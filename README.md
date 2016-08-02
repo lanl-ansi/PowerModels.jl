@@ -1,4 +1,4 @@
-# PowerModel.jl 
+# PowerModels.jl 
 
 Is a Julia/JuMP package for Power Network Optimization.
 
