@@ -1,5 +1,3 @@
-isdefined(Base, :__precompile__) && __precompile__()
-
 include("var.jl")
 include("constraint.jl")
 

@@ -4,8 +4,6 @@
 # - the network will be maintained as one connected component (i.e. at least n-1 edges)
 #
 
-isdefined(Base, :__precompile__) && __precompile__()
-
 include("var.jl")
 include("constraint.jl")
 include("obj.jl")

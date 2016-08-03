@@ -3,8 +3,6 @@
 # This will hopefully make everything more compositional
 ##########################################################################################################
 
-using JuMP
-
 # TODO need to find a way to pass-through extra args to varibles maco (look into ... syntax) 
 
 # creates a default start vector

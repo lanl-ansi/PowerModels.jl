@@ -3,8 +3,6 @@
 # This will hopefully make everything more compositional
 ##########################################################################################################
 
-using JuMP
-
 include("relaxation_scheme.jl")
 
 function constraint_active_kcl_shunt_const(m, p, pg, bus, bus_branches, bus_gens; v=1.0, pd = bus["pd"])

@@ -3,9 +3,6 @@
 # This will hopefully make everything more compositional
 ##########################################################################################################
 
-using JuMP
-
-
 # min var array
 function objective_min_vars(m, vars)
 #  @objective(m, Min, sum{v, v=vars} )
