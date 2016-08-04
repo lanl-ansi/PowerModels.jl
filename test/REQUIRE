@@ -4,7 +4,5 @@ JuMP
 
 Ipopt
 SCS
-#AmplNLWriter 0.2.1
-#CoinOptServices 0.1.0
 
-FactCheck 0.4.2
+BaseTestNext
