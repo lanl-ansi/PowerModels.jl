@@ -20,6 +20,13 @@ function phase_angle_variables(m, bus_indexes; start = create_default_start(bus_
   return theta
 end
 
+# TODO: isolate this issue and post a JuMP issue
+function phase_angle_variables_1(m, buses)
+  @variable(m, theta[b in values(buses)])
+  return theta
+end
+
+
 # Create variables associated with voltage magnitudes
 function voltage_magnitude_variables(m, buses, bus_indexes; start = create_default_start(bus_indexes, 1.0, "v_start"))
   @variable(m, buses[i]["vmin"] <= v[i in bus_indexes] <= buses[i]["vmax"], start = start[i]["v_start"])
