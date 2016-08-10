@@ -1,5 +1,0 @@
-{
-  "solver": "IPOPT",
-  "tol": 1e-6,
-  "print_level": 0
-}

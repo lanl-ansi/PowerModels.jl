@@ -8,6 +8,10 @@ if (Pkg.installed("Ipopt") != nothing)
   solver_status_lookup[Ipopt.IpoptSolver] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
 end
 
+#if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
+#  # note that AmplNLWriter.AmplNLSolver is the solver type of bonmin
+#  solver_status_lookup[AmplNLWriter.AmplNLSolver] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
+#end
 
 not_pu = Set(["rate_a","rate_b","rate_c","bs","gs","pd","qd","pg","qg","pmax","pmin","qmax","qmin"])
 not_rad = Set(["angmax","angmin","shift","va"])

@@ -7,8 +7,6 @@ else
     const Test = BaseTestNext
 end
 
-include("solvers.jl")
-
 include("output.jl")
 
 include("matpower.jl")
