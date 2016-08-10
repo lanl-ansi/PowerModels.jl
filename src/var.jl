@@ -3,8 +3,6 @@
 # This will hopefully make everything more compositional
 ##########################################################################################################
 
-using JuMP
-
 # TODO need to find a way to pass-through extra args to varibles maco (look into ... syntax) 
 
 # creates a default start vector
@@ -21,6 +19,13 @@ function phase_angle_variables(m, bus_indexes; start = create_default_start(bus_
   @variable(m, theta[i in bus_indexes], start = start[i]["theta_start"])
   return theta
 end
+
+# TODO: isolate this issue and post a JuMP issue
+function phase_angle_variables_1(m, buses)
+  @variable(m, theta[b in values(buses)])
+  return theta
+end
+
 
 # Create variables associated with voltage magnitudes
 function voltage_magnitude_variables(m, buses, bus_indexes; start = create_default_start(bus_indexes, 1.0, "v_start"))

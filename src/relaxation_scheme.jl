@@ -1,5 +1,3 @@
-using JuMP
-
 # TODO add LNC cuts to this 
 function complex_product_relaxation(m, a, b, c, d)
     @constraint(m, c^2 + d^2 <= a*b)

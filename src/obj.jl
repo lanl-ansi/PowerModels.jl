@@ -3,12 +3,9 @@
 # This will hopefully make everything more compositional
 ##########################################################################################################
 
-using JuMP
-
-
 # min var array
 function objective_min_vars(m, vars)
-#  @objective(m, Min, sum{v, v=vars} )
+#  @objective(m, Min, sum(v for v in vars) )
   # TODO can this be done cleaner???
   @objective(m, Min, sum{vars[k[1]], k=keys(vars)} )
 end
@@ -20,15 +17,10 @@ function objective_min_fuel_cost(m, pg, gens, gen_indexes)
 end
 
 function objective_min_fuel_cost_nl(m, pg, gens, gen_indexes)
-  println("NL OBJ!")
-  @NLobjective(m, Min, sum{ gens[i]["cost"][1]*pg[i]^2 + gens[i]["cost"][2]*pg[i] + gens[i]["cost"][3], i=gen_indexes} )
+  #println("NL OBJ!")
+  #@NLobjective(m, Min, sum{ gens[i]["cost"][1]*pg[i]^2 + gens[i]["cost"][2]*pg[i] + gens[i]["cost"][3], i=gen_indexes} )
+  @NLobjective(m, Min, sum{ c*pg[i]^(p-1), i=gen_indexes, (p,c) = enumerate(reverse(gens[i]["cost"]))} )
 end
-
-# TODO figure out how to do this better
-# Why does this not work!
-#@objective(m, Min, sum{ c*pg[i]^(p-1), i=gen_indexes, (p,c) = enumerate(reverse(gens[i]["cost"]))} )
-
-#@setNLObjective(m, Min, sum{ c*pg[i]^(p-1), i=gen_indexes, (p,c) = enumerate(reverse(gens[i]["cost"]))} )
 
 
 # for conic solvers which only support linear objective functions (e.g. SCS) 

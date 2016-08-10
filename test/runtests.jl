@@ -1,6 +1,11 @@
 using PowerModels
-using FactCheck
-using Base.Test
+
+if VERSION >= v"0.5.0-dev+7720"
+    using Base.Test
+else
+    using BaseTestNext
+    const Test = BaseTestNext
+end
 
 include("solvers.jl")
 
@@ -12,7 +17,7 @@ include("matpower.jl")
 # used by OTS and Loadshed TS models
 function check_br_status(sol)
     for (idx,val) in sol["branch"]
-        @fact val["br_status"] --> anyof(0.0, 1.0)
+        @test val["br_status"] == 0.0 || val["br_status"] == 1.0
     end
 end
 
@@ -25,7 +30,7 @@ include("ots.jl")
 
 include("misc.jl")
 
-
 include("loadshed.jl")
 
-FactCheck.exitstatus()
+# TODO see if something simialr is needed in Base Test
+#FactCheck.exitstatus()

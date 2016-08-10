@@ -1,5 +1,3 @@
-isdefined(Base, :__precompile__) && __precompile__()
-
 include("var.jl")
 include("constraint.jl")
 include("obj.jl")
@@ -343,8 +341,6 @@ function QC_OPF(data, settings)
 end
 
 
-#using SCS
-
 function SDP_OPF(data, settings)
     println("build lookups...")
     ref_bus, buses, gens, branches, bus_gens, arcs_from, arcs_to, arcs = build_sets(data)
@@ -356,7 +352,6 @@ function SDP_OPF(data, settings)
 
     println("build model...")
 
-    #s = SCSSolver(max_iters=1000000)
     m = Model()
 
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
