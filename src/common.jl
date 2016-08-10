@@ -1,3 +1,13 @@
+# TODO figure out how to do this properly, stronger types?
+#importall MathProgBase.SolverInterface
+solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}()
+
+
+if (Pkg.installed("Ipopt") != nothing)
+  using Ipopt
+  solver_status_lookup[Ipopt.IpoptSolver] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
+end
+
 
 not_pu = Set(["rate_a","rate_b","rate_c","bs","gs","pd","qd","pg","qg","pmax","pmin","qmax","qmin"])
 not_rad = Set(["angmax","angmin","shift","va"])

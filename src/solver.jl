@@ -16,19 +16,6 @@ const CBC_SOLVER = "CBC"
 const KNITRO_SOLVER = "KNITRO"
 
 
-using JuMP
-using JSON
-
-# TODO figure out how to do this properly, stronger types?
-#importall MathProgBase.SolverInterface
-solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}()
-
-
-if (Pkg.installed("Ipopt") != nothing)
-  using Ipopt
-  solver_status_lookup[Ipopt.IpoptSolver] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
-end
-
 if (Pkg.installed("CPLEX") != nothing)
   using CPLEX
 end
