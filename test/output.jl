@@ -21,7 +21,7 @@ end
 
 @testset "test line flow output" begin
     @testset "24-bus rts case opf" begin
-        result = run_power_model_file("../test/data/case24.json", AC_OPF, build_solver(IPOPT_SOLVER), Dict("output" => Dict("line_flows" => true)))
+        result = run_power_model_file("../test/data/case24.json", AC_OPF, IpoptSolver(tol=1e-6, print_level=1), Dict("output" => Dict("line_flows" => true)))
 
         @test haskey(result, "solver") == true
         @test haskey(result, "status") == true

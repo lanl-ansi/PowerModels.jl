@@ -1,13 +1,22 @@
 using PowerModels
 
+using Ipopt
+using SCS
+
+# needed for OTS tests
+using AmplNLWriter
+using CoinOptServices
+
+if (Pkg.installed("Gurobi") != nothing)
+    using Gurobi
+end
+
 if VERSION >= v"0.5.0-dev+7720"
     using Base.Test
 else
     using BaseTestNext
     const Test = BaseTestNext
 end
-
-include("solvers.jl")
 
 include("output.jl")
 
