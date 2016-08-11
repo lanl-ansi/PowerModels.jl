@@ -1,26 +1,31 @@
 language: julia
+os:
+  - linux
+#  - osx
 julia:
-    - 0.4
-
+  - 0.4
 cache:
-  directories:
-    - /home/travis/.julia
+ directories:
+   - /home/travis/.julia
+sudo: false
+addons:
+  apt_packages:
+    - gfortran
+    - liblapack-dev
+    - libgmp-dev
+    - libglpk-dev
 
 before_install:
     # don't keep an old version of the code in the cache
+  - julia -e 'if "PowerModels" in keys(Pkg.installed()) Pkg.rm("PowerModels"); Pkg.rm("PowerModels") end'
   - julia -e 'Pkg.update()' #make sure we get the latest version of METADATA
-  - julia -e 'if !("Coverage" in keys(Pkg.installed())) Pkg.clone("https://github.com/ccoffrin/Coverage.jl.git") end'
-  - julia -e 'if "PowerModels" in keys(Pkg.installed()) Pkg.rm("PowerModels") end'
-  - sudo apt-get -qq update
-  - sudo apt-get install -y gfortran
-  - sudo apt-get install -y liblapack-dev
-  - sudo apt-get install -y libglpk-dev
-  - echo $TRAVIS_JULIA_VERSION
+  - julia -e 'if !("Coverage" in keys(Pkg.installed())) Pkg.add("Coverage") end'
 
 script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.clone(pwd())'
   - julia -e 'Pkg.test("PowerModels", coverage=true)'
 
 after_success:
-  - julia -e 'using Coverage; cd(Pkg.dir("PowerModels")); Codecov.submit(process_folder("."));'
+  - echo $TRAVIS_JULIA_VERSION
+  - export REPO_TOKEN=9c0bd91b-c273-45a8-a221-a4d4e63ac464; julia -e 'using Coverage; cd(Pkg.dir("PowerModels")); Codecov.submit(process_folder("."));'
