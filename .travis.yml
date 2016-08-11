@@ -1,26 +1,22 @@
 language: julia
 julia:
-    - 0.4
-
-cache:
-  directories:
-    - /home/travis/.julia
-
-before_install:
-    # don't keep an old version of the code in the cache
-  - julia -e 'Pkg.update()' #make sure we get the latest version of METADATA
-  - julia -e 'if !("Coverage" in keys(Pkg.installed())) Pkg.clone("https://github.com/ccoffrin/Coverage.jl.git") end'
-  - julia -e 'if "PowerModels" in keys(Pkg.installed()) Pkg.rm("PowerModels") end'
-  - sudo apt-get -qq update
-  - sudo apt-get install -y gfortran
-  - sudo apt-get install -y liblapack-dev
-  - sudo apt-get install -y libglpk-dev
-  - echo $TRAVIS_JULIA_VERSION
+  - 0.4
+#cache:
+#  directories:
+#    - /home/travis/.julia
+sudo: false
+addons:
+  apt_packages:
+    - gfortran
+    - liblapack-dev
+    - libgmp-dev
+    - libglpk-dev
 
 script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.clone(pwd())'
   - julia -e 'Pkg.test("PowerModels", coverage=true)'
 
 after_success:
+  - echo $TRAVIS_JULIA_VERSION
   - julia -e 'using Coverage; cd(Pkg.dir("PowerModels")); Codecov.submit(process_folder("."));'
