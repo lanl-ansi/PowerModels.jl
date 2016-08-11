@@ -4,8 +4,10 @@ using Ipopt
 using SCS
 
 # needed for OTS tests
-using AmplNLWriter
-using CoinOptServices
+if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
+    using AmplNLWriter
+    using CoinOptServices
+end
 
 if (Pkg.installed("Gurobi") != nothing)
     using Gurobi
