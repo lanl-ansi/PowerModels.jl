@@ -1,9 +1,9 @@
 language: julia
 julia:
   - 0.4
-#cache:
-#  directories:
-#    - /home/travis/.julia
+cache:
+ directories:
+   - /home/travis/.julia
 sudo: false
 addons:
   apt_packages:
@@ -11,6 +11,12 @@ addons:
     - liblapack-dev
     - libgmp-dev
     - libglpk-dev
+
+before_install:
+    # don't keep an old version of the code in the cache
+  - julia -e 'Pkg.update()' #make sure we get the latest version of METADATA
+  - julia -e 'if !("Coverage" in keys(Pkg.installed())) Pkg.add("Coverage") end'
+  - julia -e 'if "PowerModels" in keys(Pkg.installed()) Pkg.rm("PowerModels"); Pkg.rm("PowerModels") end'
 
 script:
 #  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
