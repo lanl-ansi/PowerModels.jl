@@ -12,15 +12,15 @@ export run_ots, run_ots_file, run_ots_string
 export AC_OTS, DC_OTS, DC_LL_OTS, SOC_OTS
 
 
-function run_ots(; file = "../test/data/case3.json", model_builder = AC_OTS, solver = build_solver(BONMIN_SOLVER))
+function run_ots(; file = "../test/data/case3.json", model_builder = AC_OTS, solver = BonminNLSolver())
     return run_power_model(file, model_builder, solver)
 end
 
-function run_ots_file(; file = "../test/data/case3.json", model_builder = AC_OTS, solver = build_solver(BONMIN_SOLVER))
+function run_ots_file(; file = "../test/data/case3.json", model_builder = AC_OTS, solver = BonminNLSolver())
     return run_power_model_file(file, model_builder, solver)
 end
 
-function run_ots_string(data_string; model_builder = AC_OTS, solver = build_solver(BONMIN_SOLVER))
+function run_ots_string(data_string; model_builder = AC_OTS, solver = BonminNLSolver())
     return run_power_model_string(data_string, model_builder, solver)
 end
 

@@ -4,7 +4,7 @@ if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices")
     @testset "test ac ots" begin
     #  Omitting this test, until bugs can be resolved
     #    @testset "3-bus case" begin
-    #        result = run_ots_file(;file = "../test/data/case3.json", model_builder = AC_OTS, solver = build_solver(BONMIN_SOLVER, bb_log_level=0, nlp_log_level=0))
+    #        result = run_ots_file(;file = "../test/data/case3.json", model_builder = AC_OTS, solver = BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
     #
     #        check_br_status(result["solution"])
     #
@@ -12,7 +12,7 @@ if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices")
     #        @test isapprox(result["objective"], 5812; atol = 1e0)
     #    end
         @testset "5-bus case" begin
-            result = run_ots_file(;file = "../test/data/case5.json", model_builder = AC_OTS, solver = build_solver(BONMIN_SOLVER, bb_log_level=0, nlp_log_level=0))
+            result = run_ots_file(;file = "../test/data/case5.json", model_builder = AC_OTS, solver = BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
 
             check_br_status(result["solution"])
 
@@ -29,7 +29,7 @@ if (Pkg.installed("Gurobi") != nothing)
 
     @testset "test dc ots" begin
         @testset "3-bus case" begin
-            result = run_ots_file(;file = "../test/data/case3.json", model_builder = DC_OTS, solver = build_solver(GUROBI_SOLVER, OutputFlag=0))
+            result = run_ots_file(;file = "../test/data/case3.json", model_builder = DC_OTS, solver = GurobiSolver(OutputFlag=0))
 
             check_br_status(result["solution"])
 
@@ -38,7 +38,7 @@ if (Pkg.installed("Gurobi") != nothing)
         end
 
         @testset "5-bus case" begin
-            result = run_ots_file(;file = "../test/data/case5.json", model_builder = DC_OTS, solver = build_solver(GUROBI_SOLVER, OutputFlag=0))
+            result = run_ots_file(;file = "../test/data/case5.json", model_builder = DC_OTS, solver = GurobiSolver(OutputFlag=0))
 
             check_br_status(result["solution"])
 
@@ -50,7 +50,7 @@ if (Pkg.installed("Gurobi") != nothing)
 
     @testset "test dc-losses ots" begin
         @testset "3-bus case" begin
-            result = run_ots_file(;file = "../test/data/case3.json", model_builder = DC_LL_OTS, solver = build_solver(GUROBI_SOLVER, OutputFlag=0))
+            result = run_ots_file(;file = "../test/data/case3.json", model_builder = DC_LL_OTS, solver = GurobiSolver(OutputFlag=0))
 
             check_br_status(result["solution"])
 
@@ -59,7 +59,7 @@ if (Pkg.installed("Gurobi") != nothing)
         end
 
         @testset "5-bus case" begin
-            result = run_ots_file(;file = "../test/data/case5.json", model_builder = DC_LL_OTS, solver = build_solver(GUROBI_SOLVER, OutputFlag=0))
+            result = run_ots_file(;file = "../test/data/case5.json", model_builder = DC_LL_OTS, solver = GurobiSolver(OutputFlag=0))
 
             check_br_status(result["solution"])
 
@@ -71,7 +71,7 @@ if (Pkg.installed("Gurobi") != nothing)
 
     @testset "test soc ots" begin
         @testset "3-bus case" begin
-            result = run_ots_file(;file = "../test/data/case3.json", model_builder = SOC_OTS, solver = build_solver(GUROBI_SOLVER, OutputFlag=0))
+            result = run_ots_file(;file = "../test/data/case3.json", model_builder = SOC_OTS, solver = GurobiSolver(OutputFlag=0))
 
             check_br_status(result["solution"])
 
@@ -79,7 +79,7 @@ if (Pkg.installed("Gurobi") != nothing)
             @test isapprox(result["objective"], 5736.2; atol = 1e0)
         end
         @testset "5-bus rts case" begin
-            result = run_ots_file(;file = "../test/data/case5.json", model_builder = SOC_OTS, solver = build_solver(GUROBI_SOLVER, OutputFlag=0))
+            result = run_ots_file(;file = "../test/data/case5.json", model_builder = SOC_OTS, solver = GurobiSolver(OutputFlag=0))
 
             check_br_status(result["solution"])
 

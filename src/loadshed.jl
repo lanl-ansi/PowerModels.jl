@@ -8,15 +8,15 @@ export run_load_shed, run_load_shed_file, run_load_shed_string
 export AC_LS, QC_LS, SOC_LS, DC_LS, SDP_LS, AC_LS_UC, QC_LS_UC, SOC_LS_UC, DC_LS_UC, SDP_LS_UC, AC_LS_UC_TS, DC_LS_UC_TS, SOC_LS_UC_TS
 
 
-function run_load_shed(; file = "../test/data/case3.json", model_builder = AC_LS, solver = build_solver(IPOPT_SOLVER))
+function run_load_shed(; file = "../test/data/case3.json", model_builder = AC_LS, solver = IpoptSolver(tol=1e-6, print_level=1))
     return run_power_model(file, model_builder, solver)
 end
 
-function run_load_shed_file(; file = "../test/data/case3.json", model_builder = AC_LS, solver = build_solver(IPOPT_SOLVER))
+function run_load_shed_file(; file = "../test/data/case3.json", model_builder = AC_LS, solver = IpoptSolver(tol=1e-6, print_level=1))
     return run_power_model_file(file, model_builder, solver)
 end
 
-function run_load_shed_string(data_string; model_builder = AC_LS, solver = build_solver(IPOPT_SOLVER))
+function run_load_shed_string(data_string; model_builder = AC_LS, solver = IpoptSolver(tol=1e-6, print_level=1))
     return run_power_model_string(data_string, model_builder, solver)
 end
 

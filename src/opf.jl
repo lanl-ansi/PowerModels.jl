@@ -6,15 +6,15 @@ export run_opf, run_opf_file, run_opf_string
 export AC_OPF, QC_OPF, SOC_OPF, DC_OPF, SDP_OPF
 
 
-function run_opf(; file = "../test/data/case3.json", model_builder = AC_OPF, solver = build_solver(IPOPT_SOLVER))
+function run_opf(; file = "../test/data/case3.json", model_builder = AC_OPF, solver = IpoptSolver(tol=1e-6, print_level=1))
     return run_power_model(file, model_builder, solver)
 end
 
-function run_opf_file(; file = "../test/data/case3.json", model_builder = AC_OPF, solver = build_solver(IPOPT_SOLVER))
+function run_opf_file(; file = "../test/data/case3.json", model_builder = AC_OPF, solver = IpoptSolver(tol=1e-6, print_level=1))
     return run_power_model_file(file, model_builder, solver)
 end
 
-function run_opf_string(data_string; model_builder = AC_OPF, solver = build_solver(IPOPT_SOLVER))
+function run_opf_string(data_string; model_builder = AC_OPF, solver = IpoptSolver(tol=1e-6, print_level=1))
     return run_power_model_string(data_string, model_builder, solver)
 end
 

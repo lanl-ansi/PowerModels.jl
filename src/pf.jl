@@ -5,15 +5,15 @@ export run_pf, run_pf_file, run_pf_string
 export AC_PF, SOC_PF, DC_PF
 
 
-function run_pf(; file = "../test/data/case3.json", model_builder = AC_PF, solver = build_solver(IPOPT_SOLVER))
+function run_pf(; file = "../test/data/case3.json", model_builder = AC_PF, solver = IpoptSolver(tol=1e-6, print_level=1))
     return run_power_model(file, model_builder, solver)
 end
 
-function run_pf_file(; file = "../test/data/case3.json", model_builder = AC_PF, solver = build_solver(IPOPT_SOLVER))
+function run_pf_file(; file = "../test/data/case3.json", model_builder = AC_PF, solver = IpoptSolver(tol=1e-6, print_level=1))
     return run_power_model_file(file, model_builder, solver)
 end
 
-function run_pf_string(data_string; model_builder = AC_PF, solver = build_solver(IPOPT_SOLVER))
+function run_pf_string(data_string; model_builder = AC_PF, solver = IpoptSolver(tol=1e-6, print_level=1))
     return run_power_model_string(data_string, model_builder, solver)
 end
 
