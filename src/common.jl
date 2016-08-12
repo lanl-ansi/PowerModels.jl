@@ -30,10 +30,6 @@ function solver_status_dict(solver_type, status)
 end
 
 
-
-not_pu = Set(["rate_a","rate_b","rate_c","bs","gs","pd","qd","pg","qg","pmax","pmin","qmax","qmin"])
-not_rad = Set(["angmax","angmin","shift","va"])
-
 function guard_getobjbound(model)
     try
         getobjbound(model)
@@ -157,63 +153,6 @@ function run_power_model_dict(data, model_builder, solver, model_settings = Dict
 end
 
 
-
-
-function make_per_unit(data :: Dict{AbstractString,Any})
-    make_per_unit(data["baseMVA"], data)
-end
-
-function make_per_unit(mva_base :: Number, data :: Dict{AbstractString,Any})
-    for k in keys(data)
-        if k == "gencost"
-            for cost_model in data[k]
-                if cost_model["model"] != 2
-                    println("WARNING: Skipping generator cost model of tpye other than 2")
-                    continue
-                end
-                degree = length(cost_model["cost"])
-                for (i, item) in enumerate(cost_model["cost"])
-                    cost_model["cost"][i] = item*mva_base^(degree-i)
-                end
-            end
-        elseif isa(data[k], Number)
-            if k in not_pu
-                data[k] = data[k]/mva_base
-            end
-            if k in not_rad
-                data[k] = pi*data[k]/180.0
-            end
-            #println("$(k) $(data[k])")
-        else
-            make_per_unit(mva_base, data[k])
-        end
-    end
-end
-
-function make_per_unit(mva_base :: Number, data :: Array{Any,1})
-    for item in data
-        make_per_unit(mva_base, item)
-    end
-end
-
-function make_per_unit(mva_base :: Number, data :: AbstractString)
-    #nothing to do
-    #println("$(parent) $(data)")
-end
-
-function make_per_unit(mva_base :: Number, data :: Number)
-    #nothing to do
-    #println("$(parent) $(data)")
-end
-
-
-function unify_transformer_taps(data :: Dict{AbstractString,Any})
-    for branch in data["branch"]
-        if branch["tap"] == 0.0
-            branch["tap"] = 1.0
-        end
-    end
-end
 
 
 
