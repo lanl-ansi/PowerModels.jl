@@ -1,64 +1,56 @@
 # stuff that is universal to these variables
 
 export 
-    ACPPowerModel, ACPData,
-    test_ac
+    DCPPowerModel, DCPData,
+    test_dc
 
-type ACPData 
+type DCPData 
     t
-    v
     pg
-    qg
     p
-    q
 end
 
-typealias ACPPowerModel GenericPowerModel{ACPData}
+typealias DCPPowerModel GenericPowerModel{DCPData}
 
-# default AC constructor
-function ACPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    mdata = ACPData(nothing, nothing, nothing, nothing, nothing, nothing)
+# default DC constructor
+function DCPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
+    mdata = DCPData(nothing, nothing, nothing)
     return GenericPowerModel(data, mdata; setting = setting)
 end
 
-function add_vars(pm::ACPPowerModel)
+function add_vars(pm::DCPPowerModel)
     pm.ext.t  = phase_angle_variables(pm.model, pm.set.bus_indexes)
-    pm.ext.v  = voltage_magnitude_variables(pm.model, pm.set.buses, pm.set.bus_indexes; start = create_default_start(pm.set.bus_indexes, 1.0, "v_start"))
-
     pm.ext.pg = active_generation_variables(pm.model, pm.set.gens, pm.set.gen_indexes)
-    pm.ext.qg = reactive_generation_variables(pm.model, pm.set.gens, pm.set.gen_indexes)
 
-    pm.ext.p  = line_flow_variables(pm.model, pm.set.arcs, pm.set.branches, pm.set.branch_indexes)
-    pm.ext.q  = line_flow_variables(pm.model, pm.set.arcs, pm.set.branches, pm.set.branch_indexes)
+    p = line_flow_variables(pm.model, pm.set.arcs_from, pm.set.branches, pm.set.branch_indexes)
+    p_expr = [(l,i,j) => 1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from]
+    p_expr = merge(p_expr, [(l,j,i) => -1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from])
+    pm.ext.p = p_expr
 end
 
-function post_constraints(pm::ACPPowerModel)
+function post_constraints(pm::DCPPowerModel)
     @constraint(pm.model, pm.ext.t[pm.set.ref_bus] == 0)
 
     for (i,bus) in pm.set.buses
         bus_branches = filter(x -> x[2] == i, pm.set.arcs)
-        constraint_active_kcl_shunt_v(pm.model, pm.ext.p, pm.ext.pg, pm.ext.v[i], bus, bus_branches, pm.set.bus_gens[i])
-        constraint_reactive_kcl_shunt_v(pm.model, pm.ext.q, pm.ext.qg, pm.ext.v[i], bus, bus_branches, pm.set.bus_gens[i])
+        constraint_active_kcl_shunt_const(pm.model, pm.ext.p, pm.ext.pg, bus, bus_branches, pm.set.bus_gens[i])
     end
 
     for (l,i,j) in pm.set.arcs_from
         branch = pm.set.branches[l]
-        constraint_active_ohms_v_yt(pm.model, pm.ext.p[(l,i,j)], pm.ext.p[(l,j,i)], pm.ext.v[i], pm.ext.v[j], pm.ext.t[i], pm.ext.t[j], branch)
-        constraint_reactive_ohms_v_yt(pm.model, pm.ext.q[(l,i,j)], pm.ext.q[(l,j,i)], pm.ext.v[i], pm.ext.v[j], pm.ext.t[i], pm.ext.t[j], branch)
-        
-        constraint_phase_angle_diffrence_t(pm.model, pm.ext.t[i], pm.ext.t[j], branch)
+        constraint_active_ohms_linear(pm.model, pm.ext.p[(l,i,j)], pm.ext.t[i], pm.ext.t[j], branch)
 
-        constraint_thermal_limit(pm.model, pm.ext.p[(l,i,j)], pm.ext.q[(l,i,j)], branch)
-        constraint_thermal_limit(pm.model, pm.ext.p[(l,j,i)], pm.ext.q[(l,j,i)], branch)
+        constraint_phase_angle_diffrence_t(pm.model, pm.ext.t[i], pm.ext.t[j], branch)
+        # Note the thermal limit constraint is captured by the variable bounds
     end
 
 end
 
-function post_objective(pm::ACPPowerModel)
+function post_objective(pm::DCPPowerModel)
     objective_min_fuel_cost(pm.model, pm.ext.pg, pm.set.gens, pm.set.gen_indexes)
 end
 
-function post_ac_opf(pm::ACPPowerModel)
+function post_dc_opf(pm::DCPPowerModel)
     add_vars(pm)
     post_constraints(pm)
     post_objective(pm)
@@ -66,18 +58,18 @@ end
 
 using Ipopt
 
-function test_ac()
+function test_dc()
     data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"));
     data = parse_matpower(data_string);
 
-    apm = ACPPowerModel(data);
-    post_ac_opf(apm)
+    apm = DCPPowerModel(data);
+    post_dc_opf(apm)
 
     setsolver(apm, IpoptSolver())
     solve(apm)
 end
 
-function getsolution(pm::ACPPowerModel)
+function getsolution(pm::DCPPowerModel)
     sol = Dict{AbstractString,Any}()
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
@@ -85,7 +77,7 @@ function getsolution(pm::ACPPowerModel)
     return sol
 end
 
-function add_bus_voltage_setpoint(sol, pm::ACPPowerModel)
+function add_bus_voltage_setpoint(sol, pm::DCPPowerModel)
     sol_buses = nothing
     if !haskey(sol, "bus")
         sol_buses = Dict{Int,Any}()
@@ -108,14 +100,14 @@ function add_bus_voltage_setpoint(sol, pm::ACPPowerModel)
         sol_bus["va"] = NaN
 
         if bus["bus_type"] != 4
-            sol_bus["vm"] = getvalue(pm.ext.v[idx])
+            sol_bus["vm"] = 1.0
             sol_bus["va"] = getvalue(pm.ext.t[idx])*180/pi
         end
     end
 end
 
 
-function add_generator_power_setpoint(sol, pm::ACPPowerModel)
+function add_generator_power_setpoint(sol, pm::DCPPowerModel)
     mva_base = pm.data["baseMVA"]
 
     sol_gens = nothing
@@ -141,12 +133,11 @@ function add_generator_power_setpoint(sol, pm::ACPPowerModel)
 
         if gen["gen_status"] == 1
             sol_gen["pg"] = getvalue(pm.ext.pg[idx])*mva_base
-            sol_gen["qg"] = getvalue(pm.ext.qg[idx])*mva_base
         end
     end
 end
 
-function add_branch_flow_setpoint(sol, pm::ACPPowerModel)
+function add_branch_flow_setpoint(sol, pm::DCPPowerModel)
     mva_base = pm.data["baseMVA"]
 
     # check the line flows were requested
@@ -178,9 +169,7 @@ function add_branch_flow_setpoint(sol, pm::ACPPowerModel)
 
             if Int(branch["br_status"]) == 1
                 sol_branch["p_from"] = getvalue(p[(idx, branch["f_bus"] , branch["t_bus"])])*mva_base
-                sol_branch["q_from"] = getvalue(q[(idx, branch["f_bus"] , branch["t_bus"])])*mva_base
                 sol_branch["p_to"]   = getvalue(p[(idx, branch["t_bus"] , branch["f_bus"])])*mva_base
-                sol_branch["q_to"]   = getvalue(q[(idx, branch["t_bus"] , branch["f_bus"])])*mva_base
             end
         end
     end

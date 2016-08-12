@@ -1,8 +1,8 @@
 # stuff that is universal to all power models
 
 export 
-    DCPPowerModel, WRPowerModel, GenericPowerModel,
-    DCPData, WRData,
+    WRPowerModel, GenericPowerModel,
+    WRData,
     setdata, setsolver, solve, getsolution
 
 
@@ -48,16 +48,6 @@ function GenericPowerModel{T}(data::Dict{AbstractString,Any}, ext::T; setting::D
         Dict{AbstractString,Any}(), # solution
         ext # extension
     )
-end
-
-
-
-type DCPData end
-typealias DCPPowerModel GenericPowerModel{DCPData}
-
-# default DC constructor
-function DCPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}(), ext::DCPData = DCPData())
-    return GenericPowerModel(data, ext; setting = setting)
 end
 
 

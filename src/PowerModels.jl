@@ -15,6 +15,7 @@ include("constraint.jl")
 include("obj.jl")
 
 include("acp.jl")
+include("dcp.jl")
 
 #include("opf.jl")
 #include("ots.jl")
