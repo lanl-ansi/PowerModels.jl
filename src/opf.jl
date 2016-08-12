@@ -2,17 +2,7 @@ using Ipopt
 
 export test_ac_opf, test_dc_opf
 
-function post_objective_min_fuel_cost(pm::Union{ACPPowerModel, DCPPowerModel})
-    objective_min_fuel_cost(pm.model, pm.ext.pg, pm.set.gens, pm.set.gen_indexes)
-end
-
 function post_opf{T}(pm::GenericPowerModel{T})
-    add_vars(pm)
-    post_opf_constraints(pm)
-    post_objective_min_fuel_cost(pm)
-end
-
-function post_opf_constraints{T}(pm::GenericPowerModel{T})
     constraint_theta_ref(pm)
 
     for (i,bus) in pm.set.buses
@@ -28,8 +18,9 @@ function post_opf_constraints{T}(pm::GenericPowerModel{T})
 
         constraint_thermal_limit(pm, branch)
     end
-end
 
+    post_objective_min_fuel_cost(pm)
+end
 
 
 function test_ac_opf()

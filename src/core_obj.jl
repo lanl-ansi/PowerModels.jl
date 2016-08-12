@@ -3,6 +3,16 @@
 # This will hopefully make everything more compositional
 ##########################################################################################################
 
+
+function post_objective_min_fuel_cost{T}(pm::GenericPowerModel{T})
+    pg = pm.var.pg
+    cost = (i) -> pm.set.gens[i]["cost"]
+    @objective(pm.model, Min, sum{ cost(i)[1]*pg[i]^2 + cost(i)[2]*pg[i] + cost(i)[3], i in pm.set.gen_indexes} )
+end
+
+
+#=
+
 # min var array
 function objective_min_vars(m, vars)
 #  @objective(m, Min, sum(v for v in vars) )
@@ -120,5 +130,5 @@ function objective_min_fuel_cost_decent_va(m, pg, t, gens, gen_indexes, bus_inde
   )
 end
 
-
+=#
 

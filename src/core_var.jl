@@ -3,17 +3,6 @@
 # This will hopefully make everything more compositional
 ##########################################################################################################
 
-# TODO need to find a way to pass-through extra args to varibles maco (look into ... syntax) 
-
-# creates a default start vector
-function create_default_start(indexes, value, tag)
-  start = Dict()
-  for (i in indexes)
-    start[i] = Dict(tag => value)
-  end
-  return start
-end
-
 
 function phase_angle_variables{T}(pm::GenericPowerModel{T})
   @variable(pm.model, t[i in pm.set.bus_indexes])
@@ -45,6 +34,15 @@ function line_flow_variables{T}(pm::GenericPowerModel{T}; both_sides = true)
 end
 
 
+
+
+
+
+
+#=
+
+
+# TODO need to find a way to pass-through extra args to varibles maco (look into ... syntax) 
 
 # Creates variables associated with phase angles at each bus
 function phase_angle_variables(m, bus_indexes; start = create_default_start(bus_indexes,0,"theta_start"))
@@ -401,3 +399,15 @@ function complex_product_matrix_variables(m, buspairs, buspair_indexes, buses, b
 
   return WR, WI, lookup_w_index
 end
+
+
+# creates a default start vector
+function create_default_start(indexes, value, tag)
+  start = Dict()
+  for (i in indexes)
+    start[i] = Dict(tag => value)
+  end
+  return start
+end
+
+=#

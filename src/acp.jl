@@ -1,9 +1,9 @@
 # stuff that is universal to these variables
 
 export 
-    ACPPowerModel, ACPData
+    ACPPowerModel, ACPVars
 
-type ACPData 
+type ACPVars <: AbstractPowerVars
     t
     v
     pg
@@ -12,41 +12,27 @@ type ACPData
     q
 end
 
-typealias ACPPowerModel GenericPowerModel{ACPData}
+typealias ACPPowerModel GenericPowerModel{ACPVars}
 
 # default AC constructor
 function ACPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    mdata = ACPData(nothing, nothing, nothing, nothing, nothing, nothing)
+    mdata = ACPVars(nothing, nothing, nothing, nothing, nothing, nothing)
     return GenericPowerModel(data, mdata; setting = setting)
 end
 
-function add_vars(pm::ACPPowerModel)
-    pm.ext.t  = phase_angle_variables(pm)
-    pm.ext.v  = voltage_magnitude_variables(pm)
+function init_vars(pm::ACPPowerModel)
+    pm.var.t  = phase_angle_variables(pm)
+    pm.var.v  = voltage_magnitude_variables(pm)
 
-    pm.ext.pg = active_generation_variables(pm)
-    pm.ext.qg = reactive_generation_variables(pm)
+    pm.var.pg = active_generation_variables(pm)
+    pm.var.qg = reactive_generation_variables(pm)
 
-    pm.ext.p  = line_flow_variables(pm)
-    pm.ext.q  = line_flow_variables(pm)
-end
-
-function post_constraints(pm::ACPPowerModel)
-    for (l,i,j) in pm.set.arcs_from
-        branch = pm.set.branches[l]
-        constraint_active_ohms_v_yt(pm.model, pm.ext.p[(l,i,j)], pm.ext.p[(l,j,i)], pm.ext.v[i], pm.ext.v[j], pm.ext.t[i], pm.ext.t[j], branch)
-        constraint_reactive_ohms_v_yt(pm.model, pm.ext.q[(l,i,j)], pm.ext.q[(l,j,i)], pm.ext.v[i], pm.ext.v[j], pm.ext.t[i], pm.ext.t[j], branch)
-        
-        constraint_phase_angle_diffrence_t(pm.model, pm.ext.t[i], pm.ext.t[j], branch)
-
-        constraint_thermal_limit(pm.model, pm.ext.p[(l,i,j)], pm.ext.q[(l,i,j)], branch)
-        constraint_thermal_limit(pm.model, pm.ext.p[(l,j,i)], pm.ext.q[(l,j,i)], branch)
-    end
-
+    pm.var.p  = line_flow_variables(pm)
+    pm.var.q  = line_flow_variables(pm)
 end
 
 function constraint_theta_ref(pm::ACPPowerModel)
-    @constraint(pm.model, pm.ext.t[pm.set.ref_bus] == 0)
+    @constraint(pm.model, pm.var.t[pm.set.ref_bus] == 0)
 end
 
 function constraint_active_kcl_shunt(pm::ACPPowerModel, bus)
@@ -54,7 +40,7 @@ function constraint_active_kcl_shunt(pm::ACPPowerModel, bus)
     bus_branches = pm.set.bus_branches[i]
     bus_gens = pm.set.bus_gens[i]
 
-    @constraint(pm.model, sum{pm.ext.p[a], a in bus_branches} == sum{pm.ext.pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*pm.ext.v[i]^2)
+    @constraint(pm.model, sum{pm.var.p[a], a in bus_branches} == sum{pm.var.pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*pm.var.v[i]^2)
 end
 
 function constraint_reactive_kcl_shunt(pm::ACPPowerModel, bus)
@@ -62,7 +48,7 @@ function constraint_reactive_kcl_shunt(pm::ACPPowerModel, bus)
     bus_branches = pm.set.bus_branches[i]
     bus_gens = pm.set.bus_gens[i]
 
-    @constraint(pm.model, sum{pm.ext.q[a], a in bus_branches} == sum{pm.ext.qg[g], g in bus_gens} - bus["qd"] + bus["bs"]*pm.ext.v[i]^2)
+    @constraint(pm.model, sum{pm.var.q[a], a in bus_branches} == sum{pm.var.qg[g], g in bus_gens} - bus["qd"] + bus["bs"]*pm.var.v[i]^2)
 end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
@@ -73,12 +59,12 @@ function constraint_active_ohms_yt(pm::ACPPowerModel, branch)
   f_idx = (i, f_bus, t_bus)
   t_idx = (i, t_bus, f_bus)
   
-  p_fr = pm.ext.p[f_idx]
-  p_to = pm.ext.p[t_idx]
-  v_fr = pm.ext.v[f_bus]
-  v_to = pm.ext.v[t_bus]
-  t_fr = pm.ext.t[f_bus]
-  t_to = pm.ext.t[t_bus]
+  p_fr = pm.var.p[f_idx]
+  p_to = pm.var.p[t_idx]
+  v_fr = pm.var.v[f_bus]
+  v_to = pm.var.v[t_bus]
+  t_fr = pm.var.t[f_bus]
+  t_to = pm.var.t[t_bus]
 
   g = branch["g"]
   b = branch["b"]
@@ -98,12 +84,12 @@ function constraint_reactive_ohms_yt(pm::ACPPowerModel, branch)
   f_idx = (i, f_bus, t_bus)
   t_idx = (i, t_bus, f_bus)
   
-  q_fr = pm.ext.q[f_idx]
-  q_to = pm.ext.q[t_idx]
-  v_fr = pm.ext.v[f_bus]
-  v_to = pm.ext.v[t_bus]
-  t_fr = pm.ext.t[f_bus]
-  t_to = pm.ext.t[t_bus]
+  q_fr = pm.var.q[f_idx]
+  q_to = pm.var.q[t_idx]
+  v_fr = pm.var.v[f_bus]
+  v_to = pm.var.v[t_bus]
+  t_fr = pm.var.t[f_bus]
+  t_to = pm.var.t[t_bus]
 
   g = branch["g"]
   b = branch["b"]
@@ -121,8 +107,8 @@ function constraint_phase_angle_diffrence(pm::ACPPowerModel, branch)
   f_bus = branch["f_bus"]
   t_bus = branch["t_bus"]
 
-  t_fr = pm.ext.t[f_bus]
-  t_to = pm.ext.t[t_bus]
+  t_fr = pm.var.t[f_bus]
+  t_to = pm.var.t[t_bus]
 
   @constraint(pm.model, t_fr - t_to <= branch["angmax"])
   @constraint(pm.model, t_fr - t_to >= branch["angmin"])
@@ -135,10 +121,10 @@ function constraint_thermal_limit(pm::ACPPowerModel, branch)
   f_idx = (i, f_bus, t_bus)
   t_idx = (i, t_bus, f_bus)
 
-  p_fr = pm.ext.p[f_idx]
-  p_to = pm.ext.p[t_idx]
-  q_fr = pm.ext.q[f_idx]
-  q_to = pm.ext.q[t_idx]
+  p_fr = pm.var.p[f_idx]
+  p_to = pm.var.p[t_idx]
+  q_fr = pm.var.q[f_idx]
+  q_to = pm.var.q[t_idx]
 
   @constraint(pm.model, p_fr^2 + q_fr^2 <= branch["rate_a"]^2)
   @constraint(pm.model, p_to^2 + q_to^2 <= branch["rate_a"]^2)
@@ -178,8 +164,8 @@ function add_bus_voltage_setpoint(sol, pm::ACPPowerModel)
         sol_bus["va"] = NaN
 
         if bus["bus_type"] != 4
-            sol_bus["vm"] = getvalue(pm.ext.v[idx])
-            sol_bus["va"] = getvalue(pm.ext.t[idx])*180/pi
+            sol_bus["vm"] = getvalue(pm.var.v[idx])
+            sol_bus["va"] = getvalue(pm.var.t[idx])*180/pi
         end
     end
 end
@@ -210,8 +196,8 @@ function add_generator_power_setpoint(sol, pm::ACPPowerModel)
         sol_gen["qg"] = NaN
 
         if gen["gen_status"] == 1
-            sol_gen["pg"] = getvalue(pm.ext.pg[idx])*mva_base
-            sol_gen["qg"] = getvalue(pm.ext.qg[idx])*mva_base
+            sol_gen["pg"] = getvalue(pm.var.pg[idx])*mva_base
+            sol_gen["qg"] = getvalue(pm.var.qg[idx])*mva_base
         end
     end
 end

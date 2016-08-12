@@ -1,45 +1,45 @@
 # stuff that is universal to these variables
 
 export 
-    DCPPowerModel, DCPData
+    DCPPowerModel, DCPVars
 
-type DCPData 
+type DCPVars <: AbstractPowerVars
     t
     pg
     p
     p_expr
 end
 
-typealias DCPPowerModel GenericPowerModel{DCPData}
+typealias DCPPowerModel GenericPowerModel{DCPVars}
 
 # default DC constructor
 function DCPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    mdata = DCPData(nothing, nothing, nothing, nothing)
+    mdata = DCPVars(nothing, nothing, nothing, nothing)
     return GenericPowerModel(data, mdata; setting = setting)
 end
 
-function add_vars(pm::DCPPowerModel)
-    pm.ext.t  = phase_angle_variables(pm)
-    pm.ext.pg = active_generation_variables(pm)
+function init_vars(pm::DCPPowerModel)
+    pm.var.t  = phase_angle_variables(pm)
+    pm.var.pg = active_generation_variables(pm)
 
-    pm.ext.p = line_flow_variables(pm; both_sides = false)
-    p_expr = [(l,i,j) => 1.0*pm.ext.p[(l,i,j)] for (l,i,j) in pm.set.arcs_from]
-    pm.ext.p_expr = merge(p_expr, [(l,j,i) => -1.0*pm.ext.p[(l,i,j)] for (l,i,j) in pm.set.arcs_from])
+    pm.var.p = line_flow_variables(pm; both_sides = false)
+    p_expr = [(l,i,j) => 1.0*pm.var.p[(l,i,j)] for (l,i,j) in pm.set.arcs_from]
+    pm.var.p_expr = merge(p_expr, [(l,j,i) => -1.0*pm.var.p[(l,i,j)] for (l,i,j) in pm.set.arcs_from])
 end
 
 
 
 function constraint_theta_ref(pm::DCPPowerModel)
-    @constraint(pm.model, pm.ext.t[pm.set.ref_bus] == 0)
+    @constraint(pm.model, pm.var.t[pm.set.ref_bus] == 0)
 end
 
-#constraint_active_kcl_shunt_const(pm.model, pm.ext.p, pm.ext.pg, bus, bus_branches, pm.set.bus_gens[i])
+#constraint_active_kcl_shunt_const(pm.model, pm.var.p, pm.var.pg, bus, bus_branches, pm.set.bus_gens[i])
 function constraint_active_kcl_shunt(pm::DCPPowerModel, bus)
     i = bus["index"]
     bus_branches = pm.set.bus_branches[i]
     bus_gens = pm.set.bus_gens[i]
 
-    @constraint(pm.model, sum{pm.ext.p_expr[a], a in bus_branches} == sum{pm.ext.pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*1.0^2)
+    @constraint(pm.model, sum{pm.var.p_expr[a], a in bus_branches} == sum{pm.var.pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*1.0^2)
 end
 
 function constraint_reactive_kcl_shunt(pm::DCPPowerModel, bus)
@@ -55,9 +55,9 @@ function constraint_active_ohms_yt(pm::DCPPowerModel, branch)
   f_idx = (i, f_bus, t_bus)
   t_idx = (i, t_bus, f_bus)
   
-  p_fr = pm.ext.p[f_idx]
-  t_fr = pm.ext.t[f_bus]
-  t_to = pm.ext.t[t_bus]
+  p_fr = pm.var.p[f_idx]
+  t_fr = pm.var.t[f_bus]
+  t_to = pm.var.t[t_bus]
 
   b = branch["b"]
 
@@ -73,8 +73,8 @@ function constraint_phase_angle_diffrence(pm::DCPPowerModel, branch)
   f_bus = branch["f_bus"]
   t_bus = branch["t_bus"]
 
-  t_fr = pm.ext.t[f_bus]
-  t_to = pm.ext.t[t_bus]
+  t_fr = pm.var.t[f_bus]
+  t_to = pm.var.t[t_bus]
 
   @constraint(pm.model, t_fr - t_to <= branch["angmax"])
   @constraint(pm.model, t_fr - t_to >= branch["angmin"])
@@ -87,7 +87,7 @@ function constraint_thermal_limit(pm::DCPPowerModel, branch)
   f_idx = (i, f_bus, t_bus)
   t_idx = (i, t_bus, f_bus)
 
-  p_fr = pm.ext.p[f_idx]
+  p_fr = pm.var.p[f_idx]
 
   if getlowerbound(p_fr) < -branch["rate_a"]
     setlowerbound(p_fr, -branch["rate_a"])
@@ -132,7 +132,7 @@ function add_bus_voltage_setpoint(sol, pm::DCPPowerModel)
 
         if bus["bus_type"] != 4
             sol_bus["vm"] = 1.0
-            sol_bus["va"] = getvalue(pm.ext.t[idx])*180/pi
+            sol_bus["va"] = getvalue(pm.var.t[idx])*180/pi
         end
     end
 end
@@ -163,7 +163,7 @@ function add_generator_power_setpoint(sol, pm::DCPPowerModel)
         sol_gen["qg"] = NaN
 
         if gen["gen_status"] == 1
-            sol_gen["pg"] = getvalue(pm.ext.pg[idx])*mva_base
+            sol_gen["pg"] = getvalue(pm.var.pg[idx])*mva_base
         end
     end
 end

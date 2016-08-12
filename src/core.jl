@@ -22,18 +22,24 @@ type PowerDataSets
 end
 
 abstract AbstractPowerModel
+abstract AbstractPowerVars
 
-type GenericPowerModel{T} <: AbstractPowerModel
+type GenericPowerModel{T<:AbstractPowerVars} <: AbstractPowerModel
     model::Model
     data::Dict{AbstractString,Any}
     set::PowerDataSets
     setting::Dict{AbstractString,Any}
     solution::Dict{AbstractString,Any}
-    ext::T
+    var::T
 end
 
+
+function init_vars{T}(pm::GenericPowerModel{T}) end
+function init_vars{T}(pm::GenericPowerModel{T}) end
+
+
 # default generic constructor
-function GenericPowerModel{T}(data::Dict{AbstractString,Any}, ext::T; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
+function GenericPowerModel{T}(data::Dict{AbstractString,Any}, var::T; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
     make_per_unit(data)
     unify_transformer_taps(data)
     add_branch_parameters(data)
@@ -41,23 +47,25 @@ function GenericPowerModel{T}(data::Dict{AbstractString,Any}, ext::T; setting::D
 
     sets = build_sets(data)
 
-    return GenericPowerModel{T}(
+    pm = GenericPowerModel{T}(
         Model(), # model
         data, # data
         sets, # sets
         setting, # setting
         Dict{AbstractString,Any}(), # solution
-        ext # extension
+        var # variables
     )
+    init_vars(pm)
+    return pm
 end
 
 
-type WRData end
+type WRData <: AbstractPowerVars end
 typealias WRPowerModel GenericPowerModel{WRData}
 
 # default WR constructor
-function WRPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}(), ext::WRData = WRData())
-    return GenericPowerModel(data, ext; setting = setting)
+function WRPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}(), var::WRData = WRData())
+    return GenericPowerModel(data, var; setting = setting)
 end
 
 
