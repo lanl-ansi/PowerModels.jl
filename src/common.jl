@@ -184,41 +184,6 @@ function standardize_cost_order(data :: Dict{AbstractString,Any})
 end
 
 
-function build_sets(data :: Dict{AbstractString,Any})
-    bus_lookup = [ Int(bus["index"]) => bus for bus in data["bus"] ]
-    gen_lookup = [ Int(gen["index"]) => gen for gen in data["gen"] ]
-    for gencost in data["gencost"]
-        i = Int(gencost["index"])
-        gen_lookup[i] = merge(gen_lookup[i], gencost)
-    end
-    branch_lookup = [ Int(branch["index"]) => branch for branch in data["branch"] ]
-
-    # filter turned off stuff 
-    bus_lookup = filter((i, bus) -> bus["bus_type"] != 4, bus_lookup)
-    gen_lookup = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(bus_lookup), gen_lookup)
-    branch_lookup = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(bus_lookup) && branch["t_bus"] in keys(bus_lookup), branch_lookup)
-
-    bus_gens = [i => [] for (i,bus) in bus_lookup]
-    for (i,gen) in gen_lookup
-        push!(bus_gens[gen["gen_bus"]], i)
-    end
-
-    arcs_from = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in branch_lookup]
-    arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
-    arcs = [arcs_from; arcs_to] 
-
-    #ref_bus = [i for (i,bus) in bus_lookup | bus["bus_type"] == 3][1]
-    ref_bus = Union{}
-    for (k,v) in bus_lookup
-        if v["bus_type"] == 3
-            ref_bus = k
-            break
-        end
-    end
-
-    return ref_bus, bus_lookup, gen_lookup, branch_lookup, bus_gens, arcs_from, arcs_to, arcs
-end
-
 
 # compute bus pair level structures
 function buspair_parameters(buspair_indexes, branches, buses)
