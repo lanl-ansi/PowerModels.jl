@@ -1,3 +1,85 @@
+using Ipopt
+
+export test_ac_opf, test_dc_opf
+
+function post_objective_min_fuel_cost(pm::Union{ACPPowerModel, DCPPowerModel})
+    objective_min_fuel_cost(pm.model, pm.ext.pg, pm.set.gens, pm.set.gen_indexes)
+end
+
+function post_opf{T}(pm::GenericPowerModel{T})
+    add_vars(pm)
+    post_opf_constraints(pm)
+    post_objective_min_fuel_cost(pm)
+end
+
+
+function test_ac_opf()
+    data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"));
+    data = parse_matpower(data_string);
+
+    apm = ACPPowerModel(data);
+    post_opf(apm)
+
+    setsolver(apm, IpoptSolver())
+    solve(apm)
+end
+
+function test_dc_opf()
+    data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"));
+    data = parse_matpower(data_string);
+
+    apm = DCPPowerModel(data);
+    post_opf(apm)
+
+    setsolver(apm, IpoptSolver())
+    solve(apm)
+end
+
+
+function post_opf_constraints(pm::ACPPowerModel)
+    @constraint(pm.model, pm.ext.t[pm.set.ref_bus] == 0)
+
+    for (i,bus) in pm.set.buses
+        bus_branches = filter(x -> x[2] == i, pm.set.arcs)
+        constraint_active_kcl_shunt_v(pm.model, pm.ext.p, pm.ext.pg, pm.ext.v[i], bus, bus_branches, pm.set.bus_gens[i])
+        constraint_reactive_kcl_shunt_v(pm.model, pm.ext.q, pm.ext.qg, pm.ext.v[i], bus, bus_branches, pm.set.bus_gens[i])
+    end
+
+    for (l,i,j) in pm.set.arcs_from
+        branch = pm.set.branches[l]
+        constraint_active_ohms_v_yt(pm.model, pm.ext.p[(l,i,j)], pm.ext.p[(l,j,i)], pm.ext.v[i], pm.ext.v[j], pm.ext.t[i], pm.ext.t[j], branch)
+        constraint_reactive_ohms_v_yt(pm.model, pm.ext.q[(l,i,j)], pm.ext.q[(l,j,i)], pm.ext.v[i], pm.ext.v[j], pm.ext.t[i], pm.ext.t[j], branch)
+        
+        constraint_phase_angle_diffrence_t(pm.model, pm.ext.t[i], pm.ext.t[j], branch)
+
+        constraint_thermal_limit(pm.model, pm.ext.p[(l,i,j)], pm.ext.q[(l,i,j)], branch)
+        constraint_thermal_limit(pm.model, pm.ext.p[(l,j,i)], pm.ext.q[(l,j,i)], branch)
+    end
+end
+
+
+function post_opf_constraints(pm::DCPPowerModel)
+    @constraint(pm.model, pm.ext.t[pm.set.ref_bus] == 0)
+
+    for (i,bus) in pm.set.buses
+        bus_branches = filter(x -> x[2] == i, pm.set.arcs)
+        constraint_active_kcl_shunt_const(pm.model, pm.ext.p, pm.ext.pg, bus, bus_branches, pm.set.bus_gens[i])
+    end
+
+    for (l,i,j) in pm.set.arcs_from
+        branch = pm.set.branches[l]
+        constraint_active_ohms_linear(pm.model, pm.ext.p[(l,i,j)], pm.ext.t[i], pm.ext.t[j], branch)
+
+        constraint_phase_angle_diffrence_t(pm.model, pm.ext.t[i], pm.ext.t[j], branch)
+        # Note the thermal limit constraint is captured by the variable bounds
+    end
+end
+
+
+
+
+#=
+
 include("var.jl")
 include("constraint.jl")
 include("obj.jl")
@@ -435,4 +517,4 @@ function SDP_OPF(data, settings)
     return m, abstract_sol
 end
 
-
+=#

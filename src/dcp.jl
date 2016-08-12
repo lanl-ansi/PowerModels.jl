@@ -1,8 +1,7 @@
 # stuff that is universal to these variables
 
 export 
-    DCPPowerModel, DCPData,
-    test_dc
+    DCPPowerModel, DCPData
 
 type DCPData 
     t
@@ -19,55 +18,15 @@ function DCPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractStr
 end
 
 function add_vars(pm::DCPPowerModel)
-    pm.ext.t  = phase_angle_variables(pm.model, pm.set.bus_indexes)
-    pm.ext.pg = active_generation_variables(pm.model, pm.set.gens, pm.set.gen_indexes)
+    pm.ext.t  = phase_angle_variables(pm)
+    pm.ext.pg = active_generation_variables(pm)
 
-    p = line_flow_variables(pm.model, pm.set.arcs_from, pm.set.branches, pm.set.branch_indexes)
+    p = line_flow_variables(pm; both_sides = false)
     p_expr = [(l,i,j) => 1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from]
     p_expr = merge(p_expr, [(l,j,i) => -1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from])
     pm.ext.p = p_expr
 end
 
-function post_constraints(pm::DCPPowerModel)
-    @constraint(pm.model, pm.ext.t[pm.set.ref_bus] == 0)
-
-    for (i,bus) in pm.set.buses
-        bus_branches = filter(x -> x[2] == i, pm.set.arcs)
-        constraint_active_kcl_shunt_const(pm.model, pm.ext.p, pm.ext.pg, bus, bus_branches, pm.set.bus_gens[i])
-    end
-
-    for (l,i,j) in pm.set.arcs_from
-        branch = pm.set.branches[l]
-        constraint_active_ohms_linear(pm.model, pm.ext.p[(l,i,j)], pm.ext.t[i], pm.ext.t[j], branch)
-
-        constraint_phase_angle_diffrence_t(pm.model, pm.ext.t[i], pm.ext.t[j], branch)
-        # Note the thermal limit constraint is captured by the variable bounds
-    end
-
-end
-
-function post_objective(pm::DCPPowerModel)
-    objective_min_fuel_cost(pm.model, pm.ext.pg, pm.set.gens, pm.set.gen_indexes)
-end
-
-function post_dc_opf(pm::DCPPowerModel)
-    add_vars(pm)
-    post_constraints(pm)
-    post_objective(pm)
-end
-
-using Ipopt
-
-function test_dc()
-    data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"));
-    data = parse_matpower(data_string);
-
-    apm = DCPPowerModel(data);
-    post_dc_opf(apm)
-
-    setsolver(apm, IpoptSolver())
-    solve(apm)
-end
 
 function getsolution(pm::DCPPowerModel)
     sol = Dict{AbstractString,Any}()

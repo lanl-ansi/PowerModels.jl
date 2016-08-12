@@ -1,8 +1,7 @@
 # stuff that is universal to these variables
 
 export 
-    ACPPowerModel, ACPData,
-    test_ac
+    ACPPowerModel, ACPData
 
 type ACPData 
     t
@@ -22,23 +21,22 @@ function ACPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractStr
 end
 
 function add_vars(pm::ACPPowerModel)
-    pm.ext.t  = phase_angle_variables(pm.model, pm.set.bus_indexes)
-    pm.ext.v  = voltage_magnitude_variables(pm.model, pm.set.buses, pm.set.bus_indexes; start = create_default_start(pm.set.bus_indexes, 1.0, "v_start"))
+    pm.ext.t  = phase_angle_variables(pm)
+    pm.ext.v  = voltage_magnitude_variables(pm)
 
-    pm.ext.pg = active_generation_variables(pm.model, pm.set.gens, pm.set.gen_indexes)
-    pm.ext.qg = reactive_generation_variables(pm.model, pm.set.gens, pm.set.gen_indexes)
+    pm.ext.pg = active_generation_variables(pm)
+    pm.ext.qg = reactive_generation_variables(pm)
 
-    pm.ext.p  = line_flow_variables(pm.model, pm.set.arcs, pm.set.branches, pm.set.branch_indexes)
-    pm.ext.q  = line_flow_variables(pm.model, pm.set.arcs, pm.set.branches, pm.set.branch_indexes)
+    pm.ext.p  = line_flow_variables(pm)
+    pm.ext.q  = line_flow_variables(pm)
 end
 
 function post_constraints(pm::ACPPowerModel)
     @constraint(pm.model, pm.ext.t[pm.set.ref_bus] == 0)
 
     for (i,bus) in pm.set.buses
-        bus_branches = filter(x -> x[2] == i, pm.set.arcs)
-        constraint_active_kcl_shunt_v(pm.model, pm.ext.p, pm.ext.pg, pm.ext.v[i], bus, bus_branches, pm.set.bus_gens[i])
-        constraint_reactive_kcl_shunt_v(pm.model, pm.ext.q, pm.ext.qg, pm.ext.v[i], bus, bus_branches, pm.set.bus_gens[i])
+        constraint_active_kcl_shunt_v(pm.model, pm.ext.p, pm.ext.pg, pm.ext.v[i], bus, pm.setbus_branches[i], pm.set.bus_gens[i])
+        constraint_reactive_kcl_shunt_v(pm.model, pm.ext.q, pm.ext.qg, pm.ext.v[i], bus, pm.setbus_branches[i], pm.set.bus_gens[i])
     end
 
     for (l,i,j) in pm.set.arcs_from
@@ -54,28 +52,7 @@ function post_constraints(pm::ACPPowerModel)
 
 end
 
-function post_objective(pm::ACPPowerModel)
-    objective_min_fuel_cost(pm.model, pm.ext.pg, pm.set.gens, pm.set.gen_indexes)
-end
 
-function post_ac_opf(pm::ACPPowerModel)
-    add_vars(pm)
-    post_constraints(pm)
-    post_objective(pm)
-end
-
-using Ipopt
-
-function test_ac()
-    data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"));
-    data = parse_matpower(data_string);
-
-    apm = ACPPowerModel(data);
-    post_ac_opf(apm)
-
-    setsolver(apm, IpoptSolver())
-    solve(apm)
-end
 
 function getsolution(pm::ACPPowerModel)
     sol = Dict{AbstractString,Any}()

@@ -14,6 +14,38 @@ function create_default_start(indexes, value, tag)
   return start
 end
 
+
+function phase_angle_variables{T}(pm::GenericPowerModel{T})
+  @variable(pm.model, t[i in pm.set.bus_indexes])
+  return t
+end
+
+function voltage_magnitude_variables{T}(pm::GenericPowerModel{T})
+  @variable(pm.model, pm.set.buses[i]["vmin"] <= v[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"])
+  return v
+end
+
+function active_generation_variables{T}(pm::GenericPowerModel{T})
+  @variable(pm.model, pm.set.gens[i]["pmin"] <= pg[i in pm.set.gen_indexes] <= pm.set.gens[i]["pmax"])
+  return pg
+end
+
+function reactive_generation_variables{T}(pm::GenericPowerModel{T})
+  @variable(pm.model, pm.set.gens[i]["qmin"] <= qg[i in pm.set.gen_indexes] <= pm.set.gens[i]["qmax"])
+  return qg
+end
+
+function line_flow_variables{T}(pm::GenericPowerModel{T}; both_sides = true)
+  if both_sides
+    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= f[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"])
+  else
+    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= f[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"])
+  end
+  return f
+end
+
+
+
 # Creates variables associated with phase angles at each bus
 function phase_angle_variables(m, bus_indexes; start = create_default_start(bus_indexes,0,"theta_start"))
   @variable(m, theta[i in bus_indexes], start = start[i]["theta_start"])

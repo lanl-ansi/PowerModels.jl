@@ -17,7 +17,8 @@ type PowerDataSets
     bus_gens
     arcs_from
     arcs_to
-    arcs 
+    arcs
+    bus_branches
 end
 
 abstract AbstractPowerModel
@@ -152,14 +153,21 @@ function build_sets(data :: Dict{AbstractString,Any})
     gen_lookup = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(bus_lookup), gen_lookup)
     branch_lookup = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(bus_lookup) && branch["t_bus"] in keys(bus_lookup), branch_lookup)
 
+
+    arcs_from = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in branch_lookup]
+    arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
+    arcs = [arcs_from; arcs_to] 
+
     bus_gens = [i => [] for (i,bus) in bus_lookup]
     for (i,gen) in gen_lookup
         push!(bus_gens[gen["gen_bus"]], i)
     end
 
-    arcs_from = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in branch_lookup]
-    arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
-    arcs = [arcs_from; arcs_to] 
+    bus_branches = [i => [] for (i,bus) in arcs_from]
+    for (l,i,j) in arcs
+        push!(bus_branches[i], (l,i,j))
+        push!(bus_branches[j], (l,j,i))
+    end
 
     #ref_bus = [i for (i,bus) in bus_lookup | bus["bus_type"] == 3][1]
     ref_bus = Union{}
@@ -170,11 +178,12 @@ function build_sets(data :: Dict{AbstractString,Any})
         end
     end
 
+
     bus_idxs = collect(keys(bus_lookup))
     gen_idxs = collect(keys(gen_lookup))
     branch_idxs = collect(keys(branch_lookup))
 
-    return PowerDataSets(ref_bus, bus_lookup, bus_idxs, gen_lookup, gen_idxs, branch_lookup, branch_idxs, bus_gens, arcs_from, arcs_to, arcs)
+    return PowerDataSets(ref_bus, bus_lookup, bus_idxs, gen_lookup, gen_idxs, branch_lookup, branch_idxs, bus_gens, arcs_from, arcs_to, arcs, bus_branches)
 end
 
 
