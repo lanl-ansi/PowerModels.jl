@@ -32,13 +32,6 @@ function add_vars(pm::ACPPowerModel)
 end
 
 function post_constraints(pm::ACPPowerModel)
-    @constraint(pm.model, pm.ext.t[pm.set.ref_bus] == 0)
-
-    for (i,bus) in pm.set.buses
-        constraint_active_kcl_shunt_v(pm.model, pm.ext.p, pm.ext.pg, pm.ext.v[i], bus, pm.setbus_branches[i], pm.set.bus_gens[i])
-        constraint_reactive_kcl_shunt_v(pm.model, pm.ext.q, pm.ext.qg, pm.ext.v[i], bus, pm.setbus_branches[i], pm.set.bus_gens[i])
-    end
-
     for (l,i,j) in pm.set.arcs_from
         branch = pm.set.branches[l]
         constraint_active_ohms_v_yt(pm.model, pm.ext.p[(l,i,j)], pm.ext.p[(l,j,i)], pm.ext.v[i], pm.ext.v[j], pm.ext.t[i], pm.ext.t[j], branch)
@@ -51,6 +44,106 @@ function post_constraints(pm::ACPPowerModel)
     end
 
 end
+
+function constraint_theta_ref(pm::ACPPowerModel)
+    @constraint(pm.model, pm.ext.t[pm.set.ref_bus] == 0)
+end
+
+function constraint_active_kcl_shunt(pm::ACPPowerModel, bus)
+    i = bus["index"]
+    bus_branches = pm.set.bus_branches[i]
+    bus_gens = pm.set.bus_gens[i]
+
+    @constraint(pm.model, sum{pm.ext.p[a], a in bus_branches} == sum{pm.ext.pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*pm.ext.v[i]^2)
+end
+
+function constraint_reactive_kcl_shunt(pm::ACPPowerModel, bus)
+    i = bus["index"]
+    bus_branches = pm.set.bus_branches[i]
+    bus_gens = pm.set.bus_gens[i]
+
+    @constraint(pm.model, sum{pm.ext.q[a], a in bus_branches} == sum{pm.ext.qg[g], g in bus_gens} - bus["qd"] + bus["bs"]*pm.ext.v[i]^2)
+end
+
+# Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
+function constraint_active_ohms_yt(pm::ACPPowerModel, branch)
+  i = branch["index"]
+  f_bus = branch["f_bus"]
+  t_bus = branch["t_bus"]
+  f_idx = (i, f_bus, t_bus)
+  t_idx = (i, t_bus, f_bus)
+  
+  p_fr = pm.ext.p[f_idx]
+  p_to = pm.ext.p[t_idx]
+  v_fr = pm.ext.v[f_bus]
+  v_to = pm.ext.v[t_bus]
+  t_fr = pm.ext.t[f_bus]
+  t_to = pm.ext.t[t_bus]
+
+  g = branch["g"]
+  b = branch["b"]
+  c = branch["br_b"]
+  tr = branch["tr"]
+  ti = branch["ti"]
+  tm = tr^2 + ti^2 
+
+  @NLconstraint(pm.model, p_fr == g/tm*v_fr^2 + (-g*tr+b*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-b*tr-g*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
+  @NLconstraint(pm.model, p_to ==    g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
+end
+
+function constraint_reactive_ohms_yt(pm::ACPPowerModel, branch)
+  i = branch["index"]
+  f_bus = branch["f_bus"]
+  t_bus = branch["t_bus"]
+  f_idx = (i, f_bus, t_bus)
+  t_idx = (i, t_bus, f_bus)
+  
+  q_fr = pm.ext.q[f_idx]
+  q_to = pm.ext.q[t_idx]
+  v_fr = pm.ext.v[f_bus]
+  v_to = pm.ext.v[t_bus]
+  t_fr = pm.ext.t[f_bus]
+  t_to = pm.ext.t[t_bus]
+
+  g = branch["g"]
+  b = branch["b"]
+  c = branch["br_b"]
+  tr = branch["tr"]
+  ti = branch["ti"]
+  tm = tr^2 + ti^2 
+
+  @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*v_fr^2 - (-b*tr-g*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-g*tr+b*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
+  @NLconstraint(pm.model, q_to ==    -(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
+end
+
+function constraint_phase_angle_diffrence(pm::ACPPowerModel, branch)
+  i = branch["index"]
+  f_bus = branch["f_bus"]
+  t_bus = branch["t_bus"]
+
+  t_fr = pm.ext.t[f_bus]
+  t_to = pm.ext.t[t_bus]
+
+  @constraint(pm.model, t_fr - t_to <= branch["angmax"])
+  @constraint(pm.model, t_fr - t_to >= branch["angmin"])
+end
+
+function constraint_thermal_limit(pm::ACPPowerModel, branch) 
+  i = branch["index"]
+  f_bus = branch["f_bus"]
+  t_bus = branch["t_bus"]
+  f_idx = (i, f_bus, t_bus)
+  t_idx = (i, t_bus, f_bus)
+
+  p_fr = pm.ext.p[f_idx]
+  p_to = pm.ext.p[t_idx]
+  q_fr = pm.ext.q[f_idx]
+  q_to = pm.ext.q[t_idx]
+
+  @constraint(pm.model, p_fr^2 + q_fr^2 <= branch["rate_a"]^2)
+  @constraint(pm.model, p_to^2 + q_to^2 <= branch["rate_a"]^2)
+end
+
 
 
 

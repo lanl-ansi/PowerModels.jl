@@ -5,19 +5,6 @@
 
 include("relaxation_scheme.jl")
 
-function constraint_active_kcl_shunt_const(m, p, pg, bus, bus_branches, bus_gens; v=1.0, pd = bus["pd"])
-  @constraint(m, sum{p[a], a=bus_branches} == sum{pg[g], g=bus_gens} - pd - bus["gs"]*v^2)
-end
-
-# Creates Kirchoff constraints for AC models
-function constraint_active_kcl_shunt_v(m, p, pg, v, bus, bus_branches, bus_gens; pd = bus["pd"])
-  @constraint(m, sum{p[a], a=bus_branches} == sum{pg[g], g=bus_gens} - pd - bus["gs"]*v^2)
-end
-
-function constraint_reactive_kcl_shunt_v(m, q, qg, v, bus, bus_branches, bus_gens; qd = bus["qd"])
-  @constraint(m, sum{q[a], a=bus_branches} == sum{qg[g], g=bus_gens} - qd + bus["bs"]*v^2)
-end
-
 function constraint_active_kcl_shunt_w(m, p, pg, w, bus, bus_branches, bus_gens; pd = bus["pd"])
   @constraint(m, sum{p[a], a=bus_branches} == sum{pg[g], g=bus_gens} - pd - bus["gs"]*w)
 end
