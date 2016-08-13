@@ -8,14 +8,14 @@ type DCPVars <: AbstractPowerVars
     pg
     p
     p_expr
+    DCPVars() = new()
 end
 
 typealias DCPPowerModel GenericPowerModel{DCPVars}
 
 # default DC constructor
 function DCPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    mdata = DCPVars(nothing, nothing, nothing, nothing)
-    return GenericPowerModel(data, mdata; setting = setting)
+    return GenericPowerModel(data, DCPVars(); setting = setting)
 end
 
 function init_vars(pm::DCPPowerModel)

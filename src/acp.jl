@@ -10,14 +10,14 @@ type ACPVars <: AbstractPowerVars
     qg
     p
     q
+    ACPVars() = new()
 end
 
 typealias ACPPowerModel GenericPowerModel{ACPVars}
 
 # default AC constructor
 function ACPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    mdata = ACPVars(nothing, nothing, nothing, nothing, nothing, nothing)
-    return GenericPowerModel(data, mdata; setting = setting)
+    return GenericPowerModel(data, ACPVars(); setting = setting)
 end
 
 function init_vars(pm::ACPPowerModel)
@@ -30,6 +30,8 @@ function init_vars(pm::ACPPowerModel)
     pm.var.p  = line_flow_variables(pm)
     pm.var.q  = line_flow_variables(pm)
 end
+
+
 
 function constraint_theta_ref(pm::ACPPowerModel)
     @constraint(pm.model, pm.var.t[pm.set.ref_bus] == 0)

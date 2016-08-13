@@ -35,17 +35,10 @@ end
 
 
 function init_vars{T}(pm::GenericPowerModel{T}) end
-function init_vars{T}(pm::GenericPowerModel{T}) end
-
 
 # default generic constructor
-function GenericPowerModel{T}(data::Dict{AbstractString,Any}, var::T; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    make_per_unit(data)
-    unify_transformer_taps(data)
-    add_branch_parameters(data)
-    standardize_cost_order(data)
-
-    sets = build_sets(data)
+function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
+    data, sets = process_raw_data(data)
 
     pm = GenericPowerModel{T}(
         Model(), # model
@@ -53,12 +46,23 @@ function GenericPowerModel{T}(data::Dict{AbstractString,Any}, var::T; setting::D
         sets, # sets
         setting, # setting
         Dict{AbstractString,Any}(), # solution
-        var # variables
+        vars #variables
     )
     init_vars(pm)
     return pm
 end
 
+
+function process_raw_data(data::Dict{AbstractString,Any})
+    make_per_unit(data)
+    unify_transformer_taps(data)
+    add_branch_parameters(data)
+    standardize_cost_order(data)
+
+    sets = build_sets(data)
+
+    return data, sets
+end
 
 type WRData <: AbstractPowerVars end
 typealias WRPowerModel GenericPowerModel{WRData}
@@ -87,18 +91,16 @@ end
 #end
 
 
-function setdata{T}(pm::GenericPowerModel{T}, data::Dict{AbstractString,Any})
-    make_per_unit(data)
-    unify_transformer_taps(data)
-    add_branch_parameters(data)
-    standardize_cost_order(data)
 
-    sets = build_sets(data)
+function setdata{T}(pm::GenericPowerModel{T}, data::Dict{AbstractString,Any})
+    data, sets = process_raw_data(data)
 
     pm.model = Model()
     pm.set = sets
     pm.solution = Dict{AbstractString,Any}()
     pm.data = data
+
+    init_vars(pm)
 end
 
 # TODO Ask Miles, why do we need to put JuMP here?  using at top level should bring it in

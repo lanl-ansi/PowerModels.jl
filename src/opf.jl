@@ -1,6 +1,3 @@
-using Ipopt
-
-export test_ac_opf, test_dc_opf
 
 function post_opf{T}(pm::GenericPowerModel{T})
     constraint_theta_ref(pm)
@@ -21,30 +18,6 @@ function post_opf{T}(pm::GenericPowerModel{T})
 
     post_objective_min_fuel_cost(pm)
 end
-
-
-function test_ac_opf()
-    data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"));
-    data = parse_matpower(data_string);
-
-    apm = ACPPowerModel(data);
-    post_opf(apm)
-
-    setsolver(apm, IpoptSolver())
-    solve(apm)
-end
-
-function test_dc_opf()
-    data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"));
-    data = parse_matpower(data_string);
-
-    apm = DCPPowerModel(data);
-    post_opf(apm)
-
-    setsolver(apm, IpoptSolver())
-    solve(apm)
-end
-
 
 
 
