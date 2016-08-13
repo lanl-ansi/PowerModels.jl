@@ -1,8 +1,7 @@
 # stuff that is universal to all power models
 
 export 
-    WRPowerModel, GenericPowerModel,
-    WRData,
+    GenericPowerModel,
     setdata, setsolver, solve, getsolution
 
 
@@ -19,6 +18,8 @@ type PowerDataSets
     arcs_to
     arcs
     bus_branches
+    buspairs
+    buspair_indexes
 end
 
 abstract AbstractPowerModel
@@ -35,6 +36,7 @@ end
 
 
 function init_vars{T}(pm::GenericPowerModel{T}) end
+function constraint_voltage_relaxation{T}(pm::GenericPowerModel{T}) end
 
 # default generic constructor
 function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
@@ -49,6 +51,7 @@ function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting::
         vars #variables
     )
     init_vars(pm)
+    constraint_voltage_relaxation(pm)
     return pm
 end
 
@@ -63,15 +66,6 @@ function process_raw_data(data::Dict{AbstractString,Any})
 
     return data, sets
 end
-
-type WRData <: AbstractPowerVars end
-typealias WRPowerModel GenericPowerModel{WRData}
-
-# default WR constructor
-function WRPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}(), var::WRData = WRData())
-    return GenericPowerModel(data, var; setting = setting)
-end
-
 
 
 #function testit(val::ACPPowerModel)
@@ -91,17 +85,20 @@ end
 #end
 
 
+#
+# Just seems too hard to maintain with the constructor
+#
+#function setdata{T}(pm::GenericPowerModel{T}, data::Dict{AbstractString,Any})
+#    data, sets = process_raw_data(data)
 
-function setdata{T}(pm::GenericPowerModel{T}, data::Dict{AbstractString,Any})
-    data, sets = process_raw_data(data)
+#    pm.model = Model()
+#    pm.set = sets
+#    pm.solution = Dict{AbstractString,Any}()
+#    pm.data = data
 
-    pm.model = Model()
-    pm.set = sets
-    pm.solution = Dict{AbstractString,Any}()
-    pm.data = data
+#    init_vars(pm)
+#end
 
-    init_vars(pm)
-end
 
 # TODO Ask Miles, why do we need to put JuMP here?  using at top level should bring it in
 function setsolver{T}(pm::GenericPowerModel{T}, solver::MathProgBase.AbstractMathProgSolver)
@@ -188,12 +185,45 @@ function build_sets(data :: Dict{AbstractString,Any})
         end
     end
 
-
     bus_idxs = collect(keys(bus_lookup))
     gen_idxs = collect(keys(gen_lookup))
     branch_idxs = collect(keys(branch_lookup))
 
-    return PowerDataSets(ref_bus, bus_lookup, bus_idxs, gen_lookup, gen_idxs, branch_lookup, branch_idxs, bus_gens, arcs_from, arcs_to, arcs, bus_branches)
+
+    buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
+    buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)  
+
+    return PowerDataSets(ref_bus, bus_lookup, bus_idxs, gen_lookup, gen_idxs, branch_lookup, branch_idxs, bus_gens, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
+end
+
+
+# compute bus pair level structures
+function buspair_parameters(buspair_indexes, branches, buses)
+    bp_angmin = [bp => -Inf for bp in buspair_indexes] 
+    bp_angmax = [bp =>  Inf for bp in buspair_indexes] 
+    bp_line = [bp => Inf for bp in buspair_indexes]
+
+    for (l,branch) in branches
+        i = branch["f_bus"]
+        j = branch["t_bus"]
+
+        bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
+        bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
+        bp_line[(i,j)] = min(bp_line[(i,j)], l)
+    end
+
+    buspairs = [(i,j) => Dict(
+        "line"=>bp_line[(i,j)], 
+        "angmin"=>bp_angmin[(i,j)], 
+        "angmax"=>bp_angmax[(i,j)],
+        "rate_a"=>branches[bp_line[(i,j)]]["rate_a"],
+        "tap"=>branches[bp_line[(i,j)]]["tap"],
+        "v_from_min"=>buses[i]["vmin"],
+        "v_from_max"=>buses[i]["vmax"],
+        "v_to_min"=>buses[j]["vmin"],
+        "v_to_max"=>buses[j]["vmax"]
+        ) for (i,j) in buspair_indexes]
+    return buspairs
 end
 
 

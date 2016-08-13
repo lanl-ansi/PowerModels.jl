@@ -14,6 +14,11 @@ function voltage_magnitude_variables{T}(pm::GenericPowerModel{T})
   return v
 end
 
+function voltage_magnitude_sqr_variables{T}(pm::GenericPowerModel{T})
+  @variable(pm.model, pm.set.buses[i]["vmin"]^2 <= w[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"]^2)
+  return w
+end
+
 function active_generation_variables{T}(pm::GenericPowerModel{T})
   @variable(pm.model, pm.set.gens[i]["pmin"] <= pg[i in pm.set.gen_indexes] <= pm.set.gens[i]["pmax"])
   return pg
@@ -34,8 +39,44 @@ function line_flow_variables{T}(pm::GenericPowerModel{T}; both_sides = true)
 end
 
 
+# Creates variables associated with cosine terms in the AC power flow models for SOC models
+function complex_voltage_product_variables{T}(pm::GenericPowerModel{T})
+  buspairs = pm.set.buspairs
+  buspair_indexes = pm.set.buspair_indexes
 
+  wr_min = [bp => -Inf for bp in buspair_indexes] 
+  wr_max = [bp =>  Inf for bp in buspair_indexes] 
+  wi_min = [bp => -Inf for bp in buspair_indexes]
+  wi_max = [bp =>  Inf for bp in buspair_indexes] 
 
+  for bp in buspair_indexes
+    i,j = bp
+    buspair = buspairs[bp]
+    if buspair["angmin"] >= 0
+      wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*cos(buspair["angmin"])
+      wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*cos(buspair["angmax"])
+      wi_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmax"])
+      wi_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*sin(buspair["angmin"])
+    end
+    if buspair["angmax"] <= 0
+      wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*cos(buspair["angmax"])
+      wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*cos(buspair["angmin"])
+      wi_max[bp] = buspair["v_from_min"]*buspair["v_to_min"]*sin(buspair["angmax"])
+      wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
+    end
+    if buspair["angmin"] < 0 && buspair["angmax"] > 0
+      wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*1.0
+      wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*min(cos(buspair["angmin"]), cos(buspair["angmax"]))
+      wi_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmax"])
+      wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
+    end
+  end
+  
+  @variable(pm.model, wr_min[bp] <= wr[bp in buspair_indexes] <= wr_max[bp]) 
+  @variable(pm.model, wi_min[bp] <= wi[bp in buspair_indexes] <= wi_max[bp])
+
+  return wr, wi
+end
 
 
 
@@ -159,58 +200,6 @@ function voltage_magnitude_sqr_to_on_off_variables(m, z, branch_indexes, branche
   return w_to
 end
 
-
-# Creates variables associated with cosine terms in the AC power flow models for SOC models
-function real_complex_product_variables(m, buspairs, buspair_indexes; start = create_default_start(buspair_indexes,1.0, "wr_start"))
-  wr_min = [bp => -Inf for bp in buspair_indexes] 
-  wr_max = [bp =>  Inf for bp in buspair_indexes] 
-
-  for bp in buspair_indexes
-    i,j = bp
-    buspair = buspairs[bp]
-    if buspair["angmin"] >= 0
-      wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*cos(buspair["angmin"])
-      wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*cos(buspair["angmax"])
-    end
-    if buspair["angmax"] <= 0
-      wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*cos(buspair["angmax"])
-      wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*cos(buspair["angmin"])
-    end
-    if buspair["angmin"] < 0 && buspair["angmax"] > 0
-      wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*1.0
-      wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*min(cos(buspair["angmin"]), cos(buspair["angmax"]))
-    end
-  end
-  
-  @variable(m, wr_min[bp] <= wr[bp in buspair_indexes] <= wr_max[bp], start = start[bp]["wr_start"]) 
-  return wr
-end
-
-# Creates variables associated with sine terms in the AC power flow models for SOC models
-function imaginary_complex_product_variables(m, buspairs, buspair_indexes; start = create_default_start(buspair_indexes,0, "wi_start"))
-  wi_min = [bp => -Inf for bp in buspair_indexes]
-  wi_max = [bp =>  Inf for bp in buspair_indexes] 
-
-  for bp in buspair_indexes
-    i,j = bp
-    buspair = buspairs[bp]
-    if buspair["angmin"] >= 0
-      wi_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmax"])
-      wi_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*sin(buspair["angmin"])
-    end
-    if buspair["angmax"] <= 0
-      wi_max[bp] = buspair["v_from_min"]*buspair["v_to_min"]*sin(buspair["angmax"])
-      wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
-    end
-    if buspair["angmin"] < 0 && buspair["angmax"] > 0
-      wi_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmax"])
-      wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
-    end
-  end
-  
-  @variable(m, wi_min[bp] <= wi[bp in buspair_indexes] <= wi_max[bp], start = start[bp]["wi_start"])
-  return wi 
-end
 
 
 

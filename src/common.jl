@@ -185,34 +185,6 @@ end
 
 
 
-# compute bus pair level structures
-function buspair_parameters(buspair_indexes, branches, buses)
-    bp_angmin = [bp => -Inf for bp in buspair_indexes] 
-    bp_angmax = [bp =>  Inf for bp in buspair_indexes] 
-    bp_line = [bp => Inf for bp in buspair_indexes]
-
-    for (l,branch) in branches
-        i = branch["f_bus"]
-        j = branch["t_bus"]
-
-        bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
-        bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
-        bp_line[(i,j)] = min(bp_line[(i,j)], l)
-    end
-
-    buspairs = [(i,j) => Dict(
-        "line"=>bp_line[(i,j)], 
-        "angmin"=>bp_angmin[(i,j)], 
-        "angmax"=>bp_angmax[(i,j)],
-        "rate_a"=>branches[bp_line[(i,j)]]["rate_a"],
-        "tap"=>branches[bp_line[(i,j)]]["tap"],
-        "v_from_min"=>buses[i]["vmin"],
-        "v_from_max"=>buses[i]["vmax"],
-        "v_to_min"=>buses[j]["vmin"],
-        "v_to_max"=>buses[j]["vmax"]
-        ) for (i,j) in buspair_indexes]
-    return buspairs
-end
 
 
 function calc_max_phase_angle(buses, branches)
