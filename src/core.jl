@@ -99,7 +99,7 @@ end
 #end
 
 
-# TODO Ask Miles, why do we need to put JuMP here?  using at top level should bring it in
+# TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
 function setsolver{T}(pm::GenericPowerModel{T}, solver::MathProgBase.AbstractMathProgSolver)
     JuMP.setsolver(pm.model, solver)
 end
@@ -288,3 +288,68 @@ function unify_transformer_taps(data::Dict{AbstractString,Any})
         end
     end
 end
+
+
+
+function getsolution{T}(pm::GenericPowerModel{T})
+    sol = Dict{AbstractString,Any}()
+    add_bus_voltage_setpoint(sol, pm)
+    add_generator_power_setpoint(sol, pm)
+    add_branch_flow_setpoint(sol, pm)
+    return sol
+end
+
+function add_bus_voltage_setpoint{T}(sol, pm::GenericPowerModel{T})
+    add_setpoint(sol, pm, "bus", "bus_i", "vm", :v)
+    add_setpoint(sol, pm, "bus", "bus_i", "va", :t; scale = (x) -> x*180/pi)
+end
+
+function add_generator_power_setpoint{T}(sol, pm::GenericPowerModel{T})
+    mva_base = pm.data["baseMVA"]
+    add_setpoint(sol, pm, "gen", "index", "pg", :pg; scale = (x) -> x*mva_base)
+    add_setpoint(sol, pm, "gen", "index", "qg", :qg; scale = (x) -> x*mva_base)
+end
+
+function add_branch_flow_setpoint{T}(sol, pm::GenericPowerModel{T})
+    # check the line flows were requested
+    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
+        mva_base = pm.data["baseMVA"]
+
+        add_setpoint(sol, pm, "branch", "index", "p_from", :p; scale = (x) -> x*mva_base, (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint(sol, pm, "branch", "index", "q_from", :q; scale = (x) -> x*mva_base, (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint(sol, pm, "branch", "index",   "p_to", :p; scale = (x) -> x*mva_base, (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+        add_setpoint(sol, pm, "branch", "index",   "q_to", :q; scale = (x) -> x*mva_base, (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+    end
+end
+
+function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, param_name, variable_symbol; default_value = NaN, scale = (x) -> x, get_index = (x, item) -> x)
+    sol_dict = nothing
+    if !haskey(sol, dict_name)
+        sol_dict = Dict{Int,Any}()
+        sol[dict_name] = sol_dict
+    else
+        sol_dict = sol[dict_name]
+    end
+
+    for item in pm.data[dict_name]
+        idx = Int(item[index_name])
+
+        sol_item = nothing
+        if !haskey(sol_dict, idx)
+            sol_item = Dict{AbstractString,Any}()
+            sol_dict[idx] = sol_item
+        else
+            sol_item = sol_dict[idx]
+        end
+        sol_item[param_name] = default_value
+
+        try
+            val = getvalue(getvariable(pm.model, variable_symbol)[get_index(idx, item)])
+            sol_item[param_name] = scale(val)
+        catch
+        end
+    end
+end
+
+
+
