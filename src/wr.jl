@@ -1,17 +1,11 @@
 export 
-    SOCWPowerModel, WRVars
+    SOCWRPowerModel, SOCWRForm,
+    SDPWRPowerModel, SDPWRForm
 
-type WRVars <: AbstractPowerVars
-end
 
-typealias SOCWPowerModel GenericPowerModel{WRVars}
+abstract AbstractWRForm <: AbstractPowerFormulation
 
-# default AC constructor
-function SOCWPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    return GenericPowerModel(data, WRVars(); setting = setting)
-end
-
-function init_vars(pm::SOCWPowerModel)
+function init_vars{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     voltage_magnitude_sqr_variables(pm)
     complex_voltage_product_variables(pm)
 
@@ -22,7 +16,17 @@ function init_vars(pm::SOCWPowerModel)
     reactive_line_flow_variables(pm)
 end
 
-function constraint_voltage_relaxation(pm::SOCWPowerModel)
+
+
+
+type SOCWRForm <: AbstractWRForm end
+typealias SOCWRPowerModel GenericPowerModel{SOCWRForm}
+
+function SOCWRPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
+    return GenericPowerModel(data, SOCWRForm(); setting = setting)
+end
+
+function constraint_voltage_relaxation(pm::SOCWRPowerModel)
     w = getvariable(pm.model, :w)
     wr = getvariable(pm.model, :wr)
     wi = getvariable(pm.model, :wi)
@@ -34,11 +38,92 @@ end
 
 
 
-function constraint_theta_ref(pm::SOCWPowerModel)
+type SDPWRForm <: AbstractWRForm end
+typealias SDPWRPowerModel GenericPowerModel{SDPWRForm}
+
+function SDPWRPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
+    return GenericPowerModel(data, SDPWRForm(); setting = setting)
+end
+
+
+#TODO get Miles Help with this
+function constraint_voltage_relaxation(pm::SDPWRPowerModel)
+    w = getvariable(pm.model, :w)
+    wr = getvariable(pm.model, :wr)
+    wi = getvariable(pm.model, :wi)
+
+    w_index = 1:length(pm.set.bus_indexes)
+    lookup_w_index = [i => bi for (i, bi) in enumerate(pm.set.bus_indexes)]
+
+    #@variable(m, WR[1:length(bus_indexes), 1:length(bus_indexes)], Symmetric)
+    #@variable(m, WI[1:length(bus_indexes), 1:length(bus_indexes)])
+
+    lookup_wr = function(i,j)
+        w_idx = lookup_w_index[i]
+        w_jdx = lookup_w_index[j]
+        if w_idx == w_jdx
+            return w[w_idx]
+        else
+            if w_idx < w_jdx
+                try
+                    return wr[(w_idx, w_jdx)]
+                catch
+                    return zero(AffExpr)
+                end
+            else
+                try
+                    return wr[(w_jdx, w_jdx)]
+                catch
+                    return zero(AffExpr)
+                end
+            end
+        end
+    end
+
+    lookup_wi = function(i,j)
+        w_idx = lookup_w_index[i]
+        w_jdx = lookup_w_index[j]
+        if w_idx == w_jdx
+            return zero(AffExpr)
+        else
+            if w_idx < w_jdx
+                try
+                    return wi[(w_idx, w_jdx)]
+                catch
+                    return zero(AffExpr)
+                end
+            else
+                try
+                    return -wi[(w_jdx, w_idx)]
+                catch
+                    return zero(AffExpr)
+                end
+            end
+        end
+    end
+
+    WR = [ lookup_wr(i,j) for i in w_index, j in w_index]
+    WI = [ lookup_wi(i,j) for i in w_index, j in w_index]
+
+    println(WR)
+    println(WI)
+    # follow this: http://docs.mosek.com/modeling-cookbook/sdo.html
+    #@SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
+
+    # place holder while debugging sdp constraint
+    for (i,j) in pm.set.buspair_indexes
+        complex_product_relaxation(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
+    end
+
+end
+
+
+
+function constraint_theta_ref{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     # Do nothing, no way to represent this in these variables
 end
 
-function constraint_active_kcl_shunt(pm::SOCWPowerModel, bus)
+function constraint_active_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
     bus_branches = pm.set.bus_branches[i]
     bus_gens = pm.set.bus_gens[i]
@@ -50,7 +135,7 @@ function constraint_active_kcl_shunt(pm::SOCWPowerModel, bus)
     @constraint(pm.model, sum{p[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*w[i])
 end
 
-function constraint_reactive_kcl_shunt(pm::SOCWPowerModel, bus)
+function constraint_reactive_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
     bus_branches = pm.set.bus_branches[i]
     bus_gens = pm.set.bus_gens[i]
@@ -63,7 +148,7 @@ function constraint_reactive_kcl_shunt(pm::SOCWPowerModel, bus)
 end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
-function constraint_active_ohms_yt(pm::SOCWPowerModel, branch)
+function constraint_active_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -88,7 +173,7 @@ function constraint_active_ohms_yt(pm::SOCWPowerModel, branch)
     @NLconstraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
 end
 
-function constraint_reactive_ohms_yt(pm::SOCWPowerModel, branch)
+function constraint_reactive_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -113,7 +198,7 @@ function constraint_reactive_ohms_yt(pm::SOCWPowerModel, branch)
     @NLconstraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
 end
 
-function constraint_phase_angle_diffrence(pm::SOCWPowerModel, branch)
+function constraint_phase_angle_diffrence{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]

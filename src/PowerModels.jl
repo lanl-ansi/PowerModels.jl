@@ -42,12 +42,24 @@ function test_soc_opf()
     data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"))
     data = parse_matpower(data_string)
 
-    apm = SOCWPowerModel(data)
+    apm = SOCWRPowerModel(data)
     post_opf(apm)
 
     setsolver(apm, IpoptSolver())
     solve(apm)
 end
+
+function test_sdp_opf()
+    data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"))
+    data = parse_matpower(data_string)
+
+    apm = SDPWRPowerModel(data)
+    post_opf(apm)
+
+    setsolver(apm, IpoptSolver())
+    solve(apm)
+end
+
 
 function test_dc_opf()
     data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"))

@@ -3,14 +3,14 @@
 export 
     ACPPowerModel, ACPVars
 
-type ACPVars <: AbstractPowerVars
+type ACPForm <: AbstractPowerFormulation
 end
 
-typealias ACPPowerModel GenericPowerModel{ACPVars}
+typealias ACPPowerModel GenericPowerModel{ACPForm}
 
 # default AC constructor
 function ACPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    return GenericPowerModel(data, ACPVars(); setting = setting)
+    return GenericPowerModel(data, ACPForm(); setting = setting)
 end
 
 function init_vars(pm::ACPPowerModel)

@@ -3,14 +3,14 @@
 export 
     DCPPowerModel, DCPVars
 
-type DCPVars <: AbstractPowerVars
+type DCPForm <: AbstractPowerFormulation
 end
 
-typealias DCPPowerModel GenericPowerModel{DCPVars}
+typealias DCPPowerModel GenericPowerModel{DCPForm}
 
 # default DC constructor
 function DCPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    return GenericPowerModel(data, DCPVars(); setting = setting)
+    return GenericPowerModel(data, DCPForm(); setting = setting)
 end
 
 function init_vars(pm::DCPPowerModel)
