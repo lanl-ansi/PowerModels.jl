@@ -26,6 +26,7 @@ include("opf.jl")
 
 
 using Ipopt
+export test_ac_opf, test_soc_opf, test_sdp_opf, test_dc_opf
 
 function test_ac_opf()
     data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"))
