@@ -31,7 +31,6 @@ type GenericPowerModel{T<:AbstractPowerVars} <: AbstractPowerModel
     set::PowerDataSets
     setting::Dict{AbstractString,Any}
     solution::Dict{AbstractString,Any}
-    var::T
 end
 
 
@@ -48,7 +47,6 @@ function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting::
         sets, # sets
         setting, # setting
         Dict{AbstractString,Any}(), # solution
-        vars #variables
     )
     init_vars(pm)
     constraint_voltage_relaxation(pm)

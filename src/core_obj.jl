@@ -5,7 +5,7 @@
 
 
 function post_objective_min_fuel_cost{T}(pm::GenericPowerModel{T})
-    pg = pm.var.pg
+    pg = getvariable(pm.model, :pg)
     cost = (i) -> pm.set.gens[i]["cost"]
     @objective(pm.model, Min, sum{ cost(i)[1]*pg[i]^2 + cost(i)[2]*pg[i] + cost(i)[3], i in pm.set.gen_indexes} )
 end

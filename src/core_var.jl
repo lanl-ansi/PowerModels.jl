@@ -29,15 +29,23 @@ function reactive_generation_variables{T}(pm::GenericPowerModel{T})
   return qg
 end
 
-function line_flow_variables{T}(pm::GenericPowerModel{T}; both_sides = true)
+function active_line_flow_variables{T}(pm::GenericPowerModel{T}; both_sides = true)
   if both_sides
-    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= f[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"])
+    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"])
   else
-    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= f[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"])
+    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"])
   end
-  return f
+  return p
 end
 
+function reactive_line_flow_variables{T}(pm::GenericPowerModel{T}; both_sides = true)
+  if both_sides
+    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= q[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"])
+  else
+    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= q[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"])
+  end
+  return q
+end
 
 # Creates variables associated with cosine terms in the AC power flow models for SOC models
 function complex_voltage_product_variables{T}(pm::GenericPowerModel{T})
