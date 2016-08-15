@@ -6,30 +6,33 @@ using JSON
 using MathProgBase
 using JuMP
 
-include("common.jl")
-include("matpower.jl")
+include("io/matpower.jl")
 
-include("core.jl")
-include("core_var.jl")
-include("core_const.jl")
-include("core_relaxation_scheme.jl")
-include("core_obj.jl")
+include("core/base.jl")
+include("core/var.jl")
+include("core/constraint.jl")
+include("core/relaxation_scheme.jl")
+include("core/objective.jl")
+include("core/common.jl")
 
-include("acp.jl")
-include("dcp.jl")
-include("wr.jl")
+include("form/acp.jl")
+include("form/dcp.jl")
+include("form/wr.jl")
 
-include("opf.jl")
-#include("ots.jl")
-#include("pf.jl")
-#include("misc.jl")
+include("prob/opf.jl")
+#include("prob/ots.jl")
+#include("prob/pf.jl")
+#include("prob/misc.jl")
+
+
+
 
 
 using Ipopt
 export test_ac_opf, test_soc_opf, test_sdp_opf, test_dc_opf
 
 function test_ac_opf()
-    data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"))
+    data_string = readall(open("../test/data/case30.m"))
     data = parse_matpower(data_string)
 
     apm = ACPPowerModel(data)
@@ -39,8 +42,9 @@ function test_ac_opf()
     solve(apm)
 end
 
+
 function test_soc_opf()
-    data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"))
+    data_string = readall(open("../test/data/case30.m"))
     data = parse_matpower(data_string)
 
     apm = SOCWRPowerModel(data)
@@ -50,8 +54,9 @@ function test_soc_opf()
     solve(apm)
 end
 
+
 function test_sdp_opf()
-    data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"))
+    data_string = readall(open("../test/data/case30.m"))
     data = parse_matpower(data_string)
 
     apm = SDPWRPowerModel(data)
@@ -63,7 +68,7 @@ end
 
 
 function test_dc_opf()
-    data_string = readall(open("/Users/cjc/.julia/v0.4/PowerModels/test/data/case30.m"))
+    data_string = readall(open("../test/data/case30.m"))
     data = parse_matpower(data_string)
 
     apm = DCPPowerModel(data)

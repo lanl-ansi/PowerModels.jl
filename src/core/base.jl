@@ -291,6 +291,26 @@ end
 
 
 
+# NOTE, this function assumes all values are p.u. and angles are in radians
+function add_branch_parameters(data :: Dict{AbstractString,Any})
+    for branch in data["branch"]
+        r = branch["br_r"]
+        x = branch["br_x"]
+        tap_ratio = branch["tap"]
+        angle_shift = branch["shift"]
+
+        branch["g"] =  r/(x^2 + r^2)
+        branch["b"] = -x/(x^2 + r^2)
+        branch["tr"] = tap_ratio*cos(angle_shift)
+        branch["ti"] = tap_ratio*sin(angle_shift)
+    end
+end
+
+
+
+
+
+
 function getsolution{T}(pm::GenericPowerModel{T})
     sol = Dict{AbstractString,Any}()
     add_bus_voltage_setpoint(sol, pm)
