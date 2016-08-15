@@ -9,8 +9,8 @@ end
 typealias ACPPowerModel GenericPowerModel{ACPForm}
 
 # default AC constructor
-function ACPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    return GenericPowerModel(data, ACPForm(); setting = setting)
+function ACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+    return GenericPowerModel(data, ACPForm(); kwargs...)
 end
 
 function init_vars(pm::ACPPowerModel)

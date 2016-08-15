@@ -38,11 +38,11 @@ function init_vars{T}(pm::GenericPowerModel{T}) end
 function constraint_voltage_relaxation{T}(pm::GenericPowerModel{T}) end
 
 # default generic constructor
-function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
+function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
     data, sets = process_raw_data(data)
 
     pm = GenericPowerModel{T}(
-        Model(), # model
+        Model(solver = solver), # model
         data, # data
         sets, # sets
         setting, # setting
@@ -122,7 +122,7 @@ function solve{T}(pm::GenericPowerModel{T})
         solve_time = solve_sec_elapsed
     end
 
-    results = Dict{AbstractString,Any}(
+    solution = Dict{AbstractString,Any}(
         "solver" => string(typeof(pm.model.solver)), 
         "status" => status, 
         "objective" => objective, 
@@ -140,7 +140,9 @@ function solve{T}(pm::GenericPowerModel{T})
             )
         )
 
-    pm.solution = results
+    pm.solution = solution
+
+    return solution
 end
 
 

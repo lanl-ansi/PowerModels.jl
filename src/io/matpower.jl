@@ -75,7 +75,12 @@ function extract_assignment(string)
 end
 
 
-function parse_matpower(data_string)
+function parse_matpower(file_string)
+    data_string = readall(open(file_string))
+    return parse_matpower_data(data_string)
+end
+
+function parse_matpower_data(data_string)
 
     data_lines = split(data_string, '\n')
     #println(data_lines)

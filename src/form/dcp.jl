@@ -9,8 +9,8 @@ end
 typealias DCPPowerModel GenericPowerModel{DCPForm}
 
 # default DC constructor
-function DCPPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    return GenericPowerModel(data, DCPForm(); setting = setting)
+function DCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+    return GenericPowerModel(data, DCPForm(); kwargs...)
 end
 
 function init_vars(pm::DCPPowerModel)

@@ -32,50 +32,51 @@ using Ipopt
 export test_ac_opf, test_soc_opf, test_sdp_opf, test_dc_opf
 
 function test_ac_opf()
-    data_string = readall(open("../test/data/case30.m"))
-    data = parse_matpower(data_string)
+    data = parse_matpower("../test/data/case30.m")
 
-    apm = ACPPowerModel(data)
-    post_opf(apm)
+    pm = ACPPowerModel(data)
+    setsolver(pm, IpoptSolver())
 
-    setsolver(apm, IpoptSolver())
-    solve(apm)
+    post_opf(pm)
+    sol = solve(pm)
+
+    dump(sol)
 end
 
 
 function test_soc_opf()
-    data_string = readall(open("../test/data/case30.m"))
-    data = parse_matpower(data_string)
+    data = parse_matpower("../test/data/case30.m")
 
-    apm = SOCWRPowerModel(data)
-    post_opf(apm)
+    pm = SOCWRPowerModel(data; solver = IpoptSolver())
 
-    setsolver(apm, IpoptSolver())
-    solve(apm)
+    post_opf(pm)
+    sol = solve(pm)
+
+    dump(sol)
 end
 
 
 function test_sdp_opf()
-    data_string = readall(open("../test/data/case30.m"))
-    data = parse_matpower(data_string)
+    data = parse_matpower("../test/data/case30.m")
 
-    apm = SDPWRPowerModel(data)
-    post_opf(apm)
+    pm = SDPWRPowerModel(data; solver = IpoptSolver())
 
-    setsolver(apm, IpoptSolver())
-    solve(apm)
+    post_opf(pm)
+    sol = solve(pm)
+
+    dump(sol)
 end
 
 
 function test_dc_opf()
-    data_string = readall(open("../test/data/case30.m"))
-    data = parse_matpower(data_string)
+    data = parse_matpower("../test/data/case30.m")
 
-    apm = DCPPowerModel(data)
-    post_opf(apm)
+    pm = DCPPowerModel(data; solver = IpoptSolver())
 
-    setsolver(apm, IpoptSolver())
-    solve(apm)
+    post_opf(pm)
+    sol = solve(pm)
+
+    dump(sol)
 end
 
 

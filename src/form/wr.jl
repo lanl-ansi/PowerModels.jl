@@ -8,8 +8,8 @@ abstract AbstractWRForm <: AbstractPowerFormulation
 type SOCWRForm <: AbstractWRForm end
 typealias SOCWRPowerModel GenericPowerModel{SOCWRForm}
 
-function SOCWRPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    return GenericPowerModel(data, SOCWRForm(); setting = setting)
+function SOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+    return GenericPowerModel(data, SOCWRForm(); kwargs...)
 end
 
 function constraint_voltage_relaxation(pm::SOCWRPowerModel)
@@ -136,8 +136,8 @@ end
 type SDPWRForm <: AbstractWRForm end
 typealias SDPWRPowerModel GenericPowerModel{SDPWRForm}
 
-function SDPWRPowerModel(data::Dict{AbstractString,Any}; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}())
-    return GenericPowerModel(data, SDPWRForm(); setting = setting)
+function SDPWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+    return GenericPowerModel(data, SDPWRForm(); kwargs...)
 end
 
 #TODO get Miles Help with this
