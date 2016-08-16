@@ -1,16 +1,15 @@
-# stuff that is universal to these variables
-
 export 
     DCPPowerModel, DCPVars
 
-type DCPForm <: AbstractPowerFormulation
-end
 
-typealias DCPPowerModel GenericPowerModel{DCPForm}
+abstract AbstractDCPForm <: AbstractPowerFormulation
+
+type StandardDCPForm <: AbstractDCPForm end
+typealias DCPPowerModel GenericPowerModel{StandardDCPForm}
 
 # default DC constructor
 function DCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, DCPForm(); kwargs...)
+    return GenericPowerModel(data, StandardDCPForm(); kwargs...)
 end
 
 function init_vars(pm::DCPPowerModel)
@@ -54,10 +53,6 @@ function constraint_active_ohms_yt(pm::DCPPowerModel, branch)
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
-
-    #p_fr = pm.var.p[f_idx]
-    #t_fr = pm.var.t[f_bus]
-    #t_to = pm.var.t[t_bus]
 
     p_fr = getvariable(pm.model, :p)[f_idx]
     t_fr = getvariable(pm.model, :t)[f_bus]
@@ -105,7 +100,7 @@ end
 
 
 
-function add_bus_voltage_setpoint{T <: DCPForm}(sol, pm::GenericPowerModel{T})
+function add_bus_voltage_setpoint{T <: AbstractDCPForm}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :v; default_value = 1)
     add_setpoint(sol, pm, "bus", "bus_i", "va", :t; scale = (x) -> x*180/pi)
 end

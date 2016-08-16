@@ -1,16 +1,15 @@
-# stuff that is universal to these variables
-
 export 
     ACPPowerModel, ACPVars
 
-type ACPForm <: AbstractPowerFormulation
-end
 
-typealias ACPPowerModel GenericPowerModel{ACPForm}
+abstract AbstractACPForm <: AbstractPowerFormulation
+
+type StandardACPForm <: AbstractACPForm end
+typealias ACPPowerModel GenericPowerModel{StandardACPForm}
 
 # default AC constructor
 function ACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, ACPForm(); kwargs...)
+    return GenericPowerModel(data, StandardACPForm(); kwargs...)
 end
 
 function init_vars(pm::ACPPowerModel)

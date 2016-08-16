@@ -2,12 +2,12 @@ export
     SOCWRPowerModel, SOCWRForm,
     SDPWRPowerModel, SDPWRForm
 
-
 abstract AbstractWRForm <: AbstractPowerFormulation
 
 type SOCWRForm <: AbstractWRForm end
 typealias SOCWRPowerModel GenericPowerModel{SOCWRForm}
 
+# default SOC constructor
 function SOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, SOCWRForm(); kwargs...)
 end
