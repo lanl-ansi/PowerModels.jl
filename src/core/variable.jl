@@ -47,8 +47,9 @@ function reactive_line_flow_variables{T}(pm::GenericPowerModel{T}; both_sides = 
   return q
 end
 
-# Creates variables associated with cosine terms in the AC power flow models for SOC models
-function complex_voltage_product_variables{T}(pm::GenericPowerModel{T})
+
+
+function compute_voltage_product_bounds{T}(pm::GenericPowerModel{T})
   buspairs = pm.set.buspairs
   buspair_indexes = pm.set.buspair_indexes
 
@@ -79,48 +80,26 @@ function complex_voltage_product_variables{T}(pm::GenericPowerModel{T})
       wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
     end
   end
-  
-  @variable(pm.model, wr_min[bp] <= wr[bp in buspair_indexes] <= wr_max[bp]) 
-  @variable(pm.model, wi_min[bp] <= wi[bp in buspair_indexes] <= wi_max[bp])
+
+  return wr_min, wr_max, wi_min, wi_max
+end
+
+
+# Creates variables associated with cosine terms in the AC power flow models for SOC models
+function complex_voltage_product_variables{T}(pm::GenericPowerModel{T})
+  wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
+
+  @variable(pm.model, wr_min[bp] <= wr[bp in pm.set.buspair_indexes] <= wr_max[bp]) 
+  @variable(pm.model, wi_min[bp] <= wi[bp in pm.set.buspair_indexes] <= wi_max[bp])
 
   return wr, wi
 end
 
 
-
 # Creates variables associated with cosine terms in the AC power flow models for SOC models
 function complex_voltage_product_matrix_variables{T}(pm::GenericPowerModel{T})
-  buspairs = pm.set.buspairs
-  buspair_indexes = pm.set.buspair_indexes
+  wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
 
-  wr_min = [bp => -Inf for bp in buspair_indexes] 
-  wr_max = [bp =>  Inf for bp in buspair_indexes] 
-  wi_min = [bp => -Inf for bp in buspair_indexes]
-  wi_max = [bp =>  Inf for bp in buspair_indexes] 
-
-  for bp in buspair_indexes
-    i,j = bp
-    buspair = buspairs[bp]
-    if buspair["angmin"] >= 0
-      wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*cos(buspair["angmin"])
-      wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*cos(buspair["angmax"])
-      wi_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmax"])
-      wi_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*sin(buspair["angmin"])
-    end
-    if buspair["angmax"] <= 0
-      wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*cos(buspair["angmax"])
-      wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*cos(buspair["angmin"])
-      wi_max[bp] = buspair["v_from_min"]*buspair["v_to_min"]*sin(buspair["angmax"])
-      wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
-    end
-    if buspair["angmin"] < 0 && buspair["angmax"] > 0
-      wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*1.0
-      wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*min(cos(buspair["angmin"]), cos(buspair["angmax"]))
-      wi_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmax"])
-      wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
-    end
-  end
-  
   w_index = 1:length(pm.set.bus_indexes)
   lookup_w_index = [bi => i for (i,bi) in enumerate(pm.set.bus_indexes)]
 
@@ -142,7 +121,7 @@ function complex_voltage_product_matrix_variables{T}(pm::GenericPowerModel{T})
   end
 
   # bounds on off-diagonal
-  for (i,j) in buspair_indexes
+  for (i,j) in pm.set.buspair_indexes
     wi_idx = lookup_w_index[i]
     wj_idx = lookup_w_index[j]
 

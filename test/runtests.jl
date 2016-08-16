@@ -21,6 +21,8 @@ else
     const Test = BaseTestNext
 end
 
+# need master for SOCRotated constraints
+Pkg.checkout("ConicNonlinearBridge")
 
 test_ac_opf() 
 test_soc_opf() 
