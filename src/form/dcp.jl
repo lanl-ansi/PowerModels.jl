@@ -79,7 +79,7 @@ function constraint_phase_angle_diffrence(pm::DCPPowerModel, branch)
     @constraint(pm.model, t_fr - t_to >= branch["angmin"])
 end
 
-function constraint_thermal_limit(pm::DCPPowerModel, branch) 
+function constraint_thermal_limit_from(pm::DCPPowerModel, branch) 
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -97,6 +97,11 @@ function constraint_thermal_limit(pm::DCPPowerModel, branch)
     end
 end
 
+
+
+function constraint_thermal_limit_to(pm::DCPPowerModel, branch) 
+    # nothing to do, from handles both sides
+end
 
 
 

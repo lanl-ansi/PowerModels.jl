@@ -13,7 +13,8 @@ function post_opf{T}(pm::GenericPowerModel{T})
 
         constraint_phase_angle_diffrence(pm, branch)
 
-        constraint_thermal_limit(pm, branch)
+        constraint_thermal_limit_from(pm, branch)
+        constraint_thermal_limit_to(pm, branch)
     end
 
     post_objective_min_fuel_cost(pm)

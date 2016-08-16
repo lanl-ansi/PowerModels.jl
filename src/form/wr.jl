@@ -160,13 +160,13 @@ function constraint_universal(pm::SDPWRPowerModel)
         else
             if w_idx < w_jdx
                 try
-                    return wr[(w_idx, w_jdx)]
+                    return 1.0*wr[(w_idx, w_jdx)]
                 catch
                     return zero(AffExpr)
                 end
             else
                 try
-                    return wr[(w_jdx, w_jdx)]
+                    return 1.0*wr[(w_jdx, w_jdx)]
                 catch
                     return zero(AffExpr)
                 end
@@ -182,13 +182,13 @@ function constraint_universal(pm::SDPWRPowerModel)
         else
             if w_idx < w_jdx
                 try
-                    return wi[(w_idx, w_jdx)]
+                    return 1.0*wi[(w_idx, w_jdx)]
                 catch
                     return zero(AffExpr)
                 end
             else
                 try
-                    return -wi[(w_jdx, w_idx)]
+                    return -1.0*wi[(w_jdx, w_idx)]
                 catch
                     return zero(AffExpr)
                 end
@@ -202,12 +202,12 @@ function constraint_universal(pm::SDPWRPowerModel)
     println(WR)
     println(WI)
     # follow this: http://docs.mosek.com/modeling-cookbook/sdo.html
-    #@SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
+    @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
 
     # place holder while debugging sdp constraint
-    for (i,j) in pm.set.buspair_indexes
-        complex_product_relaxation(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
-    end
+    #for (i,j) in pm.set.buspair_indexes
+    #    complex_product_relaxation(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
+    #end
 
 end
 
