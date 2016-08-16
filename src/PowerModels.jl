@@ -10,7 +10,7 @@ include("io/matpower.jl")
 include("io/json.jl")
 
 include("core/base.jl")
-include("core/var.jl")
+include("core/variable.jl")
 include("core/constraint.jl")
 include("core/relaxation_scheme.jl")
 include("core/objective.jl")
