@@ -1,8 +1,7 @@
 export 
-    SOCWRPowerModel, SOCWRForm,
-    SDPWRPowerModel, SDPWRForm
+    SOCWRPowerModel, SOCWRForm
 
-abstract AbstractWRForm <: AbstractPowerFormulation
+abstract AbstractWRForm <: AbstractConicPowerFormulation
 
 type SOCWRForm <: AbstractWRForm end
 typealias SOCWRPowerModel GenericPowerModel{SOCWRForm}
@@ -130,126 +129,7 @@ function constraint_phase_angle_diffrence{T <: AbstractWRForm}(pm::GenericPowerM
 end
 
 
-# Generic thermal limit constraint
-function constraint_thermal_limit_from{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
-  i = branch["index"]
-  f_bus = branch["f_bus"]
-  t_bus = branch["t_bus"]
-  f_idx = (i, f_bus, t_bus)
-
-  p_fr = getvariable(pm.model, :p)[f_idx]
-  q_fr = getvariable(pm.model, :q)[f_idx]
-
-  @constraint(pm.model, norm([p_fr; q_fr]) <= branch["rate_a"])
-end
-
-function constraint_thermal_limit_to{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
-  i = branch["index"]
-  f_bus = branch["f_bus"]
-  t_bus = branch["t_bus"]
-  t_idx = (i, t_bus, f_bus)
-
-  p_to = getvariable(pm.model, :p)[t_idx]
-  q_to = getvariable(pm.model, :q)[t_idx]
-
-  @constraint(pm.model, norm([p_to; q_to]) <= branch["rate_a"])
-end
-
-
-
-
-type SDPWRForm <: AbstractWRForm end
-typealias SDPWRPowerModel GenericPowerModel{SDPWRForm}
-
-function SDPWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, SDPWRForm(); kwargs...)
-end
-
-function init_vars{T <: AbstractWRForm}(pm::GenericPowerModel{T})
-    voltage_magnitude_sqr_variables(pm)
-    complex_voltage_product_variables(pm)
-
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
-
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
-end
-
-#TODO get Miles Help with this
-function constraint_universal(pm::SDPWRPowerModel)
-    w = getvariable(pm.model, :w)
-    wr = getvariable(pm.model, :wr)
-    wi = getvariable(pm.model, :wi)
-
-    w_index = 1:length(pm.set.bus_indexes)
-    lookup_w_index = [i => bi for (i, bi) in enumerate(pm.set.bus_indexes)]
-
-    #@variable(m, WR[1:length(bus_indexes), 1:length(bus_indexes)], Symmetric)
-    #@variable(m, WI[1:length(bus_indexes), 1:length(bus_indexes)])
-
-    lookup_wr = function(i,j)
-        w_idx = lookup_w_index[i]
-        w_jdx = lookup_w_index[j]
-        if w_idx == w_jdx
-            return w[w_idx]
-        else
-            if w_idx < w_jdx
-                try
-                    return 1.0*wr[(w_idx, w_jdx)]
-                catch
-                    return zero(AffExpr)
-                end
-            else
-                try
-                    return 1.0*wr[(w_jdx, w_jdx)]
-                catch
-                    return zero(AffExpr)
-                end
-            end
-        end
-    end
-
-    lookup_wi = function(i,j)
-        w_idx = lookup_w_index[i]
-        w_jdx = lookup_w_index[j]
-        if w_idx == w_jdx
-            return zero(AffExpr)
-        else
-            if w_idx < w_jdx
-                try
-                    return 1.0*wi[(w_idx, w_jdx)]
-                catch
-                    return zero(AffExpr)
-                end
-            else
-                try
-                    return -1.0*wi[(w_jdx, w_idx)]
-                catch
-                    return zero(AffExpr)
-                end
-            end
-        end
-    end
-
-    WR = AffExpr[ lookup_wr(i,j) for i in w_index, j in w_index]
-    WI = AffExpr[ lookup_wi(i,j) for i in w_index, j in w_index]
-
-    println(typeof(WR))
-    println(typeof(WI))
-    # follow this: http://docs.mosek.com/modeling-cookbook/sdo.html
-    @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
-
-    # place holder while debugging sdp constraint
-    #for (i,j) in pm.set.buspair_indexes
-    #    complex_product_relaxation(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
-    #end
-
-end
-
-
-
 function add_bus_voltage_setpoint{T <: AbstractWRForm}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :w; scale = (x) -> sqrt(x))
-    add_setpoint(sol, pm, "bus", "bus_i", "va", :t; default_value = 0)
+    #add_setpoint(sol, pm, "bus", "bus_i", "va", :t; default_value = 0)
 end

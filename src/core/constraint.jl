@@ -30,6 +30,32 @@ function constraint_thermal_limit_to{T}(pm::GenericPowerModel{T}, branch)
 end
 
 
+# Generic thermal limit constraint
+function constraint_thermal_limit_from{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, branch)
+  i = branch["index"]
+  f_bus = branch["f_bus"]
+  t_bus = branch["t_bus"]
+  f_idx = (i, f_bus, t_bus)
+
+  p_fr = getvariable(pm.model, :p)[f_idx]
+  q_fr = getvariable(pm.model, :q)[f_idx]
+
+  @constraint(pm.model, norm([p_fr; q_fr]) <= branch["rate_a"])
+end
+
+function constraint_thermal_limit_to{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, branch)
+  i = branch["index"]
+  f_bus = branch["f_bus"]
+  t_bus = branch["t_bus"]
+  t_idx = (i, t_bus, f_bus)
+
+  p_to = getvariable(pm.model, :p)[t_idx]
+  q_to = getvariable(pm.model, :q)[t_idx]
+
+  @constraint(pm.model, norm([p_to; q_to]) <= branch["rate_a"])
+end
+
+
 
 
 

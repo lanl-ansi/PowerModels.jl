@@ -24,6 +24,9 @@ end
 
 abstract AbstractPowerModel
 abstract AbstractPowerFormulation
+abstract AbstractConicPowerFormulation <: AbstractPowerFormulation
+
+
 
 type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
     model::Model
@@ -341,14 +344,14 @@ function add_branch_flow_setpoint{T}(sol, pm::GenericPowerModel{T})
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
         mva_base = pm.data["baseMVA"]
 
-        add_setpoint(sol, pm, "branch", "index", "p_from", :p; scale = (x) -> x*mva_base, (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint(sol, pm, "branch", "index", "q_from", :q; scale = (x) -> x*mva_base, (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint(sol, pm, "branch", "index",   "p_to", :p; scale = (x) -> x*mva_base, (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
-        add_setpoint(sol, pm, "branch", "index",   "q_to", :q; scale = (x) -> x*mva_base, (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+        add_setpoint(sol, pm, "branch", "index", "p_from", :p; scale = (x) -> x*mva_base, get_index = (idx,item) -> [(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "index", "q_from", :q; scale = (x) -> x*mva_base, get_index = (idx,item) -> [(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "index",   "p_to", :p; scale = (x) -> x*mva_base, get_index = (idx,item) -> [(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint(sol, pm, "branch", "index",   "q_to", :q; scale = (x) -> x*mva_base, get_index = (idx,item) -> [(idx, item["t_bus"], item["f_bus"])])
     end
 end
 
-function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, param_name, variable_symbol; default_value = NaN, scale = (x) -> x, get_index = (x, item) -> x)
+function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, param_name, variable_symbol; default_value = NaN, scale = (x) -> x, get_index = (x, item) -> [x])
     sol_dict = nothing
     if !haskey(sol, dict_name)
         sol_dict = Dict{Int,Any}()
@@ -370,7 +373,7 @@ function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, p
         sol_item[param_name] = default_value
 
         try
-            val = getvalue(getvariable(pm.model, variable_symbol)[get_index(idx, item)])
+            val = getvalue(getvariable(pm.model, variable_symbol)[get_index(idx, item)...])
             sol_item[param_name] = scale(val)
         catch
         end

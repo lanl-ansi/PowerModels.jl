@@ -7,6 +7,7 @@ using MathProgBase
 using JuMP
 
 include("io/matpower.jl")
+include("io/json.jl")
 
 include("core/base.jl")
 include("core/var.jl")
@@ -18,6 +19,7 @@ include("core/common.jl")
 include("form/acp.jl")
 include("form/dcp.jl")
 include("form/wr.jl")
+include("form/wrm.jl")
 
 include("prob/opf.jl")
 #include("prob/ots.jl")
@@ -58,9 +60,11 @@ end
 
 using SCS
 function test_sdp_opf()
-    data = parse_matpower("../test/data/case30.m")
+    # too slow for unit testing
+    #data = parse_matpower("../test/data/case30.m")
+    data = parse_json("../test/data/case3.json")
 
-    pm = SDPWRPowerModel(data; solver = SCSSolver())
+    pm = SDPWRMPowerModel(data; solver = SCSSolver())
 
     post_opf(pm)
     sol = solve(pm)

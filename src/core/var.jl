@@ -121,11 +121,14 @@ function complex_voltage_product_matrix_variables{T}(pm::GenericPowerModel{T})
     end
   end
   
-  @variable(m, WR[1:length(bus_indexes), 1:length(bus_indexes)], Symmetric)
-  @variable(m, WI[1:length(bus_indexes), 1:length(bus_indexes)])
+  w_index = 1:length(pm.set.bus_indexes)
+  lookup_w_index = [bi => i for (i,bi) in enumerate(pm.set.bus_indexes)]
+
+  @variable(pm.model, WR[1:length(pm.set.bus_indexes), 1:length(pm.set.bus_indexes)], Symmetric)
+  @variable(pm.model, WI[1:length(pm.set.bus_indexes), 1:length(pm.set.bus_indexes)])
 
   # bounds on diagonal
-  for (i, bus) in pm.set.bus_indexes
+  for (i, bus) in pm.set.buses
     w_idx = lookup_w_index[i]
     wr_ii = WR[w_idx,w_idx]
     wi_ii = WR[w_idx,w_idx]
@@ -150,7 +153,8 @@ function complex_voltage_product_matrix_variables{T}(pm::GenericPowerModel{T})
     setlowerbound(WI[wi_idx, wj_idx], wi_min[(i,j)])
   end
 
-  return WR, WI, lookup_w_index
+  pm.model.ext[:lookup_w_index] = lookup_w_index
+  return WR, WI
 end
 
 
