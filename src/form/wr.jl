@@ -12,7 +12,7 @@ function SOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, SOCWRForm(); kwargs...)
 end
 
-function constraint_voltage_relaxation(pm::SOCWRPowerModel)
+function constraint_universal(pm::SOCWRPowerModel)
     w = getvariable(pm.model, :w)
     wr = getvariable(pm.model, :wr)
     wi = getvariable(pm.model, :wi)
@@ -141,7 +141,7 @@ function SDPWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
 end
 
 #TODO get Miles Help with this
-function constraint_voltage_relaxation(pm::SDPWRPowerModel)
+function constraint_universal(pm::SDPWRPowerModel)
     w = getvariable(pm.model, :w)
     wr = getvariable(pm.model, :wr)
     wi = getvariable(pm.model, :wi)
