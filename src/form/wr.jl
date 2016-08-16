@@ -83,8 +83,8 @@ function constraint_active_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{T}
     ti = branch["ti"]
     tm = tr^2 + ti^2 
 
-    @NLconstraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
-    @NLconstraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
+    @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
+    @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
 end
 
 function constraint_reactive_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
@@ -108,8 +108,8 @@ function constraint_reactive_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{
     ti = branch["ti"]
     tm = tr^2 + ti^2 
 
-    @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
-    @NLconstraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
+    @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
+    @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
 end
 
 function constraint_phase_angle_diffrence{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
@@ -130,6 +130,31 @@ function constraint_phase_angle_diffrence{T <: AbstractWRForm}(pm::GenericPowerM
 end
 
 
+# Generic thermal limit constraint
+function constraint_thermal_limit_from{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
+  i = branch["index"]
+  f_bus = branch["f_bus"]
+  t_bus = branch["t_bus"]
+  f_idx = (i, f_bus, t_bus)
+
+  p_fr = getvariable(pm.model, :p)[f_idx]
+  q_fr = getvariable(pm.model, :q)[f_idx]
+
+  @constraint(pm.model, norm([p_fr; q_fr]) <= branch["rate_a"])
+end
+
+function constraint_thermal_limit_to{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
+  i = branch["index"]
+  f_bus = branch["f_bus"]
+  t_bus = branch["t_bus"]
+  t_idx = (i, t_bus, f_bus)
+
+  p_to = getvariable(pm.model, :p)[t_idx]
+  q_to = getvariable(pm.model, :q)[t_idx]
+
+  @constraint(pm.model, norm([p_to; q_to]) <= branch["rate_a"])
+end
+
 
 
 
@@ -138,6 +163,17 @@ typealias SDPWRPowerModel GenericPowerModel{SDPWRForm}
 
 function SDPWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, SDPWRForm(); kwargs...)
+end
+
+function init_vars{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+    voltage_magnitude_sqr_variables(pm)
+    complex_voltage_product_variables(pm)
+
+    active_generation_variables(pm)
+    reactive_generation_variables(pm)
+
+    active_line_flow_variables(pm)
+    reactive_line_flow_variables(pm)
 end
 
 #TODO get Miles Help with this
@@ -196,11 +232,11 @@ function constraint_universal(pm::SDPWRPowerModel)
         end
     end
 
-    WR = [ lookup_wr(i,j) for i in w_index, j in w_index]
-    WI = [ lookup_wi(i,j) for i in w_index, j in w_index]
+    WR = AffExpr[ lookup_wr(i,j) for i in w_index, j in w_index]
+    WI = AffExpr[ lookup_wi(i,j) for i in w_index, j in w_index]
 
-    println(WR)
-    println(WI)
+    println(typeof(WR))
+    println(typeof(WI))
     # follow this: http://docs.mosek.com/modeling-cookbook/sdo.html
     @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
 

@@ -5,4 +5,7 @@ JuMP
 Ipopt
 SCS
 
+# requires master branch checkout
+ConicNonlinearBridge
+
 BaseTestNext

@@ -88,6 +88,73 @@ end
 
 
 
+# Creates variables associated with cosine terms in the AC power flow models for SOC models
+function complex_voltage_product_matrix_variables{T}(pm::GenericPowerModel{T})
+  buspairs = pm.set.buspairs
+  buspair_indexes = pm.set.buspair_indexes
+
+  wr_min = [bp => -Inf for bp in buspair_indexes] 
+  wr_max = [bp =>  Inf for bp in buspair_indexes] 
+  wi_min = [bp => -Inf for bp in buspair_indexes]
+  wi_max = [bp =>  Inf for bp in buspair_indexes] 
+
+  for bp in buspair_indexes
+    i,j = bp
+    buspair = buspairs[bp]
+    if buspair["angmin"] >= 0
+      wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*cos(buspair["angmin"])
+      wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*cos(buspair["angmax"])
+      wi_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmax"])
+      wi_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*sin(buspair["angmin"])
+    end
+    if buspair["angmax"] <= 0
+      wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*cos(buspair["angmax"])
+      wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*cos(buspair["angmin"])
+      wi_max[bp] = buspair["v_from_min"]*buspair["v_to_min"]*sin(buspair["angmax"])
+      wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
+    end
+    if buspair["angmin"] < 0 && buspair["angmax"] > 0
+      wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*1.0
+      wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*min(cos(buspair["angmin"]), cos(buspair["angmax"]))
+      wi_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmax"])
+      wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
+    end
+  end
+  
+  @variable(m, WR[1:length(bus_indexes), 1:length(bus_indexes)], Symmetric)
+  @variable(m, WI[1:length(bus_indexes), 1:length(bus_indexes)])
+
+  # bounds on diagonal
+  for (i, bus) in pm.set.bus_indexes
+    w_idx = lookup_w_index[i]
+    wr_ii = WR[w_idx,w_idx]
+    wi_ii = WR[w_idx,w_idx]
+
+    setlowerbound(wr_ii, bus["vmin"]^2)
+    setupperbound(wr_ii, bus["vmax"]^2)
+
+    #this breaks SCS on the 3 bus exmple
+    #setlowerbound(wi_ii, 0)
+    #setupperbound(wi_ii, 0)
+  end
+
+  # bounds on off-diagonal
+  for (i,j) in buspair_indexes
+    wi_idx = lookup_w_index[i]
+    wj_idx = lookup_w_index[j]
+
+    setupperbound(WR[wi_idx, wj_idx], wr_max[(i,j)])
+    setlowerbound(WR[wi_idx, wj_idx], wr_min[(i,j)])
+
+    setupperbound(WI[wi_idx, wj_idx], wi_max[(i,j)])
+    setlowerbound(WI[wi_idx, wj_idx], wi_min[(i,j)])
+  end
+
+  return WR, WI, lookup_w_index
+end
+
+
+
 #=
 
 

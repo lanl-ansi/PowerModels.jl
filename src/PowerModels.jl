@@ -34,8 +34,7 @@ export test_ac_opf, test_soc_opf, test_sdp_opf, test_dc_opf
 function test_ac_opf()
     data = parse_matpower("../test/data/case30.m")
 
-    pm = ACPPowerModel(data)
-    setsolver(pm, IpoptSolver())
+    pm = ACPPowerModel(data; solver = IpoptSolver())
 
     post_opf(pm)
     sol = solve(pm)
@@ -44,10 +43,12 @@ function test_ac_opf()
 end
 
 
+using ConicNonlinearBridge 
 function test_soc_opf()
     data = parse_matpower("../test/data/case30.m")
 
-    pm = SOCWRPowerModel(data; solver = IpoptSolver())
+    pm = SOCWRPowerModel(data)
+    setsolver(pm, ConicNLPWrapper(nlp_solver=IpoptSolver()))
 
     post_opf(pm)
     sol = solve(pm)
@@ -55,11 +56,11 @@ function test_soc_opf()
     dump(sol)
 end
 
-
+using SCS
 function test_sdp_opf()
     data = parse_matpower("../test/data/case30.m")
 
-    pm = SDPWRPowerModel(data; solver = IpoptSolver())
+    pm = SDPWRPowerModel(data; solver = SCSSolver())
 
     post_opf(pm)
     sol = solve(pm)
