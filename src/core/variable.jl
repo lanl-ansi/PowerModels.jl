@@ -3,19 +3,27 @@
 # This will hopefully make everything more compositional
 ##########################################################################################################
 
+# extracts the start value fro,
+function getstart(set, item_key, value_key, default = 0.0)
+  try
+    return set[item_key][value_key]
+  catch
+    return default
+  end
+end
 
 function phase_angle_variables{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, t[i in pm.set.bus_indexes])
+  @variable(pm.model, t[i in pm.set.bus_indexes], start = getstart(pm.set.buses, i, "t_start"))
   return t
 end
 
 function voltage_magnitude_variables{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, pm.set.buses[i]["vmin"] <= v[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"], start = 1.0)
+  @variable(pm.model, pm.set.buses[i]["vmin"] <= v[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"], start = getstart(pm.set.buses, i, "v_start", 1.0))
   return v
 end
 
 function voltage_magnitude_sqr_variables{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, pm.set.buses[i]["vmin"]^2 <= w[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"]^2, start = 1.001)
+  @variable(pm.model, pm.set.buses[i]["vmin"]^2 <= w[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"]^2, start = getstart(pm.set.buses, i, "w_start", 1.001))
   return w
 end
 
@@ -24,7 +32,7 @@ function voltage_magnitude_sqr_from_on_off_variables{T}(pm::GenericPowerModel{T}
   buses = pm.set.buses
   branches = pm.set.branches
 
-  @variable(pm.model, 0 <= w_from[i in pm.set.branch_indexes] <= buses[branches[i]["f_bus"]]["vmax"]^2)
+  @variable(pm.model, 0 <= w_from[i in pm.set.branch_indexes] <= buses[branches[i]["f_bus"]]["vmax"]^2, start = getstart(pm.set.buses, i, "w_from_start", 1.001))
 
   z = getvariable(pm.model, :line_z)
   for i in pm.set.branch_indexes
@@ -39,7 +47,7 @@ function voltage_magnitude_sqr_to_on_off_variables{T}(pm::GenericPowerModel{T})
   buses = pm.set.buses
   branches = pm.set.branches
 
-  @variable(pm.model, 0 <= w_to[i in pm.set.branch_indexes] <= buses[branches[i]["t_bus"]]["vmax"]^2)
+  @variable(pm.model, 0 <= w_to[i in pm.set.branch_indexes] <= buses[branches[i]["t_bus"]]["vmax"]^2, start = getstart(pm.set.buses, i, "w_to", 1.001))
 
   z = getvariable(pm.model, :line_z)
   for i in pm.set.branch_indexes
@@ -53,29 +61,29 @@ end
 
 
 function active_generation_variables{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, pm.set.gens[i]["pmin"] <= pg[i in pm.set.gen_indexes] <= pm.set.gens[i]["pmax"])
+  @variable(pm.model, pm.set.gens[i]["pmin"] <= pg[i in pm.set.gen_indexes] <= pm.set.gens[i]["pmax"], start = getstart(pm.set.gens, i, "pg_start"))
   return pg
 end
 
 function reactive_generation_variables{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, pm.set.gens[i]["qmin"] <= qg[i in pm.set.gen_indexes] <= pm.set.gens[i]["qmax"])
+  @variable(pm.model, pm.set.gens[i]["qmin"] <= qg[i in pm.set.gen_indexes] <= pm.set.gens[i]["qmax"], start = getstart(pm.set.gens, i, "qg_start"))
   return qg
 end
 
 function active_line_flow_variables{T}(pm::GenericPowerModel{T}; both_sides = true)
   if both_sides
-    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"])
+    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
   else
-    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"])
+    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
   end
   return p
 end
 
 function reactive_line_flow_variables{T}(pm::GenericPowerModel{T}; both_sides = true)
   if both_sides
-    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= q[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"])
+    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= q[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "q_start"))
   else
-    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= q[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"])
+    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= q[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "q_start"))
   end
   return q
 end
@@ -118,8 +126,8 @@ end
 function complex_voltage_product_variables{T}(pm::GenericPowerModel{T})
   wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
 
-  @variable(pm.model, wr_min[bp] <= wr[bp in pm.set.buspair_indexes] <= wr_max[bp], start = 1.0) 
-  @variable(pm.model, wi_min[bp] <= wi[bp in pm.set.buspair_indexes] <= wi_max[bp])
+  @variable(pm.model, wr_min[bp] <= wr[bp in pm.set.buspair_indexes] <= wr_max[bp], start = getstart(pm.set.buspairs, bp, "wr_start", 1.0)) 
+  @variable(pm.model, wi_min[bp] <= wi[bp in pm.set.buspair_indexes] <= wi_max[bp], start = getstart(pm.set.buspairs, bp, "wi_start"))
 
   return wr, wi
 end
@@ -129,8 +137,8 @@ function complex_voltage_product_on_off_variables{T}(pm::GenericPowerModel{T})
 
   bi_bp = [i => (b["f_bus"], b["t_bus"]) for (i,b) in pm.set.branches]
 
-  @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr[b in pm.set.branch_indexes] <= max(0, wr_max[bi_bp[b]]), start = 1.0) 
-  @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi[b in pm.set.branch_indexes] <= max(0, wi_max[bi_bp[b]]))
+  @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr[b in pm.set.branch_indexes] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.set.buspairs, bi_bp[b], "wr_start", 1.0)) 
+  @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi[b in pm.set.branch_indexes] <= max(0, wi_max[bi_bp[b]]), start = getstart(pm.set.buspairs, bi_bp[b], "wr_start"))
 
   z = getvariable(pm.model, :line_z)
   for b in pm.set.branch_indexes
@@ -187,7 +195,7 @@ end
 
 # Creates variables associated with differences in phase angles
 function phase_angle_diffrence_variables{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, pm.set.buspairs[bp]["angmin"] <= td[bp in pm.set.buspair_indexes] <= pm.set.buspairs[bp]["angmax"])
+  @variable(pm.model, pm.set.buspairs[bp]["angmin"] <= td[bp in pm.set.buspair_indexes] <= pm.set.buspairs[bp]["angmax"], start = getstart(pm.set.buspairs, bp, "td_start"))
   return td
 end
 
@@ -196,7 +204,7 @@ function voltage_magnitude_product_variables{T}(pm::GenericPowerModel{T})
   vv_min = [bp => pm.set.buspairs[bp]["v_from_min"]*pm.set.buspairs[bp]["v_to_min"] for bp in pm.set.buspair_indexes]
   vv_max = [bp => pm.set.buspairs[bp]["v_from_max"]*pm.set.buspairs[bp]["v_to_max"] for bp in pm.set.buspair_indexes] 
 
-  @variable(pm.model,  vv_min[bp] <= vv[bp in pm.set.buspair_indexes] <=  vv_max[bp], start = 1.0)
+  @variable(pm.model,  vv_min[bp] <= vv[bp in pm.set.buspair_indexes] <=  vv_max[bp], start = getstart(pm.set.buspairs, bp, "vv_start", 1.0))
   return vv
 end
 
@@ -220,12 +228,12 @@ function cosine_variables{T}(pm::GenericPowerModel{T})
     end
   end
 
-  @variable(pm.model, cos_min[bp] <= cs[bp in pm.set.buspair_indexes] <= cos_max[bp], start = 1.0)
+  @variable(pm.model, cos_min[bp] <= cs[bp in pm.set.buspair_indexes] <= cos_max[bp], start = getstart(pm.set.buspairs, bp, "cs_start", 1.0))
   return cs
 end
 
 function sine_variables{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, sin(pm.set.buspairs[bp]["angmin"]) <= si[bp in pm.set.buspair_indexes] <= sin(pm.set.buspairs[bp]["angmax"]))
+  @variable(pm.model, sin(pm.set.buspairs[bp]["angmin"]) <= si[bp in pm.set.buspair_indexes] <= sin(pm.set.buspairs[bp]["angmax"]), start = getstart(pm.set.buspairs, bp, "si_start"))
   return si
 end
 
@@ -234,14 +242,14 @@ function current_magnitude_sqr_variables{T}(pm::GenericPowerModel{T})
   cm_min = [bp => 0 for bp in pm.set.buspair_indexes] 
   cm_max = [bp => (buspairs[bp]["rate_a"]*buspairs[bp]["tap"]/buspairs[bp]["v_from_min"])^2 for bp in pm.set.buspair_indexes]       
 
-  @variable(pm.model, cm_min[bp] <= cm[bp in pm.set.buspair_indexes] <=  cm_max[bp])
+  @variable(pm.model, cm_min[bp] <= cm[bp in pm.set.buspair_indexes] <=  cm_max[bp], start = getstart(pm.set.buspairs, bp, "cm_start"))
   return cm
 end
 
 
 
 function line_indicator_variables{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, 0 <= line_z[l in pm.set.branch_indexes] <= 1, Int)
+  @variable(pm.model, 0 <= line_z[l in pm.set.branch_indexes] <= 1, Int, start = getstart(pm.set.branches, l, "line_z_start", 1.0))
   return line_z
 end
 
