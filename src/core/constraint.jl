@@ -355,23 +355,8 @@ end
 
 
 
-function constraint_power_magnitude_sqr(m, p, q, w, cm, branch)
-  tr = branch["tr"]
-  ti = branch["ti"]
-  tm = tr^2 + ti^2 
-  @constraint(m, p^2 + q^2 <= w/tm*cm)
-end
 
-function constraint_power_magnitude_link(m, w_fr, w_to, wr, wi, cm, q, branch)
-  g = branch["g"]
-  b = branch["b"]
-  c = branch["br_b"]
-  tr = branch["tr"]
-  ti = branch["ti"]
-  tm = tr^2 + ti^2 
 
-  @constraint(m, cm == (g^2 + b^2)*(w_fr/tm + w_to - 2*(tr*wr + ti*wi)/tm) - c*q - ((c/2)/tm)^2*w_fr)
-end
 
 # Creates a constraint that allows generators to be turned on or off
 function constraint_active_generation(m, pg, gen; var = 1)

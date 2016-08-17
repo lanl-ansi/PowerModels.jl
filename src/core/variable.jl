@@ -10,12 +10,12 @@ function phase_angle_variables{T}(pm::GenericPowerModel{T})
 end
 
 function voltage_magnitude_variables{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, pm.set.buses[i]["vmin"] <= v[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"])
+  @variable(pm.model, pm.set.buses[i]["vmin"] <= v[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"], start = 1.0)
   return v
 end
 
 function voltage_magnitude_sqr_variables{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, pm.set.buses[i]["vmin"]^2 <= w[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"]^2)
+  @variable(pm.model, pm.set.buses[i]["vmin"]^2 <= w[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"]^2, start = 1.001)
   return w
 end
 
@@ -46,8 +46,6 @@ function reactive_line_flow_variables{T}(pm::GenericPowerModel{T}; both_sides = 
   end
   return q
 end
-
-
 
 function compute_voltage_product_bounds{T}(pm::GenericPowerModel{T})
   buspairs = pm.set.buspairs
@@ -84,19 +82,15 @@ function compute_voltage_product_bounds{T}(pm::GenericPowerModel{T})
   return wr_min, wr_max, wi_min, wi_max
 end
 
-
-# Creates variables associated with cosine terms in the AC power flow models for SOC models
 function complex_voltage_product_variables{T}(pm::GenericPowerModel{T})
   wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
 
-  @variable(pm.model, wr_min[bp] <= wr[bp in pm.set.buspair_indexes] <= wr_max[bp]) 
+  @variable(pm.model, wr_min[bp] <= wr[bp in pm.set.buspair_indexes] <= wr_max[bp], start = 1.0) 
   @variable(pm.model, wi_min[bp] <= wi[bp in pm.set.buspair_indexes] <= wi_max[bp])
 
   return wr, wi
 end
 
-
-# Creates variables associated with cosine terms in the AC power flow models for SOC models
 function complex_voltage_product_matrix_variables{T}(pm::GenericPowerModel{T})
   wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
 
@@ -135,6 +129,62 @@ function complex_voltage_product_matrix_variables{T}(pm::GenericPowerModel{T})
   pm.model.ext[:lookup_w_index] = lookup_w_index
   return WR, WI
 end
+
+
+# Creates variables associated with differences in phase angles
+function phase_angle_diffrence_variables{T}(pm::GenericPowerModel{T})
+  @variable(pm.model, pm.set.buspairs[bp]["angmin"] <= td[bp in pm.set.buspair_indexes] <= pm.set.buspairs[bp]["angmax"])
+  return td
+end
+
+# Creates the voltage magnitude product variables
+function voltage_magnitude_product_variables{T}(pm::GenericPowerModel{T})
+  vv_min = [bp => pm.set.buspairs[bp]["v_from_min"]*pm.set.buspairs[bp]["v_to_min"] for bp in pm.set.buspair_indexes]
+  vv_max = [bp => pm.set.buspairs[bp]["v_from_max"]*pm.set.buspairs[bp]["v_to_max"] for bp in pm.set.buspair_indexes] 
+
+  @variable(pm.model,  vv_min[bp] <= vv[bp in pm.set.buspair_indexes] <=  vv_max[bp], start = 1.0)
+  return vv
+end
+
+function cosine_variables{T}(pm::GenericPowerModel{T})
+  cos_min = [bp => -Inf for bp in pm.set.buspair_indexes]
+  cos_max = [bp =>  Inf for bp in pm.set.buspair_indexes] 
+
+  for bp in pm.set.buspair_indexes
+    buspair = pm.set.buspairs[bp]
+    if buspair["angmin"] >= 0
+      cos_max[bp] = cos(buspair["angmin"])
+      cos_min[bp] = cos(buspair["angmax"])
+    end
+    if buspair["angmax"] <= 0
+      cos_max[bp] = cos(buspair["angmax"])
+      cos_min[bp] = cos(buspair["angmin"])
+    end
+    if buspair["angmin"] < 0 && buspair["angmax"] > 0
+      cos_max[bp] = 1.0
+      cos_min[bp] = min(cos(buspair["angmin"]), cos(buspair["angmax"]))
+    end
+  end
+
+  @variable(pm.model, cos_min[bp] <= cs[bp in pm.set.buspair_indexes] <= cos_max[bp], start = 1.0)
+  return cs
+end
+
+function sine_variables{T}(pm::GenericPowerModel{T})
+  @variable(pm.model, sin(pm.set.buspairs[bp]["angmin"]) <= si[bp in pm.set.buspair_indexes] <= sin(pm.set.buspairs[bp]["angmax"]))
+  return si
+end
+
+function current_magnitude_sqr_variables{T}(pm::GenericPowerModel{T}) 
+  buspairs = pm.set.buspairs
+  cm_min = [bp => 0 for bp in pm.set.buspair_indexes] 
+  cm_max = [bp => (buspairs[bp]["rate_a"]*buspairs[bp]["tap"]/buspairs[bp]["v_from_min"])^2 for bp in pm.set.buspair_indexes]       
+
+  @variable(pm.model, cm_min[bp] <= cm[bp in pm.set.buspair_indexes] <=  cm_max[bp])
+  return cm
+end
+
+
 
 
 
@@ -331,56 +381,10 @@ end
 
 
 
-# Creates variables associated with differences in phase angles
-function phase_angle_diffrence_variables(m, buspairs, buspair_indexes; start = create_default_start(buspair_indexes,0, "td_start"))
-  @variable(m, buspairs[bp]["angmin"] <= td[bp in buspair_indexes] <= buspairs[bp]["angmax"], start = start[bp]["td_start"])
-  return td
-end
 
-# Creates the V_i * V_j variables
-function voltage_magnitude_product_variables(m, buspairs, buspair_indexes; start = create_default_start(buspair_indexes,0, "vv_start"))
-  vv_min = [bp => buspairs[bp]["v_from_min"]*buspairs[bp]["v_to_min"] for bp in buspair_indexes]
-  vv_max = [bp => buspairs[bp]["v_from_max"]*buspairs[bp]["v_to_max"] for bp in buspair_indexes] 
 
-  @variable(m,  vv_min[bp] <= vv[bp in buspair_indexes] <=  vv_max[bp], start = start[bp]["vv_start"])
-  return vv
-end
 
-function cosine_variables(m, buspairs, buspair_indexes; start = create_default_start(buspair_indexes,0, "cs_start"))
-  cos_min = [bp => -Inf for bp in buspair_indexes]
-  cos_max = [bp =>  Inf for bp in buspair_indexes] 
 
-  for bp in buspair_indexes
-    buspair = buspairs[bp]
-    if buspair["angmin"] >= 0
-      cos_max[bp] = cos(buspair["angmin"])
-      cos_min[bp] = cos(buspair["angmax"])
-    end
-    if buspair["angmax"] <= 0
-      cos_max[bp] = cos(buspair["angmax"])
-      cos_min[bp] = cos(buspair["angmin"])
-    end
-    if buspair["angmin"] < 0 && buspair["angmax"] > 0
-      cos_max[bp] = 1.0
-      cos_min[bp] = min(cos(buspair["angmin"]), cos(buspair["angmax"]))
-    end
-  end
-
-  @variable(m, cos_min[bp] <= cs[bp in buspair_indexes] <= cos_max[bp], start = start[bp]["cs_start"])
-  return cs
-end
-
-function sine_variables(m, buspairs, buspair_indexes; start = create_default_start(buspair_indexes,0,"si_start"))
-  @variable(m, sin(buspairs[bp]["angmin"]) <= si[bp in buspair_indexes] <= sin(buspairs[bp]["angmax"]), start = start[bp]["si_start"])
-  return si
-end
-
-function current_magnitude_sqr_variables(m, buspairs, buspair_indexes; start = create_default_start(buspair_indexes,0, "cm_start")) 
-  cm_min = [bp => 0 for bp in buspair_indexes] 
-  cm_max = [bp => (buspairs[bp]["rate_a"]*buspairs[bp]["tap"]/buspairs[bp]["v_from_min"])^2 for bp in buspair_indexes]       
-  @variable(m,  cm_min[bp] <= cm[bp in buspair_indexes] <=  cm_max[bp], start = start[bp]["cm_start"])
-  return cm
-end
 
 
 function complex_product_matrix_variables(m, buspairs, buspair_indexes, buses, bus_indexes)

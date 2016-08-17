@@ -35,13 +35,13 @@ end
 
 @testset "test soc opf" begin
     @testset "3-bus case" begin
-        result = run_opf("../test/data/case3.json", SOCWRPowerModel, ConicNLPWrapper(nlp_solver=IpoptSolver(tol=1e-6, print_level=0)))
+        result = run_opf("../test/data/case3.json", SOCWRPowerModel, IpoptSolver(tol=1e-6, print_level=0))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5735.9; atol = 1e0)
     end
     @testset "24-bus rts case" begin
-        result = run_opf("../test/data/case24.json", SOCWRPowerModel, ConicNLPWrapper(nlp_solver=IpoptSolver(tol=1e-6, print_level=0)))
+        result = run_opf("../test/data/case24.json", SOCWRPowerModel, IpoptSolver(tol=1e-6, print_level=0))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 70831; atol = 1e0)
@@ -49,20 +49,20 @@ end
 end
 
 
-#@testset "test qc opf" begin
-#    @testset "3-bus case" begin
-#        result = run_opf("../test/data/case3.json", ACPPowerModel, IpoptSolver(tol=1e-6, print_level=0))
+@testset "test qc opf" begin
+    @testset "3-bus case" begin
+        result = run_opf("../test/data/case3.json", QCWRPowerModel, IpoptSolver(tol=1e-6, print_level=0))
 
-#        @test result["status"] == :LocalOptimal
-#        @test isapprox(result["objective"], 5742.0; atol = 1e0)
-#    end
-#    @testset "24-bus rts case" begin
-#        result = run_opf("../test/data/case24.json", ACPPowerModel, IpoptSolver(tol=1e-6, print_level=0))
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 5742.0; atol = 1e0)
+    end
+    @testset "24-bus rts case" begin
+        result = run_opf("../test/data/case24.json", QCWRPowerModel, IpoptSolver(tol=1e-6, print_level=0))
 
-#        @test result["status"] == :LocalOptimal
-#        @test isapprox(result["objective"], 77049; atol = 1e0)
-#    end
-#end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 77049; atol = 1e0)
+    end
+end
 
 
 @testset "test sdp opf" begin
