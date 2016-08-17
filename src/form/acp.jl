@@ -1,7 +1,7 @@
 export 
     ACPPowerModel, StandardACPForm,
-    APIACPPowerModel, APIACPForm
-
+    APIACPPowerModel, APIACPForm,
+    SADACPPowerModel, SADACPForm
 
 abstract AbstractACPForm <: AbstractPowerFormulation
 
@@ -142,6 +142,58 @@ function constraint_reactive_ohms_yt{T <: AbstractACPForm}(pm::GenericPowerModel
   @NLconstraint(pm.model, q_to ==    -(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
 end
 
+# Creates Ohms constraints for AC models (y post fix indicates that Y values are in rectangular form)
+function constraint_active_ohms_y{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
+  i = branch["index"]
+  f_bus = branch["f_bus"]
+  t_bus = branch["t_bus"]
+  f_idx = (i, f_bus, t_bus)
+  t_idx = (i, t_bus, f_bus)
+  
+  p_fr = getvariable(pm.model, :p)[f_idx]
+  p_to = getvariable(pm.model, :p)[t_idx]
+  v_fr = getvariable(pm.model, :v)[f_bus]
+  v_to = getvariable(pm.model, :v)[t_bus]
+  t_fr = getvariable(pm.model, :t)[f_bus]
+  t_to = getvariable(pm.model, :t)[t_bus]
+
+  g = branch["g"]
+  b = branch["b"]
+  c = branch["br_b"]
+  tr = branch["tap"]
+  as = branch["shift"]
+
+  @NLconstraint(pm.model, p_fr == g*(v_fr/tr)^2 + -g*v_fr/tr*v_to*cos(t_fr-t_to-as) + -b*v_fr/tr*v_to*sin(t_fr-t_to-as) )
+  @NLconstraint(pm.model, p_to ==      g*v_to^2 + -g*v_to*v_fr/tr*cos(t_to-t_fr+as) + -b*v_to*v_fr/tr*sin(t_to-t_fr+as) )
+end
+
+function constraint_reactive_ohms_y{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
+  i = branch["index"]
+  f_bus = branch["f_bus"]
+  t_bus = branch["t_bus"]
+  f_idx = (i, f_bus, t_bus)
+  t_idx = (i, t_bus, f_bus)
+  
+  q_fr = getvariable(pm.model, :q)[f_idx]
+  q_to = getvariable(pm.model, :q)[t_idx]
+  v_fr = getvariable(pm.model, :v)[f_bus]
+  v_to = getvariable(pm.model, :v)[t_bus]
+  t_fr = getvariable(pm.model, :t)[f_bus]
+  t_to = getvariable(pm.model, :t)[t_bus]
+
+  g = branch["g"]
+  b = branch["b"]
+  c = branch["br_b"]
+  tr = branch["tap"]
+  as = branch["shift"]
+
+  @NLconstraint(pm.model, q_fr == -(b+c/2)*(v_fr/tr)^2 + b*v_fr/tr*v_to*cos(t_fr-t_to-as) + -g*v_fr/tr*v_to*sin(t_fr-t_to-as) )
+  @NLconstraint(pm.model, q_to ==      -(b+c/2)*v_to^2 + b*v_to*v_fr/tr*cos(t_fr-t_to+as) + -g*v_to*v_fr/tr*sin(t_to-t_fr+as) )
+end
+
+
+
+
 function constraint_phase_angle_diffrence{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
   i = branch["index"]
   f_bus = branch["f_bus"]
@@ -201,7 +253,7 @@ function free_api_variables(pm::APIACPPowerModel)
 end
 
 
-function constraint_active_kcl_shunt(pm::APIACPPowerModel, bus)
+function constraint_active_kcl_shunt_scaled(pm::APIACPPowerModel, bus)
     i = bus["index"]
     bus_branches = pm.set.bus_branches[i]
     bus_gens = pm.set.bus_gens[i]
@@ -243,4 +295,52 @@ function add_bus_demand_setpoint(sol, pm::APIACPPowerModel)
     add_setpoint(sol, pm, "bus", "bus_i", "pd", :load_factor; default_value = (item) -> item["pd"]*mva_base, scale = (x,item) -> item["pd"] > 0 && item["qd"] > 0 ? x*item["pd"]*mva_base : item["pd"]*mva_base, extract_var = (var,idx,item) -> var)
     add_setpoint(sol, pm, "bus", "bus_i", "qd", :load_factor; default_value = (item) -> item["qd"]*mva_base, scale = (x,item) -> item["qd"]*mva_base, extract_var = (var,idx,item) -> var)
 end
+
+
+
+
+
+
+type SADACPForm <: AbstractACPForm end
+typealias SADACPPowerModel GenericPowerModel{SADACPForm}
+
+# default AC constructor
+function SADACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+    return GenericPowerModel(data, SADACPForm(); kwargs...)
+end
+
+function init_vars(pm::SADACPPowerModel)
+    # super method
+    phase_angle_variables(pm)
+    voltage_magnitude_variables(pm)
+
+    active_generation_variables(pm)
+    reactive_generation_variables(pm)
+
+    active_line_flow_variables(pm)
+    reactive_line_flow_variables(pm)
+
+    # extentions
+    @variable(pm.model, theta_delta_bound >= 0.0, start = 0.523598776)
+end
+
+function constraint_phase_angle_diffrence_flexible(pm::SADACPPowerModel, branch)
+  i = branch["index"]
+  f_bus = branch["f_bus"]
+  t_bus = branch["t_bus"]
+
+  t_fr = getvariable(pm.model, :t)[f_bus]
+  t_to = getvariable(pm.model, :t)[t_bus]
+
+  theta_delta_bound = getvariable(pm.model, :theta_delta_bound)
+
+  @constraint(pm.model, t_fr - t_to <=  theta_delta_bound)
+  @constraint(pm.model, t_fr - t_to >= -theta_delta_bound)
+end
+
+function objective_min_theta_delta(pm::SADACPPowerModel)
+    theta_delta_bound = getvariable(pm.model, :theta_delta_bound)
+    @objective(pm.model, Min, theta_delta_bound)
+end
+
 
