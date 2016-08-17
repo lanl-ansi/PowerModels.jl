@@ -125,6 +125,6 @@ end
 
 function add_bus_voltage_setpoint{T <: AbstractDCPForm}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :v; default_value = (item) -> 1)
-    add_setpoint(sol, pm, "bus", "bus_i", "va", :t; scale = (x) -> x*180/pi)
+    add_setpoint(sol, pm, "bus", "bus_i", "va", :t; scale = (x,item) -> x*180/pi)
 end
 

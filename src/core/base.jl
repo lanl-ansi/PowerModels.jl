@@ -324,19 +324,19 @@ end
 
 function add_bus_voltage_setpoint{T}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :v)
-    add_setpoint(sol, pm, "bus", "bus_i", "va", :t; scale = (x) -> x*180/pi)
+    add_setpoint(sol, pm, "bus", "bus_i", "va", :t; scale = (x,item) -> x*180/pi)
 end
 
 function add_generator_power_setpoint{T}(sol, pm::GenericPowerModel{T})
     mva_base = pm.data["baseMVA"]
-    add_setpoint(sol, pm, "gen", "index", "pg", :pg; scale = (x) -> x*mva_base)
-    add_setpoint(sol, pm, "gen", "index", "qg", :qg; scale = (x) -> x*mva_base)
+    add_setpoint(sol, pm, "gen", "index", "pg", :pg; scale = (x,item) -> x*mva_base)
+    add_setpoint(sol, pm, "gen", "index", "qg", :qg; scale = (x,item) -> x*mva_base)
 end
 
 function add_bus_demand_setpoint{T}(sol, pm::GenericPowerModel{T})
     mva_base = pm.data["baseMVA"]
-    add_setpoint(sol, pm, "bus", "bus_i", "pd", :pd; default_value = (item) -> item["pd"]*mva_base, scale = (x) -> x*mva_base, get_index = (x, item) -> [])
-    add_setpoint(sol, pm, "bus", "bus_i", "qd", :qd; default_value = (item) -> item["qd"]*mva_base, scale = (x) -> x*mva_base, get_index = (x, item) -> [])
+    add_setpoint(sol, pm, "bus", "bus_i", "pd", :pd; default_value = (item) -> item["pd"]*mva_base, scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> ())
+    add_setpoint(sol, pm, "bus", "bus_i", "qd", :qd; default_value = (item) -> item["qd"]*mva_base, scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> ())
 end
 
 function add_branch_flow_setpoint{T}(sol, pm::GenericPowerModel{T})
@@ -344,14 +344,14 @@ function add_branch_flow_setpoint{T}(sol, pm::GenericPowerModel{T})
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
         mva_base = pm.data["baseMVA"]
 
-        add_setpoint(sol, pm, "branch", "index", "p_from", :p; scale = (x) -> x*mva_base, get_index = (idx,item) -> [(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch", "index", "q_from", :q; scale = (x) -> x*mva_base, get_index = (idx,item) -> [(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch", "index",   "p_to", :p; scale = (x) -> x*mva_base, get_index = (idx,item) -> [(idx, item["t_bus"], item["f_bus"])])
-        add_setpoint(sol, pm, "branch", "index",   "q_to", :q; scale = (x) -> x*mva_base, get_index = (idx,item) -> [(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint(sol, pm, "branch", "index", "p_from", :p; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "index", "q_from", :q; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "index",   "p_to", :p; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint(sol, pm, "branch", "index",   "q_to", :q; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
     end
 end
 
-function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, param_name, variable_symbol; default_value = (item) -> NaN, scale = (x) -> x, get_index = (x, item) -> [x])
+function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, param_name, variable_symbol; default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
     sol_dict = nothing
     if !haskey(sol, dict_name)
         sol_dict = Dict{Int,Any}()
@@ -373,8 +373,8 @@ function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, p
         sol_item[param_name] = default_value(item)
 
         try
-            val = getvalue(getvariable(pm.model, variable_symbol)[get_index(idx, item)...])
-            sol_item[param_name] = scale(val)
+            var = extract_var(getvariable(pm.model, variable_symbol), idx, item)
+            sol_item[param_name] = scale(getvalue(var), item)
         catch
         end
     end

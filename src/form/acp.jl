@@ -240,16 +240,7 @@ end
 
 function add_bus_demand_setpoint(sol, pm::APIACPPowerModel)
     mva_base = pm.data["baseMVA"]
-    :tmp
-    add_setpoint(sol, pm, "bus", "bus_i", "pd", :load_factor; default_value = (item) -> item["pd"]*mva_base, scale = (x) -> x*item["pd"]*mva_base, get_index = (x, item) -> [])
-    add_setpoint(sol, pm, "bus", "bus_i", "qd", :load_factor; default_value = (item) -> item["qd"]*mva_base, scale = (x) -> x*item["qd"]*mva_base, get_index = (x, item) -> [])
+    add_setpoint(sol, pm, "bus", "bus_i", "pd", :load_factor; default_value = (item) -> item["pd"]*mva_base, scale = (x,item) -> item["pd"] > 0 && item["qd"] > 0 ? x*item["pd"]*mva_base : item["pd"]*mva_base, extract_var = (var,idx,item) -> var)
+    add_setpoint(sol, pm, "bus", "bus_i", "qd", :load_factor; default_value = (item) -> item["qd"]*mva_base, scale = (x,item) -> item["qd"]*mva_base, extract_var = (var,idx,item) -> var)
 end
-
-
-#    pd_val = i -> buses[i]["pd"] > 0 && buses[i]["qd"] > 0 ? buses[i]["pd"]*getvalue(load_factor) : buses[i]["pd"]
-#    qd_val = i -> buses[i]["qd"]
-
-#    abstract_sol = Dict{AbstractString,Any}()
-#    add_bus_voltage_setpoint(abstract_sol, data, v_val, t_val)
-#    add_bus_demand_setpoint(abstract_sol, data, pd_val, qd_val)
 
