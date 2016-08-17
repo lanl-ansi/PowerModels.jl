@@ -15,7 +15,7 @@ include("core/variable.jl")
 include("core/constraint.jl")
 include("core/relaxation_scheme.jl")
 include("core/objective.jl")
-include("core/common.jl")
+include("core/solution.jl")
 
 include("form/acp.jl")
 include("form/dcp.jl")
