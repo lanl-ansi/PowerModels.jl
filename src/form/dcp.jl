@@ -12,7 +12,7 @@ function DCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, StandardDCPForm(); kwargs...)
 end
 
-function init_vars(pm::DCPPowerModel)
+function init_vars{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
     phase_angle_variables(pm)
     active_generation_variables(pm)
 
@@ -37,7 +37,7 @@ function free_bounded_variables{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
 end
 
 
-function constraint_theta_ref(pm::DCPPowerModel)
+function constraint_theta_ref{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
     @constraint(pm.model, getvariable(pm.model, :t)[pm.set.ref_bus] == 0)
 end
 
@@ -45,13 +45,12 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::Generic
     # Do nothing, this model does not have voltage variables
 end
 
-function constraint_reactive_gen_setpoint{T}(pm::GenericPowerModel{T}, gen)
+function constraint_reactive_gen_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, gen)
     # Do nothing, this model does not have reactive variables
 end
 
 
-#constraint_active_kcl_shunt_const(pm.model, pm.var.p, pm.var.pg, bus, bus_branches, pm.set.bus_gens[i])
-function constraint_active_kcl_shunt(pm::DCPPowerModel, bus)
+function constraint_active_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
     bus_branches = pm.set.bus_branches[i]
     bus_gens = pm.set.bus_gens[i]
@@ -62,13 +61,13 @@ function constraint_active_kcl_shunt(pm::DCPPowerModel, bus)
     @constraint(pm.model, sum{p_expr[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*1.0^2)
 end
 
-function constraint_reactive_kcl_shunt(pm::DCPPowerModel, bus)
+function constraint_reactive_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus)
     # Do nothing, this model does not have reactive variables
 end
 
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
-function constraint_active_ohms_yt(pm::DCPPowerModel, branch)
+function constraint_active_ohms_yt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -84,11 +83,11 @@ function constraint_active_ohms_yt(pm::DCPPowerModel, branch)
     @constraint(pm.model, p_fr == -b*(t_fr - t_to))
 end
 
-function constraint_reactive_ohms_yt(pm::DCPPowerModel, branch)
+function constraint_reactive_ohms_yt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
     # Do nothing, this model does not have reactive variables
 end
 
-function constraint_phase_angle_diffrence(pm::DCPPowerModel, branch)
+function constraint_phase_angle_diffrence{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -100,7 +99,7 @@ function constraint_phase_angle_diffrence(pm::DCPPowerModel, branch)
     @constraint(pm.model, t_fr - t_to >= branch["angmin"])
 end
 
-function constraint_thermal_limit_from(pm::DCPPowerModel, branch) 
+function constraint_thermal_limit_from{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch) 
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -118,9 +117,7 @@ function constraint_thermal_limit_from(pm::DCPPowerModel, branch)
     end
 end
 
-
-
-function constraint_thermal_limit_to(pm::DCPPowerModel, branch) 
+function constraint_thermal_limit_to{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch) 
     # nothing to do, from handles both sides
 end
 

@@ -12,7 +12,7 @@ function ACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, StandardACPForm(); kwargs...)
 end
 
-function init_vars(pm::ACPPowerModel)
+function init_vars{T <: AbstractACPForm}(pm::GenericPowerModel{T})
     phase_angle_variables(pm)
     voltage_magnitude_variables(pm)
 
@@ -48,7 +48,7 @@ function free_bounded_variables{T <: AbstractACPForm}(pm::GenericPowerModel{T})
 end
 
 
-function constraint_theta_ref(pm::ACPPowerModel)
+function constraint_theta_ref{T <: AbstractACPForm}(pm::GenericPowerModel{T})
     @constraint(pm.model, getvariable(pm.model, :t)[pm.set.ref_bus] == 0)
 end
 
@@ -66,7 +66,7 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::Generic
 end
 
 
-function constraint_active_kcl_shunt(pm::ACPPowerModel, bus)
+function constraint_active_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
     bus_branches = pm.set.bus_branches[i]
     bus_gens = pm.set.bus_gens[i]
@@ -78,7 +78,7 @@ function constraint_active_kcl_shunt(pm::ACPPowerModel, bus)
     @constraint(pm.model, sum{p[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*v[i]^2)
 end
 
-function constraint_reactive_kcl_shunt(pm::ACPPowerModel, bus)
+function constraint_reactive_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
     bus_branches = pm.set.bus_branches[i]
     bus_gens = pm.set.bus_gens[i]
@@ -91,7 +91,7 @@ function constraint_reactive_kcl_shunt(pm::ACPPowerModel, bus)
 end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
-function constraint_active_ohms_yt(pm::ACPPowerModel, branch)
+function constraint_active_ohms_yt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
   i = branch["index"]
   f_bus = branch["f_bus"]
   t_bus = branch["t_bus"]
@@ -116,7 +116,7 @@ function constraint_active_ohms_yt(pm::ACPPowerModel, branch)
   @NLconstraint(pm.model, p_to ==    g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
 end
 
-function constraint_reactive_ohms_yt(pm::ACPPowerModel, branch)
+function constraint_reactive_ohms_yt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
   i = branch["index"]
   f_bus = branch["f_bus"]
   t_bus = branch["t_bus"]
@@ -141,7 +141,7 @@ function constraint_reactive_ohms_yt(pm::ACPPowerModel, branch)
   @NLconstraint(pm.model, q_to ==    -(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
 end
 
-function constraint_phase_angle_diffrence(pm::ACPPowerModel, branch)
+function constraint_phase_angle_diffrence{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
   i = branch["index"]
   f_bus = branch["f_bus"]
   t_bus = branch["t_bus"]
