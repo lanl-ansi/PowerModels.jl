@@ -1,5 +1,6 @@
 export 
-    ACPPowerModel, ACPVars
+    ACPPowerModel, StandardACPForm,
+    APIACPPowerModel, APIACPForm
 
 
 abstract AbstractACPForm <: AbstractPowerFormulation
@@ -154,4 +155,101 @@ function constraint_phase_angle_diffrence{T <: AbstractACPForm}(pm::GenericPower
 end
 
 
+
+
+
+
+
+type APIACPForm <: AbstractACPForm end
+typealias APIACPPowerModel GenericPowerModel{APIACPForm}
+
+# default AC constructor
+function APIACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+    return GenericPowerModel(data, APIACPForm(); kwargs...)
+end
+
+function init_vars(pm::APIACPPowerModel)
+    # super method
+    phase_angle_variables(pm)
+    voltage_magnitude_variables(pm)
+
+    active_generation_variables(pm)
+    reactive_generation_variables(pm)
+
+    active_line_flow_variables(pm)
+    reactive_line_flow_variables(pm)
+
+    # extentions
+    @variable(pm.model, load_factor >= 1.0, start = 1.0)
+end
+
+function free_api_variables(pm::APIACPPowerModel)
+    for (i,bus) in pm.set.buses
+        v = getvariable(pm.model, :v)[i]
+        setupperbound(v, bus["vmax"]*0.999)
+        setlowerbound(v, bus["vmin"]*1.001)
+    end
+    for (i,gen) in pm.set.gens
+        pg = getvariable(pm.model, :pg)[i]
+        qg = getvariable(pm.model, :qg)[i]
+        if gen["pmax"] > 0 
+            setupperbound(pg, Inf)
+        end
+        setupperbound(qg,  Inf)
+        setlowerbound(qg, -Inf)
+    end
+end
+
+
+function constraint_active_kcl_shunt(pm::APIACPPowerModel, bus)
+    i = bus["index"]
+    bus_branches = pm.set.bus_branches[i]
+    bus_gens = pm.set.bus_gens[i]
+
+    load_factor = getvariable(pm.model, :load_factor)
+    v = getvariable(pm.model, :v)
+    p = getvariable(pm.model, :p)
+    pg = getvariable(pm.model, :pg)
+
+    if bus["pd"] > 0 && bus["qd"] > 0
+        @constraint(pm.model, sum{p[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"]*load_factor - bus["gs"]*v[i]^2)
+    else
+        # super fallback impl
+        @constraint(pm.model, sum{p[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*v[i]^2)
+    end
+end
+
+function post_objective_max_loading(pm::APIACPPowerModel)
+    load_factor = getvariable(pm.model, :load_factor)
+    @objective(pm.model, Max, load_factor)
+end
+
+
+function getsolution(pm::APIACPPowerModel)
+    # super fallback
+    sol = Dict{AbstractString,Any}()
+    add_bus_voltage_setpoint(sol, pm)
+    add_generator_power_setpoint(sol, pm)
+    add_branch_flow_setpoint(sol, pm)
+
+    # extention
+    add_bus_demand_setpoint(sol, pm)
+
+    return sol
+end
+
+function add_bus_demand_setpoint(sol, pm::APIACPPowerModel)
+    mva_base = pm.data["baseMVA"]
+    :tmp
+    add_setpoint(sol, pm, "bus", "bus_i", "pd", :load_factor; default_value = (item) -> item["pd"]*mva_base, scale = (x) -> x*item["pd"]*mva_base, get_index = (x, item) -> [])
+    add_setpoint(sol, pm, "bus", "bus_i", "qd", :load_factor; default_value = (item) -> item["qd"]*mva_base, scale = (x) -> x*item["qd"]*mva_base, get_index = (x, item) -> [])
+end
+
+
+#    pd_val = i -> buses[i]["pd"] > 0 && buses[i]["qd"] > 0 ? buses[i]["pd"]*getvalue(load_factor) : buses[i]["pd"]
+#    qd_val = i -> buses[i]["qd"]
+
+#    abstract_sol = Dict{AbstractString,Any}()
+#    add_bus_voltage_setpoint(abstract_sol, data, v_val, t_val)
+#    add_bus_demand_setpoint(abstract_sol, data, pd_val, qd_val)
 

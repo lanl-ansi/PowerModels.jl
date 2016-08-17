@@ -5,7 +5,7 @@
 
 
 # Generic thermal limit constraint
-function constraint_thermal_limit_from{T}(pm::GenericPowerModel{T}, branch)
+function constraint_thermal_limit_from{T}(pm::GenericPowerModel{T}, branch; scale = 1.0)
   i = branch["index"]
   f_bus = branch["f_bus"]
   t_bus = branch["t_bus"]
@@ -14,10 +14,10 @@ function constraint_thermal_limit_from{T}(pm::GenericPowerModel{T}, branch)
   p_fr = getvariable(pm.model, :p)[f_idx]
   q_fr = getvariable(pm.model, :q)[f_idx]
 
-  @constraint(pm.model, p_fr^2 + q_fr^2 <= branch["rate_a"]^2)
+  @constraint(pm.model, p_fr^2 + q_fr^2 <= branch["rate_a"]^2*scale)
 end
 
-function constraint_thermal_limit_to{T}(pm::GenericPowerModel{T}, branch)
+function constraint_thermal_limit_to{T}(pm::GenericPowerModel{T}, branch; scale = 1.0)
   i = branch["index"]
   f_bus = branch["f_bus"]
   t_bus = branch["t_bus"]
@@ -26,7 +26,7 @@ function constraint_thermal_limit_to{T}(pm::GenericPowerModel{T}, branch)
   p_to = getvariable(pm.model, :p)[t_idx]
   q_to = getvariable(pm.model, :q)[t_idx]
 
-  @constraint(pm.model, p_to^2 + q_to^2 <= branch["rate_a"]^2)
+  @constraint(pm.model, p_to^2 + q_to^2 <= branch["rate_a"]^2*scale)
 end
 
 

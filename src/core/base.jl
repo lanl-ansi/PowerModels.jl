@@ -333,6 +333,12 @@ function add_generator_power_setpoint{T}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "gen", "index", "qg", :qg; scale = (x) -> x*mva_base)
 end
 
+function add_bus_demand_setpoint{T}(sol, pm::GenericPowerModel{T})
+    mva_base = pm.data["baseMVA"]
+    add_setpoint(sol, pm, "bus", "bus_i", "pd", :pd; default_value = (item) -> item["pd"]*mva_base, scale = (x) -> x*mva_base, get_index = (x, item) -> [])
+    add_setpoint(sol, pm, "bus", "bus_i", "qd", :qd; default_value = (item) -> item["qd"]*mva_base, scale = (x) -> x*mva_base, get_index = (x, item) -> [])
+end
+
 function add_branch_flow_setpoint{T}(sol, pm::GenericPowerModel{T})
     # check the line flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
@@ -345,7 +351,7 @@ function add_branch_flow_setpoint{T}(sol, pm::GenericPowerModel{T})
     end
 end
 
-function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, param_name, variable_symbol; default_value = NaN, scale = (x) -> x, get_index = (x, item) -> [x])
+function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, param_name, variable_symbol; default_value = (item) -> NaN, scale = (x) -> x, get_index = (x, item) -> [x])
     sol_dict = nothing
     if !haskey(sol, dict_name)
         sol_dict = Dict{Int,Any}()
@@ -364,7 +370,7 @@ function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, p
         else
             sol_item = sol_dict[idx]
         end
-        sol_item[param_name] = default_value
+        sol_item[param_name] = default_value(item)
 
         try
             val = getvalue(getvariable(pm.model, variable_symbol)[get_index(idx, item)...])
