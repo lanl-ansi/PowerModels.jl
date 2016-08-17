@@ -404,7 +404,6 @@ function constraint_thermal_limit(m, p, q, branch)
   @constraint(m, p^2 + q^2 <= branch["rate_a"]^2)
 end
 
-#TODO one day it would be nice if JuMP could unify these two constraints
 function constraint_thermal_limit_conic(m, p, q, branch) 
   @constraint(m, norm([p; q]) <= branch["rate_a"])
 end

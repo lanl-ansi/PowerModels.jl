@@ -30,7 +30,6 @@ end
 # min var array
 function objective_min_vars(m, vars)
 #  @objective(m, Min, sum(v for v in vars) )
-  # TODO can this be done cleaner???
   @objective(m, Min, sum{vars[k[1]], k=keys(vars)} )
 end
 

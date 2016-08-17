@@ -7,7 +7,7 @@
 export post_ots, run_ots
 
 function run_ots(file, model_constructor, solver)
-    data = parse_file(file)
+    data = PowerModels.parse_file(file)
 
     pm = model_constructor(data; solver = solver)
 

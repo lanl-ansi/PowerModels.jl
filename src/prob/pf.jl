@@ -1,7 +1,7 @@
 export post_pf, run_pf
 
 function run_pf(file, model_constructor, solver)
-    data = parse_file(file)
+    data = PowerModels.parse_file(file)
 
     pm = model_constructor(data; solver = solver)
 

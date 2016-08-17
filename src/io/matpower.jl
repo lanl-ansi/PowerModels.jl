@@ -4,9 +4,6 @@
 #                                                                       #
 #########################################################################
 
-export parse_matpower
-
-
 function parse_matrix(lines, index)
     last_index = length(lines)
     line_count = 0

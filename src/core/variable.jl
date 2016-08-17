@@ -258,8 +258,6 @@ end
 #=
 
 
-# TODO need to find a way to pass-through extra args to varibles maco (look into ... syntax) 
-
 # Creates variables associated with phase angles at each bus
 function phase_angle_variables(m, bus_indexes; start = create_default_start(bus_indexes,0,"theta_start"))
   @variable(m, theta[i in bus_indexes], start = start[i]["theta_start"])

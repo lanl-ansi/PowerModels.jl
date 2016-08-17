@@ -20,7 +20,6 @@ function init_vars{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
     reactive_line_flow_variables(pm)
 end
 
-#TODO get Miles Help with this
 function constraint_universal(pm::SDPWRMPowerModel)
     WR = getvariable(pm.model, :WR)
     WI = getvariable(pm.model, :WI)

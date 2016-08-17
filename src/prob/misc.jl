@@ -4,7 +4,7 @@ export
 
 
 function run_api_opf(file, model_constructor, solver)
-    data = parse_file(file)
+    data = PowerModels.parse_file(file)
 
     pm = model_constructor(data; solver = solver)
 
@@ -37,7 +37,7 @@ end
 
 
 function run_sad_opf(file, model_constructor, solver)
-    data = parse_file(file)
+    data = PowerModels.parse_file(file)
 
     pm = model_constructor(data; solver = solver)
 

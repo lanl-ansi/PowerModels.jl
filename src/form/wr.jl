@@ -319,7 +319,7 @@ end
 function init_vars(pm::QCWRPowerModel)
     # TODO seem if calling the more abstract method is possible
     # Discussion here https://github.com/JuliaLang/julia/pull/13123
-    #invoke(init_vars, Tuple{GenericPowerModel{super(QCWRForm)}}, pm)
+    #invoke(init_vars, Tuple{GenericPowerModel{T<:super(QCWRForm)}}, pm)
     
     # super method
     phase_angle_variables(pm)

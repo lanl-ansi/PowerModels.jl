@@ -1,7 +1,7 @@
 export post_opf, run_opf
 
 function run_opf(file, model_constructor, solver; kwargs...)
-    data = parse_file(file)
+    data = PowerModels.parse_file(file)
 
     pm = model_constructor(data; solver = solver, kwargs...)
 
