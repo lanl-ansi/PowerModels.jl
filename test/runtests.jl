@@ -1,12 +1,7 @@
-# This seems to break CI
-# need master for SOCRotated constraints
-# Pkg.checkout("ConicNonlinearBridge")
-
 using PowerModels
 
 using Ipopt
 using SCS
-using ConicNonlinearBridge 
 
 # needed for OTS tests
 if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
