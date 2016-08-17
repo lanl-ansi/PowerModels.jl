@@ -91,12 +91,12 @@ end
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
-function setsolver{T}(pm::GenericPowerModel{T}, solver::MathProgBase.AbstractMathProgSolver)
-    JuMP.setsolver(pm.model, solver)
+function JuMP.setsolver{T}(pm::GenericPowerModel{T}, solver::MathProgBase.AbstractMathProgSolver)
+    setsolver(pm.model, solver)
 end
 
-function solve{T}(pm::GenericPowerModel{T})
-    status, solve_sec_elapsed, solve_bytes_alloc, sec_in_gc = @timed JuMP.solve(pm.model)
+function JuMP.solve(pm::GenericPowerModel)
+    status, solve_sec_elapsed, solve_bytes_alloc, sec_in_gc = @timed solve(pm.model)
 
     build_solution(pm, status; solve_time_alternate = solve_sec_elapsed)
 end
