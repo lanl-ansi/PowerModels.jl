@@ -13,15 +13,19 @@ function SOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, SOCWRForm(); kwargs...)
 end
 
-function init_vars{T <: AbstractWRForm}(pm::GenericPowerModel{T})
-    voltage_magnitude_sqr_variables(pm)
-    complex_voltage_product_variables(pm)
+function complex_voltage_variables{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+    w = voltage_magnitude_sqr_variables(pm)
+    wr, wi = complex_voltage_product_variables(pm)
+end
 
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
-
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
+function constraint_complex_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+    w = getvariable(pm.model, :w)
+    wr = getvariable(pm.model, :wr)
+    wi = getvariable(pm.model, :wi)
+    
+    for (i,j) in pm.set.buspair_indexes
+        complex_product_relaxation(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
+    end
 end
 
 function free_bounded_variables{T <: AbstractWRForm}(pm::GenericPowerModel{T})
@@ -53,16 +57,6 @@ function free_bounded_variables{T <: AbstractWRForm}(pm::GenericPowerModel{T})
         q = getvariable(pm.model, :p)[arc]
         setupperbound(q,  Inf)
         setlowerbound(q, -Inf)
-    end
-end
-
-function constraint_universal(pm::SOCWRPowerModel)
-    w = getvariable(pm.model, :w)
-    wr = getvariable(pm.model, :wr)
-    wi = getvariable(pm.model, :wi)
-    
-    for (i,j) in pm.set.buspair_indexes
-        complex_product_relaxation(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     end
 end
 
@@ -196,27 +190,15 @@ function LSSOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, LSSOCWRForm(); kwargs...)
 end
 
-function init_vars{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
-    # super method
+function complex_voltage_variables{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
     voltage_magnitude_sqr_variables(pm)
-    #complex_voltage_product_variables(pm)
-
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
-
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
-
-    # extentions
-    line_indicator_variables(pm)
-
     voltage_magnitude_sqr_from_on_off_variables(pm)
     voltage_magnitude_sqr_to_on_off_variables(pm)
 
     complex_voltage_product_on_off_variables(pm)
 end
 
-function constraint_universal(pm::LSSOCWRPowerModel)
+function constraint_complex_voltage{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
     w = getvariable(pm.model, :w)
     wr = getvariable(pm.model, :wr)
     wi = getvariable(pm.model, :wi)
@@ -231,6 +213,7 @@ function constraint_universal(pm::LSSOCWRPowerModel)
         equality_on_off_relaxation(pm.model, w[j], w_to[l], z[l])
     end
 end
+
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 function constraint_active_ohms_yt_on_off{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T}, branch)
@@ -316,34 +299,21 @@ function QCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, QCWRForm(); kwargs...)
 end
 
-function init_vars(pm::QCWRPowerModel)
-    # TODO seem if calling the more abstract method is possible
-    # Discussion here https://github.com/JuliaLang/julia/pull/13123
-    # Read this: http://docs.julialang.org/en/release-0.4/devdocs/types/
-    # invoke(init_vars, Tuple{GenericPowerModel{Any <: super(QCWRForm)}}, pm)
-    
-    # super method
-    phase_angle_variables(pm)
-    voltage_magnitude_variables(pm)
+function complex_voltage_variables(pm::QCWRPowerModel)
+    t = phase_angle_variables(pm)
+    v = voltage_magnitude_variables(pm)
 
-    voltage_magnitude_sqr_variables(pm)
-    complex_voltage_product_variables(pm)
+    w = voltage_magnitude_sqr_variables(pm)
+    wr, wi = complex_voltage_product_variables(pm)
 
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
-
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
-
-    # extentions
-    phase_angle_diffrence_variables(pm)
-    voltage_magnitude_product_variables(pm)
-    cosine_variables(pm)
-    sine_variables(pm)
-    current_magnitude_sqr_variables(pm)
+    td = phase_angle_diffrence_variables(pm)
+    vv = voltage_magnitude_product_variables(pm)
+    cs = cosine_variables(pm)
+    si = sine_variables(pm)
+    cm = current_magnitude_sqr_variables(pm)
 end
 
-function constraint_universal(pm::QCWRPowerModel)
+function constraint_complex_voltage(pm::QCWRPowerModel)
     v = getvariable(pm.model, :v)
     t = getvariable(pm.model, :t)
 
@@ -385,6 +355,7 @@ function constraint_universal(pm::QCWRPowerModel)
         end
     end
 end
+
 
 function constraint_power_magnitude_sqr(pm::QCWRPowerModel, branch)
   i = branch["index"]

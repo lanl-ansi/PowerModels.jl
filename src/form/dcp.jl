@@ -14,15 +14,30 @@ function DCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, StandardDCPForm(); kwargs...)
 end
 
-function init_vars{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
+function complex_voltage_variables{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
     phase_angle_variables(pm)
-    active_generation_variables(pm)
+end
 
-    p = active_line_flow_variables(pm; both_sides = false)
+function reactive_generation_variables{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
+    # do nothing, this model does not have reactive variables
+end
+
+function reactive_line_flow_variables{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
+    # do nothing, this model does not have reactive variables
+end
+
+function active_line_flow_variables{T <: StandardDCPForm}(pm::GenericPowerModel{T})
+    p = @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
+
     p_expr = [(l,i,j) => 1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from]
     p_expr = merge(p_expr, [(l,j,i) => -1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from])
 
     pm.model.ext[:p_expr] = p_expr
+
+    return p
+end
+
+function constraint_complex_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
 end
 
 function free_bounded_variables{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
@@ -44,11 +59,11 @@ function constraint_theta_ref{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
 end
 
 function constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus; epsilon = 0.0)
-    # Do nothing, this model does not have voltage variables
+    # do nothing, this model does not have voltage variables
 end
 
 function constraint_reactive_gen_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, gen)
-    # Do nothing, this model does not have reactive variables
+    # do nothing, this model does not have reactive variables
 end
 
 
@@ -143,21 +158,17 @@ function LSDCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, LSDCPForm(); kwargs...)
 end
 
-function init_vars{T <: AbstractLSDCPForm}(pm::GenericPowerModel{T})
-    # super methods
-    phase_angle_variables(pm)
-    active_generation_variables(pm)
 
-    p = active_line_flow_variables(pm; both_sides = false)
+function active_line_flow_variables{T <: AbstractLSDCPForm}(pm::GenericPowerModel{T})
+    p = @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
+
     p_expr = [(l,i,j) => 1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from]
     p_expr = merge(p_expr, [(l,j,i) => -1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from])
 
     pm.model.ext[:p_expr] = p_expr
 
-    # extention
-    line_indicator_variables(pm)
+    return p
 end
-
 
 function constraint_active_ohms_yt_on_off{T <: AbstractLSDCPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
@@ -200,15 +211,6 @@ typealias LSDCPLLPowerModel GenericPowerModel{LSDCPLLForm}
 function LSDCPLLPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, LSDCPLLForm(); kwargs...)
 end
-
-function init_vars{T <: LSDCPLLForm}(pm::GenericPowerModel{T})
-    phase_angle_variables(pm)
-    active_generation_variables(pm)
-
-    active_line_flow_variables(pm)
-    line_indicator_variables(pm)
-end
-
 
 function constraint_active_kcl_shunt{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]

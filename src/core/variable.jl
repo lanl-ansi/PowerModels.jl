@@ -70,21 +70,13 @@ function reactive_generation_variables{T}(pm::GenericPowerModel{T})
   return qg
 end
 
-function active_line_flow_variables{T}(pm::GenericPowerModel{T}; both_sides = true)
-  if both_sides
-    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
-  else
-    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
-  end
+function active_line_flow_variables{T}(pm::GenericPowerModel{T})
+  @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
   return p
 end
 
-function reactive_line_flow_variables{T}(pm::GenericPowerModel{T}; both_sides = true)
-  if both_sides
-    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= q[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "q_start"))
-  else
-    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= q[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "q_start"))
-  end
+function reactive_line_flow_variables{T}(pm::GenericPowerModel{T})
+  @variable(pm.model, -pm.set.branches[l]["rate_a"] <= q[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "q_start"))
   return q
 end
 

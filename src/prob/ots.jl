@@ -17,7 +17,21 @@ end
 
 
 function post_ots{T}(pm::GenericPowerModel{T})
+    line_indicator_variables(pm)
+    complex_voltage_variables(pm)
+
+    active_generation_variables(pm)
+    reactive_generation_variables(pm)
+
+    active_line_flow_variables(pm)
+    reactive_line_flow_variables(pm)
+
+
+    objective_min_fuel_cost(pm)
+
+
     constraint_theta_ref(pm)
+    constraint_complex_voltage(pm)
 
     for (i,bus) in pm.set.buses
         constraint_active_kcl_shunt(pm, bus)
@@ -33,7 +47,5 @@ function post_ots{T}(pm::GenericPowerModel{T})
         constraint_thermal_limit_from_on_off(pm, branch)
         constraint_thermal_limit_to_on_off(pm, branch)
     end
-
-    objective_min_fuel_cost(pm)
 end
 

@@ -11,10 +11,20 @@ end
 
 
 function post_pf{T}(pm::GenericPowerModel{T})
+    complex_voltage_variables(pm)
+
+    active_generation_variables(pm)
+    reactive_generation_variables(pm)
+
+    active_line_flow_variables(pm)
+    reactive_line_flow_variables(pm)
+
     free_bounded_variables(pm)
+
 
     constraint_theta_ref(pm)
     constraint_voltage_magnitude_setpoint(pm, pm.set.buses[pm.set.ref_bus])
+    constraint_complex_voltage(pm)
 
     for (i,bus) in pm.set.buses
         constraint_active_kcl_shunt(pm, bus)

@@ -37,13 +37,6 @@ type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
 end
 
 
-# for setting up the model variables
-function init_vars{T}(pm::GenericPowerModel{T}) end
-
-# add model constraints that should be applied universalaly to all models
-# a key example being voltage relaxation constraints
-function constraint_universal{T}(pm::GenericPowerModel{T}) end
-
 # default generic constructor
 function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
     data, sets = process_raw_data(data)
@@ -56,8 +49,6 @@ function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting =
         Dict{AbstractString,Any}(), # solution
     )
 
-    init_vars(pm)
-    constraint_universal(pm)
     return pm
 end
 
@@ -86,7 +77,6 @@ end
 #    pm.solution = Dict{AbstractString,Any}()
 #    pm.data = data
 
-#    init_vars(pm)
 #end
 
 

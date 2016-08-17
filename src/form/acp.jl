@@ -14,15 +14,12 @@ function ACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, StandardACPForm(); kwargs...)
 end
 
-function init_vars{T <: AbstractACPForm}(pm::GenericPowerModel{T})
-    phase_angle_variables(pm)
-    voltage_magnitude_variables(pm)
+function complex_voltage_variables{T <: AbstractACPForm}(pm::GenericPowerModel{T})
+    t = phase_angle_variables(pm)
+    v = voltage_magnitude_variables(pm)
+end
 
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
-
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
+function constraint_complex_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T})
 end
 
 function free_bounded_variables{T <: AbstractACPForm}(pm::GenericPowerModel{T})
@@ -220,23 +217,6 @@ function LSACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, LSACPForm(); kwargs...)
 end
 
-function init_vars{T <: AbstractLSACPForm}(pm::GenericPowerModel{T})
-    # super method
-    phase_angle_variables(pm)
-    voltage_magnitude_variables(pm)
-
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
-
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
-
-    # extentions
-    line_indicator_variables(pm)
-end
-
-
-
 function constraint_active_ohms_yt_on_off{T <: AbstractLSACPForm}(pm::GenericPowerModel{T}, branch)
   i = branch["index"]
   f_bus = branch["f_bus"]
@@ -322,20 +302,12 @@ function APIACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, APIACPForm(); kwargs...)
 end
 
-function init_vars(pm::APIACPPowerModel)
-    # super method
-    phase_angle_variables(pm)
-    voltage_magnitude_variables(pm)
-
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
-
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
-
-    # extentions
+function complex_voltage_variables(pm::APIACPPowerModel)
+    t = phase_angle_variables(pm)
+    v = voltage_magnitude_variables(pm)
     @variable(pm.model, load_factor >= 1.0, start = 1.0)
 end
+
 
 function free_api_variables(pm::APIACPPowerModel)
     for (i,bus) in pm.set.buses
@@ -411,20 +383,12 @@ function SADACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, SADACPForm(); kwargs...)
 end
 
-function init_vars(pm::SADACPPowerModel)
-    # super method
-    phase_angle_variables(pm)
-    voltage_magnitude_variables(pm)
-
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
-
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
-
-    # extentions
+function complex_voltage_variables(pm::SADACPPowerModel)
+    t = phase_angle_variables(pm)
+    v = voltage_magnitude_variables(pm)
     @variable(pm.model, theta_delta_bound >= 0.0, start = 0.523598776)
 end
+
 
 function constraint_phase_angle_diffrence_flexible(pm::SADACPPowerModel, branch)
   i = branch["index"]

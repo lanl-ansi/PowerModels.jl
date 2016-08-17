@@ -10,17 +10,11 @@ function SDPWRMPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, SDPWRMForm(); kwargs...)
 end
 
-function init_vars{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
-    complex_voltage_product_matrix_variables(pm)
-
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
-
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
+function complex_voltage_variables{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
+    WR, WI = complex_voltage_product_matrix_variables(pm)
 end
 
-function constraint_universal(pm::SDPWRMPowerModel)
+function constraint_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
     WR = getvariable(pm.model, :WR)
     WI = getvariable(pm.model, :WI)
 

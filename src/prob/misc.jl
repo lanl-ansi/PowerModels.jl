@@ -13,9 +13,22 @@ function run_api_opf(file, model_constructor, solver)
 end
 
 function post_api_opf{T}(pm::GenericPowerModel{T})
+    complex_voltage_variables(pm)
+
+    active_generation_variables(pm)
+    reactive_generation_variables(pm)
+
+    active_line_flow_variables(pm)
+    reactive_line_flow_variables(pm)
+
     free_api_variables(pm)
 
+
+    objective_max_loading(pm)
+
+
     constraint_theta_ref(pm)
+    constraint_complex_voltage(pm)
 
     for (i,bus) in pm.set.buses
         constraint_active_kcl_shunt_scaled(pm, bus)
@@ -31,8 +44,6 @@ function post_api_opf{T}(pm::GenericPowerModel{T})
         constraint_thermal_limit_from(pm, branch; scale = 0.999)
         constraint_thermal_limit_to(pm, branch; scale = 0.999)
     end
-
-    objective_max_loading(pm)
 end
 
 
@@ -46,7 +57,20 @@ function run_sad_opf(file, model_constructor, solver)
 end
 
 function post_sad_opf{T}(pm::GenericPowerModel{T})
+    complex_voltage_variables(pm)
+
+    active_generation_variables(pm)
+    reactive_generation_variables(pm)
+
+    active_line_flow_variables(pm)
+    reactive_line_flow_variables(pm)
+
+
+    objective_min_theta_delta(pm)
+
+
     constraint_theta_ref(pm)
+    constraint_complex_voltage(pm)
 
     for (i,bus) in pm.set.buses
         constraint_active_kcl_shunt(pm, bus)
@@ -62,8 +86,6 @@ function post_sad_opf{T}(pm::GenericPowerModel{T})
         constraint_thermal_limit_from(pm, branch; scale = 0.999)
         constraint_thermal_limit_to(pm, branch; scale = 0.999)
     end
-
-    objective_min_theta_delta(pm)
 end
 
 

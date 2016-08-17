@@ -11,7 +11,20 @@ end
 
 
 function post_opf{T}(pm::GenericPowerModel{T})
+    complex_voltage_variables(pm)
+
+    active_generation_variables(pm)
+    reactive_generation_variables(pm)
+
+    active_line_flow_variables(pm)
+    reactive_line_flow_variables(pm)
+
+
+    objective_min_fuel_cost(pm)
+
+
     constraint_theta_ref(pm)
+    constraint_complex_voltage(pm)
 
     for (i,bus) in pm.set.buses
         constraint_active_kcl_shunt(pm, bus)
@@ -27,7 +40,5 @@ function post_opf{T}(pm::GenericPowerModel{T})
         constraint_thermal_limit_from(pm, branch)
         constraint_thermal_limit_to(pm, branch)
     end
-
-    objective_min_fuel_cost(pm)
 end
 
