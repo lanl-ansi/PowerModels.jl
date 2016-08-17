@@ -296,6 +296,9 @@ end
 
 # NOTE, this function assumes all values are p.u. and angles are in radians
 function add_branch_parameters(data :: Dict{AbstractString,Any})
+    min_theta_delta = calc_min_phase_angle(data)
+    max_theta_delta = calc_max_phase_angle(data)
+
     for branch in data["branch"]
         r = branch["br_r"]
         x = branch["br_x"]
@@ -306,9 +309,28 @@ function add_branch_parameters(data :: Dict{AbstractString,Any})
         branch["b"] = -x/(x^2 + r^2)
         branch["tr"] = tap_ratio*cos(angle_shift)
         branch["ti"] = tap_ratio*sin(angle_shift)
+
+        branch["off_angmin"] = min_theta_delta
+        branch["off_angmax"] = max_theta_delta
     end
 end
 
+
+function calc_max_phase_angle(data :: Dict{AbstractString,Any})
+    bus_count = length(data["bus"])
+    angle_max = [branch["angmax"] for branch in data["branch"]]
+    sort!(angle_max, rev=true)
+
+    return sum(angle_max[1:bus_count-1])
+end
+
+function calc_min_phase_angle(data :: Dict{AbstractString,Any})
+    bus_count = length(data["bus"])
+    angle_min = [branch["angmin"] for branch in data["branch"]]
+    sort!(angle_min)
+
+    return sum(angle_min[1:bus_count-1])
+end
 
 
 
@@ -349,6 +371,10 @@ function add_branch_flow_setpoint{T}(sol, pm::GenericPowerModel{T})
         add_setpoint(sol, pm, "branch", "index",   "p_to", :p; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
         add_setpoint(sol, pm, "branch", "index",   "q_to", :q; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
     end
+end
+
+function add_branch_status_setpoint{T}(sol, pm::GenericPowerModel{T})
+  add_setpoint(sol, pm, "branch", "index", "br_status", :line_z; default_value = (item) -> 1)
 end
 
 function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, param_name, variable_symbol; default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])

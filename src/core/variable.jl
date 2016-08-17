@@ -19,6 +19,39 @@ function voltage_magnitude_sqr_variables{T}(pm::GenericPowerModel{T})
   return w
 end
 
+
+function voltage_magnitude_sqr_from_on_off_variables{T}(pm::GenericPowerModel{T})
+  buses = pm.set.buses
+  branches = pm.set.branches
+
+  @variable(pm.model, 0 <= w_from[i in pm.set.branch_indexes] <= buses[branches[i]["f_bus"]]["vmax"]^2)
+
+  z = getvariable(pm.model, :line_z)
+  for i in pm.set.branch_indexes
+    @constraint(pm.model, w_from[i] <= z[i]*buses[branches[i]["f_bus"]]["vmax"]^2)
+    @constraint(pm.model, w_from[i] >= z[i]*buses[branches[i]["f_bus"]]["vmin"]^2)
+  end
+
+  return w_from
+end
+
+function voltage_magnitude_sqr_to_on_off_variables{T}(pm::GenericPowerModel{T})
+  buses = pm.set.buses
+  branches = pm.set.branches
+
+  @variable(pm.model, 0 <= w_to[i in pm.set.branch_indexes] <= buses[branches[i]["t_bus"]]["vmax"]^2)
+
+  z = getvariable(pm.model, :line_z)
+  for i in pm.set.branch_indexes
+    @constraint(pm.model, w_to[i] <= z[i]*buses[branches[i]["t_bus"]]["vmax"]^2)
+    @constraint(pm.model, w_to[i] >= z[i]*buses[branches[i]["t_bus"]]["vmin"]^2)
+  end
+
+  return w_to
+end
+
+
+
 function active_generation_variables{T}(pm::GenericPowerModel{T})
   @variable(pm.model, pm.set.gens[i]["pmin"] <= pg[i in pm.set.gen_indexes] <= pm.set.gens[i]["pmax"])
   return pg
@@ -90,6 +123,27 @@ function complex_voltage_product_variables{T}(pm::GenericPowerModel{T})
 
   return wr, wi
 end
+
+function complex_voltage_product_on_off_variables{T}(pm::GenericPowerModel{T})
+  wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
+
+  bi_bp = [i => (b["f_bus"], b["t_bus"]) for (i,b) in pm.set.branches]
+
+  @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr[b in pm.set.branch_indexes] <= max(0, wr_max[bi_bp[b]]), start = 1.0) 
+  @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi[b in pm.set.branch_indexes] <= max(0, wi_max[bi_bp[b]]))
+
+  z = getvariable(pm.model, :line_z)
+  for b in pm.set.branch_indexes
+    @constraint(pm.model, wr[b] <= z[b]*wr_max[bi_bp[b]])
+    @constraint(pm.model, wr[b] >= z[b]*wr_min[bi_bp[b]])
+
+    @constraint(pm.model, wi[b] <= z[b]*wi_max[bi_bp[b]])
+    @constraint(pm.model, wi[b] >= z[b]*wi_min[bi_bp[b]])
+  end
+
+  return wr, wi
+end
+
 
 function complex_voltage_product_matrix_variables{T}(pm::GenericPowerModel{T})
   wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
@@ -185,6 +239,11 @@ function current_magnitude_sqr_variables{T}(pm::GenericPowerModel{T})
 end
 
 
+
+function line_indicator_variables{T}(pm::GenericPowerModel{T})
+  @variable(pm.model, 0 <= line_z[l in pm.set.branch_indexes] <= 1, Int)
+  return line_z
+end
 
 
 

@@ -1,5 +1,6 @@
 export 
     SOCWRPowerModel, SOCWRForm,
+    LSSOCWRPowerModel, LSSOCWRForm,
     QCWRPowerModel, QCWRForm
 
 abstract AbstractWRForm <: AbstractPowerFormulation
@@ -185,9 +186,121 @@ end
 
 
 
+abstract AbstractLSWRPForm <: AbstractWRForm
 
+type LSSOCWRForm <: AbstractLSWRPForm end
+typealias LSSOCWRPowerModel GenericPowerModel{LSSOCWRForm}
 
+# default AC constructor
+function LSSOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+    return GenericPowerModel(data, LSSOCWRForm(); kwargs...)
+end
 
+function init_vars{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
+    # super method
+    voltage_magnitude_sqr_variables(pm)
+    #complex_voltage_product_variables(pm)
+
+    active_generation_variables(pm)
+    reactive_generation_variables(pm)
+
+    active_line_flow_variables(pm)
+    reactive_line_flow_variables(pm)
+
+    # extentions
+    line_indicator_variables(pm)
+
+    voltage_magnitude_sqr_from_on_off_variables(pm)
+    voltage_magnitude_sqr_to_on_off_variables(pm)
+
+    complex_voltage_product_on_off_variables(pm)
+end
+
+function constraint_universal(pm::LSSOCWRPowerModel)
+    w = getvariable(pm.model, :w)
+    wr = getvariable(pm.model, :wr)
+    wi = getvariable(pm.model, :wi)
+    z = getvariable(pm.model, :line_z)
+    
+    w_from = getvariable(pm.model, :w_from)
+    w_to = getvariable(pm.model, :w_to)
+
+    for (l,i,j) in pm.set.arcs_from
+        complex_product_on_off_relaxation(pm.model, w[i], w[j], wr[l], wi[l], z[l])
+        equality_on_off_relaxation(pm.model, w[i], w_from[l], z[l])
+        equality_on_off_relaxation(pm.model, w[j], w_to[l], z[l])
+    end
+end
+
+# Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
+function constraint_active_ohms_yt_on_off{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    p_fr = getvariable(pm.model, :p)[f_idx]
+    p_to = getvariable(pm.model, :p)[t_idx]
+    w_fr = getvariable(pm.model, :w_from)[i]
+    w_to = getvariable(pm.model, :w_to)[i]
+    wr = getvariable(pm.model, :wr)[i]
+    wi = getvariable(pm.model, :wi)[i]
+
+    g = branch["g"]
+    b = branch["b"]
+    c = branch["br_b"]
+    tr = branch["tr"]
+    ti = branch["ti"]
+    tm = tr^2 + ti^2 
+
+    @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
+    @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
+end
+
+function constraint_reactive_ohms_yt_on_off{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    q_fr = getvariable(pm.model, :q)[f_idx]
+    q_to = getvariable(pm.model, :q)[t_idx]
+    w_fr = getvariable(pm.model, :w_from)[i]
+    w_to = getvariable(pm.model, :w_to)[i]
+    wr = getvariable(pm.model, :wr)[i]
+    wi = getvariable(pm.model, :wi)[i]
+
+    g = branch["g"]
+    b = branch["b"]
+    c = branch["br_b"]
+    tr = branch["tr"]
+    ti = branch["ti"]
+    tm = tr^2 + ti^2 
+
+    @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
+    @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
+end
+
+function constraint_phase_angle_diffrence_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+
+    wr = getvariable(pm.model, :wr)[i]
+    wi = getvariable(pm.model, :wi)[i]
+
+    @constraint(pm.model, wi <= branch["angmax"]*wr)
+    @constraint(pm.model, wi >= branch["angmin"]*wr)
+end
+
+function getsolution{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
+    sol = Dict{AbstractString,Any}()
+    add_bus_voltage_setpoint(sol, pm)
+    add_generator_power_setpoint(sol, pm)
+    add_branch_flow_setpoint(sol, pm)
+    add_branch_status_setpoint(sol, pm)
+    return sol
+end
 
 
 

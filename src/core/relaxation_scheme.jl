@@ -4,7 +4,7 @@ function complex_product_relaxation(m, a, b, c, d)
 end
 
 # TODO add LNC cuts to this 
-function complex_product_relaxation_on_off(m, a, b, c, d, z)
+function complex_product_on_off_relaxation(m, a, b, c, d, z)
     @assert getlowerbound(c) <= 0 && getupperbound(c) >= 0
     @assert getlowerbound(d) <= 0 && getupperbound(d) >= 0
     # assume c and d are already linked to z in other constraints 
@@ -19,6 +19,15 @@ function complex_product_relaxation_on_off(m, a, b, c, d, z)
     @constraint(m, c^2 + d^2 <= a*b_ub*z)
 end
 
+function equality_on_off_relaxation(m, x, y, z)
+    # assumes 0 is in the domain of y when z is 0
+
+    x_ub = getupperbound(x)
+    x_lb = getlowerbound(x)
+
+    @constraint(m, y >= x - x_ub*(1-z))
+    @constraint(m, y <= x - x_lb*(1-z))
+end
 
 # general relaxation of a square term
 function sqr_relaxation(m, x, y)
@@ -72,3 +81,5 @@ function product_relaxation(m, x, y, z)
     @constraint(m, z <= x_lb*y + y_ub*x - x_lb*y_ub)
     @constraint(m, z <= x_ub*y + y_lb*x - x_ub*y_lb)
 end
+
+
