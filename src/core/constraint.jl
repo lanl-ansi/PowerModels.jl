@@ -56,6 +56,18 @@ function constraint_thermal_limit_to{T <: AbstractConicPowerFormulation}(pm::Gen
 end
 
 
+function constraint_active_gen_setpoint{T}(pm::GenericPowerModel{T}, gen)
+  i = gen["index"]
+  pg = getvariable(pm.model, :pg)[gen["index"]]
+  @constraint(pm.model, pg == gen["pg"])
+end
+
+function constraint_reactive_gen_setpoint{T}(pm::GenericPowerModel{T}, gen)
+  i = gen["index"]
+  qg = getvariable(pm.model, :qg)[gen["index"]]
+  @constraint(pm.model, qg == gen["qg"])
+end
+
 
 
 
@@ -139,15 +151,6 @@ function constraint_reactive_gen_setpoint(m, qg, gen)
   @constraint(m, qg == gen["qg"])
 end
 
-function constraint_voltage_magnitude_setpoint(m, v, bus; epsilon = 0.0)
-  if epsilon == 0.0
-    @constraint(m, v == bus["vm"])
-  else
-    @assert epsilon > 0.0
-    @constraint(m, v <= bus["vm"] + epsilon)
-    @constraint(m, v >= bus["vm"] - epsilon)
-  end
-end
 
 function constraint_voltage_magnitude_setpoint_w(m, w, bus)
   @constraint(m, w == bus["vm"]^2)

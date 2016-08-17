@@ -23,11 +23,48 @@ function init_vars(pm::ACPPowerModel)
     reactive_line_flow_variables(pm)
 end
 
+function free_bounded_variables{T <: AbstractACPForm}(pm::GenericPowerModel{T})
+    for (i,bus) in pm.set.buses
+        v = getvariable(pm.model, :v)[i]
+        setupperbound(v, Inf)
+        setlowerbound(v, 0)
+    end
+    for (i,gen) in pm.set.gens
+        pg = getvariable(pm.model, :pg)[i]
+        setupperbound(pg,  Inf)
+        setlowerbound(pg, -Inf)
+        qg = getvariable(pm.model, :pg)[i]
+        setupperbound(pg,  Inf)
+        setlowerbound(pg, -Inf)
+    end
+    for arc in pm.set.arcs
+        p = getvariable(pm.model, :p)[arc]
+        setupperbound(p,  Inf)
+        setlowerbound(p, -Inf)
+        q = getvariable(pm.model, :p)[arc]
+        setupperbound(q,  Inf)
+        setlowerbound(q, -Inf)
+    end
+end
 
 
 function constraint_theta_ref(pm::ACPPowerModel)
     @constraint(pm.model, getvariable(pm.model, :t)[pm.set.ref_bus] == 0)
 end
+
+function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, bus; epsilon = 0.0)
+    i = bus["index"]
+    v = getvariable(pm.model, :v)[i]
+
+    if epsilon == 0.0
+        @constraint(pm.model, v == bus["vm"])
+    else
+        @assert epsilon > 0.0
+        @constraint(pm.model, v <= bus["vm"] + epsilon)
+        @constraint(pm.model, v >= bus["vm"] - epsilon)
+    end
+end
+
 
 function constraint_active_kcl_shunt(pm::ACPPowerModel, bus)
     i = bus["index"]

@@ -23,6 +23,38 @@ function init_vars{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     reactive_line_flow_variables(pm)
 end
 
+function free_bounded_variables{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+    for (i,bus) in pm.set.buses
+        w = getvariable(pm.model, :w)[i]
+        setupperbound(w, Inf)
+        setlowerbound(w, 0)
+    end
+    for (i,j) in pm.set.buspair_indexes
+        wr = getvariable(pm.model, :wr)[(i,j)]
+        setupperbound(wr,  Inf)
+        setlowerbound(wr, -Inf)
+        wi = getvariable(pm.model, :wi)[(i,j)]
+        setupperbound(wi,  Inf)
+        setlowerbound(wi, -Inf)
+    end
+    for (i,gen) in pm.set.gens
+        pg = getvariable(pm.model, :pg)[i]
+        setupperbound(pg,  Inf)
+        setlowerbound(pg, -Inf)
+        qg = getvariable(pm.model, :pg)[i]
+        setupperbound(pg,  Inf)
+        setlowerbound(pg, -Inf)
+    end
+    for arc in pm.set.arcs
+        p = getvariable(pm.model, :p)[arc]
+        setupperbound(p,  Inf)
+        setlowerbound(p, -Inf)
+        q = getvariable(pm.model, :p)[arc]
+        setupperbound(q,  Inf)
+        setlowerbound(q, -Inf)
+    end
+end
+
 function constraint_universal(pm::SOCWRPowerModel)
     w = getvariable(pm.model, :w)
     wr = getvariable(pm.model, :wr)
@@ -33,8 +65,22 @@ function constraint_universal(pm::SOCWRPowerModel)
     end
 end
 
+
 function constraint_theta_ref{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     # Do nothing, no way to represent this in these variables
+end
+
+function constraint_voltage_magnitude_setpoint{T <: AbstractWRForm}(pm::GenericPowerModel{T}, bus; epsilon = 0.0)
+    i = bus["index"]
+    w = getvariable(pm.model, :w)[i]
+
+    if epsilon == 0.0
+        @constraint(pm.model, w == bus["vm"]^2)
+    else
+        @assert epsilon > 0.0
+        @constraint(pm.model, w <= bus["vm"]^2 + epsilon)
+        @constraint(pm.model, w >= bus["vm"]^2 - epsilon)
+    end
 end
 
 function constraint_active_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, bus)

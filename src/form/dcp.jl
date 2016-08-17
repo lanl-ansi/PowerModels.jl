@@ -23,11 +23,32 @@ function init_vars(pm::DCPPowerModel)
     pm.model.ext[:p_expr] = p_expr
 end
 
+function free_bounded_variables{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
+    for (i,gen) in pm.set.gens
+        pg = getvariable(pm.model, :pg)[i]
+        setupperbound(pg,  Inf)
+        setlowerbound(pg, -Inf)
+    end
+    for arc in pm.set.arcs_from
+        p = getvariable(pm.model, :p)[arc]
+        setupperbound(p,  Inf)
+        setlowerbound(p, -Inf)
+    end
+end
 
 
 function constraint_theta_ref(pm::DCPPowerModel)
     @constraint(pm.model, getvariable(pm.model, :t)[pm.set.ref_bus] == 0)
 end
+
+function constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus; epsilon = 0.0)
+    # Do nothing, this model does not have voltage variables
+end
+
+function constraint_reactive_gen_setpoint{T}(pm::GenericPowerModel{T}, gen)
+    # Do nothing, this model does not have reactive variables
+end
+
 
 #constraint_active_kcl_shunt_const(pm.model, pm.var.p, pm.var.pg, bus, bus_branches, pm.set.bus_gens[i])
 function constraint_active_kcl_shunt(pm::DCPPowerModel, bus)
