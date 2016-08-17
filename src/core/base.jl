@@ -91,7 +91,7 @@ end
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
-function JuMP.setsolver{T}(pm::GenericPowerModel{T}, solver::MathProgBase.AbstractMathProgSolver)
+function JuMP.setsolver(pm::GenericPowerModel, solver::MathProgBase.AbstractMathProgSolver)
     setsolver(pm.model, solver)
 end
 
