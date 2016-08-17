@@ -131,5 +131,6 @@ end
 
 function add_bus_voltage_setpoint{T <: AbstractWRForm}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :w; scale = (x) -> sqrt(x))
+    # What should the default value be?
     #add_setpoint(sol, pm, "bus", "bus_i", "va", :t; default_value = 0)
 end

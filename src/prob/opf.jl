@@ -1,3 +1,4 @@
+export post_opf
 
 function post_opf{T}(pm::GenericPowerModel{T})
     constraint_theta_ref(pm)

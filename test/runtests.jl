@@ -1,3 +1,6 @@
+# need master for SOCRotated constraints
+Pkg.checkout("ConicNonlinearBridge")
+
 using PowerModels
 
 using Ipopt
@@ -21,8 +24,55 @@ else
     const Test = BaseTestNext
 end
 
-# need master for SOCRotated constraints
-Pkg.checkout("ConicNonlinearBridge")
+
+
+function test_ac_opf()
+    data = parse_matpower("../test/data/case30.m")
+
+    pm = ACPPowerModel(data; solver = IpoptSolver())
+
+    post_opf(pm)
+    sol = solve(pm)
+
+    dump(sol)
+end
+
+function test_soc_opf()
+    data = parse_matpower("../test/data/case30.m")
+
+    pm = SOCWRPowerModel(data)
+    setsolver(pm, ConicNLPWrapper(nlp_solver=IpoptSolver()))
+
+    post_opf(pm)
+    sol = solve(pm)
+
+    dump(sol)
+end
+
+function test_sdp_opf()
+    # too slow for unit testing
+    #data = parse_matpower("../test/data/case30.m")
+    data = parse_json("../test/data/case3.json")
+
+    pm = SDPWRMPowerModel(data; solver = SCSSolver())
+
+    post_opf(pm)
+    sol = solve(pm)
+
+    dump(sol)
+end
+
+function test_dc_opf()
+    data = parse_matpower("../test/data/case30.m")
+
+    pm = DCPPowerModel(data; solver = IpoptSolver())
+
+    post_opf(pm)
+    sol = solve(pm)
+
+    dump(sol)
+end
+
 
 test_ac_opf() 
 test_soc_opf() 

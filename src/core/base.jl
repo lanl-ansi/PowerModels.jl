@@ -74,25 +74,9 @@ function process_raw_data(data::Dict{AbstractString,Any})
 end
 
 
-#function testit(val::ACPPowerModel)
-#    println("AC Model!")
-#    typeof(val)
-#end
-
-#function testit(val::DCPPowerModel)
-#    println("DC Model!")
-#    typeof(val)
-#end
-
-#function testit{T}(val::GenericPowerModel{T})
-#    println("Any Model!")
-#    typeof(val)
-#    typeof(T)
-#end
-
 
 #
-# Just seems too hard to maintain with the constructor
+# Just seems too hard to maintain with the default constructor
 #
 #function setdata{T}(pm::GenericPowerModel{T}, data::Dict{AbstractString,Any})
 #    data, sets = process_raw_data(data)
@@ -111,22 +95,32 @@ function setsolver{T}(pm::GenericPowerModel{T}, solver::MathProgBase.AbstractMat
     JuMP.setsolver(pm.model, solver)
 end
 
-function getsolution{T}(pm::GenericPowerModel{T})
-    return Dict{AbstractString,Any}()
+function solve{T}(pm::GenericPowerModel{T})
+    status, solve_sec_elapsed, solve_bytes_alloc, sec_in_gc = @timed JuMP.solve(pm.model)
+
+    build_solution(pm, status; solve_time_alternate = solve_sec_elapsed)
 end
 
 
-function solve{T}(pm::GenericPowerModel{T})
+function build_solution{T}(pm::GenericPowerModel{T}, status; objective = NaN, solve_time_override = NaN, solve_time_alternate = NaN)
+    # TODO assert that the model is solved
 
-    status, solve_sec_elapsed, solve_bytes_alloc, sec_in_gc = @timed JuMP.solve(pm.model)
-
-    objective = NaN
     solve_time = NaN
 
     if status != :Error
         objective = getobjectivevalue(pm.model)
         status = solver_status_dict(typeof(pm.model.solver), status)
-        solve_time = solve_sec_elapsed
+
+        if solve_time_override != NaN
+            solve_time = solve_time_override
+        else
+            try
+                solve_time = getsolvetime(pm.model)
+            catch
+                warn("there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
+                solve_time = solve_time_alternate
+            end
+        end
     end
 
     solution = Dict{AbstractString,Any}(
