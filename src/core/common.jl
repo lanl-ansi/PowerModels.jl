@@ -8,6 +8,13 @@ if (Pkg.installed("Ipopt") != nothing)
   solver_status_lookup[Ipopt.IpoptSolver] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
 end
 
+if (Pkg.installed("ConicNonlinearBridge") != nothing)
+  using ConicNonlinearBridge
+  solver_status_lookup[ConicNonlinearBridge.ConicNLPWrapper] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
+end
+
+
+
 if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
   # note that AmplNLWriter.AmplNLSolver is the solver type of bonmin
   using AmplNLWriter

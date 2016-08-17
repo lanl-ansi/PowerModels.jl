@@ -1,5 +1,6 @@
+# This seems to break CI
 # need master for SOCRotated constraints
-Pkg.checkout("ConicNonlinearBridge")
+# Pkg.checkout("ConicNonlinearBridge")
 
 using PowerModels
 
@@ -74,10 +75,10 @@ function test_dc_opf()
 end
 
 
-test_ac_opf() 
-test_soc_opf() 
-test_sdp_opf() 
-test_dc_opf()
+#test_ac_opf() 
+#test_soc_opf() 
+#test_sdp_opf() 
+#test_dc_opf()
 
 #include("output.jl")
 
@@ -94,7 +95,7 @@ test_dc_opf()
 
 #include("pf.jl")
 
-#include("opf.jl")
+include("opf.jl")
 
 #include("ots.jl")
 

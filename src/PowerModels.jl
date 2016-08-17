@@ -8,6 +8,7 @@ using JuMP
 
 include("io/matpower.jl")
 include("io/json.jl")
+include("io/common.jl")
 
 include("core/base.jl")
 include("core/variable.jl")

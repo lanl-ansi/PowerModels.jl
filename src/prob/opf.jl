@@ -1,4 +1,14 @@
-export post_opf
+export post_opf, run_opf
+
+function run_opf(file, model_constructor, solver)
+    data = parse_file(file)
+
+    pm = model_constructor(data; solver = solver)
+
+    post_opf(pm)
+    return solve(pm)
+end
+
 
 function post_opf{T}(pm::GenericPowerModel{T})
     constraint_theta_ref(pm)
