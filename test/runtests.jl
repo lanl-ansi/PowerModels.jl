@@ -25,9 +25,9 @@ else
     const Test = BaseTestNext
 end
 
-#include("output.jl")
+include("output.jl")
 
-#include("matpower.jl")
+include("matpower.jl")
 
 
 # used by OTS and Loadshed TS models

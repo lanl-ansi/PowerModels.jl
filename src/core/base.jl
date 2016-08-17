@@ -45,7 +45,7 @@ function init_vars{T}(pm::GenericPowerModel{T}) end
 function constraint_universal{T}(pm::GenericPowerModel{T}) end
 
 # default generic constructor
-function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting::Dict{AbstractString,Any} = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
+function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
     data, sets = process_raw_data(data)
 
     pm = GenericPowerModel{T}(
@@ -111,7 +111,7 @@ function build_solution{T}(pm::GenericPowerModel{T}, status; objective = NaN, so
         objective = getobjectivevalue(pm.model)
         status = solver_status_dict(typeof(pm.model.solver), status)
 
-        if solve_time_override != NaN
+        if !isnan(solve_time_override)
             solve_time = solve_time_override
         else
             try
