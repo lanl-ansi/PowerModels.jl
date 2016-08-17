@@ -4,14 +4,14 @@
 ##########################################################################################################
 
 
-function post_objective_min_fuel_cost{T}(pm::GenericPowerModel{T})
+function objective_min_fuel_cost{T}(pm::GenericPowerModel{T})
     pg = getvariable(pm.model, :pg)
     cost = (i) -> pm.set.gens[i]["cost"]
     @objective(pm.model, Min, sum{ cost(i)[1]*pg[i]^2 + cost(i)[2]*pg[i] + cost(i)[3], i in pm.set.gen_indexes} )
 end
 
 
-function post_objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T})
+function objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T})
   @variable(pm.model, pm.set.gens[i]["pmin"]^2 <= pg_sqr[i in pm.set.gen_indexes] <= pm.set.gens[i]["pmax"]^2)
 
   pg = getvariable(pm.model, :pg)

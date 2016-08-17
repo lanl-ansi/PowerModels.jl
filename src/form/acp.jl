@@ -219,7 +219,7 @@ function constraint_active_kcl_shunt(pm::APIACPPowerModel, bus)
     end
 end
 
-function post_objective_max_loading(pm::APIACPPowerModel)
+function objective_max_loading(pm::APIACPPowerModel)
     load_factor = getvariable(pm.model, :load_factor)
     @objective(pm.model, Max, load_factor)
 end
