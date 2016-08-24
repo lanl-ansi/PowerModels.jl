@@ -251,18 +251,18 @@ function constraint_active_ohms_yt_on_off{T <: LSDCPLLForm}(pm::GenericPowerMode
 end
 
 function constraint_thermal_limit_to_on_off{T <: LSDCPLLForm}(pm::GenericPowerModel{T}, branch; scale = 1.0)
-  i = branch["index"]
-  f_bus = branch["f_bus"]
-  t_bus = branch["t_bus"]
-  t_idx = (i, t_bus, f_bus)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    t_idx = (i, t_bus, f_bus)
 
-  p_to = getvariable(pm.model, :p)[t_idx]
-  z = getvariable(pm.model, :line_z)[i]
+    p_to = getvariable(pm.model, :p)[t_idx]
+    z = getvariable(pm.model, :line_z)[i]
 
-  c1 = @constraint(pm.model, p_to <= getupperbound(p_to)*z)
-  c2 = @constraint(pm.model, p_to >= getlowerbound(p_to)*z)
+    c1 = @constraint(pm.model, p_to <= getupperbound(p_to)*z)
+    c2 = @constraint(pm.model, p_to >= getlowerbound(p_to)*z)
 
-  return Set([c1, c2])
+    return Set([c1, c2])
 end
 
 
@@ -272,35 +272,35 @@ function constraint_reactive_ohms_yt_on_off{T <: Union{AbstractLSDCPForm, LSDCPL
 end
 
 function constraint_phase_angle_diffrence_on_off{T <: Union{AbstractLSDCPForm, LSDCPLLForm}}(pm::GenericPowerModel{T}, branch)
-  i = branch["index"]
-  f_bus = branch["f_bus"]
-  t_bus = branch["t_bus"]
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
 
-  t_fr = getvariable(pm.model, :t)[f_bus]
-  t_to = getvariable(pm.model, :t)[t_bus]
-  z = getvariable(pm.model, :line_z)[i]
+    t_fr = getvariable(pm.model, :t)[f_bus]
+    t_to = getvariable(pm.model, :t)[t_bus]
+    z = getvariable(pm.model, :line_z)[i]
 
-  t_min = branch["off_angmin"]
-  t_max = branch["off_angmax"]
+    t_min = branch["off_angmin"]
+    t_max = branch["off_angmax"]
 
-  c1 = @constraint(pm.model, t_fr - t_to <= branch["angmax"]*z + t_max*(1-z))
-  c2 = @constraint(pm.model, t_fr - t_to >= branch["angmin"]*z + t_min*(1-z))
-  return Set([c1, c2])
+    c1 = @constraint(pm.model, t_fr - t_to <= branch["angmax"]*z + t_max*(1-z))
+    c2 = @constraint(pm.model, t_fr - t_to >= branch["angmin"]*z + t_min*(1-z))
+    return Set([c1, c2])
 end
 
 # Generic on/off thermal limit constraint
 function constraint_thermal_limit_from_on_off{T <: Union{AbstractLSDCPForm, LSDCPLLForm}}(pm::GenericPowerModel{T}, branch; scale = 1.0)
-  i = branch["index"]
-  f_bus = branch["f_bus"]
-  t_bus = branch["t_bus"]
-  f_idx = (i, f_bus, t_bus)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
 
-  p_fr = getvariable(pm.model, :p)[f_idx]
-  z = getvariable(pm.model, :line_z)[i]
+    p_fr = getvariable(pm.model, :p)[f_idx]
+    z = getvariable(pm.model, :line_z)[i]
 
-  c1 = @constraint(pm.model, p_fr <= getupperbound(p_fr)*z)
-  c2 = @constraint(pm.model, p_fr >= getlowerbound(p_fr)*z)
-  return Set([c1, c2])
+    c1 = @constraint(pm.model, p_fr <= getupperbound(p_fr)*z)
+    c2 = @constraint(pm.model, p_fr >= getlowerbound(p_fr)*z)
+    return Set([c1, c2])
 end
 
 

@@ -120,32 +120,32 @@ end
 solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}()
 
 if (Pkg.installed("Ipopt") != nothing)
-  using Ipopt
-  solver_status_lookup[Ipopt.IpoptSolver] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
+    using Ipopt
+    solver_status_lookup[Ipopt.IpoptSolver] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
 end
 
 if (Pkg.installed("ConicNonlinearBridge") != nothing)
-  using ConicNonlinearBridge
-  solver_status_lookup[ConicNonlinearBridge.ConicNLPWrapper] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
+    using ConicNonlinearBridge
+    solver_status_lookup[ConicNonlinearBridge.ConicNLPWrapper] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
 end
 
 if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
-  # note that AmplNLWriter.AmplNLSolver is the solver type of bonmin
-  using AmplNLWriter
-  using CoinOptServices
-  solver_status_lookup[AmplNLWriter.AmplNLSolver] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
+    # note that AmplNLWriter.AmplNLSolver is the solver type of bonmin
+    using AmplNLWriter
+    using CoinOptServices
+    solver_status_lookup[AmplNLWriter.AmplNLSolver] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
 end
 
 # translates solver status codes to our status codes
 function solver_status_dict(solver_type, status)
     for (st, solver_stat_dict) in solver_status_lookup
-      if solver_type == st
-        if status in keys(solver_stat_dict)
-            return solver_stat_dict[status]
-        else
-            return status
+        if solver_type == st
+            if status in keys(solver_stat_dict)
+                return solver_stat_dict[status]
+            else
+                return status
+            end
         end
-      end
     end
     return status
 end
