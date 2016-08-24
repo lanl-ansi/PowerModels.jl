@@ -8,18 +8,18 @@ It is designed to enable computational evaluation of emerging power network form
 The code is engineered to decouple problem specifications (e.g. Power Flow, Optimal Power Flow) from the power network formulations (e.g. AC, DC-approximation, SOC-relaxation).
 This enables the definition of a wide variety of power network formulations and their comparison on common problem specifications.
 
-### Core Problem Specifications
+**Core Problem Specifications**
 * Power Flow
 * Optimal Power Flow
 * Optimal Transmission Switching
 
-### Core Network Formulations
+**Core Network Formulations**
 * AC (polar coordinates)
 * DC Approximation (polar coordinates)
 * SOC Relaxation (W-space)
 * QC Relaxation (W+L-space)
 
-### Network Data Formats
+**Network Data Formats**
 * Matpower ".m" files
 
 
@@ -82,7 +82,7 @@ Community-driven development and enhancement of PowerModels are welcome and enco
 This code has been developed as part of the Advanced Network Science Initiative at Los Alamos National Laboratory.
 The primary developer is Carleton Coffrin, with significant contributions from Russell Bent.
 
-A special thanks goes to Miles Lubin for his assistance integrating with Julia/JuMP.
+Special thanks to Miles Lubin for his assistance in integrating with Julia/JuMP.
 
 
 ## License
