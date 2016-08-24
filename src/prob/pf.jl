@@ -1,14 +1,16 @@
 export post_pf, run_pf
 
-function run_pf(file, model_constructor, solver)
+function run_pf(file, model_constructor, solver; kwargs...)
     data = PowerModels.parse_file(file)
 
-    pm = model_constructor(data; solver = solver)
+    pm = model_constructor(data; solver = solver, kwargs...)
 
     post_pf(pm)
-    return solve(pm)
-end
 
+    status, solve_time = solve(pm)
+
+    return build_solution(pm, status, solve_time)
+end
 
 function post_pf{T}(pm::GenericPowerModel{T})
     variable_complex_voltage(pm, bounded = false)

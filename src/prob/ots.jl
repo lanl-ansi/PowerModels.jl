@@ -6,13 +6,27 @@
 
 export post_ots, run_ots
 
-function run_ots(file, model_constructor, solver)
+
+function run_ots(file, model_constructor, solver; kwargs...)
     data = PowerModels.parse_file(file)
 
-    pm = model_constructor(data; solver = solver)
+    pm = model_constructor(data; solver = solver, kwargs...)
 
     post_ots(pm)
-    return solve(pm)
+
+    status, solve_time = solve(pm)
+
+    return build_solution(pm, status, solve_time, solution_builder = get_ots_solution)
+end
+
+
+function get_ots_solution{T}(pm::GenericPowerModel{T})
+    sol = Dict{AbstractString,Any}()
+    add_bus_voltage_setpoint(sol, pm)
+    add_generator_power_setpoint(sol, pm)
+    add_branch_flow_setpoint(sol, pm)
+    add_branch_status_setpoint(sol, pm)
+    return sol
 end
 
 

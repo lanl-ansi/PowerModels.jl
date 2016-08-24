@@ -2,7 +2,7 @@
 
 export 
     GenericPowerModel,
-    setdata, setsolver, solve, getsolution
+    setdata, setsolver, solve
 
 
 type PowerDataSets
@@ -86,9 +86,15 @@ function JuMP.setsolver(pm::GenericPowerModel, solver::MathProgBase.AbstractMath
 end
 
 function JuMP.solve(pm::GenericPowerModel)
-    status, solve_sec_elapsed, solve_bytes_alloc, sec_in_gc = @timed solve(pm.model)
+    status, solve_time, solve_bytes_alloc, sec_in_gc = @timed solve(pm.model)
 
-    build_solution(pm, status; solve_time_alternate = solve_sec_elapsed)
+    try
+        solve_time = getsolvetime(pm.model)
+    catch
+        warn("there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
+    end
+
+    return status, solve_time
 end
 
 

@@ -310,7 +310,7 @@ function constraint_thermal_limit_from_on_off{T <: Union{AbstractLSDCPForm, LSDC
 end
 
 
-function getsolution{T <: Union{AbstractLSDCPForm, LSDCPLLForm}}(pm::GenericPowerModel{T})
+function get_solution{T <: Union{AbstractLSDCPForm, LSDCPLLForm}}(pm::GenericPowerModel{T})
     sol = Dict{AbstractString,Any}()
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)

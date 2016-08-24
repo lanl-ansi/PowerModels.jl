@@ -281,14 +281,14 @@ function constraint_phase_angle_diffrence_on_off{T <: AbstractLSACPForm}(pm::Gen
     return Set([c1, c2])
 end
 
-function getsolution{T <: AbstractLSACPForm}(pm::GenericPowerModel{T})
-    sol = Dict{AbstractString,Any}()
-    add_bus_voltage_setpoint(sol, pm)
-    add_generator_power_setpoint(sol, pm)
-    add_branch_flow_setpoint(sol, pm)
-    add_branch_status_setpoint(sol, pm)
-    return sol
-end
+#function get_solution{T <: AbstractLSACPForm}(pm::GenericPowerModel{T})
+#    sol = Dict{AbstractString,Any}()
+#    add_bus_voltage_setpoint(sol, pm)
+#    add_generator_power_setpoint(sol, pm)
+#    add_branch_flow_setpoint(sol, pm)
+#    add_branch_status_setpoint(sol, pm)
+#    return sol
+#end
 
 
 
@@ -351,7 +351,7 @@ function constraint_active_kcl_shunt_scaled(pm::APIACPPowerModel, bus)
     return Set([c])
 end
 
-function getsolution(pm::APIACPPowerModel)
+function get_solution(pm::APIACPPowerModel)
     # super fallback
     sol = Dict{AbstractString,Any}()
     add_bus_voltage_setpoint(sol, pm)

@@ -321,7 +321,7 @@ function constraint_phase_angle_diffrence_on_off{T <: AbstractWRForm}(pm::Generi
     return Set([c1, c2])
 end
 
-function getsolution{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
+function get_solution{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
     sol = Dict{AbstractString,Any}()
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)

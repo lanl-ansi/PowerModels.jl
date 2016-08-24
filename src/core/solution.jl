@@ -1,23 +1,10 @@
 
-function build_solution{T}(pm::GenericPowerModel{T}, status; objective = NaN, solve_time_override = NaN, solve_time_alternate = NaN)
+function build_solution{T}(pm::GenericPowerModel{T}, status, solve_time; objective = NaN, solution_builder = get_solution)
     # TODO assert that the model is solved
-
-    solve_time = NaN
 
     if status != :Error
         objective = getobjectivevalue(pm.model)
         status = solver_status_dict(typeof(pm.model.solver), status)
-
-        if !isnan(solve_time_override)
-            solve_time = solve_time_override
-        else
-            try
-                solve_time = getsolvetime(pm.model)
-            catch
-                warn("there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
-                solve_time = solve_time_alternate
-            end
-        end
     end
 
     solution = Dict{AbstractString,Any}(
@@ -26,7 +13,7 @@ function build_solution{T}(pm::GenericPowerModel{T}, status; objective = NaN, so
         "objective" => objective, 
         "objective_lb" => guard_getobjbound(pm.model),
         "solve_time" => solve_time,
-        "solution" => getsolution(pm),
+        "solution" => solution_builder(pm),
         "machine" => Dict(
             "cpu" => Sys.cpu_info()[1].model,
             "memory" => string(Sys.total_memory()/2^30, " Gb")
@@ -43,7 +30,7 @@ function build_solution{T}(pm::GenericPowerModel{T}, status; objective = NaN, so
     return solution
 end
 
-function getsolution{T}(pm::GenericPowerModel{T})
+function get_solution{T}(pm::GenericPowerModel{T})
     sol = Dict{AbstractString,Any}()
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)

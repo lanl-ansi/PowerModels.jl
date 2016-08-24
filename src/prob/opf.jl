@@ -6,7 +6,10 @@ function run_opf(file, model_constructor, solver; kwargs...)
     pm = model_constructor(data; solver = solver, kwargs...)
 
     post_opf(pm)
-    return solve(pm)
+
+    status, solve_time = solve(pm)
+
+    return build_solution(pm, status, solve_time)
 end
 
 
