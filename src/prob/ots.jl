@@ -17,14 +17,14 @@ end
 
 
 function post_ots{T}(pm::GenericPowerModel{T})
-    line_indicator_variables(pm)
-    complex_voltage_variables(pm)
+    variable_line_indicator(pm)
+    variable_complex_voltage(pm)
 
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
+    variable_active_generation(pm)
+    variable_reactive_generation(pm)
 
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
+    variable_active_line_flow(pm)
+    variable_reactive_line_flow(pm)
 
 
     objective_min_fuel_cost(pm)

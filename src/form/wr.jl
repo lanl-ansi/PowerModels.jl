@@ -13,9 +13,9 @@ function SOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, SOCWRForm(); kwargs...)
 end
 
-function complex_voltage_variables{T <: AbstractWRForm}(pm::GenericPowerModel{T})
-    w = voltage_magnitude_sqr_variables(pm)
-    wr, wi = complex_voltage_product_variables(pm)
+function variable_complex_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+    w = variable_voltage_magnitude_sqr(pm)
+    wr, wi = variable_complex_voltage_product(pm)
 end
 
 function constraint_complex_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T})
@@ -190,12 +190,12 @@ function LSSOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, LSSOCWRForm(); kwargs...)
 end
 
-function complex_voltage_variables{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
-    voltage_magnitude_sqr_variables(pm)
-    voltage_magnitude_sqr_from_on_off_variables(pm)
-    voltage_magnitude_sqr_to_on_off_variables(pm)
+function variable_complex_voltage{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
+    variable_voltage_magnitude_sqr(pm)
+    variable_voltage_magnitude_sqr_from_on_off(pm)
+    variable_voltage_magnitude_sqr_to_on_off(pm)
 
-    complex_voltage_product_on_off_variables(pm)
+    variable_complex_voltage_product_on_off(pm)
 end
 
 function constraint_complex_voltage{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
@@ -299,18 +299,18 @@ function QCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, QCWRForm(); kwargs...)
 end
 
-function complex_voltage_variables(pm::QCWRPowerModel)
-    t = phase_angle_variables(pm)
-    v = voltage_magnitude_variables(pm)
+function variable_complex_voltage(pm::QCWRPowerModel)
+    t = variable_phase_angle(pm)
+    v = variable_voltage_magnitude(pm)
 
-    w = voltage_magnitude_sqr_variables(pm)
-    wr, wi = complex_voltage_product_variables(pm)
+    w = variable_voltage_magnitude_sqr(pm)
+    wr, wi = variable_complex_voltage_product(pm)
 
-    td = phase_angle_diffrence_variables(pm)
-    vv = voltage_magnitude_product_variables(pm)
-    cs = cosine_variables(pm)
-    si = sine_variables(pm)
-    cm = current_magnitude_sqr_variables(pm)
+    td = variable_phase_angle_diffrence(pm)
+    vv = variable_voltage_magnitude_product(pm)
+    cs = variable_cosine(pm)
+    si = variable_sine(pm)
+    cm = variable_current_magnitude_sqr(pm)
 end
 
 function constraint_complex_voltage(pm::QCWRPowerModel)

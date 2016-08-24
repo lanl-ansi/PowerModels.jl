@@ -14,19 +14,19 @@ function DCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, StandardDCPForm(); kwargs...)
 end
 
-function complex_voltage_variables{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
-    phase_angle_variables(pm)
+function variable_complex_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
+    variable_phase_angle(pm)
 end
 
-function reactive_generation_variables{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
+function variable_reactive_generation{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
     # do nothing, this model does not have reactive variables
 end
 
-function reactive_line_flow_variables{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
+function variable_reactive_line_flow{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
     # do nothing, this model does not have reactive variables
 end
 
-function active_line_flow_variables{T <: StandardDCPForm}(pm::GenericPowerModel{T})
+function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T})
     p = @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
 
     p_expr = [(l,i,j) => 1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from]
@@ -159,7 +159,7 @@ function LSDCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
 end
 
 
-function active_line_flow_variables{T <: AbstractLSDCPForm}(pm::GenericPowerModel{T})
+function variable_active_line_flow{T <: AbstractLSDCPForm}(pm::GenericPowerModel{T})
     p = @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
 
     p_expr = [(l,i,j) => 1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from]

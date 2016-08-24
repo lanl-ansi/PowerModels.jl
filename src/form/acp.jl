@@ -14,9 +14,9 @@ function ACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, StandardACPForm(); kwargs...)
 end
 
-function complex_voltage_variables{T <: AbstractACPForm}(pm::GenericPowerModel{T})
-    t = phase_angle_variables(pm)
-    v = voltage_magnitude_variables(pm)
+function variable_complex_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T})
+    t = variable_phase_angle(pm)
+    v = variable_voltage_magnitude(pm)
 end
 
 function constraint_complex_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T})
@@ -302,9 +302,9 @@ function APIACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, APIACPForm(); kwargs...)
 end
 
-function complex_voltage_variables(pm::APIACPPowerModel)
-    t = phase_angle_variables(pm)
-    v = voltage_magnitude_variables(pm)
+function variable_complex_voltage(pm::APIACPPowerModel)
+    t = variable_phase_angle(pm)
+    v = variable_voltage_magnitude(pm)
     @variable(pm.model, load_factor >= 1.0, start = 1.0)
 end
 
@@ -383,9 +383,9 @@ function SADACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, SADACPForm(); kwargs...)
 end
 
-function complex_voltage_variables(pm::SADACPPowerModel)
-    t = phase_angle_variables(pm)
-    v = voltage_magnitude_variables(pm)
+function variable_complex_voltage(pm::SADACPPowerModel)
+    t = variable_phase_angle(pm)
+    v = variable_voltage_magnitude(pm)
     @variable(pm.model, theta_delta_bound >= 0.0, start = 0.523598776)
 end
 

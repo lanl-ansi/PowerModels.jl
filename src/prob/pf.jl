@@ -11,13 +11,13 @@ end
 
 
 function post_pf{T}(pm::GenericPowerModel{T})
-    complex_voltage_variables(pm)
+    variable_complex_voltage(pm)
 
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
+    variable_active_generation(pm)
+    variable_reactive_generation(pm)
 
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
+    variable_active_line_flow(pm)
+    variable_reactive_line_flow(pm)
 
     free_bounded_variables(pm)
 

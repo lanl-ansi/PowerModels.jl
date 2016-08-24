@@ -13,13 +13,13 @@ function run_api_opf(file, model_constructor, solver)
 end
 
 function post_api_opf{T}(pm::GenericPowerModel{T})
-    complex_voltage_variables(pm)
+    variable_complex_voltage(pm)
 
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
+    variable_active_generation(pm)
+    variable_reactive_generation(pm)
 
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
+    variable_active_line_flow(pm)
+    variable_reactive_line_flow(pm)
 
     free_api_variables(pm)
 
@@ -57,13 +57,13 @@ function run_sad_opf(file, model_constructor, solver)
 end
 
 function post_sad_opf{T}(pm::GenericPowerModel{T})
-    complex_voltage_variables(pm)
+    variable_complex_voltage(pm)
 
-    active_generation_variables(pm)
-    reactive_generation_variables(pm)
+    variable_active_generation(pm)
+    variable_reactive_generation(pm)
 
-    active_line_flow_variables(pm)
-    reactive_line_flow_variables(pm)
+    variable_active_line_flow(pm)
+    variable_reactive_line_flow(pm)
 
 
     objective_min_theta_delta(pm)
