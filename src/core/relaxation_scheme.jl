@@ -1,10 +1,13 @@
-# TODO add LNC cuts to this 
-function complex_product_relaxation(m, a, b, c, d)
+
+
+function relaxation_complex_product(m, a, b, c, d)
+    # TODO add LNC cuts to this 
     @constraint(m, c^2 + d^2 <= a*b)
 end
 
-# TODO add LNC cuts to this 
-function complex_product_on_off_relaxation(m, a, b, c, d, z)
+
+function relaxation_complex_product_on_off(m, a, b, c, d, z)
+    # TODO add LNC cuts to this 
     @assert getlowerbound(c) <= 0 && getupperbound(c) >= 0
     @assert getlowerbound(d) <= 0 && getupperbound(d) >= 0
     # assume c and d are already linked to z in other constraints 
@@ -19,7 +22,8 @@ function complex_product_on_off_relaxation(m, a, b, c, d, z)
     @constraint(m, c^2 + d^2 <= a*b_ub*z)
 end
 
-function equality_on_off_relaxation(m, x, y, z)
+
+function relaxation_equality_on_off(m, x, y, z)
     # assumes 0 is in the domain of y when z is 0
 
     x_ub = getupperbound(x)
@@ -29,14 +33,16 @@ function equality_on_off_relaxation(m, x, y, z)
     @constraint(m, y <= x - x_lb*(1-z))
 end
 
+
 # general relaxation of a square term
-function sqr_relaxation(m, x, y)
+function relaxation_sqr(m, x, y)
     @constraint(m, y >= x^2)
     @constraint(m, y <= (getupperbound(x)+getlowerbound(x))*x - getupperbound(x)*getlowerbound(x))
 end
 
+
 # general relaxation of a sin term
-function sin_relaxation(m, x, y)
+function relaxation_sin(m, x, y)
     ub = getupperbound(x)
     lb = getlowerbound(x)
     @assert lb >= -pi/2 && ub <= pi/2
@@ -57,8 +63,9 @@ function sin_relaxation(m, x, y)
     end
 end
 
+
 # general relaxation of a cosine term
-function cos_relaxation(m, x, y)
+function relaxation_cos(m, x, y)
     ub = getupperbound(x)
     lb = getlowerbound(x)
     @assert lb >= -pi/2 && ub <= pi/2
@@ -69,8 +76,9 @@ function cos_relaxation(m, x, y)
     @constraint(m, y >= (cos(lb) - cos(ub))/(lb-ub)*(x - lb) + cos(lb))
 end
 
+
 # general relaxation of binlinear term (McCormick)
-function product_relaxation(m, x, y, z)
+function relaxation_product(m, x, y, z)
     x_ub = getupperbound(x)
     x_lb = getlowerbound(x)
     y_ub = getupperbound(y)

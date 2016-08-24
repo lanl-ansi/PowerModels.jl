@@ -24,7 +24,7 @@ function constraint_complex_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T
     wi = getvariable(pm.model, :wi)
     
     for (i,j) in pm.set.buspair_indexes
-        complex_product_relaxation(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
+        relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     end
 end
 
@@ -208,9 +208,9 @@ function constraint_complex_voltage{T <: AbstractLSWRPForm}(pm::GenericPowerMode
     w_to = getvariable(pm.model, :w_to)
 
     for (l,i,j) in pm.set.arcs_from
-        complex_product_on_off_relaxation(pm.model, w[i], w[j], wr[l], wi[l], z[l])
-        equality_on_off_relaxation(pm.model, w[i], w_from[l], z[l])
-        equality_on_off_relaxation(pm.model, w[j], w_to[l], z[l])
+        relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
+        relaxation_equality_on_off(pm.model, w[i], w_from[l], z[l])
+        relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
     end
 end
 
@@ -327,21 +327,21 @@ function constraint_complex_voltage(pm::QCWRPowerModel)
     wi = getvariable(pm.model, :wi)
     
     for (i,b) in pm.set.buses
-        sqr_relaxation(pm.model, v[i], w[i])
+        relaxation_sqr(pm.model, v[i], w[i])
     end
 
     for bp in pm.set.buspair_indexes
         i,j = bp
         @constraint(pm.model, t[i] - t[j] == td[bp])
 
-        sin_relaxation(pm.model, td[bp], si[bp])
-        cos_relaxation(pm.model, td[bp], cs[bp])
-        product_relaxation(pm.model, v[i], v[j], vv[bp])
-        product_relaxation(pm.model, vv[bp], cs[bp], wr[bp])
-        product_relaxation(pm.model, vv[bp], si[bp], wi[bp])
+        relaxation_sin(pm.model, td[bp], si[bp])
+        relaxation_cos(pm.model, td[bp], cs[bp])
+        relaxation_product(pm.model, v[i], v[j], vv[bp])
+        relaxation_product(pm.model, vv[bp], cs[bp], wr[bp])
+        relaxation_product(pm.model, vv[bp], si[bp], wi[bp])
 
         # this constraint is redudant and useful for debugging
-        #complex_product_relaxation(pm.model, w[i], w[j], wr[bp], wi[bp])
+        #relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])
    end
 
    for (i,branch) in pm.set.branches
