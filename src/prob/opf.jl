@@ -1,17 +1,8 @@
 export post_opf, run_opf
 
 function run_opf(file, model_constructor, solver; kwargs...)
-    data = PowerModels.parse_file(file)
-
-    pm = model_constructor(data; solver = solver, kwargs...)
-
-    post_opf(pm)
-
-    status, solve_time = solve(pm)
-
-    return build_solution(pm, status, solve_time)
+    return run_generic_model(file, model_constructor, solver, post_opf; kwargs...) 
 end
-
 
 function post_opf{T}(pm::GenericPowerModel{T})
     variable_complex_voltage(pm)

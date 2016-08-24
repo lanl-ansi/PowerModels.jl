@@ -4,17 +4,8 @@ export
 
 
 function run_api_opf(file, model_constructor, solver; kwargs...)
-    data = PowerModels.parse_file(file)
-
-    pm = model_constructor(data; solver = solver, kwargs...)
-
-    post_api_opf(pm)
-
-    status, solve_time = solve(pm)
-
-    return build_solution(pm, status, solve_time)
+    return run_generic_model(file, model_constructor, solver, post_api_opf; kwargs...) 
 end
-
 
 function post_api_opf{T}(pm::GenericPowerModel{T})
     variable_complex_voltage(pm)
@@ -54,18 +45,10 @@ end
 
 
 
+
 function run_sad_opf(file, model_constructor, solver; kwargs...)
-    data = PowerModels.parse_file(file)
-
-    pm = model_constructor(data; solver = solver, kwargs...)
-
-    post_sad_opf(pm)
-
-    status, solve_time = solve(pm)
-
-    return build_solution(pm, status, solve_time)
+    return run_generic_model(file, model_constructor, solver, post_sad_opf; kwargs...) 
 end
-
 
 function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericPowerModel{T})
     variable_complex_voltage(pm)
