@@ -10,8 +10,8 @@ function SDPWRMPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, SDPWRMForm(); kwargs...)
 end
 
-function variable_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
-    variable_complex_voltage_product_matrix(pm)
+function variable_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}; kwargs...)
+    variable_complex_voltage_product_matrix(pm; kwargs...)
 end
 
 function constraint_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})

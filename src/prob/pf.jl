@@ -11,15 +11,13 @@ end
 
 
 function post_pf{T}(pm::GenericPowerModel{T})
-    variable_complex_voltage(pm)
+    variable_complex_voltage(pm, bounded = false)
 
-    variable_active_generation(pm)
-    variable_reactive_generation(pm)
+    variable_active_generation(pm, bounded = false)
+    variable_reactive_generation(pm, bounded = false)
 
-    variable_active_line_flow(pm)
-    variable_reactive_line_flow(pm)
-
-    free_bounded_variables(pm)
+    variable_active_line_flow(pm, bounded = false)
+    variable_reactive_line_flow(pm, bounded = false)
 
 
     constraint_theta_ref(pm)

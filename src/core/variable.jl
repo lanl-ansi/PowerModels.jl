@@ -12,18 +12,26 @@ function getstart(set, item_key, value_key, default = 0.0)
   end
 end
 
-function variable_phase_angle{T}(pm::GenericPowerModel{T})
+function variable_phase_angle{T}(pm::GenericPowerModel{T}; bounded = true)
   @variable(pm.model, t[i in pm.set.bus_indexes], start = getstart(pm.set.buses, i, "t_start"))
   return t
 end
 
-function variable_voltage_magnitude{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, pm.set.buses[i]["vmin"] <= v[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"], start = getstart(pm.set.buses, i, "v_start", 1.0))
+function variable_voltage_magnitude{T}(pm::GenericPowerModel{T}; bounded = true)
+  if bounded
+    @variable(pm.model, pm.set.buses[i]["vmin"] <= v[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"], start = getstart(pm.set.buses, i, "v_start", 1.0))
+  else
+    @variable(pm.model, v[i in pm.set.bus_indexes] >= 0, start = getstart(pm.set.buses, i, "v_start", 1.0))
+  end
   return v
 end
 
-function variable_voltage_magnitude_sqr{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, pm.set.buses[i]["vmin"]^2 <= w[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"]^2, start = getstart(pm.set.buses, i, "w_start", 1.001))
+function variable_voltage_magnitude_sqr{T}(pm::GenericPowerModel{T}; bounded = true)
+  if bounded
+    @variable(pm.model, pm.set.buses[i]["vmin"]^2 <= w[i in pm.set.bus_indexes] <= pm.set.buses[i]["vmax"]^2, start = getstart(pm.set.buses, i, "w_start", 1.001))
+  else
+    @variable(pm.model, w[i in pm.set.bus_indexes] >= 0, start = getstart(pm.set.buses, i, "w_start", 1.001))
+  end
   return w
 end
 
@@ -60,23 +68,39 @@ end
 
 
 
-function variable_active_generation{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, pm.set.gens[i]["pmin"] <= pg[i in pm.set.gen_indexes] <= pm.set.gens[i]["pmax"], start = getstart(pm.set.gens, i, "pg_start"))
+function variable_active_generation{T}(pm::GenericPowerModel{T}; bounded = true)
+  if bounded
+    @variable(pm.model, pm.set.gens[i]["pmin"] <= pg[i in pm.set.gen_indexes] <= pm.set.gens[i]["pmax"], start = getstart(pm.set.gens, i, "pg_start"))
+  else
+    @variable(pm.model, pg[i in pm.set.gen_indexes], start = getstart(pm.set.gens, i, "pg_start"))
+  end
   return pg
 end
 
-function variable_reactive_generation{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, pm.set.gens[i]["qmin"] <= qg[i in pm.set.gen_indexes] <= pm.set.gens[i]["qmax"], start = getstart(pm.set.gens, i, "qg_start"))
+function variable_reactive_generation{T}(pm::GenericPowerModel{T}; bounded = true)
+  if bounded
+    @variable(pm.model, pm.set.gens[i]["qmin"] <= qg[i in pm.set.gen_indexes] <= pm.set.gens[i]["qmax"], start = getstart(pm.set.gens, i, "qg_start"))
+  else
+    @variable(pm.model, qg[i in pm.set.gen_indexes], start = getstart(pm.set.gens, i, "qg_start"))
+  end
   return qg
 end
 
-function variable_active_line_flow{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
+function variable_active_line_flow{T}(pm::GenericPowerModel{T}; bounded = true)
+  if bounded
+    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
+  else
+    @variable(pm.model, p[(l,i,j) in pm.set.arcs], start = getstart(pm.set.branches, l, "p_start"))
+  end
   return p
 end
 
-function variable_reactive_line_flow{T}(pm::GenericPowerModel{T})
-  @variable(pm.model, -pm.set.branches[l]["rate_a"] <= q[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "q_start"))
+function variable_reactive_line_flow{T}(pm::GenericPowerModel{T}; bounded = true)
+  if bounded
+    @variable(pm.model, -pm.set.branches[l]["rate_a"] <= q[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "q_start"))
+  else
+    @variable(pm.model, q[(l,i,j) in pm.set.arcs], start = getstart(pm.set.branches, l, "q_start"))
+  end
   return q
 end
 
@@ -115,12 +139,16 @@ function compute_voltage_product_bounds{T}(pm::GenericPowerModel{T})
   return wr_min, wr_max, wi_min, wi_max
 end
 
-function variable_complex_voltage_product{T}(pm::GenericPowerModel{T})
-  wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
+function variable_complex_voltage_product{T}(pm::GenericPowerModel{T}; bounded = true)
+  if bounded
+    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
 
-  @variable(pm.model, wr_min[bp] <= wr[bp in pm.set.buspair_indexes] <= wr_max[bp], start = getstart(pm.set.buspairs, bp, "wr_start", 1.0)) 
-  @variable(pm.model, wi_min[bp] <= wi[bp in pm.set.buspair_indexes] <= wi_max[bp], start = getstart(pm.set.buspairs, bp, "wi_start"))
-
+    @variable(pm.model, wr_min[bp] <= wr[bp in pm.set.buspair_indexes] <= wr_max[bp], start = getstart(pm.set.buspairs, bp, "wr_start", 1.0)) 
+    @variable(pm.model, wi_min[bp] <= wi[bp in pm.set.buspair_indexes] <= wi_max[bp], start = getstart(pm.set.buspairs, bp, "wi_start"))
+  else
+    @variable(pm.model, wr[bp in pm.set.buspair_indexes], start = getstart(pm.set.buspairs, bp, "wr_start", 1.0)) 
+    @variable(pm.model, wi[bp in pm.set.buspair_indexes], start = getstart(pm.set.buspairs, bp, "wi_start"))
+  end
   return wr, wi
 end
 

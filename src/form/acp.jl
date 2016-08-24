@@ -13,38 +13,15 @@ function ACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, StandardACPForm(); kwargs...)
 end
 
-function variable_complex_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T})
-    variable_phase_angle(pm)
-    variable_voltage_magnitude(pm)
+function variable_complex_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...)
+    variable_phase_angle(pm; kwargs...)
+    variable_voltage_magnitude(pm; kwargs...)
 end
 
 function constraint_complex_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T})
+    # do nothing, this model does not have complex voltage constraints
+    return Set()
 end
-
-function free_bounded_variables{T <: AbstractACPForm}(pm::GenericPowerModel{T})
-    for (i,bus) in pm.set.buses
-        v = getvariable(pm.model, :v)[i]
-        setupperbound(v, Inf)
-        setlowerbound(v, 0)
-    end
-    for (i,gen) in pm.set.gens
-        pg = getvariable(pm.model, :pg)[i]
-        setupperbound(pg,  Inf)
-        setlowerbound(pg, -Inf)
-        qg = getvariable(pm.model, :pg)[i]
-        setupperbound(pg,  Inf)
-        setlowerbound(pg, -Inf)
-    end
-    for arc in pm.set.arcs
-        p = getvariable(pm.model, :p)[arc]
-        setupperbound(p,  Inf)
-        setlowerbound(p, -Inf)
-        q = getvariable(pm.model, :p)[arc]
-        setupperbound(q,  Inf)
-        setlowerbound(q, -Inf)
-    end
-end
-
 
 function constraint_theta_ref{T <: AbstractACPForm}(pm::GenericPowerModel{T})
     c = @constraint(pm.model, getvariable(pm.model, :t)[pm.set.ref_bus] == 0)

@@ -14,20 +14,24 @@ function DCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, StandardDCPForm(); kwargs...)
 end
 
-function variable_complex_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
-    variable_phase_angle(pm)
+function variable_complex_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...)
+    variable_phase_angle(pm; kwargs...)
 end
 
 function variable_reactive_generation{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
     # do nothing, this model does not have reactive variables
 end
 
-function variable_reactive_line_flow{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
+function variable_reactive_line_flow{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; bounded = true)
     # do nothing, this model does not have reactive variables
 end
 
-function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T})
-    p = @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
+function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T}; bounded = true)
+    if bounded
+        @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
+    else
+        @variable(pm.model, p[(l,i,j) in pm.set.arcs_from], start = getstart(pm.set.branches, l, "p_start"))
+    end
 
     p_expr = [(l,i,j) => 1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from]
     p_expr = merge(p_expr, [(l,j,i) => -1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from])
@@ -38,20 +42,6 @@ end
 function constraint_complex_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
     # do nothing, this model does not have complex voltage variables
 end
-
-function free_bounded_variables{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
-    for (i,gen) in pm.set.gens
-        pg = getvariable(pm.model, :pg)[i]
-        setupperbound(pg,  Inf)
-        setlowerbound(pg, -Inf)
-    end
-    for arc in pm.set.arcs_from
-        p = getvariable(pm.model, :p)[arc]
-        setupperbound(p,  Inf)
-        setlowerbound(p, -Inf)
-    end
-end
-
 
 function constraint_theta_ref{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
     c = @constraint(pm.model, getvariable(pm.model, :t)[pm.set.ref_bus] == 0)

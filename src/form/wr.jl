@@ -13,9 +13,9 @@ function SOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, SOCWRForm(); kwargs...)
 end
 
-function variable_complex_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T})
-    variable_voltage_magnitude_sqr(pm)
-    variable_complex_voltage_product(pm)
+function variable_complex_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T}; kwargs...)
+    variable_voltage_magnitude_sqr(pm; kwargs...)
+    variable_complex_voltage_product(pm; kwargs...)
 end
 
 function constraint_complex_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T})
@@ -27,39 +27,6 @@ function constraint_complex_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T
         relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     end
 end
-
-function free_bounded_variables{T <: AbstractWRForm}(pm::GenericPowerModel{T})
-    for (i,bus) in pm.set.buses
-        w = getvariable(pm.model, :w)[i]
-        setupperbound(w, Inf)
-        setlowerbound(w, 0)
-    end
-    for (i,j) in pm.set.buspair_indexes
-        wr = getvariable(pm.model, :wr)[(i,j)]
-        setupperbound(wr,  Inf)
-        setlowerbound(wr, -Inf)
-        wi = getvariable(pm.model, :wi)[(i,j)]
-        setupperbound(wi,  Inf)
-        setlowerbound(wi, -Inf)
-    end
-    for (i,gen) in pm.set.gens
-        pg = getvariable(pm.model, :pg)[i]
-        setupperbound(pg,  Inf)
-        setlowerbound(pg, -Inf)
-        qg = getvariable(pm.model, :pg)[i]
-        setupperbound(pg,  Inf)
-        setlowerbound(pg, -Inf)
-    end
-    for arc in pm.set.arcs
-        p = getvariable(pm.model, :p)[arc]
-        setupperbound(p,  Inf)
-        setlowerbound(p, -Inf)
-        q = getvariable(pm.model, :p)[arc]
-        setupperbound(q,  Inf)
-        setlowerbound(q, -Inf)
-    end
-end
-
 
 function constraint_theta_ref{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     # Do nothing, no way to represent this in these variables
@@ -199,12 +166,12 @@ function LSSOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, LSSOCWRForm(); kwargs...)
 end
 
-function variable_complex_voltage{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
-    variable_voltage_magnitude_sqr(pm)
-    variable_voltage_magnitude_sqr_from_on_off(pm)
-    variable_voltage_magnitude_sqr_to_on_off(pm)
+function variable_complex_voltage{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T}; kwargs...)
+    variable_voltage_magnitude_sqr(pm; kwargs...)
+    variable_voltage_magnitude_sqr_from_on_off(pm; kwargs...)
+    variable_voltage_magnitude_sqr_to_on_off(pm; kwargs...)
 
-    variable_complex_voltage_product_on_off(pm)
+    variable_complex_voltage_product_on_off(pm; kwargs...)
 end
 
 function constraint_complex_voltage{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
@@ -314,18 +281,18 @@ function QCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, QCWRForm(); kwargs...)
 end
 
-function variable_complex_voltage(pm::QCWRPowerModel)
-    variable_phase_angle(pm)
-    variable_voltage_magnitude(pm)
+function variable_complex_voltage(pm::QCWRPowerModel; kwargs...)
+    variable_phase_angle(pm; kwargs...)
+    variable_voltage_magnitude(pm; kwargs...)
 
-    variable_voltage_magnitude_sqr(pm)
-    variable_complex_voltage_product(pm)
+    variable_voltage_magnitude_sqr(pm; kwargs...)
+    variable_complex_voltage_product(pm; kwargs...)
 
-    variable_phase_angle_diffrence(pm)
-    variable_voltage_magnitude_product(pm)
-    variable_cosine(pm)
-    variable_sine(pm)
-    variable_current_magnitude_sqr(pm)
+    variable_phase_angle_diffrence(pm; kwargs...)
+    variable_voltage_magnitude_product(pm; kwargs...)
+    variable_cosine(pm; kwargs...)
+    variable_sine(pm; kwargs...)
+    variable_current_magnitude_sqr(pm; kwargs...)
 end
 
 function constraint_complex_voltage(pm::QCWRPowerModel)
