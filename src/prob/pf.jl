@@ -1,4 +1,12 @@
-export post_pf, run_pf
+export run_pf, run_ac_pf, run_dc_pf
+
+function run_ac_pf(file, solver; kwargs...)
+    return run_pf(file, ACPPowerModel, solver; kwargs...)
+end
+
+function run_dc_pf(file, solver; kwargs...)
+    return run_pf(file, DCPPowerModel, solver; kwargs...)
+end
 
 function run_pf(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_pf; kwargs...) 

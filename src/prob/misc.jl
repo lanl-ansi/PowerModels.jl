@@ -1,6 +1,5 @@
 export 
-    post_api_opf, run_api_opf,
-    post_sad_opf, run_sad_opf
+    run_api_opf, run_sad_opf
 
 
 function run_api_opf(file, model_constructor, solver; kwargs...)

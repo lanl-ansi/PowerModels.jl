@@ -4,7 +4,7 @@
 # - the network will be maintained as one connected component (i.e. at least n-1 edges)
 #
 
-export post_ots, run_ots
+export run_ots
 
 function run_ots(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_ots; solution_builder = get_ots_solution, kwargs...) 

@@ -2,7 +2,7 @@
 
 @testset "test ac opf" begin
     @testset "3-bus case" begin
-        result = run_opf("../test/data/case3.json", ACPPowerModel, IpoptSolver(tol=1e-6, print_level=0))
+        result = run_ac_opf("../test/data/case3.json", IpoptSolver(tol=1e-6, print_level=0))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5812; atol = 1e0)
@@ -18,7 +18,7 @@ end
 
 @testset "test dc opf" begin
     @testset "3-bus case" begin
-        result = run_opf("../test/data/case3.json", DCPPowerModel, IpoptSolver(tol=1e-6, print_level=0))
+        result = run_dc_opf("../test/data/case3.json", IpoptSolver(tol=1e-6, print_level=0))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5695; atol = 1e0)
