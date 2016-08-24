@@ -11,23 +11,25 @@ function SDPWRMPowerModel(data::Dict{AbstractString,Any}; kwargs...)
 end
 
 function variable_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
-    WR, WI = variable_complex_voltage_product_matrix(pm)
+    variable_complex_voltage_product_matrix(pm)
 end
 
 function constraint_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
     WR = getvariable(pm.model, :WR)
     WI = getvariable(pm.model, :WI)
 
-    @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
+    c = @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
 
     # place holder while debugging sdp constraint
     #for (i,j) in pm.set.buspair_indexes
     #    relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     #end
+    return Set([c])
 end
 
 function constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
     # Do nothing, no way to represent this in these variables
+    return Set()
 end
 
 function constraint_active_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, bus)
@@ -42,7 +44,8 @@ function constraint_active_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel
     p = getvariable(pm.model, :p)
     pg = getvariable(pm.model, :pg)
 
-    @constraint(pm.model, sum{p[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*w_i)
+    c = @constraint(pm.model, sum{p[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*w_i)
+    return Set([c])
 end
 
 function constraint_reactive_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, bus)
@@ -57,7 +60,8 @@ function constraint_reactive_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerMod
     q = getvariable(pm.model, :q)
     qg = getvariable(pm.model, :qg)
 
-    @constraint(pm.model, sum{q[a], a in bus_branches} == sum{qg[g], g in bus_gens} - bus["qd"] + bus["bs"]*w_i)
+    c = @constraint(pm.model, sum{q[a], a in bus_branches} == sum{qg[g], g in bus_gens} - bus["qd"] + bus["bs"]*w_i)
+    return Set([c])
 end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
@@ -88,8 +92,9 @@ function constraint_active_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel{T
     ti = branch["ti"]
     tm = tr^2 + ti^2 
 
-    @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
-    @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
+    c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
+    c2 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
+    return Set([c1, c2])
 end
 
 function constraint_reactive_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, branch)
@@ -119,8 +124,9 @@ function constraint_reactive_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel
     ti = branch["ti"]
     tm = tr^2 + ti^2 
 
-    @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
-    @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
+    c1 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
+    c2 = @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
+    return Set([c1, c2])
 end
 
 function constraint_phase_angle_diffrence{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, branch)
@@ -139,9 +145,11 @@ function constraint_phase_angle_diffrence{T <: AbstractWRMForm}(pm::GenericPower
         wr   = WR[w_fr_index, w_to_index]
         wi   = WI[w_fr_index, w_to_index]
 
-        @constraint(pm.model, wi <= buspair["angmax"]*wr)
-        @constraint(pm.model, wi >= buspair["angmin"]*wr)
+        c1 = @constraint(pm.model, wi <= buspair["angmax"]*wr)
+        c2 = @constraint(pm.model, wi >= buspair["angmin"]*wr)
+        return Set([c1, c2])
     end
+    return Set()
 end
 
 

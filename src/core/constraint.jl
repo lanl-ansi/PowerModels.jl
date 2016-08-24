@@ -14,7 +14,8 @@ function constraint_thermal_limit_from{T}(pm::GenericPowerModel{T}, branch; scal
   p_fr = getvariable(pm.model, :p)[f_idx]
   q_fr = getvariable(pm.model, :q)[f_idx]
 
-  @constraint(pm.model, p_fr^2 + q_fr^2 <= branch["rate_a"]^2*scale)
+  c = @constraint(pm.model, p_fr^2 + q_fr^2 <= branch["rate_a"]^2*scale)
+  return Set([c])
 end
 
 function constraint_thermal_limit_to{T}(pm::GenericPowerModel{T}, branch; scale = 1.0)
@@ -26,7 +27,8 @@ function constraint_thermal_limit_to{T}(pm::GenericPowerModel{T}, branch; scale 
   p_to = getvariable(pm.model, :p)[t_idx]
   q_to = getvariable(pm.model, :q)[t_idx]
 
-  @constraint(pm.model, p_to^2 + q_to^2 <= branch["rate_a"]^2*scale)
+  c = @constraint(pm.model, p_to^2 + q_to^2 <= branch["rate_a"]^2*scale)
+  return Set([c])
 end
 
 function constraint_thermal_limit_from{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, branch)
@@ -38,7 +40,8 @@ function constraint_thermal_limit_from{T <: AbstractConicPowerFormulation}(pm::G
   p_fr = getvariable(pm.model, :p)[f_idx]
   q_fr = getvariable(pm.model, :q)[f_idx]
 
-  @constraint(pm.model, norm([p_fr; q_fr]) <= branch["rate_a"])
+  c = @constraint(pm.model, norm([p_fr; q_fr]) <= branch["rate_a"])
+  return Set([c])
 end
 
 function constraint_thermal_limit_to{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, branch)
@@ -50,7 +53,8 @@ function constraint_thermal_limit_to{T <: AbstractConicPowerFormulation}(pm::Gen
   p_to = getvariable(pm.model, :p)[t_idx]
   q_to = getvariable(pm.model, :q)[t_idx]
 
-  @constraint(pm.model, norm([p_to; q_to]) <= branch["rate_a"])
+  c = @constraint(pm.model, norm([p_to; q_to]) <= branch["rate_a"])
+  return Set([c])
 end
 
 # Generic on/off thermal limit constraint
@@ -64,7 +68,8 @@ function constraint_thermal_limit_from_on_off{T}(pm::GenericPowerModel{T}, branc
   q_fr = getvariable(pm.model, :q)[f_idx]
   z = getvariable(pm.model, :line_z)[i]
 
-  @constraint(pm.model, p_fr^2 + q_fr^2 <= branch["rate_a"]^2*z^2*scale)
+  c = @constraint(pm.model, p_fr^2 + q_fr^2 <= branch["rate_a"]^2*z^2*scale)
+  return Set([c])
 end
 
 function constraint_thermal_limit_to_on_off{T}(pm::GenericPowerModel{T}, branch; scale = 1.0)
@@ -77,20 +82,24 @@ function constraint_thermal_limit_to_on_off{T}(pm::GenericPowerModel{T}, branch;
   q_to = getvariable(pm.model, :q)[t_idx]
   z = getvariable(pm.model, :line_z)[i]
 
-  @constraint(pm.model, p_to^2 + q_to^2 <= branch["rate_a"]^2*z^2*scale)
+  c = @constraint(pm.model, p_to^2 + q_to^2 <= branch["rate_a"]^2*z^2*scale)
+  return Set([c])
 end
 
 
 function constraint_active_gen_setpoint{T}(pm::GenericPowerModel{T}, gen)
   i = gen["index"]
   pg = getvariable(pm.model, :pg)[gen["index"]]
-  @constraint(pm.model, pg == gen["pg"])
+
+  return @constraint(pm.model, pg == gen["pg"])
 end
 
 function constraint_reactive_gen_setpoint{T}(pm::GenericPowerModel{T}, gen)
   i = gen["index"]
   qg = getvariable(pm.model, :qg)[gen["index"]]
-  @constraint(pm.model, qg == gen["qg"])
+
+  c = @constraint(pm.model, qg == gen["qg"])
+  return Set([c])
 end
 
 
@@ -106,7 +115,8 @@ function constraint_active_loss_lb{T}(pm::GenericPowerModel{T}, branch)
   p_fr = getvariable(pm.model, :p)[f_idx]
   p_to = getvariable(pm.model, :p)[f_idx]
 
-  @constraint(m, p_fr + p_to >= 0)
+  c = @constraint(m, p_fr + p_to >= 0)
+  return Set([c])
 end
 
 function constraint_reactive_loss_lb{T}(pm::GenericPowerModel{T}, branch)
@@ -124,7 +134,8 @@ function constraint_reactive_loss_lb{T}(pm::GenericPowerModel{T}, branch)
   q_fr = getvariable(pm.model, :q)[f_idx]
   q_to = getvariable(pm.model, :q)[f_idx]
 
-  @constraint(m, q_fr + q_to >= -branch["br_b"]/2*(v_fr^2/branch["tap"]^2 + v_to^2))
+  c = @constraint(m, q_fr + q_to >= -branch["br_b"]/2*(v_fr^2/branch["tap"]^2 + v_to^2))
+  return Set([c])
 end
 
 

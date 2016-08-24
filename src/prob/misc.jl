@@ -69,7 +69,9 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
 
     @variable(pm.model, theta_delta_bound >= 0.0, start = 0.523598776)
 
+
     @objective(pm.model, Min, theta_delta_bound)
+
 
     constraint_theta_ref(pm)
     constraint_complex_voltage(pm)
