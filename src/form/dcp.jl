@@ -144,6 +144,18 @@ function add_bus_voltage_setpoint{T <: AbstractDCPForm}(sol, pm::GenericPowerMod
     add_setpoint(sol, pm, "bus", "bus_i", "va", :t; scale = (x,item) -> x*180/pi)
 end
 
+function add_branch_flow_setpoint{T <: AbstractDCPForm}(sol, pm::GenericPowerModel{T})
+    # check the line flows were requested
+    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
+        mva_base = pm.data["baseMVA"]
+
+        add_setpoint(sol, pm, "branch", "index", "p_from", :p; scale = (x,item) ->  x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "index", "q_from", :q; scale = (x,item) ->  x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "index",   "p_to", :p; scale = (x,item) -> -x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "index",   "q_to", :q; scale = (x,item) -> -x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+    end
+end
+
 
 
 
