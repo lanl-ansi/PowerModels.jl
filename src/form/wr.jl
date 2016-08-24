@@ -166,7 +166,7 @@ function LSSOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, LSSOCWRForm(); kwargs...)
 end
 
-function variable_complex_voltage{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T}; kwargs...)
+function variable_complex_voltage_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_voltage_magnitude_sqr(pm; kwargs...)
     variable_voltage_magnitude_sqr_from_on_off(pm; kwargs...)
     variable_voltage_magnitude_sqr_to_on_off(pm; kwargs...)
@@ -174,7 +174,7 @@ function variable_complex_voltage{T <: AbstractLSWRPForm}(pm::GenericPowerModel{
     variable_complex_voltage_product_on_off(pm; kwargs...)
 end
 
-function constraint_complex_voltage{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
+function constraint_complex_voltage_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     w = getvariable(pm.model, :w)
     wr = getvariable(pm.model, :wr)
     wi = getvariable(pm.model, :wi)

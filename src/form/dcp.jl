@@ -158,6 +158,13 @@ function LSDCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, LSDCPForm(); kwargs...)
 end
 
+function variable_complex_voltage_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...)
+    variable_phase_angle(pm; kwargs...)
+end
+
+function constraint_complex_voltage_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
+    # do nothing, this model does not have complex voltage variables
+end
 
 function variable_active_line_flow{T <: AbstractLSDCPForm}(pm::GenericPowerModel{T})
     p = @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
@@ -261,7 +268,6 @@ function constraint_thermal_limit_to_on_off{T <: LSDCPLLForm}(pm::GenericPowerMo
 
     c1 = @constraint(pm.model, p_to <= getupperbound(p_to)*z)
     c2 = @constraint(pm.model, p_to >= getlowerbound(p_to)*z)
-
     return Set([c1, c2])
 end
 

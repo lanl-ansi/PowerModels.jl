@@ -18,7 +18,7 @@ end
 
 function post_ots{T}(pm::GenericPowerModel{T})
     variable_line_indicator(pm)
-    variable_complex_voltage(pm)
+    variable_complex_voltage_on_off(pm)
 
     variable_active_generation(pm)
     variable_reactive_generation(pm)
@@ -31,7 +31,7 @@ function post_ots{T}(pm::GenericPowerModel{T})
 
 
     constraint_theta_ref(pm)
-    constraint_complex_voltage(pm)
+    constraint_complex_voltage_on_off(pm)
 
     for (i,bus) in pm.set.buses
         constraint_active_kcl_shunt(pm, bus)

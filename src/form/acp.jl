@@ -203,6 +203,16 @@ function LSACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, LSACPForm(); kwargs...)
 end
 
+function variable_complex_voltage_on_off{T <: AbstractLSACPForm}(pm::GenericPowerModel{T}; kwargs...)
+    variable_phase_angle(pm; kwargs...)
+    variable_voltage_magnitude(pm; kwargs...)
+end
+
+function constraint_complex_voltage_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T})
+    # do nothing, this model does not have complex voltage constraints
+    return Set()
+end
+
 function constraint_active_ohms_yt_on_off{T <: AbstractLSACPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
@@ -279,6 +289,9 @@ function getsolution{T <: AbstractLSACPForm}(pm::GenericPowerModel{T})
     add_branch_status_setpoint(sol, pm)
     return sol
 end
+
+
+
 
 
 
