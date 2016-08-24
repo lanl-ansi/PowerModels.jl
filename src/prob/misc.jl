@@ -14,16 +14,16 @@ end
 
 function post_api_opf{T}(pm::GenericPowerModel{T})
     variable_complex_voltage(pm)
+    bounds_tighten_voltage(pm)
 
-    variable_active_generation(pm)
-    variable_reactive_generation(pm)
+    variable_active_generation(pm, bounded = false)
+    variable_reactive_generation(pm, bounded = false)
+    upperbound_negative_active_generation(pm)
 
     variable_active_line_flow(pm)
     variable_reactive_line_flow(pm)
 
     variable_load_factor(pm)
-
-    free_api_variables(pm)
 
 
     objective_max_loading(pm)

@@ -300,20 +300,21 @@ function objective_max_loading{T}(pm::GenericPowerModel{T})
     return @objective(pm.model, Max, load_factor)
 end
 
-function free_api_variables(pm::APIACPPowerModel)
+function bounds_tighten_voltage(pm::APIACPPowerModel; epsilon = 0.001)
     for (i,bus) in pm.set.buses
         v = getvariable(pm.model, :v)[i]
-        setupperbound(v, bus["vmax"]*0.999)
-        setlowerbound(v, bus["vmin"]*1.001)
+        setupperbound(v, bus["vmax"]*(1.0-epsilon))
+        setlowerbound(v, bus["vmin"]*(1.0+epsilon))
     end
+end
+
+function upperbound_negative_active_generation(pm::APIACPPowerModel)
     for (i,gen) in pm.set.gens
         pg = getvariable(pm.model, :pg)[i]
-        qg = getvariable(pm.model, :qg)[i]
-        if gen["pmax"] > 0 
-            setupperbound(pg, Inf)
+
+        if gen["pmax"] <= 0 
+            setupperbound(pg, gen["pmax"])
         end
-        setupperbound(qg,  Inf)
-        setlowerbound(qg, -Inf)
     end
 end
 
