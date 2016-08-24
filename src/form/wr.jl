@@ -184,16 +184,18 @@ function constraint_complex_voltage_on_off{T <: AbstractWRForm}(pm::GenericPower
     w_to = getvariable(pm.model, :w_to)
 
     cs = Set()
-    constraint_voltage_magnitude_sqr_from_on_off(pm)
-    constraint_voltage_magnitude_sqr_to_on_off(pm)
-    constraint_complex_voltage_product_on_off(pm)
+    cs1 = constraint_voltage_magnitude_sqr_from_on_off(pm)
+    cs2 = constraint_voltage_magnitude_sqr_to_on_off(pm)
+    cs3 = constraint_complex_voltage_product_on_off(pm)
+    cs = union(cs, cs1, cs2, cs3)
 
     for (l,i,j) in pm.set.arcs_from
-        cs1 = relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
-        cs2 = relaxation_equality_on_off(pm.model, w[i], w_from[l], z[l])
-        cs3 = relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
-        cs = union(cs, cs1, cs2, cs3)
+        cs4 = relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
+        cs5 = relaxation_equality_on_off(pm.model, w[i], w_from[l], z[l])
+        cs6 = relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
+        cs = union(cs, cs4, cs5, cs6)
     end
+
     return cs
 end
 
@@ -204,10 +206,15 @@ function constraint_voltage_magnitude_sqr_from_on_off{T}(pm::GenericPowerModel{T
 
     w_from = getvariable(pm.model, :w_from)
     z = getvariable(pm.model, :line_z)
+
+    cs = Set()
     for i in pm.set.branch_indexes
-        @constraint(pm.model, w_from[i] <= z[i]*buses[branches[i]["f_bus"]]["vmax"]^2)
-        @constraint(pm.model, w_from[i] >= z[i]*buses[branches[i]["f_bus"]]["vmin"]^2)
+        c1 = @constraint(pm.model, w_from[i] <= z[i]*buses[branches[i]["f_bus"]]["vmax"]^2)
+        c2 = @constraint(pm.model, w_from[i] >= z[i]*buses[branches[i]["f_bus"]]["vmin"]^2)
+        push!(cs, c1)
+        push!(cs, c2)
     end
+    return cs
 end
 
 function constraint_voltage_magnitude_sqr_to_on_off{T}(pm::GenericPowerModel{T})
@@ -216,10 +223,15 @@ function constraint_voltage_magnitude_sqr_to_on_off{T}(pm::GenericPowerModel{T})
 
     w_to = getvariable(pm.model, :w_to)
     z = getvariable(pm.model, :line_z)
+
+    cs = Set()
     for i in pm.set.branch_indexes
-        @constraint(pm.model, w_to[i] <= z[i]*buses[branches[i]["t_bus"]]["vmax"]^2)
-        @constraint(pm.model, w_to[i] >= z[i]*buses[branches[i]["t_bus"]]["vmin"]^2)
+        c1 = @constraint(pm.model, w_to[i] <= z[i]*buses[branches[i]["t_bus"]]["vmax"]^2)
+        c2 = @constraint(pm.model, w_to[i] >= z[i]*buses[branches[i]["t_bus"]]["vmin"]^2)
+        push!(cs, c1)
+        push!(cs, c2)
     end
+    return cs
 end
 
 function constraint_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
@@ -230,14 +242,19 @@ function constraint_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
     wr = getvariable(pm.model, :wr)
     wi = getvariable(pm.model, :wi)
     z = getvariable(pm.model, :line_z)
+
+    cs = Set()
     for b in pm.set.branch_indexes
-        @constraint(pm.model, wr[b] <= z[b]*wr_max[bi_bp[b]])
-        @constraint(pm.model, wr[b] >= z[b]*wr_min[bi_bp[b]])
-
-        @constraint(pm.model, wi[b] <= z[b]*wi_max[bi_bp[b]])
-        @constraint(pm.model, wi[b] >= z[b]*wi_min[bi_bp[b]])
+        c1 = @constraint(pm.model, wr[b] <= z[b]*wr_max[bi_bp[b]])
+        c2 = @constraint(pm.model, wr[b] >= z[b]*wr_min[bi_bp[b]])
+        c3 = @constraint(pm.model, wi[b] <= z[b]*wi_max[bi_bp[b]])
+        c4 = @constraint(pm.model, wi[b] >= z[b]*wi_min[bi_bp[b]])
+        push!(cs, c1)
+        push!(cs, c2)
+        push!(cs, c3)
+        push!(cs, c4)
     end
-
+    return cs
 end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
