@@ -21,6 +21,8 @@ function post_api_opf{T}(pm::GenericPowerModel{T})
     variable_active_line_flow(pm)
     variable_reactive_line_flow(pm)
 
+    variable_load_factor(pm)
+
     free_api_variables(pm)
 
 

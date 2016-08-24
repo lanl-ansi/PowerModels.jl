@@ -301,12 +301,14 @@ function APIACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, APIACPForm(); kwargs...)
 end
 
-function variable_complex_voltage(pm::APIACPPowerModel)
-    t = variable_phase_angle(pm)
-    v = variable_voltage_magnitude(pm)
+function variable_load_factor{T}(pm::GenericPowerModel{T})
     @variable(pm.model, load_factor >= 1.0, start = 1.0)
 end
 
+function objective_max_loading{T}(pm::GenericPowerModel{T})
+    load_factor = getvariable(pm.model, :load_factor)
+    @objective(pm.model, Max, load_factor)
+end
 
 function free_api_variables(pm::APIACPPowerModel)
     for (i,bus) in pm.set.buses
@@ -325,7 +327,6 @@ function free_api_variables(pm::APIACPPowerModel)
     end
 end
 
-
 function constraint_active_kcl_shunt_scaled(pm::APIACPPowerModel, bus)
     i = bus["index"]
     bus_branches = pm.set.bus_branches[i]
@@ -343,12 +344,6 @@ function constraint_active_kcl_shunt_scaled(pm::APIACPPowerModel, bus)
         @constraint(pm.model, sum{p[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*v[i]^2)
     end
 end
-
-function objective_max_loading(pm::APIACPPowerModel)
-    load_factor = getvariable(pm.model, :load_factor)
-    @objective(pm.model, Max, load_factor)
-end
-
 
 function getsolution(pm::APIACPPowerModel)
     # super fallback
