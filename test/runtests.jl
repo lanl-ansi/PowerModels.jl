@@ -1,16 +1,14 @@
 using PowerModels
 
 using Ipopt
+using Pajarito
+using GLPKMathProgInterface
 using SCS
 
-# needed for OTS tests
+# needed for Non-convex OTS tests
 if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
     using AmplNLWriter
     using CoinOptServices
-end
-
-if (Pkg.installed("Gurobi") != nothing)
-    using Gurobi
 end
 
 if VERSION >= v"0.5.0-dev+7720"
@@ -20,10 +18,12 @@ else
     const Test = BaseTestNext
 end
 
+
+pajarito_solver = PajaritoSolver(mip_solver=GLPKSolverMIP(), cont_solver=IpoptSolver(tol=1e-6, print_level=0), log_level=0)
+
 include("output.jl")
 
 include("matpower.jl")
-
 
 # used by OTS and Loadshed TS models
 function check_br_status(sol)

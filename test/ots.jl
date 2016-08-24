@@ -23,69 +23,79 @@ if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices")
 
 end
 
-# at the moment only Gurobi is reliable enough to solve these models
-if (Pkg.installed("Gurobi") != nothing)
 
-    @testset "test dc ots" begin
-        @testset "3-bus case" begin
-            result = run_ots("../test/data/case3.json", DCPPowerModel, GurobiSolver(OutputFlag=0))
+function run_nl_ots(file, model_constructor, solver; kwargs...)
+    data = PowerModels.parse_file(file)
 
-            check_br_status(result["solution"])
+    pm = model_constructor(data; solver = solver, kwargs...)
 
-            @test result["status"] == :Optimal
-            @test isapprox(result["objective"], 5695.8; atol = 1e0)
-        end
+    PowerModels.post_ots(pm)
 
-        @testset "5-bus case" begin
-            result = run_ots("../test/data/case5.json", DCPPowerModel, GurobiSolver(OutputFlag=0))
+    pg = JuMP.getvariable(pm.model, :pg)[1]
+    lb = JuMP.getlowerbound(pg)
+    JuMP.@NLconstraint(pm.model, pg >= lb)
 
-            check_br_status(result["solution"])
+    status, solve_time = solve(pm)
 
-            @test result["status"] == :Optimal
-            @test isapprox(result["objective"], 14991.2; atol = 1e0)
-        end
-    end
-
-    @testset "test dc-losses ots" begin
-        @testset "3-bus case" begin
-            result = run_ots("../test/data/case3.json", DCPLLPowerModel, GurobiSolver(OutputFlag=0))
-
-            check_br_status(result["solution"])
-
-            @test result["status"] == :Optimal
-            @test isapprox(result["objective"], 5787.1; atol = 1e0)
-        end
-
-        @testset "5-bus case" begin
-            result = run_ots("../test/data/case5.json", DCPLLPowerModel, GurobiSolver(OutputFlag=0))
-
-            check_br_status(result["solution"])
-
-            @test result["status"] == :Optimal
-            @test isapprox(result["objective"], 15275.2; atol = 1e0)
-        end
-    end
-
-    @testset "test soc ots" begin
-        @testset "3-bus case" begin
-            result = run_ots("../test/data/case3.json", SOCWRPowerModel, GurobiSolver(OutputFlag=0))
-
-            check_br_status(result["solution"])
-
-            @test result["status"] == :Optimal
-            @test isapprox(result["objective"], 5736.2; atol = 1e0)
-        end
-        @testset "5-bus rts case" begin
-            result = run_ots("../test/data/case5.json", SOCWRPowerModel, GurobiSolver(OutputFlag=0))
-
-            check_br_status(result["solution"])
-
-            @test result["status"] == :Optimal
-            @test isapprox(result["objective"], 14999.7; atol = 1e0)
-        end
-    end
-
-
+    return PowerModels.build_solution(pm, status, solve_time; solution_builder = PowerModels.get_ots_solution)
 end
 
+@testset "test dc ots" begin
+    @testset "3-bus case" begin
+        result = run_nl_ots("../test/data/case3.json", DCPPowerModel, pajarito_solver)
+
+        check_br_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 5695.8; atol = 1e0)
+    end
+
+    @testset "5-bus case" begin
+        result = run_nl_ots("../test/data/case5.json", DCPPowerModel, pajarito_solver)
+
+        check_br_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 14991.2; atol = 1e0)
+    end
+end
+
+@testset "test dc-losses ots" begin
+    @testset "3-bus case" begin
+        result = run_nl_ots("../test/data/case3.json", DCPLLPowerModel, pajarito_solver)
+
+        check_br_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 5787.1; atol = 1e0)
+    end
+
+    @testset "5-bus case" begin
+        result = run_nl_ots("../test/data/case5.json", DCPLLPowerModel, pajarito_solver)
+
+        check_br_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 15275.2; atol = 1e0)
+    end
+end
+
+@testset "test soc ots" begin
+    @testset "3-bus case" begin
+        result = run_nl_ots("../test/data/case3.json", SOCWRPowerModel, pajarito_solver)
+
+        check_br_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 5736.2; atol = 1e0)
+    end
+    @testset "5-bus rts case" begin
+        result = run_nl_ots("../test/data/case5.json", SOCWRPowerModel, pajarito_solver)
+
+        check_br_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 14999.7; atol = 1e0)
+    end
+end
 
