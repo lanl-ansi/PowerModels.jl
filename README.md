@@ -59,10 +59,6 @@ Where ACPPowerModel indicates an AC formulation in polar coordinates.  This more
 ```
 run_opf("nesta\_case3\_lmbd.m", SOCWRPowerModel. IpoptSolver())
 ```
-And an SDP Optimal Power Flow can be run with, 
-```
-run_opf("nesta\_case3\_lmbd.m", SDPWRMPowerModel. IpoptSolver())
-```
 
 Extending PowerModels with new problems and formulations will be covered in a another tutorial, that is not yet available.
 
