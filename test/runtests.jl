@@ -32,14 +32,10 @@ function check_br_status(sol)
     end
 end
 
-
 include("pf.jl")
 
 include("opf.jl")
 
-include("ots.jl")
-
 include("misc.jl")
 
-# TODO see if something simialr is needed in Base Test
-#FactCheck.exitstatus()
+include("ots.jl")

@@ -22,7 +22,7 @@ before_install:
   - julia -e 'if !("Coverage" in keys(Pkg.installed())) Pkg.add("Coverage") end'
 
 script:
-#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'Pkg.clone(pwd())'
   - julia -e 'Pkg.test("PowerModels", coverage=true)'
 
