@@ -42,12 +42,6 @@ function variable_voltage_magnitude_sqr_from_on_off{T}(pm::GenericPowerModel{T})
 
     @variable(pm.model, 0 <= w_from[i in pm.set.branch_indexes] <= buses[branches[i]["f_bus"]]["vmax"]^2, start = getstart(pm.set.buses, i, "w_from_start", 1.001))
 
-    z = getvariable(pm.model, :line_z)
-    for i in pm.set.branch_indexes
-        @constraint(pm.model, w_from[i] <= z[i]*buses[branches[i]["f_bus"]]["vmax"]^2)
-        @constraint(pm.model, w_from[i] >= z[i]*buses[branches[i]["f_bus"]]["vmin"]^2)
-    end
-
     return w_from
 end
 
@@ -56,12 +50,6 @@ function variable_voltage_magnitude_sqr_to_on_off{T}(pm::GenericPowerModel{T})
     branches = pm.set.branches
 
     @variable(pm.model, 0 <= w_to[i in pm.set.branch_indexes] <= buses[branches[i]["t_bus"]]["vmax"]^2, start = getstart(pm.set.buses, i, "w_to", 1.001))
-
-    z = getvariable(pm.model, :line_z)
-    for i in pm.set.branch_indexes
-        @constraint(pm.model, w_to[i] <= z[i]*buses[branches[i]["t_bus"]]["vmax"]^2)
-        @constraint(pm.model, w_to[i] >= z[i]*buses[branches[i]["t_bus"]]["vmin"]^2)
-    end
 
     return w_to
 end
@@ -159,15 +147,6 @@ function variable_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
 
     @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr[b in pm.set.branch_indexes] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.set.buspairs, bi_bp[b], "wr_start", 1.0)) 
     @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi[b in pm.set.branch_indexes] <= max(0, wi_max[bi_bp[b]]), start = getstart(pm.set.buspairs, bi_bp[b], "wr_start"))
-
-    z = getvariable(pm.model, :line_z)
-    for b in pm.set.branch_indexes
-        @constraint(pm.model, wr[b] <= z[b]*wr_max[bi_bp[b]])
-        @constraint(pm.model, wr[b] >= z[b]*wr_min[bi_bp[b]])
-
-        @constraint(pm.model, wi[b] <= z[b]*wi_max[bi_bp[b]])
-        @constraint(pm.model, wi[b] >= z[b]*wi_min[bi_bp[b]])
-    end
 
     return wr, wi
 end
