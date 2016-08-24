@@ -1,7 +1,6 @@
 export 
     ACPPowerModel, StandardACPForm,
     APIACPPowerModel, APIACPForm,
-    SADACPPowerModel, SADACPForm,
     LSACPPowerModel, LSACPForm
 
 abstract AbstractACPForm <: AbstractPowerFormulation
@@ -371,42 +370,5 @@ function add_bus_demand_setpoint(sol, pm::APIACPPowerModel)
 end
 
 
-
-
-
-
-type SADACPForm <: AbstractACPForm end
-typealias SADACPPowerModel GenericPowerModel{SADACPForm}
-
-# default AC constructor
-function SADACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, SADACPForm(); kwargs...)
-end
-
-function variable_complex_voltage(pm::SADACPPowerModel)
-    t = variable_phase_angle(pm)
-    v = variable_voltage_magnitude(pm)
-    @variable(pm.model, theta_delta_bound >= 0.0, start = 0.523598776)
-end
-
-
-function constraint_phase_angle_diffrence_flexible(pm::SADACPPowerModel, branch)
-  i = branch["index"]
-  f_bus = branch["f_bus"]
-  t_bus = branch["t_bus"]
-
-  t_fr = getvariable(pm.model, :t)[f_bus]
-  t_to = getvariable(pm.model, :t)[t_bus]
-
-  theta_delta_bound = getvariable(pm.model, :theta_delta_bound)
-
-  @constraint(pm.model, t_fr - t_to <=  theta_delta_bound)
-  @constraint(pm.model, t_fr - t_to >= -theta_delta_bound)
-end
-
-function objective_min_theta_delta(pm::SADACPPowerModel)
-    theta_delta_bound = getvariable(pm.model, :theta_delta_bound)
-    @objective(pm.model, Min, theta_delta_bound)
-end
 
 

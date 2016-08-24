@@ -56,7 +56,7 @@ function run_sad_opf(file, model_constructor, solver)
     return solve(pm)
 end
 
-function post_sad_opf{T}(pm::GenericPowerModel{T})
+function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericPowerModel{T})
     variable_complex_voltage(pm)
 
     variable_active_generation(pm)
@@ -65,9 +65,9 @@ function post_sad_opf{T}(pm::GenericPowerModel{T})
     variable_active_line_flow(pm)
     variable_reactive_line_flow(pm)
 
+    @variable(pm.model, theta_delta_bound >= 0.0, start = 0.523598776)
 
-    objective_min_theta_delta(pm)
-
+    @objective(pm.model, Min, theta_delta_bound)
 
     constraint_theta_ref(pm)
     constraint_complex_voltage(pm)
@@ -81,7 +81,12 @@ function post_sad_opf{T}(pm::GenericPowerModel{T})
         constraint_active_ohms_y(pm, branch)
         constraint_reactive_ohms_y(pm, branch)
 
-        constraint_phase_angle_diffrence_flexible(pm, branch)
+        #constraint_phase_angle_diffrence_flexible(pm, branch)
+        theta_fr = getvariable(pm.model, :t)[branch["f_bus"]]
+        theta_to = getvariable(pm.model, :t)[branch["t_bus"]]
+
+        @constraint(pm.model, theta_fr - theta_to <=  theta_delta_bound)
+        @constraint(pm.model, theta_fr - theta_to >= -theta_delta_bound)
 
         constraint_thermal_limit_from(pm, branch; scale = 0.999)
         constraint_thermal_limit_to(pm, branch; scale = 0.999)

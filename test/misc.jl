@@ -27,19 +27,19 @@ end
 
 @testset "test ac sad" begin
     @testset "3-bus case" begin
-        result = run_sad_opf("../test/data/case3.json", SADACPPowerModel, IpoptSolver(tol=1e-6, print_level=0))
+        result = run_sad_opf("../test/data/case3.json", ACPPowerModel, IpoptSolver(tol=1e-6, print_level=0))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0.3144; atol = 1e-2)
     end
     @testset "5-bus pjm case" begin
-        result = run_sad_opf("../test/data/case5.json", SADACPPowerModel, IpoptSolver(tol=1e-6, print_level=0))
+        result = run_sad_opf("../test/data/case5.json", ACPPowerModel, IpoptSolver(tol=1e-6, print_level=0))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0.02233; atol = 1e-2)
     end
     @testset "30-bus ieee case" begin
-        result = run_sad_opf("../test/data/case30.json", SADACPPowerModel, IpoptSolver(tol=1e-6, print_level=0))
+        result = run_sad_opf("../test/data/case30.json", ACPPowerModel, IpoptSolver(tol=1e-6, print_level=0))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0.1537; atol = 1e-2)
