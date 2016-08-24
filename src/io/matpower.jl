@@ -74,7 +74,48 @@ end
 
 function parse_matpower(file_string)
     data_string = readall(open(file_string))
-    return parse_matpower_data(data_string)
+    data = parse_matpower_data(data_string)
+
+    for branch in data["branch"]
+        if branch["angmin"] <= -90
+            warn("this code only supports angmin values in -89 deg. to 89 deg., tightening the value on branch $(branch["index"]) from $(branch["angmin"]) to -60 deg.")
+            branch["angmin"] = -60.0
+        end
+        if branch["angmax"] >= 90
+            warn("this code only supports angmax values in -89 deg. to 89 deg., tightening the value on branch $(branch["index"]) from $(branch["angmax"]) to 60 deg.")
+            branch["angmax"] = 60.0
+        end
+    end
+
+    mva_base = data["baseMVA"]
+    vmax_lookup = [ bus["index"] => bus["vmax"] for bus in data["bus"] ]
+    vmin_lookup = [ bus["index"] => bus["vmin"] for bus in data["bus"] ]
+
+    for branch in data["branch"]
+        if branch["rate_a"] <= 0.0
+            theta_max = max(abs(branch["angmin"]), abs(branch["angmax"]))
+
+            r = branch["br_r"]
+            x = branch["br_x"]
+            g =  r / (r^2 + x^2)
+            b = -x / (r^2 + x^2)
+
+            y_mag = sqrt(g^2 + b^2)
+
+            fr_vmax = vmax_lookup[branch["f_bus"]]
+            to_vmax = vmax_lookup[branch["f_bus"]]
+            m_vmax = max(fr_vmax, to_vmax)
+
+            c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(deg2rad(theta_max)))
+
+            new_rate = mva_base*y_mag*m_vmax*c_max
+
+            warn("this code only supports positive rate_a values, changing the value on branch $(branch["index"]) from $(branch["rate_a"]) to $(new_rate)")
+            branch["rate_a"] = new_rate
+        end
+    end
+
+    return data
 end
 
 function parse_matpower_data(data_string)
