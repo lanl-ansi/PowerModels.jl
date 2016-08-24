@@ -1,7 +1,6 @@
 export 
-    DCPPowerModel, DCPVars,
-    LSDCPPowerModel, LSDCPForm,
-    LSDCPLLPowerModel, LSDCPLLForm
+    DCPPowerModel, StandardDCPForm,
+    DCPLLPowerModel, StandardDCPLLForm
 
 
 abstract AbstractDCPForm <: AbstractPowerFormulation
@@ -148,16 +147,6 @@ end
 
 
 
-abstract AbstractLSDCPForm <: AbstractDCPForm
-
-type LSDCPForm <: AbstractLSDCPForm end
-typealias LSDCPPowerModel GenericPowerModel{LSDCPForm}
-
-# default AC constructor
-function LSDCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, LSDCPForm(); kwargs...)
-end
-
 function variable_complex_voltage_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_phase_angle(pm; kwargs...)
 end
@@ -166,16 +155,7 @@ function constraint_complex_voltage_on_off{T <: AbstractDCPForm}(pm::GenericPowe
     # do nothing, this model does not have complex voltage variables
 end
 
-function variable_active_line_flow{T <: AbstractLSDCPForm}(pm::GenericPowerModel{T})
-    p = @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
-
-    p_expr = [(l,i,j) => 1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from]
-    p_expr = merge(p_expr, [(l,j,i) => -1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from])
-
-    pm.model.ext[:p_expr] = p_expr
-end
-
-function constraint_active_ohms_yt_on_off{T <: AbstractLSDCPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_active_ohms_yt_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -196,9 +176,46 @@ function constraint_active_ohms_yt_on_off{T <: AbstractLSDCPForm}(pm::GenericPow
     return Set([c1, c2])
 end
 
-function constraint_thermal_limit_to_on_off{T <: AbstractLSDCPForm}(pm::GenericPowerModel{T}, branch; scale = 1.0)
+function constraint_reactive_ohms_yt_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+    # Do nothing, this model does not have reactive variables
+    return Set()
+end
+
+# Generic on/off thermal limit constraint
+function constraint_thermal_limit_from_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch; scale = 1.0)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+
+    p_fr = getvariable(pm.model, :p)[f_idx]
+    z = getvariable(pm.model, :line_z)[i]
+
+    c1 = @constraint(pm.model, p_fr <= getupperbound(p_fr)*z)
+    c2 = @constraint(pm.model, p_fr >= getlowerbound(p_fr)*z)
+    return Set([c1, c2])
+end
+
+function constraint_thermal_limit_to_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch; scale = 1.0)
   # nothing to do, from handles both sides
   return Set()
+end
+
+function constraint_phase_angle_diffrence_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+
+    t_fr = getvariable(pm.model, :t)[f_bus]
+    t_to = getvariable(pm.model, :t)[t_bus]
+    z = getvariable(pm.model, :line_z)[i]
+
+    t_min = branch["off_angmin"]
+    t_max = branch["off_angmax"]
+
+    c1 = @constraint(pm.model, t_fr - t_to <= branch["angmax"]*z + t_max*(1-z))
+    c2 = @constraint(pm.model, t_fr - t_to >= branch["angmin"]*z + t_min*(1-z))
+    return Set([c1, c2])
 end
 
 
@@ -210,13 +227,10 @@ abstract AbstractDCPLLForm <: AbstractDCPForm
 type StandardDCPLLForm <: AbstractDCPLLForm end
 typealias DCPLLPowerModel GenericPowerModel{StandardDCPLLForm}
 
-type LSDCPLLForm <: AbstractDCPLLForm end
-typealias LSDCPLLPowerModel GenericPowerModel{LSDCPLLForm}
-
 
 # default DC constructor
-function LSDCPLLPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, LSDCPLLForm(); kwargs...)
+function DCPLLPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+    return GenericPowerModel(data, StandardDCPLLForm(); kwargs...)
 end
 
 function constraint_active_kcl_shunt{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, bus)
@@ -232,7 +246,7 @@ function constraint_active_kcl_shunt{T <: AbstractDCPLLForm}(pm::GenericPowerMod
 end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
-function constraint_active_ohms_yt_on_off{T <: LSDCPLLForm}(pm::GenericPowerModel{T}, branch)
+function constraint_active_ohms_yt_on_off{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -257,7 +271,7 @@ function constraint_active_ohms_yt_on_off{T <: LSDCPLLForm}(pm::GenericPowerMode
     return Set([c1, c2, c3])
 end
 
-function constraint_thermal_limit_to_on_off{T <: LSDCPLLForm}(pm::GenericPowerModel{T}, branch; scale = 1.0)
+function constraint_thermal_limit_to_on_off{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, branch; scale = 1.0)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -270,55 +284,6 @@ function constraint_thermal_limit_to_on_off{T <: LSDCPLLForm}(pm::GenericPowerMo
     c2 = @constraint(pm.model, p_to >= getlowerbound(p_to)*z)
     return Set([c1, c2])
 end
-
-
-function constraint_reactive_ohms_yt_on_off{T <: Union{AbstractLSDCPForm, LSDCPLLForm}}(pm::GenericPowerModel{T}, branch)
-    # Do nothing, this model does not have reactive variables
-    return Set()
-end
-
-function constraint_phase_angle_diffrence_on_off{T <: Union{AbstractLSDCPForm, LSDCPLLForm}}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-
-    t_fr = getvariable(pm.model, :t)[f_bus]
-    t_to = getvariable(pm.model, :t)[t_bus]
-    z = getvariable(pm.model, :line_z)[i]
-
-    t_min = branch["off_angmin"]
-    t_max = branch["off_angmax"]
-
-    c1 = @constraint(pm.model, t_fr - t_to <= branch["angmax"]*z + t_max*(1-z))
-    c2 = @constraint(pm.model, t_fr - t_to >= branch["angmin"]*z + t_min*(1-z))
-    return Set([c1, c2])
-end
-
-# Generic on/off thermal limit constraint
-function constraint_thermal_limit_from_on_off{T <: Union{AbstractLSDCPForm, LSDCPLLForm}}(pm::GenericPowerModel{T}, branch; scale = 1.0)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-
-    p_fr = getvariable(pm.model, :p)[f_idx]
-    z = getvariable(pm.model, :line_z)[i]
-
-    c1 = @constraint(pm.model, p_fr <= getupperbound(p_fr)*z)
-    c2 = @constraint(pm.model, p_fr >= getlowerbound(p_fr)*z)
-    return Set([c1, c2])
-end
-
-
-function get_solution{T <: Union{AbstractLSDCPForm, LSDCPLLForm}}(pm::GenericPowerModel{T})
-    sol = Dict{AbstractString,Any}()
-    add_bus_voltage_setpoint(sol, pm)
-    add_generator_power_setpoint(sol, pm)
-    add_branch_flow_setpoint(sol, pm)
-    add_branch_status_setpoint(sol, pm)
-    return sol
-end
-
 
 
 

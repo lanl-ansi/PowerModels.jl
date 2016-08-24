@@ -12,7 +12,7 @@ if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices")
     #        @test isapprox(result["objective"], 5812; atol = 1e0)
     #    end
         @testset "5-bus case" begin
-            result = run_ots("../test/data/case5.json", LSACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
+            result = run_ots("../test/data/case5.json", ACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
 
             check_br_status(result["solution"])
 
@@ -28,7 +28,7 @@ if (Pkg.installed("Gurobi") != nothing)
 
     @testset "test dc ots" begin
         @testset "3-bus case" begin
-            result = run_ots("../test/data/case3.json", LSDCPPowerModel, GurobiSolver(OutputFlag=0))
+            result = run_ots("../test/data/case3.json", DCPPowerModel, GurobiSolver(OutputFlag=0))
 
             check_br_status(result["solution"])
 
@@ -37,7 +37,7 @@ if (Pkg.installed("Gurobi") != nothing)
         end
 
         @testset "5-bus case" begin
-            result = run_ots("../test/data/case5.json", LSDCPPowerModel, GurobiSolver(OutputFlag=0))
+            result = run_ots("../test/data/case5.json", DCPPowerModel, GurobiSolver(OutputFlag=0))
 
             check_br_status(result["solution"])
 
@@ -48,7 +48,7 @@ if (Pkg.installed("Gurobi") != nothing)
 
     @testset "test dc-losses ots" begin
         @testset "3-bus case" begin
-            result = run_ots("../test/data/case3.json", LSDCPLLPowerModel, GurobiSolver(OutputFlag=0))
+            result = run_ots("../test/data/case3.json", DCPLLPowerModel, GurobiSolver(OutputFlag=0))
 
             check_br_status(result["solution"])
 
@@ -57,7 +57,7 @@ if (Pkg.installed("Gurobi") != nothing)
         end
 
         @testset "5-bus case" begin
-            result = run_ots("../test/data/case5.json", LSDCPLLPowerModel, GurobiSolver(OutputFlag=0))
+            result = run_ots("../test/data/case5.json", DCPLLPowerModel, GurobiSolver(OutputFlag=0))
 
             check_br_status(result["solution"])
 
@@ -68,7 +68,7 @@ if (Pkg.installed("Gurobi") != nothing)
 
     @testset "test soc ots" begin
         @testset "3-bus case" begin
-            result = run_ots("../test/data/case3.json", LSSOCWRPowerModel, GurobiSolver(OutputFlag=0))
+            result = run_ots("../test/data/case3.json", SOCWRPowerModel, GurobiSolver(OutputFlag=0))
 
             check_br_status(result["solution"])
 
@@ -76,7 +76,7 @@ if (Pkg.installed("Gurobi") != nothing)
             @test isapprox(result["objective"], 5736.2; atol = 1e0)
         end
         @testset "5-bus rts case" begin
-            result = run_ots("../test/data/case5.json", LSSOCWRPowerModel, GurobiSolver(OutputFlag=0))
+            result = run_ots("../test/data/case5.json", SOCWRPowerModel, GurobiSolver(OutputFlag=0))
 
             check_br_status(result["solution"])
 

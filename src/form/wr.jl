@@ -1,6 +1,5 @@
 export 
     SOCWRPowerModel, SOCWRForm,
-    LSSOCWRPowerModel, LSSOCWRForm,
     QCWRPowerModel, QCWRForm
 
 abstract AbstractWRForm <: AbstractPowerFormulation
@@ -156,16 +155,6 @@ end
 
 
 
-abstract AbstractLSWRPForm <: AbstractWRForm
-
-type LSSOCWRForm <: AbstractLSWRPForm end
-typealias LSSOCWRPowerModel GenericPowerModel{LSSOCWRForm}
-
-# default AC constructor
-function LSSOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, LSSOCWRForm(); kwargs...)
-end
-
 function variable_complex_voltage_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_voltage_magnitude_sqr(pm; kwargs...)
     variable_voltage_magnitude_sqr_from_on_off(pm; kwargs...)
@@ -258,7 +247,7 @@ function constraint_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
 end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
-function constraint_active_ohms_yt_on_off{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_active_ohms_yt_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -284,7 +273,7 @@ function constraint_active_ohms_yt_on_off{T <: AbstractLSWRPForm}(pm::GenericPow
     return Set([c1, c2])
 end
 
-function constraint_reactive_ohms_yt_on_off{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_reactive_ohms_yt_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -319,15 +308,6 @@ function constraint_phase_angle_diffrence_on_off{T <: AbstractWRForm}(pm::Generi
     c1 = @constraint(pm.model, wi <= branch["angmax"]*wr)
     c2 = @constraint(pm.model, wi >= branch["angmin"]*wr)
     return Set([c1, c2])
-end
-
-function get_solution{T <: AbstractLSWRPForm}(pm::GenericPowerModel{T})
-    sol = Dict{AbstractString,Any}()
-    add_bus_voltage_setpoint(sol, pm)
-    add_generator_power_setpoint(sol, pm)
-    add_branch_flow_setpoint(sol, pm)
-    add_branch_status_setpoint(sol, pm)
-    return sol
 end
 
 

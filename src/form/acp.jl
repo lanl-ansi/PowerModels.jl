@@ -1,7 +1,6 @@
 export 
     ACPPowerModel, StandardACPForm,
-    APIACPPowerModel, APIACPForm,
-    LSACPPowerModel, LSACPForm
+    APIACPPowerModel, APIACPForm
 
 abstract AbstractACPForm <: AbstractPowerFormulation
 
@@ -193,17 +192,7 @@ end
 
 
 
-abstract AbstractLSACPForm <: AbstractACPForm
-
-type LSACPForm <: AbstractLSACPForm end
-typealias LSACPPowerModel GenericPowerModel{LSACPForm}
-
-# default AC constructor
-function LSACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, LSACPForm(); kwargs...)
-end
-
-function variable_complex_voltage_on_off{T <: AbstractLSACPForm}(pm::GenericPowerModel{T}; kwargs...)
+function variable_complex_voltage_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_phase_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
 end
@@ -213,7 +202,7 @@ function constraint_complex_voltage_on_off{T <: AbstractACPForm}(pm::GenericPowe
     return Set()
 end
 
-function constraint_active_ohms_yt_on_off{T <: AbstractLSACPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_active_ohms_yt_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -240,7 +229,7 @@ function constraint_active_ohms_yt_on_off{T <: AbstractLSACPForm}(pm::GenericPow
     return Set([c1, c2])
 end
 
-function constraint_reactive_ohms_yt_on_off{T <: AbstractLSACPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_reactive_ohms_yt_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -267,7 +256,7 @@ function constraint_reactive_ohms_yt_on_off{T <: AbstractLSACPForm}(pm::GenericP
     return Set([c1, c2])
 end
 
-function constraint_phase_angle_diffrence_on_off{T <: AbstractLSACPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_phase_angle_diffrence_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -281,14 +270,6 @@ function constraint_phase_angle_diffrence_on_off{T <: AbstractLSACPForm}(pm::Gen
     return Set([c1, c2])
 end
 
-#function get_solution{T <: AbstractLSACPForm}(pm::GenericPowerModel{T})
-#    sol = Dict{AbstractString,Any}()
-#    add_bus_voltage_setpoint(sol, pm)
-#    add_generator_power_setpoint(sol, pm)
-#    add_branch_flow_setpoint(sol, pm)
-#    add_branch_status_setpoint(sol, pm)
-#    return sol
-#end
 
 
 
