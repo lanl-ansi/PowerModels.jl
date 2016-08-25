@@ -4,5 +4,7 @@ JuMP
 
 Ipopt
 SCS
+GLPKMathProgInterface
+Pajarito
 
 BaseTestNext
