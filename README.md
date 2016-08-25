@@ -29,14 +29,14 @@ For the moment, PowerModels.jl is not yet registered as a Julia package.  Hence,
 
 `Pkg.clone("git@github.com:lanl-ansi/PowerModels.jl.git")`
 
-At least one solver is required for running PowerModels.  Using the open-source solver Ipopt is recommended, as it is extremely fast, and can be used to solve a wide variety of problems and network formulations in PowerModels.  Ipopt is installed in Julia via,
+At least one solver is required for running PowerModels.  Using the open-source solver Ipopt is recommended, as it is extremely fast, and can be used to solve a wide variety of the problems and network formulations provided in PowerModels.  The Ipopt solver is installed via,
 
 `Pkg.add("Ipopt")`
 
 
 ## Basic Usage
 
-Once PowerModels is installed, Ipopt is installed, and a network data file (e.g. "nesta\_case3\_lmbd.m") has been acquired, then an AC Optimal Power Flow can be executed with,
+Once PowerModels is installed, Ipopt is installed, and a network data file (e.g. "nesta\_case3\_lmbd.m") has been acquired, an AC Optimal Power Flow can be executed with,
 ```
 using PowerModels
 using Ipopt
@@ -44,20 +44,20 @@ using Ipopt
 run_ac_opf("nesta\_case3\_lmbd.m", IpoptSolver())
 ```
 
-Similarly a DC Optimal Power Flow can be executed with,
+Similarly, a DC Optimal Power Flow can be executed with,
 ```
 run_dc_opf("nesta\_case3\_lmbd.m", IpoptSolver())
 ```
 
-In fact, "run_ac_opf" and "run_dc_opf" are simply shorthands for a more general formulation-independent OPF execution, "run_opf".  For example, "run_ac_opf" is equivalent to,
+In fact, "run_ac_opf" and "run_dc_opf" are shorthands for a more general formulation-independent OPF execution, "run_opf".  For example, "run_ac_opf" is,
 ```
-run_opf("nesta\_case3\_lmbd.m", ACPPowerModel. IpoptSolver())
+run_opf("nesta\_case3\_lmbd.m", ACPPowerModel, IpoptSolver())
 ```
 
-Where ACPPowerModel indicates an AC formulation in polar coordinates.  This more generic "run_opf" allows one to solve an OPF problem with any power network formulation implemented in PowerModels.  For example, an SOC Optimal Power Flow can be run with,
+Where "ACPPowerModel" indicates an AC formulation in polar coordinates.  This more generic "run_opf" allows one to solve an OPF problem with any power network formulation implemented in PowerModels.  For example, an SOC Optimal Power Flow can be run with,
 
 ```
-run_opf("nesta\_case3\_lmbd.m", SOCWRPowerModel. IpoptSolver())
+run_opf("nesta\_case3\_lmbd.m", SOCWRPowerModel, IpoptSolver())
 ```
 
 Extending PowerModels with new problems and formulations will be covered in a another tutorial, that is not yet available.
