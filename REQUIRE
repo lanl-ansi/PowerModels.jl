@@ -1,4 +1,4 @@
 julia 0.4.6
 JSON
-MathProgBase
+MathProgBase 0.5.4
 JuMP
