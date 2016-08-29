@@ -1,6 +1,4 @@
 julia 0.4.6
-JSON
-JuMP
 
 Ipopt
 SCS
