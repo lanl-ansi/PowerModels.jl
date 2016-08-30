@@ -41,23 +41,23 @@ Once PowerModels is installed, Ipopt is installed, and a network data file (e.g.
 using PowerModels
 using Ipopt
 
-run_ac_opf("nesta\_case3\_lmbd.m", IpoptSolver())
+run_ac_opf("nesta_case3_lmbd.m", IpoptSolver())
 ```
 
 Similarly, a DC Optimal Power Flow can be executed with,
 ```
-run_dc_opf("nesta\_case3\_lmbd.m", IpoptSolver())
+run_dc_opf("nesta_case3_lmbd.m", IpoptSolver())
 ```
 
 In fact, "run_ac_opf" and "run_dc_opf" are shorthands for a more general formulation-independent OPF execution, "run_opf".  For example, "run_ac_opf" is,
 ```
-run_opf("nesta\_case3\_lmbd.m", ACPPowerModel, IpoptSolver())
+run_opf("nesta_case3_lmbd.m", ACPPowerModel, IpoptSolver())
 ```
 
 Where "ACPPowerModel" indicates an AC formulation in polar coordinates.  This more generic "run_opf" allows one to solve an OPF problem with any power network formulation implemented in PowerModels.  For example, an SOC Optimal Power Flow can be run with,
 
 ```
-run_opf("nesta\_case3\_lmbd.m", SOCWRPowerModel, IpoptSolver())
+run_opf("nesta_case3_lmbd.m", SOCWRPowerModel, IpoptSolver())
 ```
 
 Extending PowerModels with new problems and formulations will be covered in a another tutorial, that is not yet available.
