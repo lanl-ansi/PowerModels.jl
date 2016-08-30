@@ -193,7 +193,7 @@ end
 
 
 # Creates variables associated with differences in phase angles
-function variable_phase_angle_diffrence{T}(pm::GenericPowerModel{T})
+function variable_phase_angle_difference{T}(pm::GenericPowerModel{T})
     @variable(pm.model, pm.set.buspairs[bp]["angmin"] <= td[bp in pm.set.buspair_indexes] <= pm.set.buspairs[bp]["angmax"], start = getstart(pm.set.buspairs, bp, "td_start"))
     return td
 end

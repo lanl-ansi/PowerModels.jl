@@ -35,7 +35,7 @@ function post_api_opf{T}(pm::GenericPowerModel{T})
         constraint_active_ohms_yt(pm, branch)
         constraint_reactive_ohms_yt(pm, branch)
 
-        constraint_phase_angle_diffrence(pm, branch)
+        constraint_phase_angle_difference(pm, branch)
 
         constraint_thermal_limit_from(pm, branch; scale = 0.999)
         constraint_thermal_limit_to(pm, branch; scale = 0.999)
@@ -76,7 +76,7 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
         constraint_active_ohms_y(pm, branch)
         constraint_reactive_ohms_y(pm, branch)
 
-        #constraint_phase_angle_diffrence_flexible(pm, branch)
+        #constraint_phase_angle_difference_flexible(pm, branch)
         theta_fr = getvariable(pm.model, :t)[branch["f_bus"]]
         theta_to = getvariable(pm.model, :t)[branch["t_bus"]]
 

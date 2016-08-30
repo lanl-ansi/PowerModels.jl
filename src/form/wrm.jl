@@ -129,7 +129,7 @@ function constraint_reactive_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel
     return Set([c1, c2])
 end
 
-function constraint_phase_angle_diffrence{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, branch)
+function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
