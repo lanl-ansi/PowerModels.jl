@@ -25,11 +25,15 @@ This enables the definition of a wide variety of power network formulations and 
 
 ## Installation
 
-For the moment, PowerModels.jl is not yet registered as a Julia package.  Hence, "clone" should be used instead of "add" for package installation,
+The latest stable release of PowerModels can be installed using the Julia package manager with,
+
+`Pkg.add("PowerModels")`
+
+For the current development version, "clone" this repository directly with,
 
 `Pkg.clone("git@github.com:lanl-ansi/PowerModels.jl.git")`
 
-At least one solver is required for running PowerModels.  Using the open-source solver Ipopt is recommended, as it is extremely fast, and can be used to solve a wide variety of the problems and network formulations provided in PowerModels.  The Ipopt solver is installed via,
+At least one solver is required for running PowerModels.  Using the open-source solver Ipopt is recommended, as it is extremely fast, and can be used to solve a wide variety of the problems and network formulations provided in PowerModels.  The Ipopt solver can be installed via tha package manager with,
 
 `Pkg.add("Ipopt")`
 
