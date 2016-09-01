@@ -120,8 +120,8 @@ function build_sets(data::Dict{AbstractString,Any})
     arcs = [arcs_from; arcs_to]
 
     bus_gens = [i => [] for (i,bus) in bus_lookup]
-    for (i,gen) in gen_lookup
-        push!(bus_gens[gen["gen_bus"]], i)
+    for (i, g) in gen_lookup
+        push!(bus_gens[g["gen_bus"]], i)
     end
 
     bus_branches = [i => [] for (i,bus) in bus_lookup]
