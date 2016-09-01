@@ -1,16 +1,15 @@
-
 function build_solution{T}(pm::GenericPowerModel{T}, status, solve_time; objective = NaN, solution_builder = get_solution)
     # TODO assert that the model is solved
 
     if status != :Error
         objective = getobjectivevalue(pm.model)
-        status = solver_status_dict(symbol(typeof(pm.model.solver).name.module), status)
+        status = solver_status_dict(Symbol(typeof(pm.model.solver).name.module), status)
     end
 
     solution = Dict{AbstractString,Any}(
-        "solver" => string(typeof(pm.model.solver)), 
-        "status" => status, 
-        "objective" => objective, 
+        "solver" => string(typeof(pm.model.solver)),
+        "status" => status,
+        "objective" => objective,
         "objective_lb" => guard_getobjbound(pm.model),
         "solve_time" => solve_time,
         "solution" => solution_builder(pm),
@@ -100,8 +99,6 @@ function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, p
     end
 end
 
-
-
 solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}()
 
 solver_status_lookup[:Ipopt] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
@@ -109,7 +106,6 @@ solver_status_lookup[:ConicNonlinearBridge] = Dict(:Optimal => :LocalOptimal, :I
 
 # note that AmplNLWriter.AmplNLSolver is the solver type of bonmin
 solver_status_lookup[:AmplNLWriter] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
-
 
 # translates solver status codes to our status codes
 function solver_status_dict(solver_module_symbol, status)
@@ -132,6 +128,3 @@ function guard_getobjbound(model)
         -Inf
     end
 end
-
-
-
