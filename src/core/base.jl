@@ -1,6 +1,6 @@
 # stuff that is universal to all power models
 
-export 
+export
     GenericPowerModel,
     setdata, setsolver, solve
 
@@ -120,7 +120,7 @@ function build_sets(data :: Dict{AbstractString,Any})
     end
     branch_lookup = [ Int(branch["index"]) => branch for branch in data["branch"] ]
 
-    # filter turned off stuff 
+    # filter turned off stuff
     bus_lookup = filter((i, bus) -> bus["bus_type"] != 4, bus_lookup)
     gen_lookup = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(bus_lookup), gen_lookup)
     branch_lookup = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(bus_lookup) && branch["t_bus"] in keys(bus_lookup), branch_lookup)
@@ -128,7 +128,7 @@ function build_sets(data :: Dict{AbstractString,Any})
 
     arcs_from = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in branch_lookup]
     arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
-    arcs = [arcs_from; arcs_to] 
+    arcs = [arcs_from; arcs_to]
 
     bus_gens = [i => [] for (i,bus) in bus_lookup]
     for (i,gen) in gen_lookup
@@ -156,7 +156,7 @@ function build_sets(data :: Dict{AbstractString,Any})
 
 
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
-    buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)  
+    buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)
 
     return PowerDataSets(ref_bus, bus_lookup, bus_idxs, gen_lookup, gen_idxs, branch_lookup, branch_idxs, bus_gens, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
 end
@@ -164,8 +164,8 @@ end
 
 # compute bus pair level structures
 function buspair_parameters(buspair_indexes, branches, buses)
-    bp_angmin = [bp => -Inf for bp in buspair_indexes] 
-    bp_angmax = [bp =>  Inf for bp in buspair_indexes] 
+    bp_angmin = [bp => -Inf for bp in buspair_indexes]
+    bp_angmax = [bp =>  Inf for bp in buspair_indexes]
     bp_line = [bp => Inf for bp in buspair_indexes]
 
     for (l,branch) in branches
@@ -178,8 +178,8 @@ function buspair_parameters(buspair_indexes, branches, buses)
     end
 
     buspairs = [(i,j) => Dict(
-        "line"=>bp_line[(i,j)], 
-        "angmin"=>bp_angmin[(i,j)], 
+        "line"=>bp_line[(i,j)],
+        "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],
         "rate_a"=>branches[bp_line[(i,j)]]["rate_a"],
         "tap"=>branches[bp_line[(i,j)]]["tap"],
@@ -305,10 +305,3 @@ function calc_min_phase_angle(data :: Dict{AbstractString,Any})
 
     return sum(angle_min[1:bus_count-1])
 end
-
-
-
-
-
-
-
