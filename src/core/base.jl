@@ -101,7 +101,7 @@ function run_generic_model(file, model_constructor, solver, post_method; solutio
     return build_solution(pm, status, solve_time; solution_builder = solution_builder)
 end
 
-function build_sets(data :: Dict{AbstractString,Any})
+function build_sets(data::Dict{AbstractString,Any})
     bus_lookup = [ Int(bus["index"]) => bus for bus in data["bus"] ]
     gen_lookup = [ Int(gen["index"]) => gen for gen in data["gen"] ]
     for gencost in data["gencost"]
@@ -240,7 +240,7 @@ function unify_transformer_taps(data::Dict{AbstractString,Any})
 end
 
 # NOTE, this function assumes all values are p.u. and angles are in radians
-function add_branch_parameters(data :: Dict{AbstractString,Any})
+function add_branch_parameters(data::Dict{AbstractString,Any})
     min_theta_delta = calc_min_phase_angle(data)
     max_theta_delta = calc_max_phase_angle(data)
 
@@ -260,7 +260,7 @@ function add_branch_parameters(data :: Dict{AbstractString,Any})
     end
 end
 
-function standardize_cost_order(data :: Dict{AbstractString,Any})
+function standardize_cost_order(data::Dict{AbstractString,Any})
     for gencost in data["gencost"]
         if gencost["model"] == 2 && length(gencost["cost"]) < 3
             println("std gen cost: ",gencost["cost"])
@@ -271,7 +271,7 @@ function standardize_cost_order(data :: Dict{AbstractString,Any})
     end
 end
 
-function calc_max_phase_angle(data :: Dict{AbstractString,Any})
+function calc_max_phase_angle(data::Dict{AbstractString,Any})
     bus_count = length(data["bus"])
     angle_max = [branch["angmax"] for branch in data["branch"]]
     sort!(angle_max, rev=true)
@@ -279,7 +279,7 @@ function calc_max_phase_angle(data :: Dict{AbstractString,Any})
     return sum(angle_max[1:bus_count-1])
 end
 
-function calc_min_phase_angle(data :: Dict{AbstractString,Any})
+function calc_min_phase_angle(data::Dict{AbstractString,Any})
     bus_count = length(data["bus"])
     angle_min = [branch["angmin"] for branch in data["branch"]]
     sort!(angle_min)
