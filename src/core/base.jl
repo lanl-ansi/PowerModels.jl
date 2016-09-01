@@ -143,7 +143,7 @@ function build_sets(data::Dict{AbstractString,Any})
     gen_idxs = collect(keys(gen_lookup))
     branch_idxs = collect(keys(branch_lookup))
 
-    buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
+    buspair_indexes = collect(Set([a[2:3] for a in arcs_from]))
     buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)
 
     return PowerDataSets(ref_bus, bus_lookup, bus_idxs, gen_lookup, gen_idxs, branch_lookup, branch_idxs, bus_gens, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
