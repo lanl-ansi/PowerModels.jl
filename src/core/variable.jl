@@ -1,7 +1,7 @@
-##########################################################################################################
-# The purpose of this file is to define commonly used and created variables used in power flow models
+################################################################################
+# This file defines common variables used in power flow models
 # This will hopefully make everything more compositional
-##########################################################################################################
+################################################################################
 
 # extracts the start value fro,
 function getstart(set, item_key, value_key, default = 0.0)
