@@ -1,7 +1,7 @@
-##########################################################################################################
-# The purpose of this file is to define commonly used and created variables used in power flow models
+################################################################################
+# This file defines commonly used variables for power flow models
 # This will hopefully make everything more compositional
-##########################################################################################################
+################################################################################
 
 # extracts the start value fro,
 function getstart(set, item_key, value_key, default = 0.0)
@@ -35,7 +35,6 @@ function variable_voltage_magnitude_sqr{T}(pm::GenericPowerModel{T}; bounded = t
     return w
 end
 
-
 function variable_voltage_magnitude_sqr_from_on_off{T}(pm::GenericPowerModel{T})
     buses = pm.set.buses
     branches = pm.set.branches
@@ -53,8 +52,6 @@ function variable_voltage_magnitude_sqr_to_on_off{T}(pm::GenericPowerModel{T})
 
     return w_to
 end
-
-
 
 function variable_active_generation{T}(pm::GenericPowerModel{T}; bounded = true)
     if bounded
@@ -96,10 +93,10 @@ function compute_voltage_product_bounds{T}(pm::GenericPowerModel{T})
     buspairs = pm.set.buspairs
     buspair_indexes = pm.set.buspair_indexes
 
-    wr_min = [bp => -Inf for bp in buspair_indexes] 
-    wr_max = [bp =>  Inf for bp in buspair_indexes] 
+    wr_min = [bp => -Inf for bp in buspair_indexes]
+    wr_max = [bp =>  Inf for bp in buspair_indexes]
     wi_min = [bp => -Inf for bp in buspair_indexes]
-    wi_max = [bp =>  Inf for bp in buspair_indexes] 
+    wi_max = [bp =>  Inf for bp in buspair_indexes]
 
     for bp in buspair_indexes
         i,j = bp
@@ -131,10 +128,10 @@ function variable_complex_voltage_product{T}(pm::GenericPowerModel{T}; bounded =
     if bounded
         wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
 
-        @variable(pm.model, wr_min[bp] <= wr[bp in pm.set.buspair_indexes] <= wr_max[bp], start = getstart(pm.set.buspairs, bp, "wr_start", 1.0)) 
+        @variable(pm.model, wr_min[bp] <= wr[bp in pm.set.buspair_indexes] <= wr_max[bp], start = getstart(pm.set.buspairs, bp, "wr_start", 1.0))
         @variable(pm.model, wi_min[bp] <= wi[bp in pm.set.buspair_indexes] <= wi_max[bp], start = getstart(pm.set.buspairs, bp, "wi_start"))
     else
-        @variable(pm.model, wr[bp in pm.set.buspair_indexes], start = getstart(pm.set.buspairs, bp, "wr_start", 1.0)) 
+        @variable(pm.model, wr[bp in pm.set.buspair_indexes], start = getstart(pm.set.buspairs, bp, "wr_start", 1.0))
         @variable(pm.model, wi[bp in pm.set.buspair_indexes], start = getstart(pm.set.buspairs, bp, "wi_start"))
     end
     return wr, wi
@@ -145,12 +142,11 @@ function variable_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
 
     bi_bp = [i => (b["f_bus"], b["t_bus"]) for (i,b) in pm.set.branches]
 
-    @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr[b in pm.set.branch_indexes] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.set.buspairs, bi_bp[b], "wr_start", 1.0)) 
+    @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr[b in pm.set.branch_indexes] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.set.buspairs, bi_bp[b], "wr_start", 1.0))
     @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi[b in pm.set.branch_indexes] <= max(0, wi_max[bi_bp[b]]), start = getstart(pm.set.buspairs, bi_bp[b], "wr_start"))
 
     return wr, wi
 end
-
 
 function variable_complex_voltage_product_matrix{T}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
@@ -191,7 +187,6 @@ function variable_complex_voltage_product_matrix{T}(pm::GenericPowerModel{T})
     return WR, WI
 end
 
-
 # Creates variables associated with differences in phase angles
 function variable_phase_angle_difference{T}(pm::GenericPowerModel{T})
     @variable(pm.model, pm.set.buspairs[bp]["angmin"] <= td[bp in pm.set.buspair_indexes] <= pm.set.buspairs[bp]["angmax"], start = getstart(pm.set.buspairs, bp, "td_start"))
@@ -201,7 +196,7 @@ end
 # Creates the voltage magnitude product variables
 function variable_voltage_magnitude_product{T}(pm::GenericPowerModel{T})
     vv_min = [bp => pm.set.buspairs[bp]["v_from_min"]*pm.set.buspairs[bp]["v_to_min"] for bp in pm.set.buspair_indexes]
-    vv_max = [bp => pm.set.buspairs[bp]["v_from_max"]*pm.set.buspairs[bp]["v_to_max"] for bp in pm.set.buspair_indexes] 
+    vv_max = [bp => pm.set.buspairs[bp]["v_from_max"]*pm.set.buspairs[bp]["v_to_max"] for bp in pm.set.buspair_indexes]
 
     @variable(pm.model,  vv_min[bp] <= vv[bp in pm.set.buspair_indexes] <=  vv_max[bp], start = getstart(pm.set.buspairs, bp, "vv_start", 1.0))
     return vv
@@ -209,7 +204,7 @@ end
 
 function variable_cosine{T}(pm::GenericPowerModel{T})
     cos_min = [bp => -Inf for bp in pm.set.buspair_indexes]
-    cos_max = [bp =>  Inf for bp in pm.set.buspair_indexes] 
+    cos_max = [bp =>  Inf for bp in pm.set.buspair_indexes]
 
     for bp in pm.set.buspair_indexes
         buspair = pm.set.buspairs[bp]
@@ -236,23 +231,16 @@ function variable_sine{T}(pm::GenericPowerModel{T})
     return si
 end
 
-function variable_current_magnitude_sqr{T}(pm::GenericPowerModel{T}) 
+function variable_current_magnitude_sqr{T}(pm::GenericPowerModel{T})
     buspairs = pm.set.buspairs
-    cm_min = [bp => 0 for bp in pm.set.buspair_indexes] 
-    cm_max = [bp => (buspairs[bp]["rate_a"]*buspairs[bp]["tap"]/buspairs[bp]["v_from_min"])^2 for bp in pm.set.buspair_indexes]       
+    cm_min = [bp => 0 for bp in pm.set.buspair_indexes]
+    cm_max = [bp => (buspairs[bp]["rate_a"]*buspairs[bp]["tap"]/buspairs[bp]["v_from_min"])^2 for bp in pm.set.buspair_indexes]
 
     @variable(pm.model, cm_min[bp] <= cm[bp in pm.set.buspair_indexes] <=  cm_max[bp], start = getstart(pm.set.buspairs, bp, "cm_start"))
     return cm
 end
 
-
-
 function variable_line_indicator{T}(pm::GenericPowerModel{T})
     @variable(pm.model, 0 <= line_z[l in pm.set.branch_indexes] <= 1, Int, start = getstart(pm.set.branches, l, "line_z_start", 1.0))
     return line_z
 end
-
-
-
-
-

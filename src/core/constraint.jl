@@ -1,8 +1,8 @@
-##########################################################################################################
-# The purpose of this file is to define commonly used and created constraints used in power flow models
+################################################################################
+# The purpose of this file is to define commonly used and created constraints
+# used in power flow models
 # This will hopefully make everything more compositional
-##########################################################################################################
-
+################################################################################
 
 # Generic thermal limit constraint
 function constraint_thermal_limit_from{T}(pm::GenericPowerModel{T}, branch; scale = 1.0)
@@ -86,7 +86,6 @@ function constraint_thermal_limit_to_on_off{T}(pm::GenericPowerModel{T}, branch;
     return Set([c])
 end
 
-
 function constraint_active_gen_setpoint{T}(pm::GenericPowerModel{T}, gen)
     i = gen["index"]
     pg = getvariable(pm.model, :pg)[gen["index"]]
@@ -101,7 +100,6 @@ function constraint_reactive_gen_setpoint{T}(pm::GenericPowerModel{T}, gen)
     c = @constraint(pm.model, qg == gen["qg"])
     return Set([c])
 end
-
 
 function constraint_active_loss_lb{T}(pm::GenericPowerModel{T}, branch)
     @assert branch["br_r"] >= 0
@@ -137,5 +135,3 @@ function constraint_reactive_loss_lb{T}(pm::GenericPowerModel{T}, branch)
     c = @constraint(m, q_fr + q_to >= -branch["br_b"]/2*(v_fr^2/branch["tap"]^2 + v_to^2))
     return Set([c])
 end
-
-
