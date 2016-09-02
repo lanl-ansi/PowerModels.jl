@@ -194,7 +194,7 @@ function make_per_unit(mva_base::Number, data::Dict{AbstractString,Any})
         if k == "gencost"
             for cost_model in data[k]
                 if cost_model["model"] != 2
-                    println("WARNING: Skipping generator cost model of tpye other than 2")
+                    println("WARNING: Skipping generator cost model of type other than 2")
                     continue
                 end
                 degree = length(cost_model["cost"])
