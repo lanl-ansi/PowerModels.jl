@@ -1,17 +1,14 @@
-
-
 function relaxation_complex_product(m, a, b, c, d)
-    # TODO add LNC cuts to this 
+    # TODO add LNC cuts to this
     c = @constraint(m, c^2 + d^2 <= a*b)
     return Set([c])
 end
 
-
 function relaxation_complex_product_on_off(m, a, b, c, d, z)
-    # TODO add LNC cuts to this 
+    # TODO add LNC cuts to this
     @assert getlowerbound(c) <= 0 && getupperbound(c) >= 0
     @assert getlowerbound(d) <= 0 && getupperbound(d) >= 0
-    # assume c and d are already linked to z in other constraints 
+    # assume c and d are already linked to z in other constraints
     # and will be forced to 0 when z is 0
 
     a_ub = getupperbound(a)
@@ -23,7 +20,6 @@ function relaxation_complex_product_on_off(m, a, b, c, d, z)
     c3 = @constraint(m, c^2 + d^2 <= a*b_ub*z)
     return Set([c1, c2, c3])
 end
-
 
 function relaxation_equality_on_off(m, x, y, z)
     # assumes 0 is in the domain of y when z is 0
@@ -37,14 +33,12 @@ function relaxation_equality_on_off(m, x, y, z)
     return Set([c1, c2])
 end
 
-
 # general relaxation of a square term
 function relaxation_sqr(m, x, y)
     c1 = @constraint(m, y >= x^2)
     c2 = @constraint(m, y <= (getupperbound(x)+getlowerbound(x))*x - getupperbound(x)*getlowerbound(x))
     return Set([c1, c2])
 end
-
 
 # general relaxation of a sin term
 function relaxation_sin(m, x, y)
@@ -53,7 +47,7 @@ function relaxation_sin(m, x, y)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))
-    
+
     if lb < 0 && ub > 0
         c1 = @constraint(m, y <= cos(max_ad/2)*(x - max_ad/2) + sin(max_ad/2))
         c2 = @constraint(m, y >= cos(max_ad/2)*(x + max_ad/2) - sin(max_ad/2))
@@ -69,7 +63,6 @@ function relaxation_sin(m, x, y)
     return Set([c1, c2])
 end
 
-
 # general relaxation of a cosine term
 function relaxation_cos(m, x, y)
     ub = getupperbound(x)
@@ -77,12 +70,11 @@ function relaxation_cos(m, x, y)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))
-    
+
     c1 = @constraint(m, y <= 1 - (1-cos(max_ad))/(max_ad*max_ad)*(x^2))
     c2 = @constraint(m, y >= (cos(lb) - cos(ub))/(lb-ub)*(x - lb) + cos(lb))
     return Set([c1, c2])
 end
-
 
 # general relaxation of binlinear term (McCormick)
 function relaxation_product(m, x, y, z)
@@ -98,5 +90,3 @@ function relaxation_product(m, x, y, z)
 
     return Set([c1, c2, c3, c4])
 end
-
-
