@@ -1,9 +1,8 @@
 # stuff that is universal to all power models
 
-export 
+export
     GenericPowerModel,
     setdata, setsolver, solve
-
 
 type PowerDataSets
     ref_bus
@@ -26,8 +25,6 @@ abstract AbstractPowerModel
 abstract AbstractPowerFormulation
 abstract AbstractConicPowerFormulation <: AbstractPowerFormulation
 
-
-
 type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
     model::Model
     data::Dict{AbstractString,Any}
@@ -35,7 +32,6 @@ type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
     setting::Dict{AbstractString,Any}
     solution::Dict{AbstractString,Any}
 end
-
 
 # default generic constructor
 function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
@@ -52,7 +48,6 @@ function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting =
     return pm
 end
 
-
 function process_raw_data(data::Dict{AbstractString,Any})
     make_per_unit(data)
     unify_transformer_taps(data)
@@ -63,8 +58,6 @@ function process_raw_data(data::Dict{AbstractString,Any})
 
     return data, sets
 end
-
-
 
 #
 # Just seems too hard to maintain with the default constructor
@@ -78,7 +71,6 @@ end
 #    pm.data = data
 
 #end
-
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
 function JuMP.setsolver(pm::GenericPowerModel, solver::MathProgBase.AbstractMathProgSolver)
@@ -97,7 +89,6 @@ function JuMP.solve(pm::GenericPowerModel)
     return status, solve_time
 end
 
-
 function run_generic_model(file, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
     data = PowerModels.parse_file(file)
 
@@ -110,8 +101,7 @@ function run_generic_model(file, model_constructor, solver, post_method; solutio
     return build_solution(pm, status, solve_time; solution_builder = solution_builder)
 end
 
-
-function build_sets(data :: Dict{AbstractString,Any})
+function build_sets(data::Dict{AbstractString,Any})
     bus_lookup = [ Int(bus["index"]) => bus for bus in data["bus"] ]
     gen_lookup = [ Int(gen["index"]) => gen for gen in data["gen"] ]
     for gencost in data["gencost"]
@@ -120,15 +110,14 @@ function build_sets(data :: Dict{AbstractString,Any})
     end
     branch_lookup = [ Int(branch["index"]) => branch for branch in data["branch"] ]
 
-    # filter turned off stuff 
+    # filter turned off stuff
     bus_lookup = filter((i, bus) -> bus["bus_type"] != 4, bus_lookup)
     gen_lookup = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(bus_lookup), gen_lookup)
     branch_lookup = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(bus_lookup) && branch["t_bus"] in keys(bus_lookup), branch_lookup)
 
-
     arcs_from = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in branch_lookup]
     arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
-    arcs = [arcs_from; arcs_to] 
+    arcs = [arcs_from; arcs_to]
 
     bus_gens = [i => [] for (i,bus) in bus_lookup]
     for (i,gen) in gen_lookup
@@ -156,16 +145,15 @@ function build_sets(data :: Dict{AbstractString,Any})
 
 
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
-    buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)  
+    buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)
 
     return PowerDataSets(ref_bus, bus_lookup, bus_idxs, gen_lookup, gen_idxs, branch_lookup, branch_idxs, bus_gens, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
 end
 
-
 # compute bus pair level structures
 function buspair_parameters(buspair_indexes, branches, buses)
-    bp_angmin = [bp => -Inf for bp in buspair_indexes] 
-    bp_angmax = [bp =>  Inf for bp in buspair_indexes] 
+    bp_angmin = [bp => -Inf for bp in buspair_indexes]
+    bp_angmax = [bp =>  Inf for bp in buspair_indexes]
     bp_line = [bp => Inf for bp in buspair_indexes]
 
     for (l,branch) in branches
@@ -178,8 +166,8 @@ function buspair_parameters(buspair_indexes, branches, buses)
     end
 
     buspairs = [(i,j) => Dict(
-        "line"=>bp_line[(i,j)], 
-        "angmin"=>bp_angmin[(i,j)], 
+        "line"=>bp_line[(i,j)],
+        "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],
         "rate_a"=>branches[bp_line[(i,j)]]["rate_a"],
         "tap"=>branches[bp_line[(i,j)]]["tap"],
@@ -190,9 +178,6 @@ function buspair_parameters(buspair_indexes, branches, buses)
         ) for (i,j) in buspair_indexes]
     return buspairs
 end
-
-
-
 
 not_pu = Set(["rate_a","rate_b","rate_c","bs","gs","pd","qd","pg","qg","pmax","pmin","qmax","qmin"])
 not_rad = Set(["angmax","angmin","shift","va"])
@@ -209,7 +194,7 @@ function make_per_unit(mva_base::Number, data::Dict{AbstractString,Any})
         if k == "gencost"
             for cost_model in data[k]
                 if cost_model["model"] != 2
-                    println("WARNING: Skipping generator cost model of tpye other than 2")
+                    warn("Skipping generator cost model of type other than 2")
                     continue
                 end
                 degree = length(cost_model["cost"])
@@ -255,10 +240,8 @@ function unify_transformer_taps(data::Dict{AbstractString,Any})
     end
 end
 
-
-
 # NOTE, this function assumes all values are p.u. and angles are in radians
-function add_branch_parameters(data :: Dict{AbstractString,Any})
+function add_branch_parameters(data::Dict{AbstractString,Any})
     min_theta_delta = calc_min_phase_angle(data)
     max_theta_delta = calc_max_phase_angle(data)
 
@@ -278,7 +261,7 @@ function add_branch_parameters(data :: Dict{AbstractString,Any})
     end
 end
 
-function standardize_cost_order(data :: Dict{AbstractString,Any})
+function standardize_cost_order(data::Dict{AbstractString,Any})
     for gencost in data["gencost"]
         if gencost["model"] == 2 && length(gencost["cost"]) < 3
             println("std gen cost: ",gencost["cost"])
@@ -289,8 +272,7 @@ function standardize_cost_order(data :: Dict{AbstractString,Any})
     end
 end
 
-
-function calc_max_phase_angle(data :: Dict{AbstractString,Any})
+function calc_max_phase_angle(data::Dict{AbstractString,Any})
     bus_count = length(data["bus"])
     angle_max = [branch["angmax"] for branch in data["branch"]]
     sort!(angle_max, rev=true)
@@ -298,17 +280,10 @@ function calc_max_phase_angle(data :: Dict{AbstractString,Any})
     return sum(angle_max[1:bus_count-1])
 end
 
-function calc_min_phase_angle(data :: Dict{AbstractString,Any})
+function calc_min_phase_angle(data::Dict{AbstractString,Any})
     bus_count = length(data["bus"])
     angle_min = [branch["angmin"] for branch in data["branch"]]
     sort!(angle_min)
 
     return sum(angle_min[1:bus_count-1])
 end
-
-
-
-
-
-
-
