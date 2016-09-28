@@ -76,7 +76,7 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
         constraint_active_ohms_yt(pm, branch)
         constraint_reactive_ohms_yt(pm, branch)
 
-        constraint_phase_angle_diffrence(pm, branch)
+        constraint_phase_angle_difference(pm, branch)
         theta_fr = getvariable(pm.model, :t)[branch["f_bus"]]
         theta_to = getvariable(pm.model, :t)[branch["t_bus"]]
 
