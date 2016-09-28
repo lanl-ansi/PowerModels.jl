@@ -110,7 +110,7 @@ function constraint_active_loss_lb{T}(pm::GenericPowerModel{T}, branch)
     t_idx = (i, t_bus, f_bus)
 
     p_fr = getvariable(pm.model, :p)[f_idx]
-    p_to = getvariable(pm.model, :p)[f_idx]
+    p_to = getvariable(pm.model, :p)[t_idx]
 
     c = @constraint(m, p_fr + p_to >= 0)
     return Set([c])
@@ -126,10 +126,10 @@ function constraint_reactive_loss_lb{T}(pm::GenericPowerModel{T}, branch)
     t_idx = (i, t_bus, f_bus)
 
     v_fr = getvariable(pm.model, :v)[f_bus]
-    v_to = getvariable(pm.model, :v)[f_bus]
+    v_to = getvariable(pm.model, :v)[t_bus]
 
     q_fr = getvariable(pm.model, :q)[f_idx]
-    q_to = getvariable(pm.model, :q)[f_idx]
+    q_to = getvariable(pm.model, :q)[t_idx]
 
     c = @constraint(m, q_fr + q_to >= -branch["br_b"]/2*(v_fr^2/branch["tap"]^2 + v_to^2))
     return Set([c])
