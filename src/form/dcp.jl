@@ -99,7 +99,7 @@ function constraint_reactive_ohms_yt{T <: AbstractDCPForm}(pm::GenericPowerModel
     return Set()
 end
 
-function constraint_phase_angle_diffrence{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_phase_angle_difference{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -213,7 +213,7 @@ function constraint_thermal_limit_to_on_off{T <: AbstractDCPForm}(pm::GenericPow
   return Set()
 end
 
-function constraint_phase_angle_diffrence_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_phase_angle_difference_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]

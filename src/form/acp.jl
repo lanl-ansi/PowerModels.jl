@@ -176,7 +176,7 @@ end
 
 
 
-function constraint_phase_angle_diffrence{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_phase_angle_difference{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -256,7 +256,7 @@ function constraint_reactive_ohms_yt_on_off{T <: AbstractACPForm}(pm::GenericPow
     return Set([c1, c2])
 end
 
-function constraint_phase_angle_diffrence_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_phase_angle_difference_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]

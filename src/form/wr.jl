@@ -126,7 +126,7 @@ function constraint_reactive_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{
     return Set([c1, c2])
 end
 
-function constraint_phase_angle_diffrence{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
+function constraint_phase_angle_difference{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -299,7 +299,7 @@ function constraint_reactive_ohms_yt_on_off{T <: AbstractWRForm}(pm::GenericPowe
     return Set([c1, c2])
 end
 
-function constraint_phase_angle_diffrence_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
+function constraint_phase_angle_difference_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
 
     wr = getvariable(pm.model, :wr)[i]
@@ -331,7 +331,7 @@ function variable_complex_voltage(pm::QCWRPowerModel; kwargs...)
     variable_voltage_magnitude_sqr(pm; kwargs...)
     variable_complex_voltage_product(pm; kwargs...)
 
-    variable_phase_angle_diffrence(pm; kwargs...)
+    variable_phase_angle_difference(pm; kwargs...)
     variable_voltage_magnitude_product(pm; kwargs...)
     variable_cosine(pm; kwargs...)
     variable_sine(pm; kwargs...)
@@ -439,7 +439,7 @@ function constraint_theta_ref(pm::QCWRPowerModel)
     @constraint(pm.model, getvariable(pm.model, :t)[pm.set.ref_bus] == 0)
 end
 
-function constraint_phase_angle_diffrence(pm::QCWRPowerModel, branch)
+function constraint_phase_angle_difference(pm::QCWRPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]

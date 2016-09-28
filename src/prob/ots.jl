@@ -36,7 +36,7 @@ function post_ots{T}(pm::GenericPowerModel{T})
         constraint_active_ohms_yt_on_off(pm, branch)
         constraint_reactive_ohms_yt_on_off(pm, branch)
 
-        constraint_phase_angle_diffrence_on_off(pm, branch)
+        constraint_phase_angle_difference_on_off(pm, branch)
 
         constraint_thermal_limit_from_on_off(pm, branch)
         constraint_thermal_limit_to_on_off(pm, branch)

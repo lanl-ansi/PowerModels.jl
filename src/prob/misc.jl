@@ -35,7 +35,7 @@ function post_api_opf{T}(pm::GenericPowerModel{T})
         constraint_active_ohms_yt(pm, branch)
         constraint_reactive_ohms_yt(pm, branch)
 
-        constraint_phase_angle_diffrence(pm, branch)
+        constraint_phase_angle_difference(pm, branch)
 
         constraint_thermal_limit_from(pm, branch; scale = 0.999)
         constraint_thermal_limit_to(pm, branch; scale = 0.999)
