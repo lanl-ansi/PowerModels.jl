@@ -102,13 +102,13 @@ function run_generic_model(file, model_constructor, solver, post_method; solutio
 end
 
 function build_sets(data::Dict{AbstractString,Any})
-    bus_lookup = [ Int(bus["index"]) => bus for bus in data["bus"] ]
-    gen_lookup = [ Int(gen["index"]) => gen for gen in data["gen"] ]
+    bus_lookup = Dict(Int(bus["index"]) => bus for bus in data["bus"])
+    gen_lookup = Dict(Int(gen["index"]) => gen for gen in data["gen"])
     for gencost in data["gencost"]
         i = Int(gencost["index"])
         gen_lookup[i] = merge(gen_lookup[i], gencost)
     end
-    branch_lookup = [ Int(branch["index"]) => branch for branch in data["branch"] ]
+    branch_lookup = Dict(Int(branch["index"]) => branch for branch in data["branch"])
 
     # filter turned off stuff
     bus_lookup = filter((i, bus) -> bus["bus_type"] != 4, bus_lookup)
@@ -119,12 +119,12 @@ function build_sets(data::Dict{AbstractString,Any})
     arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
     arcs = [arcs_from; arcs_to]
 
-    bus_gens = [i => [] for (i,bus) in bus_lookup]
+    bus_gens = Dict(i => [] for (i,bus) in bus_lookup)
     for (i,gen) in gen_lookup
         push!(bus_gens[gen["gen_bus"]], i)
     end
 
-    bus_branches = [i => [] for (i,bus) in bus_lookup]
+    bus_branches = Dict(i => [] for (i,bus) in bus_lookup)
     for (l,i,j) in arcs_from
         push!(bus_branches[i], (l,i,j))
         push!(bus_branches[j], (l,j,i))
@@ -152,9 +152,9 @@ end
 
 # compute bus pair level structures
 function buspair_parameters(buspair_indexes, branches, buses)
-    bp_angmin = [bp => -Inf for bp in buspair_indexes]
-    bp_angmax = [bp =>  Inf for bp in buspair_indexes]
-    bp_line = [bp => Inf for bp in buspair_indexes]
+    bp_angmin = Dict(bp => -Inf for bp in buspair_indexes)
+    bp_angmax = Dict(bp =>  Inf for bp in buspair_indexes)
+    bp_line = Dict(bp => Inf for bp in buspair_indexes)
 
     for (l,branch) in branches
         i = branch["f_bus"]
@@ -165,7 +165,7 @@ function buspair_parameters(buspair_indexes, branches, buses)
         bp_line[(i,j)] = min(bp_line[(i,j)], l)
     end
 
-    buspairs = [(i,j) => Dict(
+    buspairs = Dict((i,j) => Dict(
         "line"=>bp_line[(i,j)],
         "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],
@@ -175,7 +175,7 @@ function buspair_parameters(buspair_indexes, branches, buses)
         "v_from_max"=>buses[i]["vmax"],
         "v_to_min"=>buses[j]["vmin"],
         "v_to_max"=>buses[j]["vmax"]
-        ) for (i,j) in buspair_indexes]
+        ) for (i,j) in buspair_indexes)
     return buspairs
 end
 

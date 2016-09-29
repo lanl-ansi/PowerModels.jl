@@ -24,7 +24,7 @@ function parse_matrix(lines, index)
     matrix_body_lines = [matrix_assignment_rhs]
     found_close_bracket = contains(matrix_assignment_rhs, "]")
 
-    while index + line_count < last_index && !found_close_bracket 
+    while index + line_count < last_index && !found_close_bracket
         line = strip(lines[index+line_count])
 
         if length(line) == 0 || line[1] == '%'
@@ -73,7 +73,7 @@ end
 
 
 function parse_matpower(file_string)
-    data_string = readall(open(file_string))
+    data_string = readstring(open(file_string))
     data = parse_matpower_data(data_string)
 
     for branch in data["branch"]
@@ -88,8 +88,8 @@ function parse_matpower(file_string)
     end
 
     mva_base = data["baseMVA"]
-    vmax_lookup = [ bus["index"] => bus["vmax"] for bus in data["bus"] ]
-    vmin_lookup = [ bus["index"] => bus["vmin"] for bus in data["bus"] ]
+    vmax_lookup = Dict(bus["index"] => bus["vmax"] for bus in data["bus"])
+    vmin_lookup = Dict(bus["index"] => bus["vmin"] for bus in data["bus"])
 
     for branch in data["branch"]
         if branch["rate_a"] <= 0.0
@@ -143,7 +143,7 @@ function parse_matpower_data(data_string)
 
     last_index = length(data_lines)
     index = 1
-    while index <= last_index 
+    while index <= last_index
         line = strip(data_lines[index])
 
         if length(line) <= 0 || strip(line)[1] == '%'
@@ -166,10 +166,10 @@ function parse_matpower_data(data_string)
     end
 
     case = Dict{AbstractString,Any}(
-        "name" => name, 
-        "version" => version, 
+        "name" => name,
+        "version" => version,
         "baseMVA" => baseMVA,
-        "dcline" => [], 
+        "dcline" => [],
         "gencost" => []
     )
 
@@ -192,9 +192,9 @@ function parse_matpower_data(data_string)
                     "vm" => parse(Float64, bus_row[8]),
                     "va" => parse(Float64, bus_row[9]),
                     "base_kv" => parse(Float64, bus_row[10]),
-                    "zone" => parse(Int, bus_row[11]), 
-                    "vmax" => parse(Float64, bus_row[12]), 
-                    "vmin" => parse(Float64, bus_row[13]), 
+                    "zone" => parse(Int, bus_row[11]),
+                    "vmax" => parse(Float64, bus_row[12]),
+                    "vmin" => parse(Float64, bus_row[13]),
                 )
                 if length(bus_row) > 13
                     bus_data["lam_p"] = parse(Float64, bus_row[14])
@@ -224,17 +224,17 @@ function parse_matpower_data(data_string)
                     "gen_status" => parse(Int, gen_row[8]),
                     "pmax" => parse(Float64, gen_row[9]),
                     "pmin" => parse(Float64, gen_row[10]),
-                    "pc1" => parse(Float64, gen_row[11]), 
-                    "pc2" => parse(Float64, gen_row[12]), 
-                    "qc1min" => parse(Float64, gen_row[13]), 
+                    "pc1" => parse(Float64, gen_row[11]),
+                    "pc2" => parse(Float64, gen_row[12]),
+                    "qc1min" => parse(Float64, gen_row[13]),
                     "qc1max" => parse(Float64, gen_row[14]),
-                    "qc2min" => parse(Float64, gen_row[15]), 
-                    "qc2max" => parse(Float64, gen_row[16]), 
+                    "qc2min" => parse(Float64, gen_row[15]),
+                    "qc2max" => parse(Float64, gen_row[16]),
                     "ramp_agc" => parse(Float64, gen_row[17]),
-                    "ramp_10" => parse(Float64, gen_row[18]), 
-                    "ramp_30" => parse(Float64, gen_row[19]), 
-                    "ramp_q" => parse(Float64, gen_row[20]), 
-                    "apf" => parse(Float64, gen_row[21]), 
+                    "ramp_10" => parse(Float64, gen_row[18]),
+                    "ramp_30" => parse(Float64, gen_row[19]),
+                    "ramp_q" => parse(Float64, gen_row[20]),
+                    "apf" => parse(Float64, gen_row[21]),
                 )
                 if length(gen_row) > 21
                     gen_data["mu_pmax"] = parse(Float64, gen_row[22])
@@ -264,9 +264,9 @@ function parse_matpower_data(data_string)
                     "rate_c" => parse(Float64, branch_row[8]),
                     "tap" => parse(Float64, branch_row[9]),
                     "shift" => parse(Float64, branch_row[10]),
-                    "br_status" => parse(Int, branch_row[11]), 
-                    "angmin" => parse(Float64, branch_row[12]), 
-                    "angmax" => parse(Float64, branch_row[13]), 
+                    "br_status" => parse(Int, branch_row[11]),
+                    "angmin" => parse(Float64, branch_row[12]),
+                    "angmax" => parse(Float64, branch_row[13]),
                 )
                 if length(branch_row) > 13
                     branch_data["pf"] = parse(Float64, gen_row[14])
@@ -301,7 +301,7 @@ function parse_matpower_data(data_string)
 
             case["gencost"] = gencost
 
-        elseif parsed_matrix["name"] == "mpc.dcline" 
+        elseif parsed_matrix["name"] == "mpc.dcline"
             dclines = []
 
             for (i, dcline_row) in enumerate(parsed_matrix["data"])
@@ -318,12 +318,12 @@ function parse_matpower_data(data_string)
                     "vt" => parse(Float64, dcline_row[9]),
                     "pmin" => parse(Float64, dcline_row[10]),
                     "pmax" => parse(Float64, dcline_row[11]),
-                    "qminf" => parse(Float64, dcline_row[12]), 
-                    "qmaxf" => parse(Float64, dcline_row[13]), 
-                    "qmint" => parse(Float64, dcline_row[14]), 
-                    "qmaxt" => parse(Float64, dcline_row[15]), 
-                    "loss0" => parse(Float64, dcline_row[16]), 
-                    "loss1" => parse(Float64, dcline_row[17]), 
+                    "qminf" => parse(Float64, dcline_row[12]),
+                    "qmaxf" => parse(Float64, dcline_row[13]),
+                    "qmint" => parse(Float64, dcline_row[14]),
+                    "qmaxt" => parse(Float64, dcline_row[15]),
+                    "loss0" => parse(Float64, dcline_row[16]),
+                    "loss1" => parse(Float64, dcline_row[17]),
                 )
                 if length(dcline_row) > 17
                     branch_data["mu_pmin"] = parse(Float64, dcline_row[18])
@@ -350,5 +350,3 @@ function parse_matpower_data(data_string)
 
     return case
 end
-
-
