@@ -93,10 +93,10 @@ function compute_voltage_product_bounds{T}(pm::GenericPowerModel{T})
     buspairs = pm.set.buspairs
     buspair_indexes = pm.set.buspair_indexes
 
-    wr_min = Dict(bp => -Inf for bp in buspair_indexes)
-    wr_max = Dict(bp =>  Inf for bp in buspair_indexes)
-    wi_min = Dict(bp => -Inf for bp in buspair_indexes)
-    wi_max = Dict(bp =>  Inf for bp in buspair_indexes)
+    wr_min = Dict([(bp, -Inf) for bp in buspair_indexes])
+    wr_max = Dict([(bp,  Inf) for bp in buspair_indexes])
+    wi_min = Dict([(bp, -Inf) for bp in buspair_indexes])
+    wi_max = Dict([(bp,  Inf) for bp in buspair_indexes])
 
     for bp in buspair_indexes
         i,j = bp
@@ -140,7 +140,7 @@ end
 function variable_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
 
-    bi_bp = Dict(i => (b["f_bus"], b["t_bus"]) for (i,b) in pm.set.branches)
+    bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.set.branches])
 
     @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr[b in pm.set.branch_indexes] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.set.buspairs, bi_bp[b], "wr_start", 1.0))
     @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi[b in pm.set.branch_indexes] <= max(0, wi_max[bi_bp[b]]), start = getstart(pm.set.buspairs, bi_bp[b], "wr_start"))
@@ -152,7 +152,7 @@ function variable_complex_voltage_product_matrix{T}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
 
     w_index = 1:length(pm.set.bus_indexes)
-    lookup_w_index = Dict(bi => i for (i,bi) in enumerate(pm.set.bus_indexes))
+    lookup_w_index = Dict([(bi, i) for (i,bi) in enumerate(pm.set.bus_indexes)])
 
     @variable(pm.model, WR[1:length(pm.set.bus_indexes), 1:length(pm.set.bus_indexes)], Symmetric)
     @variable(pm.model, WI[1:length(pm.set.bus_indexes), 1:length(pm.set.bus_indexes)])
@@ -195,16 +195,16 @@ end
 
 # Creates the voltage magnitude product variables
 function variable_voltage_magnitude_product{T}(pm::GenericPowerModel{T})
-    vv_min = Dict(bp => pm.set.buspairs[bp]["v_from_min"]*pm.set.buspairs[bp]["v_to_min"] for bp in pm.set.buspair_indexes)
-    vv_max = Dict(bp => pm.set.buspairs[bp]["v_from_max"]*pm.set.buspairs[bp]["v_to_max"] for bp in pm.set.buspair_indexes)
+    vv_min = Dict([(bp, pm.set.buspairs[bp]["v_from_min"]*pm.set.buspairs[bp]["v_to_min"]) for bp in pm.set.buspair_indexes])
+    vv_max = Dict([(bp, pm.set.buspairs[bp]["v_from_max"]*pm.set.buspairs[bp]["v_to_max"]) for bp in pm.set.buspair_indexes])
 
     @variable(pm.model,  vv_min[bp] <= vv[bp in pm.set.buspair_indexes] <=  vv_max[bp], start = getstart(pm.set.buspairs, bp, "vv_start", 1.0))
     return vv
 end
 
 function variable_cosine{T}(pm::GenericPowerModel{T})
-    cos_min = Dict(bp => -Inf for bp in pm.set.buspair_indexes)
-    cos_max = Dict(bp =>  Inf for bp in pm.set.buspair_indexes)
+    cos_min = Dict([(bp, -Inf) for bp in pm.set.buspair_indexes])
+    cos_max = Dict([(bp,  Inf) for bp in pm.set.buspair_indexes])
 
     for bp in pm.set.buspair_indexes
         buspair = pm.set.buspairs[bp]
@@ -233,8 +233,8 @@ end
 
 function variable_current_magnitude_sqr{T}(pm::GenericPowerModel{T})
     buspairs = pm.set.buspairs
-    cm_min = Dict(bp => 0 for bp in pm.set.buspair_indexes)
-    cm_max = Dict(bp => (buspairs[bp]["rate_a"]*buspairs[bp]["tap"]/buspairs[bp]["v_from_min"])^2 for bp in pm.set.buspair_indexes)
+    cm_min = Dict([(bp, 0) for bp in pm.set.buspair_indexes])
+    cm_max = Dict([(bp, (buspairs[bp]["rate_a"]*buspairs[bp]["tap"]/buspairs[bp]["v_from_min"])^2) for bp in pm.set.buspair_indexes])
 
     @variable(pm.model, cm_min[bp] <= cm[bp in pm.set.buspair_indexes] <=  cm_max[bp], start = getstart(pm.set.buspairs, bp, "cm_start"))
     return cm

@@ -88,8 +88,8 @@ function parse_matpower(file_string)
     end
 
     mva_base = data["baseMVA"]
-    vmax_lookup = Dict(bus["index"] => bus["vmax"] for bus in data["bus"])
-    vmin_lookup = Dict(bus["index"] => bus["vmin"] for bus in data["bus"])
+    vmax_lookup = Dict([(bus["index"], bus["vmax"]) for bus in data["bus"]])
+    vmin_lookup = Dict([(bus["index"], bus["vmin"]) for bus in data["bus"]])
 
     for branch in data["branch"]
         if branch["rate_a"] <= 0.0

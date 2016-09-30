@@ -226,7 +226,7 @@ end
 function constraint_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
 
-    bi_bp = Dict(i => (b["f_bus"], b["t_bus"]) for (i,b) in pm.set.branches)
+    bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.set.branches])
 
     wr = getvariable(pm.model, :wr)
     wi = getvariable(pm.model, :wi)

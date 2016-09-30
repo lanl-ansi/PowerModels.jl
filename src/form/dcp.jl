@@ -32,8 +32,8 @@ function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T
         @variable(pm.model, p[(l,i,j) in pm.set.arcs_from], start = getstart(pm.set.branches, l, "p_start"))
     end
 
-    p_expr = Dict((l,i,j) => 1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from)
-    p_expr = merge(p_expr, Dict((l,j,i) => -1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from))
+    p_expr = Dict([((l,i,j), 1.0*p[(l,i,j)]) for (l,i,j) in pm.set.arcs_from])
+    p_expr = merge(p_expr, Dict([((l,j,i), -1.0*p[(l,i,j)]) for (l,i,j) in pm.set.arcs_from]))
 
     pm.model.ext[:p_expr] = p_expr
 end
