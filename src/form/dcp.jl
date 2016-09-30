@@ -1,4 +1,4 @@
-export 
+export
     DCPPowerModel, StandardDCPForm,
     DCPLLPowerModel, StandardDCPLLForm
 
@@ -32,8 +32,8 @@ function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T
         @variable(pm.model, p[(l,i,j) in pm.set.arcs_from], start = getstart(pm.set.branches, l, "p_start"))
     end
 
-    p_expr = [(l,i,j) => 1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from]
-    p_expr = merge(p_expr, [(l,j,i) => -1.0*p[(l,i,j)] for (l,i,j) in pm.set.arcs_from])
+    p_expr = Dict([((l,i,j), 1.0*p[(l,i,j)]) for (l,i,j) in pm.set.arcs_from])
+    p_expr = merge(p_expr, Dict([((l,j,i), -1.0*p[(l,i,j)]) for (l,i,j) in pm.set.arcs_from]))
 
     pm.model.ext[:p_expr] = p_expr
 end
@@ -112,7 +112,7 @@ function constraint_phase_angle_difference{T <: AbstractDCPForm}(pm::GenericPowe
     return Set([c1, c2])
 end
 
-function constraint_thermal_limit_from{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch) 
+function constraint_thermal_limit_from{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -132,7 +132,7 @@ function constraint_thermal_limit_from{T <: AbstractDCPForm}(pm::GenericPowerMod
     return Set()
 end
 
-function constraint_thermal_limit_to{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch) 
+function constraint_thermal_limit_to{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
     # nothing to do, from handles both sides
     return Set()
 end
@@ -296,7 +296,3 @@ function constraint_thermal_limit_to_on_off{T <: AbstractDCPLLForm}(pm::GenericP
     c2 = @constraint(pm.model, p_to >= getlowerbound(p_to)*z)
     return Set([c1, c2])
 end
-
-
-
-

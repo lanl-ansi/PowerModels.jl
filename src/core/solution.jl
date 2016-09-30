@@ -3,7 +3,7 @@ function build_solution{T}(pm::GenericPowerModel{T}, status, solve_time; objecti
 
     if status != :Error
         objective = getobjectivevalue(pm.model)
-        status = solver_status_dict(symbol(typeof(pm.model.solver).name.module), status)
+        status = solver_status_dict(Symbol(typeof(pm.model.solver).name.module), status)
     end
 
     solution = Dict{AbstractString,Any}(
