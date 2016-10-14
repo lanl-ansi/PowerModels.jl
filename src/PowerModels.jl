@@ -27,6 +27,6 @@ include("prob/pf.jl")
 include("prob/opf.jl")
 include("prob/ots.jl")
 include("prob/misc.jl")
-include("prob/expansion.jl")
+include("prob/tnep.jl")
 
 end
