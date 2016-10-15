@@ -6,6 +6,24 @@ function check_tnep_status(sol)
     end
 end
 
+@testset "test soc tnep" begin
+    @testset "3-bus case" begin
+        result = run_tnep("../test/data/case3_tnep.json", SOCWRPowerModel, pajarito_solver)
+
+        check_tnep_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 2; atol = 1e-2)
+    end
+    @testset "5-bus rts case" begin
+        result = run_tnep("../test/data/case5_tnep.json", SOCWRPowerModel, pajarito_solver)
+
+        check_tnep_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 1; atol = 1e-2)
+    end
+end
 
 
 
@@ -50,6 +68,8 @@ end
     end
 end
 
+
+
 if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
 
     @testset "test ac tnep" begin
@@ -63,24 +83,3 @@ if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices")
         end
     end
 end
-
-
-@testset "test soc tnep" begin
-    @testset "3-bus case" begin
-        result = run_tnep("../test/data/case3_tnep.json", SOCWRPowerModel, pajarito_solver)
-
-        check_tnep_status(result["solution"])
-
-        @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 2; atol = 1e-2)
-    end
-    @testset "5-bus rts case" begin
-        result = run_tnep("../test/data/case5_tnep.json", SOCWRPowerModel, pajarito_solver)
-
-        check_tnep_status(result["solution"])
-
-        @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 1; atol = 1e-2)
-    end
-end
-

@@ -38,7 +38,7 @@ function post_tnep{T}(pm::GenericPowerModel{T})
        
     constraint_theta_ref(pm)
 
-    constraint_complex_voltage(pm)    
+    constraint_complex_voltage(pm)           
     constraint_complex_voltage_tnep(pm)
 
     for (i,bus) in pm.set.buses
@@ -53,7 +53,7 @@ function post_tnep{T}(pm::GenericPowerModel{T})
         constraint_thermal_limit_from_tnep(pm, branch)
         constraint_thermal_limit_to_tnep(pm, branch)
     end
-    
+        
     for (i,branch) in pm.set.branches
         constraint_active_ohms_yt(pm, branch)
         constraint_reactive_ohms_yt(pm, branch)
@@ -98,23 +98,23 @@ end
 function variable_voltage_magnitude_sqr_from_tnep{T}(pm::GenericPowerModel{T})
     buses = pm.set.buses
     branches = pm.data["tnep_data"].branches
-    @variable(pm.model, 0 <= w_from[i in pm.data["tnep_data"].branch_indexes] <= buses[branches[i]["f_bus"]]["vmax"]^2, start = getstart(pm.set.buses, i, "w_from_start", 1.001))
-    return w_from
+    @variable(pm.model, 0 <= w_from_tnep[i in pm.data["tnep_data"].branch_indexes] <= buses[branches[i]["f_bus"]]["vmax"]^2, start = getstart(pm.set.buses, i, "w_from_start", 1.001))
+    return w_from_tnep
 end
 
-function variable_voltage_magnitude_sqr_to_on_off{T}(pm::GenericPowerModel{T})
+function variable_voltage_magnitude_sqr_to_tnep{T}(pm::GenericPowerModel{T})
     buses = pm.set.buses
     branches = pm.data["tnep_data"].branches
-    @variable(pm.model, 0 <= w_to[i in pm.data["tnep_data"].branch_indexes] <= buses[branches[i]["t_bus"]]["vmax"]^2, start = getstart(pm.set.buses, i, "w_to", 1.001))
-    return w_to
+    @variable(pm.model, 0 <= w_to_tnep[i in pm.data["tnep_data"].branch_indexes] <= buses[branches[i]["t_bus"]]["vmax"]^2, start = getstart(pm.set.buses, i, "w_to", 1.001))
+    return w_to_tnep
 end
 
 function variable_complex_voltage_product_tnep{T}(pm::GenericPowerModel{T})
-    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
+    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds_tnep(pm)
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.data["tnep_data"].branches])
-    @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr[b in pm.data["tnep_data"].branch_indexes] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.data["tnep_data"].buspairs, bi_bp[b], "wr_start", 1.0))
-    @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi[b in pm.data["tnep_data"].branch_indexes] <= max(0, wi_max[bi_bp[b]]), start = getstart(pm.data["tnep_data"].buspairs, bi_bp[b], "wr_start"))
-    return wr, wi
+    @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr_tnep[b in pm.data["tnep_data"].branch_indexes] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.data["tnep_data"].buspairs, bi_bp[b], "wr_start", 1.0))
+    @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi_tnep[b in pm.data["tnep_data"].branch_indexes] <= max(0, wi_max[bi_bp[b]]), start = getstart(pm.data["tnep_data"].buspairs, bi_bp[b], "wr_start"))
+    return wr_tnep, wi_tnep
 end
 
 function variable_active_line_flow_tnep{T}(pm::GenericPowerModel{T}; bounded = true)
@@ -265,10 +265,10 @@ function constraint_active_ohms_yt_tnep{T <: AbstractWRForm}(pm::GenericPowerMod
 
     p_fr = getvariable(pm.model, :p)[f_idx]
     p_to = getvariable(pm.model, :p)[t_idx]
-    w_fr = getvariable(pm.model, :w_from)[i]
-    w_to = getvariable(pm.model, :w_to)[i]
-    wr = getvariable(pm.model, :wr)[i]
-    wi = getvariable(pm.model, :wi)[i]
+    w_fr = getvariable(pm.model, :w_from_tnep)[i]
+    w_to = getvariable(pm.model, :w_to_tnep)[i]
+    wr = getvariable(pm.model, :wr_tnep)[i]
+    wi = getvariable(pm.model, :wi_tnep)[i]
 
     g = branch["g"]
     b = branch["b"]
@@ -279,6 +279,7 @@ function constraint_active_ohms_yt_tnep{T <: AbstractWRForm}(pm::GenericPowerMod
 
     c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
     c2 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
+    
     return Set([c1, c2])
 end
 
@@ -323,10 +324,10 @@ function constraint_reactive_ohms_yt_tnep{T <: AbstractWRForm}(pm::GenericPowerM
 
     q_fr = getvariable(pm.model, :q)[f_idx]
     q_to = getvariable(pm.model, :q)[t_idx]
-    w_fr = getvariable(pm.model, :w_from)[i]
-    w_to = getvariable(pm.model, :w_to)[i]
-    wr = getvariable(pm.model, :wr)[i]
-    wi = getvariable(pm.model, :wi)[i]
+    w_fr = getvariable(pm.model, :w_from_tnep)[i]
+    w_to = getvariable(pm.model, :w_to_tnep)[i]
+    wr = getvariable(pm.model, :wr_tnep)[i]
+    wi = getvariable(pm.model, :wi_tnep)[i]
 
     g = branch["g"]
     b = branch["b"]
@@ -337,6 +338,7 @@ function constraint_reactive_ohms_yt_tnep{T <: AbstractWRForm}(pm::GenericPowerM
 
     c1 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
     c2 = @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
+    
     return Set([c1, c2])
 end
 
@@ -374,8 +376,8 @@ end
 function constraint_phase_angle_difference_tnep{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
 
-    wr = getvariable(pm.model, :wr)[i]
-    wi = getvariable(pm.model, :wi)[i]
+    wr = getvariable(pm.model, :wr_tnep)[i]
+    wi = getvariable(pm.model, :wi_tnep)[i]
 
     c1 = @constraint(pm.model, wi <= branch["angmax"]*wr)
     c2 = @constraint(pm.model, wi >= branch["angmin"]*wr)
@@ -457,16 +459,16 @@ function constraint_complex_voltage_tnep{T <: AbstractWRForm}(pm::GenericPowerMo
     buses = pm.set.buses
     branches = pm.data["tnep_data"].branches
     
-    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
+    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds_tnep(pm)
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in branches])
           
     w = getvariable(pm.model, :w)
-    wr = getvariable(pm.model, :wr)
-    wi = getvariable(pm.model, :wi)
+    wr = getvariable(pm.model, :wr_tnep)
+    wi = getvariable(pm.model, :wi_tnep)
     z = getvariable(pm.model, :line_tnep)
 
-    w_from = getvariable(pm.model, :w_from)
-    w_to = getvariable(pm.model, :w_to)
+    w_from = getvariable(pm.model, :w_from_tnep)
+    w_to = getvariable(pm.model, :w_to_tnep)
 
     cs = Set()
     for (l,i,j) in pm.data["tnep_data"].arcs_from
@@ -545,7 +547,7 @@ function constraint_active_kcl_shunt_tnep{T <: AbstractWRMForm}(pm::GenericPower
     bus_branches = [pm.set.bus_branches[i]; pm.data["tnep_data"].bus_branches[i]]
     bus_gens = pm.set.bus_gens[i]
 
-    WR = getvariable(pm.model, :WR)
+    WR = getvariable(pm.model, )
     w_index = pm.model.ext[:lookup_w_index][i]
     w_i = WR[w_index, w_index]
 
@@ -553,7 +555,7 @@ function constraint_active_kcl_shunt_tnep{T <: AbstractWRMForm}(pm::GenericPower
     pg = getvariable(pm.model, :pg)
 
     c = @constraint(pm.model, sum{p[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*w_i)
-    return Set([c])
+    return Set([c]):WR
 end
 
 
@@ -651,9 +653,9 @@ function build_tnep_sets{T}(pm::GenericPowerModel{T})
 
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
     buspairs = buspair_parameters(buspair_indexes, branch_lookup, pm.set.buses)
-    
+
+    unify_transformer_taps_tnep(pm.data)    
     add_tnep_branch_parameters(pm.data)
-    unify_transformer_taps_tnep(pm.data)
     
     pm.data["tnep_data"] = TNEPDataSets(branch_lookup, branch_idxs, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
 end
@@ -695,6 +697,40 @@ function add_tnep_branch_parameters(data::Dict{AbstractString,Any})
     end
 end      
       
+function compute_voltage_product_bounds_tnep{T}(pm::GenericPowerModel{T})
+    buspairs = pm.data["tnep_data"].buspairs
+    buspair_indexes = pm.data["tnep_data"].buspair_indexes
+
+    wr_min = Dict([(bp, -Inf) for bp in buspair_indexes])
+    wr_max = Dict([(bp,  Inf) for bp in buspair_indexes])
+    wi_min = Dict([(bp, -Inf) for bp in buspair_indexes])
+    wi_max = Dict([(bp,  Inf) for bp in buspair_indexes])
+
+    for bp in buspair_indexes
+        i,j = bp
+        buspair = buspairs[bp]
+        if buspair["angmin"] >= 0
+            wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*cos(buspair["angmin"])
+            wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*cos(buspair["angmax"])
+            wi_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmax"])
+            wi_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*sin(buspair["angmin"])
+        end
+        if buspair["angmax"] <= 0
+            wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*cos(buspair["angmax"])
+            wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*cos(buspair["angmin"])
+            wi_max[bp] = buspair["v_from_min"]*buspair["v_to_min"]*sin(buspair["angmax"])
+            wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
+        end
+        if buspair["angmin"] < 0 && buspair["angmax"] > 0
+            wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*1.0
+            wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*min(cos(buspair["angmin"]), cos(buspair["angmax"]))
+            wi_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmax"])
+            wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
+        end
+    end
+
+    return wr_min, wr_max, wi_min, wi_max
+end
       
       
       
