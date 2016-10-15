@@ -36,7 +36,6 @@ end
 # default generic constructor
 function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
     data, sets = process_raw_data(data)
-
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
         data, # data
@@ -53,9 +52,7 @@ function process_raw_data(data::Dict{AbstractString,Any})
     unify_transformer_taps(data)
     add_branch_parameters(data)
     standardize_cost_order(data)
-
     sets = build_sets(data)
-
     return data, sets
 end
 
@@ -142,7 +139,6 @@ function build_sets(data::Dict{AbstractString,Any})
     bus_idxs = collect(keys(bus_lookup))
     gen_idxs = collect(keys(gen_lookup))
     branch_idxs = collect(keys(branch_lookup))
-
 
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
     buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)
@@ -244,7 +240,7 @@ end
 function add_branch_parameters(data::Dict{AbstractString,Any})
     min_theta_delta = calc_min_phase_angle(data)
     max_theta_delta = calc_max_phase_angle(data)
-
+    
     for branch in data["branch"]
         r = branch["br_r"]
         x = branch["br_x"]
@@ -276,14 +272,18 @@ function calc_max_phase_angle(data::Dict{AbstractString,Any})
     bus_count = length(data["bus"])
     angle_max = [branch["angmax"] for branch in data["branch"]]
     sort!(angle_max, rev=true)
-
-    return sum(angle_max[1:bus_count-1])
+    if length(angle_max) > 1
+        return sum(angle_max[1:bus_count-1])
+    end
+    return angle_max[1]
 end
 
 function calc_min_phase_angle(data::Dict{AbstractString,Any})
     bus_count = length(data["bus"])
     angle_min = [branch["angmin"] for branch in data["branch"]]
     sort!(angle_min)
-
-    return sum(angle_min[1:bus_count-1])
+    if length(angle_min) > 1
+        return sum(angle_min[1:bus_count-1])
+    end
+    return angle_min[1]
 end

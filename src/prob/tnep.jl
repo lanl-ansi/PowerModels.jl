@@ -653,9 +653,19 @@ function build_tnep_sets{T}(pm::GenericPowerModel{T})
     buspairs = buspair_parameters(buspair_indexes, branch_lookup, pm.set.buses)
     
     add_tnep_branch_parameters(pm.data)
+    unify_transformer_taps_tnep(pm.data)
     
     pm.data["tnep_data"] = TNEPDataSets(branch_lookup, branch_idxs, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
 end
+
+function unify_transformer_taps_tnep(data::Dict{AbstractString,Any})
+    for branch in data["new_branch"]
+        if branch["tap"] == 0.0
+            branch["tap"] = 1.0
+        end
+    end
+end
+
       
 function add_tnep_branch_parameters(data::Dict{AbstractString,Any})
     min_theta_delta = calc_min_phase_angle(data)
