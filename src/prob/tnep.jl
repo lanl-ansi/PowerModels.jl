@@ -31,15 +31,13 @@ function post_tnep{T}(pm::GenericPowerModel{T})
     variable_active_generation(pm)
     variable_reactive_generation(pm)
 
-    variable_active_line_flow(pm)
-    variable_reactive_line_flow(pm)
     variable_active_line_flow_tnep(pm)
     variable_reactive_line_flow_tnep(pm)
-                
+    
     objective_tnep_cost(pm)
-    
+       
     constraint_theta_ref(pm)
-    
+
     constraint_complex_voltage(pm)    
     constraint_complex_voltage_tnep(pm)
 
@@ -47,8 +45,8 @@ function post_tnep{T}(pm::GenericPowerModel{T})
         constraint_active_kcl_shunt_tnep(pm, bus)
         constraint_reactive_kcl_shunt_tnep(pm, bus)
     end
-
-    for (i,branch) in pm.data["tnep_branches"].branches
+    
+    for (i,branch) in pm.data["tnep_data"].branches
         constraint_active_ohms_yt_tnep(pm, branch)
         constraint_reactive_ohms_yt_tnep(pm, branch) 
         constraint_phase_angle_difference_tnep(pm, branch)
@@ -62,7 +60,8 @@ function post_tnep{T}(pm::GenericPowerModel{T})
         constraint_phase_angle_difference(pm, branch)
         constraint_thermal_limit_from(pm, branch)
         constraint_thermal_limit_to(pm, branch)
-    end    
+    end  
+    
 end
 
 function get_tnep_solution{T}(pm::GenericPowerModel{T})
@@ -119,35 +118,38 @@ function variable_complex_voltage_product_tnep{T}(pm::GenericPowerModel{T})
 end
 
 function variable_active_line_flow_tnep{T}(pm::GenericPowerModel{T}; bounded = true)
-    branches = pm.data["tnep_data"].branches  
+    arcs = [pm.set.arcs; pm.data["tnep_data"].arcs]    
+    branches = merge(pm.set.branches, pm.data["tnep_data"].branches)  
     if bounded
-        @variable(pm.model, -branches[l]["rate_a"] <= p[(l,i,j) in pm.data["tnep_data"].arcs] <= branches[l]["rate_a"], start = getstart(branches, l, "p_start"))
+        @variable(pm.model, -branches[l]["rate_a"] <= p[(l,i,j) in arcs] <= branches[l]["rate_a"], start = getstart(branches, l, "p_start"))
     else
-        @variable(pm.model, p[(l,i,j) in pm.data["tnep_data"].arcs], start = getstart(branches, l, "p_start"))
+        @variable(pm.model, p[(l,i,j) in arcs], start = getstart(branches, l, "p_start"))
     end
     return p
 end
 
 function variable_active_line_flow_tnep{T <: StandardDCPForm}(pm::GenericPowerModel{T}; bounded = true)
-    branches = pm.data["tnep_data"].branches    
+    branches = merge(pm.set.branches, pm.data["tnep_data"].branches)  
+    arcs = [pm.set.arcs_from; pm.data["tnep_data"].arcs_from]    
     if bounded
-        @variable(pm.model, -branches[l]["rate_a"] <= p[(l,i,j) in pm.data["tnep_data"].arcs_from] <= branches[l]["rate_a"], start = getstart(pm.data["tnep_data"].branches, l, "p_start"))
+        @variable(pm.model, -branches[l]["rate_a"] <= p[(l,i,j) in arcs] <= branches[l]["rate_a"], start = getstart(pm.data["tnep_data"].branches, l, "p_start"))
     else
-        @variable(pm.model, p[(l,i,j) in pm.data["tnep_data"].arcs_from], start = getstart(branches, l, "p_start"))
+        @variable(pm.model, p[(l,i,j) in arcs], start = getstart(branches, l, "p_start"))
     end
 
-    p_expr = Dict([((l,i,j), 1.0*p[(l,i,j)]) for (l,i,j) in pm.data["tnep_data"].arcs_from])
-    p_expr = merge(p_expr, Dict([((l,j,i), -1.0*p[(l,i,j)]) for (l,i,j) in pm.data["tnep_data"].arcs_from]))
+    p_expr = Dict([((l,i,j), 1.0*p[(l,i,j)]) for (l,i,j) in arcs])
+    p_expr = merge(p_expr, Dict([((l,j,i), -1.0*p[(l,i,j)]) for (l,i,j) in arcs]))
 
     pm.model.ext[:p_expr] = p_expr
 end
 
 function variable_reactive_line_flow_tnep{T}(pm::GenericPowerModel{T}; bounded = true)
-    branches = pm.data["tnep_data"].branches      
+    arcs = [pm.set.arcs; pm.data["tnep_data"].arcs]    
+    branches = merge(pm.set.branches, pm.data["tnep_data"].branches)  
     if bounded
-        @variable(pm.model, -branches[l]["rate_a"] <= q[(l,i,j) in pm.data["tnep_data"].arcs] <= branches[l]["rate_a"], start = getstart(branches, l, "q_start"))
+        @variable(pm.model, -branches[l]["rate_a"] <= q[(l,i,j) in arcs] <= branches[l]["rate_a"], start = getstart(branches, l, "q_start"))
     else
-        @variable(pm.model, q[(l,i,j) in pm.data["tnep_data"].arcs], start = getstart(branches, l, "q_start"))
+        @variable(pm.model, q[(l,i,j) in arcs], start = getstart(branches, l, "q_start"))
     end
     return q
 end
@@ -204,7 +206,7 @@ function constraint_active_ohms_yt_tnep{T <: AbstractACPForm}(pm::GenericPowerMo
     tm = tr^2 + ti^2 
 
     c1 = @NLconstraint(pm.model, p_fr == z*(g/tm*v_fr^2 + (-g*tr+b*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-b*tr-g*ti)/tm*(v_fr*v_to*sin(t_fr-t_to))) )
-    c2 = @NLconstraint(pm.model, p_to ==    z*(g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )
+    c2 = @NLconstraint(pm.model, p_to ==    z*(g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )      
     return Set([c1, c2])
 end
 
@@ -490,7 +492,7 @@ end
 
 function constraint_active_kcl_shunt_tnep{T <: AbstractACPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = union(pm.set.bus_branches[i],pm.data["tnep_data"].bus_branches)
+    bus_branches = [pm.set.bus_branches[i]; pm.data["tnep_data"].bus_branches[i]]
     bus_gens = pm.set.bus_gens[i]
 
     v = getvariable(pm.model, :v)
@@ -503,7 +505,7 @@ end
 
 function constraint_active_kcl_shunt_tnep{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = union(pm.set.bus_branches[i],pm.data["tnep_data"].bus_branches)
+    bus_branches = [pm.set.bus_branches[i]; pm.data["tnep_data"].bus_branches[i]]
     bus_gens = pm.set.bus_gens[i]
 
     pg = getvariable(pm.model, :pg)
@@ -515,7 +517,7 @@ end
 
 function constraint_active_kcl_shunt_tnep{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = union(pm.set.bus_branches[i],pm.data["tnep_data"].bus_branches)
+    bus_branches = [pm.set.bus_branches[i]; pm.data["tnep_data"].bus_branches[i]]
     bus_gens = pm.set.bus_gens[i]
 
     pg = getvariable(pm.model, :pg)
@@ -527,7 +529,7 @@ end
 
 function constraint_active_kcl_shunt_tnep{T <: AbstractWRForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = union(pm.set.bus_branches[i],pm.data["tnep_data"].bus_branches)
+    bus_branches = [pm.set.bus_branches[i]; pm.data["tnep_data"].bus_branches[i]]
     bus_gens = pm.set.bus_gens[i]
 
     w = getvariable(pm.model, :w)
@@ -540,7 +542,7 @@ end
 
 function constraint_active_kcl_shunt_tnep{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = union(pm.set.bus_branches[i],pm.data["tnep_data"].bus_branches)
+    bus_branches = [pm.set.bus_branches[i]; pm.data["tnep_data"].bus_branches[i]]
     bus_gens = pm.set.bus_gens[i]
 
     WR = getvariable(pm.model, :WR)
@@ -555,12 +557,73 @@ function constraint_active_kcl_shunt_tnep{T <: AbstractWRMForm}(pm::GenericPower
 end
 
 
+function constraint_reactive_kcl_shunt_tnep{T <: AbstractACPForm}(pm::GenericPowerModel{T}, bus)
+    i = bus["index"]
+    bus_branches = [pm.set.bus_branches[i]; pm.data["tnep_data"].bus_branches[i]]
+    bus_gens = pm.set.bus_gens[i]
+
+    v = getvariable(pm.model, :v)
+    q = getvariable(pm.model, :q)
+    qg = getvariable(pm.model, :qg)
+
+    c = @constraint(pm.model, sum{q[a], a in bus_branches} == sum{qg[g], g in bus_gens} - bus["qd"] + bus["bs"]*v[i]^2)
+    return Set([c])
+end
+
+function constraint_reactive_kcl_shunt_tnep{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus)
+    # Do nothing, this model does not have reactive variables
+    return Set()
+end
+
+function constraint_reactive_kcl_shunt_tnep{T <: AbstractWRForm}(pm::GenericPowerModel{T}, bus)
+    i = bus["index"]
+    bus_branches = [pm.set.bus_branches[i]; pm.data["tnep_data"].bus_branches[i]]
+    bus_gens = pm.set.bus_gens[i]
+
+    w = getvariable(pm.model, :w)
+    q = getvariable(pm.model, :q)
+    qg = getvariable(pm.model, :qg)
+
+    c = @constraint(pm.model, sum{q[a], a in bus_branches} == sum{qg[g], g in bus_gens} - bus["qd"] + bus["bs"]*w[i])
+    return Set([c])
+end
+
+function constraint_reactive_kcl_shunt_tnep{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, bus)
+    i = bus["index"]
+    bus_branches = [pm.set.bus_branches[i]; pm.data["tnep_data"].bus_branches[i]]
+    bus_gens = pm.set.bus_gens[i]
+
+    WR = getvariable(pm.model, :WR)
+    w_index = pm.model.ext[:lookup_w_index][i]
+    w_i = WR[w_index, w_index]
+
+    q = getvariable(pm.model, :q)
+    qg = getvariable(pm.model, :qg)
+
+    c = @constraint(pm.model, sum{q[a], a in bus_branches} == sum{qg[g], g in bus_gens} - bus["qd"] + bus["bs"]*w_i)
+    return Set([c])
+end
+
+
 
 
 ##### TNEP specific solution extractors
 function add_branch_tnep_setpoint{T}(sol, pm::GenericPowerModel{T})
   add_setpoint(sol, pm, "new_branch", "index", "built", :line_tnep; default_value = (item) -> 1)
 end
+
+function add_branch_flow_setpoint_tnep{T}(sol, pm::GenericPowerModel{T})
+    # check the line flows were requested
+    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
+        mva_base = pm.data["baseMVA"]
+
+        add_setpoint(sol, pm, "new_branch", "index", "p_from", :p; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "new_branch", "index", "q_from", :q; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "new_branch", "index",   "p_to", :p; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint(sol, pm, "new_branch", "index",   "q_to", :q; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+    end
+end
+
 
 #### create some tnep specific sets
 function build_tnep_sets{T}(pm::GenericPowerModel{T})    
@@ -589,16 +652,38 @@ function build_tnep_sets{T}(pm::GenericPowerModel{T})
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
     buspairs = buspair_parameters(buspair_indexes, branch_lookup, pm.set.buses)
     
-    for (i, branch) in branch_lookup
-        if !haskey(branch, "construction_cost")
-            branch["construction_cost"] = 0
-        end
-    end
+    add_tnep_branch_parameters(pm.data)
     
     pm.data["tnep_data"] = TNEPDataSets(branch_lookup, branch_idxs, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
 end
       
-      
+function add_tnep_branch_parameters(data::Dict{AbstractString,Any})
+    min_theta_delta = calc_min_phase_angle(data)
+    max_theta_delta = calc_max_phase_angle(data)
+
+    for branch in data["new_branch"]
+        r = branch["br_r"]
+        x = branch["br_x"]
+        tap_ratio = branch["tap"]
+        angle_shift = branch["shift"]
+
+        branch["g"] =  r/(x^2 + r^2)
+        branch["b"] = -x/(x^2 + r^2)
+        branch["tr"] = tap_ratio*cos(angle_shift)
+        branch["ti"] = tap_ratio*sin(angle_shift)
+
+        branch["off_angmin"] = min_theta_delta
+        branch["off_angmax"] = max_theta_delta
+          
+        if !haskey(branch, "construction_cost")
+            branch["construction_cost"] = 0
+        end
+        
+        if !haskey(branch, "max_branches")
+            branch["max_branches"] = 1
+        end          
+    end
+end      
       
       
       

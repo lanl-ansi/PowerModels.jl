@@ -8,19 +8,6 @@ end
 
 
 
-if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
-
-    @testset "test ac tnep" begin
-        @testset "5-bus case" begin
-            result = run_tnep("../test/data/case5_tnep.json", ACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
-
-            check_tnep_status(result["solution"])
-
-            @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 1; atol = 1e-2)
-        end
-    end
-end
 
 
 @testset "test dc tnep" begin
@@ -62,6 +49,21 @@ end
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
 end
+
+if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
+
+    @testset "test ac tnep" begin
+        @testset "5-bus case" begin
+            result = run_tnep("../test/data/case5_tnep.json", ACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
+
+            check_tnep_status(result["solution"])
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 1; atol = 1e-2)
+        end
+    end
+end
+
 
 @testset "test soc tnep" begin
     @testset "3-bus case" begin
