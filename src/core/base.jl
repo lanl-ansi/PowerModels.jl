@@ -31,6 +31,12 @@ type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
     set::PowerDataSets
     setting::Dict{AbstractString,Any}
     solution::Dict{AbstractString,Any}
+
+    # Extension dictionary
+    # Extensions should define a type to hold information particular to
+    # their functionality, and store an instance of the type in this
+    # dictionary keyed on an extension-specific symbol
+    ext::Dict{Symbol,Any}
 end
 
 # default generic constructor
@@ -42,6 +48,7 @@ function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting =
         sets, # sets
         setting, # setting
         Dict{AbstractString,Any}(), # solution
+        Dict{Symbol,Any}() # ext
     )
 
     return pm

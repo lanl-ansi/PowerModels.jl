@@ -181,7 +181,7 @@
   ],
   "name": "nesta_case3_lmbd",
   "version": "'2'",
-  "new_branch": [
+  "branch_ne": [
     {
       "angmax": 30.0,
       "angmin": -30.0,

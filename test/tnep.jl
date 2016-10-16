@@ -1,7 +1,7 @@
 
 
 function check_tnep_status(sol)
-    for (idx,val) in sol["new_branch"]
+    for (idx,val) in sol["branch_ne"]
         @test val["built"] == 0.0 || val["built"] == 1.0
     end
 end
