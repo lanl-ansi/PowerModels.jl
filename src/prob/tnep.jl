@@ -103,9 +103,8 @@ function process_raw_mp_ne_data(data::Dict{AbstractString,Any})
     # would be fine, except for on/off phase angle calc
     make_per_unit(data)
 
-    # TODO, make these two copmutations correct in context of TNEP
-    min_theta_delta = calc_min_phase_angle(data)
-    max_theta_delta = calc_max_phase_angle(data)
+    min_theta_delta = calc_min_phase_angle_ne(data)
+    max_theta_delta = calc_max_phase_angle_ne(data)
 
     unify_transformer_taps(data["branch"])
     add_branch_parameters(data["branch"], min_theta_delta, max_theta_delta)
@@ -121,6 +120,34 @@ function process_raw_mp_ne_data(data::Dict{AbstractString,Any})
     ext[:ne] = ne_sets
 
     return data, sets, ext
+end
+
+function calc_max_phase_angle_ne(data::Dict{AbstractString,Any})
+    bus_count = length(data["bus"])
+    angle_max = [branch["angmax"] for branch in data["branch"]]
+    if haskey(data, "branch_ne")
+        angle_max_ne = [branch["angmax"] for branch in data["branch_ne"]]
+        angle_max = [angle_max; angle_max_ne]
+    end
+    sort!(angle_max, rev=true)
+    if length(angle_max) > 1
+        return sum(angle_max[1:bus_count-1])
+    end
+    return angle_max[1]
+end
+
+function calc_min_phase_angle_ne(data::Dict{AbstractString,Any})
+    bus_count = length(data["bus"])
+    angle_min = [branch["angmin"] for branch in data["branch"]]
+    if haskey(data, "branch_ne")
+        angle_min_ne = [branch["angmin"] for branch in data["branch_ne"]]
+        angle_min = [angle_min; angle_min_ne]
+    end
+    sort!(angle_min)
+    if length(angle_min) > 1
+        return sum(angle_min[1:bus_count-1])
+    end
+    return angle_min[1]
 end
 
 function get_tnep_solution{T}(pm::GenericPowerModel{T})
