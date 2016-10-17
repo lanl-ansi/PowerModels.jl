@@ -89,10 +89,7 @@ function variable_reactive_line_flow{T}(pm::GenericPowerModel{T}; bounded = true
     return q
 end
 
-function compute_voltage_product_bounds{T}(pm::GenericPowerModel{T})
-    buspairs = pm.set.buspairs
-    buspair_indexes = pm.set.buspair_indexes
-
+function compute_voltage_product_bounds(buspairs, buspair_indexes)
     wr_min = Dict([(bp, -Inf) for bp in buspair_indexes])
     wr_max = Dict([(bp,  Inf) for bp in buspair_indexes])
     wi_min = Dict([(bp, -Inf) for bp in buspair_indexes])
@@ -126,7 +123,7 @@ end
 
 function variable_complex_voltage_product{T}(pm::GenericPowerModel{T}; bounded = true)
     if bounded
-        wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
+        wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.set.buspairs, pm.set.buspair_indexes)
 
         @variable(pm.model, wr_min[bp] <= wr[bp in pm.set.buspair_indexes] <= wr_max[bp], start = getstart(pm.set.buspairs, bp, "wr_start", 1.0))
         @variable(pm.model, wi_min[bp] <= wi[bp in pm.set.buspair_indexes] <= wi_max[bp], start = getstart(pm.set.buspairs, bp, "wi_start"))
@@ -138,7 +135,7 @@ function variable_complex_voltage_product{T}(pm::GenericPowerModel{T}; bounded =
 end
 
 function variable_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
-    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
+    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.set.buspairs, pm.set.buspair_indexes)
 
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.set.branches])
 
@@ -149,7 +146,7 @@ function variable_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
 end
 
 function variable_complex_voltage_product_matrix{T}(pm::GenericPowerModel{T})
-    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm)
+    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.set.buspairs, pm.set.buspair_indexes)
 
     w_index = 1:length(pm.set.bus_indexes)
     lookup_w_index = Dict([(bi, i) for (i,bi) in enumerate(pm.set.bus_indexes)])

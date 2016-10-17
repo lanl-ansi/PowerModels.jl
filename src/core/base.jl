@@ -40,27 +40,35 @@ type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
 end
 
 # default generic constructor
-function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
-    data, sets = process_raw_data(data)
+function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver(), data_processor = process_raw_mp_data)
+    data, sets, ext = data_processor(data)
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
         data, # data
         sets, # sets
         setting, # setting
         Dict{AbstractString,Any}(), # solution
-        Dict{Symbol,Any}() # ext
+        ext # ext
     )
 
     return pm
 end
 
-function process_raw_data(data::Dict{AbstractString,Any})
+function process_raw_mp_data(data::Dict{AbstractString,Any})
     make_per_unit(data)
-    unify_transformer_taps(data)
-    add_branch_parameters(data)
+
+    min_theta_delta = calc_min_phase_angle(data)
+    max_theta_delta = calc_max_phase_angle(data)
+
+    unify_transformer_taps(data["branch"])
+    add_branch_parameters(data["branch"], min_theta_delta, max_theta_delta)
+
     standardize_cost_order(data)
     sets = build_sets(data)
-    return data, sets
+
+    ext = Dict{Symbol,Any}()
+
+    return data, sets, ext
 end
 
 #
@@ -235,8 +243,8 @@ function make_per_unit(mva_base::Number, data::Number)
     #println("$(parent) $(data)")
 end
 
-function unify_transformer_taps(data::Dict{AbstractString,Any})
-    for branch in data["branch"]
+function unify_transformer_taps(branches)
+    for branch in branches
         if branch["tap"] == 0.0
             branch["tap"] = 1.0
         end
@@ -244,11 +252,8 @@ function unify_transformer_taps(data::Dict{AbstractString,Any})
 end
 
 # NOTE, this function assumes all values are p.u. and angles are in radians
-function add_branch_parameters(data::Dict{AbstractString,Any})
-    min_theta_delta = calc_min_phase_angle(data)
-    max_theta_delta = calc_max_phase_angle(data)
-    
-    for branch in data["branch"]
+function add_branch_parameters(branches, min_theta_delta, max_theta_delta)
+    for branch in branches
         r = branch["br_r"]
         x = branch["br_x"]
         tap_ratio = branch["tap"]
