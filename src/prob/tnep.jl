@@ -55,6 +55,9 @@ function post_tnep{T}(pm::GenericPowerModel{T})
 end
 
 
+
+##### TNEP specific base and solution code
+
 type TNEPDataSets
     branches
     branch_indexes
@@ -69,41 +72,21 @@ end
 #### create some tnep specific sets
 function build_ne_sets(data::Dict{AbstractString,Any})    
     bus_lookup = Dict([(Int(bus["index"]), bus) for bus in data["bus"]])
-    #gen_lookup = Dict([(Int(gen["index"]), gen) for gen in data["gen"]])
-    #for gencost in data["gencost"]
-    #    i = Int(gencost["index"])
-    #    gen_lookup[i] = merge(gen_lookup[i], gencost)
-    #end
     branch_lookup = Dict([(Int(branch["index"]), branch) for branch in data["branch_ne"]])
 
     # filter turned off stuff
     bus_lookup = filter((i, bus) -> bus["bus_type"] != 4, bus_lookup)
-    #gen_lookup = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(bus_lookup), gen_lookup)
     branch_lookup = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(bus_lookup) && branch["t_bus"] in keys(bus_lookup), branch_lookup)
 
     arcs_from = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in branch_lookup]
     arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
     arcs = [arcs_from; arcs_to]
 
-    #bus_gens = Dict([(i, []) for (i,bus) in bus_lookup])
-    #for (i,gen) in gen_lookup
-    #    push!(bus_gens[gen["gen_bus"]], i)
-    #end
-
     bus_branches = Dict([(i, []) for (i,bus) in bus_lookup])
     for (l,i,j) in arcs_from
         push!(bus_branches[i], (l,i,j))
         push!(bus_branches[j], (l,j,i))
     end
-
-    #ref_bus = [i for (i,bus) in bus_lookup | bus["bus_type"] == 3][1]
-    #ref_bus = Union{}
-    #for (k,v) in bus_lookup
-    #    if v["bus_type"] == 3
-    #        ref_bus = k
-    #        break
-    #    end
-    #end
 
     bus_idxs = collect(keys(bus_lookup))
     #gen_idxs = collect(keys(gen_lookup))
@@ -114,7 +97,6 @@ function build_ne_sets(data::Dict{AbstractString,Any})
 
     return TNEPDataSets(branch_lookup, branch_idxs, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
 end
-
 
 function process_raw_mp_ne_data(data::Dict{AbstractString,Any})
     # TODO, see if there is a clean way of reusing 'process_raw_mp_data'
@@ -141,10 +123,6 @@ function process_raw_mp_ne_data(data::Dict{AbstractString,Any})
     return data, sets, ext
 end
 
-
-
-
-
 function get_tnep_solution{T}(pm::GenericPowerModel{T})
     sol = Dict{AbstractString,Any}()
     add_bus_voltage_setpoint(sol, pm)
@@ -154,6 +132,23 @@ function get_tnep_solution{T}(pm::GenericPowerModel{T})
     add_branch_ne_setpoint(sol, pm)
     return sol
 end
+
+function add_branch_ne_setpoint{T}(sol, pm::GenericPowerModel{T})
+  add_setpoint(sol, pm, "branch_ne", "index", "built", :line_ne; default_value = (item) -> 1)
+end
+
+function add_branch_flow_setpoint_ne{T}(sol, pm::GenericPowerModel{T})
+    # check the line flows were requested
+    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
+        mva_base = pm.data["baseMVA"]
+
+        add_setpoint(sol, pm, "branch_ne", "index", "p_from", :p_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch_ne", "index", "q_from", :q_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch_ne", "index",   "p_to", :p_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint(sol, pm, "branch_ne", "index",   "q_to", :q_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+    end
+end
+
 
 #### TNEP specific variables
 
@@ -192,46 +187,32 @@ function variable_complex_voltage_product_ne{T}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.ext[:ne].buspairs, pm.ext[:ne].buspair_indexes)
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.ext[:ne].branches])
     @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr_ne[b in pm.ext[:ne].branch_indexes] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.ext[:ne].buspairs, bi_bp[b], "wr_start", 1.0))
-    @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi_ne[b in pm.ext[:ne].branch_indexes] <= max(0, wi_max[bi_bp[b]]), start = getstart(pm.ext[:ne].buspairs, bi_bp[b], "wr_start"))
+    @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi_ne[b in pm.ext[:ne].branch_indexes] <= max(0, wi_max[bi_bp[b]]), start = getstart(pm.ext[:ne].buspairs, bi_bp[b], "wi_start"))
     return wr_ne, wi_ne
 end
 
-function variable_active_line_flow_ne{T}(pm::GenericPowerModel{T}; bounded = true)
-    if bounded
-        @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= p_ne[(l,i,j) in pm.ext[:ne].arcs] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "p_start"))
-    else
-        @variable(pm.model, p[(l,i,j) in pm.ext[:ne].arcs], start = getstart(pm.ext[:ne].branches, l, "p_start"))
-    end
+function variable_active_line_flow_ne{T}(pm::GenericPowerModel{T})
+    @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= p_ne[(l,i,j) in pm.ext[:ne].arcs] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "p_start"))
     return p_ne
 end
 
-function variable_active_line_flow_ne{T <: StandardDCPForm}(pm::GenericPowerModel{T}; bounded = true)
-    if bounded
-        @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= p_ne[(l,i,j) in pm.ext[:ne].arcs_from] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "p_start"))
-    else
-        @variable(pm.model, p_ne[(l,i,j) in pm.ext[:ne].arcs_from], start = getstart(pm.ext[:ne].branches, l, "p_start"))
-    end
-
+function variable_active_line_flow_ne{T <: StandardDCPForm}(pm::GenericPowerModel{T})
+    @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= p_ne[(l,i,j) in pm.ext[:ne].arcs_from] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "p_start"))
+ 
     p_ne_expr = Dict([((l,i,j), 1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ext[:ne].arcs_from])
     p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ext[:ne].arcs_from]))
 
     pm.model.ext[:p_ne_expr] = p_ne_expr
 end
 
-
-function variable_reactive_line_flow_ne{T}(pm::GenericPowerModel{T}; bounded = true)
-    if bounded
-        @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= q_ne[(l,i,j) in pm.ext[:ne].arcs] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "q_start"))
-    else
-        @variable(pm.model, q_ne[(l,i,j) in pm.ext[:ne].arcs], start = getstart(pm.ext[:ne].branches, l, "q_start"))
-    end
+function variable_reactive_line_flow_ne{T}(pm::GenericPowerModel{T})
+    @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= q_ne[(l,i,j) in pm.ext[:ne].arcs] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "q_start"))
     return q_ne
 end
 
 function variable_reactive_line_flow_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; bounded = true)
     # do nothing, this model does not have reactive variables
 end
-
 
 
 #### TNEP specific objectives
@@ -242,6 +223,7 @@ function objective_tnep_cost{T}(pm::GenericPowerModel{T})
     branches = pm.ext[:ne].branches
     return @objective(pm.model, Min, sum{ branches[i]["construction_cost"]*line_ne[i], (i,branch) in branches} )
 end
+
 
 #### TNEP specific constraints
 
@@ -646,24 +628,6 @@ function constraint_reactive_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerM
     return Set([c])
 end
 
-
-
-##### TNEP specific solution extractors
-function add_branch_ne_setpoint{T}(sol, pm::GenericPowerModel{T})
-  add_setpoint(sol, pm, "branch_ne", "index", "built", :line_ne; default_value = (item) -> 1)
-end
-
-function add_branch_flow_setpoint_ne{T}(sol, pm::GenericPowerModel{T})
-    # check the line flows were requested
-    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
-        mva_base = pm.data["baseMVA"]
-
-        add_setpoint(sol, pm, "branch_ne", "index", "p_from", :p_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch_ne", "index", "q_from", :q_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch_ne", "index",   "p_to", :p_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-        add_setpoint(sol, pm, "branch_ne", "index",   "q_to", :q_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-    end
-end
 
 
 
