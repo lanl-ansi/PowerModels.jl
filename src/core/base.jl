@@ -31,32 +31,44 @@ type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
     set::PowerDataSets
     setting::Dict{AbstractString,Any}
     solution::Dict{AbstractString,Any}
+
+    # Extension dictionary
+    # Extensions should define a type to hold information particular to
+    # their functionality, and store an instance of the type in this
+    # dictionary keyed on an extension-specific symbol
+    ext::Dict{Symbol,Any}
 end
 
 # default generic constructor
-function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
-    data, sets = process_raw_data(data)
-
+function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver(), data_processor = process_raw_mp_data)
+    data, sets, ext = data_processor(data)
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
         data, # data
         sets, # sets
         setting, # setting
         Dict{AbstractString,Any}(), # solution
+        ext # ext
     )
 
     return pm
 end
 
-function process_raw_data(data::Dict{AbstractString,Any})
+function process_raw_mp_data(data::Dict{AbstractString,Any})
     make_per_unit(data)
-    unify_transformer_taps(data)
-    add_branch_parameters(data)
-    standardize_cost_order(data)
 
+    min_theta_delta = calc_min_phase_angle(data)
+    max_theta_delta = calc_max_phase_angle(data)
+
+    unify_transformer_taps(data["branch"])
+    add_branch_parameters(data["branch"], min_theta_delta, max_theta_delta)
+
+    standardize_cost_order(data)
     sets = build_sets(data)
 
-    return data, sets
+    ext = Dict{Symbol,Any}()
+
+    return data, sets, ext
 end
 
 #
@@ -142,7 +154,6 @@ function build_sets(data::Dict{AbstractString,Any})
     bus_idxs = collect(keys(bus_lookup))
     gen_idxs = collect(keys(gen_lookup))
     branch_idxs = collect(keys(branch_lookup))
-
 
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
     buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)
@@ -232,8 +243,8 @@ function make_per_unit(mva_base::Number, data::Number)
     #println("$(parent) $(data)")
 end
 
-function unify_transformer_taps(data::Dict{AbstractString,Any})
-    for branch in data["branch"]
+function unify_transformer_taps(branches)
+    for branch in branches
         if branch["tap"] == 0.0
             branch["tap"] = 1.0
         end
@@ -241,11 +252,8 @@ function unify_transformer_taps(data::Dict{AbstractString,Any})
 end
 
 # NOTE, this function assumes all values are p.u. and angles are in radians
-function add_branch_parameters(data::Dict{AbstractString,Any})
-    min_theta_delta = calc_min_phase_angle(data)
-    max_theta_delta = calc_max_phase_angle(data)
-
-    for branch in data["branch"]
+function add_branch_parameters(branches, min_theta_delta, max_theta_delta)
+    for branch in branches
         r = branch["br_r"]
         x = branch["br_x"]
         tap_ratio = branch["tap"]
@@ -276,14 +284,18 @@ function calc_max_phase_angle(data::Dict{AbstractString,Any})
     bus_count = length(data["bus"])
     angle_max = [branch["angmax"] for branch in data["branch"]]
     sort!(angle_max, rev=true)
-
-    return sum(angle_max[1:bus_count-1])
+    if length(angle_max) > 1
+        return sum(angle_max[1:bus_count-1])
+    end
+    return angle_max[1]
 end
 
 function calc_min_phase_angle(data::Dict{AbstractString,Any})
     bus_count = length(data["bus"])
     angle_min = [branch["angmin"] for branch in data["branch"]]
     sort!(angle_min)
-
-    return sum(angle_min[1:bus_count-1])
+    if length(angle_min) > 1
+        return sum(angle_min[1:bus_count-1])
+    end
+    return angle_min[1]
 end
