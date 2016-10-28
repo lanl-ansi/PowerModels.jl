@@ -85,6 +85,34 @@ function constraint_thermal_limit_to_on_off{T}(pm::GenericPowerModel{T}, branch;
     return Set([c])
 end
 
+function constraint_thermal_limit_from_ne{T}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+
+    p_fr = getvariable(pm.model, :p_ne)[f_idx]
+    q_fr = getvariable(pm.model, :q_ne)[f_idx]
+    z = getvariable(pm.model, :line_ne)[i]
+
+    c = @constraint(pm.model, p_fr^2 + q_fr^2 <= branch["rate_a"]^2*z^2)
+    return Set([c])
+end
+
+function constraint_thermal_limit_to_ne{T}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    t_idx = (i, t_bus, f_bus)
+
+    p_to = getvariable(pm.model, :p_ne)[t_idx]
+    q_to = getvariable(pm.model, :q_ne)[t_idx]
+    z = getvariable(pm.model, :line_ne)[i]
+
+    c = @constraint(pm.model, p_to^2 + q_to^2 <= branch["rate_a"]^2*z^2)
+    return Set([c])
+end
+
 function constraint_active_gen_setpoint{T}(pm::GenericPowerModel{T}, gen)
     i = gen["index"]
     pg = getvariable(pm.model, :pg)[gen["index"]]

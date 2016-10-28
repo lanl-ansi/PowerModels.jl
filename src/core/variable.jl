@@ -80,6 +80,12 @@ function variable_active_line_flow{T}(pm::GenericPowerModel{T}; bounded = true)
     return p
 end
 
+function variable_active_line_flow_ne{T}(pm::GenericPowerModel{T})
+    @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= p_ne[(l,i,j) in pm.ext[:ne].arcs] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "p_start"))
+    return p_ne
+end
+
+
 function variable_reactive_line_flow{T}(pm::GenericPowerModel{T}; bounded = true)
     if bounded
         @variable(pm.model, -pm.set.branches[l]["rate_a"] <= q[(l,i,j) in pm.set.arcs] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "q_start"))
@@ -88,6 +94,12 @@ function variable_reactive_line_flow{T}(pm::GenericPowerModel{T}; bounded = true
     end
     return q
 end
+
+function variable_reactive_line_flow_ne{T}(pm::GenericPowerModel{T})
+    @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= q_ne[(l,i,j) in pm.ext[:ne].arcs] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "q_start"))
+    return q_ne
+end
+
 
 function compute_voltage_product_bounds(buspairs, buspair_indexes)
     wr_min = Dict([(bp, -Inf) for bp in buspair_indexes])
@@ -241,3 +253,10 @@ function variable_line_indicator{T}(pm::GenericPowerModel{T})
     @variable(pm.model, 0 <= line_z[l in pm.set.branch_indexes] <= 1, Int, start = getstart(pm.set.branches, l, "line_z_start", 1.0))
     return line_z
 end
+
+function variable_line_ne{T}(pm::GenericPowerModel{T})
+    branches = pm.ext[:ne].branches
+    @variable(pm.model, 0 <= line_ne[l in pm.ext[:ne].branch_indexes] <= 1, Int, start = getstart(branches, l, "line_tnep_start", 1.0))
+    return line_ne
+end
+
