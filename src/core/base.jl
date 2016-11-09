@@ -21,6 +21,18 @@ type PowerDataSets
     buspair_indexes
 end
 
+type TNEPDataSets
+    branches
+    branch_indexes
+    arcs_from
+    arcs_to
+    arcs
+    bus_branches
+    buspairs
+    buspair_indexes
+end
+
+
 abstract AbstractPowerModel
 abstract AbstractPowerFormulation
 abstract AbstractConicPowerFormulation <: AbstractPowerFormulation
@@ -70,6 +82,31 @@ function process_raw_mp_data(data::Dict{AbstractString,Any})
 
     return data, sets, ext
 end
+
+function process_raw_mp_ne_data(data::Dict{AbstractString,Any})
+    # TODO, see if there is a clean way of reusing 'process_raw_mp_data'
+    # would be fine, except for on/off phase angle calc
+    make_per_unit(data)
+
+    min_theta_delta = calc_min_phase_angle_ne(data)
+    max_theta_delta = calc_max_phase_angle_ne(data)
+
+    unify_transformer_taps(data["branch"])
+    add_branch_parameters(data["branch"], min_theta_delta, max_theta_delta)
+
+    unify_transformer_taps(data["branch_ne"])
+    add_branch_parameters(data["branch_ne"], min_theta_delta, max_theta_delta)
+
+    standardize_cost_order(data)
+    sets = build_sets(data)
+    ne_sets = build_ne_sets(data)
+
+    ext = Dict{Symbol,Any}()
+    ext[:ne] = ne_sets
+
+    return data, sets, ext
+end
+
 
 #
 # Just seems too hard to maintain with the default constructor
@@ -160,6 +197,35 @@ function build_sets(data::Dict{AbstractString,Any})
 
     return PowerDataSets(ref_bus, bus_lookup, bus_idxs, gen_lookup, gen_idxs, branch_lookup, branch_idxs, bus_gens, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
 end
+
+function build_ne_sets(data::Dict{AbstractString,Any})    
+    bus_lookup = Dict([(Int(bus["index"]), bus) for bus in data["bus"]])
+    branch_lookup = Dict([(Int(branch["index"]), branch) for branch in data["branch_ne"]])
+
+    # filter turned off stuff
+    bus_lookup = filter((i, bus) -> bus["bus_type"] != 4, bus_lookup)
+    branch_lookup = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(bus_lookup) && branch["t_bus"] in keys(bus_lookup), branch_lookup)
+
+    arcs_from = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in branch_lookup]
+    arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
+    arcs = [arcs_from; arcs_to]
+
+    bus_branches = Dict([(i, []) for (i,bus) in bus_lookup])
+    for (l,i,j) in arcs_from
+        push!(bus_branches[i], (l,i,j))
+        push!(bus_branches[j], (l,j,i))
+    end
+
+    bus_idxs = collect(keys(bus_lookup))
+    #gen_idxs = collect(keys(gen_lookup))
+    branch_idxs = collect(keys(branch_lookup))
+
+    buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
+    buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)
+
+    return TNEPDataSets(branch_lookup, branch_idxs, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
+end
+
 
 # compute bus pair level structures
 function buspair_parameters(buspair_indexes, branches, buses)
@@ -293,6 +359,34 @@ end
 function calc_min_phase_angle(data::Dict{AbstractString,Any})
     bus_count = length(data["bus"])
     angle_min = [branch["angmin"] for branch in data["branch"]]
+    sort!(angle_min)
+    if length(angle_min) > 1
+        return sum(angle_min[1:bus_count-1])
+    end
+    return angle_min[1]
+end
+
+function calc_max_phase_angle_ne(data::Dict{AbstractString,Any})
+    bus_count = length(data["bus"])
+    angle_max = [branch["angmax"] for branch in data["branch"]]
+    if haskey(data, "branch_ne")
+        angle_max_ne = [branch["angmax"] for branch in data["branch_ne"]]
+        angle_max = [angle_max; angle_max_ne]
+    end
+    sort!(angle_max, rev=true)
+    if length(angle_max) > 1
+        return sum(angle_max[1:bus_count-1])
+    end
+    return angle_max[1]
+end
+
+function calc_min_phase_angle_ne(data::Dict{AbstractString,Any})
+    bus_count = length(data["bus"])
+    angle_min = [branch["angmin"] for branch in data["branch"]]
+    if haskey(data, "branch_ne")
+        angle_min_ne = [branch["angmin"] for branch in data["branch_ne"]]
+        angle_min = [angle_min; angle_min_ne]
+    end
     sort!(angle_min)
     if length(angle_min) > 1
         return sum(angle_min[1:bus_count-1])

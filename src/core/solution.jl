@@ -66,9 +66,26 @@ function add_branch_flow_setpoint{T}(sol, pm::GenericPowerModel{T})
     end
 end
 
+function add_branch_flow_setpoint_ne{T}(sol, pm::GenericPowerModel{T})
+    # check the line flows were requested
+    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
+        mva_base = pm.data["baseMVA"]
+
+        add_setpoint(sol, pm, "branch_ne", "index", "p_from", :p_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch_ne", "index", "q_from", :q_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch_ne", "index",   "p_to", :p_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint(sol, pm, "branch_ne", "index",   "q_to", :q_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+    end
+end
+
 function add_branch_status_setpoint{T}(sol, pm::GenericPowerModel{T})
   add_setpoint(sol, pm, "branch", "index", "br_status", :line_z; default_value = (item) -> 1)
 end
+
+function add_branch_ne_setpoint{T}(sol, pm::GenericPowerModel{T})
+  add_setpoint(sol, pm, "branch_ne", "index", "built", :line_ne; default_value = (item) -> 1)
+end
+
 
 function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, param_name, variable_symbol; default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
     sol_dict = nothing

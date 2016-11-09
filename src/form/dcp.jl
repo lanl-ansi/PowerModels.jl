@@ -17,6 +17,9 @@ function variable_complex_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T}
     variable_phase_angle(pm; kwargs...)
 end
 
+function variable_complex_voltage_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...)
+end
+
 function variable_reactive_generation{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
     # do nothing, this model does not have reactive variables
 end
@@ -24,6 +27,11 @@ end
 function variable_reactive_line_flow{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; bounded = true)
     # do nothing, this model does not have reactive variables
 end
+
+function variable_reactive_line_flow_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; bounded = true)
+    # do nothing, this model does not have reactive variables
+end
+
 
 function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T}; bounded = true)
     if bounded
@@ -38,7 +46,21 @@ function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T
     pm.model.ext[:p_expr] = p_expr
 end
 
+function variable_active_line_flow_ne{T <: StandardDCPForm}(pm::GenericPowerModel{T})
+    @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= p_ne[(l,i,j) in pm.ext[:ne].arcs_from] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "p_start"))
+ 
+    p_ne_expr = Dict([((l,i,j), 1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ext[:ne].arcs_from])
+    p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ext[:ne].arcs_from]))
+
+    pm.model.ext[:p_ne_expr] = p_ne_expr
+end
+
+
 function constraint_complex_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
+    # do nothing, this model does not have complex voltage variables
+end
+
+function constraint_complex_voltage_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
     # do nothing, this model does not have complex voltage variables
 end
 
@@ -70,11 +92,30 @@ function constraint_active_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel
     return Set([c])
 end
 
+function constraint_active_kcl_shunt_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus)
+    i = bus["index"]
+    bus_branches = pm.set.bus_branches[i]
+    bus_branches_ne = pm.ext[:ne].bus_branches[i]
+    bus_gens = pm.set.bus_gens[i]
+
+    pg = getvariable(pm.model, :pg)
+    p_expr = pm.model.ext[:p_expr]
+    p_ne_expr = pm.model.ext[:p_ne_expr]
+
+    c = @constraint(pm.model, sum{p_expr[a], a in bus_branches} + sum{p_ne_expr[a], a in bus_branches_ne} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*1.0^2)
+    return Set([c])
+end
+
+
 function constraint_reactive_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus)
     # Do nothing, this model does not have reactive variables
     return Set()
 end
 
+function constraint_reactive_kcl_shunt_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus)
+    # Do nothing, this model does not have reactive variables
+    return Set()
+end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 function constraint_active_ohms_yt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
@@ -94,10 +135,38 @@ function constraint_active_ohms_yt{T <: AbstractDCPForm}(pm::GenericPowerModel{T
     return Set([c])
 end
 
+function constraint_active_ohms_yt_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    p_fr = getvariable(pm.model, :p_ne)[f_idx]
+    t_fr = getvariable(pm.model, :t)[f_bus]
+    t_to = getvariable(pm.model, :t)[t_bus]
+    z = getvariable(pm.model, :line_ne)[i]
+
+    b = branch["b"]
+    t_min = branch["off_angmin"]
+    t_max = branch["off_angmax"]
+
+    c1 = @constraint(pm.model, p_fr <= -b*(t_fr - t_to + t_max*(1-z)) )
+    c2 = @constraint(pm.model, p_fr >= -b*(t_fr - t_to + t_min*(1-z)) )
+    return Set([c1, c2])
+end
+
+
 function constraint_reactive_ohms_yt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
     # Do nothing, this model does not have reactive variables
     return Set()
 end
+
+function constraint_reactive_ohms_yt_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+    # Do nothing, this model does not have reactive variables
+    return Set()
+end
+
 
 function constraint_phase_angle_difference{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
@@ -208,10 +277,30 @@ function constraint_thermal_limit_from_on_off{T <: AbstractDCPForm}(pm::GenericP
     return Set([c1, c2])
 end
 
+function constraint_thermal_limit_from_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+
+    p_fr = getvariable(pm.model, :p_ne)[f_idx]
+    z = getvariable(pm.model, :line_ne)[i]
+
+    c1 = @constraint(pm.model, p_fr <= getupperbound(p_fr)*z)
+    c2 = @constraint(pm.model, p_fr >= getlowerbound(p_fr)*z)
+    return Set([c1, c2])
+end
+
 function constraint_thermal_limit_to_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch; scale = 1.0)
   # nothing to do, from handles both sides
   return Set()
 end
+
+function constraint_thermal_limit_to_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+  # nothing to do, from handles both sides
+  return Set()
+end
+
 
 function constraint_phase_angle_difference_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
@@ -230,6 +319,22 @@ function constraint_phase_angle_difference_on_off{T <: AbstractDCPForm}(pm::Gene
     return Set([c1, c2])
 end
 
+function constraint_phase_angle_difference_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+
+    t_fr = getvariable(pm.model, :t)[f_bus]
+    t_to = getvariable(pm.model, :t)[t_bus]
+    z = getvariable(pm.model, :line_ne)[i]
+
+    t_min = branch["off_angmin"]
+    t_max = branch["off_angmax"]
+
+    c1 = @constraint(pm.model, t_fr - t_to <= branch["angmax"]*z + t_max*(1-z))
+    c2 = @constraint(pm.model, t_fr - t_to >= branch["angmin"]*z + t_min*(1-z))
+    return Set([c1, c2])
+end
 
 
 
@@ -254,6 +359,20 @@ function constraint_active_kcl_shunt{T <: AbstractDCPLLForm}(pm::GenericPowerMod
     p = getvariable(pm.model, :p)
 
     c = @constraint(pm.model, sum{p[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*1.0^2)
+    return Set([c])
+end
+
+function constraint_active_kcl_shunt_ne{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, bus)
+    i = bus["index"]
+    bus_branches = pm.set.bus_branches[i]
+    bus_branches_ne = pm.ext[:ne].bus_branches[i]
+    bus_gens = pm.set.bus_gens[i]
+
+    p = getvariable(pm.model, :p)
+    p_ne = getvariable(pm.model, :p_ne)
+    pg = getvariable(pm.model, :pg)
+
+    c = @constraint(pm.model, sum{p[a], a in bus_branches} + sum{p_ne[a], a in bus_branches_ne} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*1.0^2)
     return Set([c])
 end
 
@@ -283,6 +402,31 @@ function constraint_active_ohms_yt_on_off{T <: AbstractDCPLLForm}(pm::GenericPow
     return Set([c1, c2, c3])
 end
 
+function constraint_active_ohms_yt_ne{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    p_fr = getvariable(pm.model, :p_ne)[f_idx]
+    p_to = getvariable(pm.model, :p_ne)[t_idx]
+    t_fr = getvariable(pm.model, :t)[f_bus]
+    t_to = getvariable(pm.model, :t)[t_bus]
+    z = getvariable(pm.model, :line_ne)[i]
+
+    b = branch["b"]
+    t_min = branch["off_angmin"]
+    t_max = branch["off_angmax"]
+
+    c1 = @constraint(pm.model, p_fr <= -b*(t_fr - t_to + t_max*(1-z)) )
+    c2 = @constraint(pm.model, p_fr >= -b*(t_fr - t_to + t_min*(1-z)) )
+
+    t_m = max(abs(t_min),abs(t_max))
+    c3 = @constraint(pm.model, p_fr + p_to >= branch["br_r"]*( (-branch["b"]*(t_fr - t_to))^2 - (-branch["b"]*(t_m))^2*(1-z) ) )
+    return Set([c1, c2, c3])
+end
+
 function constraint_thermal_limit_to_on_off{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, branch; scale = 1.0)
     i = branch["index"]
     f_bus = branch["f_bus"]
@@ -291,6 +435,20 @@ function constraint_thermal_limit_to_on_off{T <: AbstractDCPLLForm}(pm::GenericP
 
     p_to = getvariable(pm.model, :p)[t_idx]
     z = getvariable(pm.model, :line_z)[i]
+
+    c1 = @constraint(pm.model, p_to <= getupperbound(p_to)*z)
+    c2 = @constraint(pm.model, p_to >= getlowerbound(p_to)*z)
+    return Set([c1, c2])
+end
+
+function constraint_thermal_limit_to_ne{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    t_idx = (i, t_bus, f_bus)
+
+    p_to = getvariable(pm.model, :p_ne)[t_idx]
+    z = getvariable(pm.model, :line_ne)[i]
 
     c1 = @constraint(pm.model, p_to <= getupperbound(p_to)*z)
     c2 = @constraint(pm.model, p_to >= getlowerbound(p_to)*z)
