@@ -1,6 +1,9 @@
 PowerModels.jl Change Log 
 =================
 
+### v0.2.2
+- Added Transmission Network Expansion Planning (tnep) problem.
+
 ### v0.2.1
 - Added support for julia v0.5.0 and OS X
 - Added line flows option for solution output
