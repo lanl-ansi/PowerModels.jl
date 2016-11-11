@@ -1,9 +1,9 @@
 julia 0.4.6
 
-Ipopt
+Ipopt 
 SCS
 GLPKMathProgInterface
-Pajarito
+Pajarito 0.2.1
 
-BaseTestNext
-Logging
+BaseTestNext 0.2.2
+Logging 0.3.1
