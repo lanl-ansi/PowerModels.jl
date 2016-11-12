@@ -5,6 +5,7 @@ module PowerModels
 using JSON
 using MathProgBase
 using JuMP
+using Compat
 
 include("io/matpower.jl")
 include("io/json.jl")
