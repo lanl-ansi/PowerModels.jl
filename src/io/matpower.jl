@@ -57,7 +57,7 @@ function parse_matrix(lines, index)
         if columns < 0
             columns = length(row_items)
         elseif columns != length(row_items)
-            error("matrix parsing error, inconsistent number of items in each row\n"+row)
+            error("matrix parsing error, inconsistent number of items in each row\n$(row)")
         end
     end
 
