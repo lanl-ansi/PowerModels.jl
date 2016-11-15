@@ -301,6 +301,10 @@ function parse_matpower_data(data_string)
 
             case["gencost"] = gencost
 
+            if length(case["gencost"]) != length(case["gen"]) && length(case["gencost"]) != 2*length(case["gen"])
+                error("incorrect Matpower file, the number of generator cost functions ($(length(case["gencost"]))) is inconsistent with the number of generators ($(length(case["gen"]))).\n")
+            end
+
         elseif parsed_matrix["name"] == "mpc.dcline"
             dclines = []
 
