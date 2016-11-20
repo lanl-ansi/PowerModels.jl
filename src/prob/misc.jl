@@ -26,6 +26,11 @@ function post_api_opf{T}(pm::GenericPowerModel{T})
     constraint_theta_ref(pm)
     constraint_complex_voltage(pm)
 
+    for (i,gen) in pm.set.gens
+        pg = getvariable(pm.model, :pg)[i]
+        @constraint(pm.model, pg >= gen["pmin"])
+    end
+
     for (i,bus) in pm.set.buses
         constraint_active_kcl_shunt_scaled(pm, bus)
         constraint_reactive_kcl_shunt(pm, bus)
