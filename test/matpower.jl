@@ -1,5 +1,5 @@
 @testset "test matpower parser" begin
-    @testset "30-bus case file name" begin
+    @testset "30-bus case file" begin
         result = run_opf("../test/data/case30.m", ACPPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
@@ -10,6 +10,14 @@
         data = PowerModels.parse_file("../test/data/case30.m")
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 204.96; atol = 1e-1)
+    end
+
+    @testset "2-bus case file with spaces" begin
+        result = run_opf("../test/data/case2.m", ACPPowerModel, ipopt_solver)
+
+        println(result["objective"])
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
     end
