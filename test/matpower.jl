@@ -17,9 +17,8 @@
     @testset "2-bus case file with spaces" begin
         result = run_opf("../test/data/case2.m", ACPPowerModel, ipopt_solver)
 
-        println(result["objective"])
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 204.96; atol = 1e-1)
+        @test isapprox(result["objective"], 184.70; atol = 1e-1)
     end
 end
 

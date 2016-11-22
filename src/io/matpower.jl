@@ -32,14 +32,18 @@ function parse_matrix(lines, index)
             continue
         end
 
-        line = split(line, '%')[1]
+        line = strip(split(line, '%')[1])
 
         if contains(line, "]")
             found_close_bracket = true
         end
 
-        if contains(line, ";")
-            push!(matrix_body_lines, strip(split(line, '%')[1]))
+        if ! contains(line, "]")
+            line_data = line
+            if ! contains(line_data, ";")
+                line_data = "$(line_data);"
+            end
+            push!(matrix_body_lines, line_data)
         end
 
         line_count = line_count + 1
@@ -52,7 +56,7 @@ function parse_matrix(lines, index)
 
     maxtrix = []
     for row in matrix_body_rows
-        row_items = split(row, '\t')
+        row_items = split(row)
         push!(maxtrix, row_items)
         if columns < 0
             columns = length(row_items)
@@ -83,6 +87,11 @@ function parse_matpower(file_string)
         end
         if branch["angmax"] >= 90
             warn("this code only supports angmax values in -89 deg. to 89 deg., tightening the value on branch $(branch["index"]) from $(branch["angmax"]) to 60 deg.")
+            branch["angmax"] = 60.0
+        end
+        if branch["angmin"] == 0.0 && branch["angmax"] == 0.0
+            warn("angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- 60 deg.")
+            branch["angmin"] = -60.0
             branch["angmax"] = 60.0
         end
     end
@@ -269,14 +278,14 @@ function parse_matpower_data(data_string)
                     "angmax" => parse(Float64, branch_row[13]),
                 )
                 if length(branch_row) > 13
-                    branch_data["pf"] = parse(Float64, gen_row[14])
-                    branch_data["qf"] = parse(Float64, gen_row[15])
-                    branch_data["pt"] = parse(Float64, gen_row[16])
-                    branch_data["qt"] = parse(Float64, gen_row[17])
-                    branch_data["mu_sf"] = parse(Float64, gen_row[18])
-                    branch_data["mu_st"] = parse(Float64, gen_row[19])
-                    branch_data["mu_angmin"] = parse(Float64, gen_row[20])
-                    branch_data["mu_angmax"] = parse(Float64, gen_row[21])
+                    branch_data["pf"] = parse(Float64, branch_row[14])
+                    branch_data["qf"] = parse(Float64, branch_row[15])
+                    branch_data["pt"] = parse(Float64, branch_row[16])
+                    branch_data["qt"] = parse(Float64, branch_row[17])
+                    branch_data["mu_sf"] = parse(Float64, branch_row[18])
+                    branch_data["mu_st"] = parse(Float64, branch_row[19])
+                    branch_data["mu_angmin"] = parse(Float64, branch_row[20])
+                    branch_data["mu_angmax"] = parse(Float64, branch_row[21])
                 end
 
                 push!(branches, branch_data)
