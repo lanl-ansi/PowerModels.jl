@@ -349,10 +349,11 @@ end
 function standardize_cost_order(data::Dict{AbstractString,Any})
     for gencost in data["gencost"]
         if gencost["model"] == 2 && length(gencost["cost"]) < 3
-            println("std gen cost: ",gencost["cost"])
+            #println("std gen cost: ",gencost["cost"])
             cost_3 = [zeros(1,3 - length(gencost["cost"])); gencost["cost"]]
             gencost["cost"] = cost_3
-            println("   ",gencost["cost"])
+            #println("   ",gencost["cost"])
+            warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
         end
     end
 end
