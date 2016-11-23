@@ -38,16 +38,14 @@ function parse_matrix(lines, index)
             found_close_bracket = true
         end
 
-        if ! contains(line, "]")
-            line_data = line
-            if ! contains(line_data, ";")
-                line_data = "$(line_data);"
-            end
-            push!(matrix_body_lines, line_data)
-        end
+        push!(matrix_body_lines, line)
 
         line_count = line_count + 1
     end
+
+    #print(matrix_body_lines)
+    matrix_body_lines = [ add_line_delimiters(line) for line in matrix_body_lines]
+    #print(matrix_body_lines)
 
     matrix_body = join(matrix_body_lines, ' ')
     matrix_body = strip(replace(strip(strip(matrix_body), '['), "];", ""))
@@ -66,6 +64,25 @@ function parse_matrix(lines, index)
     end
 
     return Dict("name" => matrix_name, "data" => maxtrix, "line_count" => line_count)
+end
+
+function add_line_delimiters(string)
+    if strip(string) == "["
+        return string
+    end
+
+    if ! contains(string, ";") && ! contains(string, "]")
+        string = "$(string);"
+    end
+
+    if contains(string, "]") 
+        prefix = strip(split(string, "]")[1])
+        if length(prefix) > 0 && ! contains(prefix, ";")
+            string = replace(string, "]", ";]")
+        end
+    end
+
+    return string
 end
 
 
