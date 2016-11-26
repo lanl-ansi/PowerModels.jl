@@ -21,6 +21,7 @@ function post_api_opf{T}(pm::GenericPowerModel{T})
 
 
     objective_max_loading(pm)
+    #objective_max_loading_voltage_norm(pm)
 
 
     constraint_theta_ref(pm)

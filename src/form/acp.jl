@@ -396,9 +396,20 @@ function variable_load_factor{T}(pm::GenericPowerModel{T})
     @variable(pm.model, load_factor >= 1.0, start = 1.0)
 end
 
+
 function objective_max_loading{T}(pm::GenericPowerModel{T})
     load_factor = getvariable(pm.model, :load_factor)
     return @objective(pm.model, Max, load_factor)
+end
+
+# Seems to create too much reactive power and makes even small models hard to converge
+function objective_max_loading_voltage_norm{T}(pm::GenericPowerModel{T})
+    load_factor = getvariable(pm.model, :load_factor)
+
+    scale = length(pm.set.buses)
+    v = getvariable(pm.model, :v)
+
+    return @objective(pm.model, Max, 10*scale*load_factor - sum{ ((bus["vmin"] + bus["vmax"])/2 - v[i])^2, (i,bus) in pm.set.buses })
 end
 
 function bounds_tighten_voltage(pm::APIACPPowerModel; epsilon = 0.001)
