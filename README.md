@@ -12,9 +12,10 @@ The code is engineered to decouple problem specifications (e.g. Power Flow, Opti
 This enables the definition of a wide variety of power network formulations and their comparison on common problem specifications.
 
 **Core Problem Specifications**
-* Power Flow
-* Optimal Power Flow
-* Optimal Transmission Switching
+* Power Flow (pf)
+* Optimal Power Flow (opf)
+* Optimal Transmission Switching (ots)
+* Transmission Network Expansion Planning (tnep)
 
 **Core Network Formulations**
 * AC (polar coordinates)
@@ -32,11 +33,11 @@ The latest stable release of PowerModels can be installed using the Julia packag
 
 `Pkg.add("PowerModels")`
 
-For the current development version, "clone" this repository directly with,
+For the current development version, "checkout" this package with,
 
-`Pkg.clone("git@github.com:lanl-ansi/PowerModels.jl.git")`
+`Pkg.checkout("PowerModels")`
 
-At least one solver is required for running PowerModels.  Using the open-source solver Ipopt is recommended, as it is extremely fast, and can be used to solve a wide variety of the problems and network formulations provided in PowerModels.  The Ipopt solver can be installed via tha package manager with,
+At least one solver is required for running PowerModels.  The open-source solver Ipopt is recommended, as it is extremely fast, and can be used to solve a wide variety of the problems and network formulations provided in PowerModels.  The Ipopt solver can be installed via tha package manager with,
 
 `Pkg.add("Ipopt")`
 
