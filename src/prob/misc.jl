@@ -21,10 +21,16 @@ function post_api_opf{T}(pm::GenericPowerModel{T})
 
 
     objective_max_loading(pm)
-
+    #objective_max_loading_voltage_norm(pm)
+    #objective_max_loading_gen_output(pm)
 
     constraint_theta_ref(pm)
     constraint_complex_voltage(pm)
+
+    for (i,gen) in pm.set.gens
+        pg = getvariable(pm.model, :pg)[i]
+        @constraint(pm.model, pg >= gen["pmin"])
+    end
 
     for (i,bus) in pm.set.buses
         constraint_active_kcl_shunt_scaled(pm, bus)
