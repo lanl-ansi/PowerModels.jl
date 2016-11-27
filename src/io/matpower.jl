@@ -4,7 +4,16 @@
 #                                                                       #
 #########################################################################
 
+
+function parse_cell(lines, index)
+    return parse_matlab_data(lines, index, '{', '}')
+end
+
 function parse_matrix(lines, index)
+    return parse_matlab_data(lines, index, '[', ']')
+end
+
+function parse_matlab_data(lines, index, start_char, end_char)
     last_index = length(lines)
     line_count = 0
     columns = -1
@@ -22,7 +31,7 @@ function parse_matrix(lines, index)
 
     line_count = line_count + 1
     matrix_body_lines = [matrix_assignment_rhs]
-    found_close_bracket = contains(matrix_assignment_rhs, "]")
+    found_close_bracket = contains(matrix_assignment_rhs, string(end_char))
 
     while index + line_count < last_index && !found_close_bracket
         line = strip(lines[index+line_count])
@@ -32,27 +41,29 @@ function parse_matrix(lines, index)
             continue
         end
 
-        line = split(line, '%')[1]
+        line = strip(split(line, '%')[1])
 
-        if contains(line, "]")
+        if contains(line, string(end_char))
             found_close_bracket = true
         end
 
-        if contains(line, ";")
-            push!(matrix_body_lines, strip(split(line, '%')[1]))
-        end
+        push!(matrix_body_lines, line)
 
         line_count = line_count + 1
     end
 
+    #print(matrix_body_lines)
+    matrix_body_lines = [add_line_delimiter(line, start_char, end_char) for line in matrix_body_lines]
+    #print(matrix_body_lines)
+
     matrix_body = join(matrix_body_lines, ' ')
-    matrix_body = strip(replace(strip(strip(matrix_body), '['), "];", ""))
+    matrix_body = strip(replace(strip(strip(matrix_body), start_char), "$(end_char);", ""))
     matrix_body_rows = split(matrix_body, ';')
     matrix_body_rows = matrix_body_rows[1:(length(matrix_body_rows)-1)]
 
     maxtrix = []
     for row in matrix_body_rows
-        row_items = split(row, '\t')
+        row_items = split_line(strip(row))
         push!(maxtrix, row_items)
         if columns < 0
             columns = length(row_items)
@@ -62,6 +73,34 @@ function parse_matrix(lines, index)
     end
 
     return Dict("name" => matrix_name, "data" => maxtrix, "line_count" => line_count)
+end
+
+function split_line(mp_line)
+    if contains(mp_line, "'")
+        # TODO fix this so that it will split a string escaping single quoted strings
+        return strip(mp_line, '\'')
+    else
+        return split(mp_line)
+    end
+end
+
+function add_line_delimiter(mp_line, start_char, end_char)
+    if strip(mp_line) == string(start_char)
+        return mp_line
+    end
+
+    if ! contains(mp_line, ";") && ! contains(mp_line, string(end_char))
+        mp_line = "$(mp_line);"
+    end
+
+    if contains(mp_line, string(end_char)) 
+        prefix = strip(split(mp_line, end_char)[1])
+        if length(prefix) > 0 && ! contains(prefix, ";")
+            mp_line = replace(mp_line, end_char, ";$(end_char)")
+        end
+    end
+
+    return mp_line
 end
 
 
@@ -83,6 +122,11 @@ function parse_matpower(file_string)
         end
         if branch["angmax"] >= 90
             warn("this code only supports angmax values in -89 deg. to 89 deg., tightening the value on branch $(branch["index"]) from $(branch["angmax"]) to 60 deg.")
+            branch["angmax"] = 60.0
+        end
+        if branch["angmin"] == 0.0 && branch["angmax"] == 0.0
+            warn("angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- 60 deg.")
+            branch["angmin"] = -60.0
             branch["angmax"] = 60.0
         end
     end
@@ -118,6 +162,7 @@ function parse_matpower(file_string)
     return data
 end
 
+
 function parse_matpower_data(data_string)
 
     data_lines = split(data_string, '\n')
@@ -140,6 +185,7 @@ function parse_matpower_data(data_string)
     dcline = -1
 
     parsed_matrixes = []
+    parsed_cells = []
 
     last_index = length(data_lines)
     index = 1
@@ -161,6 +207,10 @@ function parse_matpower_data(data_string)
             matrix = parse_matrix(data_lines, index)
             push!(parsed_matrixes, matrix)
             index = index + matrix["line_count"]-1
+        elseif contains(line, "{")
+            cell = parse_cell(data_lines, index)
+            push!(parsed_cells, cell)
+            index = index + cell["line_count"]-1
         end
         index += 1
     end
@@ -203,6 +253,7 @@ function parse_matpower_data(data_string)
                     bus_data["mu_vmin"] = parse(Float64, bus_row[17])
                 end
 
+                bus_data["bus_name"] = "Bus $(bus_data["bus_i"])"
                 push!(buses, bus_data)
             end
 
@@ -269,14 +320,14 @@ function parse_matpower_data(data_string)
                     "angmax" => parse(Float64, branch_row[13]),
                 )
                 if length(branch_row) > 13
-                    branch_data["pf"] = parse(Float64, gen_row[14])
-                    branch_data["qf"] = parse(Float64, gen_row[15])
-                    branch_data["pt"] = parse(Float64, gen_row[16])
-                    branch_data["qt"] = parse(Float64, gen_row[17])
-                    branch_data["mu_sf"] = parse(Float64, gen_row[18])
-                    branch_data["mu_st"] = parse(Float64, gen_row[19])
-                    branch_data["mu_angmin"] = parse(Float64, gen_row[20])
-                    branch_data["mu_angmax"] = parse(Float64, gen_row[21])
+                    branch_data["pf"] = parse(Float64, branch_row[14])
+                    branch_data["qf"] = parse(Float64, branch_row[15])
+                    branch_data["pt"] = parse(Float64, branch_row[16])
+                    branch_data["qt"] = parse(Float64, branch_row[17])
+                    branch_data["mu_sf"] = parse(Float64, branch_row[18])
+                    branch_data["mu_st"] = parse(Float64, branch_row[19])
+                    branch_data["mu_angmin"] = parse(Float64, branch_row[20])
+                    branch_data["mu_angmax"] = parse(Float64, branch_row[21])
                 end
 
                 push!(branches, branch_data)
@@ -345,6 +396,25 @@ function parse_matpower_data(data_string)
         else
             println(parsed_matrix["name"])
             warn(string("unrecognized data matrix named \"", parsed_matrix["name"], "\" data was ignored."))
+        end
+    end
+
+
+    for parsed_cell in parsed_cells
+        #println(parsed_cell)
+        if parsed_cell["name"] == "mpc.bus_name" 
+
+            if length(parsed_cell["data"]) != length(case["bus"])
+                error("incorrect Matpower file, the number of bus names ($(length(parsed_cell["data"]))) is inconsistent with the number of buses ($(length(case["bus"]))).\n")
+            end
+
+            for (i, bus) in enumerate(case["bus"])
+                bus["bus_name"] = parsed_cell["data"][i]
+                #println(bus["bus_name"])
+            end
+        else
+            println(parsed_cell["name"])
+            warn(string("unrecognized data cell array named \"", parsed_cell["name"], "\" data was ignored."))
         end
 
     end
