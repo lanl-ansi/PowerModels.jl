@@ -50,12 +50,22 @@ end
 end
 
 @testset "test matpower extentions parser" begin
-    @testset "3-bus extended case data" begin
+    @testset "3-bus extended constants" begin
         data = PowerModels.parse_file("../test/data/case3.m")
 
         @test data["const_int"] == 123
         @test data["const_float"] == 4.56
         @test data["const_str"] == "a string"
+    end
+
+    @testset "3-bus extended matrix" begin
+        data = PowerModels.parse_file("../test/data/case3.m")
+
+        @test haskey(data, "areas")
+        @test data["areas"][1]["col_1"] == 1
+        @test data["areas"][1]["col_2"] == 1
+        @test data["areas"][2]["col_1"] == 2
+        @test data["areas"][2]["col_2"] == 3
     end
 
 end

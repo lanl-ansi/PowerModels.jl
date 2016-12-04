@@ -21,8 +21,10 @@ function parse_matlab_data(lines, index, start_char, end_char)
     assert(contains(lines[index+line_count], "="))
     matrix_assignment = split(lines[index+line_count], '%')[1]
     matrix_assignment = strip(matrix_assignment)
+
+    assert(contains(matrix_assignment, "mpc."))
     matrix_assignment_parts = split(matrix_assignment, '=')
-    matrix_name = strip(matrix_assignment_parts[1])
+    matrix_name = strip(replace(matrix_assignment_parts[1], "mpc.", ""))
 
     matrix_assignment_rhs = ""
     if length(matrix_assignment_parts) > 1
@@ -117,20 +119,45 @@ function extract_mpc_assignment(string)
     statement = replace(statement, "mpc.", "")
     name, value = split(statement, '=')
     name = strip(name)
-    value = strip(value)
-    
-    if contains(value, "'") # value is a string
-        value = strip(value, '\'')
+    value = type_value(strip(value))
+
+    return (name, value)
+end
+
+
+# Attempts to determine the type of a string extracted from a matlab file
+function type_value(value_string)
+    value_string = strip(value_string)
+
+    if contains(value_string, "'") # value is a string
+        value = strip(value_string, '\'')
     else
         # if value is a float
-        if contains(value, ".") || contains(value, "e")
-            value = parse(Float64, value)
+        if contains(value_string, ".") || contains(value_string, "e")
+            value = parse(Float64, value_string)
         else # otherwise assume it is an int
-            value = parse(Int, value)
+            value = parse(Int, value_string)
         end
     end
 
-    return (name, value)
+    return value
+end
+
+# Attempts to determine the type of an array of strings extracted from a matlab file
+function type_array(string_array)
+    value_string = [strip(value_string) for value_string in string_array]
+
+    if any([contains(value_string, "'") for value_string in string_array])
+        value_array = [strip(value_string, '\'') for value_string in string_array]
+    else
+        if any([contains(value_string, ".") || contains(value_string, "e") for value_string in string_array])
+            value_array = [parse(Float64, value_string) for value_string in string_array]
+        else # otherwise assume it is an int
+            value_array = [parse(Int, value_string) for value_string in string_array]
+        end
+    end
+
+    return value_array
 end
 
 
@@ -245,7 +272,7 @@ function parse_matpower_data(data_string)
         elseif contains(line, "mpc.")
             name, value = extract_mpc_assignment(line)
             case[name] = value
-            info("extending matpower format with constant value: $(name)")
+            info("extending matpower format with value named: $(name)")
         end
         index += 1
     end
@@ -268,7 +295,7 @@ function parse_matpower_data(data_string)
     for parsed_matrix in parsed_matrixes
         #println(parsed_matrix)
 
-        if parsed_matrix["name"] == "mpc.bus"
+        if parsed_matrix["name"] == "bus"
             buses = []
 
             for bus_row in parsed_matrix["data"]
@@ -301,7 +328,7 @@ function parse_matpower_data(data_string)
 
             case["bus"] = buses
 
-        elseif parsed_matrix["name"] == "mpc.gen"
+        elseif parsed_matrix["name"] == "gen"
             gens = []
 
             for (i, gen_row) in enumerate(parsed_matrix["data"])
@@ -341,7 +368,7 @@ function parse_matpower_data(data_string)
 
             case["gen"] = gens
 
-        elseif parsed_matrix["name"] == "mpc.branch"
+        elseif parsed_matrix["name"] == "branch"
             branches = []
 
             for (i, branch_row) in enumerate(parsed_matrix["data"])
@@ -377,7 +404,7 @@ function parse_matpower_data(data_string)
 
             case["branch"] = branches
 
-        elseif parsed_matrix["name"] == "mpc.gencost"
+        elseif parsed_matrix["name"] == "gencost"
             gencost = []
 
             for (i, gencost_row) in enumerate(parsed_matrix["data"])
@@ -398,7 +425,7 @@ function parse_matpower_data(data_string)
                 error("incorrect Matpower file, the number of generator cost functions ($(length(case["gencost"]))) is inconsistent with the number of generators ($(length(case["gen"]))).\n")
             end
 
-        elseif parsed_matrix["name"] == "mpc.dcline"
+        elseif parsed_matrix["name"] == "dcline"
             dclines = []
 
             for (i, dcline_row) in enumerate(parsed_matrix["data"])
@@ -435,15 +462,45 @@ function parse_matpower_data(data_string)
             end
 
         else
-            #println(parsed_matrix["name"])
-            warn(string("unrecognized data matrix named \"", parsed_matrix["name"], "\" data was ignored."))
+            name = parsed_matrix["name"]
+            data = parsed_matrix["data"]
+
+            info("extending matpower format with matrix: $(name) $(length(data))x$(length(data[1]))")
+
+            # TODO see if there is a more julia-y way of doing this
+
+            rows = length(data)
+            columns = length(data[1])
+
+            typed_columns = []
+
+            for c in 1:columns
+                column = [ data[r][c] for r in 1:rows ]
+                #println(column)
+                typed_column = type_array(column)
+                #println(typed_column)
+                push!(typed_columns, typed_column)
+            end
+
+            data = []
+            for r in 1:rows
+                data_dict = Dict{AbstractString,Any}()
+                data_dict["index"] = r
+                for c in 1:columns
+                    data_dict["col_$(c)"] = typed_columns[c][r]
+                end
+                push!(data, data_dict)
+            end
+
+            #println(data)
+            case[name] = data
         end
     end
 
 
     for parsed_cell in parsed_cells
         #println(parsed_cell)
-        if parsed_cell["name"] == "mpc.bus_name" 
+        if parsed_cell["name"] == "bus_name" 
 
             if length(parsed_cell["data"]) != length(case["bus"])
                 error("incorrect Matpower file, the number of bus names ($(length(parsed_cell["data"]))) is inconsistent with the number of buses ($(length(case["bus"]))).\n")
