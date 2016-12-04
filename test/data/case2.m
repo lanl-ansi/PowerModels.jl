@@ -1,5 +1,6 @@
 % Case to test space based matlab matrix
 % And other hard to parse cases
+
 function mpc = case2
 mpc.version = '2';
 mpc.baseMVA =  100.00;

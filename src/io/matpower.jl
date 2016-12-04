@@ -64,6 +64,7 @@ function parse_matlab_data(lines, index, start_char, end_char)
     maxtrix = []
     for row in matrix_body_rows
         row_items = split_line(strip(row))
+        #println(row_items)
         push!(maxtrix, row_items)
         if columns < 0
             columns = length(row_items)
@@ -78,7 +79,7 @@ end
 function split_line(mp_line)
     if contains(mp_line, "'")
         # TODO fix this so that it will split a string escaping single quoted strings
-        return strip(mp_line, '\'')
+        return [strip(mp_line, '\'')]
     else
         return split(mp_line)
     end
@@ -108,6 +109,28 @@ function extract_assignment(string)
     statement = split(string, ';')[1]
     value = split(statement, '=')[2]
     return strip(value)
+end
+
+function extract_mpc_assignment(string)
+    assert(contains(string, "mpc."))
+    statement = split(string, ';')[1]
+    statement = replace(statement, "mpc.", "")
+    name, value = split(statement, '=')
+    name = strip(name)
+    value = strip(value)
+    
+    if contains(value, "'") # value is a string
+        value = strip(value, '\'')
+    else
+        # if value is a float
+        if contains(value, ".") || contains(value, "e")
+            value = parse(Float64, value)
+        else # otherwise assume it is an int
+            value = parse(Int, value)
+        end
+    end
+
+    return (name, value)
 end
 
 
@@ -200,9 +223,9 @@ function parse_matpower_data(data_string)
         if contains(line, "function mpc")
             name = extract_assignment(line)
         elseif contains(line, "mpc.version")
-            version = extract_assignment(line)
+            version = extract_mpc_assignment(line)[2]
         elseif contains(line, "mpc.baseMVA")
-            baseMVA = parse(Float64, extract_assignment(line))
+            baseMVA = extract_mpc_assignment(line)[2]
         elseif contains(line, "[")
             matrix = parse_matrix(data_lines, index)
             push!(parsed_matrixes, matrix)
@@ -211,6 +234,9 @@ function parse_matpower_data(data_string)
             cell = parse_cell(data_lines, index)
             push!(parsed_cells, cell)
             index = index + cell["line_count"]-1
+        elseif contains(line, "mpc.")
+            name, value = extract_mpc_assignment(line)
+            warn(string("unrecognized assignment \"$(name) = $(value)\""))
         end
         index += 1
     end
@@ -392,9 +418,8 @@ function parse_matpower_data(data_string)
                 push!(dclines, dcline_data)
             end
 
-
         else
-            println(parsed_matrix["name"])
+            #println(parsed_matrix["name"])
             warn(string("unrecognized data matrix named \"", parsed_matrix["name"], "\" data was ignored."))
         end
     end
@@ -409,11 +434,11 @@ function parse_matpower_data(data_string)
             end
 
             for (i, bus) in enumerate(case["bus"])
-                bus["bus_name"] = parsed_cell["data"][i]
+                bus["bus_name"] = parsed_cell["data"][i][1]
                 #println(bus["bus_name"])
             end
         else
-            println(parsed_cell["name"])
+            #println(parsed_cell["name"])
             warn(string("unrecognized data cell array named \"", parsed_cell["name"], "\" data was ignored."))
         end
 
