@@ -210,6 +210,11 @@ function parse_matpower_data(data_string)
     parsed_matrixes = []
     parsed_cells = []
 
+    case = Dict{AbstractString,Any}(
+        "dcline" => [],
+        "gencost" => []
+    )
+
     last_index = length(data_lines)
     index = 1
     while index <= last_index
@@ -222,10 +227,13 @@ function parse_matpower_data(data_string)
 
         if contains(line, "function mpc")
             name = extract_assignment(line)
+            case["name"] = name
         elseif contains(line, "mpc.version")
             version = extract_mpc_assignment(line)[2]
+            case["version"] = version
         elseif contains(line, "mpc.baseMVA")
             baseMVA = extract_mpc_assignment(line)[2]
+            case["baseMVA"] = baseMVA
         elseif contains(line, "[")
             matrix = parse_matrix(data_lines, index)
             push!(parsed_matrixes, matrix)
@@ -236,18 +244,26 @@ function parse_matpower_data(data_string)
             index = index + cell["line_count"]-1
         elseif contains(line, "mpc.")
             name, value = extract_mpc_assignment(line)
-            warn(string("unrecognized assignment \"$(name) = $(value)\""))
+            case[name] = value
+            info("extending matpower format with constant value: $(name)")
         end
         index += 1
     end
 
-    case = Dict{AbstractString,Any}(
-        "name" => name,
-        "version" => version,
-        "baseMVA" => baseMVA,
-        "dcline" => [],
-        "gencost" => []
-    )
+    if !haskey(case, "name")
+        warn(string("no case name found in matpower file.  The file seems to be missing \"function mpc = ...\""))
+        case["name"] = "no_name_found"
+    end
+
+    if !haskey(case, "version")
+        warn(string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
+        case["version"] = "unknown"
+    end
+
+    if !haskey(case, "baseMVA")
+        warn(string("no baseMVA found in matpower file.  The file seems to be missing \"mpc.baseMVA = ...\""))
+        case["baseMVA"] = 1.0
+    end
 
     for parsed_matrix in parsed_matrixes
         #println(parsed_matrix)

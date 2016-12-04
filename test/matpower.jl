@@ -6,7 +6,7 @@
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
     end
 
-    @testset "30-bus case json data" begin
+    @testset "30-bus case matpower data" begin
         data = PowerModels.parse_file("../test/data/case30.m")
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
@@ -47,4 +47,15 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 8075.1; atol = 1e0)
     end
+end
+
+@testset "test matpower extentions parser" begin
+    @testset "3-bus extended case data" begin
+        data = PowerModels.parse_file("../test/data/case3.m")
+
+        @test data["const_int"] == 123
+        @test data["const_float"] == 4.56
+        @test data["const_str"] == "a string"
+    end
+
 end
