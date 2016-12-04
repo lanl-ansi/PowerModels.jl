@@ -68,4 +68,13 @@ end
         @test data["areas"][2]["col_2"] == 3
     end
 
+    @testset "3-bus extended named matrix" begin
+        data = PowerModels.parse_file("../test/data/case3.m")
+
+        @test haskey(data, "areas_named")
+        @test data["areas_named"][1]["area"] == 4
+        @test data["areas_named"][1]["refbus"] == 5
+        @test data["areas_named"][2]["area"] == 5
+        @test data["areas_named"][2]["refbus"] == 6
+    end
 end

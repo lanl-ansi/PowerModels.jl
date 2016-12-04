@@ -63,11 +63,11 @@ function parse_matlab_data(lines, index, start_char, end_char)
     matrix_body_rows = split(matrix_body, ';')
     matrix_body_rows = matrix_body_rows[1:(length(matrix_body_rows)-1)]
 
-    maxtrix = []
+    matrix = []
     for row in matrix_body_rows
         row_items = split_line(strip(row))
         #println(row_items)
-        push!(maxtrix, row_items)
+        push!(matrix, row_items)
         if columns < 0
             columns = length(row_items)
         elseif columns != length(row_items)
@@ -75,7 +75,19 @@ function parse_matlab_data(lines, index, start_char, end_char)
         end
     end
 
-    return Dict("name" => matrix_name, "data" => maxtrix, "line_count" => line_count)
+    matrix_dict = Dict("name" => matrix_name, "data" => matrix, "line_count" => line_count)
+
+    if index > 1 && contains(lines[index-1], "%column_names%")
+        column_names_string = lines[index-1]
+        column_names_string = replace(column_names_string, "%column_names%", "")
+        column_names = split(column_names_string)
+        if length(matrix[1]) != length(column_names)
+            error("matrix column name parsing error, matrix rows $(length(matrix[1])), column names $(length(column_names)) \n$(column_names)")
+        end
+        matrix_dict["column_names"] = column_names
+    end
+
+    return matrix_dict
 end
 
 function split_line(mp_line)
@@ -471,6 +483,11 @@ function parse_matpower_data(data_string)
 
             rows = length(data)
             columns = length(data[1])
+            column_names = ["col_$(c)" for c in 1:columns]
+
+            if haskey(parsed_matrix, "column_names")
+                column_names = parsed_matrix["column_names"]
+            end
 
             typed_columns = []
 
@@ -487,7 +504,7 @@ function parse_matpower_data(data_string)
                 data_dict = Dict{AbstractString,Any}()
                 data_dict["index"] = r
                 for c in 1:columns
-                    data_dict["col_$(c)"] = typed_columns[c][r]
+                    data_dict[column_names[c]] = typed_columns[c][r]
                 end
                 push!(data, data_dict)
             end
@@ -514,7 +531,6 @@ function parse_matpower_data(data_string)
             #println(parsed_cell["name"])
             warn(string("unrecognized data cell array named \"", parsed_cell["name"], "\" data was ignored."))
         end
-
     end
 
     #println("Case:")

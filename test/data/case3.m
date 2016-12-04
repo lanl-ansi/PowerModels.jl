@@ -44,3 +44,14 @@ mpc.area_cells = {
 	'Area 1'	'Slack Bus 1'	123;
 	'Area 2'	'Slack Bus 3'	4.56;
 };
+
+
+% named column table
+%column_names%	area	refbus
+mpc.areas_named = [
+	4	5;
+	5	6;
+];
+
+
+
