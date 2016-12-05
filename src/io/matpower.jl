@@ -477,10 +477,6 @@ function parse_matpower_data(data_string)
             name = parsed_matrix["name"]
             data = parsed_matrix["data"]
 
-            info("extending matpower format with matrix: $(name) $(length(data))x$(length(data[1]))")
-
-            # TODO see if there is a more julia-y way of doing this
-
             rows = length(data)
             columns = length(data[1])
             column_names = ["col_$(c)" for c in 1:columns]
@@ -488,6 +484,8 @@ function parse_matpower_data(data_string)
             if haskey(parsed_matrix, "column_names")
                 column_names = parsed_matrix["column_names"]
             end
+
+            # TODO see if there is a more julia-y way of doing this
 
             typed_columns = []
 
@@ -499,18 +497,55 @@ function parse_matpower_data(data_string)
                 push!(typed_columns, typed_column)
             end
 
-            data = []
+            typed_data = []
             for r in 1:rows
                 data_dict = Dict{AbstractString,Any}()
                 data_dict["index"] = r
                 for c in 1:columns
                     data_dict[column_names[c]] = typed_columns[c][r]
                 end
-                push!(data, data_dict)
+                push!(typed_data, data_dict)
             end
+            #println(typed_data)
 
-            #println(data)
-            case[name] = data
+            matpower_matrix_names = ["bus", "gen", "branch", "dcline"]
+            if any([startswith(name, "$(mp_name)_") for mp_name in matpower_matrix_names])
+
+                mp_name = "none"
+                mp_matrix = "none"
+
+                for mp_name in matpower_matrix_names
+                    if startswith(name, "$(mp_name)_")
+                        mp_matrix = case[mp_name]
+                        break
+                    end
+                end
+
+                if !haskey(parsed_matrix, "column_names")
+                    error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because it does not have column names.")
+                end
+
+                if length(mp_matrix) != length(typed_data)
+                    error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because they do not have the same number of rows, $(length(mp_matrix)) and $(length(typed_data)) respectively.")
+                end
+
+                info("extending matpower format by appending matrix \"$(name)\" onto \"$(mp_name)\"")
+                for (i, row) in enumerate(mp_matrix)
+                    merge_row = typed_data[i]
+                    assert(row["index"] == merge_row["index"])
+                    delete!(merge_row, "index")
+                    for key in keys(merge_row)
+                        if haskey(row, key)
+                            error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because they both share \"$(key)\" as a column name.")
+                        end
+                        row[key] = merge_row[key]
+                    end
+                end
+                
+            else
+                info("extending matpower format with matrix: $(name) $(length(data))x$(length(data[1]))")
+                case[name] = typed_data
+            end
         end
     end
 

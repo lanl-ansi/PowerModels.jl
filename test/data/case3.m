@@ -29,6 +29,8 @@ mpc.branch = [
 ];
 
 
+% matpower data format extentions
+
 mpc.const_int = 123;
 mpc.const_float = 4.56
 mpc.const_str = 'a string';
@@ -45,13 +47,25 @@ mpc.area_cells = {
 	'Area 2'	'Slack Bus 3'	4.56;
 };
 
-
 % named column table
 %column_names%	area	refbus
 mpc.areas_named = [
 	4	5;
 	5	6;
 ];
+
+% add two new columns to "branch" matrix
+%column_names%	rate_i	rate_p
+mpc.branch_limit = [
+	50.2	45;
+	36	60.1;
+	12	30;
+];
+
+
+
+
+
 
 
 

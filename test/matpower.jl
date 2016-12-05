@@ -77,4 +77,17 @@ end
         @test data["areas_named"][2]["area"] == 5
         @test data["areas_named"][2]["refbus"] == 6
     end
+
+    @testset "3-bus extended predefined matrix" begin
+        data = PowerModels.parse_file("../test/data/case3.m")
+
+        @test haskey(data, "areas_named")
+        @test data["branch"][1]["rate_i"] == 50.2
+        @test data["branch"][1]["rate_p"] == 45
+        @test data["branch"][2]["rate_i"] == 36
+        @test data["branch"][2]["rate_p"] == 60.1
+        @test data["branch"][3]["rate_i"] == 12
+        @test data["branch"][3]["rate_p"] == 30
+    end
 end
+
