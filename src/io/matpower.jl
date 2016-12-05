@@ -96,8 +96,56 @@ end
 
 function split_line(mp_line)
     if contains(mp_line, "'")
-        # TODO fix this so that it will split a string escaping single quoted strings
-        return [strip(mp_line, '\'')]
+        # splits a string on white space escaping text quoted with "'"
+        # note that quotes will be stripped later, when data typing occurs
+        # TODO is this really the best we can do here???  gonna be super slow
+
+        #println(mp_line)
+        tokens = []
+
+        buffer = ""
+        open = false
+        prev = "none"
+        for c in mp_line
+            if c == '\'' && prev != '\\'
+                if !open
+                    open = true
+                    if length(strip(buffer)) > 0
+                        push!(tokens, buffer)
+                    end
+                    buffer = ""
+                    buffer = string(buffer, c)
+                else
+                    open = false
+                    buffer = string(buffer, c)
+                    if length(strip(buffer)) > 0
+                        push!(tokens, buffer)
+                    end
+                    buffer = ""
+                end
+            else
+                buffer = string(buffer, c)
+            end
+            prev = c
+        end
+        push!(tokens, buffer)
+
+        #println(tokens)
+
+        items = []
+        for token in tokens
+            if contains(token, "'")
+                push!(items, token)
+            else
+                for parts in split(token)
+                    push!(items, parts)
+                end
+            end
+        end
+        #println(items)
+
+        #return [strip(mp_line, '\'')]
+        return items
     else
         return split(mp_line)
     end
@@ -502,13 +550,12 @@ function parse_matpower_data(data_string)
             end
 
             for (i, bus) in enumerate(case["bus"])
-                bus["bus_name"] = parsed_cell["data"][i][1]
+                # note striping the single quotes is not necessary in general, column typing takes care of this
+                bus["bus_name"] = strip(parsed_cell["data"][i][1], '\'')
                 #println(bus["bus_name"])
             end
         else
-            #println(parsed_cell["name"])
-            #warn(string("unrecognized data cell array named \"", parsed_cell["name"], "\" data was ignored."))
-
+        
             name = parsed_cell["name"]
             data = parsed_cell["data"]
 

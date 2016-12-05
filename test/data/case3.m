@@ -31,21 +31,19 @@ mpc.branch = [
 
 % matpower data format extentions
 
+% adding single values
 mpc.const_int = 123;
 mpc.const_float = 4.56
 mpc.const_str = 'a string';
+
+
+% adding extra matrix values
 
 % generic table, comes in a matrix
 mpc.areas = [
 	1	1;
 	2	3;
 ];
-
-% generic cell, comes in a matrix
-mpc.area_cells = {
-	'Area 1'	'Slack Bus 1'	123;
-	'Area 2'	'Slack Bus 3'	4.56;
-};
 
 % named column table
 %column_names%	area	refbus
@@ -63,8 +61,25 @@ mpc.branch_limit = [
 ];
 
 
+% adding extra cell values
 
+mpc.areas_cells = {
+	'Area 1'	123	'Slack Bus 1'	1.23;
+	'Area 2'	456	'Slack Bus 3'	4.56;
+};
 
+%column_names%	area_name	area	refbus_name	refbus
+mpc.areas_named_cells = {
+	'Area 1'	123	'Slack Bus 1'	1.23;
+	'Area 2'	456	'Slack Bus 3'	4.56;
+};
+
+%column_names%	name	number_id
+mpc.branch_names = {
+	'Branch 1'	123;
+	'Branch 2'	456;
+	'Branch 3'	789;
+};
 
 
 
