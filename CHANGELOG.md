@@ -2,8 +2,10 @@ PowerModels.jl Change Log
 =================
 
 ### staged
-- Increased robustness of matlab parsing
-- Added support for reading matpower bus_names
+- Multiple improvements to Matlab file parsing
+  - Added support matlab cell arrays
+  - Added support for matpower bus_names
+  - Added ability for reading non-standard matpower data elements
 
 ### v0.2.2
 - Added Transmission Network Expansion Planning (tnep) problem.

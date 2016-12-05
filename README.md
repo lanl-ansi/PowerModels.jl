@@ -24,7 +24,7 @@ This enables the definition of a wide variety of power network formulations and 
 * QC Relaxation (W+L-space)
 
 **Network Data Formats**
-* Matpower ".m" files
+* Matpower ".m" files (see DATA.md for details)
 
 
 ## Installation
