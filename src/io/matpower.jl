@@ -5,6 +5,7 @@
 #########################################################################
 
 
+
 function parse_cell(lines, index)
     return parse_matlab_data(lines, index, '{', '}')
 end
@@ -82,7 +83,10 @@ function parse_matlab_data(lines, index, start_char, end_char)
         column_names_string = replace(column_names_string, "%column_names%", "")
         column_names = split(column_names_string)
         if length(matrix[1]) != length(column_names)
-            error("matrix column name parsing error, matrix rows $(length(matrix[1])), column names $(length(column_names)) \n$(column_names)")
+            error("column name parsing error, data rows $(length(matrix[1])), column names $(length(column_names)) \n$(column_names)")
+        end
+        if any([column_name == "index" for column_name in column_names])
+            error("column name parsing error, \"index\" is a reserved column name \n$(column_names)")
         end
         matrix_dict["column_names"] = column_names
     end
@@ -477,75 +481,14 @@ function parse_matpower_data(data_string)
             name = parsed_matrix["name"]
             data = parsed_matrix["data"]
 
-            rows = length(data)
-            columns = length(data[1])
-            column_names = ["col_$(c)" for c in 1:columns]
-
+            column_names = ["col_$(c)" for c in 1:length(data[1])]
             if haskey(parsed_matrix, "column_names")
                 column_names = parsed_matrix["column_names"]
             end
 
-            # TODO see if there is a more julia-y way of doing this
+            typed_dict_data = build_typed_dict(data, column_names)
 
-            typed_columns = []
-
-            for c in 1:columns
-                column = [ data[r][c] for r in 1:rows ]
-                #println(column)
-                typed_column = type_array(column)
-                #println(typed_column)
-                push!(typed_columns, typed_column)
-            end
-
-            typed_data = []
-            for r in 1:rows
-                data_dict = Dict{AbstractString,Any}()
-                data_dict["index"] = r
-                for c in 1:columns
-                    data_dict[column_names[c]] = typed_columns[c][r]
-                end
-                push!(typed_data, data_dict)
-            end
-            #println(typed_data)
-
-            matpower_matrix_names = ["bus", "gen", "branch", "dcline"]
-            if any([startswith(name, "$(mp_name)_") for mp_name in matpower_matrix_names])
-
-                mp_name = "none"
-                mp_matrix = "none"
-
-                for mp_name in matpower_matrix_names
-                    if startswith(name, "$(mp_name)_")
-                        mp_matrix = case[mp_name]
-                        break
-                    end
-                end
-
-                if !haskey(parsed_matrix, "column_names")
-                    error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because it does not have column names.")
-                end
-
-                if length(mp_matrix) != length(typed_data)
-                    error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because they do not have the same number of rows, $(length(mp_matrix)) and $(length(typed_data)) respectively.")
-                end
-
-                info("extending matpower format by appending matrix \"$(name)\" onto \"$(mp_name)\"")
-                for (i, row) in enumerate(mp_matrix)
-                    merge_row = typed_data[i]
-                    assert(row["index"] == merge_row["index"])
-                    delete!(merge_row, "index")
-                    for key in keys(merge_row)
-                        if haskey(row, key)
-                            error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because they both share \"$(key)\" as a column name.")
-                        end
-                        row[key] = merge_row[key]
-                    end
-                end
-                
-            else
-                info("extending matpower format with matrix: $(name) $(length(data))x$(length(data[1]))")
-                case[name] = typed_data
-            end
+            extend_case_data(case, name, typed_dict_data, haskey(parsed_matrix, "column_names"))
         end
     end
 
@@ -564,7 +507,19 @@ function parse_matpower_data(data_string)
             end
         else
             #println(parsed_cell["name"])
-            warn(string("unrecognized data cell array named \"", parsed_cell["name"], "\" data was ignored."))
+            #warn(string("unrecognized data cell array named \"", parsed_cell["name"], "\" data was ignored."))
+
+            name = parsed_cell["name"]
+            data = parsed_cell["data"]
+
+            column_names = ["col_$(c)" for c in 1:length(data[1])]
+            if haskey(parsed_cell, "column_names")
+                column_names = parsed_cell["column_names"]
+            end
+
+            typed_dict_data = build_typed_dict(data, column_names)
+
+            extend_case_data(case, name, typed_dict_data, haskey(parsed_cell, "column_names"))
         end
     end
 
@@ -573,3 +528,76 @@ function parse_matpower_data(data_string)
 
     return case
 end
+
+# takes a list of list of strings and turns it into a list of typed dictionaries
+function build_typed_dict(data, column_names)
+    # TODO see if there is a more julia-y way of doing this
+    rows = length(data)
+    columns = length(data[1])
+
+    typed_columns = []
+    for c in 1:columns
+        column = [ data[r][c] for r in 1:rows ]
+        #println(column)
+        typed_column = type_array(column)
+        #println(typed_column)
+        push!(typed_columns, typed_column)
+    end
+
+    typed_data = []
+    for r in 1:rows
+        data_dict = Dict{AbstractString,Any}()
+        data_dict["index"] = r
+        for c in 1:columns
+            data_dict[column_names[c]] = typed_columns[c][r]
+        end
+        push!(typed_data, data_dict)
+    end
+    #println(typed_data)
+
+    return typed_data
+end
+
+# extends a give case data with typed dictionary data
+function extend_case_data(case, name, typed_dict_data, has_column_names)
+    matpower_matrix_names = ["bus", "gen", "branch", "dcline"]
+
+    if any([startswith(name, "$(mp_name)_") for mp_name in matpower_matrix_names])
+        mp_name = "none"
+        mp_matrix = "none"
+
+        for mp_name in matpower_matrix_names
+            if startswith(name, "$(mp_name)_")
+                mp_matrix = case[mp_name]
+                break
+            end
+        end
+
+        if !has_column_names
+            error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because it does not have column names.")
+        end
+
+        if length(mp_matrix) != length(typed_dict_data)
+            error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because they do not have the same number of rows, $(length(mp_matrix)) and $(length(typed_dict_data)) respectively.")
+        end
+
+        info("extending matpower format by appending matrix \"$(name)\" onto \"$(mp_name)\"")
+        for (i, row) in enumerate(mp_matrix)
+            merge_row = typed_dict_data[i]
+            assert(row["index"] == merge_row["index"])
+            delete!(merge_row, "index")
+            for key in keys(merge_row)
+                if haskey(row, key)
+                    error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because they both share \"$(key)\" as a column name.")
+                end
+                row[key] = merge_row[key]
+            end
+        end
+
+    else
+        # minus 1 for excluding added "index" key
+        info("extending matpower format with data: $(name) $(length(typed_dict_data))x$(length(typed_dict_data[1])-1)")
+        case[name] = typed_dict_data
+    end
+end
+
