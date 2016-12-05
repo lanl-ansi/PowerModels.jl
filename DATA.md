@@ -105,6 +105,7 @@ becomes,
         "col_2":3
     }
 ]
+}
 ```
 
 #### Column Names
@@ -131,6 +132,7 @@ becomes,
         "refbus":6
     }
 ]
+}
 ```
 
 #### Standard Matrix Extentions
@@ -167,6 +169,7 @@ becomes,
         "rate_p":30
     }
 ]
+}
 ```
 
 
