@@ -39,7 +39,7 @@ The network data dictionary structure is roughly as follows,
         "t_bus":<int>,
         "br_r":<int>,
         ...
-    }
+    },
     ...
 ],
 "gencost":[
@@ -52,11 +52,12 @@ The network data dictionary structure is roughly as follows,
     },
     ...
 ]
+}
 ```
 
 For a detailed list of all possible parameters please refer to the specification document provided with [Matpower](http://www.pserc.cornell.edu/matpower/).  In addition to the traditional Matpower parameters every network component in the PowerModels dictionary has an `index` parameter, which can be used to uniquely identify that network element.
 
-It is also important to note that although the Matpower format contains values in mixed units during the data setup phase of PowerModels.jl all of data values are converted to per unit and radian values.
+It is also important to note that although the Matpower format contains values in mixed units, during PowerModels data setup phase all of the data values are converted to per-unit and radian values.
 
 
 ## Matpower Data Files
@@ -69,7 +70,8 @@ To that end PowerModels also has extensive support for parsing Matpower network 
 
 In addition to parsing the standard Matpower parameters, PowerModels also supports extending the standard Matpower format in a number of ways as illustrated by the following examples.  In these examples a JSON document fragments are used to indicate the structure of the PowerModel dictionary.
 
-Adding single values,
+#### Single Values
+Single values are added to the root of the dictionary as follows,
 ```
 mpc.const_float = 4.56
 ```
@@ -80,7 +82,8 @@ becomes,
 }
 ```
 
-Adding new matrices,
+#### Nonstandard Matrices
+Nonstandard matrices can be added as follows,
 ```
 mpc.areas = [
     1   1;
@@ -104,7 +107,8 @@ becomes,
 ]
 ```
 
-Column names can be given to matrices using the following special comment,
+#### Column Names
+Column names can be given to nonstandard matrices using the following special comment,
 ```
 %column_names%  area    refbus
 mpc.areas_named = [
@@ -129,9 +133,9 @@ becomes,
 ]
 ```
 
-Finally, if a new matrix's name extends a current Matpower matrix name with an underscore, then its values will be merged with the original Matpower data matrix.  Note that this feature requires that the new matrix column names and is the same length as the original matrix.  For example,
+#### Standard Matrix Extentions
+Finally, if a nonstandard matrix's name extends a current Matpower matrix name with an underscore, then its values will be merged with the original Matpower component data.  Note that this feature requires that the nonstandard matrix has column names and has the same number of rows as the original matrix (similar to the `gencost` matrix in the Matpower format).  For example,
 ```
-% add two new columns to "branch" matrix
 %column_names%  rate_i  rate_p
 mpc.branch_limit = [
     50.2    45;
