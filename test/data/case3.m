@@ -64,14 +64,14 @@ mpc.branch_limit = [
 % adding extra cell values
 
 mpc.areas_cells = {
-	'Area 1'	123	'Slack Bus 1'	1.23;
-	'Area 2'	456	'Slack Bus 3'	4.56;
+	'Area 1'	123	987	'Slack \'Bus\' 1'	1.23	;
+	'Area 2'	456	987	'Slack Bus 3'	4.56	;
 };
 
-%column_names%	area_name	area	refbus_name	refbus
+%column_names%	area_name	area	area2	refbus_name	refbus
 mpc.areas_named_cells = {
-	'Area 1'	123	'Slack Bus 1'	1.23;
-	'Area 2'	456	'Slack Bus 3'	4.56;
+	'Area 1'	123  987	'Slack Bus 1'	1.23;
+	'Area 2'	456  987	'Slack Bus 3'	4.56;
 };
 
 %column_names%	name	number_id

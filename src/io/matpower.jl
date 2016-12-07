@@ -94,51 +94,39 @@ function parse_matlab_data(lines, index, start_char, end_char)
     return matrix_dict
 end
 
+
+single_quote_expr = r"\'((\\.|[^\'])*?)\'"
+
 function split_line(mp_line)
-    if contains(mp_line, "'")
-        # splits a string on white space escaping text quoted with "'"
+    if ismatch(single_quote_expr, mp_line)
+        # splits a string on white space while escaping text quoted with "'"
         # note that quotes will be stripped later, when data typing occurs
-        # TODO is this really the best we can do here???  gonna be super slow
 
         #println(mp_line)
         tokens = []
+        while length(mp_line) > 0 && ismatch(single_quote_expr, mp_line)
+            #println(mp_line)
+            m = match(single_quote_expr, mp_line)
 
-        buffer = ""
-        open = false
-        prev = "none"
-        for c in mp_line
-            if c == '\'' && prev != '\\'
-                if !open
-                    open = true
-                    if length(strip(buffer)) > 0
-                        push!(tokens, buffer)
-                    end
-                    buffer = ""
-                    buffer = string(buffer, c)
-                else
-                    open = false
-                    buffer = string(buffer, c)
-                    if length(strip(buffer)) > 0
-                        push!(tokens, buffer)
-                    end
-                    buffer = ""
-                end
-            else
-                buffer = string(buffer, c)
+            if m.offset > 1
+                push!(tokens, mp_line[1:m.offset-1])
             end
-            prev = c
-        end
-        push!(tokens, buffer)
+            push!(tokens, replace(m.match, "\\'", "'")) # replace escaped quotes
 
+            mp_line = mp_line[m.offset+length(m.match):end]
+        end
+        if length(mp_line) > 0
+            push!(tokens, mp_line)
+        end
         #println(tokens)
 
         items = []
         for token in tokens
             if contains(token, "'")
-                push!(items, token)
+                push!(items, strip(token))
             else
                 for parts in split(token)
-                    push!(items, parts)
+                    push!(items, strip(parts))
                 end
             end
         end

@@ -97,12 +97,12 @@ end
         @test haskey(data, "areas_cells")
         @test data["areas_cells"][1]["col_1"] == "Area 1"
         @test data["areas_cells"][1]["col_2"] == 123
-        @test data["areas_cells"][1]["col_3"] == "Slack Bus 1"
-        @test data["areas_cells"][1]["col_4"] == 1.23
+        @test data["areas_cells"][1]["col_4"] == "Slack 'Bus' 1"
+        @test data["areas_cells"][1]["col_5"] == 1.23
         @test data["areas_cells"][2]["col_1"] == "Area 2"
         @test data["areas_cells"][2]["col_2"] == 456
-        @test data["areas_cells"][2]["col_3"] == "Slack Bus 3"
-        @test data["areas_cells"][2]["col_4"] == 4.56
+        @test data["areas_cells"][2]["col_4"] == "Slack Bus 3"
+        @test data["areas_cells"][2]["col_5"] == 4.56
     end
 
     @testset "3-bus extended named matrix from cell" begin
@@ -111,10 +111,12 @@ end
         @test haskey(data, "areas_named_cells")
         @test data["areas_named_cells"][1]["area_name"] == "Area 1"
         @test data["areas_named_cells"][1]["area"] == 123
+        @test data["areas_named_cells"][1]["area2"] == 987
         @test data["areas_named_cells"][1]["refbus_name"] == "Slack Bus 1"
         @test data["areas_named_cells"][1]["refbus"] == 1.23
         @test data["areas_named_cells"][2]["area_name"] == "Area 2"
         @test data["areas_named_cells"][2]["area"] == 456
+        @test data["areas_named_cells"][2]["area2"] == 987
         @test data["areas_named_cells"][2]["refbus_name"] == "Slack Bus 3"
         @test data["areas_named_cells"][2]["refbus"] == 4.56
     end
