@@ -5,6 +5,7 @@
 #########################################################################
 
 
+
 function parse_cell(lines, index)
     return parse_matlab_data(lines, index, '{', '}')
 end
@@ -21,8 +22,10 @@ function parse_matlab_data(lines, index, start_char, end_char)
     assert(contains(lines[index+line_count], "="))
     matrix_assignment = split(lines[index+line_count], '%')[1]
     matrix_assignment = strip(matrix_assignment)
+
+    assert(contains(matrix_assignment, "mpc."))
     matrix_assignment_parts = split(matrix_assignment, '=')
-    matrix_name = strip(matrix_assignment_parts[1])
+    matrix_name = strip(replace(matrix_assignment_parts[1], "mpc.", ""))
 
     matrix_assignment_rhs = ""
     if length(matrix_assignment_parts) > 1
@@ -61,10 +64,11 @@ function parse_matlab_data(lines, index, start_char, end_char)
     matrix_body_rows = split(matrix_body, ';')
     matrix_body_rows = matrix_body_rows[1:(length(matrix_body_rows)-1)]
 
-    maxtrix = []
+    matrix = []
     for row in matrix_body_rows
         row_items = split_line(strip(row))
-        push!(maxtrix, row_items)
+        #println(row_items)
+        push!(matrix, row_items)
         if columns < 0
             columns = length(row_items)
         elseif columns != length(row_items)
@@ -72,13 +76,64 @@ function parse_matlab_data(lines, index, start_char, end_char)
         end
     end
 
-    return Dict("name" => matrix_name, "data" => maxtrix, "line_count" => line_count)
+    matrix_dict = Dict("name" => matrix_name, "data" => matrix, "line_count" => line_count)
+
+    if index > 1 && contains(lines[index-1], "%column_names%")
+        column_names_string = lines[index-1]
+        column_names_string = replace(column_names_string, "%column_names%", "")
+        column_names = split(column_names_string)
+        if length(matrix[1]) != length(column_names)
+            error("column name parsing error, data rows $(length(matrix[1])), column names $(length(column_names)) \n$(column_names)")
+        end
+        if any([column_name == "index" for column_name in column_names])
+            error("column name parsing error, \"index\" is a reserved column name \n$(column_names)")
+        end
+        matrix_dict["column_names"] = column_names
+    end
+
+    return matrix_dict
 end
 
+
+single_quote_expr = r"\'((\\.|[^\'])*?)\'"
+
 function split_line(mp_line)
-    if contains(mp_line, "'")
-        # TODO fix this so that it will split a string escaping single quoted strings
-        return strip(mp_line, '\'')
+    if ismatch(single_quote_expr, mp_line)
+        # splits a string on white space while escaping text quoted with "'"
+        # note that quotes will be stripped later, when data typing occurs
+
+        #println(mp_line)
+        tokens = []
+        while length(mp_line) > 0 && ismatch(single_quote_expr, mp_line)
+            #println(mp_line)
+            m = match(single_quote_expr, mp_line)
+
+            if m.offset > 1
+                push!(tokens, mp_line[1:m.offset-1])
+            end
+            push!(tokens, replace(m.match, "\\'", "'")) # replace escaped quotes
+
+            mp_line = mp_line[m.offset+length(m.match):end]
+        end
+        if length(mp_line) > 0
+            push!(tokens, mp_line)
+        end
+        #println(tokens)
+
+        items = []
+        for token in tokens
+            if contains(token, "'")
+                push!(items, strip(token))
+            else
+                for parts in split(token)
+                    push!(items, strip(parts))
+                end
+            end
+        end
+        #println(items)
+
+        #return [strip(mp_line, '\'')]
+        return items
     else
         return split(mp_line)
     end
@@ -108,6 +163,53 @@ function extract_assignment(string)
     statement = split(string, ';')[1]
     value = split(statement, '=')[2]
     return strip(value)
+end
+
+function extract_mpc_assignment(string)
+    assert(contains(string, "mpc."))
+    statement = split(string, ';')[1]
+    statement = replace(statement, "mpc.", "")
+    name, value = split(statement, '=')
+    name = strip(name)
+    value = type_value(strip(value))
+
+    return (name, value)
+end
+
+
+# Attempts to determine the type of a string extracted from a matlab file
+function type_value(value_string)
+    value_string = strip(value_string)
+
+    if contains(value_string, "'") # value is a string
+        value = strip(value_string, '\'')
+    else
+        # if value is a float
+        if contains(value_string, ".") || contains(value_string, "e")
+            value = parse(Float64, value_string)
+        else # otherwise assume it is an int
+            value = parse(Int, value_string)
+        end
+    end
+
+    return value
+end
+
+# Attempts to determine the type of an array of strings extracted from a matlab file
+function type_array(string_array)
+    value_string = [strip(value_string) for value_string in string_array]
+
+    if any([contains(value_string, "'") for value_string in string_array])
+        value_array = [strip(value_string, '\'') for value_string in string_array]
+    else
+        if any([contains(value_string, ".") || contains(value_string, "e") for value_string in string_array])
+            value_array = [parse(Float64, value_string) for value_string in string_array]
+        else # otherwise assume it is an int
+            value_array = [parse(Int, value_string) for value_string in string_array]
+        end
+    end
+
+    return value_array
 end
 
 
@@ -187,6 +289,11 @@ function parse_matpower_data(data_string)
     parsed_matrixes = []
     parsed_cells = []
 
+    case = Dict{AbstractString,Any}(
+        "dcline" => [],
+        "gencost" => []
+    )
+
     last_index = length(data_lines)
     index = 1
     while index <= last_index
@@ -199,10 +306,13 @@ function parse_matpower_data(data_string)
 
         if contains(line, "function mpc")
             name = extract_assignment(line)
+            case["name"] = name
         elseif contains(line, "mpc.version")
-            version = extract_assignment(line)
+            version = extract_mpc_assignment(line)[2]
+            case["version"] = version
         elseif contains(line, "mpc.baseMVA")
-            baseMVA = parse(Float64, extract_assignment(line))
+            baseMVA = extract_mpc_assignment(line)[2]
+            case["baseMVA"] = baseMVA
         elseif contains(line, "[")
             matrix = parse_matrix(data_lines, index)
             push!(parsed_matrixes, matrix)
@@ -211,22 +321,33 @@ function parse_matpower_data(data_string)
             cell = parse_cell(data_lines, index)
             push!(parsed_cells, cell)
             index = index + cell["line_count"]-1
+        elseif contains(line, "mpc.")
+            name, value = extract_mpc_assignment(line)
+            case[name] = value
+            info("extending matpower format with value named: $(name)")
         end
         index += 1
     end
 
-    case = Dict{AbstractString,Any}(
-        "name" => name,
-        "version" => version,
-        "baseMVA" => baseMVA,
-        "dcline" => [],
-        "gencost" => []
-    )
+    if !haskey(case, "name")
+        warn(string("no case name found in matpower file.  The file seems to be missing \"function mpc = ...\""))
+        case["name"] = "no_name_found"
+    end
+
+    if !haskey(case, "version")
+        warn(string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
+        case["version"] = "unknown"
+    end
+
+    if !haskey(case, "baseMVA")
+        warn(string("no baseMVA found in matpower file.  The file seems to be missing \"mpc.baseMVA = ...\""))
+        case["baseMVA"] = 1.0
+    end
 
     for parsed_matrix in parsed_matrixes
         #println(parsed_matrix)
 
-        if parsed_matrix["name"] == "mpc.bus"
+        if parsed_matrix["name"] == "bus"
             buses = []
 
             for bus_row in parsed_matrix["data"]
@@ -259,7 +380,7 @@ function parse_matpower_data(data_string)
 
             case["bus"] = buses
 
-        elseif parsed_matrix["name"] == "mpc.gen"
+        elseif parsed_matrix["name"] == "gen"
             gens = []
 
             for (i, gen_row) in enumerate(parsed_matrix["data"])
@@ -299,7 +420,7 @@ function parse_matpower_data(data_string)
 
             case["gen"] = gens
 
-        elseif parsed_matrix["name"] == "mpc.branch"
+        elseif parsed_matrix["name"] == "branch"
             branches = []
 
             for (i, branch_row) in enumerate(parsed_matrix["data"])
@@ -335,7 +456,7 @@ function parse_matpower_data(data_string)
 
             case["branch"] = branches
 
-        elseif parsed_matrix["name"] == "mpc.gencost"
+        elseif parsed_matrix["name"] == "gencost"
             gencost = []
 
             for (i, gencost_row) in enumerate(parsed_matrix["data"])
@@ -356,7 +477,7 @@ function parse_matpower_data(data_string)
                 error("incorrect Matpower file, the number of generator cost functions ($(length(case["gencost"]))) is inconsistent with the number of generators ($(length(case["gen"]))).\n")
             end
 
-        elseif parsed_matrix["name"] == "mpc.dcline"
+        elseif parsed_matrix["name"] == "dcline"
             dclines = []
 
             for (i, dcline_row) in enumerate(parsed_matrix["data"])
@@ -392,31 +513,49 @@ function parse_matpower_data(data_string)
                 push!(dclines, dcline_data)
             end
 
-
         else
-            println(parsed_matrix["name"])
-            warn(string("unrecognized data matrix named \"", parsed_matrix["name"], "\" data was ignored."))
+            name = parsed_matrix["name"]
+            data = parsed_matrix["data"]
+
+            column_names = ["col_$(c)" for c in 1:length(data[1])]
+            if haskey(parsed_matrix, "column_names")
+                column_names = parsed_matrix["column_names"]
+            end
+
+            typed_dict_data = build_typed_dict(data, column_names)
+
+            extend_case_data(case, name, typed_dict_data, haskey(parsed_matrix, "column_names"))
         end
     end
 
 
     for parsed_cell in parsed_cells
         #println(parsed_cell)
-        if parsed_cell["name"] == "mpc.bus_name" 
+        if parsed_cell["name"] == "bus_name" 
 
             if length(parsed_cell["data"]) != length(case["bus"])
                 error("incorrect Matpower file, the number of bus names ($(length(parsed_cell["data"]))) is inconsistent with the number of buses ($(length(case["bus"]))).\n")
             end
 
             for (i, bus) in enumerate(case["bus"])
-                bus["bus_name"] = parsed_cell["data"][i]
+                # note striping the single quotes is not necessary in general, column typing takes care of this
+                bus["bus_name"] = strip(parsed_cell["data"][i][1], '\'')
                 #println(bus["bus_name"])
             end
         else
-            println(parsed_cell["name"])
-            warn(string("unrecognized data cell array named \"", parsed_cell["name"], "\" data was ignored."))
-        end
+        
+            name = parsed_cell["name"]
+            data = parsed_cell["data"]
 
+            column_names = ["col_$(c)" for c in 1:length(data[1])]
+            if haskey(parsed_cell, "column_names")
+                column_names = parsed_cell["column_names"]
+            end
+
+            typed_dict_data = build_typed_dict(data, column_names)
+
+            extend_case_data(case, name, typed_dict_data, haskey(parsed_cell, "column_names"))
+        end
     end
 
     #println("Case:")
@@ -424,3 +563,76 @@ function parse_matpower_data(data_string)
 
     return case
 end
+
+# takes a list of list of strings and turns it into a list of typed dictionaries
+function build_typed_dict(data, column_names)
+    # TODO see if there is a more julia-y way of doing this
+    rows = length(data)
+    columns = length(data[1])
+
+    typed_columns = []
+    for c in 1:columns
+        column = [ data[r][c] for r in 1:rows ]
+        #println(column)
+        typed_column = type_array(column)
+        #println(typed_column)
+        push!(typed_columns, typed_column)
+    end
+
+    typed_data = []
+    for r in 1:rows
+        data_dict = Dict{AbstractString,Any}()
+        data_dict["index"] = r
+        for c in 1:columns
+            data_dict[column_names[c]] = typed_columns[c][r]
+        end
+        push!(typed_data, data_dict)
+    end
+    #println(typed_data)
+
+    return typed_data
+end
+
+# extends a give case data with typed dictionary data
+function extend_case_data(case, name, typed_dict_data, has_column_names)
+    matpower_matrix_names = ["bus", "gen", "branch", "dcline"]
+
+    if any([startswith(name, "$(mp_name)_") for mp_name in matpower_matrix_names])
+        mp_name = "none"
+        mp_matrix = "none"
+
+        for mp_name in matpower_matrix_names
+            if startswith(name, "$(mp_name)_")
+                mp_matrix = case[mp_name]
+                break
+            end
+        end
+
+        if !has_column_names
+            error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because it does not have column names.")
+        end
+
+        if length(mp_matrix) != length(typed_dict_data)
+            error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because they do not have the same number of rows, $(length(mp_matrix)) and $(length(typed_dict_data)) respectively.")
+        end
+
+        info("extending matpower format by appending matrix \"$(name)\" onto \"$(mp_name)\"")
+        for (i, row) in enumerate(mp_matrix)
+            merge_row = typed_dict_data[i]
+            assert(row["index"] == merge_row["index"])
+            delete!(merge_row, "index")
+            for key in keys(merge_row)
+                if haskey(row, key)
+                    error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because they both share \"$(key)\" as a column name.")
+                end
+                row[key] = merge_row[key]
+            end
+        end
+
+    else
+        # minus 1 for excluding added "index" key
+        info("extending matpower format with data: $(name) $(length(typed_dict_data))x$(length(typed_dict_data[1])-1)")
+        case[name] = typed_dict_data
+    end
+end
+
