@@ -6,7 +6,7 @@
 function objective_min_fuel_cost{T}(pm::GenericPowerModel{T})
     pg = getvariable(pm.model, :pg)
     cost = (i) -> pm.set.gens[i]["cost"]
-    return @objective(pm.model, Min, sum{ cost(i)[1]*pg[i]^2 + cost(i)[2]*pg[i] + cost(i)[3], i in pm.set.gen_indexes} )
+    return @objective(pm.model, Min, sum(cost(i)[1]*pg[i]^2 + cost(i)[2]*pg[i] + cost(i)[3] for i in pm.set.gen_indexes) )
 end
 
 function objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T})
@@ -19,12 +19,12 @@ function objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::Generic
     end
 
     cost = (i) -> pm.set.gens[i]["cost"]
-    return @objective(pm.model, Min, sum{ cost(i)[1]*pg_sqr[i] + cost(i)[2]*pg[i] + cost(i)[3], i in pm.set.gen_indexes} )
+    return @objective(pm.model, Min, sum( cost(i)[1]*pg_sqr[i] + cost(i)[2]*pg[i] + cost(i)[3] for i in pm.set.gen_indexes) )
 end
 
 ### Cost of building lines
 function objective_tnep_cost{T}(pm::GenericPowerModel{T})
     line_ne = getvariable(pm.model, :line_ne)
     branches = pm.ext[:ne].branches
-    return @objective(pm.model, Min, sum{ branches[i]["construction_cost"]*line_ne[i], (i,branch) in branches} )
+    return @objective(pm.model, Min, sum( branches[i]["construction_cost"]*line_ne[i] for (i,branch) in branches) )
 end

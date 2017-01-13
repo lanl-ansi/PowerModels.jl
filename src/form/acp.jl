@@ -61,7 +61,7 @@ function constraint_active_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel
     p = getvariable(pm.model, :p)
     pg = getvariable(pm.model, :pg)
 
-    c = @constraint(pm.model, sum{p[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*v[i]^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_branches) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*v[i]^2)
     return Set([c])
 end
 
@@ -76,7 +76,7 @@ function constraint_active_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerMo
     p_ne = getvariable(pm.model, :p_ne)
     pg = getvariable(pm.model, :pg)
 
-    c = @constraint(pm.model, sum{p[a], a in bus_branches} + sum{p_ne[a], a in bus_branches_ne} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*v[i]^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_branches) + sum(p_ne[a] for a in bus_branches_ne) == sum(pg[g], g in bus_gens) - bus["pd"] - bus["gs"]*v[i]^2)
     return Set([c])
 end
 
@@ -90,7 +90,7 @@ function constraint_reactive_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerMod
     q = getvariable(pm.model, :q)
     qg = getvariable(pm.model, :qg)
 
-    c = @constraint(pm.model, sum{q[a], a in bus_branches} == sum{qg[g], g in bus_gens} - bus["qd"] + bus["bs"]*v[i]^2)
+    c = @constraint(pm.model, sum(q[a] for a in bus_branches) == sum(qg[g] for g in bus_gens) - bus["qd"] + bus["bs"]*v[i]^2)
     return Set([c])
 end
 
@@ -105,7 +105,7 @@ function constraint_reactive_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPower
     q_ne = getvariable(pm.model, :q_ne)
     qg = getvariable(pm.model, :qg)
 
-    c = @constraint(pm.model, sum{q[a], a in bus_branches} + sum{q_ne[a], a in bus_branches_ne} == sum{qg[g], g in bus_gens} - bus["qd"] + bus["bs"]*v[i]^2)
+    c = @constraint(pm.model, sum(q[a] for a in bus_branches) + sum(q_ne[a] for a in bus_branches_ne) == sum(qg[g] for g in bus_gens) - bus["qd"] + bus["bs"]*v[i]^2)
     return Set([c])
 end
 
@@ -409,7 +409,7 @@ function objective_max_loading_voltage_norm{T}(pm::GenericPowerModel{T})
     scale = length(pm.set.buses)
     v = getvariable(pm.model, :v)
 
-    return @objective(pm.model, Max, 10*scale*load_factor - sum{ ((bus["vmin"] + bus["vmax"])/2 - v[i])^2, (i,bus) in pm.set.buses })
+    return @objective(pm.model, Max, 10*scale*load_factor - sum(((bus["vmin"] + bus["vmax"])/2 - v[i])^2 for (i,bus) in pm.set.buses ))
 end
 
 # Works but adds unnessiary runtime
@@ -420,7 +420,7 @@ function objective_max_loading_gen_output{T}(pm::GenericPowerModel{T})
     pg = getvariable(pm.model, :pg)
     qg = getvariable(pm.model, :qg)
 
-    return @NLobjective(pm.model, Max, 100*scale*load_factor - sum{ (pg[i]^2 - (2*qg[i])^2)^2, (i,gen) in pm.set.gens })
+    return @NLobjective(pm.model, Max, 100*scale*load_factor - sum( (pg[i]^2 - (2*qg[i])^2)^2 for (i,gen) in pm.set.gens ))
 end
 
 
@@ -453,10 +453,10 @@ function constraint_active_kcl_shunt_scaled(pm::APIACPPowerModel, bus)
     pg = getvariable(pm.model, :pg)
 
     if bus["pd"] > 0 && bus["qd"] > 0
-        c = @constraint(pm.model, sum{p[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"]*load_factor - bus["gs"]*v[i]^2)
+        c = @constraint(pm.model, sum(p[a] for a in bus_branches) == sum(pg[g] for g in bus_gens) - bus["pd"]*load_factor - bus["gs"]*v[i]^2)
     else
         # super fallback impl
-        c = @constraint(pm.model, sum{p[a], a in bus_branches} == sum{pg[g], g in bus_gens} - bus["pd"] - bus["gs"]*v[i]^2)
+        c = @constraint(pm.model, sum(p[a] for a in bus_branches) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*v[i]^2)
     end
 
     return Set([c])
