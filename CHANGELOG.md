@@ -1,6 +1,9 @@
 PowerModels.jl Change Log 
 =================
 
+### staged
+- Updated to JuMP v0.15 syntax
+
 ### v0.2.3
 - Multiple improvements to Matlab file parsing
   - Added support matlab cell arrays
