@@ -3,6 +3,6 @@ julia 0.5
 Ipopt 
 SCS
 GLPKMathProgInterface
-Pajarito 0.3
+Pajarito 0.3.1
 
 Logging 0.3.1
