@@ -16,6 +16,8 @@ function parse_matpower(file_string)
 
     make_per_unit(data)
 
+    add_derived_values(data)
+
     return data
 end
 

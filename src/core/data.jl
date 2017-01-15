@@ -1,10 +1,16 @@
 # tools for working with PowerModels internal data format
 
+
+# adds values that are derived from other values in PM data structure, for the first time
+function add_derived_values(data::Dict{AbstractString,Any})
+    update_derived_values(data, overwrite = false)
+end
+
 # updates values that are derived from other values in PM data structure 
-function update_derived_values(data::Dict{AbstractString,Any})
+function update_derived_values(data::Dict{AbstractString,Any}; overwrite = true)
     min_theta_delta, max_theta_delta = calc_theta_delta_bounds(data)
 
-    add_branch_parameters(data, min_theta_delta, max_theta_delta)
+    add_branch_parameters(data, min_theta_delta, max_theta_delta, overwrite)
 end
 
 function calc_theta_delta_bounds(data::Dict{AbstractString,Any})
@@ -32,7 +38,7 @@ function calc_theta_delta_bounds(data::Dict{AbstractString,Any})
 end
 
 # NOTE, this function assumes all values are p.u. and angles are in radians
-function add_branch_parameters(data, min_theta_delta, max_theta_delta)
+function add_branch_parameters(data, min_theta_delta, max_theta_delta, overwrite)
     branches = data["branch"]
     if haskey(data, "branch_ne")
         append!(branches, data["branch_ne"])
@@ -44,6 +50,10 @@ function add_branch_parameters(data, min_theta_delta, max_theta_delta)
         tap_ratio = branch["tap"]
         angle_shift = branch["shift"]
 
+        if !overwrite
+            check_keys(branch, ["g", "b", "tr", "ti", "off_angmin", "off_angmax"])
+        end
+
         branch["g"] =  r/(x^2 + r^2)
         branch["b"] = -x/(x^2 + r^2)
         branch["tr"] = tap_ratio*cos(angle_shift)
@@ -53,3 +63,12 @@ function add_branch_parameters(data, min_theta_delta, max_theta_delta)
         branch["off_angmax"] = max_theta_delta
     end
 end
+
+function check_keys(data, keys)
+    for key in keys
+        if haskey(data, key)
+            error("attempting to overwrite value of $(key) in PowerModels data,\n$(data)")
+        end
+    end
+end
+
