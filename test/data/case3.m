@@ -1,6 +1,6 @@
 % Case to test adding data to matpower file
-
-function mpc = case3
+% based on NESTA v0.6.0
+function mpc = nesta_case3_lmbd
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 

@@ -1,7 +1,7 @@
 
 @testset "test output api" begin
     @testset "24-bus rts case" begin
-        result = run_opf("../test/data/case24.json", ACPPowerModel, ipopt_solver)
+        result = run_opf("../test/data/case24.m", ACPPowerModel, ipopt_solver)
 
         @test haskey(result, "solver") == true
         @test haskey(result, "status") == true
@@ -22,7 +22,7 @@ end
 
 @testset "test line flow output" begin
     @testset "24-bus rts case ac opf" begin
-        result = run_opf("../test/data/case24.json", ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("line_flows" => true)))
+        result = run_opf("../test/data/case24.m", ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("line_flows" => true)))
 
         @test haskey(result, "solver") == true
         @test haskey(result, "status") == true
@@ -48,7 +48,7 @@ end
 
     # A DCPPowerModel test is important because it does have variables for the reverse side of the lines
     @testset "3-bus case dc opf" begin
-        result = run_opf("../test/data/case3.json", DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("line_flows" => true)))
+        result = run_opf("../test/data/case3.m", DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("line_flows" => true)))
 
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "branch") == true
