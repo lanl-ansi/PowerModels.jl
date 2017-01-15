@@ -192,7 +192,7 @@ end
 
 function build_ne_sets(data::Dict{AbstractString,Any})    
     bus_lookup = Dict([(Int(bus["index"]), bus) for bus in data["bus"]])
-    branch_lookup = Dict([(Int(branch["index"]), branch) for branch in data["branch_ne"]])
+    branch_lookup = Dict([(Int(branch["index"]), branch) for branch in data["ne_branch"]])
 
     # filter turned off stuff
     bus_lookup = filter((i, bus) -> bus["bus_type"] != 4, bus_lookup)

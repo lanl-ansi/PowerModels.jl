@@ -128,9 +128,9 @@ end
 
 # sets all line transformer taps to 1.0, to simplify line models
 function unify_transformer_taps(data)
-    branches = data["branch"]
-    if haskey(data, "branch_ne")
-        append!(branches, data["branch_ne"])
+    branches = [branch for branch in data["branch"]]
+    if haskey(data, "ne_branch")
+        append!(branches, data["ne_branch"])
     end
     for branch in branches
         if branch["tap"] == 0.0

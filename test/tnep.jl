@@ -1,14 +1,14 @@
 
 
 function check_tnep_status(sol)
-    for (idx,val) in sol["branch_ne"]
+    for (idx,val) in sol["ne_branch"]
         @test val["built"] == 0.0 || val["built"] == 1.0
     end
 end
 
 @testset "test soc tnep" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/case3_tnep.json", SOCWRPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/case3_tnep.m", SOCWRPowerModel, pajarito_solver)
 
         check_tnep_status(result["solution"])
 
@@ -16,7 +16,7 @@ end
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
     @testset "5-bus rts case" begin
-        result = run_tnep("../test/data/case5_tnep.json", SOCWRPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/case5_tnep.m", SOCWRPowerModel, pajarito_solver)
 
         check_tnep_status(result["solution"])
 
@@ -30,7 +30,7 @@ end
 
 @testset "test dc tnep" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/case3_tnep.json", DCPPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/case3_tnep.m", DCPPowerModel, pajarito_solver)
 
         check_tnep_status(result["solution"])
 
@@ -39,7 +39,7 @@ end
     end
 
     @testset "5-bus case" begin
-        result = run_tnep("../test/data/case5_tnep.json", DCPPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/case5_tnep.m", DCPPowerModel, pajarito_solver)
 
         check_tnep_status(result["solution"])
 
@@ -50,7 +50,7 @@ end
 
 @testset "test dc-losses tnep" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/case3_tnep.json", DCPLLPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/case3_tnep.m", DCPLLPowerModel, pajarito_solver)
 
         check_tnep_status(result["solution"])
 
@@ -59,7 +59,7 @@ end
     end
 
     @testset "5-bus case" begin
-        result = run_tnep("../test/data/case5_tnep.json", DCPLLPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/case5_tnep.m", DCPLLPowerModel, pajarito_solver)
 
         check_tnep_status(result["solution"])
 
@@ -74,7 +74,7 @@ if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices")
 
     @testset "test ac tnep" begin
         @testset "5-bus case" begin
-            result = run_tnep("../test/data/case5_tnep.json", ACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
+            result = run_tnep("../test/data/case5_tnep.m", ACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
 
             check_tnep_status(result["solution"])
 
