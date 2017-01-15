@@ -14,12 +14,7 @@ if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices")
     using CoinOptServices
 end
 
-if VERSION >= v"0.5.0-dev+7720"
-    using Base.Test
-else
-    using BaseTestNext
-    const Test = BaseTestNext
-end
+using Base.Test
 
 # default setup for solvers
 ipopt_solver = IpoptSolver(tol=1e-6, print_level=0)
