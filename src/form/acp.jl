@@ -76,7 +76,7 @@ function constraint_active_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerMo
     p_ne = getvariable(pm.model, :p_ne)
     pg = getvariable(pm.model, :pg)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_branches) + sum(p_ne[a] for a in bus_branches_ne) == sum(pg[g], g in bus_gens) - bus["pd"] - bus["gs"]*v[i]^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_branches) + sum(p_ne[a] for a in bus_branches_ne) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*v[i]^2)
     return Set([c])
 end
 
