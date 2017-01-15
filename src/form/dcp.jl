@@ -82,27 +82,27 @@ end
 
 function constraint_active_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
+    bus_arcs = pm.set.bus_arcs[i]
     bus_gens = pm.set.bus_gens[i]
 
     pg = getvariable(pm.model, :pg)
     p_expr = pm.model.ext[:p_expr]
 
-    c = @constraint(pm.model, sum(p_expr[a] for a in bus_branches) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
+    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
     return Set([c])
 end
 
 function constraint_active_kcl_shunt_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
-    bus_branches_ne = pm.ext[:ne].bus_branches[i]
+    bus_arcs = pm.set.bus_arcs[i]
+    bus_arcs_ne = pm.ext[:ne].bus_arcs[i]
     bus_gens = pm.set.bus_gens[i]
 
     pg = getvariable(pm.model, :pg)
     p_expr = pm.model.ext[:p_expr]
     p_ne_expr = pm.model.ext[:p_ne_expr]
 
-    c = @constraint(pm.model, sum(p_expr[a] for a in bus_branches) + sum(p_ne_expr[a] for a in bus_branches_ne) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
+    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) + sum(p_ne_expr[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
     return Set([c])
 end
 
@@ -352,27 +352,27 @@ end
 
 function constraint_active_kcl_shunt{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
+    bus_arcs = pm.set.bus_arcs[i]
     bus_gens = pm.set.bus_gens[i]
 
     pg = getvariable(pm.model, :pg)
     p = getvariable(pm.model, :p)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_branches) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
     return Set([c])
 end
 
 function constraint_active_kcl_shunt_ne{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
-    bus_branches_ne = pm.ext[:ne].bus_branches[i]
+    bus_arcs = pm.set.bus_arcs[i]
+    bus_arcs_ne = pm.ext[:ne].bus_arcs[i]
     bus_gens = pm.set.bus_gens[i]
 
     p = getvariable(pm.model, :p)
     p_ne = getvariable(pm.model, :p_ne)
     pg = getvariable(pm.model, :pg)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_branches) + sum(p_ne[a] for a in bus_branches_ne) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
     return Set([c])
 end
 

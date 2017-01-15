@@ -34,7 +34,7 @@ end
 
 function constraint_active_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
+    bus_arcs = pm.set.bus_arcs[i]
     bus_gens = pm.set.bus_gens[i]
 
     WR = getvariable(pm.model, :WR)
@@ -44,13 +44,13 @@ function constraint_active_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel
     p = getvariable(pm.model, :p)
     pg = getvariable(pm.model, :pg)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_branches) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*w_i)
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*w_i)
     return Set([c])
 end
 
 function constraint_reactive_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
+    bus_arcs = pm.set.bus_arcs[i]
     bus_gens = pm.set.bus_gens[i]
 
     WR = getvariable(pm.model, :WR)
@@ -60,7 +60,7 @@ function constraint_reactive_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerMod
     q = getvariable(pm.model, :q)
     qg = getvariable(pm.model, :qg)
 
-    c = @constraint(pm.model, sum(q[a] for a in bus_branches) == sum(qg[g] for g in bus_gens) - bus["qd"] + bus["bs"]*w_i)
+    c = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - bus["qd"] + bus["bs"]*w_i)
     return Set([c])
 end
 

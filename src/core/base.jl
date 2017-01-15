@@ -13,7 +13,7 @@ type PowerDataSets
     arcs_from
     arcs_to
     arcs
-    bus_branches
+    bus_arcs
     buspairs
 end
 
@@ -22,7 +22,7 @@ type TNEPDataSets
     arcs_from
     arcs_to
     arcs
-    bus_branches
+    bus_arcs
     buspairs
 end
 
@@ -155,10 +155,10 @@ function build_sets(data::Dict{AbstractString,Any})
         push!(bus_gens[gen["gen_bus"]], i)
     end
 
-    bus_branches = Dict([(i, []) for (i,bus) in bus_lookup])
+    bus_arcs = Dict([(i, []) for (i,bus) in bus_lookup])
     for (l,i,j) in arcs_from
-        push!(bus_branches[i], (l,i,j))
-        push!(bus_branches[j], (l,j,i))
+        push!(bus_arcs[i], (l,i,j))
+        push!(bus_arcs[j], (l,j,i))
     end
 
     #ref_bus = [i for (i,bus) in bus_lookup | bus["bus_type"] == 3][1]
@@ -172,7 +172,7 @@ function build_sets(data::Dict{AbstractString,Any})
 
     buspairs = buspair_parameters(arcs_from, branch_lookup, bus_lookup)
 
-    return PowerDataSets(ref_bus, bus_lookup, gen_lookup, branch_lookup, bus_gens, arcs_from, arcs_to, arcs, bus_branches, buspairs)
+    return PowerDataSets(ref_bus, bus_lookup, gen_lookup, branch_lookup, bus_gens, arcs_from, arcs_to, arcs, bus_arcs, buspairs)
 end
 
 function build_ne_sets(data::Dict{AbstractString,Any})    
@@ -187,15 +187,15 @@ function build_ne_sets(data::Dict{AbstractString,Any})
     arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
     arcs = [arcs_from; arcs_to]
 
-    bus_branches = Dict([(i, []) for (i,bus) in bus_lookup])
+    bus_arcs = Dict([(i, []) for (i,bus) in bus_lookup])
     for (l,i,j) in arcs_from
-        push!(bus_branches[i], (l,i,j))
-        push!(bus_branches[j], (l,j,i))
+        push!(bus_arcs[i], (l,i,j))
+        push!(bus_arcs[j], (l,j,i))
     end
 
     buspairs = buspair_parameters(arcs_from, branch_lookup, bus_lookup)
 
-    return TNEPDataSets(branch_lookup, arcs_from, arcs_to, arcs, bus_branches, buspairs)
+    return TNEPDataSets(branch_lookup, arcs_from, arcs_to, arcs, bus_arcs, buspairs)
 end
 
 
