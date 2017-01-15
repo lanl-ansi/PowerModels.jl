@@ -21,7 +21,7 @@ function constraint_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{
     c = @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
 
     # place holder while debugging sdp constraint
-    #for (i,j) in pm.set.buspair_indexes
+    #for (i,j) in keys(pm.set.buspairs)
     #    relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     #end
     return Set([c])

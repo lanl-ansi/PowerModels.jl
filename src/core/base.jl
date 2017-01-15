@@ -7,29 +7,23 @@ export
 type PowerDataSets
     ref_bus
     buses
-    bus_indexes
     gens
-    gen_indexes
     branches
-    branch_indexes
     bus_gens
     arcs_from
     arcs_to
     arcs
     bus_branches
     buspairs
-    buspair_indexes
 end
 
 type TNEPDataSets
     branches
-    branch_indexes
     arcs_from
     arcs_to
     arcs
     bus_branches
     buspairs
-    buspair_indexes
 end
 
 
@@ -67,8 +61,6 @@ function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting =
 end
 
 function process_raw_mp_data(data::Dict{AbstractString,Any})
-    update_derived_values(data)
-
     sets = build_sets(data)
 
     ext = Dict{Symbol,Any}()
@@ -77,8 +69,6 @@ function process_raw_mp_data(data::Dict{AbstractString,Any})
 end
 
 function process_raw_mp_ne_data(data::Dict{AbstractString,Any})
-    update_derived_values(data)
-
     sets = build_sets(data)
     ne_sets = build_ne_sets(data)
 
@@ -180,14 +170,9 @@ function build_sets(data::Dict{AbstractString,Any})
         end
     end
 
-    bus_idxs = collect(keys(bus_lookup))
-    gen_idxs = collect(keys(gen_lookup))
-    branch_idxs = collect(keys(branch_lookup))
+    buspairs = buspair_parameters(arcs_from, branch_lookup, bus_lookup)
 
-    buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
-    buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)
-
-    return PowerDataSets(ref_bus, bus_lookup, bus_idxs, gen_lookup, gen_idxs, branch_lookup, branch_idxs, bus_gens, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
+    return PowerDataSets(ref_bus, bus_lookup, gen_lookup, branch_lookup, bus_gens, arcs_from, arcs_to, arcs, bus_branches, buspairs)
 end
 
 function build_ne_sets(data::Dict{AbstractString,Any})    
@@ -208,19 +193,16 @@ function build_ne_sets(data::Dict{AbstractString,Any})
         push!(bus_branches[j], (l,j,i))
     end
 
-    bus_idxs = collect(keys(bus_lookup))
-    #gen_idxs = collect(keys(gen_lookup))
-    branch_idxs = collect(keys(branch_lookup))
+    buspairs = buspair_parameters(arcs_from, branch_lookup, bus_lookup)
 
-    buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
-    buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)
-
-    return TNEPDataSets(branch_lookup, branch_idxs, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
+    return TNEPDataSets(branch_lookup, arcs_from, arcs_to, arcs, bus_branches, buspairs)
 end
 
 
 # compute bus pair level structures
-function buspair_parameters(buspair_indexes, branches, buses)
+function buspair_parameters(arcs_from, branches, buses)
+    buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
+
     bp_angmin = Dict([(bp, -Inf) for bp in buspair_indexes])
     bp_angmax = Dict([(bp, Inf) for bp in buspair_indexes])
     bp_line = Dict([(bp, Inf) for bp in buspair_indexes])
