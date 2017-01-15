@@ -4,6 +4,151 @@
 #                                                                       #
 #########################################################################
 
+function parse_matpower(file_string)
+    data_string = readstring(open(file_string))
+    data = parse_matpower_data(data_string)
+
+    check_phase_angle_differences(data)
+    check_thermal_limits(data)
+    standardize_cost_order(data)
+
+    unify_transformer_taps(data)
+
+    make_per_unit(data)
+
+    return data
+end
+
+
+not_pu = Set(["rate_a","rate_b","rate_c","bs","gs","pd","qd","pg","qg","pmax","pmin","qmax","qmin"])
+not_rad = Set(["angmax","angmin","shift","va"])
+
+function make_per_unit(data::Dict{AbstractString,Any})
+    if !haskey(data, "per_unit") || data["per_unit"] == false
+        make_per_unit(data["baseMVA"], data)
+        data["per_unit"] = true
+    end
+end
+
+function make_per_unit(mva_base::Number, data::Dict{AbstractString,Any})
+    for k in keys(data)
+        if k == "gencost"
+            for cost_model in data[k]
+                if cost_model["model"] != 2
+                    warn("Skipping generator cost model of type other than 2")
+                    continue
+                end
+                degree = length(cost_model["cost"])
+                for (i, item) in enumerate(cost_model["cost"])
+                    cost_model["cost"][i] = item*mva_base^(degree-i)
+                end
+            end
+        elseif isa(data[k], Number)
+            if k in not_pu
+                data[k] = data[k]/mva_base
+            end
+            if k in not_rad
+                data[k] = pi*data[k]/180.0
+            end
+            #println("$(k) $(data[k])")
+        else
+            make_per_unit(mva_base, data[k])
+        end
+    end
+end
+
+function make_per_unit(mva_base::Number, data::Array{Any,1})
+    for item in data
+        make_per_unit(mva_base, item)
+    end
+end
+
+function make_per_unit(mva_base::Number, data::AbstractString)
+    #nothing to do
+end
+
+function make_per_unit(mva_base::Number, data::Number)
+    #nothing to do
+end
+
+
+# checks that phase angle differences are within 90 deg., if not tightens
+function check_phase_angle_differences(data, default_pad = 60)
+    for branch in data["branch"]
+        if branch["angmin"] <= -90
+            warn("this code only supports angmin values in -89 deg. to 89 deg., tightening the value on branch $(branch["index"]) from $(branch["angmin"]) to -60 deg.")
+            branch["angmin"] = -default_pad
+        end
+        if branch["angmax"] >= 90
+            warn("this code only supports angmax values in -89 deg. to 89 deg., tightening the value on branch $(branch["index"]) from $(branch["angmax"]) to 60 deg.")
+            branch["angmax"] = default_pad
+        end
+        if branch["angmin"] == 0.0 && branch["angmax"] == 0.0
+            warn("angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- 60 deg.")
+            branch["angmin"] = -default_pad
+            branch["angmax"] = default_pad
+        end
+    end
+end
+
+
+# checks that each line has a reasonable line thermal rating, if not computes one
+function check_thermal_limits(data)
+    mva_base = data["baseMVA"]
+    vmax_lookup = Dict([(bus["index"], bus["vmax"]) for bus in data["bus"]])
+    vmin_lookup = Dict([(bus["index"], bus["vmin"]) for bus in data["bus"]])
+
+    for branch in data["branch"]
+        if branch["rate_a"] <= 0.0
+            theta_max = max(abs(branch["angmin"]), abs(branch["angmax"]))
+
+            r = branch["br_r"]
+            x = branch["br_x"]
+            g =  r / (r^2 + x^2)
+            b = -x / (r^2 + x^2)
+
+            y_mag = sqrt(g^2 + b^2)
+
+            fr_vmax = vmax_lookup[branch["f_bus"]]
+            to_vmax = vmax_lookup[branch["f_bus"]]
+            m_vmax = max(fr_vmax, to_vmax)
+
+            c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(deg2rad(theta_max)))
+
+            new_rate = mva_base*y_mag*m_vmax*c_max
+
+            warn("this code only supports positive rate_a values, changing the value on branch $(branch["index"]) from $(branch["rate_a"]) to $(new_rate)")
+            branch["rate_a"] = new_rate
+        end
+    end
+end
+
+
+# sets all line transformer taps to 1.0, to simplify line models
+function unify_transformer_taps(data)
+    branches = data["branch"]
+    if haskey(data, "branch_ne")
+        append!(branches, data["branch_ne"])
+    end
+    for branch in branches
+        if branch["tap"] == 0.0
+            branch["tap"] = 1.0
+        end
+    end
+end
+
+# ensures all costs functions are quadratic and reverses their order
+function standardize_cost_order(data::Dict{AbstractString,Any})
+    for gencost in data["gencost"]
+        if gencost["model"] == 2 && length(gencost["cost"]) < 3
+            #println("std gen cost: ",gencost["cost"])
+            cost_3 = [zeros(1,3 - length(gencost["cost"])); gencost["cost"]]
+            gencost["cost"] = cost_3
+            #println("   ",gencost["cost"])
+            warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
+        end
+    end
+end
 
 
 function parse_cell(lines, index)
@@ -212,57 +357,6 @@ function type_array(string_array)
     return value_array
 end
 
-
-function parse_matpower(file_string)
-    data_string = readstring(open(file_string))
-    data = parse_matpower_data(data_string)
-
-    for branch in data["branch"]
-        if branch["angmin"] <= -90
-            warn("this code only supports angmin values in -89 deg. to 89 deg., tightening the value on branch $(branch["index"]) from $(branch["angmin"]) to -60 deg.")
-            branch["angmin"] = -60.0
-        end
-        if branch["angmax"] >= 90
-            warn("this code only supports angmax values in -89 deg. to 89 deg., tightening the value on branch $(branch["index"]) from $(branch["angmax"]) to 60 deg.")
-            branch["angmax"] = 60.0
-        end
-        if branch["angmin"] == 0.0 && branch["angmax"] == 0.0
-            warn("angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- 60 deg.")
-            branch["angmin"] = -60.0
-            branch["angmax"] = 60.0
-        end
-    end
-
-    mva_base = data["baseMVA"]
-    vmax_lookup = Dict([(bus["index"], bus["vmax"]) for bus in data["bus"]])
-    vmin_lookup = Dict([(bus["index"], bus["vmin"]) for bus in data["bus"]])
-
-    for branch in data["branch"]
-        if branch["rate_a"] <= 0.0
-            theta_max = max(abs(branch["angmin"]), abs(branch["angmax"]))
-
-            r = branch["br_r"]
-            x = branch["br_x"]
-            g =  r / (r^2 + x^2)
-            b = -x / (r^2 + x^2)
-
-            y_mag = sqrt(g^2 + b^2)
-
-            fr_vmax = vmax_lookup[branch["f_bus"]]
-            to_vmax = vmax_lookup[branch["f_bus"]]
-            m_vmax = max(fr_vmax, to_vmax)
-
-            c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(deg2rad(theta_max)))
-
-            new_rate = mva_base*y_mag*m_vmax*c_max
-
-            warn("this code only supports positive rate_a values, changing the value on branch $(branch["index"]) from $(branch["rate_a"]) to $(new_rate)")
-            branch["rate_a"] = new_rate
-        end
-    end
-
-    return data
-end
 
 
 function parse_matpower_data(data_string)

@@ -67,15 +67,11 @@ function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting =
 end
 
 function process_raw_mp_data(data::Dict{AbstractString,Any})
-    make_per_unit(data)
-
     min_theta_delta = calc_min_phase_angle(data)
     max_theta_delta = calc_max_phase_angle(data)
 
-    unify_transformer_taps(data["branch"])
     add_branch_parameters(data["branch"], min_theta_delta, max_theta_delta)
 
-    standardize_cost_order(data)
     sets = build_sets(data)
 
     ext = Dict{Symbol,Any}()
@@ -86,18 +82,14 @@ end
 function process_raw_mp_ne_data(data::Dict{AbstractString,Any})
     # TODO, see if there is a clean way of reusing 'process_raw_mp_data'
     # would be fine, except for on/off phase angle calc
-    make_per_unit(data)
 
     min_theta_delta = calc_min_phase_angle_ne(data)
     max_theta_delta = calc_max_phase_angle_ne(data)
 
-    unify_transformer_taps(data["branch"])
     add_branch_parameters(data["branch"], min_theta_delta, max_theta_delta)
 
-    unify_transformer_taps(data["branch_ne"])
     add_branch_parameters(data["branch_ne"], min_theta_delta, max_theta_delta)
 
-    standardize_cost_order(data)
     sets = build_sets(data)
     ne_sets = build_ne_sets(data)
 
@@ -267,66 +259,7 @@ function buspair_parameters(buspair_indexes, branches, buses)
     return buspairs
 end
 
-not_pu = Set(["rate_a","rate_b","rate_c","bs","gs","pd","qd","pg","qg","pmax","pmin","qmax","qmin"])
-not_rad = Set(["angmax","angmin","shift","va"])
 
-function make_per_unit(data::Dict{AbstractString,Any})
-    if !haskey(data, "perUnit") || data["perUnit"] == false
-        make_per_unit(data["baseMVA"], data)
-        data["perUnit"] = true
-    end
-end
-
-function make_per_unit(mva_base::Number, data::Dict{AbstractString,Any})
-    for k in keys(data)
-        if k == "gencost"
-            for cost_model in data[k]
-                if cost_model["model"] != 2
-                    warn("Skipping generator cost model of type other than 2")
-                    continue
-                end
-                degree = length(cost_model["cost"])
-                for (i, item) in enumerate(cost_model["cost"])
-                    cost_model["cost"][i] = item*mva_base^(degree-i)
-                end
-            end
-        elseif isa(data[k], Number)
-            if k in not_pu
-                data[k] = data[k]/mva_base
-            end
-            if k in not_rad
-                data[k] = pi*data[k]/180.0
-            end
-            #println("$(k) $(data[k])")
-        else
-            make_per_unit(mva_base, data[k])
-        end
-    end
-end
-
-function make_per_unit(mva_base::Number, data::Array{Any,1})
-    for item in data
-        make_per_unit(mva_base, item)
-    end
-end
-
-function make_per_unit(mva_base::Number, data::AbstractString)
-    #nothing to do
-    #println("$(parent) $(data)")
-end
-
-function make_per_unit(mva_base::Number, data::Number)
-    #nothing to do
-    #println("$(parent) $(data)")
-end
-
-function unify_transformer_taps(branches)
-    for branch in branches
-        if branch["tap"] == 0.0
-            branch["tap"] = 1.0
-        end
-    end
-end
 
 # NOTE, this function assumes all values are p.u. and angles are in radians
 function add_branch_parameters(branches, min_theta_delta, max_theta_delta)
@@ -346,17 +279,6 @@ function add_branch_parameters(branches, min_theta_delta, max_theta_delta)
     end
 end
 
-function standardize_cost_order(data::Dict{AbstractString,Any})
-    for gencost in data["gencost"]
-        if gencost["model"] == 2 && length(gencost["cost"]) < 3
-            #println("std gen cost: ",gencost["cost"])
-            cost_3 = [zeros(1,3 - length(gencost["cost"])); gencost["cost"]]
-            gencost["cost"] = cost_3
-            #println("   ",gencost["cost"])
-            warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
-        end
-    end
-end
 
 function calc_max_phase_angle(data::Dict{AbstractString,Any})
     bus_count = length(data["bus"])
