@@ -67,10 +67,7 @@ function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting =
 end
 
 function process_raw_mp_data(data::Dict{AbstractString,Any})
-    min_theta_delta = calc_min_phase_angle(data)
-    max_theta_delta = calc_max_phase_angle(data)
-
-    add_branch_parameters(data["branch"], min_theta_delta, max_theta_delta)
+    update_derived_values(data)
 
     sets = build_sets(data)
 
@@ -80,15 +77,7 @@ function process_raw_mp_data(data::Dict{AbstractString,Any})
 end
 
 function process_raw_mp_ne_data(data::Dict{AbstractString,Any})
-    # TODO, see if there is a clean way of reusing 'process_raw_mp_data'
-    # would be fine, except for on/off phase angle calc
-
-    min_theta_delta = calc_min_phase_angle_ne(data)
-    max_theta_delta = calc_max_phase_angle_ne(data)
-
-    add_branch_parameters(data["branch"], min_theta_delta, max_theta_delta)
-
-    add_branch_parameters(data["branch_ne"], min_theta_delta, max_theta_delta)
+    update_derived_values(data)
 
     sets = build_sets(data)
     ne_sets = build_ne_sets(data)
@@ -260,70 +249,3 @@ function buspair_parameters(buspair_indexes, branches, buses)
 end
 
 
-
-# NOTE, this function assumes all values are p.u. and angles are in radians
-function add_branch_parameters(branches, min_theta_delta, max_theta_delta)
-    for branch in branches
-        r = branch["br_r"]
-        x = branch["br_x"]
-        tap_ratio = branch["tap"]
-        angle_shift = branch["shift"]
-
-        branch["g"] =  r/(x^2 + r^2)
-        branch["b"] = -x/(x^2 + r^2)
-        branch["tr"] = tap_ratio*cos(angle_shift)
-        branch["ti"] = tap_ratio*sin(angle_shift)
-
-        branch["off_angmin"] = min_theta_delta
-        branch["off_angmax"] = max_theta_delta
-    end
-end
-
-
-function calc_max_phase_angle(data::Dict{AbstractString,Any})
-    bus_count = length(data["bus"])
-    angle_max = [branch["angmax"] for branch in data["branch"]]
-    sort!(angle_max, rev=true)
-    if length(angle_max) > 1
-        return sum(angle_max[1:bus_count-1])
-    end
-    return angle_max[1]
-end
-
-function calc_min_phase_angle(data::Dict{AbstractString,Any})
-    bus_count = length(data["bus"])
-    angle_min = [branch["angmin"] for branch in data["branch"]]
-    sort!(angle_min)
-    if length(angle_min) > 1
-        return sum(angle_min[1:bus_count-1])
-    end
-    return angle_min[1]
-end
-
-function calc_max_phase_angle_ne(data::Dict{AbstractString,Any})
-    bus_count = length(data["bus"])
-    angle_max = [branch["angmax"] for branch in data["branch"]]
-    if haskey(data, "branch_ne")
-        angle_max_ne = [branch["angmax"] for branch in data["branch_ne"]]
-        angle_max = [angle_max; angle_max_ne]
-    end
-    sort!(angle_max, rev=true)
-    if length(angle_max) > 1
-        return sum(angle_max[1:bus_count-1])
-    end
-    return angle_max[1]
-end
-
-function calc_min_phase_angle_ne(data::Dict{AbstractString,Any})
-    bus_count = length(data["bus"])
-    angle_min = [branch["angmin"] for branch in data["branch"]]
-    if haskey(data, "branch_ne")
-        angle_min_ne = [branch["angmin"] for branch in data["branch_ne"]]
-        angle_min = [angle_min; angle_min_ne]
-    end
-    sort!(angle_min)
-    if length(angle_min) > 1
-        return sum(angle_min[1:bus_count-1])
-    end
-    return angle_min[1]
-end
