@@ -37,7 +37,7 @@ For the current development version, "checkout" this package with,
 
 `Pkg.checkout("PowerModels")`
 
-At least one solver is required for running PowerModels.  The open-source solver Ipopt is recommended, as it is extremely fast, and can be used to solve a wide variety of the problems and network formulations provided in PowerModels.  The Ipopt solver can be installed via tha package manager with,
+At least one solver is required for running PowerModels.  The open-source solver Ipopt is recommended, as it is extremely fast, and can be used to solve a wide variety of the problems and network formulations provided in PowerModels.  The Ipopt solver can be installed via the package manager with,
 
 `Pkg.add("Ipopt")`
 
@@ -73,7 +73,7 @@ Extending PowerModels with new problems and formulations will be covered in a an
 
 ### Modifying Network Data
 
-The follow example demonstrates how to modify the network data in Julia.
+The follow example demonstrates how to perform multiple PowerModels solves while modify the network data in Julia,
 
 ```
 network_data = PowerModels.parse_file("nesta_case3_lmbd.m")
