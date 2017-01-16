@@ -16,61 +16,11 @@ function parse_matpower(file_string)
 
     make_per_unit(data)
 
+    merge_generator_cost_data(data)
+
     add_derived_values(data)
 
     return data
-end
-
-
-not_pu = Set(["rate_a","rate_b","rate_c","bs","gs","pd","qd","pg","qg","pmax","pmin","qmax","qmin"])
-not_rad = Set(["angmax","angmin","shift","va"])
-
-function make_per_unit(data::Dict{AbstractString,Any})
-    if !haskey(data, "per_unit") || data["per_unit"] == false
-        make_per_unit(data["baseMVA"], data)
-        data["per_unit"] = true
-    end
-end
-
-function make_per_unit(mva_base::Number, data::Dict{AbstractString,Any})
-    for k in keys(data)
-        if k == "gencost"
-            for cost_model in data[k]
-                if cost_model["model"] != 2
-                    warn("Skipping generator cost model of type other than 2")
-                    continue
-                end
-                degree = length(cost_model["cost"])
-                for (i, item) in enumerate(cost_model["cost"])
-                    cost_model["cost"][i] = item*mva_base^(degree-i)
-                end
-            end
-        elseif isa(data[k], Number)
-            if k in not_pu
-                data[k] = data[k]/mva_base
-            end
-            if k in not_rad
-                data[k] = pi*data[k]/180.0
-            end
-            #println("$(k) $(data[k])")
-        else
-            make_per_unit(mva_base, data[k])
-        end
-    end
-end
-
-function make_per_unit(mva_base::Number, data::Array{Any,1})
-    for item in data
-        make_per_unit(mva_base, item)
-    end
-end
-
-function make_per_unit(mva_base::Number, data::AbstractString)
-    #nothing to do
-end
-
-function make_per_unit(mva_base::Number, data::Number)
-    #nothing to do
 end
 
 
@@ -126,8 +76,22 @@ function check_thermal_limits(data)
 end
 
 
+# ensures all costs functions are quadratic and reverses their order
+function standardize_cost_order(data::Dict{AbstractString,Any})
+    for gencost in data["gencost"]
+        if gencost["model"] == 2 && length(gencost["cost"]) < 3
+            #println("std gen cost: ",gencost["cost"])
+            cost_3 = [zeros(1,3 - length(gencost["cost"])); gencost["cost"]]
+            gencost["cost"] = cost_3
+            #println("   ",gencost["cost"])
+            warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
+        end
+    end
+end
+
+
 # sets all line transformer taps to 1.0, to simplify line models
-function unify_transformer_taps(data)
+function unify_transformer_taps(data::Dict{AbstractString,Any})
     branches = [branch for branch in data["branch"]]
     if haskey(data, "ne_branch")
         append!(branches, data["ne_branch"])
@@ -139,16 +103,74 @@ function unify_transformer_taps(data)
     end
 end
 
-# ensures all costs functions are quadratic and reverses their order
-function standardize_cost_order(data::Dict{AbstractString,Any})
-    for gencost in data["gencost"]
-        if gencost["model"] == 2 && length(gencost["cost"]) < 3
-            #println("std gen cost: ",gencost["cost"])
-            cost_3 = [zeros(1,3 - length(gencost["cost"])); gencost["cost"]]
-            gencost["cost"] = cost_3
-            #println("   ",gencost["cost"])
-            warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
+
+### Recursive Per Unit Computation ###
+
+not_pu = Set(["rate_a","rate_b","rate_c","bs","gs","pd","qd","pg","qg","pmax","pmin","qmax","qmin"])
+not_rad = Set(["angmax","angmin","shift","va"])
+
+function make_per_unit(data::Dict{AbstractString,Any})
+    if !haskey(data, "per_unit") || data["per_unit"] == false
+        make_per_unit(data["baseMVA"], data)
+        data["per_unit"] = true
+    end
+end
+
+function make_per_unit(mva_base::Number, data::Dict{AbstractString,Any})
+    for k in keys(data)
+        if k == "gencost"
+            for cost_model in data[k]
+                if cost_model["model"] != 2
+                    warn("Skipping generator cost model of type other than 2")
+                    continue
+                end
+                degree = length(cost_model["cost"])
+                for (i, item) in enumerate(cost_model["cost"])
+                    cost_model["cost"][i] = item*mva_base^(degree-i)
+                end
+            end
+        elseif isa(data[k], Number)
+            if k in not_pu
+                data[k] = data[k]/mva_base
+            end
+            if k in not_rad
+                data[k] = pi*data[k]/180.0
+            end
+            #println("$(k) $(data[k])")
+        else
+            make_per_unit(mva_base, data[k])
         end
+    end
+end
+
+function make_per_unit(mva_base::Number, data::Array{Any,1})
+    for item in data
+        make_per_unit(mva_base, item)
+    end
+end
+
+function make_per_unit(mva_base::Number, data::AbstractString)
+    #nothing to do
+end
+
+function make_per_unit(mva_base::Number, data::Number)
+    #nothing to do
+end
+
+# merges generator cost functions into generator data, if they exist
+function merge_generator_cost_data(data::Dict{AbstractString,Any})
+    if haskey(data, "gencost")
+        # can assume same length is same as gen (or double)
+        # this is validated during parsing
+        for (i, gencost) in enumerate(data["gencost"])
+            gen = data["gen"][i]
+            assert(gen["index"] == gencost["index"])
+            delete!(gencost, "index")
+
+            check_keys(gen, keys(gencost))
+            merge!(gen, gencost)
+        end
+        delete!(data, "gencost")
     end
 end
 

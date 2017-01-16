@@ -101,12 +101,6 @@ function build_ref(data::Dict{AbstractString,Any})
         end
     end
 
-    if haskey(ref, :gencost)
-        for (i, gencost) in ref[:gencost]
-            merge!(ref[:gen][i], gencost)
-        end
-    end
-
     # filter turned off stuff
     ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
     ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
