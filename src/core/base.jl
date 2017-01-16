@@ -4,19 +4,6 @@ export
     GenericPowerModel,
     setdata, setsolver, solve
 
-type PowerDataSets
-    ref_bus
-    buses
-    gens
-    branches
-    bus_gens
-    arcs_from
-    arcs_to
-    arcs
-    bus_arcs
-    buspairs
-end
-
 type TNEPDataSets
     branches
     arcs_from
@@ -134,57 +121,52 @@ function run_generic_model(data::Dict{AbstractString,Any}, model_constructor, so
 end
 
 function build_ref(data::Dict{AbstractString,Any})
-    bus_lookup = Dict([(Int(bus["index"]), bus) for bus in data["bus"]])
-    gen_lookup = Dict([(Int(gen["index"]), gen) for gen in data["gen"]])
-    for gencost in data["gencost"]
-        i = Int(gencost["index"])
-        gen_lookup[i] = merge(gen_lookup[i], gencost)
+    ref = Dict{Symbol,Any}()
+    for (key, item) in data
+        if isa(item, Array)
+            item_lookup = Dict([(Int(value["index"]), value) for value in item])
+            ref[Symbol(key)] = item_lookup
+        end
     end
-    branch_lookup = Dict([(Int(branch["index"]), branch) for branch in data["branch"]])
+
+    if haskey(ref, :gencost)
+        for (i, gencost) in ref[:gencost]
+            merge!(ref[:gen][i], gencost)
+        end
+    end
 
     # filter turned off stuff
-    bus_lookup = filter((i, bus) -> bus["bus_type"] != 4, bus_lookup)
-    gen_lookup = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(bus_lookup), gen_lookup)
-    branch_lookup = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(bus_lookup) && branch["t_bus"] in keys(bus_lookup), branch_lookup)
+    ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
+    ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
+    ref[:branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
 
-    arcs_from = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in branch_lookup]
-    arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
-    arcs = [arcs_from; arcs_to]
+    ref[:arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:branch]]
+    ref[:arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:branch]]
+    ref[:arcs] = [ref[:arcs_from]; ref[:arcs_to]]
 
-    bus_gens = Dict([(i, []) for (i,bus) in bus_lookup])
-    for (i,gen) in gen_lookup
+    bus_gens = Dict([(i, []) for (i,bus) in ref[:bus]])
+    for (i,gen) in ref[:gen]
         push!(bus_gens[gen["gen_bus"]], i)
     end
+    ref[:bus_gens] = bus_gens
 
-    bus_arcs = Dict([(i, []) for (i,bus) in bus_lookup])
-    for (l,i,j) in arcs_from
+    bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
+    for (l,i,j) in ref[:arcs]
         push!(bus_arcs[i], (l,i,j))
-        push!(bus_arcs[j], (l,j,i))
     end
+    ref[:bus_arcs] = bus_arcs
 
-    #ref_bus = [i for (i,bus) in bus_lookup | bus["bus_type"] == 3][1]
     ref_bus = Union{}
-    for (k,v) in bus_lookup
+    for (k,v) in ref[:bus]
         if v["bus_type"] == 3
             ref_bus = k
             break
         end
     end
+    ref[:ref_bus] = ref_bus
 
-    buspairs_lookup = buspair_parameters(arcs_from, branch_lookup, bus_lookup)
+    ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])
 
-    ref = Dict(
-        :ref_bus => ref_bus,
-        :bus => bus_lookup,
-        :gen => gen_lookup,
-        :branch => branch_lookup,
-        :bus_gens => bus_gens,
-        :arcs_from => arcs_from,
-        :arcs_to => arcs_to,
-        :arcs => arcs,
-        :bus_arcs => bus_arcs,
-        :buspairs => buspairs_lookup
-    )
     return ref
 end
 
