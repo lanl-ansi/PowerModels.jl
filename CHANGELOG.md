@@ -7,7 +7,7 @@ PowerModels.jl Change Log
 - Refactored Matpower data processing to simplify editing data after parsing
 - Replaced JSON test files with Matpower test files
 - Added documentation on internal JSON data format to DATA.md
-- Updated TNEP models to work with Matpower parsing extentions
+- Updated TNEP models to work with Matpower parsing extensions
 
 ### v0.2.3
 - Multiple improvements to Matlab file parsing
