@@ -68,7 +68,7 @@ end
 function constraint_active_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
     bus_arcs = pm.ref[:bus_arcs][i]
-    bus_arcs_ne = pm.ext[:ne].bus_arcs[i]
+    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
     bus_gens = pm.ref[:bus_gens][i]
 
     v = getvariable(pm.model, :v)
@@ -97,7 +97,7 @@ end
 function constraint_reactive_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
     bus_arcs = pm.ref[:bus_arcs][i]
-    bus_arcs_ne = pm.ext[:ne].bus_arcs[i]
+    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
     bus_gens = pm.ref[:bus_gens][i]
 
     v = getvariable(pm.model, :v)

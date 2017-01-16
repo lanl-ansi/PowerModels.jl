@@ -63,7 +63,7 @@ end
 function constraint_active_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
     bus_arcs = pm.ref[:bus_arcs][i]
-    bus_arcs_ne = pm.ext[:ne].bus_arcs[i]
+    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
     bus_gens = pm.ref[:bus_gens][i]
 
     w = getvariable(pm.model, :w)
@@ -91,7 +91,7 @@ end
 function constraint_reactive_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
     bus_arcs = pm.ref[:bus_arcs][i]
-    bus_arcs_ne = pm.ext[:ne].bus_arcs[i]
+    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
     bus_gens = pm.ref[:bus_gens][i]
 
     w = getvariable(pm.model, :w)
@@ -277,9 +277,9 @@ end
 
 function constraint_complex_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     buses = pm.ref[:bus]
-    branches = pm.ext[:ne].branches
+    branches = pm.ref[:ne_branch]
     
-    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.ext[:ne].buspairs)
+    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.ref[:ne_buspairs])
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in branches])
           
     w = getvariable(pm.model, :w)
@@ -291,7 +291,7 @@ function constraint_complex_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerMode
     w_to = getvariable(pm.model, :w_to_ne)
 
     cs = Set()
-    for (l,i,j) in pm.ext[:ne].arcs_from
+    for (l,i,j) in pm.ref[:ne_arcs_from]
         c1 = @constraint(pm.model, w_from[l] <= z[l]*buses[branches[l]["f_bus"]]["vmax"]^2)
         c2 = @constraint(pm.model, w_from[l] >= z[l]*buses[branches[l]["f_bus"]]["vmin"]^2)
             
@@ -454,23 +454,23 @@ end
 
 function variable_voltage_magnitude_sqr_from_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     buses = pm.ref[:bus]
-    branches = pm.ext[:ne].branches
-    @variable(pm.model, 0 <= w_from_ne[i in keys(pm.ext[:ne].branches)] <= buses[branches[i]["f_bus"]]["vmax"]^2, start = getstart(pm.ref[:bus], i, "w_from_start", 1.001))
+    branches = pm.ref[:ne_branch]
+    @variable(pm.model, 0 <= w_from_ne[i in keys(pm.ref[:ne_branch])] <= buses[branches[i]["f_bus"]]["vmax"]^2, start = getstart(pm.ref[:bus], i, "w_from_start", 1.001))
     return w_from_ne
 end
 
 function variable_voltage_magnitude_sqr_to_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     buses = pm.ref[:bus]
-    branches = pm.ext[:ne].branches
-    @variable(pm.model, 0 <= w_to_ne[i in keys(pm.ext[:ne].branches)] <= buses[branches[i]["t_bus"]]["vmax"]^2, start = getstart(pm.ref[:bus], i, "w_to", 1.001))
+    branches = pm.ref[:ne_branch]
+    @variable(pm.model, 0 <= w_to_ne[i in keys(pm.ref[:ne_branch])] <= buses[branches[i]["t_bus"]]["vmax"]^2, start = getstart(pm.ref[:bus], i, "w_to", 1.001))
     return w_to_ne
 end
 
 function variable_complex_voltage_product_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
-    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.ext[:ne].buspairs)
-    bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.ext[:ne].branches])
-    @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr_ne[b in keys(pm.ext[:ne].branches)] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.ext[:ne].buspairs, bi_bp[b], "wr_start", 1.0))
-    @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi_ne[b in keys(pm.ext[:ne].branches)] <= max(0, wi_max[bi_bp[b]]), start = getstart(pm.ext[:ne].buspairs, bi_bp[b], "wi_start"))
+    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.ref[:ne_buspairs])
+    bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.ref[:ne_branch]])
+    @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr_ne[b in keys(pm.ref[:ne_branch])] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.ref[:ne_buspairs], bi_bp[b], "wr_start", 1.0))
+    @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi_ne[b in keys(pm.ref[:ne_branch])] <= max(0, wi_max[bi_bp[b]]), start = getstart(pm.ref[:ne_buspairs], bi_bp[b], "wi_start"))
     return wr_ne, wi_ne
 end
 

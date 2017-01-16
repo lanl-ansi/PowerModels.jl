@@ -47,10 +47,10 @@ function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T
 end
 
 function variable_active_line_flow_ne{T <: StandardDCPForm}(pm::GenericPowerModel{T})
-    @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= p_ne[(l,i,j) in pm.ext[:ne].arcs_from] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "p_start"))
+    @variable(pm.model, -pm.ref[:ne_branch][l]["rate_a"] <= p_ne[(l,i,j) in pm.ref[:ne_arcs_from]] <= pm.ref[:ne_branch][l]["rate_a"], start = getstart(pm.ref[:ne_branch], l, "p_start"))
  
-    p_ne_expr = Dict([((l,i,j), 1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ext[:ne].arcs_from])
-    p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ext[:ne].arcs_from]))
+    p_ne_expr = Dict([((l,i,j), 1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]])
+    p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]]))
 
     pm.model.ext[:p_ne_expr] = p_ne_expr
 end
@@ -95,7 +95,7 @@ end
 function constraint_active_kcl_shunt_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
     bus_arcs = pm.ref[:bus_arcs][i]
-    bus_arcs_ne = pm.ext[:ne].bus_arcs[i]
+    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
     bus_gens = pm.ref[:bus_gens][i]
 
     pg = getvariable(pm.model, :pg)
@@ -365,7 +365,7 @@ end
 function constraint_active_kcl_shunt_ne{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
     bus_arcs = pm.ref[:bus_arcs][i]
-    bus_arcs_ne = pm.ext[:ne].bus_arcs[i]
+    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
     bus_gens = pm.ref[:bus_gens][i]
 
     p = getvariable(pm.model, :p)

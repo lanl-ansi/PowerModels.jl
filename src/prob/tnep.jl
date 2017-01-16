@@ -5,7 +5,7 @@
 export run_tnep
 
 function run_tnep(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_tnep; data_processor = process_raw_mp_ne_data, solution_builder = get_tnep_solution, kwargs...) 
+    return run_generic_model(file, model_constructor, solver, post_tnep; solution_builder = get_tnep_solution, kwargs...) 
 end
 
 # the general form of the tnep optimization model
@@ -35,7 +35,7 @@ function post_tnep{T}(pm::GenericPowerModel{T})
         constraint_reactive_kcl_shunt_ne(pm, bus)
     end
     
-    for (i,branch) in pm.ext[:ne].branches
+    for (i,branch) in pm.ref[:ne_branch]
         constraint_active_ohms_yt_ne(pm, branch)
         constraint_reactive_ohms_yt_ne(pm, branch) 
 

@@ -81,7 +81,7 @@ function variable_active_line_flow{T}(pm::GenericPowerModel{T}; bounded = true)
 end
 
 function variable_active_line_flow_ne{T}(pm::GenericPowerModel{T})
-    @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= p_ne[(l,i,j) in pm.ext[:ne].arcs] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "p_start"))
+    @variable(pm.model, -pm.ref[:ne_branch][l]["rate_a"] <= p_ne[(l,i,j) in pm.ref[:ne_arcs]] <= pm.ref[:ne_branch][l]["rate_a"], start = getstart(pm.ref[:ne_branch], l, "p_start"))
     return p_ne
 end
 
@@ -96,7 +96,7 @@ function variable_reactive_line_flow{T}(pm::GenericPowerModel{T}; bounded = true
 end
 
 function variable_reactive_line_flow_ne{T}(pm::GenericPowerModel{T})
-    @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= q_ne[(l,i,j) in pm.ext[:ne].arcs] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "q_start"))
+    @variable(pm.model, -pm.ref[:ne_branch][l]["rate_a"] <= q_ne[(l,i,j) in pm.ref[:ne_arcs]] <= pm.ref[:ne_branch][l]["rate_a"], start = getstart(pm.ref[:ne_branch], l, "q_start"))
     return q_ne
 end
 
@@ -254,8 +254,8 @@ function variable_line_indicator{T}(pm::GenericPowerModel{T})
 end
 
 function variable_line_ne{T}(pm::GenericPowerModel{T})
-    branches = pm.ext[:ne].branches
-    @variable(pm.model, 0 <= line_ne[l in keys(pm.ext[:ne].branches)] <= 1, Int, start = getstart(branches, l, "line_tnep_start", 1.0))
+    branches = pm.ref[:ne_branch]
+    @variable(pm.model, 0 <= line_ne[l in keys(branches)] <= 1, Int, start = getstart(branches, l, "line_tnep_start", 1.0))
     return line_ne
 end
 

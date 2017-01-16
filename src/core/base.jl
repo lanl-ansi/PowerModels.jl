@@ -4,16 +4,6 @@ export
     GenericPowerModel,
     setdata, setsolver, solve
 
-type TNEPDataSets
-    branches
-    arcs_from
-    arcs_to
-    arcs
-    bus_arcs
-    buspairs
-end
-
-
 abstract AbstractPowerModel
 abstract AbstractPowerFormulation
 abstract AbstractConicPowerFormulation <: AbstractPowerFormulation
@@ -34,38 +24,19 @@ type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
 end
 
 # default generic constructor
-function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver(), data_processor = process_raw_mp_data)
-    data, ref, ext = data_processor(data)
+function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
+
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
         data, # data
         setting, # setting
         Dict{AbstractString,Any}(), # solution
-        ref, # sets
-        ext # ext
+        build_ref(data), # refrence data
+        Dict{Symbol,Any}() # ext
     )
 
     return pm
 end
-
-function process_raw_mp_data(data::Dict{AbstractString,Any})
-    ref = build_ref(data)
-
-    ext = Dict{Symbol,Any}()
-
-    return data, ref, ext
-end
-
-function process_raw_mp_ne_data(data::Dict{AbstractString,Any})
-    ref = build_ref(data)
-    ne_sets = build_ne_sets(data)
-
-    ext = Dict{Symbol,Any}()
-    ext[:ne] = ne_sets
-
-    return data, ref, ext
-end
-
 
 #
 # Just seems too hard to maintain with the default constructor
@@ -120,6 +91,7 @@ function run_generic_model(data::Dict{AbstractString,Any}, model_constructor, so
     return build_solution(pm, status, solve_time; solution_builder = solution_builder)
 end
 
+
 function build_ref(data::Dict{AbstractString,Any})
     ref = Dict{Symbol,Any}()
     for (key, item) in data
@@ -167,30 +139,23 @@ function build_ref(data::Dict{AbstractString,Any})
 
     ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])
 
-    return ref
-end
+    if haskey(ref, :ne_branch)
+        ref[:ne_branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:ne_branch])
 
-function build_ne_sets(data::Dict{AbstractString,Any})    
-    bus_lookup = Dict([(Int(bus["index"]), bus) for bus in data["bus"]])
-    branch_lookup = Dict([(Int(branch["index"]), branch) for branch in data["ne_branch"]])
+        ref[:ne_arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:ne_branch]]
+        ref[:ne_arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:ne_branch]]
+        ref[:ne_arcs] = [ref[:ne_arcs_from]; ref[:ne_arcs_to]]
 
-    # filter turned off stuff
-    bus_lookup = filter((i, bus) -> bus["bus_type"] != 4, bus_lookup)
-    branch_lookup = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(bus_lookup) && branch["t_bus"] in keys(bus_lookup), branch_lookup)
+        ne_bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (l,i,j) in ref[:ne_arcs]
+            push!(ne_bus_arcs[i], (l,i,j))
+        end
+        ref[:ne_bus_arcs] = ne_bus_arcs
 
-    arcs_from = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in branch_lookup]
-    arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
-    arcs = [arcs_from; arcs_to]
-
-    bus_arcs = Dict([(i, []) for (i,bus) in bus_lookup])
-    for (l,i,j) in arcs_from
-        push!(bus_arcs[i], (l,i,j))
-        push!(bus_arcs[j], (l,j,i))
+        ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus])
     end
 
-    buspairs = buspair_parameters(arcs_from, branch_lookup, bus_lookup)
-
-    return TNEPDataSets(branch_lookup, arcs_from, arcs_to, arcs, bus_arcs, buspairs)
+    return ref
 end
 
 
