@@ -34,9 +34,10 @@ abstract AbstractConicPowerFormulation <: AbstractPowerFormulation
 type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
     model::Model
     data::Dict{AbstractString,Any}
-    set::PowerDataSets
     setting::Dict{AbstractString,Any}
     solution::Dict{AbstractString,Any}
+
+    ref::Dict{Symbol,Any}
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -47,13 +48,13 @@ end
 
 # default generic constructor
 function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver(), data_processor = process_raw_mp_data)
-    data, sets, ext = data_processor(data)
+    data, ref, ext = data_processor(data)
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
         data, # data
-        sets, # sets
         setting, # setting
         Dict{AbstractString,Any}(), # solution
+        ref, # sets
         ext # ext
     )
 
@@ -61,21 +62,21 @@ function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting =
 end
 
 function process_raw_mp_data(data::Dict{AbstractString,Any})
-    sets = build_sets(data)
+    ref = build_ref(data)
 
     ext = Dict{Symbol,Any}()
 
-    return data, sets, ext
+    return data, ref, ext
 end
 
 function process_raw_mp_ne_data(data::Dict{AbstractString,Any})
-    sets = build_sets(data)
+    ref = build_ref(data)
     ne_sets = build_ne_sets(data)
 
     ext = Dict{Symbol,Any}()
     ext[:ne] = ne_sets
 
-    return data, sets, ext
+    return data, ref, ext
 end
 
 
@@ -132,7 +133,7 @@ function run_generic_model(data::Dict{AbstractString,Any}, model_constructor, so
     return build_solution(pm, status, solve_time; solution_builder = solution_builder)
 end
 
-function build_sets(data::Dict{AbstractString,Any})
+function build_ref(data::Dict{AbstractString,Any})
     bus_lookup = Dict([(Int(bus["index"]), bus) for bus in data["bus"]])
     gen_lookup = Dict([(Int(gen["index"]), gen) for gen in data["gen"]])
     for gencost in data["gencost"]
@@ -170,9 +171,21 @@ function build_sets(data::Dict{AbstractString,Any})
         end
     end
 
-    buspairs = buspair_parameters(arcs_from, branch_lookup, bus_lookup)
+    buspairs_lookup = buspair_parameters(arcs_from, branch_lookup, bus_lookup)
 
-    return PowerDataSets(ref_bus, bus_lookup, gen_lookup, branch_lookup, bus_gens, arcs_from, arcs_to, arcs, bus_arcs, buspairs)
+    ref = Dict(
+        :ref_bus => ref_bus,
+        :bus => bus_lookup,
+        :gen => gen_lookup,
+        :branch => branch_lookup,
+        :bus_gens => bus_gens,
+        :arcs_from => arcs_from,
+        :arcs_to => arcs_to,
+        :arcs => arcs,
+        :bus_arcs => bus_arcs,
+        :buspairs => buspairs_lookup
+    )
+    return ref
 end
 
 function build_ne_sets(data::Dict{AbstractString,Any})    

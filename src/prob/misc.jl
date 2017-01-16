@@ -27,17 +27,17 @@ function post_api_opf{T}(pm::GenericPowerModel{T})
     constraint_theta_ref(pm)
     constraint_complex_voltage(pm)
 
-    for (i,gen) in pm.set.gens
+    for (i,gen) in pm.ref[:gen]
         pg = getvariable(pm.model, :pg)[i]
         @constraint(pm.model, pg >= gen["pmin"])
     end
 
-    for (i,bus) in pm.set.buses
+    for (i,bus) in pm.ref[:bus]
         constraint_active_kcl_shunt_scaled(pm, bus)
         constraint_reactive_kcl_shunt(pm, bus)
     end
 
-    for (i,branch) in pm.set.branches
+    for (i,branch) in pm.ref[:branch]
         constraint_active_ohms_yt(pm, branch)
         constraint_reactive_ohms_yt(pm, branch)
 
@@ -73,12 +73,12 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
     constraint_theta_ref(pm)
     constraint_complex_voltage(pm)
 
-    for (i,bus) in pm.set.buses
+    for (i,bus) in pm.ref[:bus]
         constraint_active_kcl_shunt(pm, bus)
         constraint_reactive_kcl_shunt(pm, bus)
     end
 
-    for (i,branch) in pm.set.branches
+    for (i,branch) in pm.ref[:branch]
         constraint_active_ohms_yt(pm, branch)
         constraint_reactive_ohms_yt(pm, branch)
 

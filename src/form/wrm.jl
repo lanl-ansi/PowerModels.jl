@@ -21,7 +21,7 @@ function constraint_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{
     c = @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
 
     # place holder while debugging sdp constraint
-    #for (i,j) in keys(pm.set.buspairs)
+    #for (i,j) in keys(pm.ref[:buspairs])
     #    relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     #end
     return Set([c])
@@ -34,8 +34,8 @@ end
 
 function constraint_active_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_arcs = pm.set.bus_arcs[i]
-    bus_gens = pm.set.bus_gens[i]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
 
     WR = getvariable(pm.model, :WR)
     w_index = pm.model.ext[:lookup_w_index][i]
@@ -50,8 +50,8 @@ end
 
 function constraint_reactive_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_arcs = pm.set.bus_arcs[i]
-    bus_gens = pm.set.bus_gens[i]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
 
     WR = getvariable(pm.model, :WR)
     w_index = pm.model.ext[:lookup_w_index][i]
@@ -134,7 +134,7 @@ function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowe
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     pair = (f_bus, t_bus)
-    buspair = pm.set.buspairs[pair]
+    buspair = pm.ref[:buspairs][pair]
 
     # to prevent this constraint from being posted on multiple parallel lines
     if buspair["line"] == i

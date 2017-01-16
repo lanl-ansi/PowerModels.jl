@@ -5,19 +5,19 @@
 
 function objective_min_fuel_cost{T}(pm::GenericPowerModel{T})
     pg = getvariable(pm.model, :pg)
-    return @objective(pm.model, Min, sum(gen["cost"][1]*pg[i]^2 + gen["cost"][2]*pg[i] + gen["cost"][3] for (i,gen) in pm.set.gens) )
+    return @objective(pm.model, Min, sum(gen["cost"][1]*pg[i]^2 + gen["cost"][2]*pg[i] + gen["cost"][3] for (i,gen) in pm.ref[:gen]) )
 end
 
 function objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T})
-    @variable(pm.model, pm.set.gens[i]["pmin"]^2 <= pg_sqr[i in keys(pm.set.gens)] <= pm.set.gens[i]["pmax"]^2)
+    @variable(pm.model, pm.ref[:gen][i]["pmin"]^2 <= pg_sqr[i in keys(pm.ref[:gen])] <= pm.ref[:gen][i]["pmax"]^2)
 
     pg = getvariable(pm.model, :pg)
 
-    for (i, gen) in pm.set.gens
+    for (i, gen) in pm.ref[:gen]
         @constraint(pm.model, norm([2*pg[i], pg_sqr[i]-1]) <= pg_sqr[i]+1)
     end
 
-    return @objective(pm.model, Min, sum( gen["cost"][1]*pg_sqr[i] + gen["cost"][2]*pg[i] + gen["cost"][3] for (i,gen) in pm.set.gens) )
+    return @objective(pm.model, Min, sum( gen["cost"][1]*pg_sqr[i] + gen["cost"][2]*pg[i] + gen["cost"][3] for (i,gen) in pm.ref[:gen]) )
 end
 
 ### Cost of building lines
