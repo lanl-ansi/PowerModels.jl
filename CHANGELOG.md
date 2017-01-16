@@ -1,8 +1,13 @@
 PowerModels.jl Change Log 
 =================
 
-### staged
+### Staged
 - Updated to JuMP v0.15 syntax
+- Replaced PowerModels set data types with "ref" dictionary
+- Refactored Matpower data processing to simplify editing data after parsing
+- Replaced JSON test files with Matpower test files
+- Added documentation on internal JSON data format to DATA.md
+- Updated TNEP models to work with Matpower parsing extentions
 
 ### v0.2.3
 - Multiple improvements to Matlab file parsing

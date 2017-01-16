@@ -71,6 +71,23 @@ run_opf("nesta_case3_lmbd.m", SOCWRPowerModel, IpoptSolver())
 Extending PowerModels with new problems and formulations will be covered in a another tutorial, that is not yet available.
 
 
+### Modifying Network Data
+
+The follow example demonstrates how to modify the network data in Julia.
+
+```
+network_data = PowerModels.parse_file("nesta_case3_lmbd.m")
+run_opf(network_data, ACPPowerModel, IpoptSolver())
+
+network_data["bus"][3]["pd"] = 0.0
+network_data["bus"][3]["qd"] = 0.0
+
+run_opf(network_data, ACPPowerModel, IpoptSolver())
+```
+
+For additional details about the PowerModels network data structure see the DATA.md file.
+
+
 ## Comparison to Other Tools
 
 Forthcoming.
