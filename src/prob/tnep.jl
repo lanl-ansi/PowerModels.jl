@@ -3,6 +3,8 @@
 #
 
 export run_tnep
+export process_raw_mp_ne_data
+export add_branch_ne_setpoint
 
 function run_tnep(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_tnep; solution_builder = get_tnep_solution, kwargs...) 
