@@ -23,27 +23,27 @@ function post_pf{T}(pm::GenericPowerModel{T})
 
 
     constraint_theta_ref(pm)
-    constraint_voltage_magnitude_setpoint(pm, pm.set.buses[pm.set.ref_bus])
+    constraint_voltage_magnitude_setpoint(pm, pm.ref[:bus][pm.ref[:ref_bus]])
     constraint_complex_voltage(pm)
 
-    for (i,bus) in pm.set.buses
+    for (i,bus) in pm.ref[:bus]
         constraint_active_kcl_shunt(pm, bus)
         constraint_reactive_kcl_shunt(pm, bus)
 
         # PV Bus Constraints
-        if length(pm.set.bus_gens[i]) > 0 && i != pm.set.ref_bus
+        if length(pm.ref[:bus_gens][i]) > 0 && i != pm.ref[:ref_bus]
             # this assumes inactive generators are filtered out of bus_gens
             @assert bus["bus_type"] == 2
 
             # soft equality needed becouse v in file is not precice enough to ensure feasiblity
             constraint_voltage_magnitude_setpoint(pm, bus; epsilon = 0.00001)
-            for j in pm.set.bus_gens[i]
-                constraint_active_gen_setpoint(pm, pm.set.gens[j])
+            for j in pm.ref[:bus_gens][i]
+                constraint_active_gen_setpoint(pm, pm.ref[:gen][j])
             end
         end
     end
 
-    for (i,branch) in pm.set.branches
+    for (i,branch) in pm.ref[:branch]
         constraint_active_ohms_yt(pm, branch)
         constraint_reactive_ohms_yt(pm, branch)
     end

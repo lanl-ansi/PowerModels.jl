@@ -1,16 +1,4 @@
-%
-% from NESTA v0.6.0, Optimal Power Flow - Typical Operation, 02, January, 2016
-%
-%   Power flow data for IEEE 30 bus test case.
-%   This data was converted from IEEE Common Data Format
-%   (ieee30cdf.txt) on 20-Sep-2004 by cdf2matp, rev. 1.11
-%
-%   Converted from IEEE CDF file from:
-%       http://www.ee.washington.edu/research/pstca/
-%
-%   CDF Header:
-%   08/20/93 UW ARCHIVE           100.0  1961 W IEEE 30 Bus Test Case
-%
+% NESTA v0.6.0
 function mpc = nesta_case30_ieee
 mpc.version = '2';
 mpc.baseMVA = 100.0;

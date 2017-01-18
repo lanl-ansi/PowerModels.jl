@@ -4,35 +4,6 @@ export
     GenericPowerModel,
     setdata, setsolver, solve
 
-type PowerDataSets
-    ref_bus
-    buses
-    bus_indexes
-    gens
-    gen_indexes
-    branches
-    branch_indexes
-    bus_gens
-    arcs_from
-    arcs_to
-    arcs
-    bus_branches
-    buspairs
-    buspair_indexes
-end
-
-type TNEPDataSets
-    branches
-    branch_indexes
-    arcs_from
-    arcs_to
-    arcs
-    bus_branches
-    buspairs
-    buspair_indexes
-end
-
-
 abstract AbstractPowerModel
 abstract AbstractPowerFormulation
 abstract AbstractConicPowerFormulation <: AbstractPowerFormulation
@@ -40,9 +11,10 @@ abstract AbstractConicPowerFormulation <: AbstractPowerFormulation
 type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
     model::Model
     data::Dict{AbstractString,Any}
-    set::PowerDataSets
     setting::Dict{AbstractString,Any}
     solution::Dict{AbstractString,Any}
+
+    ref::Dict{Symbol,Any}
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -52,61 +24,19 @@ type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
 end
 
 # default generic constructor
-function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver(), data_processor = process_raw_mp_data)
-    data, sets, ext = data_processor(data)
+function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
+
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
         data, # data
-        sets, # sets
         setting, # setting
         Dict{AbstractString,Any}(), # solution
-        ext # ext
+        build_ref(data), # refrence data
+        Dict{Symbol,Any}() # ext
     )
 
     return pm
 end
-
-function process_raw_mp_data(data::Dict{AbstractString,Any})
-    make_per_unit(data)
-
-    min_theta_delta = calc_min_phase_angle(data)
-    max_theta_delta = calc_max_phase_angle(data)
-
-    unify_transformer_taps(data["branch"])
-    add_branch_parameters(data["branch"], min_theta_delta, max_theta_delta)
-
-    standardize_cost_order(data)
-    sets = build_sets(data)
-
-    ext = Dict{Symbol,Any}()
-
-    return data, sets, ext
-end
-
-function process_raw_mp_ne_data(data::Dict{AbstractString,Any})
-    # TODO, see if there is a clean way of reusing 'process_raw_mp_data'
-    # would be fine, except for on/off phase angle calc
-    make_per_unit(data)
-
-    min_theta_delta = calc_min_phase_angle_ne(data)
-    max_theta_delta = calc_max_phase_angle_ne(data)
-
-    unify_transformer_taps(data["branch"])
-    add_branch_parameters(data["branch"], min_theta_delta, max_theta_delta)
-
-    unify_transformer_taps(data["branch_ne"])
-    add_branch_parameters(data["branch_ne"], min_theta_delta, max_theta_delta)
-
-    standardize_cost_order(data)
-    sets = build_sets(data)
-    ne_sets = build_ne_sets(data)
-
-    ext = Dict{Symbol,Any}()
-    ext[:ne] = ne_sets
-
-    return data, sets, ext
-end
-
 
 #
 # Just seems too hard to maintain with the default constructor
@@ -161,85 +91,72 @@ function run_generic_model(data::Dict{AbstractString,Any}, model_constructor, so
     return build_solution(pm, status, solve_time; solution_builder = solution_builder)
 end
 
-function build_sets(data::Dict{AbstractString,Any})
-    bus_lookup = Dict([(Int(bus["index"]), bus) for bus in data["bus"]])
-    gen_lookup = Dict([(Int(gen["index"]), gen) for gen in data["gen"]])
-    for gencost in data["gencost"]
-        i = Int(gencost["index"])
-        gen_lookup[i] = merge(gen_lookup[i], gencost)
+
+function build_ref(data::Dict{AbstractString,Any})
+    ref = Dict{Symbol,Any}()
+    for (key, item) in data
+        if isa(item, Array)
+            item_lookup = Dict([(Int(value["index"]), value) for value in item])
+            ref[Symbol(key)] = item_lookup
+        end
     end
-    branch_lookup = Dict([(Int(branch["index"]), branch) for branch in data["branch"]])
 
     # filter turned off stuff
-    bus_lookup = filter((i, bus) -> bus["bus_type"] != 4, bus_lookup)
-    gen_lookup = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(bus_lookup), gen_lookup)
-    branch_lookup = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(bus_lookup) && branch["t_bus"] in keys(bus_lookup), branch_lookup)
+    ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
+    ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
+    ref[:branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
 
-    arcs_from = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in branch_lookup]
-    arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
-    arcs = [arcs_from; arcs_to]
+    ref[:arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:branch]]
+    ref[:arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:branch]]
+    ref[:arcs] = [ref[:arcs_from]; ref[:arcs_to]]
 
-    bus_gens = Dict([(i, []) for (i,bus) in bus_lookup])
-    for (i,gen) in gen_lookup
+    bus_gens = Dict([(i, []) for (i,bus) in ref[:bus]])
+    for (i,gen) in ref[:gen]
         push!(bus_gens[gen["gen_bus"]], i)
     end
+    ref[:bus_gens] = bus_gens
 
-    bus_branches = Dict([(i, []) for (i,bus) in bus_lookup])
-    for (l,i,j) in arcs_from
-        push!(bus_branches[i], (l,i,j))
-        push!(bus_branches[j], (l,j,i))
+    bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
+    for (l,i,j) in ref[:arcs]
+        push!(bus_arcs[i], (l,i,j))
     end
+    ref[:bus_arcs] = bus_arcs
 
-    #ref_bus = [i for (i,bus) in bus_lookup | bus["bus_type"] == 3][1]
     ref_bus = Union{}
-    for (k,v) in bus_lookup
+    for (k,v) in ref[:bus]
         if v["bus_type"] == 3
             ref_bus = k
             break
         end
     end
+    ref[:ref_bus] = ref_bus
 
-    bus_idxs = collect(keys(bus_lookup))
-    gen_idxs = collect(keys(gen_lookup))
-    branch_idxs = collect(keys(branch_lookup))
+    ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])
 
-    buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
-    buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)
+    if haskey(ref, :ne_branch)
+        ref[:ne_branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:ne_branch])
 
-    return PowerDataSets(ref_bus, bus_lookup, bus_idxs, gen_lookup, gen_idxs, branch_lookup, branch_idxs, bus_gens, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
-end
+        ref[:ne_arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:ne_branch]]
+        ref[:ne_arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:ne_branch]]
+        ref[:ne_arcs] = [ref[:ne_arcs_from]; ref[:ne_arcs_to]]
 
-function build_ne_sets(data::Dict{AbstractString,Any})    
-    bus_lookup = Dict([(Int(bus["index"]), bus) for bus in data["bus"]])
-    branch_lookup = Dict([(Int(branch["index"]), branch) for branch in data["branch_ne"]])
+        ne_bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (l,i,j) in ref[:ne_arcs]
+            push!(ne_bus_arcs[i], (l,i,j))
+        end
+        ref[:ne_bus_arcs] = ne_bus_arcs
 
-    # filter turned off stuff
-    bus_lookup = filter((i, bus) -> bus["bus_type"] != 4, bus_lookup)
-    branch_lookup = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(bus_lookup) && branch["t_bus"] in keys(bus_lookup), branch_lookup)
-
-    arcs_from = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in branch_lookup]
-    arcs_to   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in branch_lookup]
-    arcs = [arcs_from; arcs_to]
-
-    bus_branches = Dict([(i, []) for (i,bus) in bus_lookup])
-    for (l,i,j) in arcs_from
-        push!(bus_branches[i], (l,i,j))
-        push!(bus_branches[j], (l,j,i))
+        ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus])
     end
 
-    bus_idxs = collect(keys(bus_lookup))
-    #gen_idxs = collect(keys(gen_lookup))
-    branch_idxs = collect(keys(branch_lookup))
-
-    buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
-    buspairs = buspair_parameters(buspair_indexes, branch_lookup, bus_lookup)
-
-    return TNEPDataSets(branch_lookup, branch_idxs, arcs_from, arcs_to, arcs, bus_branches, buspairs, buspair_indexes)
+    return ref
 end
 
 
 # compute bus pair level structures
-function buspair_parameters(buspair_indexes, branches, buses)
+function buspair_parameters(arcs_from, branches, buses)
+    buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
+
     bp_angmin = Dict([(bp, -Inf) for bp in buspair_indexes])
     bp_angmax = Dict([(bp, Inf) for bp in buspair_indexes])
     bp_line = Dict([(bp, Inf) for bp in buspair_indexes])
@@ -267,141 +184,4 @@ function buspair_parameters(buspair_indexes, branches, buses)
     return buspairs
 end
 
-not_pu = Set(["rate_a","rate_b","rate_c","bs","gs","pd","qd","pg","qg","pmax","pmin","qmax","qmin"])
-not_rad = Set(["angmax","angmin","shift","va"])
 
-function make_per_unit(data::Dict{AbstractString,Any})
-    if !haskey(data, "perUnit") || data["perUnit"] == false
-        make_per_unit(data["baseMVA"], data)
-        data["perUnit"] = true
-    end
-end
-
-function make_per_unit(mva_base::Number, data::Dict{AbstractString,Any})
-    for k in keys(data)
-        if k == "gencost"
-            for cost_model in data[k]
-                if cost_model["model"] != 2
-                    warn("Skipping generator cost model of type other than 2")
-                    continue
-                end
-                degree = length(cost_model["cost"])
-                for (i, item) in enumerate(cost_model["cost"])
-                    cost_model["cost"][i] = item*mva_base^(degree-i)
-                end
-            end
-        elseif isa(data[k], Number)
-            if k in not_pu
-                data[k] = data[k]/mva_base
-            end
-            if k in not_rad
-                data[k] = pi*data[k]/180.0
-            end
-            #println("$(k) $(data[k])")
-        else
-            make_per_unit(mva_base, data[k])
-        end
-    end
-end
-
-function make_per_unit(mva_base::Number, data::Array{Any,1})
-    for item in data
-        make_per_unit(mva_base, item)
-    end
-end
-
-function make_per_unit(mva_base::Number, data::AbstractString)
-    #nothing to do
-    #println("$(parent) $(data)")
-end
-
-function make_per_unit(mva_base::Number, data::Number)
-    #nothing to do
-    #println("$(parent) $(data)")
-end
-
-function unify_transformer_taps(branches)
-    for branch in branches
-        if branch["tap"] == 0.0
-            branch["tap"] = 1.0
-        end
-    end
-end
-
-# NOTE, this function assumes all values are p.u. and angles are in radians
-function add_branch_parameters(branches, min_theta_delta, max_theta_delta)
-    for branch in branches
-        r = branch["br_r"]
-        x = branch["br_x"]
-        tap_ratio = branch["tap"]
-        angle_shift = branch["shift"]
-
-        branch["g"] =  r/(x^2 + r^2)
-        branch["b"] = -x/(x^2 + r^2)
-        branch["tr"] = tap_ratio*cos(angle_shift)
-        branch["ti"] = tap_ratio*sin(angle_shift)
-
-        branch["off_angmin"] = min_theta_delta
-        branch["off_angmax"] = max_theta_delta
-    end
-end
-
-function standardize_cost_order(data::Dict{AbstractString,Any})
-    for gencost in data["gencost"]
-        if gencost["model"] == 2 && length(gencost["cost"]) < 3
-            #println("std gen cost: ",gencost["cost"])
-            cost_3 = [zeros(1,3 - length(gencost["cost"])); gencost["cost"]]
-            gencost["cost"] = cost_3
-            #println("   ",gencost["cost"])
-            warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
-        end
-    end
-end
-
-function calc_max_phase_angle(data::Dict{AbstractString,Any})
-    bus_count = length(data["bus"])
-    angle_max = [branch["angmax"] for branch in data["branch"]]
-    sort!(angle_max, rev=true)
-    if length(angle_max) > 1
-        return sum(angle_max[1:bus_count-1])
-    end
-    return angle_max[1]
-end
-
-function calc_min_phase_angle(data::Dict{AbstractString,Any})
-    bus_count = length(data["bus"])
-    angle_min = [branch["angmin"] for branch in data["branch"]]
-    sort!(angle_min)
-    if length(angle_min) > 1
-        return sum(angle_min[1:bus_count-1])
-    end
-    return angle_min[1]
-end
-
-function calc_max_phase_angle_ne(data::Dict{AbstractString,Any})
-    bus_count = length(data["bus"])
-    angle_max = [branch["angmax"] for branch in data["branch"]]
-    if haskey(data, "branch_ne")
-        angle_max_ne = [branch["angmax"] for branch in data["branch_ne"]]
-        angle_max = [angle_max; angle_max_ne]
-    end
-    sort!(angle_max, rev=true)
-    if length(angle_max) > 1
-        return sum(angle_max[1:bus_count-1])
-    end
-    return angle_max[1]
-end
-
-function calc_min_phase_angle_ne(data::Dict{AbstractString,Any})
-    bus_count = length(data["bus"])
-    angle_min = [branch["angmin"] for branch in data["branch"]]
-    if haskey(data, "branch_ne")
-        angle_min_ne = [branch["angmin"] for branch in data["branch_ne"]]
-        angle_min = [angle_min; angle_min_ne]
-    end
-    sort!(angle_min)
-    if length(angle_min) > 1
-        return sum(angle_min[1:bus_count-1])
-    end
-    return angle_min[1]
-end

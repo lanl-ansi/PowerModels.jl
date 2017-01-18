@@ -28,12 +28,12 @@ function post_opf{T}(pm::GenericPowerModel{T})
     constraint_theta_ref(pm)
     constraint_complex_voltage(pm)
 
-    for (i,bus) in pm.set.buses
+    for (i,bus) in pm.ref[:bus]
         constraint_active_kcl_shunt(pm, bus)
         constraint_reactive_kcl_shunt(pm, bus)
     end
 
-    for (i,branch) in pm.set.branches
+    for (i,branch) in pm.ref[:branch]
         constraint_active_ohms_yt(pm, branch)
         constraint_reactive_ohms_yt(pm, branch)
 

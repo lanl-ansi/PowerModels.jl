@@ -32,7 +32,7 @@ end
 
 
 function constraint_theta_ref{T <: AbstractACPForm}(pm::GenericPowerModel{T})
-    c = @constraint(pm.model, getvariable(pm.model, :t)[pm.set.ref_bus] == 0)
+    c = @constraint(pm.model, getvariable(pm.model, :t)[pm.ref[:ref_bus]] == 0)
     return Set([c])
 end
 
@@ -54,58 +54,58 @@ end
 
 function constraint_active_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
-    bus_gens = pm.set.bus_gens[i]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
 
     v = getvariable(pm.model, :v)
     p = getvariable(pm.model, :p)
     pg = getvariable(pm.model, :pg)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_branches) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*v[i]^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*v[i]^2)
     return Set([c])
 end
 
 function constraint_active_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
-    bus_branches_ne = pm.ext[:ne].bus_branches[i]
-    bus_gens = pm.set.bus_gens[i]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
 
     v = getvariable(pm.model, :v)
     p = getvariable(pm.model, :p)
     p_ne = getvariable(pm.model, :p_ne)
     pg = getvariable(pm.model, :pg)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_branches) + sum(p_ne[a] for a in bus_branches_ne) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*v[i]^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*v[i]^2)
     return Set([c])
 end
 
 
 function constraint_reactive_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
-    bus_gens = pm.set.bus_gens[i]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
 
     v = getvariable(pm.model, :v)
     q = getvariable(pm.model, :q)
     qg = getvariable(pm.model, :qg)
 
-    c = @constraint(pm.model, sum(q[a] for a in bus_branches) == sum(qg[g] for g in bus_gens) - bus["qd"] + bus["bs"]*v[i]^2)
+    c = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - bus["qd"] + bus["bs"]*v[i]^2)
     return Set([c])
 end
 
 function constraint_reactive_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
-    bus_branches_ne = pm.ext[:ne].bus_branches[i]
-    bus_gens = pm.set.bus_gens[i]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
 
     v = getvariable(pm.model, :v)
     q = getvariable(pm.model, :q)
     q_ne = getvariable(pm.model, :q_ne)
     qg = getvariable(pm.model, :qg)
 
-    c = @constraint(pm.model, sum(q[a] for a in bus_branches) + sum(q_ne[a] for a in bus_branches_ne) == sum(qg[g] for g in bus_gens) - bus["qd"] + bus["bs"]*v[i]^2)
+    c = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - bus["qd"] + bus["bs"]*v[i]^2)
     return Set([c])
 end
 
@@ -406,26 +406,26 @@ end
 function objective_max_loading_voltage_norm{T}(pm::GenericPowerModel{T})
     load_factor = getvariable(pm.model, :load_factor)
 
-    scale = length(pm.set.buses)
+    scale = length(pm.ref[:bus])
     v = getvariable(pm.model, :v)
 
-    return @objective(pm.model, Max, 10*scale*load_factor - sum(((bus["vmin"] + bus["vmax"])/2 - v[i])^2 for (i,bus) in pm.set.buses ))
+    return @objective(pm.model, Max, 10*scale*load_factor - sum(((bus["vmin"] + bus["vmax"])/2 - v[i])^2 for (i,bus) in pm.ref[:bus] ))
 end
 
 # Works but adds unnessiary runtime
 function objective_max_loading_gen_output{T}(pm::GenericPowerModel{T})
     load_factor = getvariable(pm.model, :load_factor)
 
-    scale = length(pm.set.gens)
+    scale = length(pm.ref[:gen])
     pg = getvariable(pm.model, :pg)
     qg = getvariable(pm.model, :qg)
 
-    return @NLobjective(pm.model, Max, 100*scale*load_factor - sum( (pg[i]^2 - (2*qg[i])^2)^2 for (i,gen) in pm.set.gens ))
+    return @NLobjective(pm.model, Max, 100*scale*load_factor - sum( (pg[i]^2 - (2*qg[i])^2)^2 for (i,gen) in pm.ref[:gen] ))
 end
 
 
 function bounds_tighten_voltage(pm::APIACPPowerModel; epsilon = 0.001)
-    for (i,bus) in pm.set.buses
+    for (i,bus) in pm.ref[:bus]
         v = getvariable(pm.model, :v)[i]
         setupperbound(v, bus["vmax"]*(1.0-epsilon))
         setlowerbound(v, bus["vmin"]*(1.0+epsilon))
@@ -433,7 +433,7 @@ function bounds_tighten_voltage(pm::APIACPPowerModel; epsilon = 0.001)
 end
 
 function upperbound_negative_active_generation(pm::APIACPPowerModel)
-    for (i,gen) in pm.set.gens
+    for (i,gen) in pm.ref[:gen]
         pg = getvariable(pm.model, :pg)[i]
 
         if gen["pmax"] <= 0 
@@ -444,8 +444,8 @@ end
 
 function constraint_active_kcl_shunt_scaled(pm::APIACPPowerModel, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
-    bus_gens = pm.set.bus_gens[i]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
 
     load_factor = getvariable(pm.model, :load_factor)
     v = getvariable(pm.model, :v)
@@ -453,10 +453,10 @@ function constraint_active_kcl_shunt_scaled(pm::APIACPPowerModel, bus)
     pg = getvariable(pm.model, :pg)
 
     if bus["pd"] > 0 && bus["qd"] > 0
-        c = @constraint(pm.model, sum(p[a] for a in bus_branches) == sum(pg[g] for g in bus_gens) - bus["pd"]*load_factor - bus["gs"]*v[i]^2)
+        c = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - bus["pd"]*load_factor - bus["gs"]*v[i]^2)
     else
         # super fallback impl
-        c = @constraint(pm.model, sum(p[a] for a in bus_branches) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*v[i]^2)
+        c = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*v[i]^2)
     end
 
     return Set([c])

@@ -35,22 +35,22 @@ end
 
 function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T}; bounded = true)
     if bounded
-        @variable(pm.model, -pm.set.branches[l]["rate_a"] <= p[(l,i,j) in pm.set.arcs_from] <= pm.set.branches[l]["rate_a"], start = getstart(pm.set.branches, l, "p_start"))
+        @variable(pm.model, -pm.ref[:branch][l]["rate_a"] <= p[(l,i,j) in pm.ref[:arcs_from]] <= pm.ref[:branch][l]["rate_a"], start = getstart(pm.ref[:branch], l, "p_start"))
     else
-        @variable(pm.model, p[(l,i,j) in pm.set.arcs_from], start = getstart(pm.set.branches, l, "p_start"))
+        @variable(pm.model, p[(l,i,j) in pm.ref[:arcs_from]], start = getstart(pm.ref[:branch], l, "p_start"))
     end
 
-    p_expr = Dict([((l,i,j), 1.0*p[(l,i,j)]) for (l,i,j) in pm.set.arcs_from])
-    p_expr = merge(p_expr, Dict([((l,j,i), -1.0*p[(l,i,j)]) for (l,i,j) in pm.set.arcs_from]))
+    p_expr = Dict([((l,i,j), 1.0*p[(l,i,j)]) for (l,i,j) in pm.ref[:arcs_from]])
+    p_expr = merge(p_expr, Dict([((l,j,i), -1.0*p[(l,i,j)]) for (l,i,j) in pm.ref[:arcs_from]]))
 
     pm.model.ext[:p_expr] = p_expr
 end
 
 function variable_active_line_flow_ne{T <: StandardDCPForm}(pm::GenericPowerModel{T})
-    @variable(pm.model, -pm.ext[:ne].branches[l]["rate_a"] <= p_ne[(l,i,j) in pm.ext[:ne].arcs_from] <= pm.ext[:ne].branches[l]["rate_a"], start = getstart(pm.ext[:ne].branches, l, "p_start"))
+    @variable(pm.model, -pm.ref[:ne_branch][l]["rate_a"] <= p_ne[(l,i,j) in pm.ref[:ne_arcs_from]] <= pm.ref[:ne_branch][l]["rate_a"], start = getstart(pm.ref[:ne_branch], l, "p_start"))
  
-    p_ne_expr = Dict([((l,i,j), 1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ext[:ne].arcs_from])
-    p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ext[:ne].arcs_from]))
+    p_ne_expr = Dict([((l,i,j), 1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]])
+    p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]]))
 
     pm.model.ext[:p_ne_expr] = p_ne_expr
 end
@@ -65,7 +65,7 @@ function constraint_complex_voltage_ne{T <: AbstractDCPForm}(pm::GenericPowerMod
 end
 
 function constraint_theta_ref{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
-    c = @constraint(pm.model, getvariable(pm.model, :t)[pm.set.ref_bus] == 0)
+    c = @constraint(pm.model, getvariable(pm.model, :t)[pm.ref[:ref_bus]] == 0)
     return Set([c])
 end
 
@@ -82,27 +82,27 @@ end
 
 function constraint_active_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
-    bus_gens = pm.set.bus_gens[i]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
 
     pg = getvariable(pm.model, :pg)
     p_expr = pm.model.ext[:p_expr]
 
-    c = @constraint(pm.model, sum(p_expr[a] for a in bus_branches) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
+    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
     return Set([c])
 end
 
 function constraint_active_kcl_shunt_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
-    bus_branches_ne = pm.ext[:ne].bus_branches[i]
-    bus_gens = pm.set.bus_gens[i]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
 
     pg = getvariable(pm.model, :pg)
     p_expr = pm.model.ext[:p_expr]
     p_ne_expr = pm.model.ext[:p_ne_expr]
 
-    c = @constraint(pm.model, sum(p_expr[a] for a in bus_branches) + sum(p_ne_expr[a] for a in bus_branches_ne) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
+    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) + sum(p_ne_expr[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
     return Set([c])
 end
 
@@ -352,27 +352,27 @@ end
 
 function constraint_active_kcl_shunt{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
-    bus_gens = pm.set.bus_gens[i]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
 
     pg = getvariable(pm.model, :pg)
     p = getvariable(pm.model, :p)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_branches) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
     return Set([c])
 end
 
 function constraint_active_kcl_shunt_ne{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, bus)
     i = bus["index"]
-    bus_branches = pm.set.bus_branches[i]
-    bus_branches_ne = pm.ext[:ne].bus_branches[i]
-    bus_gens = pm.set.bus_gens[i]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
 
     p = getvariable(pm.model, :p)
     p_ne = getvariable(pm.model, :p_ne)
     pg = getvariable(pm.model, :pg)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_branches) + sum(p_ne[a] for a in bus_branches_ne) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*1.0^2)
     return Set([c])
 end
 
