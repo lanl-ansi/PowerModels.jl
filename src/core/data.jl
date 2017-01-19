@@ -1,5 +1,6 @@
 # tools for working with PowerModels internal data format
 
+export update_derived_values
 
 # adds values that are derived from other values in PM data structure, for the first time
 function add_derived_values(data::Dict{AbstractString,Any})
