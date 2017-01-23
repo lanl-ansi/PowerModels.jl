@@ -82,6 +82,8 @@ end
 
 # core run function assumes network data is given as a Dict
 function run_generic_model(data::Dict{AbstractString,Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
+    update_derived_values(data)
+
     pm = model_constructor(data; solver = solver, kwargs...)
 
     post_method(pm)

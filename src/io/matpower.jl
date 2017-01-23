@@ -18,8 +18,6 @@ function parse_matpower(file_string)
 
     merge_generator_cost_data(data)
 
-    add_derived_values(data)
-
     return data
 end
 
