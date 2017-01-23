@@ -84,6 +84,7 @@ end
 function run_generic_model(data::Dict{AbstractString,Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
     update_derived_values(data)
 
+    # NOTE, this model constructor will build the ref dict using the latest info from the data
     pm = model_constructor(data; solver = solver, kwargs...)
 
     post_method(pm)
@@ -92,7 +93,6 @@ function run_generic_model(data::Dict{AbstractString,Any}, model_constructor, so
 
     return build_solution(pm, status, solve_time; solution_builder = solution_builder)
 end
-
 
 function build_ref(data::Dict{AbstractString,Any})
     ref = Dict{Symbol,Any}()
