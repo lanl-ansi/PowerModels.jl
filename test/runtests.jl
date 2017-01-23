@@ -43,3 +43,5 @@ include("misc.jl")
 include("ots.jl")
 
 include("tnep.jl")
+
+include("docs.jl")
