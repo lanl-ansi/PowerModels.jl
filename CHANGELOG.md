@@ -4,16 +4,17 @@ PowerModels.jl Change Log
 ### Staged
 - Updated to JuMP v0.15 syntax
 - Replaced PowerModels set data types with "ref" dictionary
-- Refactored Matpower data processing to simplify editing data after parsing
+- Refactored Matpower data processing to simplify editing network data after parsing
 - Replaced JSON test files with Matpower test files
 - Added documentation on internal JSON data format to DATA.md
 - Updated TNEP models to work with Matpower parsing extensions
+- Strengthened convex formulations with Lifted Nonlinear Cuts (LNCs)
 
 ### v0.2.3
 - Multiple improvements to Matlab file parsing
-  - Added support matlab cell arrays
-  - Added support for matpower bus_names
-  - Added ability for reading non-standard matpower data elements
+  - Added support Matlab cell arrays
+  - Added support for Matpower bus_names
+  - Added ability for reading non-standard Matpower data elements
 - Added JuMP version v0.14 upper bound 
 
 ### v0.2.2
