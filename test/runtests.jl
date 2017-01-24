@@ -25,6 +25,8 @@ include("matpower.jl")
 
 include("output.jl")
 
+include("modify.jl")
+
 # used by OTS and Loadshed TS models
 function check_br_status(sol)
     for (idx,val) in sol["branch"]
@@ -41,3 +43,5 @@ include("misc.jl")
 include("ots.jl")
 
 include("tnep.jl")
+
+include("docs.jl")

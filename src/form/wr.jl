@@ -12,6 +12,33 @@ function SOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, SOCWRForm(); kwargs...)
 end
 
+
+
+function variable_complex_voltage_product{T}(pm::GenericPowerModel{T}; bounded = true)
+    if bounded
+        wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.ref[:buspairs])
+
+        @variable(pm.model, wr_min[bp] <= wr[bp in keys(pm.ref[:buspairs])] <= wr_max[bp], start = getstart(pm.ref[:buspairs], bp, "wr_start", 1.0))
+        @variable(pm.model, wi_min[bp] <= wi[bp in keys(pm.ref[:buspairs])] <= wi_max[bp], start = getstart(pm.ref[:buspairs], bp, "wi_start"))
+    else
+        @variable(pm.model, wr[bp in keys(pm.ref[:buspairs])], start = getstart(pm.ref[:buspairs], bp, "wr_start", 1.0))
+        @variable(pm.model, wi[bp in keys(pm.ref[:buspairs])], start = getstart(pm.ref[:buspairs], bp, "wi_start"))
+    end
+    return wr, wi
+end
+
+function variable_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
+    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.ref[:buspairs])
+
+    bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.ref[:branch]])
+
+    @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr[b in keys(pm.ref[:branch])] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.ref[:buspairs], bi_bp[b], "wr_start", 1.0))
+    @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi[b in keys(pm.ref[:branch])] <= max(0, wi_max[bi_bp[b]]), start = getstart(pm.ref[:buspairs], bi_bp[b], "wi_start"))
+
+    return wr, wi
+end
+
+
 function variable_complex_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_voltage_magnitude_sqr(pm; kwargs...)
     variable_complex_voltage_product(pm; kwargs...)
@@ -222,12 +249,23 @@ function constraint_phase_angle_difference{T <: AbstractWRForm}(pm::GenericPower
 
     # to prevent this constraint from being posted on multiple parallel lines
     if buspair["line"] == i
+        cs = Set()
+
+        w_fr = getvariable(pm.model, :w)[f_bus]
+        w_to = getvariable(pm.model, :w)[t_bus]
         wr = getvariable(pm.model, :wr)[pair]
         wi = getvariable(pm.model, :wi)[pair]
 
         c1 = @constraint(pm.model, wi <= buspair["angmax"]*wr)
         c2 = @constraint(pm.model, wi >= buspair["angmin"]*wr)
-        return Set([c1, c2])
+
+        c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, buspair["angmin"], buspair["angmax"])
+
+        push!(cs, c1)
+        push!(cs, c2)
+        push!(cs, c3)
+
+        return cs
     end
     return Set()
 end
@@ -441,6 +479,9 @@ function constraint_phase_angle_difference_ne{T <: AbstractWRForm}(pm::GenericPo
 
     c1 = @constraint(pm.model, wi <= branch["angmax"]*wr)
     c2 = @constraint(pm.model, wi >= branch["angmin"]*wr)
+
+
+
     return Set([c1, c2])
 end
 
@@ -479,6 +520,10 @@ end
 
 
 
+
+
+
+
 type QCWRForm <: AbstractWRForm end
 typealias QCWRPowerModel GenericPowerModel{QCWRForm}
 
@@ -486,6 +531,59 @@ typealias QCWRPowerModel GenericPowerModel{QCWRForm}
 function QCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, QCWRForm(); kwargs...)
 end
+
+# Creates variables associated with differences in phase angles
+function variable_phase_angle_difference{T}(pm::GenericPowerModel{T})
+    @variable(pm.model, pm.ref[:buspairs][bp]["angmin"] <= td[bp in keys(pm.ref[:buspairs])] <= pm.ref[:buspairs][bp]["angmax"], start = getstart(pm.ref[:buspairs], bp, "td_start"))
+    return td
+end
+
+# Creates the voltage magnitude product variables
+function variable_voltage_magnitude_product{T}(pm::GenericPowerModel{T})
+    vv_min = Dict([(bp, buspair["v_from_min"]*buspair["v_to_min"]) for (bp, buspair) in pm.ref[:buspairs]])
+    vv_max = Dict([(bp, buspair["v_from_max"]*buspair["v_to_max"]) for (bp, buspair) in pm.ref[:buspairs]])
+
+    @variable(pm.model,  vv_min[bp] <= vv[bp in keys(pm.ref[:buspairs])] <=  vv_max[bp], start = getstart(pm.ref[:buspairs], bp, "vv_start", 1.0))
+    return vv
+end
+
+function variable_cosine{T}(pm::GenericPowerModel{T})
+    cos_min = Dict([(bp, -Inf) for bp in keys(pm.ref[:buspairs])])
+    cos_max = Dict([(bp,  Inf) for bp in keys(pm.ref[:buspairs])])
+
+    for (bp, buspair) in pm.ref[:buspairs]
+        if buspair["angmin"] >= 0
+            cos_max[bp] = cos(buspair["angmin"])
+            cos_min[bp] = cos(buspair["angmax"])
+        end
+        if buspair["angmax"] <= 0
+            cos_max[bp] = cos(buspair["angmax"])
+            cos_min[bp] = cos(buspair["angmin"])
+        end
+        if buspair["angmin"] < 0 && buspair["angmax"] > 0
+            cos_max[bp] = 1.0
+            cos_min[bp] = min(cos(buspair["angmin"]), cos(buspair["angmax"]))
+        end
+    end
+
+    @variable(pm.model, cos_min[bp] <= cs[bp in keys(pm.ref[:buspairs])] <= cos_max[bp], start = getstart(pm.ref[:buspairs], bp, "cs_start", 1.0))
+    return cs
+end
+
+function variable_sine{T}(pm::GenericPowerModel{T})
+    @variable(pm.model, sin(pm.ref[:buspairs][bp]["angmin"]) <= si[bp in keys(pm.ref[:buspairs])] <= sin(pm.ref[:buspairs][bp]["angmax"]), start = getstart(pm.ref[:buspairs], bp, "si_start"))
+    return si
+end
+
+function variable_current_magnitude_sqr{T}(pm::GenericPowerModel{T})
+    buspairs = pm.ref[:buspairs]
+    cm_min = Dict([(bp, 0) for bp in keys(pm.ref[:buspairs])])
+    cm_max = Dict([(bp, (buspair["rate_a"]*buspair["tap"]/buspair["v_from_min"])^2) for (bp, buspair) in pm.ref[:buspairs]])
+
+    @variable(pm.model, cm_min[bp] <= cm[bp in keys(pm.ref[:buspairs])] <=  cm_max[bp], start = getstart(pm.ref[:buspairs], bp, "cm_start"))
+    return cm
+end
+
 
 function variable_complex_voltage(pm::QCWRPowerModel; kwargs...)
     variable_phase_angle(pm; kwargs...)
@@ -623,12 +721,23 @@ function constraint_phase_angle_difference(pm::QCWRPowerModel, branch)
 
     # to prevent this constraint from being posted on multiple parallel lines
     if buspair["line"] == i
+        cs = Set()
+
+        w_fr = getvariable(pm.model, :w)[f_bus]
+        w_to = getvariable(pm.model, :w)[t_bus]
         wr = getvariable(pm.model, :wr)[pair]
         wi = getvariable(pm.model, :wi)[pair]
 
         c1 = @constraint(pm.model, wi <= buspair["angmax"]*wr)
         c2 = @constraint(pm.model, wi >= buspair["angmin"]*wr)
-        return Set([c1, c2])
+
+        c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, buspair["angmin"], buspair["angmax"])
+
+        push!(cs, c1)
+        push!(cs, c2)
+        push!(cs, c3)
+
+        return cs
     end
     return Set()
 end

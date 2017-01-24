@@ -10,6 +10,8 @@ function parse_matpower(file_string)
 
     check_phase_angle_differences(data)
     check_thermal_limits(data)
+    check_bus_types(data)
+
     standardize_cost_order(data)
 
     unify_transformer_taps(data)
@@ -17,8 +19,6 @@ function parse_matpower(file_string)
     make_per_unit(data)
 
     merge_generator_cost_data(data)
-
-    add_derived_values(data)
 
     return data
 end
@@ -28,11 +28,11 @@ end
 function check_phase_angle_differences(data, default_pad = 60)
     for branch in data["branch"]
         if branch["angmin"] <= -90
-            warn("this code only supports angmin values in -89 deg. to 89 deg., tightening the value on branch $(branch["index"]) from $(branch["angmin"]) to -60 deg.")
+            warn("this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(branch["angmin"]) to -60 deg.")
             branch["angmin"] = -default_pad
         end
         if branch["angmax"] >= 90
-            warn("this code only supports angmax values in -89 deg. to 89 deg., tightening the value on branch $(branch["index"]) from $(branch["angmax"]) to 60 deg.")
+            warn("this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(branch["angmax"]) to 60 deg.")
             branch["angmax"] = default_pad
         end
         if branch["angmin"] == 0.0 && branch["angmax"] == 0.0
@@ -73,6 +73,37 @@ function check_thermal_limits(data)
             branch["rate_a"] = new_rate
         end
     end
+end
+
+
+# checks bus types are consistent with generator connections, if not, fixes them
+function check_bus_types(data)
+    bus_gens = Dict([(bus["bus_i"], []) for (i,bus) in enumerate(data["bus"])])
+
+    for (i,gen) in enumerate(data["gen"])
+        #println(gen)
+        if gen["gen_status"] == 1
+            push!(bus_gens[gen["gen_bus"]], i)
+        end
+    end
+
+    for bus in data["bus"]
+        if bus["bus_type"] != 4 && bus["bus_type"] != 3
+            bus_gens_count = length(bus_gens[bus["bus_i"]])
+
+            if bus_gens_count == 0 && bus["bus_type"] != 1
+                warn("no active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 1")
+                bus["bus_type"] = 1
+            end
+
+            if bus_gens_count != 0 && bus["bus_type"] != 2
+                warn("active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 2")
+                bus["bus_type"] = 2
+            end
+
+        end
+    end
+
 end
 
 
