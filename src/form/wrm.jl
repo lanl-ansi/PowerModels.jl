@@ -14,6 +14,45 @@ function variable_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}
     variable_complex_voltage_product_matrix(pm; kwargs...)
 end
 
+function variable_complex_voltage_product_matrix{T}(pm::GenericPowerModel{T})
+    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.ref[:buspairs])
+
+    w_index = 1:length(keys(pm.ref[:bus]))
+    lookup_w_index = Dict([(bi, i) for (i,bi) in enumerate(keys(pm.ref[:bus]))])
+
+    @variable(pm.model, WR[1:length(keys(pm.ref[:bus])), 1:length(keys(pm.ref[:bus]))], Symmetric)
+    @variable(pm.model, WI[1:length(keys(pm.ref[:bus])), 1:length(keys(pm.ref[:bus]))])
+
+    # bounds on diagonal
+    for (i, bus) in pm.ref[:bus]
+        w_idx = lookup_w_index[i]
+        wr_ii = WR[w_idx,w_idx]
+        wi_ii = WR[w_idx,w_idx]
+
+        setlowerbound(wr_ii, bus["vmin"]^2)
+        setupperbound(wr_ii, bus["vmax"]^2)
+
+        #this breaks SCS on the 3 bus exmple
+        #setlowerbound(wi_ii, 0)
+        #setupperbound(wi_ii, 0)
+    end
+
+    # bounds on off-diagonal
+    for (i,j) in keys(pm.ref[:buspairs])
+        wi_idx = lookup_w_index[i]
+        wj_idx = lookup_w_index[j]
+
+        setupperbound(WR[wi_idx, wj_idx], wr_max[(i,j)])
+        setlowerbound(WR[wi_idx, wj_idx], wr_min[(i,j)])
+
+        setupperbound(WI[wi_idx, wj_idx], wi_max[(i,j)])
+        setlowerbound(WI[wi_idx, wj_idx], wi_min[(i,j)])
+    end
+
+    pm.model.ext[:lookup_w_index] = lookup_w_index
+    return WR, WI
+end
+
 function constraint_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
     WR = getvariable(pm.model, :WR)
     WI = getvariable(pm.model, :WI)

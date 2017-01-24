@@ -1,5 +1,38 @@
 # tools for working with PowerModels internal data format
 
+function compute_voltage_product_bounds(buspairs)
+    wr_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
+    wr_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
+    wi_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
+    wi_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
+
+    for (bp, buspair) in buspairs
+        i,j = bp
+
+        if buspair["angmin"] >= 0
+            wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*cos(buspair["angmin"])
+            wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*cos(buspair["angmax"])
+            wi_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmax"])
+            wi_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*sin(buspair["angmin"])
+        end
+        if buspair["angmax"] <= 0
+            wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*cos(buspair["angmax"])
+            wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*cos(buspair["angmin"])
+            wi_max[bp] = buspair["v_from_min"]*buspair["v_to_min"]*sin(buspair["angmax"])
+            wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
+        end
+        if buspair["angmin"] < 0 && buspair["angmax"] > 0
+            wr_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*1.0
+            wr_min[bp] = buspair["v_from_min"]*buspair["v_to_min"]*min(cos(buspair["angmin"]), cos(buspair["angmax"]))
+            wi_max[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmax"])
+            wi_min[bp] = buspair["v_from_max"]*buspair["v_to_max"]*sin(buspair["angmin"])
+        end
+    end
+
+    return wr_min, wr_max, wi_min, wi_max
+end
+
+
 # adds values that are derived from other values in PM data structure, for the first time
 function add_derived_values(data::Dict{AbstractString,Any})
     update_derived_values(data, overwrite = false)
