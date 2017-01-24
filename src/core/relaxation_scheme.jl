@@ -1,7 +1,31 @@
 function relaxation_complex_product(m, a, b, c, d)
-    # TODO add LNC cuts to this
     c = @constraint(m, c^2 + d^2 <= a*b)
     return Set([c])
+end
+
+# In the literature this constraints are called the Lifted Nonlinear Cuts (LNCs)
+function cut_complex_product_and_angle_difference(m, wf, wt, wr, wi, angmin, angmax)
+    @assert angmin >= -pi/2 && angmin <= pi/2
+    @assert angmax >= -pi/2 && angmax <= pi/2
+    @assert angmin < angmax
+
+    vfub = sqrt(getupperbound(wf))
+    vflb = sqrt(getlowerbound(wf))
+    vtub = sqrt(getupperbound(wt))
+    vtlb = sqrt(getlowerbound(wt))
+    tdub = angmax
+    tdlb = angmin
+
+    phi = (tdub + tdlb)/2
+    d   = (tdub - tdlb)/2
+
+    sf = vflb + vfub
+    st = vtlb + vtub
+
+    c1 = @constraint(m, sf*st*(cos(phi)*wr + sin(phi)*wi) - vtub*cos(d)*st*wf - vfub*cos(d)*sf*wt >=  vfub*vtub*cos(d)*(vflb*vtlb - vfub*vtub))
+    c2 = @constraint(m, sf*st*(cos(phi)*wr + sin(phi)*wi) - vtlb*cos(d)*st*wf - vflb*cos(d)*sf*wt >= -vflb*vtlb*cos(d)*(vflb*vtlb - vfub*vtub))
+
+    return Set([c1, c2])
 end
 
 function relaxation_complex_product_on_off(m, a, b, c, d, z)

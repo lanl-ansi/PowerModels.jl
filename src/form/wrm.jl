@@ -138,16 +138,28 @@ function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowe
 
     # to prevent this constraint from being posted on multiple parallel lines
     if buspair["line"] == i
+        cs = Set()
+
         WR = getvariable(pm.model, :WR)
         WI = getvariable(pm.model, :WI)
         w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
         w_to_index = pm.model.ext[:lookup_w_index][t_bus]
+
+        w_fr = WR[w_fr_index, w_fr_index]
+        w_to = WR[w_to_index, w_to_index]
         wr   = WR[w_fr_index, w_to_index]
         wi   = WI[w_fr_index, w_to_index]
 
         c1 = @constraint(pm.model, wi <= buspair["angmax"]*wr)
         c2 = @constraint(pm.model, wi >= buspair["angmin"]*wr)
-        return Set([c1, c2])
+
+        c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, buspair["angmin"], buspair["angmax"])
+
+        push!(cs, c1)
+        push!(cs, c2)
+        push!(cs, c3)
+
+        return cs
     end
     return Set()
 end
