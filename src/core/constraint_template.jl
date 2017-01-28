@@ -121,6 +121,44 @@ function constraint_thermal_limit_to{T}(pm::GenericPowerModel{T}, branch; scale 
 end
 
 
+function constraint_thermal_limit_from_on_off(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+
+    return constraint_thermal_limit_from_on_off(pm, i, f_idx, branch["rate_a"])
+end
+
+function constraint_thermal_limit_to_on_off{T}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    t_idx = (i, t_bus, f_bus)
+
+    return constraint_thermal_limit_to_on_off(pm, i, t_idx, branch["rate_a"])
+end
+
+
+function constraint_thermal_limit_from_ne(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+
+    return constraint_thermal_limit_from_ne(pm, i, f_idx, branch["rate_a"])
+end
+
+function constraint_thermal_limit_to_ne{T}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    t_idx = (i, t_bus, f_bus)
+
+    return constraint_thermal_limit_to_ne(pm, i, t_idx, branch["rate_a"])
+end
+
+
 ### Phase Angle Difference Constraints ### 
 
 function constraint_phase_angle_difference(pm::GenericPowerModel, branch)
