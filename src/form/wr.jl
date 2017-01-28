@@ -132,26 +132,13 @@ end
 
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
-function constraint_active_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_active_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     p_fr = getvariable(pm.model, :p)[f_idx]
     p_to = getvariable(pm.model, :p)[t_idx]
     w_fr = getvariable(pm.model, :w)[f_bus]
     w_to = getvariable(pm.model, :w)[t_bus]
     wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
     wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
-
-    g = branch["g"]
-    b = branch["b"]
-    c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2
 
     c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
     c2 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
@@ -186,26 +173,13 @@ function constraint_active_ohms_yt_ne{T <: AbstractWRForm}(pm::GenericPowerModel
 end
 
 
-function constraint_reactive_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_reactive_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     q_fr = getvariable(pm.model, :q)[f_idx]
     q_to = getvariable(pm.model, :q)[t_idx]
     w_fr = getvariable(pm.model, :w)[f_bus]
     w_to = getvariable(pm.model, :w)[t_bus]
     wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
     wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
-
-    g = branch["g"]
-    b = branch["b"]
-    c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2
 
     c1 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
     c2 = @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )

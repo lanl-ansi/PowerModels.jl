@@ -118,18 +118,10 @@ function constraint_reactive_kcl_shunt_ne{T <: AbstractDCPForm}(pm::GenericPower
 end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
-function constraint_active_ohms_yt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_active_ohms_yt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     p_fr = getvariable(pm.model, :p)[f_idx]
     t_fr = getvariable(pm.model, :t)[f_bus]
     t_to = getvariable(pm.model, :t)[t_bus]
-
-    b = branch["b"]
 
     c = @constraint(pm.model, p_fr == -b*(t_fr - t_to))
     return Set([c])
@@ -157,7 +149,7 @@ function constraint_active_ohms_yt_ne{T <: AbstractDCPForm}(pm::GenericPowerMode
 end
 
 
-function constraint_reactive_ohms_yt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_reactive_ohms_yt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     # Do nothing, this model does not have reactive variables
     return Set()
 end
