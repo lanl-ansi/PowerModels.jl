@@ -2,7 +2,8 @@
 
 export
     GenericPowerModel,
-    setdata, setsolver, solve
+    setdata, setsolver, solve,
+    run_generic_model, build_generic_model, solve_generic_model
 
 abstract AbstractPowerModel
 abstract AbstractPowerFormulation
@@ -69,30 +70,47 @@ function JuMP.solve(pm::GenericPowerModel)
 end
 
 
-# if the user passed a file name load into Dict
-#function run_generic_model(file::AbstractString, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
-#    data = PowerModels.parse_file(file)
-#    return run_generic_model(data, model_constructor, solver, post_method; solution_builder = solution_builder, kwargs...)
-#end
-
-function run_generic_model(file::AbstractString, args...; kwargs...)
+function run_generic_model(file::AbstractString, model_constructor, solver, post_method; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_generic_model(data, args...; kwargs...)
+    return run_generic_model(data, model_constructor, solver, post_method; kwargs...)
 end
 
 # core run function assumes network data is given as a Dict
 function run_generic_model(data::Dict{AbstractString,Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
+    pm = build_generic_model(data, model_constructor, post_method; kwargs...)
+
+    solution = solve_generic_model(pm, solver; solution_builder = solution_builder)
+
+    return solution
+end
+
+
+function build_generic_model(file::AbstractString,  model_constructor, post_method; kwargs...)
+    data = PowerModels.parse_file(file)
+    return build_generic_model(data, model_constructor, post_method; kwargs...)
+end
+
+function build_generic_model(data::Dict{AbstractString,Any}, model_constructor, post_method; kwargs...)
     update_derived_values(data)
 
     # NOTE, this model constructor will build the ref dict using the latest info from the data
-    pm = model_constructor(data; solver = solver, kwargs...)
+    pm = model_constructor(data; kwargs...)
 
     post_method(pm)
+
+    return pm
+end
+
+
+function solve_generic_model(pm::GenericPowerModel, solver; solution_builder = get_solution)
+    setsolver(pm.model, solver)
 
     status, solve_time = solve(pm)
 
     return build_solution(pm, status, solve_time; solution_builder = solution_builder)
 end
+
+
 
 function build_ref(data::Dict{AbstractString,Any})
     ref = Dict{Symbol,Any}()

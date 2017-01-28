@@ -9,6 +9,7 @@ PowerModels.jl Change Log
 - Added documentation on internal JSON data format to DATA.md
 - Updated TNEP models to work with Matpower parsing extensions
 - Strengthened convex formulations with Lifted Nonlinear Cuts (LNCs)
+- Added ability to easily inspect the JuMP model produced by PowerModels
 
 ### v0.2.3
 - Multiple improvements to Matlab file parsing
