@@ -11,7 +11,18 @@
 #
 
 
-### KCL Constraints ###
+### Generator Constraints ###
+
+function constraint_active_gen_setpoint(pm::GenericPowerModel, gen)
+    return constraint_active_gen_setpoint(pm, gen["index"], gen["pg"])
+end
+
+function constraint_reactive_gen_setpoint(pm::GenericPowerModel, gen)
+    return constraint_reactive_gen_setpoint(pm, gen["index"], gen["qg"])
+end
+
+
+### Bus - KCL Constraints ###
 
 function constraint_active_kcl_shunt(pm::GenericPowerModel, bus)
     i = bus["index"]
@@ -48,7 +59,7 @@ function constraint_reactive_kcl_shunt_ne(pm::GenericPowerModel, bus)
 end
 
 
-### Ohm's Law Constraints ### 
+### Branch - Ohm's Law Constraints ### 
 
 function constraint_active_ohms_yt(pm::GenericPowerModel, branch)
     i = branch["index"]
@@ -118,7 +129,7 @@ function constraint_reactive_ohms_y(pm::GenericPowerModel, branch)
 end
 
 
-### Thermal Limit Constraints ### 
+### Branch - Thermal Limit Constraints ### 
 
 function constraint_thermal_limit_from(pm::GenericPowerModel, branch; scale = 1.0)
     i = branch["index"]
@@ -177,7 +188,7 @@ function constraint_thermal_limit_to_ne{T}(pm::GenericPowerModel{T}, branch)
 end
 
 
-### Phase Angle Difference Constraints ### 
+### Branch - Phase Angle Difference Constraints ### 
 
 function constraint_phase_angle_difference(pm::GenericPowerModel, branch)
     i = branch["index"]
@@ -190,5 +201,33 @@ function constraint_phase_angle_difference(pm::GenericPowerModel, branch)
         return constraint_phase_angle_difference(pm, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
     end
     return Set()
+end
+
+
+### Branch - Loss Constraints ### 
+
+function constraint_active_loss_lb(pm::GenericPowerModel, branch)
+    @assert branch["br_r"] >= 0
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    c = branch["br_b"]
+    tr = branch["tr"]
+
+    return constraint_active_loss_lb(pm, f_bus, t_bus, f_idx, t_idx, c, tr)
+end
+
+function constraint_reactive_loss_lb(pm::GenericPowerModel, branch)
+    @assert branch["br_x"] >= 0
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    return constraint_reactive_loss_lb(pm, f_bus, t_bus, f_idx, t_idx, c, tr)
 end
 

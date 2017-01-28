@@ -307,6 +307,15 @@ function constraint_phase_angle_difference_ne{T <: AbstractACPForm}(pm::GenericP
 end
 
 
+function constraint_reactive_loss_lb{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, c, tr)
+    v_fr = getvariable(pm.model, :v)[f_bus]
+    v_to = getvariable(pm.model, :v)[t_bus]
+    q_fr = getvariable(pm.model, :q)[f_idx]
+    q_to = getvariable(pm.model, :q)[t_idx]
+
+    c = @constraint(m, q_fr + q_to >= -c/2*(v_fr^2/tr^2 + v_to^2))
+    return Set([c])
+end
 
 
 

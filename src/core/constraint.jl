@@ -1,7 +1,8 @@
-################################################################################
-# This file defines commonly used and created constraints for power flow models
-# This will hopefully make everything more compositional
-################################################################################
+###############################################################################
+# This file defines commonly used constraints for power flow models
+# These constraints generally assume that the model contains p and q values 
+# for branches line flows and bus flow conservation
+###############################################################################
 
 # Generic thermal limit constraint
 function constraint_thermal_limit_from{T}(pm::GenericPowerModel{T}, f_idx, rate_a)
@@ -75,30 +76,20 @@ function constraint_thermal_limit_to_ne{T}(pm::GenericPowerModel{T}, i, t_idx, r
 end
 
 
-function constraint_active_gen_setpoint{T}(pm::GenericPowerModel{T}, gen)
-    i = gen["index"]
-    pg = getvariable(pm.model, :pg)[gen["index"]]
-
-    return @constraint(pm.model, pg == gen["pg"])
+function constraint_active_gen_setpoint{T}(pm::GenericPowerModel{T}, i, pg)
+    pg_var = getvariable(pm.model, :pg)[i]
+    c = @constraint(pm.model, pg_var == pg)
+    return Set([c]) 
 end
 
-function constraint_reactive_gen_setpoint{T}(pm::GenericPowerModel{T}, gen)
-    i = gen["index"]
-    qg = getvariable(pm.model, :qg)[gen["index"]]
-
-    c = @constraint(pm.model, qg == gen["qg"])
+function constraint_reactive_gen_setpoint{T}(pm::GenericPowerModel{T}, i, qg)
+    qg_var = getvariable(pm.model, :qg)[i]
+    c = @constraint(pm.model, qg_var == qg)
     return Set([c])
 end
 
-function constraint_active_loss_lb{T}(pm::GenericPowerModel{T}, branch)
-    @assert branch["br_r"] >= 0
 
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_active_loss_lb{T}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, c, tr)
     p_fr = getvariable(pm.model, :p)[f_idx]
     p_to = getvariable(pm.model, :p)[t_idx]
 
@@ -106,21 +97,3 @@ function constraint_active_loss_lb{T}(pm::GenericPowerModel{T}, branch)
     return Set([c])
 end
 
-function constraint_reactive_loss_lb{T}(pm::GenericPowerModel{T}, branch)
-    @assert branch["br_x"] >= 0
-
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
-    v_fr = getvariable(pm.model, :v)[f_bus]
-    v_to = getvariable(pm.model, :v)[t_bus]
-
-    q_fr = getvariable(pm.model, :q)[f_idx]
-    q_to = getvariable(pm.model, :q)[t_idx]
-
-    c = @constraint(m, q_fr + q_to >= -branch["br_b"]/2*(v_fr^2/branch["tap"]^2 + v_to^2))
-    return Set([c])
-end
