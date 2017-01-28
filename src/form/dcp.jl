@@ -69,7 +69,7 @@ function constraint_theta_ref{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
     return Set([c])
 end
 
-function constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, bus; epsilon = 0.0)
+function constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, vm, epsilon)
     # do nothing, this model does not have voltage variables
     return Set()
 end

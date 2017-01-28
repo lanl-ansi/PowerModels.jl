@@ -22,6 +22,13 @@ function constraint_reactive_gen_setpoint(pm::GenericPowerModel, gen)
 end
 
 
+### Bus - Setpoint Constraints ###
+
+function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, bus; epsilon = 0.0)
+    @assert epsilon >= 0.0
+    return constraint_voltage_magnitude_setpoint(pm, bus["index"], bus["vm"], epsilon)
+end
+
 ### Bus - KCL Constraints ###
 
 function constraint_active_kcl_shunt(pm::GenericPowerModel, bus)

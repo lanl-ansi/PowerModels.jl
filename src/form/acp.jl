@@ -36,17 +36,15 @@ function constraint_theta_ref{T <: AbstractACPForm}(pm::GenericPowerModel{T})
     return Set([c])
 end
 
-function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, bus; epsilon = 0.0)
-    i = bus["index"]
+function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, vm, epsilon)
     v = getvariable(pm.model, :v)[i]
 
     if epsilon == 0.0
-        c = @constraint(pm.model, v == bus["vm"])
+        c = @constraint(pm.model, v == vm)
         return Set([c])
     else
-        @assert epsilon > 0.0
-        c1 = @constraint(pm.model, v <= bus["vm"] + epsilon)
-        c2 = @constraint(pm.model, v >= bus["vm"] - epsilon)
+        c1 = @constraint(pm.model, v <= vm + epsilon)
+        c2 = @constraint(pm.model, v >= vm - epsilon)
         return Set([c1, c2])
     end
 end

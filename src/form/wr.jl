@@ -59,17 +59,16 @@ function constraint_theta_ref{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     return Set()
 end
 
-function constraint_voltage_magnitude_setpoint{T <: AbstractWRForm}(pm::GenericPowerModel{T}, bus; epsilon = 0.0)
-    i = bus["index"]
+function constraint_voltage_magnitude_setpoint{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, vm, epsilon)
     w = getvariable(pm.model, :w)[i]
 
     if epsilon == 0.0
-        c = @constraint(pm.model, w == bus["vm"]^2)
+        c = @constraint(pm.model, w == vm^2)
         return Set([c])
     else
         @assert epsilon > 0.0
-        c1 = @constraint(pm.model, w <= bus["vm"]^2 + epsilon)
-        c2 = @constraint(pm.model, w >= bus["vm"]^2 - epsilon)
+        c1 = @constraint(pm.model, w <= (vm + epsilon)^2)
+        c2 = @constraint(pm.model, w >= (vm - epsilon)^2)
         return Set([c1, c2])
     end
 end
