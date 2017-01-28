@@ -215,28 +215,18 @@ function constraint_complex_voltage_on_off{T <: AbstractDCPForm}(pm::GenericPowe
     # do nothing, this model does not have complex voltage variables
 end
 
-function constraint_active_ohms_yt_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_active_ohms_yt_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = getvariable(pm.model, :p)[f_idx]
     t_fr = getvariable(pm.model, :t)[f_bus]
     t_to = getvariable(pm.model, :t)[t_bus]
     z = getvariable(pm.model, :line_z)[i]
-
-    b = branch["b"]
-    t_min = branch["off_angmin"]
-    t_max = branch["off_angmax"]
 
     c1 = @constraint(pm.model, p_fr <= -b*(t_fr - t_to + t_max*(1-z)) )
     c2 = @constraint(pm.model, p_fr >= -b*(t_fr - t_to + t_min*(1-z)) )
     return Set([c1, c2])
 end
 
-function constraint_reactive_ohms_yt_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_reactive_ohms_yt_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     # Do nothing, this model does not have reactive variables
     return Set()
 end
@@ -347,28 +337,19 @@ function constraint_active_kcl_shunt_ne{T <: AbstractDCPLLForm}(pm::GenericPower
 end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
-function constraint_active_ohms_yt_on_off{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_active_ohms_yt_on_off{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = getvariable(pm.model, :p)[f_idx]
     p_to = getvariable(pm.model, :p)[t_idx]
     t_fr = getvariable(pm.model, :t)[f_bus]
     t_to = getvariable(pm.model, :t)[t_bus]
     z = getvariable(pm.model, :line_z)[i]
 
-    b = branch["b"]
-    t_min = branch["off_angmin"]
-    t_max = branch["off_angmax"]
-
     c1 = @constraint(pm.model, p_fr <= -b*(t_fr - t_to + t_max*(1-z)) )
     c2 = @constraint(pm.model, p_fr >= -b*(t_fr - t_to + t_min*(1-z)) )
 
+    r = g/(g^2 + b^2)
     t_m = max(abs(t_min),abs(t_max))
-    c3 = @constraint(pm.model, p_fr + p_to >= branch["br_r"]*( (-branch["b"]*(t_fr - t_to))^2 - (-branch["b"]*(t_m))^2*(1-z) ) )
+    c3 = @constraint(pm.model, p_fr + p_to >= r*( (-b*(t_fr - t_to))^2 - (-b*(t_m))^2*(1-z) ) )
     return Set([c1, c2, c3])
 end
 

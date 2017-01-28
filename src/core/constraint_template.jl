@@ -136,6 +136,49 @@ function constraint_reactive_ohms_y(pm::GenericPowerModel, branch)
 end
 
 
+### Branch - On/Off Ohm's Law Constraints ### 
+
+function constraint_active_ohms_yt_on_off(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    g = branch["g"]
+    b = branch["b"]
+    c = branch["br_b"]
+    tr = branch["tr"]
+    ti = branch["ti"]
+    tm = tr^2 + ti^2 
+
+    t_min = branch["off_angmin"]
+    t_max = branch["off_angmax"]
+
+    return constraint_active_ohms_yt_on_off(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+end
+
+function constraint_reactive_ohms_yt_on_off(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    g = branch["g"]
+    b = branch["b"]
+    c = branch["br_b"]
+    tr = branch["tr"]
+    ti = branch["ti"]
+    tm = tr^2 + ti^2 
+
+    t_min = branch["off_angmin"]
+    t_max = branch["off_angmax"]
+
+    return constraint_reactive_ohms_yt_on_off(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+end
+
+
 ### Branch - Thermal Limit Constraints ### 
 
 function constraint_thermal_limit_from(pm::GenericPowerModel, branch; scale = 1.0)

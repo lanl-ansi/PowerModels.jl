@@ -103,32 +103,6 @@ function constraint_active_ohms_yt{T <: AbstractACPForm}(pm::GenericPowerModel{T
     return Set([c1, c2])
 end
 
-function constraint_active_ohms_yt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
-    p_fr = getvariable(pm.model, :p_ne)[f_idx]
-    p_to = getvariable(pm.model, :p_ne)[t_idx]
-    v_fr = getvariable(pm.model, :v)[f_bus]
-    v_to = getvariable(pm.model, :v)[t_bus]
-    t_fr = getvariable(pm.model, :t)[f_bus]
-    t_to = getvariable(pm.model, :t)[t_bus]
-    z = getvariable(pm.model, :line_ne)[i]
-
-    g = branch["g"]
-    b = branch["b"]
-    c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2 
-
-    c1 = @NLconstraint(pm.model, p_fr == z*(g/tm*v_fr^2 + (-g*tr+b*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-b*tr-g*ti)/tm*(v_fr*v_to*sin(t_fr-t_to))) )
-    c2 = @NLconstraint(pm.model, p_to ==    z*(g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )      
-    return Set([c1, c2])
-end
 
 function constraint_reactive_ohms_yt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     q_fr = getvariable(pm.model, :q)[f_idx]
@@ -140,33 +114,6 @@ function constraint_reactive_ohms_yt{T <: AbstractACPForm}(pm::GenericPowerModel
 
     c1 = @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*v_fr^2 - (-b*tr-g*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-g*tr+b*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
     c2 = @NLconstraint(pm.model, q_to ==    -(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
-    return Set([c1, c2])
-end
-
-function constraint_reactive_ohms_yt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
-    q_fr = getvariable(pm.model, :q_ne)[f_idx]
-    q_to = getvariable(pm.model, :q_ne)[t_idx]
-    v_fr = getvariable(pm.model, :v)[f_bus]
-    v_to = getvariable(pm.model, :v)[t_bus]
-    t_fr = getvariable(pm.model, :t)[f_bus]
-    t_to = getvariable(pm.model, :t)[t_bus]
-    z = getvariable(pm.model, :line_ne)[i]
-
-    g = branch["g"]
-    b = branch["b"]
-    c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2 
-
-    c1 = @NLconstraint(pm.model, q_fr == z*(-(b+c/2)/tm*v_fr^2 - (-b*tr-g*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-g*tr+b*ti)/tm*(v_fr*v_to*sin(t_fr-t_to))) )
-    c2 = @NLconstraint(pm.model, q_to ==    z*(-(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )
     return Set([c1, c2])
 end
 
@@ -222,13 +169,7 @@ function constraint_complex_voltage_on_off{T <: AbstractACPForm}(pm::GenericPowe
     return Set()
 end
 
-function constraint_active_ohms_yt_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_active_ohms_yt_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = getvariable(pm.model, :p)[f_idx]
     p_to = getvariable(pm.model, :p)[t_idx]
     v_fr = getvariable(pm.model, :v)[f_bus]
@@ -236,6 +177,26 @@ function constraint_active_ohms_yt_on_off{T <: AbstractACPForm}(pm::GenericPower
     t_fr = getvariable(pm.model, :t)[f_bus]
     t_to = getvariable(pm.model, :t)[t_bus]
     z = getvariable(pm.model, :line_z)[i]
+
+    c1 = @NLconstraint(pm.model, p_fr == z*(g/tm*v_fr^2 + (-g*tr+b*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-b*tr-g*ti)/tm*(v_fr*v_to*sin(t_fr-t_to))) )
+    c2 = @NLconstraint(pm.model, p_to ==    z*(g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )
+    return Set([c1, c2])
+end
+
+function constraint_active_ohms_yt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    p_fr = getvariable(pm.model, :p_ne)[f_idx]
+    p_to = getvariable(pm.model, :p_ne)[t_idx]
+    v_fr = getvariable(pm.model, :v)[f_bus]
+    v_to = getvariable(pm.model, :v)[t_bus]
+    t_fr = getvariable(pm.model, :t)[f_bus]
+    t_to = getvariable(pm.model, :t)[t_bus]
+    z = getvariable(pm.model, :line_ne)[i]
 
     g = branch["g"]
     b = branch["b"]
@@ -245,17 +206,12 @@ function constraint_active_ohms_yt_on_off{T <: AbstractACPForm}(pm::GenericPower
     tm = tr^2 + ti^2 
 
     c1 = @NLconstraint(pm.model, p_fr == z*(g/tm*v_fr^2 + (-g*tr+b*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-b*tr-g*ti)/tm*(v_fr*v_to*sin(t_fr-t_to))) )
-    c2 = @NLconstraint(pm.model, p_to ==    z*(g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )
+    c2 = @NLconstraint(pm.model, p_to ==    z*(g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )      
     return Set([c1, c2])
 end
 
-function constraint_reactive_ohms_yt_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
 
+function constraint_reactive_ohms_yt_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     q_fr = getvariable(pm.model, :q)[f_idx]
     q_to = getvariable(pm.model, :q)[t_idx]
     v_fr = getvariable(pm.model, :v)[f_bus]
@@ -263,6 +219,26 @@ function constraint_reactive_ohms_yt_on_off{T <: AbstractACPForm}(pm::GenericPow
     t_fr = getvariable(pm.model, :t)[f_bus]
     t_to = getvariable(pm.model, :t)[t_bus]
     z = getvariable(pm.model, :line_z)[i]
+
+    c1 = @NLconstraint(pm.model, q_fr == z*(-(b+c/2)/tm*v_fr^2 - (-b*tr-g*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-g*tr+b*ti)/tm*(v_fr*v_to*sin(t_fr-t_to))) )
+    c2 = @NLconstraint(pm.model, q_to ==    z*(-(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )
+    return Set([c1, c2])
+end
+
+function constraint_reactive_ohms_yt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    q_fr = getvariable(pm.model, :q_ne)[f_idx]
+    q_to = getvariable(pm.model, :q_ne)[t_idx]
+    v_fr = getvariable(pm.model, :v)[f_bus]
+    v_to = getvariable(pm.model, :v)[t_bus]
+    t_fr = getvariable(pm.model, :t)[f_bus]
+    t_to = getvariable(pm.model, :t)[t_bus]
+    z = getvariable(pm.model, :line_ne)[i]
 
     g = branch["g"]
     b = branch["b"]
@@ -275,6 +251,7 @@ function constraint_reactive_ohms_yt_on_off{T <: AbstractACPForm}(pm::GenericPow
     c2 = @NLconstraint(pm.model, q_to ==    z*(-(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )
     return Set([c1, c2])
 end
+
 
 function constraint_phase_angle_difference_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
     i = branch["index"]
