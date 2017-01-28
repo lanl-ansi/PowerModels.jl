@@ -83,18 +83,13 @@ function constraint_active_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerModel{
     return Set([c])
 end
 
-function constraint_active_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, bus)
-    i = bus["index"]
-    bus_arcs = pm.ref[:bus_arcs][i]
-    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
-    bus_gens = pm.ref[:bus_gens][i]
-
-    w = getvariable(pm.model, :w)
+function constraint_active_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
+    w = getvariable(pm.model, :w)[i]
     p = getvariable(pm.model, :p)
     p_ne = getvariable(pm.model, :p_ne)
     pg = getvariable(pm.model, :pg)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*w[i])
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*w)
     return Set([c])
 end
 
@@ -107,18 +102,13 @@ function constraint_reactive_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerMode
     return Set([c])
 end
 
-function constraint_reactive_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, bus)
-    i = bus["index"]
-    bus_arcs = pm.ref[:bus_arcs][i]
-    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
-    bus_gens = pm.ref[:bus_gens][i]
-
-    w = getvariable(pm.model, :w)
+function constraint_reactive_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
+    w = getvariable(pm.model, :w)[i]
     q = getvariable(pm.model, :q)
     q_ne = getvariable(pm.model, :q_ne)
     qg = getvariable(pm.model, :qg)
 
-    c = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - bus["qd"] + bus["bs"]*w[i])
+    c = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*w)
     return Set([c])
 end
 

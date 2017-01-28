@@ -29,6 +29,24 @@ function constraint_reactive_kcl_shunt(pm::GenericPowerModel, bus)
     return constraint_reactive_kcl_shunt(pm, i, bus_arcs, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
 end
 
+function constraint_active_kcl_shunt_ne(pm::GenericPowerModel, bus)
+    i = bus["index"]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
+
+    return constraint_active_kcl_shunt_ne(pm, i, bus_arcs, bus_arcs_ne, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
+end
+
+function constraint_reactive_kcl_shunt_ne(pm::GenericPowerModel, bus)
+    i = bus["index"]
+    bus_arcs = pm.ref[:bus_arcs][i]
+    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
+    bus_gens = pm.ref[:bus_gens][i]
+
+    return constraint_reactive_kcl_shunt_ne(pm, i, bus_arcs, bus_arcs_ne, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
+end
+
 
 ### Ohm's Law Constraints ### 
 
