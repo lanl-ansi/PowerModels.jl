@@ -212,16 +212,12 @@ end
 
 
 
-function constraint_phase_angle_difference{T <: AbstractACPForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-
+function constraint_phase_angle_difference{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
     t_fr = getvariable(pm.model, :t)[f_bus]
     t_to = getvariable(pm.model, :t)[t_bus]
 
-    c1 = @constraint(pm.model, t_fr - t_to <= branch["angmax"])
-    c2 = @constraint(pm.model, t_fr - t_to >= branch["angmin"])
+    c1 = @constraint(pm.model, t_fr - t_to <= angmax)
+    c2 = @constraint(pm.model, t_fr - t_to >= angmin)
     return Set([c1, c2])
 end
 

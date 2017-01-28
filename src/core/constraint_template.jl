@@ -99,3 +99,19 @@ function constraint_reactive_ohms_y(pm::GenericPowerModel, branch)
     return constraint_reactive_ohms_y(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
 end
 
+
+### Phase Angle Difference Constraints ### 
+
+function constraint_phase_angle_difference(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    pair = (f_bus, t_bus)
+    buspair = pm.ref[:buspairs][pair]
+
+    if buspair["line"] == i
+        return constraint_phase_angle_difference(pm, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
+    end
+    return Set()
+end
+

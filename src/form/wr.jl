@@ -206,34 +206,23 @@ function constraint_reactive_ohms_yt_ne{T <: AbstractWRForm}(pm::GenericPowerMod
     return Set([c1, c2])
 end
 
-function constraint_phase_angle_difference{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    pair = (f_bus, t_bus)
-    buspair = pm.ref[:buspairs][pair]
+function constraint_phase_angle_difference{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
+    cs = Set()
 
-    # to prevent this constraint from being posted on multiple parallel lines
-    if buspair["line"] == i
-        cs = Set()
+    w_fr = getvariable(pm.model, :w)[f_bus]
+    w_to = getvariable(pm.model, :w)[t_bus]
+    wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
+    wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
 
-        w_fr = getvariable(pm.model, :w)[f_bus]
-        w_to = getvariable(pm.model, :w)[t_bus]
-        wr = getvariable(pm.model, :wr)[pair]
-        wi = getvariable(pm.model, :wi)[pair]
+    c1 = @constraint(pm.model, wi <= angmax*wr)
+    c2 = @constraint(pm.model, wi >= angmin*wr)
+    c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 
-        c1 = @constraint(pm.model, wi <= buspair["angmax"]*wr)
-        c2 = @constraint(pm.model, wi >= buspair["angmin"]*wr)
+    push!(cs, c1)
+    push!(cs, c2)
+    push!(cs, c3)
 
-        c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, buspair["angmin"], buspair["angmax"])
-
-        push!(cs, c1)
-        push!(cs, c2)
-        push!(cs, c3)
-
-        return cs
-    end
-    return Set()
+    return cs
 end
 
 
@@ -668,44 +657,34 @@ function constraint_theta_ref(pm::QCWRPowerModel)
     @constraint(pm.model, getvariable(pm.model, :t)[pm.ref[:ref_bus]] == 0)
 end
 
-function constraint_phase_angle_difference(pm::QCWRPowerModel, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    pair = (f_bus, t_bus)
-    buspair = pm.ref[:buspairs][pair]
+function constraint_phase_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, angmin, angmax)
+    td = getvariable(pm.model, :td)[(f_bus, t_bus)]
 
-    td = getvariable(pm.model, :td)[pair]
-
-    if getlowerbound(td) < branch["angmin"]
-        setlowerbound(td, branch["angmin"])
+    if getlowerbound(td) < angmin
+        setlowerbound(td, angmin)
     end
 
-    if getupperbound(td) > branch["angmax"]
-        setupperbound(td, branch["angmax"])
+    if getupperbound(td) > angmax
+        setupperbound(td, angmax)
     end
 
-    # to prevent this constraint from being posted on multiple parallel lines
-    if buspair["line"] == i
-        cs = Set()
+    cs = Set()
 
-        w_fr = getvariable(pm.model, :w)[f_bus]
-        w_to = getvariable(pm.model, :w)[t_bus]
-        wr = getvariable(pm.model, :wr)[pair]
-        wi = getvariable(pm.model, :wi)[pair]
+    w_fr = getvariable(pm.model, :w)[f_bus]
+    w_to = getvariable(pm.model, :w)[t_bus]
+    wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
+    wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
 
-        c1 = @constraint(pm.model, wi <= buspair["angmax"]*wr)
-        c2 = @constraint(pm.model, wi >= buspair["angmin"]*wr)
+    c1 = @constraint(pm.model, wi <= angmax*wr)
+    c2 = @constraint(pm.model, wi >= angmin*wr)
 
-        c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, buspair["angmin"], buspair["angmax"])
+    c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 
-        push!(cs, c1)
-        push!(cs, c2)
-        push!(cs, c3)
+    push!(cs, c1)
+    push!(cs, c2)
+    push!(cs, c3)
 
-        return cs
-    end
-    return Set()
+    return cs
 end
 
 function add_bus_voltage_setpoint(sol, pm::QCWRPowerModel)
