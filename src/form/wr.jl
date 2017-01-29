@@ -13,7 +13,6 @@ function SOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
 end
 
 
-
 function variable_complex_voltage_product{T}(pm::GenericPowerModel{T}; bounded = true)
     if bounded
         wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])

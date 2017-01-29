@@ -2,7 +2,6 @@ export
     DCPPowerModel, StandardDCPForm,
     DCPLLPowerModel, StandardDCPLLForm
 
-
 abstract AbstractDCPForm <: AbstractPowerFormulation
 
 type StandardDCPForm <: AbstractDCPForm end
@@ -12,6 +11,7 @@ typealias DCPPowerModel GenericPowerModel{StandardDCPForm}
 function DCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, StandardDCPForm(); kwargs...)
 end
+
 
 function variable_complex_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_phase_angle(pm; kwargs...)

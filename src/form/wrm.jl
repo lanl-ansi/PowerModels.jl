@@ -14,6 +14,7 @@ function variable_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}
     variable_complex_voltage_product_matrix(pm; kwargs...)
 end
 
+
 function variable_complex_voltage_product_matrix{T}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
 
