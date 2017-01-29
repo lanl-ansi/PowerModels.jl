@@ -12,6 +12,7 @@ function getstart(set, item_key, value_key, default = 0.0)
     end
 end
 
+
 function variable_phase_angle{T}(pm::GenericPowerModel{T}; bounded = true)
     @variable(pm.model, t[i in keys(pm.ref[:bus])], start = getstart(pm.ref[:bus], i, "t_start"))
     return t
@@ -53,6 +54,12 @@ function variable_voltage_magnitude_sqr_to_on_off{T}(pm::GenericPowerModel{T})
     return w_to
 end
 
+
+function variable_generation{T}(pm::GenericPowerModel{T}; kwargs...)
+    variable_active_generation(pm; kwargs...)
+    variable_reactive_generation(pm; kwargs...)
+end
+
 function variable_active_generation{T}(pm::GenericPowerModel{T}; bounded = true)
     if bounded
         @variable(pm.model, pm.ref[:gen][i]["pmin"] <= pg[i in keys(pm.ref[:gen])] <= pm.ref[:gen][i]["pmax"], start = getstart(pm.ref[:gen], i, "pg_start"))
@@ -71,6 +78,12 @@ function variable_reactive_generation{T}(pm::GenericPowerModel{T}; bounded = tru
     return qg
 end
 
+
+function variable_line_flow{T}(pm::GenericPowerModel{T}; kwargs...)
+    variable_active_line_flow(pm; kwargs...)
+    variable_reactive_line_flow(pm; kwargs...)
+end
+
 function variable_active_line_flow{T}(pm::GenericPowerModel{T}; bounded = true)
     if bounded
         @variable(pm.model, -pm.ref[:branch][l]["rate_a"] <= p[(l,i,j) in pm.ref[:arcs]] <= pm.ref[:branch][l]["rate_a"], start = getstart(pm.ref[:branch], l, "p_start"))
@@ -80,12 +93,6 @@ function variable_active_line_flow{T}(pm::GenericPowerModel{T}; bounded = true)
     return p
 end
 
-function variable_active_line_flow_ne{T}(pm::GenericPowerModel{T})
-    @variable(pm.model, -pm.ref[:ne_branch][l]["rate_a"] <= p_ne[(l,i,j) in pm.ref[:ne_arcs]] <= pm.ref[:ne_branch][l]["rate_a"], start = getstart(pm.ref[:ne_branch], l, "p_start"))
-    return p_ne
-end
-
-
 function variable_reactive_line_flow{T}(pm::GenericPowerModel{T}; bounded = true)
     if bounded
         @variable(pm.model, -pm.ref[:branch][l]["rate_a"] <= q[(l,i,j) in pm.ref[:arcs]] <= pm.ref[:branch][l]["rate_a"], start = getstart(pm.ref[:branch], l, "q_start"))
@@ -93,6 +100,17 @@ function variable_reactive_line_flow{T}(pm::GenericPowerModel{T}; bounded = true
         @variable(pm.model, q[(l,i,j) in pm.ref[:arcs]], start = getstart(pm.ref[:branch], l, "q_start"))
     end
     return q
+end
+
+
+function variable_line_flow_ne{T}(pm::GenericPowerModel{T}; kwargs...)
+    variable_active_line_flow_ne(pm; kwargs...)
+    variable_reactive_line_flow_ne(pm; kwargs...)
+end
+
+function variable_active_line_flow_ne{T}(pm::GenericPowerModel{T})
+    @variable(pm.model, -pm.ref[:ne_branch][l]["rate_a"] <= p_ne[(l,i,j) in pm.ref[:ne_arcs]] <= pm.ref[:ne_branch][l]["rate_a"], start = getstart(pm.ref[:ne_branch], l, "p_start"))
+    return p_ne
 end
 
 function variable_reactive_line_flow_ne{T}(pm::GenericPowerModel{T})

@@ -89,11 +89,3 @@ function constraint_reactive_gen_setpoint{T}(pm::GenericPowerModel{T}, i, qg)
 end
 
 
-function constraint_active_loss_lb{T}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, c, tr)
-    p_fr = getvariable(pm.model, :p)[f_idx]
-    p_to = getvariable(pm.model, :p)[t_idx]
-
-    c = @constraint(m, p_fr + p_to >= 0)
-    return Set([c])
-end
-

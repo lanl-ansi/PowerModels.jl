@@ -10,12 +10,11 @@ function SDPWRMPowerModel(data::Dict{AbstractString,Any}; kwargs...)
     return GenericPowerModel(data, SDPWRMForm(); kwargs...)
 end
 
-function variable_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}; kwargs...)
-    variable_complex_voltage_product_matrix(pm; kwargs...)
+function variable_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}; kwargs...)
+    variable_voltage_product_matrix(pm; kwargs...)
 end
 
-
-function variable_complex_voltage_product_matrix{T}(pm::GenericPowerModel{T})
+function variable_voltage_product_matrix{T}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
 
     w_index = 1:length(keys(pm.ref[:bus]))
@@ -54,7 +53,7 @@ function variable_complex_voltage_product_matrix{T}(pm::GenericPowerModel{T})
     return WR, WI
 end
 
-function constraint_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
+function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
     WR = getvariable(pm.model, :WR)
     WI = getvariable(pm.model, :WI)
 
@@ -74,34 +73,25 @@ function constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, re
     return Set()
 end
 
-function constraint_active_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
     WR = getvariable(pm.model, :WR)
     w_index = pm.model.ext[:lookup_w_index][i]
     w = WR[w_index, w_index]
 
     p = getvariable(pm.model, :p)
-    pg = getvariable(pm.model, :pg)
-
-    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*w)
-    return Set([c])
-end
-
-function constraint_reactive_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
-    WR = getvariable(pm.model, :WR)
-    w_index = pm.model.ext[:lookup_w_index][i]
-    w = WR[w_index, w_index]
-
     q = getvariable(pm.model, :q)
+    pg = getvariable(pm.model, :pg)
     qg = getvariable(pm.model, :qg)
 
-    c = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*w)
-    return Set([c])
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*w)
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*w)
+    return Set([c1, c2])
 end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
-function constraint_active_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+function constraint_ohms_yt_from{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     p_fr = getvariable(pm.model, :p)[f_idx]
-    p_to = getvariable(pm.model, :p)[t_idx]
+    q_fr = getvariable(pm.model, :q)[f_idx]
 
     WR = getvariable(pm.model, :WR)
     WI = getvariable(pm.model, :WI)
@@ -114,13 +104,13 @@ function constraint_active_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel{T
     wi   = WI[w_fr_index, w_to_index]
 
     c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
-    c2 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
+    c2 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
     return Set([c1, c2])
 end
 
-function constraint_reactive_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    q_fr = getvariable(pm.model, :q)[f_idx]
+function constraint_ohms_yt_to{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     q_to = getvariable(pm.model, :q)[t_idx]
+    p_to = getvariable(pm.model, :p)[t_idx]
 
     WR = getvariable(pm.model, :WR)
     WI = getvariable(pm.model, :WI)
@@ -132,7 +122,7 @@ function constraint_reactive_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel
     wr   = WR[w_fr_index, w_to_index]
     wi   = WI[w_fr_index, w_to_index]
 
-    c1 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
+    c1 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
     c2 = @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
     return Set([c1, c2])
 end
