@@ -23,5 +23,23 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2933.85; atol = 1e0)
     end
+
+    @testset "README.md - JuMP Model Inspection" begin
+        
+        pm = build_generic_model("$(Pkg.dir("PowerModels"))/test/data/case3.m", ACPPowerModel, PowerModels.post_opf)
+
+        #pretty print the model to the terminal
+        #print(pm.model)
+
+        @test MathProgBase.numlinconstr(pm.model) == 7
+        @test MathProgBase.numquadconstr(pm.model) == 12
+        @test MathProgBase.numconstr(pm.model) - MathProgBase.numlinconstr(pm.model) - MathProgBase.numquadconstr(pm.model) == 12
+        @test MathProgBase.numvar(pm.model) == 24
+
+        result = solve_generic_model(pm, IpoptSolver(print_level=0))
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 5812.64; atol = 1e0)
+    end
 end
 

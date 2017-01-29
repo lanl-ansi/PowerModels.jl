@@ -14,8 +14,9 @@ function variable_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}
     variable_complex_voltage_product_matrix(pm; kwargs...)
 end
 
+
 function variable_complex_voltage_product_matrix{T}(pm::GenericPowerModel{T})
-    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.ref[:buspairs])
+    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
 
     w_index = 1:length(keys(pm.ref[:bus]))
     lookup_w_index = Dict([(bi, i) for (i,bi) in enumerate(keys(pm.ref[:bus]))])
@@ -66,51 +67,39 @@ function constraint_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{
     return Set([c])
 end
 
-function constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
+
+
+function constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus)
     # Do nothing, no way to represent this in these variables
     return Set()
 end
 
-function constraint_active_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, bus)
-    i = bus["index"]
-    bus_arcs = pm.ref[:bus_arcs][i]
-    bus_gens = pm.ref[:bus_gens][i]
-
+function constraint_active_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
     WR = getvariable(pm.model, :WR)
     w_index = pm.model.ext[:lookup_w_index][i]
-    w_i = WR[w_index, w_index]
+    w = WR[w_index, w_index]
 
     p = getvariable(pm.model, :p)
     pg = getvariable(pm.model, :pg)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - bus["pd"] - bus["gs"]*w_i)
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*w)
     return Set([c])
 end
 
-function constraint_reactive_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, bus)
-    i = bus["index"]
-    bus_arcs = pm.ref[:bus_arcs][i]
-    bus_gens = pm.ref[:bus_gens][i]
-
+function constraint_reactive_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
     WR = getvariable(pm.model, :WR)
     w_index = pm.model.ext[:lookup_w_index][i]
-    w_i = WR[w_index, w_index]
+    w = WR[w_index, w_index]
 
     q = getvariable(pm.model, :q)
     qg = getvariable(pm.model, :qg)
 
-    c = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - bus["qd"] + bus["bs"]*w_i)
+    c = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*w)
     return Set([c])
 end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
-function constraint_active_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_active_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     p_fr = getvariable(pm.model, :p)[f_idx]
     p_to = getvariable(pm.model, :p)[t_idx]
 
@@ -124,25 +113,12 @@ function constraint_active_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel{T
     wr   = WR[w_fr_index, w_to_index]
     wi   = WI[w_fr_index, w_to_index]
 
-    g = branch["g"]
-    b = branch["b"]
-    c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2 
-
     c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
     c2 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
     return Set([c1, c2])
 end
 
-function constraint_reactive_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_reactive_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     q_fr = getvariable(pm.model, :q)[f_idx]
     q_to = getvariable(pm.model, :q)[t_idx]
 
@@ -156,51 +132,28 @@ function constraint_reactive_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel
     wr   = WR[w_fr_index, w_to_index]
     wi   = WI[w_fr_index, w_to_index]
 
-    g = branch["g"]
-    b = branch["b"]
-    c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2 
-
     c1 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
     c2 = @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
     return Set([c1, c2])
 end
 
-function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    pair = (f_bus, t_bus)
-    buspair = pm.ref[:buspairs][pair]
+function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
+    WR = getvariable(pm.model, :WR)
+    WI = getvariable(pm.model, :WI)
+    w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
+    w_to_index = pm.model.ext[:lookup_w_index][t_bus]
 
-    # to prevent this constraint from being posted on multiple parallel lines
-    if buspair["line"] == i
-        cs = Set()
+    w_fr = WR[w_fr_index, w_fr_index]
+    w_to = WR[w_to_index, w_to_index]
+    wr   = WR[w_fr_index, w_to_index]
+    wi   = WI[w_fr_index, w_to_index]
 
-        WR = getvariable(pm.model, :WR)
-        WI = getvariable(pm.model, :WI)
-        w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
-        w_to_index = pm.model.ext[:lookup_w_index][t_bus]
+    c1 = @constraint(pm.model, wi <= angmax*wr)
+    c2 = @constraint(pm.model, wi >= angmin*wr)
 
-        w_fr = WR[w_fr_index, w_fr_index]
-        w_to = WR[w_to_index, w_to_index]
-        wr   = WR[w_fr_index, w_to_index]
-        wi   = WI[w_fr_index, w_to_index]
+    c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 
-        c1 = @constraint(pm.model, wi <= buspair["angmax"]*wr)
-        c2 = @constraint(pm.model, wi >= buspair["angmin"]*wr)
-
-        c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, buspair["angmin"], buspair["angmax"])
-
-        push!(cs, c1)
-        push!(cs, c2)
-        push!(cs, c3)
-
-        return cs
-    end
-    return Set()
+    return Set([c1, c2, c3])
 end
 
 

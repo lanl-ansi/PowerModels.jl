@@ -71,9 +71,11 @@ run_opf("nesta_case3_lmbd.m", SOCWRPowerModel, IpoptSolver())
 Extending PowerModels with new problems and formulations will be covered in a another tutorial, that is not yet available.
 
 
+## Frequently Asked Questions
+
 ### Modifying Network Data
 
-The follow example demonstrates how to perform multiple PowerModels solves while modify the network data in Julia,
+The following example demonstrates one way to perform multiple PowerModels solves while modify the network data in Julia,
 
 ```
 network_data = PowerModels.parse_file("nesta_case3_lmbd.m")
@@ -88,11 +90,16 @@ run_opf(network_data, ACPPowerModel, IpoptSolver())
 
 For additional details about the PowerModels network data structure see the DATA.md file.
 
+### JuMP Model Inspection
 
-## Comparison to Other Tools
+The following example demonstrates how to break a `run_opf` call into seperate model building and solving steps.  This allows inspection of the JuMP model created by PowerModels for the AC-OPF problem,
+```
+pm = build_generic_model("nesta_case3_lmbd.m", ACPPowerModel, PowerModels.post_opf)
 
-Forthcoming.
+print(pm.model)
 
+solve_generic_model(pm, IpoptSolver())
+```
 
 ## Development
 
