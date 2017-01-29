@@ -66,6 +66,8 @@ function constraint_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{
     return Set([c])
 end
 
+
+
 function constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus)
     # Do nothing, no way to represent this in these variables
     return Set()
@@ -135,8 +137,6 @@ function constraint_reactive_ohms_yt{T <: AbstractWRMForm}(pm::GenericPowerModel
 end
 
 function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
-    cs = Set()
-
     WR = getvariable(pm.model, :WR)
     WI = getvariable(pm.model, :WI)
     w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
@@ -152,11 +152,7 @@ function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowe
 
     c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 
-    push!(cs, c1)
-    push!(cs, c2)
-    push!(cs, c3)
-
-    return cs
+    return Set([c1, c2, c3])
 end
 
 

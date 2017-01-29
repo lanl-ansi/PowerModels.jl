@@ -169,8 +169,6 @@ function constraint_reactive_ohms_yt_ne{T <: AbstractWRForm}(pm::GenericPowerMod
 end
 
 function constraint_phase_angle_difference{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
-    cs = Set()
-
     w_fr = getvariable(pm.model, :w)[f_bus]
     w_to = getvariable(pm.model, :w)[t_bus]
     wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
@@ -180,11 +178,7 @@ function constraint_phase_angle_difference{T <: AbstractWRForm}(pm::GenericPower
     c2 = @constraint(pm.model, wi >= angmin*wr)
     c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 
-    push!(cs, c1)
-    push!(cs, c2)
-    push!(cs, c3)
-
-    return cs
+    return Set([c1, c2, c3])
 end
 
 
@@ -267,7 +261,7 @@ function constraint_complex_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerMode
 end
 
 
-function constraint_voltage_magnitude_sqr_from_on_off{T}(pm::GenericPowerModel{T})
+function constraint_voltage_magnitude_sqr_from_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     buses = pm.ref[:bus]
     branches = pm.ref[:branch]
 
@@ -284,7 +278,7 @@ function constraint_voltage_magnitude_sqr_from_on_off{T}(pm::GenericPowerModel{T
     return cs
 end
 
-function constraint_voltage_magnitude_sqr_to_on_off{T}(pm::GenericPowerModel{T})
+function constraint_voltage_magnitude_sqr_to_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     buses = pm.ref[:bus]
     branches = pm.ref[:branch]
 
@@ -301,7 +295,7 @@ function constraint_voltage_magnitude_sqr_to_on_off{T}(pm::GenericPowerModel{T})
     return cs
 end
 
-function constraint_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
+function constraint_complex_voltage_product_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.ref[:buspairs])
 
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.ref[:branch]])
@@ -573,8 +567,6 @@ function constraint_phase_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, ang
         setupperbound(td, angmax)
     end
 
-    cs = Set()
-
     w_fr = getvariable(pm.model, :w)[f_bus]
     w_to = getvariable(pm.model, :w)[t_bus]
     wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
@@ -585,11 +577,7 @@ function constraint_phase_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, ang
 
     c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 
-    push!(cs, c1)
-    push!(cs, c2)
-    push!(cs, c3)
-
-    return cs
+    return Set([c1, c2, c3]) 
 end
 
 function add_bus_voltage_setpoint(sol, pm::QCWRPowerModel)
