@@ -224,6 +224,39 @@ function constraint_reactive_ohms_yt_ne(pm::GenericPowerModel, branch)
 end
 
 
+### Branch - Current ### 
+
+function constraint_power_magnitude_sqr(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    pair = (f_bus, t_bus)
+    f_idx = (i, f_bus, t_bus)
+
+    tr = branch["tr"]
+    ti = branch["ti"]
+    tm = tr^2 + ti^2
+
+    return constraint_power_magnitude_sqr(pm, f_bus, t_bus, f_idx, tm)
+end
+
+function constraint_power_magnitude_link(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    pair = (f_bus, t_bus)
+    f_idx = (i, f_bus, t_bus)
+
+    g = branch["g"]
+    b = branch["b"]
+    c = branch["br_b"]
+    tr = branch["tr"]
+    ti = branch["ti"]
+    tm = tr^2 + ti^2
+
+    return constraint_power_magnitude_link(pm, f_bus, t_bus, f_idx, g, b, c, tr, ti, tm)
+end
+
 ### Branch - Thermal Limit Constraints ### 
 
 function constraint_thermal_limit_from(pm::GenericPowerModel, branch; scale = 1.0)

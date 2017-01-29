@@ -535,47 +535,23 @@ end
 
 
 
-
-function constraint_power_magnitude_sqr(pm::QCWRPowerModel, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    pair = (f_bus, t_bus)
-    f_idx = (i, f_bus, t_bus)
-
+function constraint_power_magnitude_sqr(pm::QCWRPowerModel, f_bus, t_bus, f_idx, tm)
     w_i = getvariable(pm.model, :w)[f_bus]
     p_fr = getvariable(pm.model, :p)[f_idx]
     q_fr = getvariable(pm.model, :q)[f_idx]
-    cm = getvariable(pm.model, :cm)[pair]
-
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2
+    cm = getvariable(pm.model, :cm)[(f_bus, t_bus)]
 
     c = @constraint(pm.model, p_fr^2 + q_fr^2 <= w_i/tm*cm)
     return Set([c])
 end
 
-function constraint_power_magnitude_link(pm::QCWRPowerModel, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    pair = (f_bus, t_bus)
-    f_idx = (i, f_bus, t_bus)
-
+function constraint_power_magnitude_link(pm::QCWRPowerModel, f_bus, t_bus, f_idx, g, b, c, tr, ti, tm)
     w_fr = getvariable(pm.model, :w)[f_bus]
     w_to = getvariable(pm.model, :w)[t_bus]
     q_fr = getvariable(pm.model, :q)[f_idx]
-    wr = getvariable(pm.model, :wr)[pair]
-    wi = getvariable(pm.model, :wi)[pair]
-    cm = getvariable(pm.model, :cm)[pair]
-
-    g = branch["g"]
-    b = branch["b"]
-    c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2
+    wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
+    wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
+    cm = getvariable(pm.model, :cm)[(f_bus, t_bus)]
 
     c = @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm + w_to - 2*(tr*wr + ti*wi)/tm) - c*q_fr - ((c/2)/tm)^2*w_fr)
     return Set([c])

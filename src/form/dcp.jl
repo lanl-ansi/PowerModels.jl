@@ -150,27 +150,21 @@ function constraint_phase_angle_difference{T <: AbstractDCPForm}(pm::GenericPowe
     return Set([c1, c2])
 end
 
-function constraint_thermal_limit_from{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_thermal_limit_from{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_idx, rate_a)
     p_fr = getvariable(pm.model, :p)[f_idx]
 
-    if getlowerbound(p_fr) < -branch["rate_a"]
-        setlowerbound(p_fr, -branch["rate_a"])
+    if getlowerbound(p_fr) < -rate_a
+        setlowerbound(p_fr, -rate_a)
     end
 
-    if getupperbound(p_fr) > branch["rate_a"]
-        setupperbound(p_fr, branch["rate_a"])
+    if getupperbound(p_fr) > rate_a
+        setupperbound(p_fr, rate_a)
     end
 
     return Set()
 end
 
-function constraint_thermal_limit_to{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_thermal_limit_to{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, t_idx, rate_a)
     # nothing to do, from handles both sides
     return Set()
 end
@@ -231,17 +225,12 @@ function constraint_thermal_limit_from_on_off{T <: AbstractDCPForm}(pm::GenericP
     return Set([c1, c2])
 end
 
-function constraint_thermal_limit_from_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-
+function constraint_thermal_limit_from_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, f_idx, rate_a)
     p_fr = getvariable(pm.model, :p_ne)[f_idx]
     z = getvariable(pm.model, :line_ne)[i]
 
-    c1 = @constraint(pm.model, p_fr <= getupperbound(p_fr)*z)
-    c2 = @constraint(pm.model, p_fr >= getlowerbound(p_fr)*z)
+    c1 = @constraint(pm.model, p_fr <=  rate_a*z)
+    c2 = @constraint(pm.model, p_fr >= -rate_a*z)
     return Set([c1, c2])
 end
 
@@ -250,7 +239,7 @@ function constraint_thermal_limit_to_on_off{T <: AbstractDCPForm}(pm::GenericPow
   return Set()
 end
 
-function constraint_thermal_limit_to_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, branch)
+function constraint_thermal_limit_to_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, t_idx, rate_a)
   # nothing to do, from handles both sides
   return Set()
 end
@@ -349,16 +338,11 @@ function constraint_thermal_limit_to_on_off{T <: AbstractDCPLLForm}(pm::GenericP
     return Set([c1, c2])
 end
 
-function constraint_thermal_limit_to_ne{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_thermal_limit_to_ne{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, i, t_idx, rate_a)
     p_to = getvariable(pm.model, :p_ne)[t_idx]
     z = getvariable(pm.model, :line_ne)[i]
 
-    c1 = @constraint(pm.model, p_to <= getupperbound(p_to)*z)
-    c2 = @constraint(pm.model, p_to >= getlowerbound(p_to)*z)
+    c1 = @constraint(pm.model, p_to <=  rate_a*z)
+    c2 = @constraint(pm.model, p_to >= -rate_a*z)
     return Set([c1, c2])
 end
