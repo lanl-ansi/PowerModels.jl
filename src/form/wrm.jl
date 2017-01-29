@@ -66,7 +66,7 @@ function constraint_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{
     return Set([c])
 end
 
-function constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
+function constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus)
     # Do nothing, no way to represent this in these variables
     return Set()
 end

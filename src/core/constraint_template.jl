@@ -24,6 +24,10 @@ end
 
 ### Bus - Setpoint Constraints ###
 
+function constraint_theta_ref(pm::GenericPowerModel)
+    return constraint_theta_ref(pm, pm.ref[:ref_bus])
+end
+
 function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, bus; epsilon = 0.0)
     @assert epsilon >= 0.0
     return constraint_voltage_magnitude_setpoint(pm, bus["index"], bus["vm"], epsilon)

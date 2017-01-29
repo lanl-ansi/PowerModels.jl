@@ -64,8 +64,8 @@ function constraint_complex_voltage_ne{T <: AbstractDCPForm}(pm::GenericPowerMod
     # do nothing, this model does not have complex voltage variables
 end
 
-function constraint_theta_ref{T <: AbstractDCPForm}(pm::GenericPowerModel{T})
-    c = @constraint(pm.model, getvariable(pm.model, :t)[pm.ref[:ref_bus]] == 0)
+function constraint_theta_ref{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, ref_bus)
+    c = @constraint(pm.model, getvariable(pm.model, :t)[ref_bus] == 0)
     return Set([c])
 end
 
@@ -74,7 +74,7 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::Generic
     return Set()
 end
 
-function constraint_reactive_gen_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, gen)
+function constraint_reactive_gen_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, qg)
     # do nothing, this model does not have reactive variables
     return Set()
 end

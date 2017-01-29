@@ -31,8 +31,8 @@ function constraint_complex_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerMod
 end
 
 
-function constraint_theta_ref{T <: AbstractACPForm}(pm::GenericPowerModel{T})
-    c = @constraint(pm.model, getvariable(pm.model, :t)[pm.ref[:ref_bus]] == 0)
+function constraint_theta_ref{T <: AbstractACPForm}(pm::GenericPowerModel{T}, ref_bus)
+    c = @constraint(pm.model, getvariable(pm.model, :t)[ref_bus] == 0)
     return Set([c])
 end
 

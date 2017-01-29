@@ -54,7 +54,7 @@ function constraint_complex_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T
     end
 end
 
-function constraint_theta_ref{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+function constraint_theta_ref{T <: AbstractWRForm}(pm::GenericPowerModel{T}, ref_bus)
     # Do nothing, no way to represent this in these variables
     return Set()
 end
@@ -582,8 +582,8 @@ function constraint_power_magnitude_link(pm::QCWRPowerModel, branch)
 end
 
 
-function constraint_theta_ref(pm::QCWRPowerModel)
-    @constraint(pm.model, getvariable(pm.model, :t)[pm.ref[:ref_bus]] == 0)
+function constraint_theta_ref(pm::QCWRPowerModel, ref_bus)
+    @constraint(pm.model, getvariable(pm.model, :t)[ref_bus] == 0)
 end
 
 function constraint_phase_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, angmin, angmax)
