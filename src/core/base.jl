@@ -91,8 +91,6 @@ function build_generic_model(file::AbstractString,  model_constructor, post_meth
 end
 
 function build_generic_model(data::Dict{AbstractString,Any}, model_constructor, post_method; kwargs...)
-    update_derived_values(data)
-
     # NOTE, this model constructor will build the ref dict using the latest info from the data
     pm = model_constructor(data; kwargs...)
 

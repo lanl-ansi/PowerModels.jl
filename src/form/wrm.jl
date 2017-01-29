@@ -15,7 +15,7 @@ function variable_complex_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}
 end
 
 function variable_complex_voltage_product_matrix{T}(pm::GenericPowerModel{T})
-    wr_min, wr_max, wi_min, wi_max = compute_voltage_product_bounds(pm.ref[:buspairs])
+    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
 
     w_index = 1:length(keys(pm.ref[:bus]))
     lookup_w_index = Dict([(bi, i) for (i,bi) in enumerate(keys(pm.ref[:bus]))])

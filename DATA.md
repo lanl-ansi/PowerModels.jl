@@ -62,7 +62,6 @@ The PowerModels network data dictionary differs from the Matpower format in the 
 - All non-transformer branches are given nominal transformer values (i.e. a tap of 1.0 and a shift of 0).
 - When present, the `gencost` data is incorporated into the `gen` data, the column names remain the same.
 - Only quadratic active power generation cost functions are supported at this time.
-- Some additional derived values are added to branches, such as line admittance values (see `update_derived_values` in `src/core/data.jl` for details).
 - Special treatment is given to the optional `ne_branch` matrix to support the TNEP problem.
 
 

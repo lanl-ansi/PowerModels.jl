@@ -1,6 +1,6 @@
 # tools for working with PowerModels internal data format
 
-function compute_voltage_product_bounds(buspairs)
+function calc_voltage_product_bounds(buspairs)
     wr_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
     wr_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
     wi_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
@@ -56,40 +56,26 @@ function calc_theta_delta_bounds(data::Dict{AbstractString,Any})
     return angle_min, angle_max
 end
 
+function calc_branch_t(branch::Dict{AbstractString,Any})
+    tap_ratio = branch["tap"]
+    angle_shift = branch["shift"]
 
-# adds values that are derived from other values in PM data structure, for the first time
-function add_derived_values(data::Dict{AbstractString,Any})
-    update_derived_values(data, overwrite = false)
+    tr = tap_ratio*cos(angle_shift)
+    ti = tap_ratio*sin(angle_shift)
+
+    return tr, ti
 end
 
-# updates values that are derived from other values in PM data structure 
-function update_derived_values(data::Dict{AbstractString,Any}; overwrite = true)
-    add_branch_parameters(data, overwrite)
+function calc_branch_y(branch::Dict{AbstractString,Any})
+    r = branch["br_r"]
+    x = branch["br_x"]
+
+    g =  r/(x^2 + r^2)
+    b = -x/(x^2 + r^2)
+
+    return g, b
 end
 
-# NOTE, this function assumes all values are p.u. and angles are in radians
-function add_branch_parameters(data, overwrite)
-    branches = [branch for branch in data["branch"]]
-    if haskey(data, "ne_branch")
-        append!(branches, data["ne_branch"])
-    end
-
-    for branch in branches
-        r = branch["br_r"]
-        x = branch["br_x"]
-        tap_ratio = branch["tap"]
-        angle_shift = branch["shift"]
-
-        if !overwrite
-            check_keys(branch, ["g", "b", "tr", "ti"])
-        end
-
-        branch["g"] =  r/(x^2 + r^2)
-        branch["b"] = -x/(x^2 + r^2)
-        branch["tr"] = tap_ratio*cos(angle_shift)
-        branch["ti"] = tap_ratio*sin(angle_shift)
-    end
-end
 
 function check_keys(data, keys)
     for key in keys

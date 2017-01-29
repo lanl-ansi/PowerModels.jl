@@ -79,12 +79,10 @@ function constraint_active_ohms_yt(pm::GenericPowerModel, branch)
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
 
-    g = branch["g"]
-    b = branch["b"]
+    g, b = calc_branch_y(branch)
+    tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2 
+    tm = branch["tap"]^2
 
     return constraint_active_ohms_yt(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
 end
@@ -96,12 +94,10 @@ function constraint_reactive_ohms_yt(pm::GenericPowerModel, branch)
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
 
-    g = branch["g"]
-    b = branch["b"]
+    g, b = calc_branch_y(branch)
+    tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2 
+    tm = branch["tap"]^2
 
     return constraint_reactive_ohms_yt(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
 end
@@ -114,8 +110,7 @@ function constraint_active_ohms_y(pm::GenericPowerModel, branch)
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
 
-    g = branch["g"]
-    b = branch["b"]
+    g, b = calc_branch_y(branch)
     c = branch["br_b"]
     tr = branch["tap"]
     as = branch["shift"]
@@ -130,8 +125,7 @@ function constraint_reactive_ohms_y(pm::GenericPowerModel, branch)
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
 
-    g = branch["g"]
-    b = branch["b"]
+    g, b = calc_branch_y(branch)
     c = branch["br_b"]
     tr = branch["tap"]
     as = branch["shift"]
@@ -149,12 +143,10 @@ function constraint_active_ohms_yt_on_off(pm::GenericPowerModel, branch)
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
 
-    g = branch["g"]
-    b = branch["b"]
+    g, b = calc_branch_y(branch)
+    tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2 
+    tm = branch["tap"]^2 
 
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
@@ -169,12 +161,10 @@ function constraint_reactive_ohms_yt_on_off(pm::GenericPowerModel, branch)
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
 
-    g = branch["g"]
-    b = branch["b"]
+    g, b = calc_branch_y(branch)
+    tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2 
+    tm = branch["tap"]^2 
 
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
@@ -190,12 +180,10 @@ function constraint_active_ohms_yt_ne(pm::GenericPowerModel, branch)
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
 
-    g = branch["g"]
-    b = branch["b"]
+    g, b = calc_branch_y(branch)
+    tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2 
+    tm = branch["tap"]^2
 
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
@@ -210,12 +198,10 @@ function constraint_reactive_ohms_yt_ne(pm::GenericPowerModel, branch)
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
 
-    g = branch["g"]
-    b = branch["b"]
+    g, b = calc_branch_y(branch)
+    tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2 
+    tm = branch["tap"]^2 
 
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
@@ -233,9 +219,7 @@ function constraint_power_magnitude_sqr(pm::GenericPowerModel, branch)
     pair = (f_bus, t_bus)
     f_idx = (i, f_bus, t_bus)
 
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2
+    tm = branch["tap"]^2
 
     return constraint_power_magnitude_sqr(pm, f_bus, t_bus, f_idx, tm)
 end
@@ -247,12 +231,10 @@ function constraint_power_magnitude_link(pm::GenericPowerModel, branch)
     pair = (f_bus, t_bus)
     f_idx = (i, f_bus, t_bus)
 
-    g = branch["g"]
-    b = branch["b"]
+    g, b = calc_branch_y(branch)
+    tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2
+    tm = branch["tap"]^2 
 
     return constraint_power_magnitude_link(pm, f_bus, t_bus, f_idx, g, b, c, tr, ti, tm)
 end
