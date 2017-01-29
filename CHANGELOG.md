@@ -12,6 +12,7 @@ PowerModels.jl Change Log
 - Added ability to easily inspect the JuMP model produced by PowerModels
 - Added constraint templates to provide an abstraction layer between the network data and network constraint definitions
 - Moved system wide phase angle difference bounds to the "ref" dictionary
+- Refactored model defitions to be based on complex numbers
 
 ### v0.2.3
 - Multiple improvements to Matlab file parsing
