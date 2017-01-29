@@ -32,19 +32,6 @@ function compute_voltage_product_bounds(buspairs)
     return wr_min, wr_max, wi_min, wi_max
 end
 
-
-# adds values that are derived from other values in PM data structure, for the first time
-function add_derived_values(data::Dict{AbstractString,Any})
-    update_derived_values(data, overwrite = false)
-end
-
-# updates values that are derived from other values in PM data structure 
-function update_derived_values(data::Dict{AbstractString,Any}; overwrite = true)
-    min_theta_delta, max_theta_delta = calc_theta_delta_bounds(data)
-
-    add_branch_parameters(data, min_theta_delta, max_theta_delta, overwrite)
-end
-
 function calc_theta_delta_bounds(data::Dict{AbstractString,Any})
     bus_count = length(data["bus"])
     branches = [branch for branch in data["branch"]]
@@ -69,8 +56,19 @@ function calc_theta_delta_bounds(data::Dict{AbstractString,Any})
     return angle_min, angle_max
 end
 
+
+# adds values that are derived from other values in PM data structure, for the first time
+function add_derived_values(data::Dict{AbstractString,Any})
+    update_derived_values(data, overwrite = false)
+end
+
+# updates values that are derived from other values in PM data structure 
+function update_derived_values(data::Dict{AbstractString,Any}; overwrite = true)
+    add_branch_parameters(data, overwrite)
+end
+
 # NOTE, this function assumes all values are p.u. and angles are in radians
-function add_branch_parameters(data, min_theta_delta, max_theta_delta, overwrite)
+function add_branch_parameters(data, overwrite)
     branches = [branch for branch in data["branch"]]
     if haskey(data, "ne_branch")
         append!(branches, data["ne_branch"])
@@ -83,16 +81,13 @@ function add_branch_parameters(data, min_theta_delta, max_theta_delta, overwrite
         angle_shift = branch["shift"]
 
         if !overwrite
-            check_keys(branch, ["g", "b", "tr", "ti", "off_angmin", "off_angmax"])
+            check_keys(branch, ["g", "b", "tr", "ti"])
         end
 
         branch["g"] =  r/(x^2 + r^2)
         branch["b"] = -x/(x^2 + r^2)
         branch["tr"] = tap_ratio*cos(angle_shift)
         branch["ti"] = tap_ratio*sin(angle_shift)
-
-        branch["off_angmin"] = min_theta_delta
-        branch["off_angmax"] = max_theta_delta
     end
 end
 

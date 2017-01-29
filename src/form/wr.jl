@@ -126,26 +126,13 @@ function constraint_active_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{T}
     return Set([c1, c2])
 end
 
-function constraint_active_ohms_yt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_active_ohms_yt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = getvariable(pm.model, :p_ne)[f_idx]
     p_to = getvariable(pm.model, :p_ne)[t_idx]
     w_fr = getvariable(pm.model, :w_from_ne)[i]
     w_to = getvariable(pm.model, :w_to_ne)[i]
     wr = getvariable(pm.model, :wr_ne)[i]
     wi = getvariable(pm.model, :wi_ne)[i]
-
-    g = branch["g"]
-    b = branch["b"]
-    c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2
 
     c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
     c2 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
@@ -168,13 +155,7 @@ function constraint_reactive_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{
 end
 
 
-function constraint_reactive_ohms_yt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
+function constraint_reactive_ohms_yt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     q_fr = getvariable(pm.model, :q_ne)[f_idx]
     q_to = getvariable(pm.model, :q_ne)[t_idx]
     w_fr = getvariable(pm.model, :w_from_ne)[i]
@@ -182,16 +163,8 @@ function constraint_reactive_ohms_yt_ne{T <: AbstractWRForm}(pm::GenericPowerMod
     wr = getvariable(pm.model, :wr_ne)[i]
     wi = getvariable(pm.model, :wi_ne)[i]
 
-    g = branch["g"]
-    b = branch["b"]
-    c = branch["br_b"]
-    tr = branch["tr"]
-    ti = branch["ti"]
-    tm = tr^2 + ti^2
-
     c1 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
     c2 = @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
-    
     return Set([c1, c2])
 end
 
@@ -378,28 +351,21 @@ function constraint_reactive_ohms_yt_on_off{T <: AbstractWRForm}(pm::GenericPowe
     return Set([c1, c2])
 end
 
-function constraint_phase_angle_difference_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-
+function constraint_phase_angle_difference_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     wr = getvariable(pm.model, :wr)[i]
     wi = getvariable(pm.model, :wi)[i]
 
-    c1 = @constraint(pm.model, wi <= branch["angmax"]*wr)
-    c2 = @constraint(pm.model, wi >= branch["angmin"]*wr)
+    c1 = @constraint(pm.model, wi <= angmax*wr)
+    c2 = @constraint(pm.model, wi >= angmin*wr)
     return Set([c1, c2])
 end
 
-function constraint_phase_angle_difference_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, branch)
-    i = branch["index"]
-
+function constraint_phase_angle_difference_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     wr = getvariable(pm.model, :wr_ne)[i]
     wi = getvariable(pm.model, :wi_ne)[i]
 
-    c1 = @constraint(pm.model, wi <= branch["angmax"]*wr)
-    c2 = @constraint(pm.model, wi >= branch["angmin"]*wr)
-
-
-
+    c1 = @constraint(pm.model, wi <= angmax*wr)
+    c2 = @constraint(pm.model, wi >= angmin*wr)
     return Set([c1, c2])
 end
 

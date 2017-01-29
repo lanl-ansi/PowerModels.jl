@@ -152,8 +152,8 @@ function constraint_active_ohms_yt_on_off(pm::GenericPowerModel, branch)
     ti = branch["ti"]
     tm = tr^2 + ti^2 
 
-    t_min = branch["off_angmin"]
-    t_max = branch["off_angmax"]
+    t_min = pm.ref[:off_angmin]
+    t_max = pm.ref[:off_angmax]
 
     return constraint_active_ohms_yt_on_off(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
 end
@@ -172,10 +172,51 @@ function constraint_reactive_ohms_yt_on_off(pm::GenericPowerModel, branch)
     ti = branch["ti"]
     tm = tr^2 + ti^2 
 
-    t_min = branch["off_angmin"]
-    t_max = branch["off_angmax"]
+    t_min = pm.ref[:off_angmin]
+    t_max = pm.ref[:off_angmax]
 
     return constraint_reactive_ohms_yt_on_off(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+end
+
+
+function constraint_active_ohms_yt_ne(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    g = branch["g"]
+    b = branch["b"]
+    c = branch["br_b"]
+    tr = branch["tr"]
+    ti = branch["ti"]
+    tm = tr^2 + ti^2 
+
+    t_min = pm.ref[:off_angmin]
+    t_max = pm.ref[:off_angmax]
+
+    return constraint_active_ohms_yt_ne(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+end
+
+function constraint_reactive_ohms_yt_ne(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    g = branch["g"]
+    b = branch["b"]
+    c = branch["br_b"]
+    tr = branch["tr"]
+    ti = branch["ti"]
+    tm = tr^2 + ti^2 
+
+    t_min = pm.ref[:off_angmin]
+    t_max = pm.ref[:off_angmax]
+
+    return constraint_reactive_ohms_yt_ne(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
 end
 
 
@@ -251,6 +292,28 @@ function constraint_phase_angle_difference(pm::GenericPowerModel, branch)
         return constraint_phase_angle_difference(pm, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
     end
     return Set()
+end
+
+function constraint_phase_angle_difference_on_off(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+
+    t_min = pm.ref[:off_angmin]
+    t_max = pm.ref[:off_angmax]
+
+    return constraint_phase_angle_difference_on_off(pm, i, f_bus, t_bus, branch["angmin"], branch["angmax"], t_min, t_max)
+end
+
+function constraint_phase_angle_difference_ne(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+
+    t_min = pm.ref[:off_angmin]
+    t_max = pm.ref[:off_angmax]
+
+    return constraint_phase_angle_difference_ne(pm, i, f_bus, t_bus, branch["angmin"], branch["angmax"], t_min, t_max)
 end
 
 

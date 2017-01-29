@@ -121,6 +121,10 @@ function build_ref(data::Dict{AbstractString,Any})
         end
     end
 
+    off_angmin, off_angmax = calc_theta_delta_bounds(data)
+    ref[:off_angmin] = off_angmin
+    ref[:off_angmax] = off_angmax
+
     # filter turned off stuff
     ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
     ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
