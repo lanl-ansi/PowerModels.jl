@@ -10,6 +10,8 @@ PowerModels.jl Change Log
 - Updated TNEP models to work with Matpower parsing extensions
 - Strengthened convex formulations with Lifted Nonlinear Cuts (LNCs)
 - Added ability to easily inspect the JuMP model produced by PowerModels
+- Added constraint templates to provide an abstraction layer between the network data and network constraint definitions
+- Moved system wide phase angle difference bounds to the "ref" dictionary
 
 ### v0.2.3
 - Multiple improvements to Matlab file parsing
