@@ -13,7 +13,7 @@ function SOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
 end
 
 
-function variable_complex_voltage_product{T}(pm::GenericPowerModel{T}; bounded = true)
+function variable_voltage_product{T}(pm::GenericPowerModel{T}; bounded = true)
     if bounded
         wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
 
@@ -26,7 +26,7 @@ function variable_complex_voltage_product{T}(pm::GenericPowerModel{T}; bounded =
     return wr, wi
 end
 
-function variable_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
+function variable_voltage_product_on_off{T}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
 
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.ref[:branch]])
@@ -38,12 +38,12 @@ function variable_complex_voltage_product_on_off{T}(pm::GenericPowerModel{T})
 end
 
 
-function variable_complex_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T}; kwargs...)
+function variable_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_voltage_magnitude_sqr(pm; kwargs...)
-    variable_complex_voltage_product(pm; kwargs...)
+    variable_voltage_product(pm; kwargs...)
 end
 
-function constraint_complex_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+function constraint_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     w = getvariable(pm.model, :w)
     wr = getvariable(pm.model, :wr)
     wi = getvariable(pm.model, :wi)
@@ -72,97 +72,84 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractWRForm}(pm::GenericP
     end
 end
 
-function constraint_active_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
     w = getvariable(pm.model, :w)[i]
     p = getvariable(pm.model, :p)
+    q = getvariable(pm.model, :q)
     pg = getvariable(pm.model, :pg)
+    qg = getvariable(pm.model, :qg)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*w)
-    return Set([c])
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*w)
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*w)
+    return Set([c1, c2])
 end
 
-function constraint_active_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
     w = getvariable(pm.model, :w)[i]
     p = getvariable(pm.model, :p)
+    q = getvariable(pm.model, :q)
     p_ne = getvariable(pm.model, :p_ne)
-    pg = getvariable(pm.model, :pg)
-
-    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*w)
-    return Set([c])
-end
-
-function constraint_reactive_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
-    w = getvariable(pm.model, :w)[i]
-    q = getvariable(pm.model, :q)
-    qg = getvariable(pm.model, :qg)
-
-    c = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*w)
-    return Set([c])
-end
-
-function constraint_reactive_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
-    w = getvariable(pm.model, :w)[i]
-    q = getvariable(pm.model, :q)
     q_ne = getvariable(pm.model, :q_ne)
+    pg = getvariable(pm.model, :pg)
     qg = getvariable(pm.model, :qg)
 
-    c = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*w)
-    return Set([c])
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*w)
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*w)
+    return Set([c1, c2])
 end
 
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
-function constraint_active_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+function constraint_ohms_yt_from{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     p_fr = getvariable(pm.model, :p)[f_idx]
+    q_fr = getvariable(pm.model, :q)[f_idx]
+    w_fr = getvariable(pm.model, :w)[f_bus]
+    w_to = getvariable(pm.model, :w)[t_bus]
+    wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
+    wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
+
+    c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
+    c2 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
+    return Set([c1, c2])
+end
+
+function constraint_ohms_yt_to{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    q_to = getvariable(pm.model, :q)[t_idx]
     p_to = getvariable(pm.model, :p)[t_idx]
     w_fr = getvariable(pm.model, :w)[f_bus]
     w_to = getvariable(pm.model, :w)[t_bus]
     wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
     wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
 
-    c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
-    c2 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
+    c1 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
+    c2 = @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
     return Set([c1, c2])
 end
 
-function constraint_active_ohms_yt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+
+
+function constraint_ohms_yt_from_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = getvariable(pm.model, :p_ne)[f_idx]
-    p_to = getvariable(pm.model, :p_ne)[t_idx]
+    q_fr = getvariable(pm.model, :q_ne)[f_idx]
     w_fr = getvariable(pm.model, :w_from_ne)[i]
     w_to = getvariable(pm.model, :w_to_ne)[i]
     wr = getvariable(pm.model, :wr_ne)[i]
     wi = getvariable(pm.model, :wi_ne)[i]
 
     c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
-    c2 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
-    
+    c2 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
     return Set([c1, c2])
 end
 
-
-function constraint_reactive_ohms_yt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    q_fr = getvariable(pm.model, :q)[f_idx]
-    q_to = getvariable(pm.model, :q)[t_idx]
-    w_fr = getvariable(pm.model, :w)[f_bus]
-    w_to = getvariable(pm.model, :w)[t_bus]
-    wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
-    wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
-
-    c1 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
-    c2 = @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
-    return Set([c1, c2])
-end
-
-
-function constraint_reactive_ohms_yt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
-    q_fr = getvariable(pm.model, :q_ne)[f_idx]
+function constraint_ohms_yt_to_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+    p_to = getvariable(pm.model, :p_ne)[t_idx]
     q_to = getvariable(pm.model, :q_ne)[t_idx]
     w_fr = getvariable(pm.model, :w_from_ne)[i]
     w_to = getvariable(pm.model, :w_to_ne)[i]
     wr = getvariable(pm.model, :wr_ne)[i]
     wi = getvariable(pm.model, :wi_ne)[i]
 
-    c1 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
+    c1 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
     c2 = @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
     return Set([c1, c2])
 end
@@ -190,15 +177,15 @@ end
 
 
 
-function variable_complex_voltage_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}; kwargs...)
+function variable_voltage_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_voltage_magnitude_sqr(pm; kwargs...)
     variable_voltage_magnitude_sqr_from_on_off(pm; kwargs...)
     variable_voltage_magnitude_sqr_to_on_off(pm; kwargs...)
 
-    variable_complex_voltage_product_on_off(pm; kwargs...)
+    variable_voltage_product_on_off(pm; kwargs...)
 end
 
-function constraint_complex_voltage_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+function constraint_voltage_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     w = getvariable(pm.model, :w)
     wr = getvariable(pm.model, :wr)
     wi = getvariable(pm.model, :wi)
@@ -210,7 +197,7 @@ function constraint_complex_voltage_on_off{T <: AbstractWRForm}(pm::GenericPower
     cs = Set()
     cs1 = constraint_voltage_magnitude_sqr_from_on_off(pm)
     cs2 = constraint_voltage_magnitude_sqr_to_on_off(pm)
-    cs3 = constraint_complex_voltage_product_on_off(pm)
+    cs3 = constraint_voltage_product_on_off(pm)
     cs = union(cs, cs1, cs2, cs3)
 
     for (l,i,j) in pm.ref[:arcs_from]
@@ -223,7 +210,7 @@ function constraint_complex_voltage_on_off{T <: AbstractWRForm}(pm::GenericPower
     return cs
 end
 
-function constraint_complex_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+function constraint_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     buses = pm.ref[:bus]
     branches = pm.ref[:ne_branch]
     
@@ -294,7 +281,7 @@ function constraint_voltage_magnitude_sqr_to_on_off{T <: AbstractWRForm}(pm::Gen
     return cs
 end
 
-function constraint_complex_voltage_product_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+function constraint_voltage_product_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
 
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.ref[:branch]])
@@ -318,29 +305,29 @@ function constraint_complex_voltage_product_on_off{T <: AbstractWRForm}(pm::Gene
 end
 
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
-function constraint_active_ohms_yt_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+function constraint_ohms_yt_from_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = getvariable(pm.model, :p)[f_idx]
-    p_to = getvariable(pm.model, :p)[t_idx]
+    q_fr = getvariable(pm.model, :q)[f_idx]
     w_fr = getvariable(pm.model, :w_from)[i]
     w_to = getvariable(pm.model, :w_to)[i]
     wr = getvariable(pm.model, :wr)[i]
     wi = getvariable(pm.model, :wi)[i]
 
-    c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
-    c2 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
+    c1 = @constraint(pm.model, p_fr ==        g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
+    c2 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
     return Set([c1, c2])
 end
 
-function constraint_reactive_ohms_yt_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
-    q_fr = getvariable(pm.model, :q)[f_idx]
+function constraint_ohms_yt_to_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+    p_to = getvariable(pm.model, :p)[t_idx]
     q_to = getvariable(pm.model, :q)[t_idx]
     w_fr = getvariable(pm.model, :w_from)[i]
     w_to = getvariable(pm.model, :w_to)[i]
     wr = getvariable(pm.model, :wr)[i]
     wi = getvariable(pm.model, :wi)[i]
 
-    c1 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
-    c2 = @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
+    c1 = @constraint(pm.model, p_to ==        g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
+    c2 = @constraint(pm.model, q_to == -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
     return Set([c1, c2])
 end
 
@@ -364,10 +351,10 @@ end
 
 
 
-function variable_complex_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}; kwargs...)
+function variable_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_voltage_magnitude_sqr_from_ne(pm; kwargs...)
     variable_voltage_magnitude_sqr_to_ne(pm; kwargs...)
-    variable_complex_voltage_product_ne(pm; kwargs...)
+    variable_voltage_product_ne(pm; kwargs...)
 end
 
 function variable_voltage_magnitude_sqr_from_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
@@ -384,7 +371,7 @@ function variable_voltage_magnitude_sqr_to_ne{T <: AbstractWRForm}(pm::GenericPo
     return w_to_ne
 end
 
-function variable_complex_voltage_product_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+function variable_voltage_product_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:ne_buspairs])
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.ref[:ne_branch]])
     @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr_ne[b in keys(pm.ref[:ne_branch])] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.ref[:ne_buspairs], bi_bp[b], "wr_start", 1.0))
@@ -462,12 +449,12 @@ function variable_current_magnitude_sqr{T}(pm::GenericPowerModel{T})
 end
 
 
-function variable_complex_voltage(pm::QCWRPowerModel; kwargs...)
+function variable_voltage(pm::QCWRPowerModel; kwargs...)
     variable_phase_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
 
     variable_voltage_magnitude_sqr(pm; kwargs...)
-    variable_complex_voltage_product(pm; kwargs...)
+    variable_voltage_product(pm; kwargs...)
 
     variable_phase_angle_difference(pm; kwargs...)
     variable_voltage_magnitude_product(pm; kwargs...)
@@ -476,7 +463,7 @@ function variable_complex_voltage(pm::QCWRPowerModel; kwargs...)
     variable_current_magnitude_sqr(pm; kwargs...)
 end
 
-function constraint_complex_voltage(pm::QCWRPowerModel)
+function constraint_voltage(pm::QCWRPowerModel)
     v = getvariable(pm.model, :v)
     t = getvariable(pm.model, :t)
 

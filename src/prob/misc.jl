@@ -7,15 +7,13 @@ function run_api_opf(file, model_constructor, solver; kwargs...)
 end
 
 function post_api_opf{T}(pm::GenericPowerModel{T})
-    variable_complex_voltage(pm)
+    variable_voltage(pm)
     bounds_tighten_voltage(pm)
 
-    variable_active_generation(pm, bounded = false)
-    variable_reactive_generation(pm, bounded = false)
+    variable_generation(pm, bounded = false)
     upperbound_negative_active_generation(pm)
 
-    variable_active_line_flow(pm)
-    variable_reactive_line_flow(pm)
+    variable_line_flow(pm)
 
     variable_load_factor(pm)
 
@@ -25,7 +23,7 @@ function post_api_opf{T}(pm::GenericPowerModel{T})
     #objective_max_loading_gen_output(pm)
 
     constraint_theta_ref(pm)
-    constraint_complex_voltage(pm)
+    constraint_voltage(pm)
 
     for (i,gen) in pm.ref[:gen]
         pg = getvariable(pm.model, :pg)[i]
@@ -33,13 +31,12 @@ function post_api_opf{T}(pm::GenericPowerModel{T})
     end
 
     for (i,bus) in pm.ref[:bus]
-        constraint_active_kcl_shunt_scaled(pm, bus)
-        constraint_reactive_kcl_shunt(pm, bus)
+        constraint_kcl_shunt_scaled(pm, bus)
     end
 
     for (i,branch) in pm.ref[:branch]
-        constraint_active_ohms_yt(pm, branch)
-        constraint_reactive_ohms_yt(pm, branch)
+        constraint_ohms_yt_from(pm, branch)
+        constraint_ohms_yt_to(pm, branch)
 
         constraint_phase_angle_difference(pm, branch)
 
@@ -56,31 +53,23 @@ function run_sad_opf(file, model_constructor, solver; kwargs...)
 end
 
 function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericPowerModel{T})
-    variable_complex_voltage(pm)
-
-    variable_active_generation(pm)
-    variable_reactive_generation(pm)
-
-    variable_active_line_flow(pm)
-    variable_reactive_line_flow(pm)
-
+    variable_voltage(pm)
+    variable_generation(pm)
+    variable_line_flow(pm)
     @variable(pm.model, theta_delta_bound >= 0.0, start = 0.523598776)
-
 
     @objective(pm.model, Min, theta_delta_bound)
 
-
     constraint_theta_ref(pm)
-    constraint_complex_voltage(pm)
+    constraint_voltage(pm)
 
     for (i,bus) in pm.ref[:bus]
-        constraint_active_kcl_shunt(pm, bus)
-        constraint_reactive_kcl_shunt(pm, bus)
+        constraint_kcl_shunt(pm, bus)
     end
 
     for (i,branch) in pm.ref[:branch]
-        constraint_active_ohms_yt(pm, branch)
-        constraint_reactive_ohms_yt(pm, branch)
+        constraint_ohms_yt_from(pm, branch)
+        constraint_ohms_yt_to(pm, branch)
 
         constraint_phase_angle_difference(pm, branch)
         theta_fr = getvariable(pm.model, :t)[branch["f_bus"]]

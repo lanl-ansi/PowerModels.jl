@@ -12,29 +12,22 @@ end
 
 function post_ots{T}(pm::GenericPowerModel{T})
     variable_line_indicator(pm)
-    variable_complex_voltage_on_off(pm)
-
-    variable_active_generation(pm)
-    variable_reactive_generation(pm)
-
-    variable_active_line_flow(pm)
-    variable_reactive_line_flow(pm)
-
+    variable_voltage_on_off(pm)
+    variable_generation(pm)
+    variable_line_flow(pm)
 
     objective_min_fuel_cost(pm)
 
-
     constraint_theta_ref(pm)
-    constraint_complex_voltage_on_off(pm)
+    constraint_voltage_on_off(pm)
 
     for (i,bus) in pm.ref[:bus]
-        constraint_active_kcl_shunt(pm, bus)
-        constraint_reactive_kcl_shunt(pm, bus)
+        constraint_kcl_shunt(pm, bus)
     end
 
     for (i,branch) in pm.ref[:branch]
-        constraint_active_ohms_yt_on_off(pm, branch)
-        constraint_reactive_ohms_yt_on_off(pm, branch)
+        constraint_ohms_yt_from_on_off(pm, branch)
+        constraint_ohms_yt_to_on_off(pm, branch)
 
         constraint_phase_angle_difference_on_off(pm, branch)
 

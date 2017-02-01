@@ -35,44 +35,27 @@ end
 
 ### Bus - KCL Constraints ###
 
-function constraint_active_kcl_shunt(pm::GenericPowerModel, bus)
+function constraint_kcl_shunt(pm::GenericPowerModel, bus)
     i = bus["index"]
     bus_arcs = pm.ref[:bus_arcs][i]
     bus_gens = pm.ref[:bus_gens][i]
 
-    return constraint_active_kcl_shunt(pm, i, bus_arcs, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
+    return constraint_kcl_shunt(pm, i, bus_arcs, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
 end
 
-function constraint_reactive_kcl_shunt(pm::GenericPowerModel, bus)
-    i = bus["index"]
-    bus_arcs = pm.ref[:bus_arcs][i]
-    bus_gens = pm.ref[:bus_gens][i]
-
-    return constraint_reactive_kcl_shunt(pm, i, bus_arcs, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
-end
-
-function constraint_active_kcl_shunt_ne(pm::GenericPowerModel, bus)
+function constraint_kcl_shunt_ne(pm::GenericPowerModel, bus)
     i = bus["index"]
     bus_arcs = pm.ref[:bus_arcs][i]
     bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
     bus_gens = pm.ref[:bus_gens][i]
 
-    return constraint_active_kcl_shunt_ne(pm, i, bus_arcs, bus_arcs_ne, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
-end
-
-function constraint_reactive_kcl_shunt_ne(pm::GenericPowerModel, bus)
-    i = bus["index"]
-    bus_arcs = pm.ref[:bus_arcs][i]
-    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
-    bus_gens = pm.ref[:bus_gens][i]
-
-    return constraint_reactive_kcl_shunt_ne(pm, i, bus_arcs, bus_arcs_ne, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
+    return constraint_kcl_shunt_ne(pm, i, bus_arcs, bus_arcs_ne, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
 end
 
 
 ### Branch - Ohm's Law Constraints ### 
 
-function constraint_active_ohms_yt(pm::GenericPowerModel, branch)
+function constraint_ohms_yt_from(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -84,10 +67,10 @@ function constraint_active_ohms_yt(pm::GenericPowerModel, branch)
     c = branch["br_b"]
     tm = branch["tap"]^2
 
-    return constraint_active_ohms_yt(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    return constraint_ohms_yt_from(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
 end
 
-function constraint_reactive_ohms_yt(pm::GenericPowerModel, branch)
+function constraint_ohms_yt_to(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -99,11 +82,10 @@ function constraint_reactive_ohms_yt(pm::GenericPowerModel, branch)
     c = branch["br_b"]
     tm = branch["tap"]^2
 
-    return constraint_reactive_ohms_yt(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    return constraint_ohms_yt_to(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
 end
 
-
-function constraint_active_ohms_y(pm::GenericPowerModel, branch)
+function constraint_ohms_y_from(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -115,10 +97,10 @@ function constraint_active_ohms_y(pm::GenericPowerModel, branch)
     tr = branch["tap"]
     as = branch["shift"]
 
-    return constraint_active_ohms_y(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
+    return constraint_ohms_y_from(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
 end
 
-function constraint_reactive_ohms_y(pm::GenericPowerModel, branch)
+function constraint_ohms_y_to(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -130,13 +112,14 @@ function constraint_reactive_ohms_y(pm::GenericPowerModel, branch)
     tr = branch["tap"]
     as = branch["shift"]
 
-    return constraint_reactive_ohms_y(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
+    return constraint_ohms_y_to(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
 end
+
 
 
 ### Branch - On/Off Ohm's Law Constraints ### 
 
-function constraint_active_ohms_yt_on_off(pm::GenericPowerModel, branch)
+function constraint_ohms_yt_from_on_off(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -151,10 +134,10 @@ function constraint_active_ohms_yt_on_off(pm::GenericPowerModel, branch)
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
 
-    return constraint_active_ohms_yt_on_off(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+    return constraint_ohms_yt_from_on_off(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
 end
 
-function constraint_reactive_ohms_yt_on_off(pm::GenericPowerModel, branch)
+function constraint_ohms_yt_to_on_off(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -169,11 +152,11 @@ function constraint_reactive_ohms_yt_on_off(pm::GenericPowerModel, branch)
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
 
-    return constraint_reactive_ohms_yt_on_off(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+    return constraint_ohms_yt_to_on_off(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
 end
 
 
-function constraint_active_ohms_yt_ne(pm::GenericPowerModel, branch)
+function constraint_ohms_yt_from_ne(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -188,10 +171,10 @@ function constraint_active_ohms_yt_ne(pm::GenericPowerModel, branch)
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
 
-    return constraint_active_ohms_yt_ne(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+    return constraint_ohms_yt_from_ne(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
 end
 
-function constraint_reactive_ohms_yt_ne(pm::GenericPowerModel, branch)
+function constraint_ohms_yt_to_ne(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -206,7 +189,7 @@ function constraint_reactive_ohms_yt_ne(pm::GenericPowerModel, branch)
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
 
-    return constraint_reactive_ohms_yt_ne(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+    return constraint_ohms_yt_to_ne(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
 end
 
 
@@ -338,8 +321,9 @@ end
 
 ### Branch - Loss Constraints ### 
 
-function constraint_active_loss_lb(pm::GenericPowerModel, branch)
+function constraint_loss_lb(pm::GenericPowerModel, branch)
     @assert branch["br_r"] >= 0
+    @assert branch["br_x"] >= 0
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -349,17 +333,7 @@ function constraint_active_loss_lb(pm::GenericPowerModel, branch)
     c = branch["br_b"]
     tr = branch["tr"]
 
-    return constraint_active_loss_lb(pm, f_bus, t_bus, f_idx, t_idx, c, tr)
+    return constraint_loss_lb(pm, f_bus, t_bus, f_idx, t_idx, c, tr)
 end
 
-function constraint_reactive_loss_lb(pm::GenericPowerModel, branch)
-    @assert branch["br_x"] >= 0
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
-    return constraint_reactive_loss_lb(pm, f_bus, t_bus, f_idx, t_idx, c, tr)
-end
 
