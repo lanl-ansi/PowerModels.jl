@@ -40,10 +40,10 @@ end
 
         branches = result["solution"]["branch"]
 
-        @test isapprox(branches[2]["p_from"],  20.01; atol = 1e-1)
-        @test isapprox(branches[2]["p_to"],   -19.80; atol = 1e-1)
-        @test isapprox(branches[2]["q_from"],   0.55; atol = 1e-1)
-        @test isapprox(branches[2]["q_to"],    -5.71; atol = 1e-1)
+        @test isapprox(branches["2"]["p_from"],  20.01; atol = 1e-1)
+        @test isapprox(branches["2"]["p_to"],   -19.80; atol = 1e-1)
+        @test isapprox(branches["2"]["q_from"],   0.55; atol = 1e-1)
+        @test isapprox(branches["2"]["q_to"],    -5.71; atol = 1e-1)
     end
 
     # A DCPPowerModel test is important because it does have variables for the reverse side of the lines
@@ -59,9 +59,9 @@ end
 
         branches = result["solution"]["branch"]
 
-        @test isapprox(branches[3]["p_from"], -10.34; atol = 1e-1)
-        @test isapprox(branches[3]["p_to"],    10.34; atol = 1e-1)
-        @test isnan(branches[3]["q_from"])
-        @test isnan(branches[3]["q_to"])
+        @test isapprox(branches["3"]["p_from"], -10.34; atol = 1e-1)
+        @test isapprox(branches["3"]["p_to"],    10.34; atol = 1e-1)
+        @test isnan(branches["3"]["q_from"])
+        @test isnan(branches["3"]["q_to"])
     end
 end
