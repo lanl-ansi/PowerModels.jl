@@ -8,6 +8,7 @@ function parse_matpower(file_string)
     data_string = readstring(open(file_string))
     mp_data = parse_matpower_data(data_string)
 
+    update_branch_transformer_settings(mp_data)
     standardize_cost_order(mp_data)
 
     # TODO make this work on PowerModels data, not MatPower Data, move to data.jl
@@ -23,95 +24,8 @@ function parse_matpower(file_string)
     check_thermal_limits(mp_data)
     check_bus_types(mp_data)
 
-    unify_transformer_taps(mp_data)
-
     return mp_data
 end
-
-
-# checks that phase angle differences are within 90 deg., if not tightens
-function check_phase_angle_differences(data, default_pad = 1.0472)
-    assert("per_unit" in keys(data) && data["per_unit"])
-
-    for (i, branch) in data["branch"]
-        if branch["angmin"] <= -pi/2
-            warn("this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(rad2deg(branch["angmin"])) to -$(rad2deg(default_pad)) deg.")
-            branch["angmin"] = -default_pad
-        end
-        if branch["angmax"] >= pi/2
-            warn("this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(rad2deg(branch["angmax"])) to $(rad2deg(default_pad)) deg.")
-            branch["angmax"] = default_pad
-        end
-        if branch["angmin"] == 0.0 && branch["angmax"] == 0.0
-            warn("angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- $(rad2deg(default_pad)) deg.")
-            branch["angmin"] = -rad2deg(default_pad)
-            branch["angmax"] = rad2deg(default_pad)
-        end
-    end
-end
-
-
-# checks that each line has a reasonable line thermal rating, if not computes one
-function check_thermal_limits(data)
-    assert("per_unit" in keys(data) && data["per_unit"])
-    mva_base = data["baseMVA"]
-
-    for (i, branch) in data["branch"]
-        if branch["rate_a"] <= 0.0
-            theta_max = max(abs(branch["angmin"]), abs(branch["angmax"]))
-
-            r = branch["br_r"]
-            x = branch["br_x"]
-            g =  r / (r^2 + x^2)
-            b = -x / (r^2 + x^2)
-
-            y_mag = sqrt(g^2 + b^2)
-
-            fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"]
-            to_vmax = data["bus"][string(branch["t_bus"])]["vmax"]
-            m_vmax = max(fr_vmax, to_vmax)
-
-            c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
-
-            new_rate = y_mag*m_vmax*c_max
-
-            warn("this code only supports positive rate_a values, changing the value on branch $(branch["index"]) from $(mva_base*branch["rate_a"]) to $(mva_base*new_rate)")
-            branch["rate_a"] = new_rate
-        end
-    end
-end
-
-
-# checks bus types are consistent with generator connections, if not, fixes them
-function check_bus_types(data)
-    bus_gens = Dict([(i, []) for (i,bus) in data["bus"]])
-
-    for (i,gen) in data["gen"]
-        #println(gen)
-        if gen["gen_status"] == 1
-            push!(bus_gens[string(gen["gen_bus"])], i)
-        end
-    end
-
-    for (i, bus) in data["bus"]
-        if bus["bus_type"] != 4 && bus["bus_type"] != 3
-            bus_gens_count = length(bus_gens[i])
-
-            if bus_gens_count == 0 && bus["bus_type"] != 1
-                warn("no active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 1")
-                bus["bus_type"] = 1
-            end
-
-            if bus_gens_count != 0 && bus["bus_type"] != 2
-                warn("active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 2")
-                bus["bus_type"] = 2
-            end
-
-        end
-    end
-
-end
-
 
 # ensures all costs functions are quadratic and reverses their order
 function standardize_cost_order(data::Dict{AbstractString,Any})
@@ -126,16 +40,18 @@ function standardize_cost_order(data::Dict{AbstractString,Any})
     end
 end
 
-
 # sets all line transformer taps to 1.0, to simplify line models
-function unify_transformer_taps(data::Dict{AbstractString,Any})
-    branches = [branch for branch in values(data["branch"])]
+function update_branch_transformer_settings(data::Dict{AbstractString,Any})
+    branches = [branch for branch in data["branch"]]
     if haskey(data, "ne_branch")
-        append!(branches, values(data["ne_branch"]))
+        append!(branches, data["ne_branch"])
     end
     for branch in branches
         if branch["tap"] == 0.0
+            branch["transformer"] = false
             branch["tap"] = 1.0
+        else
+            branch["transformer"] = true
         end
     end
 end
