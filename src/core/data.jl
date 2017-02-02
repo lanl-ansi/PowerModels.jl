@@ -86,12 +86,29 @@ function check_keys(data, keys)
     end
 end
 
+# Recusivly applies new_data to data, overwritting information
+function update_data(data::Dict{AbstractString,Any}, new_data::Dict{AbstractString,Any})
+    for (key, new_v) in new_data
+        if haskey(data, key)
+            v = data[key]
+            if isa(v, Dict) && isa(new_v, Dict)
+                update_data(v, new_v)
+            else
+                data[key] = new_v
+            end
+        else
+            data[key] = new_v
+        end
+    end
+end
+
 function apply_func(data::Dict{AbstractString,Any}, key::AbstractString, func)
     if haskey(data, key)
         data[key] = func(data[key])
     end
 end
 
+# Transforms network data into per-unit
 function make_per_unit(data::Dict{AbstractString,Any})
     if !haskey(data, "per_unit") || data["per_unit"] == false
         data["per_unit"] = true
@@ -150,7 +167,8 @@ function make_per_unit(data::Dict{AbstractString,Any})
 end
 
 
-function make_mixed_unit(data::Dict{AbstractString,Any})
+# Transforms network data into mixed-units (inverse of per-unit)
+function make_mixed_units(data::Dict{AbstractString,Any})
     if haskey(data, "per_unit") && data["per_unit"] == true
         data["per_unit"] = false
         mva_base = data["baseMVA"]
