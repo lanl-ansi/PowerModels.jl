@@ -537,7 +537,6 @@ function parse_matpower_data(data_string)
                     bus_data["mu_vmin"] = parse(Float64, bus_row[17])
                 end
 
-                bus_data["bus_name"] = "Bus $(bus_data["bus_i"])"
                 push!(buses, bus_data)
             end
 
