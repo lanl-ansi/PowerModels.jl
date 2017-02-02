@@ -6,21 +6,26 @@
 
 function parse_matpower(file_string)
     data_string = readstring(open(file_string))
-    data = parse_matpower_data(data_string)
+    mp_data = parse_matpower_data(data_string)
 
-    check_phase_angle_differences(data)
-    check_thermal_limits(data)
-    check_bus_types(data)
+    standardize_cost_order(mp_data)
 
-    standardize_cost_order(data)
+    # TODO make this work on PowerModels data, not MatPower Data, move to data.jl
+    make_per_unit(mp_data)
 
-    unify_transformer_taps(data)
+    merge_bus_name_data(mp_data)
+    merge_generator_cost_data(mp_data)
 
-    make_per_unit(data)
+    # after this call, Matpower data is consistent with PowerModels data
+    #mp_data_to_pm_data(mp_data)
 
-    merge_generator_cost_data(data)
+    check_phase_angle_differences(mp_data)
+    check_thermal_limits(mp_data)
+    check_bus_types(mp_data)
 
-    return data
+    unify_transformer_taps(mp_data)
+
+    return mp_data
 end
 
 
@@ -188,7 +193,7 @@ function make_per_unit(mva_base::Number, data::Number)
     #nothing to do
 end
 
-# merges generator cost functions into generator data, if they exist
+# merges generator cost functions into generator data, if costs exist
 function merge_generator_cost_data(data::Dict{AbstractString,Any})
     if haskey(data, "gencost")
         # can assume same length is same as gen (or double)
@@ -202,6 +207,23 @@ function merge_generator_cost_data(data::Dict{AbstractString,Any})
             merge!(gen, gencost)
         end
         delete!(data, "gencost")
+    end
+end
+
+# merges bus name data into buses, if names exist
+function merge_bus_name_data(data::Dict{AbstractString,Any})
+    if haskey(data, "bus_name")
+        # can assume same length is same as bus
+        # this is validated during parsing
+        for (i, bus_name) in enumerate(data["bus_name"])
+            bus = data["bus"][i]
+            assert(bus["index"] == bus_name["index"])
+            delete!(bus_name, "index")
+
+            check_keys(bus, keys(bus_name))
+            merge!(bus, bus_name)
+        end
+        delete!(data, "bus_name")
     end
 end
 
@@ -415,15 +437,7 @@ end
 
 
 function parse_matpower_data(data_string)
-
     data_lines = split(data_string, '\n')
-    #println(data_lines)
-
-    #data_lines = filter(line -> !(length(strip(line)) <= 0 || strip(line)[1] == '%'), data_lines)
-    #data_lines = filter(line -> !(strip(line)[1] == '%'), data_lines)
-    #for line in data_lines
-        #println(line)
-    #end
 
     version = -1
     name = -1
@@ -681,18 +695,19 @@ function parse_matpower_data(data_string)
     for parsed_cell in parsed_cells
         #println(parsed_cell)
         if parsed_cell["name"] == "bus_name" 
-
             if length(parsed_cell["data"]) != length(case["bus"])
                 error("incorrect Matpower file, the number of bus names ($(length(parsed_cell["data"]))) is inconsistent with the number of buses ($(length(case["bus"]))).\n")
             end
 
-            for (i, bus) in enumerate(case["bus"])
-                # note striping the single quotes is not necessary in general, column typing takes care of this
-                bus["bus_name"] = strip(parsed_cell["data"][i][1], '\'')
-                #println(bus["bus_name"])
-            end
+            #for (i, bus) in enumerate(case["bus"])
+            #    # note striping the single quotes is not necessary in general, column typing takes care of this
+            #    bus["bus_name"] = strip(parsed_cell["data"][i][1], '\'')
+            #    #println(bus["bus_name"])
+            #end
+
+            typed_dict_data = build_typed_dict(parsed_cell["data"], ["bus_name"])
+            case["bus_name"] = typed_dict_data
         else
-        
             name = parsed_cell["name"]
             data = parsed_cell["data"]
 
@@ -712,6 +727,7 @@ function parse_matpower_data(data_string)
 
     return case
 end
+
 
 # takes a list of list of strings and turns it into a list of typed dictionaries
 function build_typed_dict(data, column_names)
@@ -784,4 +800,22 @@ function extend_case_data(case, name, typed_dict_data, has_column_names)
         case[name] = typed_dict_data
     end
 end
+
+
+# converts arrays of objects into a dicts with lookup by "index"
+function mp_data_to_pm_data(mp_data)
+    for (k,v) in case
+        if isa(v, Array)
+            println("updating $(k)")
+            dict = Dict{AbstractString,Any}()
+            for item in v
+                assert("index" in keys(item))
+                dict[string(item["index"])] = item
+            end
+            case[k] = dict
+        end
+    end
+end
+
+
 
