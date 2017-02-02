@@ -554,12 +554,6 @@ function parse_matpower_data(data_string)
                 error("incorrect Matpower file, the number of bus names ($(length(parsed_cell["data"]))) is inconsistent with the number of buses ($(length(case["bus"]))).\n")
             end
 
-            #for (i, bus) in enumerate(case["bus"])
-            #    # note striping the single quotes is not necessary in general, column typing takes care of this
-            #    bus["bus_name"] = strip(parsed_cell["data"][i][1], '\'')
-            #    #println(bus["bus_name"])
-            #end
-
             typed_dict_data = build_typed_dict(parsed_cell["data"], ["bus_name"])
             case["bus_name"] = typed_dict_data
         else
