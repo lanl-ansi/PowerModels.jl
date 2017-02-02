@@ -17,7 +17,7 @@ function parse_matpower(file_string)
     merge_generator_cost_data(mp_data)
 
     # after this call, Matpower data is consistent with PowerModels data
-    #mp_data_to_pm_data(mp_data)
+    mp_data_to_pm_data(mp_data)
 
     check_phase_angle_differences(mp_data)
     check_thermal_limits(mp_data)
@@ -33,7 +33,7 @@ end
 function check_phase_angle_differences(data, default_pad = 1.0472)
     assert("per_unit" in keys(data) && data["per_unit"])
 
-    for branch in data["branch"]
+    for (i, branch) in data["branch"]
         if branch["angmin"] <= -pi/2
             warn("this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(rad2deg(branch["angmin"])) to -$(rad2deg(default_pad)) deg.")
             branch["angmin"] = -default_pad
@@ -54,12 +54,9 @@ end
 # checks that each line has a reasonable line thermal rating, if not computes one
 function check_thermal_limits(data)
     assert("per_unit" in keys(data) && data["per_unit"])
-
     mva_base = data["baseMVA"]
-    vmax_lookup = Dict([(bus["index"], bus["vmax"]) for bus in data["bus"]])
-    vmin_lookup = Dict([(bus["index"], bus["vmin"]) for bus in data["bus"]])
 
-    for branch in data["branch"]
+    for (i, branch) in data["branch"]
         if branch["rate_a"] <= 0.0
             theta_max = max(abs(branch["angmin"]), abs(branch["angmax"]))
 
@@ -70,8 +67,8 @@ function check_thermal_limits(data)
 
             y_mag = sqrt(g^2 + b^2)
 
-            fr_vmax = vmax_lookup[branch["f_bus"]]
-            to_vmax = vmax_lookup[branch["f_bus"]]
+            fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"]
+            to_vmax = data["bus"][string(branch["t_bus"])]["vmax"]
             m_vmax = max(fr_vmax, to_vmax)
 
             c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
@@ -87,18 +84,18 @@ end
 
 # checks bus types are consistent with generator connections, if not, fixes them
 function check_bus_types(data)
-    bus_gens = Dict([(bus["bus_i"], []) for (i,bus) in enumerate(data["bus"])])
+    bus_gens = Dict([(i, []) for (i,bus) in data["bus"]])
 
-    for (i,gen) in enumerate(data["gen"])
+    for (i,gen) in data["gen"]
         #println(gen)
         if gen["gen_status"] == 1
-            push!(bus_gens[gen["gen_bus"]], i)
+            push!(bus_gens[string(gen["gen_bus"])], i)
         end
     end
 
-    for bus in data["bus"]
+    for (i, bus) in data["bus"]
         if bus["bus_type"] != 4 && bus["bus_type"] != 3
-            bus_gens_count = length(bus_gens[bus["bus_i"]])
+            bus_gens_count = length(bus_gens[i])
 
             if bus_gens_count == 0 && bus["bus_type"] != 1
                 warn("no active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 1")
@@ -132,9 +129,9 @@ end
 
 # sets all line transformer taps to 1.0, to simplify line models
 function unify_transformer_taps(data::Dict{AbstractString,Any})
-    branches = [branch for branch in data["branch"]]
+    branches = [branch for branch in values(data["branch"])]
     if haskey(data, "ne_branch")
-        append!(branches, data["ne_branch"])
+        append!(branches, values(data["ne_branch"]))
     end
     for branch in branches
         if branch["tap"] == 0.0
@@ -807,15 +804,15 @@ end
 
 # converts arrays of objects into a dicts with lookup by "index"
 function mp_data_to_pm_data(mp_data)
-    for (k,v) in case
+    for (k,v) in mp_data
         if isa(v, Array)
-            println("updating $(k)")
+            #println("updating $(k)")
             dict = Dict{AbstractString,Any}()
             for item in v
                 assert("index" in keys(item))
                 dict[string(item["index"])] = item
             end
-            case[k] = dict
+            mp_data[k] = dict
         end
     end
 end

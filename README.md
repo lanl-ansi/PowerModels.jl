@@ -82,8 +82,8 @@ network_data = PowerModels.parse_file("nesta_case3_lmbd.m")
 
 run_opf(network_data, ACPPowerModel, IpoptSolver())
 
-network_data["bus"][3]["pd"] = 0.0
-network_data["bus"][3]["qd"] = 0.0
+network_data["bus"]["3"]["pd"] = 0.0
+network_data["bus"]["3"]["qd"] = 0.0
 
 run_opf(network_data, ACPPowerModel, IpoptSolver())
 ```

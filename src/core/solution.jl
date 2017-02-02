@@ -96,7 +96,7 @@ function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, p
         sol_dict = sol[dict_name]
     end
 
-    for item in pm.data[dict_name]
+    for (i,item) in pm.data[dict_name]
         idx = Int(item[index_name])
 
         sol_item = nothing

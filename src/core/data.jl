@@ -34,9 +34,9 @@ end
 
 function calc_theta_delta_bounds(data::Dict{AbstractString,Any})
     bus_count = length(data["bus"])
-    branches = [branch for branch in data["branch"]]
+    branches = [branch for branch in values(data["branch"])]
     if haskey(data, "ne_branch")
-        append!(branches, data["ne_branch"])
+        append!(branches, values(data["ne_branch"]))
     end
 
     angle_mins = [branch["angmin"] for branch in branches]
