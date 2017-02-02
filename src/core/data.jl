@@ -86,6 +86,127 @@ function check_keys(data, keys)
     end
 end
 
+function apply_func(data::Dict{AbstractString,Any}, key::AbstractString, func)
+    if haskey(data, key)
+        data[key] = func(data[key])
+    end
+end
+
+function make_per_unit(data::Dict{AbstractString,Any})
+    if !haskey(data, "per_unit") || data["per_unit"] == false
+        data["per_unit"] = true
+        mva_base = data["baseMVA"]
+
+        rescale = x -> x/mva_base
+
+        for (i, bus) in data["bus"]
+            apply_func(bus, "pd", rescale)
+            apply_func(bus, "qd", rescale)
+
+            apply_func(bus, "gs", rescale)
+            apply_func(bus, "bs", rescale)
+
+            apply_func(bus, "va", deg2rad)
+        end
+
+        branches = [branch for branch in values(data["branch"])]
+        if haskey(data, "ne_branch")
+            append!(branches, values(data["ne_branch"]))
+        end
+
+        for branch in branches
+            apply_func(branch, "rate_a", rescale)
+            apply_func(branch, "rate_b", rescale)
+            apply_func(branch, "rate_c", rescale)
+
+            apply_func(branch, "shift", deg2rad)
+            apply_func(branch, "angmax", deg2rad)
+            apply_func(branch, "angmin", deg2rad)
+        end
+
+        for (i, gen) in data["gen"]
+            apply_func(gen, "pg", rescale)
+            apply_func(gen, "qg", rescale)
+
+            apply_func(gen, "pmax", rescale)
+            apply_func(gen, "pmin", rescale)
+
+            apply_func(gen, "qmax", rescale)
+            apply_func(gen, "qmin", rescale)
+
+            if "model" in keys(gen) && "cost" in keys(gen)
+                if gen["model"] != 2
+                    warn("Skipping generator cost model of type other than 2")
+                else
+                    degree = length(gen["cost"])
+                    for (i, item) in enumerate(gen["cost"])
+                        gen["cost"][i] = item*mva_base^(degree-i)
+                    end
+                end
+            end
+        end
+
+    end
+end
+
+
+function make_mixed_unit(data::Dict{AbstractString,Any})
+    if haskey(data, "per_unit") && data["per_unit"] == true
+        data["per_unit"] = false
+        mva_base = data["baseMVA"]
+
+        rescale = x -> x*mva_base
+
+        for (i, bus) in data["bus"]
+            apply_func(bus, "pd", rescale)
+            apply_func(bus, "qd", rescale)
+
+            apply_func(bus, "gs", rescale)
+            apply_func(bus, "bs", rescale)
+
+            apply_func(bus, "va", rad2deg)
+        end
+
+        branches = [branch for branch in values(data["branch"])]
+        if haskey(data, "ne_branch")
+            append!(branches, values(data["ne_branch"]))
+        end
+
+        for branch in branches
+            apply_func(branch, "rate_a", rescale)
+            apply_func(branch, "rate_b", rescale)
+            apply_func(branch, "rate_c", rescale)
+
+            apply_func(branch, "shift", rad2deg)
+            apply_func(branch, "angmax", rad2deg)
+            apply_func(branch, "angmin", rad2deg)
+        end
+
+        for (i, gen) in data["gen"]
+            apply_func(gen, "pg", rescale)
+            apply_func(gen, "qg", rescale)
+
+            apply_func(gen, "pmax", rescale)
+            apply_func(gen, "pmin", rescale)
+
+            apply_func(gen, "qmax", rescale)
+            apply_func(gen, "qmin", rescale)
+
+            if "model" in keys(gen) && "cost" in keys(gen)
+                if gen["model"] != 2
+                    warn("Skipping generator cost model of type other than 2")
+                else
+                    degree = length(gen["cost"])
+                    for (i, item) in enumerate(gen["cost"])
+                        gen["cost"][i] = item/mva_base^(degree-i)
+                    end
+                end
+            end
+        end
+
+    end
+end
+
 
 # checks that phase angle differences are within 90 deg., if not tightens
 function check_phase_angle_differences(data, default_pad = 1.0472)
