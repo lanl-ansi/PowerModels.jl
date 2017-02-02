@@ -30,20 +30,22 @@ end
 
 
 # checks that phase angle differences are within 90 deg., if not tightens
-function check_phase_angle_differences(data, default_pad = 60)
+function check_phase_angle_differences(data, default_pad = 1.0472)
+    assert("per_unit" in keys(data) && data["per_unit"])
+
     for branch in data["branch"]
-        if branch["angmin"] <= -90
-            warn("this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(branch["angmin"]) to -60 deg.")
+        if branch["angmin"] <= -pi/2
+            warn("this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(rad2deg(branch["angmin"])) to -$(rad2deg(default_pad)) deg.")
             branch["angmin"] = -default_pad
         end
-        if branch["angmax"] >= 90
-            warn("this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(branch["angmax"]) to 60 deg.")
+        if branch["angmax"] >= pi/2
+            warn("this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(rad2deg(branch["angmax"])) to $(rad2deg(default_pad)) deg.")
             branch["angmax"] = default_pad
         end
         if branch["angmin"] == 0.0 && branch["angmax"] == 0.0
-            warn("angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- 60 deg.")
-            branch["angmin"] = -default_pad
-            branch["angmax"] = default_pad
+            warn("angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- $(rad2deg(default_pad)) deg.")
+            branch["angmin"] = -rad2deg(default_pad)
+            branch["angmax"] = rad2deg(default_pad)
         end
     end
 end
@@ -51,6 +53,8 @@ end
 
 # checks that each line has a reasonable line thermal rating, if not computes one
 function check_thermal_limits(data)
+    assert("per_unit" in keys(data) && data["per_unit"])
+
     mva_base = data["baseMVA"]
     vmax_lookup = Dict([(bus["index"], bus["vmax"]) for bus in data["bus"]])
     vmin_lookup = Dict([(bus["index"], bus["vmin"]) for bus in data["bus"]])
@@ -70,11 +74,11 @@ function check_thermal_limits(data)
             to_vmax = vmax_lookup[branch["f_bus"]]
             m_vmax = max(fr_vmax, to_vmax)
 
-            c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(deg2rad(theta_max)))
+            c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
 
-            new_rate = mva_base*y_mag*m_vmax*c_max
+            new_rate = y_mag*m_vmax*c_max
 
-            warn("this code only supports positive rate_a values, changing the value on branch $(branch["index"]) from $(branch["rate_a"]) to $(new_rate)")
+            warn("this code only supports positive rate_a values, changing the value on branch $(branch["index"]) from $(mva_base*branch["rate_a"]) to $(mva_base*new_rate)")
             branch["rate_a"] = new_rate
         end
     end
