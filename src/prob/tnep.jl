@@ -49,7 +49,7 @@ function post_tnep{T}(pm::GenericPowerModel{T})
 end
 
 function get_tnep_solution{T}(pm::GenericPowerModel{T})
-    sol = Dict{AbstractString,Any}()
+    sol = init_solution(pm)
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)

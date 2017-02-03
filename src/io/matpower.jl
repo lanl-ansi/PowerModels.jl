@@ -6,106 +6,18 @@
 
 function parse_matpower(file_string)
     data_string = readstring(open(file_string))
-    data = parse_matpower_data(data_string)
+    mp_data = parse_matpower_data(data_string)
 
-    check_phase_angle_differences(data)
-    check_thermal_limits(data)
-    check_bus_types(data)
+    update_branch_transformer_settings(mp_data)
+    standardize_cost_order(mp_data)
+    merge_bus_name_data(mp_data)
+    merge_generator_cost_data(mp_data)
 
-    standardize_cost_order(data)
+    # after this call, Matpower data is consistent with PowerModels data
+    mp_data_to_pm_data(mp_data)
 
-    unify_transformer_taps(data)
-
-    make_per_unit(data)
-
-    merge_generator_cost_data(data)
-
-    return data
+    return mp_data
 end
-
-
-# checks that phase angle differences are within 90 deg., if not tightens
-function check_phase_angle_differences(data, default_pad = 60)
-    for branch in data["branch"]
-        if branch["angmin"] <= -90
-            warn("this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(branch["angmin"]) to -60 deg.")
-            branch["angmin"] = -default_pad
-        end
-        if branch["angmax"] >= 90
-            warn("this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(branch["angmax"]) to 60 deg.")
-            branch["angmax"] = default_pad
-        end
-        if branch["angmin"] == 0.0 && branch["angmax"] == 0.0
-            warn("angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- 60 deg.")
-            branch["angmin"] = -default_pad
-            branch["angmax"] = default_pad
-        end
-    end
-end
-
-
-# checks that each line has a reasonable line thermal rating, if not computes one
-function check_thermal_limits(data)
-    mva_base = data["baseMVA"]
-    vmax_lookup = Dict([(bus["index"], bus["vmax"]) for bus in data["bus"]])
-    vmin_lookup = Dict([(bus["index"], bus["vmin"]) for bus in data["bus"]])
-
-    for branch in data["branch"]
-        if branch["rate_a"] <= 0.0
-            theta_max = max(abs(branch["angmin"]), abs(branch["angmax"]))
-
-            r = branch["br_r"]
-            x = branch["br_x"]
-            g =  r / (r^2 + x^2)
-            b = -x / (r^2 + x^2)
-
-            y_mag = sqrt(g^2 + b^2)
-
-            fr_vmax = vmax_lookup[branch["f_bus"]]
-            to_vmax = vmax_lookup[branch["f_bus"]]
-            m_vmax = max(fr_vmax, to_vmax)
-
-            c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(deg2rad(theta_max)))
-
-            new_rate = mva_base*y_mag*m_vmax*c_max
-
-            warn("this code only supports positive rate_a values, changing the value on branch $(branch["index"]) from $(branch["rate_a"]) to $(new_rate)")
-            branch["rate_a"] = new_rate
-        end
-    end
-end
-
-
-# checks bus types are consistent with generator connections, if not, fixes them
-function check_bus_types(data)
-    bus_gens = Dict([(bus["bus_i"], []) for (i,bus) in enumerate(data["bus"])])
-
-    for (i,gen) in enumerate(data["gen"])
-        #println(gen)
-        if gen["gen_status"] == 1
-            push!(bus_gens[gen["gen_bus"]], i)
-        end
-    end
-
-    for bus in data["bus"]
-        if bus["bus_type"] != 4 && bus["bus_type"] != 3
-            bus_gens_count = length(bus_gens[bus["bus_i"]])
-
-            if bus_gens_count == 0 && bus["bus_type"] != 1
-                warn("no active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 1")
-                bus["bus_type"] = 1
-            end
-
-            if bus_gens_count != 0 && bus["bus_type"] != 2
-                warn("active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 2")
-                bus["bus_type"] = 2
-            end
-
-        end
-    end
-
-end
-
 
 # ensures all costs functions are quadratic and reverses their order
 function standardize_cost_order(data::Dict{AbstractString,Any})
@@ -120,75 +32,24 @@ function standardize_cost_order(data::Dict{AbstractString,Any})
     end
 end
 
-
 # sets all line transformer taps to 1.0, to simplify line models
-function unify_transformer_taps(data::Dict{AbstractString,Any})
+function update_branch_transformer_settings(data::Dict{AbstractString,Any})
     branches = [branch for branch in data["branch"]]
     if haskey(data, "ne_branch")
         append!(branches, data["ne_branch"])
     end
     for branch in branches
         if branch["tap"] == 0.0
+            branch["transformer"] = false
             branch["tap"] = 1.0
-        end
-    end
-end
-
-
-### Recursive Per Unit Computation ###
-
-not_pu = Set(["rate_a","rate_b","rate_c","bs","gs","pd","qd","pg","qg","pmax","pmin","qmax","qmin"])
-not_rad = Set(["angmax","angmin","shift","va"])
-
-function make_per_unit(data::Dict{AbstractString,Any})
-    if !haskey(data, "per_unit") || data["per_unit"] == false
-        make_per_unit(data["baseMVA"], data)
-        data["per_unit"] = true
-    end
-end
-
-function make_per_unit(mva_base::Number, data::Dict{AbstractString,Any})
-    for k in keys(data)
-        if k == "gencost"
-            for cost_model in data[k]
-                if cost_model["model"] != 2
-                    warn("Skipping generator cost model of type other than 2")
-                    continue
-                end
-                degree = length(cost_model["cost"])
-                for (i, item) in enumerate(cost_model["cost"])
-                    cost_model["cost"][i] = item*mva_base^(degree-i)
-                end
-            end
-        elseif isa(data[k], Number)
-            if k in not_pu
-                data[k] = data[k]/mva_base
-            end
-            if k in not_rad
-                data[k] = pi*data[k]/180.0
-            end
-            #println("$(k) $(data[k])")
         else
-            make_per_unit(mva_base, data[k])
+            branch["transformer"] = true
         end
     end
 end
 
-function make_per_unit(mva_base::Number, data::Array{Any,1})
-    for item in data
-        make_per_unit(mva_base, item)
-    end
-end
 
-function make_per_unit(mva_base::Number, data::AbstractString)
-    #nothing to do
-end
-
-function make_per_unit(mva_base::Number, data::Number)
-    #nothing to do
-end
-
-# merges generator cost functions into generator data, if they exist
+# merges generator cost functions into generator data, if costs exist
 function merge_generator_cost_data(data::Dict{AbstractString,Any})
     if haskey(data, "gencost")
         # can assume same length is same as gen (or double)
@@ -202,6 +63,23 @@ function merge_generator_cost_data(data::Dict{AbstractString,Any})
             merge!(gen, gencost)
         end
         delete!(data, "gencost")
+    end
+end
+
+# merges bus name data into buses, if names exist
+function merge_bus_name_data(data::Dict{AbstractString,Any})
+    if haskey(data, "bus_name")
+        # can assume same length is same as bus
+        # this is validated during parsing
+        for (i, bus_name) in enumerate(data["bus_name"])
+            bus = data["bus"][i]
+            assert(bus["index"] == bus_name["index"])
+            delete!(bus_name, "index")
+
+            check_keys(bus, keys(bus_name))
+            merge!(bus, bus_name)
+        end
+        delete!(data, "bus_name")
     end
 end
 
@@ -415,15 +293,7 @@ end
 
 
 function parse_matpower_data(data_string)
-
     data_lines = split(data_string, '\n')
-    #println(data_lines)
-
-    #data_lines = filter(line -> !(length(strip(line)) <= 0 || strip(line)[1] == '%'), data_lines)
-    #data_lines = filter(line -> !(strip(line)[1] == '%'), data_lines)
-    #for line in data_lines
-        #println(line)
-    #end
 
     version = -1
     name = -1
@@ -523,7 +393,6 @@ function parse_matpower_data(data_string)
                     bus_data["mu_vmin"] = parse(Float64, bus_row[17])
                 end
 
-                bus_data["bus_name"] = "Bus $(bus_data["bus_i"])"
                 push!(buses, bus_data)
             end
 
@@ -681,18 +550,13 @@ function parse_matpower_data(data_string)
     for parsed_cell in parsed_cells
         #println(parsed_cell)
         if parsed_cell["name"] == "bus_name" 
-
             if length(parsed_cell["data"]) != length(case["bus"])
                 error("incorrect Matpower file, the number of bus names ($(length(parsed_cell["data"]))) is inconsistent with the number of buses ($(length(case["bus"]))).\n")
             end
 
-            for (i, bus) in enumerate(case["bus"])
-                # note striping the single quotes is not necessary in general, column typing takes care of this
-                bus["bus_name"] = strip(parsed_cell["data"][i][1], '\'')
-                #println(bus["bus_name"])
-            end
+            typed_dict_data = build_typed_dict(parsed_cell["data"], ["bus_name"])
+            case["bus_name"] = typed_dict_data
         else
-        
             name = parsed_cell["name"]
             data = parsed_cell["data"]
 
@@ -712,6 +576,7 @@ function parse_matpower_data(data_string)
 
     return case
 end
+
 
 # takes a list of list of strings and turns it into a list of typed dictionaries
 function build_typed_dict(data, column_names)
@@ -784,4 +649,22 @@ function extend_case_data(case, name, typed_dict_data, has_column_names)
         case[name] = typed_dict_data
     end
 end
+
+
+# converts arrays of objects into a dicts with lookup by "index"
+function mp_data_to_pm_data(mp_data)
+    for (k,v) in mp_data
+        if isa(v, Array)
+            #println("updating $(k)")
+            dict = Dict{AbstractString,Any}()
+            for item in v
+                assert("index" in keys(item))
+                dict[string(item["index"])] = item
+            end
+            mp_data[k] = dict
+        end
+    end
+end
+
+
 

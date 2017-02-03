@@ -327,7 +327,7 @@ end
 
 function get_solution(pm::APIACPPowerModel)
     # super fallback
-    sol = Dict{AbstractString,Any}()
+    sol = init_solution(pm)
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
@@ -340,8 +340,8 @@ end
 
 function add_bus_demand_setpoint(sol, pm::APIACPPowerModel)
     mva_base = pm.data["baseMVA"]
-    add_setpoint(sol, pm, "bus", "bus_i", "pd", :load_factor; default_value = (item) -> item["pd"]*mva_base, scale = (x,item) -> item["pd"] > 0 && item["qd"] > 0 ? x*item["pd"]*mva_base : item["pd"]*mva_base, extract_var = (var,idx,item) -> var)
-    add_setpoint(sol, pm, "bus", "bus_i", "qd", :load_factor; default_value = (item) -> item["qd"]*mva_base, scale = (x,item) -> item["qd"]*mva_base, extract_var = (var,idx,item) -> var)
+    add_setpoint(sol, pm, "bus", "bus_i", "pd", :load_factor; default_value = (item) -> item["pd"], scale = (x,item) -> item["pd"] > 0 && item["qd"] > 0 ? x*item["pd"] : item["pd"], extract_var = (var,idx,item) -> var)
+    add_setpoint(sol, pm, "bus", "bus_i", "qd", :load_factor; default_value = (item) -> item["qd"], scale = (x,item) -> item["qd"], extract_var = (var,idx,item) -> var)
 end
 
 

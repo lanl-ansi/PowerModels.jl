@@ -15,8 +15,8 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5812.64; atol = 1e0)
 
-        network_data["bus"][3]["pd"] = 0.0
-        network_data["bus"][3]["qd"] = 0.0
+        network_data["bus"]["3"]["pd"] = 0.0
+        network_data["bus"]["3"]["qd"] = 0.0
 
         result = run_opf(network_data, ACPPowerModel, IpoptSolver(print_level=0))
 

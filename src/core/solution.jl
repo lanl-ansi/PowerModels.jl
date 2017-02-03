@@ -6,13 +6,16 @@ function build_solution{T}(pm::GenericPowerModel{T}, status, solve_time; objecti
         status = solver_status_dict(Symbol(typeof(pm.model.solver).name.module), status)
     end
 
+    sol = solution_builder(pm)
+    make_mixed_units(sol)
+
     solution = Dict{AbstractString,Any}(
         "solver" => string(typeof(pm.model.solver)),
         "status" => status,
         "objective" => objective,
         "objective_lb" => guard_getobjbound(pm.model),
         "solve_time" => solve_time,
-        "solution" => solution_builder(pm),
+        "solution" => sol,
         "machine" => Dict(
             "cpu" => Sys.cpu_info()[1].model,
             "memory" => string(Sys.total_memory()/2^30, " Gb")
@@ -29,8 +32,16 @@ function build_solution{T}(pm::GenericPowerModel{T}, status, solve_time; objecti
     return solution
 end
 
-function get_solution{T}(pm::GenericPowerModel{T})
+function init_solution{T}(pm::GenericPowerModel{T})
     sol = Dict{AbstractString,Any}()
+    for key in ["per_unit", "baseMVA"]
+        sol[key] = pm.data[key]
+    end
+    return sol
+end
+
+function get_solution{T}(pm::GenericPowerModel{T})
+    sol = init_solution(pm)
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
@@ -39,19 +50,19 @@ end
 
 function add_bus_voltage_setpoint{T}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :v)
-    add_setpoint(sol, pm, "bus", "bus_i", "va", :t; scale = (x,item) -> x*180/pi)
+    add_setpoint(sol, pm, "bus", "bus_i", "va", :t)
 end
 
 function add_generator_power_setpoint{T}(sol, pm::GenericPowerModel{T})
     mva_base = pm.data["baseMVA"]
-    add_setpoint(sol, pm, "gen", "index", "pg", :pg; scale = (x,item) -> x*mva_base)
-    add_setpoint(sol, pm, "gen", "index", "qg", :qg; scale = (x,item) -> x*mva_base)
+    add_setpoint(sol, pm, "gen", "index", "pg", :pg)
+    add_setpoint(sol, pm, "gen", "index", "qg", :qg)
 end
 
 function add_bus_demand_setpoint{T}(sol, pm::GenericPowerModel{T})
     mva_base = pm.data["baseMVA"]
-    add_setpoint(sol, pm, "bus", "bus_i", "pd", :pd; default_value = (item) -> item["pd"]*mva_base, scale = (x,item) -> x*mva_base)
-    add_setpoint(sol, pm, "bus", "bus_i", "qd", :qd; default_value = (item) -> item["qd"]*mva_base, scale = (x,item) -> x*mva_base)
+    add_setpoint(sol, pm, "bus", "bus_i", "pd", :pd; default_value = (item) -> item["pd"]*mva_base)
+    add_setpoint(sol, pm, "bus", "bus_i", "qd", :qd; default_value = (item) -> item["qd"]*mva_base)
 end
 
 function add_branch_flow_setpoint{T}(sol, pm::GenericPowerModel{T})
@@ -90,21 +101,21 @@ end
 function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, param_name, variable_symbol; default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
     sol_dict = nothing
     if !haskey(sol, dict_name)
-        sol_dict = Dict{Int,Any}()
+        sol_dict = Dict{AbstractString,Any}()
         sol[dict_name] = sol_dict
     else
         sol_dict = sol[dict_name]
     end
 
-    for item in pm.data[dict_name]
+    for (i,item) in pm.data[dict_name]
         idx = Int(item[index_name])
 
         sol_item = nothing
-        if !haskey(sol_dict, idx)
+        if !haskey(sol_dict, i)
             sol_item = Dict{AbstractString,Any}()
-            sol_dict[idx] = sol_item
+            sol_dict[i] = sol_item
         else
-            sol_item = sol_dict[idx]
+            sol_item = sol_dict[i]
         end
         sol_item[param_name] = default_value(item)
 

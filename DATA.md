@@ -12,36 +12,39 @@ The network data dictionary structure is roughly as follows,
 "name":<string>,
 "version":"2",
 "baseMVA":<float>,
-"bus":[
-    {
+"bus":{
+    "1":{
         "index":<int>,
         "bus_type":<int>,
         "pd":<float>,
         "qd":<float>,
         ...
     },
+    "2":{...},
     ...
-],
-"gen":[
-    {
+},
+"gen":{
+    "1":{
         "index":<int>,
         "gen_bus":<int>,
         "pg":<float>,
         "qg":<float>,
         ...
     },
+    "2":{...},
     ...
-],
-"branch":[
-    {
+},
+"branch":{
+    "1":{
         "index":<int>,
         "f_bus":<int>,
         "t_bus":<int>,
         "br_r":<int>,
         ...
     },
+    "2":{...},
     ...
-]
+}
 }
 ```
 
@@ -60,6 +63,7 @@ The PowerModels network data dictionary differs from the Matpower format in the 
 - All PowerModels components have an `index` parameter, which can be used to uniquely identify that network element.
 - All network parameters are in per-unit and angles are in radians.
 - All non-transformer branches are given nominal transformer values (i.e. a tap of 1.0 and a shift of 0).
+- All branches have a `transformer` field indicating if they are a transformer or not.
 - When present, the `gencost` data is incorporated into the `gen` data, the column names remain the same.
 - Only quadratic active power generation cost functions are supported at this time.
 - Special treatment is given to the optional `ne_branch` matrix to support the TNEP problem.
@@ -67,8 +71,7 @@ The PowerModels network data dictionary differs from the Matpower format in the 
 
 ## Working with Matpower Data Files
 
-The data exchange via JSON files is ideal for building algorithms, however it is hard to for humans to read and process.
-To that end PowerModels also has extensive support for parsing Matpower network files in the `.m` format.
+The data exchange via JSON files is ideal for building algorithms, however it is hard to for humans to read and process.  To that end PowerModels also has extensive support for parsing Matpower network files in the `.m` format.
 
 
 ### User Extensions
@@ -98,18 +101,18 @@ mpc.areas = [
 becomes,
 ```
 {
-"areas":[
-    {
+"areas":{
+    "1":{
         "index":1,
         "col_1":1,
         "col_2":1
     },
-    {
+    "2":{
         "index":1,
         "col_1":2,
         "col_2":3
     }
-]
+}
 }
 ```
 
@@ -125,18 +128,18 @@ mpc.areas_named = [
 becomes,
 ```
 {
-"areas":[
-    {
+"areas":{
+    "1":{
         "index":1,
         "area":4,
         "refbus":5
     },
-    {
-        "index":1,
+    "2":{
+        "index":2,
         "area":5,
         "refbus":6
     }
-]
+}
 }
 ```
 
@@ -154,26 +157,26 @@ mpc.branch_limit = [
 becomes,
 ```
 {
-"branch":[
-    {
+"branch":{
+    "1":{
         "index":1,
         ...(all pre existing fields)...
         "rate_i":50.2,
         "rate_p":45
     },
-    {
+    "2":{
         "index":2,
         ...(all pre existing fields)...
         "rate_i":36,
         "rate_p":60.1
     },
-    {
+    "3":{
         "index":3,
         ...(all pre existing fields)...
         "rate_i":12,
         "rate_p":30
     }
-]
+}
 }
 ```
 

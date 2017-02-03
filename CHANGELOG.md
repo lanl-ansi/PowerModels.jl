@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Updated to JuMP v0.15 syntax
 - Replaced PowerModels set data types with "ref" dictionary
 - Refactored Matpower data processing to simplify editing network data after parsing
+- Unified network data and solution formats and made them valid JSON documents
 - Replaced JSON test files with Matpower test files
 - Added documentation on internal JSON data format to DATA.md
 - Updated TNEP models to work with Matpower parsing extensions
