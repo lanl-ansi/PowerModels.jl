@@ -19,6 +19,12 @@
         @test isapprox(result["solution"]["bus"][3]["vm"], 0.90000; atol = 1e-3)
         @test isapprox(result["solution"]["bus"][3]["va"], -17.26711; atol = 1e-3)
     end
+    @testset "5-bus asymmetric case" begin
+        result = run_pf("../test/data/case5_asym.m", ACPPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+    end
     @testset "24-bus rts case" begin
         result = run_pf("../test/data/case24.m", ACPPowerModel, ipopt_solver)
 
@@ -41,6 +47,12 @@ end
         @test isapprox(result["solution"]["bus"][2]["va"], 5.24122; atol = 1e-3)
         @test isapprox(result["solution"]["bus"][3]["va"], -16.21006; atol = 1e-3)
     end
+    @testset "5-bus asymmetric case" begin
+        result = run_dc_pf("../test/data/case5_asym.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+    end
     @testset "24-bus rts case" begin
         result = run_pf("../test/data/case24.m", DCPPowerModel, ipopt_solver)
 
@@ -59,6 +71,12 @@ end
         @test isapprox(result["solution"]["bus"][1]["vm"], 1.09999; atol = 1e-3)
         @test isapprox(result["solution"]["bus"][2]["vm"], 0.92616; atol = 1e-3)
         @test isapprox(result["solution"]["bus"][3]["vm"], 0.89999; atol = 1e-3)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+    end
+    @testset "5-bus asymmetric case" begin
+        result = run_pf("../test/data/case5_asym.m", SOCWRPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
