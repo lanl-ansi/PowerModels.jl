@@ -2,6 +2,8 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+
+### v0.3.0
 - Updated to JuMP v0.15 syntax
 - Replaced PowerModels set data types with "ref" dictionary
 - Refactored Matpower data processing to simplify editing network data after parsing
