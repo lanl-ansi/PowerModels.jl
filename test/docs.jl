@@ -1,14 +1,14 @@
 
 @testset "code snippets from docs" begin
     @testset "DATA.md - The Network Data Dictionary" begin
-        network_data = PowerModels.parse_file("$(Pkg.dir("PowerModels"))/test/data/case14.m")
+        network_data = PowerModels.parse_file("../test/data/case14.m")
 
         @test length(network_data["bus"]) == 14
         @test length(network_data["branch"]) == 20
     end
 
     @testset "README.md - Modifying Network Data" begin
-        network_data = PowerModels.parse_file("$(Pkg.dir("PowerModels"))/test/data/case3.m")
+        network_data = PowerModels.parse_file("../test/data/case3.m")
 
         result = run_opf(network_data, ACPPowerModel, IpoptSolver(print_level=0))
 
@@ -25,8 +25,7 @@
     end
 
     @testset "README.md - JuMP Model Inspection" begin
-        
-        pm = build_generic_model("$(Pkg.dir("PowerModels"))/test/data/case3.m", ACPPowerModel, PowerModels.post_opf)
+        pm = build_generic_model("../test/data/case3.m", ACPPowerModel, PowerModels.post_opf)
 
         #pretty print the model to the terminal
         #print(pm.model)
