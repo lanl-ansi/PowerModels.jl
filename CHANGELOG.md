@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added missing function for AC-TNEP models
 
 ### v0.3.0
 - Updated to JuMP v0.15 syntax
