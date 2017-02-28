@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Added missing function for AC-TNEP models
+- Added checks that tap ratios are non-zero
 
 ### v0.3.0
 - Updated to JuMP v0.15 syntax
