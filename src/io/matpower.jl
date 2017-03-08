@@ -73,7 +73,6 @@ function merge_bus_name_data(data::Dict{AbstractString,Any})
         # this is validated during parsing
         for (i, bus_name) in enumerate(data["bus_name"])
             bus = data["bus"][i]
-            assert(bus["index"] == bus_name["index"])
             delete!(bus_name, "index")
 
             check_keys(bus, keys(bus_name))
