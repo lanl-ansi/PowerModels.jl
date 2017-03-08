@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Added missing function for AC-TNEP models
+- Fixed a bug that prevented parsing of bus_names when buses have non-contiguous ids
 
 ### v0.3.0
 - Updated to JuMP v0.15 syntax
