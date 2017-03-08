@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Added missing function for AC-TNEP models
+- Added checks that tap ratios are non-zero
 - Fixed a bug that prevented parsing of bus_names when buses have non-contiguous ids
 
 ### v0.3.0

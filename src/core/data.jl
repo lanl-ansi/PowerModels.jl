@@ -293,6 +293,29 @@ function check_thermal_limits(data)
 end
 
 
+# checks that each line has a reasonable transformer parameters
+# this is important becouse setting tap == 0.0 leads to NaN computations, which are hard to debug
+function check_transformer_parameters(data)
+    assert("per_unit" in keys(data) && data["per_unit"])
+
+    for (i, branch) in data["branch"]
+        if !haskey(branch, "tap")
+            warn("branch found without tap value, setting a tap to 1.0")
+            branch["tap"] = 1.0
+        else
+            if branch["tap"] <= 0.0
+                warn("branch found with non-posative tap value of $(branch["tap"]), setting a tap to 1.0")
+                branch["tap"] = 1.0
+            end
+        end
+        if !haskey(branch, "shift")
+            warn("branch found without shift value, setting a shift to 0.0")
+            branch["shift"] = 0.0
+        end
+    end
+end
+
+
 # checks bus types are consistent with generator connections, if not, fixes them
 function check_bus_types(data)
     bus_gens = Dict([(i, []) for (i,bus) in data["bus"]])
