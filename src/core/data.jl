@@ -255,8 +255,10 @@ function check_phase_angle_differences(data, default_pad = 1.0472)
         end
         if branch["angmin"] == 0.0 && branch["angmax"] == 0.0
             warn("angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- $(rad2deg(default_pad)) deg.")
-            branch["angmin"] = -rad2deg(default_pad)
-            branch["angmax"] = rad2deg(default_pad)
+            #branch["angmin"] = -rad2deg(default_pad)
+            #branch["angmax"] = rad2deg(default_pad)
+            branch["angmin"] = -default_pad
+            branch["angmax"] = default_pad
         end
     end
 end
