@@ -462,6 +462,8 @@ function parse_matpower_data(data_string)
                     branch_data["qf"] = parse(Float64, branch_row[15])
                     branch_data["pt"] = parse(Float64, branch_row[16])
                     branch_data["qt"] = parse(Float64, branch_row[17])
+                end
+                if length(branch_row) > 17
                     branch_data["mu_sf"] = parse(Float64, branch_row[18])
                     branch_data["mu_st"] = parse(Float64, branch_row[19])
                     branch_data["mu_angmin"] = parse(Float64, branch_row[20])
