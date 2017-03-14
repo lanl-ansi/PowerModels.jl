@@ -6,7 +6,7 @@ PowerModels.jl Change Log
 - Added checks that tap ratios are non-zero
 - Made matpower parser more robust to cases with line flow values
 - Fixed a bug that prevented parsing of bus_names when buses have non-contiguous ids
-- Fixed bounds correction when angmin and angmax are 0.0
+- Fixed bounds correction units when angmin and angmax are 0.0
 
 ### v0.3.0
 - Updated to JuMP v0.15 syntax
