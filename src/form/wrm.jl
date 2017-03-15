@@ -3,11 +3,11 @@ export
 
 abstract AbstractWRMForm <: AbstractConicPowerFormulation
 
-type SDPWRMForm <: AbstractWRMForm end
+abstract SDPWRMForm <: AbstractWRMForm
 typealias SDPWRMPowerModel GenericPowerModel{SDPWRMForm}
 
 function SDPWRMPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, SDPWRMForm(); kwargs...)
+    return GenericPowerModel(data, SDPWRMForm; kwargs...)
 end
 
 function variable_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}; kwargs...)
