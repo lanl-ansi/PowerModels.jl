@@ -4,12 +4,12 @@ export
 
 abstract AbstractACPForm <: AbstractPowerFormulation
 
-type StandardACPForm <: AbstractACPForm end
+abstract StandardACPForm <: AbstractACPForm
 typealias ACPPowerModel GenericPowerModel{StandardACPForm}
 
 # default AC constructor
 function ACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, StandardACPForm(); kwargs...)
+    return GenericPowerModel(data, StandardACPForm; kwargs...)
 end
 
 function variable_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...)
@@ -248,12 +248,12 @@ end
 
 
 
-type APIACPForm <: AbstractACPForm end
+abstract APIACPForm <: AbstractACPForm
 typealias APIACPPowerModel GenericPowerModel{APIACPForm}
 
 # default AC constructor
 function APIACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, APIACPForm(); kwargs...)
+    return GenericPowerModel(data, APIACPForm; kwargs...)
 end
 
 function variable_load_factor{T}(pm::GenericPowerModel{T})

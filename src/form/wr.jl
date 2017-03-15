@@ -4,12 +4,12 @@ export
 
 abstract AbstractWRForm <: AbstractPowerFormulation
 
-type SOCWRForm <: AbstractWRForm end
+abstract SOCWRForm <: AbstractWRForm
 typealias SOCWRPowerModel GenericPowerModel{SOCWRForm}
 
 # default SOC constructor
 function SOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, SOCWRForm(); kwargs...)
+    return GenericPowerModel(data, SOCWRForm; kwargs...)
 end
 
 
@@ -388,12 +388,12 @@ end
 
 
 
-type QCWRForm <: AbstractWRForm end
+abstract QCWRForm <: AbstractWRForm
 typealias QCWRPowerModel GenericPowerModel{QCWRForm}
 
 # default QC constructor
 function QCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, QCWRForm(); kwargs...)
+    return GenericPowerModel(data, QCWRForm; kwargs...)
 end
 
 # Creates variables associated with differences in phase angles

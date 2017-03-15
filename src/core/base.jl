@@ -25,7 +25,7 @@ type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
 end
 
 # default generic constructor
-function GenericPowerModel{T}(data::Dict{AbstractString,Any}, vars::T; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
+function GenericPowerModel(data::Dict{AbstractString,Any}, T::DataType; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
 
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
