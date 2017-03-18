@@ -634,7 +634,7 @@ function extend_case_data(case, name, typed_dict_data, has_column_names)
         info("extending matpower format by appending matrix \"$(name)\" onto \"$(mp_name)\"")
         for (i, row) in enumerate(mp_matrix)
             merge_row = typed_dict_data[i]
-            assert(row["index"] == merge_row["index"])
+            #assert(row["index"] == merge_row["index"]) # note this does not hold for the bus table
             delete!(merge_row, "index")
             for key in keys(merge_row)
                 if haskey(row, key)
