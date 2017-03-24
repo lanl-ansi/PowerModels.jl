@@ -4,12 +4,12 @@ export
 
 abstract AbstractDCPForm <: AbstractPowerFormulation
 
-type StandardDCPForm <: AbstractDCPForm end
+abstract StandardDCPForm <: AbstractDCPForm
 typealias DCPPowerModel GenericPowerModel{StandardDCPForm}
 
 # default DC constructor
 function DCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, StandardDCPForm(); kwargs...)
+    return GenericPowerModel(data, StandardDCPForm; kwargs...)
 end
 
 
@@ -266,13 +266,13 @@ end
 
 abstract AbstractDCPLLForm <: AbstractDCPForm
 
-type StandardDCPLLForm <: AbstractDCPLLForm end
+abstract StandardDCPLLForm <: AbstractDCPLLForm
 typealias DCPLLPowerModel GenericPowerModel{StandardDCPLLForm}
 
 
 # default DC constructor
 function DCPLLPowerModel(data::Dict{AbstractString,Any}; kwargs...)
-    return GenericPowerModel(data, StandardDCPLLForm(); kwargs...)
+    return GenericPowerModel(data, StandardDCPLLForm; kwargs...)
 end
 
 function constraint_kcl_shunt{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)

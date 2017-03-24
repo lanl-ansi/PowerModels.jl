@@ -3,6 +3,11 @@ PowerModels.jl Change Log
 
 ### Staged
 - Added missing function for AC-TNEP models
+- Added checks that tap ratios are non-zero
+- Made all power model forms abstract types, to support future extensions
+- Made matpower parser more robust to cases with line flow values
+- Fixed a bug that prevented parsing of bus_names when buses have non-contiguous ids
+- Fixed bounds correction units when angmin and angmax are 0.0
 
 ### v0.3.0
 - Updated to JuMP v0.15 syntax

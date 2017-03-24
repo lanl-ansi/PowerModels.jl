@@ -73,7 +73,6 @@ function merge_bus_name_data(data::Dict{AbstractString,Any})
         # this is validated during parsing
         for (i, bus_name) in enumerate(data["bus_name"])
             bus = data["bus"][i]
-            assert(bus["index"] == bus_name["index"])
             delete!(bus_name, "index")
 
             check_keys(bus, keys(bus_name))
@@ -463,6 +462,8 @@ function parse_matpower_data(data_string)
                     branch_data["qf"] = parse(Float64, branch_row[15])
                     branch_data["pt"] = parse(Float64, branch_row[16])
                     branch_data["qt"] = parse(Float64, branch_row[17])
+                end
+                if length(branch_row) > 17
                     branch_data["mu_sf"] = parse(Float64, branch_row[18])
                     branch_data["mu_st"] = parse(Float64, branch_row[19])
                     branch_data["mu_angmin"] = parse(Float64, branch_row[20])
@@ -633,7 +634,7 @@ function extend_case_data(case, name, typed_dict_data, has_column_names)
         info("extending matpower format by appending matrix \"$(name)\" onto \"$(mp_name)\"")
         for (i, row) in enumerate(mp_matrix)
             merge_row = typed_dict_data[i]
-            assert(row["index"] == merge_row["index"])
+            #assert(row["index"] == merge_row["index"]) # note this does not hold for the bus table
             delete!(merge_row, "index")
             for key in keys(merge_row)
                 if haskey(row, key)

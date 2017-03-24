@@ -255,8 +255,10 @@ function check_phase_angle_differences(data, default_pad = 1.0472)
         end
         if branch["angmin"] == 0.0 && branch["angmax"] == 0.0
             warn("angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- $(rad2deg(default_pad)) deg.")
-            branch["angmin"] = -rad2deg(default_pad)
-            branch["angmax"] = rad2deg(default_pad)
+            #branch["angmin"] = -rad2deg(default_pad)
+            #branch["angmax"] = rad2deg(default_pad)
+            branch["angmin"] = -default_pad
+            branch["angmax"] = default_pad
         end
     end
 end
@@ -288,6 +290,29 @@ function check_thermal_limits(data)
 
             warn("this code only supports positive rate_a values, changing the value on branch $(branch["index"]) from $(mva_base*branch["rate_a"]) to $(mva_base*new_rate)")
             branch["rate_a"] = new_rate
+        end
+    end
+end
+
+
+# checks that each line has a reasonable transformer parameters
+# this is important becouse setting tap == 0.0 leads to NaN computations, which are hard to debug
+function check_transformer_parameters(data)
+    assert("per_unit" in keys(data) && data["per_unit"])
+
+    for (i, branch) in data["branch"]
+        if !haskey(branch, "tap")
+            warn("branch found without tap value, setting a tap to 1.0")
+            branch["tap"] = 1.0
+        else
+            if branch["tap"] <= 0.0
+                warn("branch found with non-posative tap value of $(branch["tap"]), setting a tap to 1.0")
+                branch["tap"] = 1.0
+            end
+        end
+        if !haskey(branch, "shift")
+            warn("branch found without shift value, setting a shift to 0.0")
+            branch["shift"] = 0.0
         end
     end
 end
