@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added JuMP v0.16 and Julia v0.6 compatibility
 - Added missing function for AC-TNEP models
 - Added checks that tap ratios are non-zero
 - Made all power model forms abstract types, to support future extensions
