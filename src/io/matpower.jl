@@ -20,7 +20,7 @@ function parse_matpower(file_string)
 end
 
 # ensures all costs functions are quadratic and reverses their order
-function standardize_cost_order(data::Dict{AbstractString,Any})
+function standardize_cost_order(data::Dict{String,Any})
     for gencost in data["gencost"]
         if gencost["model"] == 2 && length(gencost["cost"]) < 3
             #println("std gen cost: ",gencost["cost"])
@@ -33,7 +33,7 @@ function standardize_cost_order(data::Dict{AbstractString,Any})
 end
 
 # sets all line transformer taps to 1.0, to simplify line models
-function update_branch_transformer_settings(data::Dict{AbstractString,Any})
+function update_branch_transformer_settings(data::Dict{String,Any})
     branches = [branch for branch in data["branch"]]
     if haskey(data, "ne_branch")
         append!(branches, data["ne_branch"])
@@ -50,7 +50,7 @@ end
 
 
 # merges generator cost functions into generator data, if costs exist
-function merge_generator_cost_data(data::Dict{AbstractString,Any})
+function merge_generator_cost_data(data::Dict{String,Any})
     if haskey(data, "gencost")
         # can assume same length is same as gen (or double)
         # this is validated during parsing
@@ -67,7 +67,7 @@ function merge_generator_cost_data(data::Dict{AbstractString,Any})
 end
 
 # merges bus name data into buses, if names exist
-function merge_bus_name_data(data::Dict{AbstractString,Any})
+function merge_bus_name_data(data::Dict{String,Any})
     if haskey(data, "bus_name")
         # can assume same length is same as bus
         # this is validated during parsing
@@ -307,7 +307,7 @@ function parse_matpower_data(data_string)
     parsed_matrixes = []
     parsed_cells = []
 
-    case = Dict{AbstractString,Any}(
+    case = Dict{String,Any}(
         "dcline" => [],
         "gencost" => []
     )
@@ -369,7 +369,7 @@ function parse_matpower_data(data_string)
             buses = []
 
             for bus_row in parsed_matrix["data"]
-                bus_data = Dict{AbstractString,Any}(
+                bus_data = Dict{String,Any}(
                     "index" => parse(Int, bus_row[1]),
                     "bus_i" => parse(Int, bus_row[1]),
                     "bus_type" => parse(Int, bus_row[2]),
@@ -401,7 +401,7 @@ function parse_matpower_data(data_string)
             gens = []
 
             for (i, gen_row) in enumerate(parsed_matrix["data"])
-                gen_data = Dict{AbstractString,Any}(
+                gen_data = Dict{String,Any}(
                     "index" => i,
                     "gen_bus" => parse(Int, gen_row[1]),
                     "pg" => parse(Float64, gen_row[2]),
@@ -441,7 +441,7 @@ function parse_matpower_data(data_string)
             branches = []
 
             for (i, branch_row) in enumerate(parsed_matrix["data"])
-                branch_data = Dict{AbstractString,Any}(
+                branch_data = Dict{String,Any}(
                     "index" => i,
                     "f_bus" => parse(Int, branch_row[1]),
                     "t_bus" => parse(Int, branch_row[2]),
@@ -479,7 +479,7 @@ function parse_matpower_data(data_string)
             gencost = []
 
             for (i, gencost_row) in enumerate(parsed_matrix["data"])
-                gencost_data = Dict{AbstractString,Any}(
+                gencost_data = Dict{String,Any}(
                     "index" => i,
                     "model" => parse(Int, gencost_row[1]),
                     "startup" => parse(Float64, gencost_row[2]),
@@ -500,7 +500,7 @@ function parse_matpower_data(data_string)
             dclines = []
 
             for (i, dcline_row) in enumerate(parsed_matrix["data"])
-                dcline_data = Dict{AbstractString,Any}(
+                dcline_data = Dict{String,Any}(
                     "index" => i,
                     "f_bus" => parse(Int, dcline_row[1]),
                     "t_bus" => parse(Int, dcline_row[2]),
@@ -596,7 +596,7 @@ function build_typed_dict(data, column_names)
 
     typed_data = []
     for r in 1:rows
-        data_dict = Dict{AbstractString,Any}()
+        data_dict = Dict{String,Any}()
         data_dict["index"] = r
         for c in 1:columns
             data_dict[column_names[c]] = typed_columns[c][r]
@@ -657,7 +657,7 @@ function mp_data_to_pm_data(mp_data)
     for (k,v) in mp_data
         if isa(v, Array)
             #println("updating $(k)")
-            dict = Dict{AbstractString,Any}()
+            dict = Dict{String,Any}()
             for item in v
                 assert("index" in keys(item))
                 dict[string(item["index"])] = item
