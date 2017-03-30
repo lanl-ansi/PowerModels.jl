@@ -8,7 +8,7 @@ abstract StandardDCPForm <: AbstractDCPForm
 typealias DCPPowerModel GenericPowerModel{StandardDCPForm}
 
 # default DC constructor
-function DCPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+function DCPPowerModel(data::Dict{String,Any}; kwargs...)
     return GenericPowerModel(data, StandardDCPForm; kwargs...)
 end
 
@@ -271,7 +271,7 @@ typealias DCPLLPowerModel GenericPowerModel{StandardDCPLLForm}
 
 
 # default DC constructor
-function DCPLLPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+function DCPLLPowerModel(data::Dict{String,Any}; kwargs...)
     return GenericPowerModel(data, StandardDCPLLForm; kwargs...)
 end
 

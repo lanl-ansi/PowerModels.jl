@@ -33,7 +33,7 @@ function calc_voltage_product_bounds(buspairs)
     return wr_min, wr_max, wi_min, wi_max
 end
 
-function calc_theta_delta_bounds(data::Dict{AbstractString,Any})
+function calc_theta_delta_bounds(data::Dict{String,Any})
     bus_count = length(data["bus"])
     branches = [branch for branch in values(data["branch"])]
     if haskey(data, "ne_branch")
@@ -57,7 +57,7 @@ function calc_theta_delta_bounds(data::Dict{AbstractString,Any})
     return angle_min, angle_max
 end
 
-function calc_branch_t(branch::Dict{AbstractString,Any})
+function calc_branch_t(branch::Dict{String,Any})
     tap_ratio = branch["tap"]
     angle_shift = branch["shift"]
 
@@ -67,7 +67,7 @@ function calc_branch_t(branch::Dict{AbstractString,Any})
     return tr, ti
 end
 
-function calc_branch_y(branch::Dict{AbstractString,Any})
+function calc_branch_y(branch::Dict{String,Any})
     r = branch["br_r"]
     x = branch["br_x"]
 
@@ -87,7 +87,7 @@ function check_keys(data, keys)
 end
 
 # Recusivly applies new_data to data, overwritting information
-function update_data(data::Dict{AbstractString,Any}, new_data::Dict{AbstractString,Any})
+function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
     for (key, new_v) in new_data
         if haskey(data, key)
             v = data[key]
@@ -102,14 +102,14 @@ function update_data(data::Dict{AbstractString,Any}, new_data::Dict{AbstractStri
     end
 end
 
-function apply_func(data::Dict{AbstractString,Any}, key::AbstractString, func)
+function apply_func(data::Dict{String,Any}, key::String, func)
     if haskey(data, key)
         data[key] = func(data[key])
     end
 end
 
 # Transforms network data into per-unit
-function make_per_unit(data::Dict{AbstractString,Any})
+function make_per_unit(data::Dict{String,Any})
     if !haskey(data, "per_unit") || data["per_unit"] == false
         data["per_unit"] = true
         mva_base = data["baseMVA"]
@@ -175,7 +175,7 @@ end
 
 
 # Transforms network data into mixed-units (inverse of per-unit)
-function make_mixed_units(data::Dict{AbstractString,Any})
+function make_mixed_units(data::Dict{String,Any})
     if haskey(data, "per_unit") && data["per_unit"] == true
         data["per_unit"] = false
         mva_base = data["baseMVA"]

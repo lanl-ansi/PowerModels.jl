@@ -48,7 +48,7 @@
                     \"qd\":0
                 }
             }
-        }", dicttype = Dict{AbstractString,Any})
+        }")
 
         PowerModels.update_data(data, data_delta)
 

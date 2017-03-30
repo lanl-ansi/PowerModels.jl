@@ -8,7 +8,7 @@ abstract SOCWRForm <: AbstractWRForm
 typealias SOCWRPowerModel GenericPowerModel{SOCWRForm}
 
 # default SOC constructor
-function SOCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+function SOCWRPowerModel(data::Dict{String,Any}; kwargs...)
     return GenericPowerModel(data, SOCWRForm; kwargs...)
 end
 
@@ -392,7 +392,7 @@ abstract QCWRForm <: AbstractWRForm
 typealias QCWRPowerModel GenericPowerModel{QCWRForm}
 
 # default QC constructor
-function QCWRPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+function QCWRPowerModel(data::Dict{String,Any}; kwargs...)
     return GenericPowerModel(data, QCWRForm; kwargs...)
 end
 
