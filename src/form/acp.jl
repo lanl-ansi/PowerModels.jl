@@ -8,7 +8,7 @@ abstract StandardACPForm <: AbstractACPForm
 typealias ACPPowerModel GenericPowerModel{StandardACPForm}
 
 # default AC constructor
-function ACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+function ACPPowerModel(data::Dict{String,Any}; kwargs...)
     return GenericPowerModel(data, StandardACPForm; kwargs...)
 end
 
@@ -252,7 +252,7 @@ abstract APIACPForm <: AbstractACPForm
 typealias APIACPPowerModel GenericPowerModel{APIACPForm}
 
 # default AC constructor
-function APIACPPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+function APIACPPowerModel(data::Dict{String,Any}; kwargs...)
     return GenericPowerModel(data, APIACPForm; kwargs...)
 end
 

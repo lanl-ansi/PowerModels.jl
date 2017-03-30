@@ -10,7 +10,7 @@ function parse_file(file)
     return pm_data
 end
 
-function check_network_data(data::Dict{AbstractString,Any})
+function check_network_data(data::Dict{String,Any})
     make_per_unit(data)
     check_transformer_parameters(data)
     check_phase_angle_differences(data)

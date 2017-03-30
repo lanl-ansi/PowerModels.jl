@@ -9,7 +9,7 @@ function build_solution{T}(pm::GenericPowerModel{T}, status, solve_time; objecti
     sol = solution_builder(pm)
     make_mixed_units(sol)
 
-    solution = Dict{AbstractString,Any}(
+    solution = Dict{String,Any}(
         "solver" => string(typeof(pm.model.solver)),
         "status" => status,
         "objective" => objective,
@@ -33,7 +33,7 @@ function build_solution{T}(pm::GenericPowerModel{T}, status, solve_time; objecti
 end
 
 function init_solution{T}(pm::GenericPowerModel{T})
-    sol = Dict{AbstractString,Any}()
+    sol = Dict{String,Any}()
     for key in ["per_unit", "baseMVA"]
         sol[key] = pm.data[key]
     end
@@ -101,7 +101,7 @@ end
 function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, param_name, variable_symbol; default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
     sol_dict = nothing
     if !haskey(sol, dict_name)
-        sol_dict = Dict{AbstractString,Any}()
+        sol_dict = Dict{String,Any}()
         sol[dict_name] = sol_dict
     else
         sol_dict = sol[dict_name]
@@ -112,7 +112,7 @@ function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, p
 
         sol_item = nothing
         if !haskey(sol_dict, i)
-            sol_item = Dict{AbstractString,Any}()
+            sol_item = Dict{String,Any}()
             sol_dict[i] = sol_item
         else
             sol_item = sol_dict[i]

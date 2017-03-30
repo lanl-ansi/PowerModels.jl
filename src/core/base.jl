@@ -11,9 +11,9 @@ abstract AbstractConicPowerFormulation <: AbstractPowerFormulation
 
 type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
     model::Model
-    data::Dict{AbstractString,Any}
-    setting::Dict{AbstractString,Any}
-    solution::Dict{AbstractString,Any}
+    data::Dict{String,Any}
+    setting::Dict{String,Any}
+    solution::Dict{String,Any}
 
     ref::Dict{Symbol,Any}
 
@@ -25,13 +25,13 @@ type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
 end
 
 # default generic constructor
-function GenericPowerModel(data::Dict{AbstractString,Any}, T::DataType; setting = Dict{AbstractString,Any}(), solver = JuMP.UnsetSolver())
+function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{String,Any}(), solver = JuMP.UnsetSolver())
 
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
         data, # data
         setting, # setting
-        Dict{AbstractString,Any}(), # solution
+        Dict{String,Any}(), # solution
         build_ref(data), # refrence data
         Dict{Symbol,Any}() # ext
     )
@@ -42,12 +42,12 @@ end
 #
 # Just seems too hard to maintain with the default constructor
 #
-#function setdata{T}(pm::GenericPowerModel{T}, data::Dict{AbstractString,Any})
+#function setdata{T}(pm::GenericPowerModel{T}, data::Dict{String,Any})
 #    data, sets = process_raw_data(data)
 
 #    pm.model = Model()
 #    pm.set = sets
-#    pm.solution = Dict{AbstractString,Any}()
+#    pm.solution = Dict{String,Any}()
 #    pm.data = data
 
 #end
@@ -70,13 +70,13 @@ function JuMP.solve(pm::GenericPowerModel)
 end
 
 
-function run_generic_model(file::AbstractString, model_constructor, solver, post_method; kwargs...)
+function run_generic_model(file::String, model_constructor, solver, post_method; kwargs...)
     data = PowerModels.parse_file(file)
     return run_generic_model(data, model_constructor, solver, post_method; kwargs...)
 end
 
 # core run function assumes network data is given as a Dict
-function run_generic_model(data::Dict{AbstractString,Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
+function run_generic_model(data::Dict{String,Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
     pm = build_generic_model(data, model_constructor, post_method; kwargs...)
 
     solution = solve_generic_model(pm, solver; solution_builder = solution_builder)
@@ -85,12 +85,12 @@ function run_generic_model(data::Dict{AbstractString,Any}, model_constructor, so
 end
 
 
-function build_generic_model(file::AbstractString,  model_constructor, post_method; kwargs...)
+function build_generic_model(file::String,  model_constructor, post_method; kwargs...)
     data = PowerModels.parse_file(file)
     return build_generic_model(data, model_constructor, post_method; kwargs...)
 end
 
-function build_generic_model(data::Dict{AbstractString,Any}, model_constructor, post_method; kwargs...)
+function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
     pm = model_constructor(data; kwargs...)
 
@@ -110,7 +110,7 @@ end
 
 
 
-function build_ref(data::Dict{AbstractString,Any})
+function build_ref(data::Dict{String,Any})
     ref = Dict{Symbol,Any}()
     for (key, item) in data
         if isa(item, Dict)
