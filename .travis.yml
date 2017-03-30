@@ -4,6 +4,7 @@ os:
   - osx
 julia:
   - 0.5
+  - nightly
 cache:
  directories:
    - /home/travis/.julia
