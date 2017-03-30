@@ -6,7 +6,7 @@ abstract AbstractWRMForm <: AbstractConicPowerFormulation
 abstract SDPWRMForm <: AbstractWRMForm
 typealias SDPWRMPowerModel GenericPowerModel{SDPWRMForm}
 
-function SDPWRMPowerModel(data::Dict{AbstractString,Any}; kwargs...)
+function SDPWRMPowerModel(data::Dict{String,Any}; kwargs...)
     return GenericPowerModel(data, SDPWRMForm; kwargs...)
 end
 
