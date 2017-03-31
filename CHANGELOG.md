@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Updated type declarations to Julia v0.6 syntax
 
 ### v0.3.1
 - Added JuMP v0.16 and Julia v0.6 compatibility
