@@ -2,10 +2,10 @@ export
     DCPPowerModel, StandardDCPForm,
     DCPLLPowerModel, StandardDCPLLForm
 
-abstract AbstractDCPForm <: AbstractPowerFormulation
+@compat abstract type AbstractDCPForm <: AbstractPowerFormulation end
 
-abstract StandardDCPForm <: AbstractDCPForm
-typealias DCPPowerModel GenericPowerModel{StandardDCPForm}
+@compat abstract type StandardDCPForm <: AbstractDCPForm end
+const DCPPowerModel = GenericPowerModel{StandardDCPForm}
 
 # default DC constructor
 function DCPPowerModel(data::Dict{String,Any}; kwargs...)
@@ -264,10 +264,10 @@ end
 
 
 
-abstract AbstractDCPLLForm <: AbstractDCPForm
+@compat abstract type AbstractDCPLLForm <: AbstractDCPForm end
 
-abstract StandardDCPLLForm <: AbstractDCPLLForm
-typealias DCPLLPowerModel GenericPowerModel{StandardDCPLLForm}
+@compat abstract type StandardDCPLLForm <: AbstractDCPLLForm end
+const DCPLLPowerModel = GenericPowerModel{StandardDCPLLForm}
 
 
 # default DC constructor

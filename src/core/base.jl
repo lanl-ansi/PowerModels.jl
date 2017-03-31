@@ -5,9 +5,9 @@ export
     setdata, setsolver, solve,
     run_generic_model, build_generic_model, solve_generic_model
 
-abstract AbstractPowerModel
-abstract AbstractPowerFormulation
-abstract AbstractConicPowerFormulation <: AbstractPowerFormulation
+@compat abstract type AbstractPowerModel end
+@compat abstract type AbstractPowerFormulation end
+@compat abstract type AbstractConicPowerFormulation <: AbstractPowerFormulation end
 
 type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
     model::Model
