@@ -1,10 +1,10 @@
 export 
     SDPWRMPowerModel, SDPWRMForm
 
-abstract AbstractWRMForm <: AbstractConicPowerFormulation
+@compat abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
 
-abstract SDPWRMForm <: AbstractWRMForm
-typealias SDPWRMPowerModel GenericPowerModel{SDPWRMForm}
+@compat abstract type SDPWRMForm <: AbstractWRMForm end
+const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
 
 function SDPWRMPowerModel(data::Dict{String,Any}; kwargs...)
     return GenericPowerModel(data, SDPWRMForm; kwargs...)

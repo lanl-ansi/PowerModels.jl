@@ -2,10 +2,10 @@ export
     ACPPowerModel, StandardACPForm,
     APIACPPowerModel, APIACPForm
 
-abstract AbstractACPForm <: AbstractPowerFormulation
+@compat abstract type AbstractACPForm <: AbstractPowerFormulation end
 
-abstract StandardACPForm <: AbstractACPForm
-typealias ACPPowerModel GenericPowerModel{StandardACPForm}
+@compat abstract type StandardACPForm <: AbstractACPForm end
+const ACPPowerModel = GenericPowerModel{StandardACPForm}
 
 # default AC constructor
 function ACPPowerModel(data::Dict{String,Any}; kwargs...)
@@ -248,8 +248,8 @@ end
 
 
 
-abstract APIACPForm <: AbstractACPForm
-typealias APIACPPowerModel GenericPowerModel{APIACPForm}
+@compat abstract type APIACPForm <: AbstractACPForm end
+const APIACPPowerModel = GenericPowerModel{APIACPForm}
 
 # default AC constructor
 function APIACPPowerModel(data::Dict{String,Any}; kwargs...)

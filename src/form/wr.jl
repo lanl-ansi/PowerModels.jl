@@ -2,10 +2,10 @@ export
     SOCWRPowerModel, SOCWRForm,
     QCWRPowerModel, QCWRForm
 
-abstract AbstractWRForm <: AbstractPowerFormulation
+@compat abstract type AbstractWRForm <: AbstractPowerFormulation end
 
-abstract SOCWRForm <: AbstractWRForm
-typealias SOCWRPowerModel GenericPowerModel{SOCWRForm}
+@compat abstract type SOCWRForm <: AbstractWRForm end
+const SOCWRPowerModel = GenericPowerModel{SOCWRForm}
 
 # default SOC constructor
 function SOCWRPowerModel(data::Dict{String,Any}; kwargs...)
@@ -380,16 +380,8 @@ function variable_voltage_product_ne{T <: AbstractWRForm}(pm::GenericPowerModel{
 end
 
 
-
-
-
-
-
-
-
-
-abstract QCWRForm <: AbstractWRForm
-typealias QCWRPowerModel GenericPowerModel{QCWRForm}
+@compat abstract type QCWRForm <: AbstractWRForm end
+const QCWRPowerModel = GenericPowerModel{QCWRForm}
 
 # default QC constructor
 function QCWRPowerModel(data::Dict{String,Any}; kwargs...)
