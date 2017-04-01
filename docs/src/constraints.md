@@ -60,11 +60,11 @@ constraint_power_magnitude_link(pm::GenericPowerModel, branch)
 
 ```@docs
 constraint_thermal_limit_from(pm::GenericPowerModel, branch; scale = 1.0)
-constraint_thermal_limit_to{T}(pm::GenericPowerModel{T}, branch; scale = 1.0)
+constraint_thermal_limit_to(pm::GenericPowerModel, branch; scale = 1.0)
 constraint_thermal_limit_from_on_off(pm::GenericPowerModel, branch)
-constraint_thermal_limit_to_on_off{T}(pm::GenericPowerModel{T}, branch)
+constraint_thermal_limit_to_on_off(pm::GenericPowerModel, branch)
 constraint_thermal_limit_from_ne(pm::GenericPowerModel, branch)
-constraint_thermal_limit_to_ne{T}(pm::GenericPowerModel{T}, branch)
+constraint_thermal_limit_to_ne(pm::GenericPowerModel, branch)
 ```
 
 ### Phase Angle Difference Constraints
@@ -89,8 +89,8 @@ The following methods generally assume that the model contains `p` and `q` value
 ```@docs
 constraint_thermal_limit_from(pm::GenericPowerModel, f_idx, rate_a)
 constraint_thermal_limit_to(pm::GenericPowerModel, t_idx, rate_a)
-constraint_thermal_limit_from{T }(pm::GenericPowerModel{<: AbstractConicPowerFormulation}, f_idx, rate_a)
-constraint_thermal_limit_to{T }(pm::GenericPowerModel{<: AbstractConicPowerFormulation}, t_idx, rate_a)
+constraint_thermal_limit_from(pm::GenericPowerModel{<: AbstractConicPowerFormulation}, f_idx, rate_a)
+constraint_thermal_limit_to(pm::GenericPowerModel{<: AbstractConicPowerFormulation}, t_idx, rate_a)
 ```
 
 # Generic on/off thermal limit constraint
