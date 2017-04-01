@@ -8,8 +8,11 @@ makedocs(
         "Home" => "index.md",
         "Getting Started" => "example.md",
         "Data Formats" => "data.md",
-        "Power Models" => "models.md",
-        "Constraint Templates" => "constraint_templates.md"
+        "Network Formulations" => "formulations.md",
+        "Problem Specifications" => "specifications.md",
+        "Variables" => "variables.md",
+        "Constraints" => "constraints.md",
+        "Relaxation Schemes" => "relaxations.md"
     ]
 )
 
