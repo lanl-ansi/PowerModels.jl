@@ -5,7 +5,7 @@
 ###############################################################################
 
 # Generic thermal limit constraint
-function constraint_thermal_limit_from{T}(pm::GenericPowerModel{T}, f_idx, rate_a)
+function constraint_thermal_limit_from(pm::GenericPowerModel, f_idx, rate_a)
     p_fr = getvariable(pm.model, :p)[f_idx]
     q_fr = getvariable(pm.model, :q)[f_idx]
 
@@ -13,7 +13,7 @@ function constraint_thermal_limit_from{T}(pm::GenericPowerModel{T}, f_idx, rate_
     return Set([c])
 end
 
-function constraint_thermal_limit_to{T}(pm::GenericPowerModel{T}, t_idx, rate_a)
+function constraint_thermal_limit_to(pm::GenericPowerModel, t_idx, rate_a)
     p_to = getvariable(pm.model, :p)[t_idx]
     q_to = getvariable(pm.model, :q)[t_idx]
 
@@ -39,7 +39,7 @@ end
 
 
 # Generic on/off thermal limit constraint
-function constraint_thermal_limit_from_on_off{T}(pm::GenericPowerModel{T}, i, f_idx, rate_a)
+function constraint_thermal_limit_from_on_off(pm::GenericPowerModel, i, f_idx, rate_a)
     p_fr = getvariable(pm.model, :p)[f_idx]
     q_fr = getvariable(pm.model, :q)[f_idx]
     z = getvariable(pm.model, :line_z)[i]
@@ -48,7 +48,7 @@ function constraint_thermal_limit_from_on_off{T}(pm::GenericPowerModel{T}, i, f_
     return Set([c])
 end
 
-function constraint_thermal_limit_to_on_off{T}(pm::GenericPowerModel{T}, i, t_idx, rate_a)
+function constraint_thermal_limit_to_on_off(pm::GenericPowerModel, i, t_idx, rate_a)
     p_to = getvariable(pm.model, :p)[t_idx]
     q_to = getvariable(pm.model, :q)[t_idx]
     z = getvariable(pm.model, :line_z)[i]
@@ -57,7 +57,7 @@ function constraint_thermal_limit_to_on_off{T}(pm::GenericPowerModel{T}, i, t_id
     return Set([c])
 end
 
-function constraint_thermal_limit_from_ne{T}(pm::GenericPowerModel{T}, i, f_idx, rate_a)
+function constraint_thermal_limit_from_ne(pm::GenericPowerModel, i, f_idx, rate_a)
     p_fr = getvariable(pm.model, :p_ne)[f_idx]
     q_fr = getvariable(pm.model, :q_ne)[f_idx]
     z = getvariable(pm.model, :line_ne)[i]
@@ -66,7 +66,7 @@ function constraint_thermal_limit_from_ne{T}(pm::GenericPowerModel{T}, i, f_idx,
     return Set([c])
 end
 
-function constraint_thermal_limit_to_ne{T}(pm::GenericPowerModel{T}, i, t_idx, rate_a)
+function constraint_thermal_limit_to_ne(pm::GenericPowerModel, i, t_idx, rate_a)
     p_to = getvariable(pm.model, :p_ne)[t_idx]
     q_to = getvariable(pm.model, :q_ne)[t_idx]
     z = getvariable(pm.model, :line_ne)[i]
@@ -76,16 +76,14 @@ function constraint_thermal_limit_to_ne{T}(pm::GenericPowerModel{T}, i, t_idx, r
 end
 
 
-function constraint_active_gen_setpoint{T}(pm::GenericPowerModel{T}, i, pg)
+function constraint_active_gen_setpoint(pm::GenericPowerModel, i, pg)
     pg_var = getvariable(pm.model, :pg)[i]
     c = @constraint(pm.model, pg_var == pg)
     return Set([c]) 
 end
 
-function constraint_reactive_gen_setpoint{T}(pm::GenericPowerModel{T}, i, qg)
+function constraint_reactive_gen_setpoint(pm::GenericPowerModel, i, qg)
     qg_var = getvariable(pm.model, :qg)[i]
     c = @constraint(pm.model, qg_var == qg)
     return Set([c])
 end
-
-
