@@ -4,6 +4,7 @@
 #                                                                       #
 #########################################################################
 
+""
 function parse_matpower(file_string::String)
     data_string = readstring(open(file_string))
     mp_data = parse_matpower_data(data_string)
@@ -81,9 +82,13 @@ function merge_bus_name_data(data::Dict{String,Any})
     end
 end
 
+""
 parse_cell(lines, index) = parse_matlab_data(lines, index, '{', '}')
+
+""
 parse_matrix(lines, index) = parse_matlab_data(lines, index, '[', ']')
 
+""
 function parse_matlab_data(lines, index, start_char, end_char)
     last_index = length(lines)
     line_count = 0
@@ -164,8 +169,9 @@ function parse_matlab_data(lines, index, start_char, end_char)
     return matrix_dict
 end
 
-single_quote_expr = r"\'((\\.|[^\'])*?)\'"
+const single_quote_expr = r"\'((\\.|[^\'])*?)\'"
 
+""
 function split_line(mp_line::AbstractString)
     if ismatch(single_quote_expr, mp_line)
         # splits a string on white space while escaping text quoted with "'"
@@ -208,6 +214,7 @@ function split_line(mp_line::AbstractString)
     end
 end
 
+""
 function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
     if strip(mp_line) == string(start_char)
         return mp_line
@@ -227,12 +234,14 @@ function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
     return mp_line
 end
 
+""
 function extract_assignment(string::AbstractString)
     statement = split(string, ';')[1]
     value = split(statement, '=')[2]
     return strip(value)
 end
 
+""
 function extract_mpc_assignment(string::AbstractString)
     assert(contains(string, "mpc."))
     statement = split(string, ';')[1]
@@ -275,6 +284,7 @@ function type_array{T <: AbstractString}(string_array::Vector{T})
     end
 end
 
+""
 function parse_matpower_data(data_string::String)
     data_lines = split(data_string, '\n')
 
@@ -626,7 +636,9 @@ function extend_case_data(case, name, typed_dict_data, has_column_names)
     end
 end
 
-# converts arrays of objects into a dicts with lookup by "index"
+"""
+converts arrays of objects into a dicts with lookup by "index"
+"""
 function mp_data_to_pm_data(mp_data)
     for (k,v) in mp_data
         if isa(v, Array)

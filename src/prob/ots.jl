@@ -6,11 +6,13 @@
 
 export run_ots
 
+""
 function run_ots(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_ots; solution_builder = get_ots_solution, kwargs...) 
 end
 
-function post_ots{T}(pm::GenericPowerModel{T})
+""
+function post_ots(pm::GenericPowerModel)
     variable_line_indicator(pm)
     variable_voltage_on_off(pm)
     variable_generation(pm)
@@ -36,7 +38,8 @@ function post_ots{T}(pm::GenericPowerModel{T})
     end
 end
 
-function get_ots_solution{T}(pm::GenericPowerModel{T})
+""
+function get_ots_solution(pm::GenericPowerModel)
     sol = init_solution(pm)
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)

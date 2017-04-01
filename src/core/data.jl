@@ -1,5 +1,6 @@
 # tools for working with PowerModels internal data format
 
+""
 function calc_voltage_product_bounds(buspairs)
     wr_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
     wr_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
@@ -32,6 +33,7 @@ function calc_voltage_product_bounds(buspairs)
     return wr_min, wr_max, wi_min, wi_max
 end
 
+""
 function calc_theta_delta_bounds(data::Dict{String,Any})
     bus_count = length(data["bus"])
     branches = [branch for branch in values(data["branch"])]
@@ -56,6 +58,7 @@ function calc_theta_delta_bounds(data::Dict{String,Any})
     return angle_min, angle_max
 end
 
+""
 function calc_branch_t(branch::Dict{String,Any})
     tap_ratio = branch["tap"]
     angle_shift = branch["shift"]
@@ -66,6 +69,7 @@ function calc_branch_t(branch::Dict{String,Any})
     return tr, ti
 end
 
+""
 function calc_branch_y(branch::Dict{String,Any})
     r = branch["br_r"]
     x = branch["br_x"]
@@ -76,7 +80,7 @@ function calc_branch_y(branch::Dict{String,Any})
     return g, b
 end
 
-
+""
 function check_keys(data, keys)
     for key in keys
         if haskey(data, key)
@@ -101,6 +105,7 @@ function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
     end
 end
 
+""
 function apply_func(data::Dict{String,Any}, key::String, func)
     if haskey(data, key)
         data[key] = func(data[key])

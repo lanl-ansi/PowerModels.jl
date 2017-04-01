@@ -2,38 +2,39 @@ export
     ACPPowerModel, StandardACPForm,
     APIACPPowerModel, APIACPForm
 
+""
 @compat abstract type AbstractACPForm <: AbstractPowerFormulation end
 
+""
 @compat abstract type StandardACPForm <: AbstractACPForm end
+
+""
 const ACPPowerModel = GenericPowerModel{StandardACPForm}
 
-# default AC constructor
-function ACPPowerModel(data::Dict{String,Any}; kwargs...)
-    return GenericPowerModel(data, StandardACPForm; kwargs...)
-end
+"default AC constructor"
+ACPPowerModel(data::Dict{String,Any}; kwargs...) = 
+    GenericPowerModel(data, StandardACPForm; kwargs...)
 
+""
 function variable_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_phase_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
 end
 
-function variable_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...)
-end
+""
+variable_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...) = nothing
 
-function constraint_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T})
-    # do nothing, this model does not have complex voltage constraints
-    return Set()
-end
+"do nothing, this model does not have complex voltage constraints"
+constraint_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}) = Set()
 
-function constraint_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T})
-    # do nothing, this model does not have complex voltage constraints
-end
+"do nothing, this model does not have complex voltage constraints"
+constraint_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}) = nothing
 
-function constraint_theta_ref{T <: AbstractACPForm}(pm::GenericPowerModel{T}, ref_bus)
-    c = @constraint(pm.model, getvariable(pm.model, :t)[ref_bus] == 0)
-    return Set([c])
-end
+""
+constraint_theta_ref{T <: AbstractACPForm}(pm::GenericPowerModel{T}, ref_bus) =
+    Set([@constraint(pm.model, getvariable(pm.model, :t)[ref_bus] == 0)])
 
+""
 function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, vm, epsilon)
     v = getvariable(pm.model, :v)[i]
 
@@ -47,6 +48,7 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::Generic
     end
 end
 
+""
 function constraint_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
     v = getvariable(pm.model, :v)[i]
     p = getvariable(pm.model, :p)
@@ -59,6 +61,7 @@ function constraint_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i,
     return Set([c1, c2])
 end
 
+""
 function constraint_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
     v = getvariable(pm.model, :v)[i]
     p = getvariable(pm.model, :p)
@@ -114,6 +117,7 @@ function constraint_ohms_y_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, 
     return Set([c1, c2])
 end
 
+""
 function constraint_ohms_y_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
     p_to = getvariable(pm.model, :p)[t_idx]
     q_to = getvariable(pm.model, :q)[t_idx]
@@ -127,6 +131,7 @@ function constraint_ohms_y_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_
     return Set([c1, c2])
 end
 
+""
 function constraint_phase_angle_difference{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
     t_fr = getvariable(pm.model, :t)[f_bus]
     t_to = getvariable(pm.model, :t)[t_bus]
@@ -136,16 +141,16 @@ function constraint_phase_angle_difference{T <: AbstractACPForm}(pm::GenericPowe
     return Set([c1, c2])
 end
 
+""
 function variable_voltage_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_phase_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
 end
 
-function constraint_voltage_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T})
-    # do nothing, this model does not have complex voltage constraints
-    return Set()
-end
+"do nothing, this model does not have complex voltage constraints"
+constraint_voltage_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}) = Set()
 
+""
 function constraint_ohms_yt_from_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = getvariable(pm.model, :p)[f_idx]
     q_fr = getvariable(pm.model, :q)[f_idx]
@@ -160,6 +165,7 @@ function constraint_ohms_yt_from_on_off{T <: AbstractACPForm}(pm::GenericPowerMo
     return Set([c1, c2])
 end
 
+""
 function constraint_ohms_yt_to_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_to = getvariable(pm.model, :p)[t_idx]
     q_to = getvariable(pm.model, :q)[t_idx]
@@ -174,6 +180,7 @@ function constraint_ohms_yt_to_on_off{T <: AbstractACPForm}(pm::GenericPowerMode
     return Set([c1, c2])
 end
 
+""
 function constraint_ohms_yt_from_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = getvariable(pm.model, :p_ne)[f_idx]
     q_fr = getvariable(pm.model, :q_ne)[f_idx]
@@ -188,6 +195,7 @@ function constraint_ohms_yt_from_ne{T <: AbstractACPForm}(pm::GenericPowerModel{
     return Set([c1, c2])
 end
 
+""
 function constraint_ohms_yt_to_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_to = getvariable(pm.model, :p_ne)[t_idx]
     q_to = getvariable(pm.model, :q_ne)[t_idx]
@@ -202,6 +210,7 @@ function constraint_ohms_yt_to_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}
     return Set([c1, c2])
 end
 
+""
 function constraint_phase_angle_difference_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     t_fr = getvariable(pm.model, :t)[f_bus]
     t_to = getvariable(pm.model, :t)[t_bus]
@@ -212,6 +221,7 @@ function constraint_phase_angle_difference_on_off{T <: AbstractACPForm}(pm::Gene
     return Set([c1, c2])
 end
 
+""
 function constraint_phase_angle_difference_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     t_fr = getvariable(pm.model, :t)[f_bus]
     t_to = getvariable(pm.model, :t)[t_bus]
@@ -222,6 +232,7 @@ function constraint_phase_angle_difference_ne{T <: AbstractACPForm}(pm::GenericP
     return Set([c1, c2])
 end
 
+""
 function constraint_loss_lb{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, c, tr)
     v_fr = getvariable(pm.model, :v)[f_bus]
     v_to = getvariable(pm.model, :v)[t_bus]
@@ -235,26 +246,27 @@ function constraint_loss_lb{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bu
     return Set([c1, c2])
 end
 
-
+""
 @compat abstract type APIACPForm <: AbstractACPForm end
+
+""
 const APIACPPowerModel = GenericPowerModel{APIACPForm}
 
-# default AC constructor
-function APIACPPowerModel(data::Dict{String,Any}; kwargs...)
-    return GenericPowerModel(data, APIACPForm; kwargs...)
-end
+"default AC constructor"
+APIACPPowerModel(data::Dict{String,Any}; kwargs...) =
+    GenericPowerModel(data, APIACPForm; kwargs...)
 
-function variable_load_factor{T}(pm::GenericPowerModel{T})
+""
+variable_load_factor(pm::GenericPowerModel) =
     @variable(pm.model, load_factor >= 1.0, start = 1.0)
-end
 
-function objective_max_loading{T}(pm::GenericPowerModel{T})
-    load_factor = getvariable(pm.model, :load_factor)
-    return @objective(pm.model, Max, load_factor)
-end
+""
+objective_max_loading(pm::GenericPowerModel) = 
+    @objective(pm.model, Max, getvariable(pm.model, :load_factor))
 
-# Seems to create too much reactive power and makes even small models hard to converge
-function objective_max_loading_voltage_norm{T}(pm::GenericPowerModel{T})
+""
+function objective_max_loading_voltage_norm(pm::GenericPowerModel)
+    # Seems to create too much reactive power and makes even small models hard to converge
     load_factor = getvariable(pm.model, :load_factor)
 
     scale = length(pm.ref[:bus])
@@ -263,8 +275,9 @@ function objective_max_loading_voltage_norm{T}(pm::GenericPowerModel{T})
     return @objective(pm.model, Max, 10*scale*load_factor - sum(((bus["vmin"] + bus["vmax"])/2 - v[i])^2 for (i,bus) in pm.ref[:bus] ))
 end
 
-# Works but adds unnessiary runtime
-function objective_max_loading_gen_output{T}(pm::GenericPowerModel{T})
+""
+function objective_max_loading_gen_output(pm::GenericPowerModel)
+    # Works but adds unnecessary runtime
     load_factor = getvariable(pm.model, :load_factor)
 
     scale = length(pm.ref[:gen])
@@ -274,6 +287,7 @@ function objective_max_loading_gen_output{T}(pm::GenericPowerModel{T})
     return @NLobjective(pm.model, Max, 100*scale*load_factor - sum( (pg[i]^2 - (2*qg[i])^2)^2 for (i,gen) in pm.ref[:gen] ))
 end
 
+""
 function bounds_tighten_voltage(pm::APIACPPowerModel; epsilon = 0.001)
     for (i,bus) in pm.ref[:bus]
         v = getvariable(pm.model, :v)[i]
@@ -282,6 +296,7 @@ function bounds_tighten_voltage(pm::APIACPPowerModel; epsilon = 0.001)
     end
 end
 
+""
 function upperbound_negative_active_generation(pm::APIACPPowerModel)
     for (i,gen) in pm.ref[:gen]
         pg = getvariable(pm.model, :pg)[i]
@@ -292,6 +307,7 @@ function upperbound_negative_active_generation(pm::APIACPPowerModel)
     end
 end
 
+""
 function constraint_kcl_shunt_scaled(pm::APIACPPowerModel, bus)
     i = bus["index"]
     bus_arcs = pm.ref[:bus_arcs][i]
@@ -316,6 +332,7 @@ function constraint_kcl_shunt_scaled(pm::APIACPPowerModel, bus)
     return Set([c1, c2])
 end
 
+""
 function get_solution(pm::APIACPPowerModel)
     # super fallback
     sol = init_solution(pm)
@@ -329,6 +346,7 @@ function get_solution(pm::APIACPPowerModel)
     return sol
 end
 
+""
 function add_bus_demand_setpoint(sol, pm::APIACPPowerModel)
     mva_base = pm.data["baseMVA"]
     add_setpoint(sol, pm, "bus", "bus_i", "pd", :load_factor; default_value = (item) -> item["pd"], scale = (x,item) -> item["pd"] > 0 && item["qd"] > 0 ? x*item["pd"] : item["pd"], extract_var = (var,idx,item) -> var)

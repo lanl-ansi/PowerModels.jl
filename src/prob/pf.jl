@@ -1,18 +1,22 @@
 export run_pf, run_ac_pf, run_dc_pf
 
+""
 function run_ac_pf(file, solver; kwargs...)
     return run_pf(file, ACPPowerModel, solver; kwargs...)
 end
 
+""
 function run_dc_pf(file, solver; kwargs...)
     return run_pf(file, DCPPowerModel, solver; kwargs...)
 end
 
+""
 function run_pf(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_pf; kwargs...) 
 end
 
-function post_pf{T}(pm::GenericPowerModel{T})
+""
+function post_pf(pm::GenericPowerModel)
     variable_voltage(pm, bounded = false)
     variable_generation(pm, bounded = false)
     variable_line_flow(pm, bounded = false)
@@ -42,4 +46,3 @@ function post_pf{T}(pm::GenericPowerModel{T})
         constraint_ohms_yt_to(pm, branch)
     end
 end
-

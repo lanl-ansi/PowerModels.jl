@@ -1,11 +1,13 @@
 export 
     run_api_opf, run_sad_opf
 
+""
 function run_api_opf(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_api_opf; kwargs...) 
 end
 
-function post_api_opf{T}(pm::GenericPowerModel{T})
+""
+function post_api_opf(pm::GenericPowerModel)
     variable_voltage(pm)
     bounds_tighten_voltage(pm)
 
@@ -44,10 +46,12 @@ function post_api_opf{T}(pm::GenericPowerModel{T})
     end
 end
 
+""
 function run_sad_opf(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_sad_opf; kwargs...) 
 end
 
+""
 function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericPowerModel{T})
     variable_voltage(pm)
     variable_generation(pm)
