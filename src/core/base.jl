@@ -69,13 +69,11 @@ function JuMP.solve(pm::GenericPowerModel)
     return status, solve_time
 end
 
-
 function run_generic_model(file::String, model_constructor, solver, post_method; kwargs...)
     data = PowerModels.parse_file(file)
     return run_generic_model(data, model_constructor, solver, post_method; kwargs...)
 end
 
-# core run function assumes network data is given as a Dict
 function run_generic_model(data::Dict{String,Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
     pm = build_generic_model(data, model_constructor, post_method; kwargs...)
 
@@ -83,7 +81,6 @@ function run_generic_model(data::Dict{String,Any}, model_constructor, solver, po
 
     return solution
 end
-
 
 function build_generic_model(file::String,  model_constructor, post_method; kwargs...)
     data = PowerModels.parse_file(file)
@@ -99,7 +96,6 @@ function build_generic_model(data::Dict{String,Any}, model_constructor, post_met
     return pm
 end
 
-
 function solve_generic_model(pm::GenericPowerModel, solver; solution_builder = get_solution)
     setsolver(pm.model, solver)
 
@@ -107,8 +103,6 @@ function solve_generic_model(pm::GenericPowerModel, solver; solution_builder = g
 
     return build_solution(pm, status, solve_time; solution_builder = solution_builder)
 end
-
-
 
 function build_ref(data::Dict{String,Any})
     ref = Dict{Symbol,Any}()
@@ -203,7 +197,6 @@ function buspair_parameters(arcs_from, branches, buses)
         "v_to_min"=>buses[j]["vmin"],
         "v_to_max"=>buses[j]["vmax"]
         )) for (i,j) in buspair_indexes])
+
     return buspairs
 end
-
-
