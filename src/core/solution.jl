@@ -1,4 +1,4 @@
-function build_solution{T}(pm::GenericPowerModel{T}, status, solve_time; objective = NaN, solution_builder = get_solution)
+function build_solution(pm::GenericPowerModel, status, solve_time; objective = NaN, solution_builder = get_solution)
     # TODO assert that the model is solved
 
     if status != :Error
@@ -32,15 +32,11 @@ function build_solution{T}(pm::GenericPowerModel{T}, status, solve_time; objecti
     return solution
 end
 
-function init_solution{T}(pm::GenericPowerModel{T})
-    sol = Dict{String,Any}()
-    for key in ["per_unit", "baseMVA"]
-        sol[key] = pm.data[key]
-    end
-    return sol
+function init_solution(pm::GenericPowerModel)
+    return Dict{String,Any}(key => pm.data[key] for key in ["per_unit", "baseMVA"])
 end
 
-function get_solution{T}(pm::GenericPowerModel{T})
+function get_solution(pm::GenericPowerModel)
     sol = init_solution(pm)
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
@@ -48,24 +44,24 @@ function get_solution{T}(pm::GenericPowerModel{T})
     return sol
 end
 
-function add_bus_voltage_setpoint{T}(sol, pm::GenericPowerModel{T})
+function add_bus_voltage_setpoint(sol, pm::GenericPowerModel)
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :v)
     add_setpoint(sol, pm, "bus", "bus_i", "va", :t)
 end
 
-function add_generator_power_setpoint{T}(sol, pm::GenericPowerModel{T})
+function add_generator_power_setpoint(sol, pm::GenericPowerModel)
     mva_base = pm.data["baseMVA"]
     add_setpoint(sol, pm, "gen", "index", "pg", :pg)
     add_setpoint(sol, pm, "gen", "index", "qg", :qg)
 end
 
-function add_bus_demand_setpoint{T}(sol, pm::GenericPowerModel{T})
+function add_bus_demand_setpoint(sol, pm::GenericPowerModel)
     mva_base = pm.data["baseMVA"]
     add_setpoint(sol, pm, "bus", "bus_i", "pd", :pd; default_value = (item) -> item["pd"]*mva_base)
     add_setpoint(sol, pm, "bus", "bus_i", "qd", :qd; default_value = (item) -> item["qd"]*mva_base)
 end
 
-function add_branch_flow_setpoint{T}(sol, pm::GenericPowerModel{T})
+function add_branch_flow_setpoint(sol, pm::GenericPowerModel)
     # check the line flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
         mva_base = pm.data["baseMVA"]
@@ -77,7 +73,7 @@ function add_branch_flow_setpoint{T}(sol, pm::GenericPowerModel{T})
     end
 end
 
-function add_branch_flow_setpoint_ne{T}(sol, pm::GenericPowerModel{T})
+function add_branch_flow_setpoint_ne(sol, pm::GenericPowerModel)
     # check the line flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
         mva_base = pm.data["baseMVA"]
@@ -89,36 +85,21 @@ function add_branch_flow_setpoint_ne{T}(sol, pm::GenericPowerModel{T})
     end
 end
 
-function add_branch_status_setpoint{T}(sol, pm::GenericPowerModel{T})
+function add_branch_status_setpoint(sol, pm::GenericPowerModel)
   add_setpoint(sol, pm, "branch", "index", "br_status", :line_z; default_value = (item) -> 1)
 end
 
-function add_branch_ne_setpoint{T}(sol, pm::GenericPowerModel{T})
+function add_branch_ne_setpoint(sol, pm::GenericPowerModel)
   add_setpoint(sol, pm, "ne_branch", "index", "built", :line_ne; default_value = (item) -> 1)
 end
 
 
-function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, param_name, variable_symbol; default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
-    sol_dict = nothing
-    if !haskey(sol, dict_name)
-        sol_dict = Dict{String,Any}()
-        sol[dict_name] = sol_dict
-    else
-        sol_dict = sol[dict_name]
-    end
-
+function add_setpoint(sol, pm::GenericPowerModel, dict_name, index_name, param_name, variable_symbol; default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
+    sol_dict = sol[dict_name] = get(sol, dict_name, Dict{String,Any}())
     for (i,item) in pm.data[dict_name]
         idx = Int(item[index_name])
-
-        sol_item = nothing
-        if !haskey(sol_dict, i)
-            sol_item = Dict{String,Any}()
-            sol_dict[i] = sol_item
-        else
-            sol_item = sol_dict[i]
-        end
+        sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
         sol_item[param_name] = default_value(item)
-
         try
             var = extract_var(getvariable(pm.model, variable_symbol), idx, item)
             sol_item[param_name] = scale(getvalue(var), item)
@@ -127,23 +108,18 @@ function add_setpoint{T}(sol, pm::GenericPowerModel{T}, dict_name, index_name, p
     end
 end
 
-solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}()
+solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}(
+    :Ipopt => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
+    :ConicNonlinearBridge => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
+    # note that AmplNLWriter.AmplNLSolver is the solver type of bonmin
+    :AmplNLWriter => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
+    )
 
-solver_status_lookup[:Ipopt] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
-solver_status_lookup[:ConicNonlinearBridge] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
-
-# note that AmplNLWriter.AmplNLSolver is the solver type of bonmin
-solver_status_lookup[:AmplNLWriter] = Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
-
-# translates solver status codes to our status codes
+"translates solver status codes to our status codes"
 function solver_status_dict(solver_module_symbol, status)
     for (st, solver_stat_dict) in solver_status_lookup
         if solver_module_symbol == st
-            if status in keys(solver_stat_dict)
-                return solver_stat_dict[status]
-            else
-                return status
-            end
+            return get(solver_stat_dict, status, status)
         end
     end
     return status
