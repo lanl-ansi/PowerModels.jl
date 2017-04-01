@@ -10,8 +10,11 @@ makedocs(
         "Data Formats" => "data.md",
         "Network Formulations" => "formulations.md",
         "Problem Specifications" => "specifications.md",
-        "Variables" => "variables.md",
-        "Constraints" => "constraints.md",
+        "Model Components" => [
+            "Objective" => "objective.md",
+            "Variables" => "variables.md",
+            "Constraints" => "constraints.md"
+        ],
         "Relaxation Schemes" => "relaxations.md"
     ]
 )

@@ -1,5 +1,6 @@
-# Constraint Templates
+# Constraints
 
+## Constraint Templates
 Constraint templates help simplify data wrangling across multiple Power Flow formulations by providing an abstraction layer between the network data and network constraint definitions. The constraint template's job is to extract the required parameters from a given network data structure and pass the data as named arguments to the Power Flow formulations.
 
 These templates should always be defined over "GenericPowerModel" and should never refer to model variables. In the following subsections, we document the current set of constraint templates implemented in this package.
