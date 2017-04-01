@@ -31,8 +31,6 @@ SOCWRPowerModel = GenericPowerModel{SOCWRForm}
 QCWRPowerModel = GenericPowerModel{QCWRForm}
 ```
 
-where `GenericPowerModel` is the problem specification.
-
 ## User-Defined Abstractions
 
 Consider the class of conic formulations for power flow models. One way of modelling them in this package is through the following type hierarchy:
@@ -43,7 +41,6 @@ AbstractWRMForm <: AbstractConicPowerFormulation
 SDPWRMForm <: AbstractWRMForm
 SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
 ```
-where we (explain what the snippet is doing).
 
 The user-defined abstractions do not have to begin from the root `AbstractPowerFormulation` abstract type, and can begin from an intermediate abstract type. For example, in the following snippet:
 ```julia

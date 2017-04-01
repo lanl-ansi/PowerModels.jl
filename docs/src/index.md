@@ -1,5 +1,9 @@
 # PowerModels.jl Documentation
 
+```@meta
+CurrentModule = PowerModels
+```
+
 ## Overview
 
 PowerModels.jl is a Julia/JuMP package for Steady-State Power Network Optimization. It is designed to enable computational evaluation of emerging power network formulations and algorithms in a common platform.
@@ -31,8 +35,3 @@ Test that the package works by running
 ```julia
 Pkg.test("PowerModels")
 ```
-
-## Highlights
-
-Mention some nice things here.
-
