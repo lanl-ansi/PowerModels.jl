@@ -57,4 +57,3 @@ function get_tnep_solution{T}(pm::GenericPowerModel{T})
     add_branch_ne_setpoint(sol, pm)
     return sol
 end
-

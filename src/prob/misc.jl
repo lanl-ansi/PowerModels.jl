@@ -1,7 +1,6 @@
 export 
     run_api_opf, run_sad_opf
 
-
 function run_api_opf(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_api_opf; kwargs...) 
 end
@@ -45,9 +44,6 @@ function post_api_opf{T}(pm::GenericPowerModel{T})
     end
 end
 
-
-
-
 function run_sad_opf(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_sad_opf; kwargs...) 
 end
@@ -82,7 +78,3 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
         constraint_thermal_limit_to(pm, branch; scale = 0.999)
     end
 end
-
-
-
-

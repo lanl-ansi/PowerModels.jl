@@ -66,8 +66,6 @@ function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
     return Set([c])
 end
 
-
-
 function constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus)
     # Do nothing, no way to represent this in these variables
     return Set()
@@ -145,7 +143,6 @@ function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowe
 
     return Set([c1, c2, c3])
 end
-
 
 function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :WR; scale = (x,item) -> sqrt(x), extract_var = (var,idx,item) -> var[pm.model.ext[:lookup_w_index][idx], pm.model.ext[:lookup_w_index][idx]])

@@ -36,4 +36,3 @@ function post_opf{T}(pm::GenericPowerModel{T})
         constraint_thermal_limit_to(pm, branch)
     end
 end
-
