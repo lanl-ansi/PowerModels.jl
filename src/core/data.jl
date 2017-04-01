@@ -1,6 +1,5 @@
 # tools for working with PowerModels internal data format
 
-
 function calc_voltage_product_bounds(buspairs)
     wr_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
     wr_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
@@ -86,7 +85,7 @@ function check_keys(data, keys)
     end
 end
 
-# Recusivly applies new_data to data, overwritting information
+"Recursively applies new_data to data, overwritting information"
 function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
     for (key, new_v) in new_data
         if haskey(data, key)
@@ -108,7 +107,7 @@ function apply_func(data::Dict{String,Any}, key::String, func)
     end
 end
 
-# Transforms network data into per-unit
+"Transforms network data into per-unit"
 function make_per_unit(data::Dict{String,Any})
     if !haskey(data, "per_unit") || data["per_unit"] == false
         data["per_unit"] = true
@@ -173,8 +172,7 @@ function make_per_unit(data::Dict{String,Any})
     end
 end
 
-
-# Transforms network data into mixed-units (inverse of per-unit)
+"Transforms network data into mixed-units (inverse of per-unit)"
 function make_mixed_units(data::Dict{String,Any})
     if haskey(data, "per_unit") && data["per_unit"] == true
         data["per_unit"] = false
@@ -239,8 +237,7 @@ function make_mixed_units(data::Dict{String,Any})
     end
 end
 
-
-# checks that phase angle differences are within 90 deg., if not tightens
+"checks that phase angle differences are within 90 deg., if not tightens"
 function check_phase_angle_differences(data, default_pad = 1.0472)
     assert("per_unit" in keys(data) && data["per_unit"])
 
@@ -263,8 +260,7 @@ function check_phase_angle_differences(data, default_pad = 1.0472)
     end
 end
 
-
-# checks that each line has a reasonable line thermal rating, if not computes one
+"checks that each line has a reasonable line thermal rating, if not computes one"
 function check_thermal_limits(data)
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
@@ -294,9 +290,11 @@ function check_thermal_limits(data)
     end
 end
 
+"""
+checks that each line has a reasonable transformer parameters
 
-# checks that each line has a reasonable transformer parameters
-# this is important becouse setting tap == 0.0 leads to NaN computations, which are hard to debug
+this is important becouse setting tap == 0.0 leads to NaN computations, which are hard to debug
+"""
 function check_transformer_parameters(data)
     assert("per_unit" in keys(data) && data["per_unit"])
 
@@ -317,8 +315,7 @@ function check_transformer_parameters(data)
     end
 end
 
-
-# checks bus types are consistent with generator connections, if not, fixes them
+"checks bus types are consistent with generator connections, if not, fixes them"
 function check_bus_types(data)
     bus_gens = Dict([(i, []) for (i,bus) in data["bus"]])
 
@@ -347,4 +344,3 @@ function check_bus_types(data)
     end
 
 end
-

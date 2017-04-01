@@ -12,7 +12,6 @@ function SOCWRPowerModel(data::Dict{String,Any}; kwargs...)
     return GenericPowerModel(data, SOCWRForm; kwargs...)
 end
 
-
 function variable_voltage_product{T}(pm::GenericPowerModel{T}; bounded = true)
     if bounded
         wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
@@ -98,7 +97,6 @@ function constraint_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, 
     return Set([c1, c2])
 end
 
-
 # Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 function constraint_ohms_yt_from{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     p_fr = getvariable(pm.model, :p)[f_idx]
@@ -125,8 +123,6 @@ function constraint_ohms_yt_to{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_
     c2 = @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
     return Set([c1, c2])
 end
-
-
 
 function constraint_ohms_yt_from_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = getvariable(pm.model, :p_ne)[f_idx]
@@ -167,15 +163,11 @@ function constraint_phase_angle_difference{T <: AbstractWRForm}(pm::GenericPower
     return Set([c1, c2, c3])
 end
 
-
 function add_bus_voltage_setpoint{T <: AbstractWRForm}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :w; scale = (x,item) -> sqrt(x))
     # What should the default value be?
     #add_setpoint(sol, pm, "bus", "bus_i", "va", :t; default_value = 0)
 end
-
-
-
 
 function variable_voltage_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_voltage_magnitude_sqr(pm; kwargs...)
@@ -246,7 +238,6 @@ function constraint_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     return cs
 end
 
-
 function constraint_voltage_magnitude_sqr_from_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     buses = pm.ref[:bus]
     branches = pm.ref[:branch]
@@ -304,7 +295,7 @@ function constraint_voltage_product_on_off{T <: AbstractWRForm}(pm::GenericPower
     return cs
 end
 
-# Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
+"Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)"
 function constraint_ohms_yt_from_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = getvariable(pm.model, :p)[f_idx]
     q_fr = getvariable(pm.model, :q)[f_idx]
@@ -349,8 +340,6 @@ function constraint_phase_angle_difference_ne{T <: AbstractWRForm}(pm::GenericPo
     return Set([c1, c2])
 end
 
-
-
 function variable_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_voltage_magnitude_sqr_from_ne(pm; kwargs...)
     variable_voltage_magnitude_sqr_to_ne(pm; kwargs...)
@@ -379,7 +368,6 @@ function variable_voltage_product_ne{T <: AbstractWRForm}(pm::GenericPowerModel{
     return wr_ne, wi_ne
 end
 
-
 @compat abstract type QCWRForm <: AbstractWRForm end
 const QCWRPowerModel = GenericPowerModel{QCWRForm}
 
@@ -388,13 +376,13 @@ function QCWRPowerModel(data::Dict{String,Any}; kwargs...)
     return GenericPowerModel(data, QCWRForm; kwargs...)
 end
 
-# Creates variables associated with differences in phase angles
+"Creates variables associated with differences in phase angles"
 function variable_phase_angle_difference{T}(pm::GenericPowerModel{T})
     @variable(pm.model, pm.ref[:buspairs][bp]["angmin"] <= td[bp in keys(pm.ref[:buspairs])] <= pm.ref[:buspairs][bp]["angmax"], start = getstart(pm.ref[:buspairs], bp, "td_start"))
     return td
 end
 
-# Creates the voltage magnitude product variables
+"Creates the voltage magnitude product variables"
 function variable_voltage_magnitude_product{T}(pm::GenericPowerModel{T})
     vv_min = Dict([(bp, buspair["v_from_min"]*buspair["v_to_min"]) for (bp, buspair) in pm.ref[:buspairs]])
     vv_max = Dict([(bp, buspair["v_from_max"]*buspair["v_to_max"]) for (bp, buspair) in pm.ref[:buspairs]])
@@ -439,7 +427,6 @@ function variable_current_magnitude_sqr{T}(pm::GenericPowerModel{T})
     @variable(pm.model, cm_min[bp] <= cm[bp in keys(pm.ref[:buspairs])] <=  cm_max[bp], start = getstart(pm.ref[:buspairs], bp, "cm_start"))
     return cm
 end
-
 
 function variable_voltage(pm::QCWRPowerModel; kwargs...)
     variable_phase_angle(pm; kwargs...)
@@ -504,8 +491,6 @@ function constraint_voltage(pm::QCWRPowerModel)
 
     return const_set
 end
-
-
 
 function constraint_power_magnitude_sqr(pm::QCWRPowerModel, f_bus, t_bus, f_idx, tm)
     w_i = getvariable(pm.model, :w)[f_bus]

@@ -20,7 +20,6 @@ end
 function variable_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...)
 end
 
-
 function constraint_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T})
     # do nothing, this model does not have complex voltage constraints
     return Set()
@@ -48,7 +47,6 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::Generic
     end
 end
 
-
 function constraint_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
     v = getvariable(pm.model, :v)[i]
     p = getvariable(pm.model, :p)
@@ -75,8 +73,7 @@ function constraint_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T},
     return Set([c1, c2])
 end
 
-
-# Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
+"Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)"
 function constraint_ohms_yt_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     p_fr = getvariable(pm.model, :p)[f_idx]
     q_fr = getvariable(pm.model, :q)[f_idx]
@@ -103,7 +100,7 @@ function constraint_ohms_yt_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f
     return Set([c1, c2])
 end
 
-# Creates Ohms constraints for AC models (y post fix indicates that Y values are in rectangular form)
+"Creates Ohms constraints for AC models (y post fix indicates that Y values are in rectangular form)"
 function constraint_ohms_y_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
     p_fr = getvariable(pm.model, :p)[f_idx]
     q_fr = getvariable(pm.model, :q)[f_idx]
@@ -130,7 +127,6 @@ function constraint_ohms_y_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_
     return Set([c1, c2])
 end
 
-
 function constraint_phase_angle_difference{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
     t_fr = getvariable(pm.model, :t)[f_bus]
     t_to = getvariable(pm.model, :t)[t_bus]
@@ -139,9 +135,6 @@ function constraint_phase_angle_difference{T <: AbstractACPForm}(pm::GenericPowe
     c2 = @constraint(pm.model, t_fr - t_to >= angmin)
     return Set([c1, c2])
 end
-
-
-
 
 function variable_voltage_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...)
     variable_phase_angle(pm; kwargs...)
@@ -209,7 +202,6 @@ function constraint_ohms_yt_to_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}
     return Set([c1, c2])
 end
 
-
 function constraint_phase_angle_difference_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     t_fr = getvariable(pm.model, :t)[f_bus]
     t_to = getvariable(pm.model, :t)[t_bus]
@@ -230,7 +222,6 @@ function constraint_phase_angle_difference_ne{T <: AbstractACPForm}(pm::GenericP
     return Set([c1, c2])
 end
 
-
 function constraint_loss_lb{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, c, tr)
     v_fr = getvariable(pm.model, :v)[f_bus]
     v_to = getvariable(pm.model, :v)[t_bus]
@@ -243,9 +234,6 @@ function constraint_loss_lb{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bu
     c2 = @constraint(m, q_fr + q_to >= -c/2*(v_fr^2/tr^2 + v_to^2))
     return Set([c1, c2])
 end
-
-
-
 
 
 @compat abstract type APIACPForm <: AbstractACPForm end
@@ -285,7 +273,6 @@ function objective_max_loading_gen_output{T}(pm::GenericPowerModel{T})
 
     return @NLobjective(pm.model, Max, 100*scale*load_factor - sum( (pg[i]^2 - (2*qg[i])^2)^2 for (i,gen) in pm.ref[:gen] ))
 end
-
 
 function bounds_tighten_voltage(pm::APIACPPowerModel; epsilon = 0.001)
     for (i,bus) in pm.ref[:bus]
@@ -336,7 +323,7 @@ function get_solution(pm::APIACPPowerModel)
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
 
-    # extention
+    # extension
     add_bus_demand_setpoint(sol, pm)
 
     return sol
@@ -347,7 +334,3 @@ function add_bus_demand_setpoint(sol, pm::APIACPPowerModel)
     add_setpoint(sol, pm, "bus", "bus_i", "pd", :load_factor; default_value = (item) -> item["pd"], scale = (x,item) -> item["pd"] > 0 && item["qd"] > 0 ? x*item["pd"] : item["pd"], extract_var = (var,idx,item) -> var)
     add_setpoint(sol, pm, "bus", "bus_i", "qd", :load_factor; default_value = (item) -> item["qd"], scale = (x,item) -> item["qd"], extract_var = (var,idx,item) -> var)
 end
-
-
-
-
