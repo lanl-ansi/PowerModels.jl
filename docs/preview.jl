@@ -8,6 +8,7 @@ makedocs(
         "Home" => "index.md",
         "Getting Started" => "example.md",
         "Data Formats" => "data.md",
+        "File IO" => "parser.md",
         "Network Formulations" => "formulations.md",
         "Problem Specifications" => "specifications.md",
         "Model Components" => [

@@ -1,10 +1,19 @@
-# Parsing Matpower Data
+# File IO
+
+## General Data Formats
+
+```@docs
+parse_file(file::String)
+parse_json(file::String)
+```
+
+## Matpower Data Files
 
 The following two methods are the main exported methods for parsing matpower data files:
 
 ```@docs
-parse_matpower(file_string)
-parse_matpower_data(data_string)
+parse_matpower(file::String)
+parse_matpower_data(data::String)
 ```
 
 We also provide the following (internal) helper methods:
