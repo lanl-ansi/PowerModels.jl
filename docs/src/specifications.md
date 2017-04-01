@@ -10,7 +10,8 @@ objective_min_fuel_cost(pm)
 ### Variables
 ```julia
 variable_voltage(pm)
-variable_generation(pm)
+variable_active_generation(pm)
+variable_reactive_generation(pm)
 variable_line_flow(pm)
 ```
 
@@ -44,7 +45,8 @@ end
 ```julia
 variable_line_indicator(pm)
 variable_voltage_on_off(pm)
-variable_generation(pm)
+variable_active_generation(pm)
+variable_reactive_generation(pm)
 variable_line_flow(pm)
 ```
 
@@ -80,7 +82,8 @@ end
 ### Variables
 ```julia
 variable_voltage(pm, bounded = false)
-variable_generation(pm, bounded = false)
+variable_active_generation(pm, bounded = false)
+variable_reactive_generation(pm, bounded = false)
 variable_line_flow(pm, bounded = false)
 ```
 
@@ -124,7 +127,8 @@ objective_tnep_cost(pm)
 variable_line_ne(pm) 
 variable_voltage(pm)
 variable_voltage_ne(pm)
-variable_generation(pm)
+variable_active_generation(pm)
+variable_reactive_generation(pm)
 variable_line_flow(pm)
 variable_line_flow_ne(pm)
 ```

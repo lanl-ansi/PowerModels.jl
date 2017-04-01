@@ -8,17 +8,29 @@ The code is engineered to decouple problem specifications (e.g. Power Flow, Opti
 
 ## Installation
 
-The latest stable release of PowerModels can be installed using the Julia package manager with,
+The latest stable release of PowerModels can be installed using the Julia package manager with
 
-`Pkg.add("PowerModels")`
+```@repl
+Pkg.add("PowerModels")
+````
 
 For the current development version, "checkout" this package with,
 
-`Pkg.checkout("PowerModels")`
+```@repl
+Pkg.checkout("PowerModels")
+```
 
 At least one solver is required for running PowerModels.  The open-source solver Ipopt is recommended, as it is extremely fast, and can be used to solve a wide variety of the problems and network formulations provided in PowerModels.  The Ipopt solver can be installed via the package manager with,
 
-`Pkg.add("Ipopt")`
+```@repl
+Pkg.add("Ipopt")
+```
+
+Test that the package works by running
+
+```@repl
+Pkg.test("PowerModels")
+```
 
 ## Highlights
 
