@@ -11,7 +11,7 @@ Pkg.add("Documenter")
 To preview the html output of the documents, run the following command:
 
 ```julia
-julia preview.jl
+julia --color=yes make.jl
 ```
 
 You can then view the documents in `build/index.html`.
