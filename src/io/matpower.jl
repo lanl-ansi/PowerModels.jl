@@ -4,7 +4,7 @@
 #                                                                       #
 #########################################################################
 
-function parse_matpower(file_string)
+function parse_matpower(file_string::String)
     data_string = readstring(open(file_string))
     mp_data = parse_matpower_data(data_string)
 
@@ -19,7 +19,7 @@ function parse_matpower(file_string)
     return mp_data
 end
 
-# ensures all costs functions are quadratic and reverses their order
+"ensures all costs functions are quadratic and reverses their order"
 function standardize_cost_order(data::Dict{String,Any})
     for gencost in data["gencost"]
         if gencost["model"] == 2 && length(gencost["cost"]) < 3
@@ -32,7 +32,7 @@ function standardize_cost_order(data::Dict{String,Any})
     end
 end
 
-# sets all line transformer taps to 1.0, to simplify line models
+"sets all line transformer taps to 1.0, to simplify line models"
 function update_branch_transformer_settings(data::Dict{String,Any})
     branches = [branch for branch in data["branch"]]
     if haskey(data, "ne_branch")
@@ -48,8 +48,7 @@ function update_branch_transformer_settings(data::Dict{String,Any})
     end
 end
 
-
-# merges generator cost functions into generator data, if costs exist
+"merges generator cost functions into generator data, if costs exist"
 function merge_generator_cost_data(data::Dict{String,Any})
     if haskey(data, "gencost")
         # can assume same length is same as gen (or double)
@@ -66,7 +65,7 @@ function merge_generator_cost_data(data::Dict{String,Any})
     end
 end
 
-# merges bus name data into buses, if names exist
+"merges bus name data into buses, if names exist"
 function merge_bus_name_data(data::Dict{String,Any})
     if haskey(data, "bus_name")
         # can assume same length is same as bus
@@ -82,14 +81,8 @@ function merge_bus_name_data(data::Dict{String,Any})
     end
 end
 
-
-function parse_cell(lines, index)
-    return parse_matlab_data(lines, index, '{', '}')
-end
-
-function parse_matrix(lines, index)
-    return parse_matlab_data(lines, index, '[', ']')
-end
+parse_cell(lines, index) = parse_matlab_data(lines, index, '{', '}')
+parse_matrix(lines, index) = parse_matlab_data(lines, index, '[', ']')
 
 function parse_matlab_data(lines, index, start_char, end_char)
     last_index = length(lines)
@@ -171,10 +164,9 @@ function parse_matlab_data(lines, index, start_char, end_char)
     return matrix_dict
 end
 
-
 single_quote_expr = r"\'((\\.|[^\'])*?)\'"
 
-function split_line(mp_line)
+function split_line(mp_line::AbstractString)
     if ismatch(single_quote_expr, mp_line)
         # splits a string on white space while escaping text quoted with "'"
         # note that quotes will be stripped later, when data typing occurs
@@ -216,12 +208,12 @@ function split_line(mp_line)
     end
 end
 
-function add_line_delimiter(mp_line, start_char, end_char)
+function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
     if strip(mp_line) == string(start_char)
         return mp_line
     end
 
-    if ! contains(mp_line, ";") && ! contains(mp_line, string(end_char))
+    if !contains(mp_line, ";") && !contains(mp_line, string(end_char))
         mp_line = "$(mp_line);"
     end
 
@@ -235,14 +227,13 @@ function add_line_delimiter(mp_line, start_char, end_char)
     return mp_line
 end
 
-
-function extract_assignment(string)
+function extract_assignment(string::AbstractString)
     statement = split(string, ';')[1]
     value = split(statement, '=')[2]
     return strip(value)
 end
 
-function extract_mpc_assignment(string)
+function extract_mpc_assignment(string::AbstractString)
     assert(contains(string, "mpc."))
     statement = split(string, ';')[1]
     statement = replace(statement, "mpc.", "")
@@ -253,9 +244,8 @@ function extract_mpc_assignment(string)
     return (name, value)
 end
 
-
-# Attempts to determine the type of a string extracted from a matlab file
-function type_value(value_string)
+"Attempts to determine the type of a string extracted from a matlab file"
+function type_value(value_string::AbstractString)
     value_string = strip(value_string)
 
     if contains(value_string, "'") # value is a string
@@ -272,26 +262,20 @@ function type_value(value_string)
     return value
 end
 
-# Attempts to determine the type of an array of strings extracted from a matlab file
-function type_array(string_array)
+"Attempts to determine the type of an array of strings extracted from a matlab file"
+function type_array{T <: AbstractString}(string_array::Vector{T})
     value_string = [strip(value_string) for value_string in string_array]
 
-    if any([contains(value_string, "'") for value_string in string_array])
-        value_array = [strip(value_string, '\'') for value_string in string_array]
-    else
-        if any([contains(value_string, ".") || contains(value_string, "e") for value_string in string_array])
-            value_array = [parse(Float64, value_string) for value_string in string_array]
-        else # otherwise assume it is an int
-            value_array = [parse(Int, value_string) for value_string in string_array]
-        end
+    return if any(contains(value_string, "'") for value_string in string_array)
+        [strip(value_string, '\'') for value_string in string_array]
+    elseif any(contains(value_string, ".") || contains(value_string, "e") for value_string in string_array)
+        [parse(Float64, value_string) for value_string in string_array]
+    else # otherwise assume it is an int
+        [parse(Int, value_string) for value_string in string_array]
     end
-
-    return value_array
 end
 
-
-
-function parse_matpower_data(data_string)
+function parse_matpower_data(data_string::String)
     data_lines = split(data_string, '\n')
 
     version = -1
@@ -547,7 +531,6 @@ function parse_matpower_data(data_string)
         end
     end
 
-
     for parsed_cell in parsed_cells
         #println(parsed_cell)
         if parsed_cell["name"] == "bus_name" 
@@ -578,23 +561,15 @@ function parse_matpower_data(data_string)
     return case
 end
 
-
-# takes a list of list of strings and turns it into a list of typed dictionaries
+"takes a list of list of strings and turns it into a list of typed dictionaries"
 function build_typed_dict(data, column_names)
     # TODO see if there is a more julia-y way of doing this
     rows = length(data)
     columns = length(data[1])
 
-    typed_columns = []
-    for c in 1:columns
-        column = [ data[r][c] for r in 1:rows ]
-        #println(column)
-        typed_column = type_array(column)
-        #println(typed_column)
-        push!(typed_columns, typed_column)
-    end
-
-    typed_data = []
+    typed_columns = [type_array([ data[r][c] for r in 1:rows ]) for c in 1:columns]
+    
+    typed_data = Dict{String,Any}[]
     for r in 1:rows
         data_dict = Dict{String,Any}()
         data_dict["index"] = r
@@ -608,7 +583,7 @@ function build_typed_dict(data, column_names)
     return typed_data
 end
 
-# extends a give case data with typed dictionary data
+"extends a give case data with typed dictionary data"
 function extend_case_data(case, name, typed_dict_data, has_column_names)
     matpower_matrix_names = ["bus", "gen", "branch", "dcline"]
 
@@ -651,7 +626,6 @@ function extend_case_data(case, name, typed_dict_data, has_column_names)
     end
 end
 
-
 # converts arrays of objects into a dicts with lookup by "index"
 function mp_data_to_pm_data(mp_data)
     for (k,v) in mp_data
@@ -666,6 +640,3 @@ function mp_data_to_pm_data(mp_data)
         end
     end
 end
-
-
-

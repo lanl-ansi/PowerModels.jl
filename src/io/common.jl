@@ -1,4 +1,4 @@
-function parse_file(file)
+function parse_file(file::String)
     if endswith(file, ".m")
         pm_data = PowerModels.parse_matpower(file)
     else
@@ -16,4 +16,4 @@ function check_network_data(data::Dict{String,Any})
     check_phase_angle_differences(data)
     check_thermal_limits(data)
     check_bus_types(data)
-end 
+end
