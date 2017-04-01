@@ -116,7 +116,6 @@ function constraint_ohms_y_to(pm::GenericPowerModel, branch)
 end
 
 
-
 ### Branch - On/Off Ohm's Law Constraints ### 
 
 function constraint_ohms_yt_from_on_off(pm::GenericPowerModel, branch)
@@ -154,7 +153,6 @@ function constraint_ohms_yt_to_on_off(pm::GenericPowerModel, branch)
 
     return constraint_ohms_yt_to_on_off(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
 end
-
 
 function constraint_ohms_yt_from_ne(pm::GenericPowerModel, branch)
     i = branch["index"]
@@ -233,7 +231,7 @@ function constraint_thermal_limit_from(pm::GenericPowerModel, branch; scale = 1.
     return constraint_thermal_limit_from(pm, f_idx, branch["rate_a"]*scale)
 end
 
-function constraint_thermal_limit_to{T}(pm::GenericPowerModel{T}, branch; scale = 1.0)
+function constraint_thermal_limit_to(pm::GenericPowerModel, branch; scale = 1.0)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -252,7 +250,7 @@ function constraint_thermal_limit_from_on_off(pm::GenericPowerModel, branch)
     return constraint_thermal_limit_from_on_off(pm, i, f_idx, branch["rate_a"])
 end
 
-function constraint_thermal_limit_to_on_off{T}(pm::GenericPowerModel{T}, branch)
+function constraint_thermal_limit_to_on_off(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -271,7 +269,7 @@ function constraint_thermal_limit_from_ne(pm::GenericPowerModel, branch)
     return constraint_thermal_limit_from_ne(pm, i, f_idx, branch["rate_a"])
 end
 
-function constraint_thermal_limit_to_ne{T}(pm::GenericPowerModel{T}, branch)
+function constraint_thermal_limit_to_ne(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -335,5 +333,3 @@ function constraint_loss_lb(pm::GenericPowerModel, branch)
 
     return constraint_loss_lb(pm, f_bus, t_bus, f_idx, t_idx, c, tr)
 end
-
-
