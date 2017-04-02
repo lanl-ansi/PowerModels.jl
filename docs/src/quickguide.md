@@ -1,6 +1,6 @@
 # Quick Guide
 
-Once PowerModels is installed, Ipopt is installed, and a network data file (e.g. `"nesta\_case3\_lmbd.m"`) has been acquired, an AC Optimal Power Flow can be executed with
+Once PowerModels is installed, Ipopt is installed, and a network data file (e.g. `"nesta_case3_lmbd.m"`) has been acquired, an AC Optimal Power Flow can be executed with
 
 ```julia
 using PowerModels
@@ -28,7 +28,7 @@ where "ACPPowerModel" indicates an AC formulation in polar coordinates.  This mo
 run_opf("nesta_case3_lmbd.m", SOCWRPowerModel, IpoptSolver())
 ```
 
-## Performing Multiple Solves
+## Modifying Network Data
 The following example demonstrates one way to perform multiple PowerModels solves while modify the network data in Julia,
 
 ```julia
@@ -41,6 +41,8 @@ network_data["bus"]["3"]["qd"] = 0.0
 
 run_opf(network_data, ACPPowerModel, IpoptSolver())
 ```
+
+For additional details about the network data, see the [PowerModels Data Format](@ref) section.
 
 ## Inspecting the Formulation
 The following example demonstrates how to break a `run_opf` call into seperate model building and solving steps.  This allows inspection of the JuMP model created by PowerModels for the AC-OPF problem,
