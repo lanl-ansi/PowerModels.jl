@@ -1,20 +1,23 @@
 export 
     SDPWRMPowerModel, SDPWRMForm
 
+""
 @compat abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
 
+""
 @compat abstract type SDPWRMForm <: AbstractWRMForm end
+
+""
 const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
 
-function SDPWRMPowerModel(data::Dict{String,Any}; kwargs...)
-    return GenericPowerModel(data, SDPWRMForm; kwargs...)
-end
+""
+SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPWRMForm; kwargs...)
 
-function variable_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}; kwargs...)
-    variable_voltage_product_matrix(pm; kwargs...)
-end
+""
+variable_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}; kwargs...) = variable_voltage_product_matrix(pm; kwargs...)
 
-function variable_voltage_product_matrix{T}(pm::GenericPowerModel{T})
+""
+function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
 
     w_index = 1:length(keys(pm.ref[:bus]))
@@ -53,6 +56,7 @@ function variable_voltage_product_matrix{T}(pm::GenericPowerModel{T})
     return WR, WI
 end
 
+""
 function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
     WR = getvariable(pm.model, :WR)
     WI = getvariable(pm.model, :WI)
@@ -66,13 +70,10 @@ function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
     return Set([c])
 end
 
+"Do nothing, no way to represent this in these variables"
+constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus) = Set()
 
-
-function constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus)
-    # Do nothing, no way to represent this in these variables
-    return Set()
-end
-
+""
 function constraint_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
     WR = getvariable(pm.model, :WR)
     w_index = pm.model.ext[:lookup_w_index][i]
@@ -88,7 +89,7 @@ function constraint_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i,
     return Set([c1, c2])
 end
 
-# Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
+"Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)"
 function constraint_ohms_yt_from{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     p_fr = getvariable(pm.model, :p)[f_idx]
     q_fr = getvariable(pm.model, :q)[f_idx]
@@ -108,6 +109,7 @@ function constraint_ohms_yt_from{T <: AbstractWRMForm}(pm::GenericPowerModel{T},
     return Set([c1, c2])
 end
 
+""
 function constraint_ohms_yt_to{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     q_to = getvariable(pm.model, :q)[t_idx]
     p_to = getvariable(pm.model, :p)[t_idx]
@@ -127,6 +129,7 @@ function constraint_ohms_yt_to{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f
     return Set([c1, c2])
 end
 
+""
 function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
     WR = getvariable(pm.model, :WR)
     WI = getvariable(pm.model, :WI)
@@ -146,7 +149,7 @@ function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowe
     return Set([c1, c2, c3])
 end
 
-
+""
 function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :WR; scale = (x,item) -> sqrt(x), extract_var = (var,idx,item) -> var[pm.model.ext[:lookup_w_index][idx], pm.model.ext[:lookup_w_index][idx]])
 

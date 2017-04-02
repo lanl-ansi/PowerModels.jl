@@ -1,9 +1,10 @@
+""
 function relaxation_complex_product(m, a, b, c, d)
     c = @constraint(m, c^2 + d^2 <= a*b)
     return Set([c])
 end
 
-# In the literature this constraints are called the Lifted Nonlinear Cuts (LNCs)
+"In the literature this constraints are called the Lifted Nonlinear Cuts (LNCs)"
 function cut_complex_product_and_angle_difference(m, wf, wt, wr, wi, angmin, angmax)
     @assert angmin >= -pi/2 && angmin <= pi/2
     @assert angmax >= -pi/2 && angmax <= pi/2
@@ -28,6 +29,7 @@ function cut_complex_product_and_angle_difference(m, wf, wt, wr, wi, angmin, ang
     return Set([c1, c2])
 end
 
+""
 function relaxation_complex_product_on_off(m, a, b, c, d, z)
     # TODO add LNC cuts to this
     @assert getlowerbound(c) <= 0 && getupperbound(c) >= 0
@@ -45,6 +47,7 @@ function relaxation_complex_product_on_off(m, a, b, c, d, z)
     return Set([c1, c2, c3])
 end
 
+""
 function relaxation_equality_on_off(m, x, y, z)
     # assumes 0 is in the domain of y when z is 0
 
@@ -57,14 +60,14 @@ function relaxation_equality_on_off(m, x, y, z)
     return Set([c1, c2])
 end
 
-# general relaxation of a square term
+"general relaxation of a square term"
 function relaxation_sqr(m, x, y)
     c1 = @constraint(m, y >= x^2)
     c2 = @constraint(m, y <= (getupperbound(x)+getlowerbound(x))*x - getupperbound(x)*getlowerbound(x))
     return Set([c1, c2])
 end
 
-# general relaxation of a sin term
+"general relaxation of a sin term"
 function relaxation_sin(m, x, y)
     ub = getupperbound(x)
     lb = getlowerbound(x)
@@ -87,7 +90,8 @@ function relaxation_sin(m, x, y)
     return Set([c1, c2])
 end
 
-# general relaxation of a cosine term
+
+"general relaxation of a cosine term"
 function relaxation_cos(m, x, y)
     ub = getupperbound(x)
     lb = getlowerbound(x)
@@ -100,7 +104,7 @@ function relaxation_cos(m, x, y)
     return Set([c1, c2])
 end
 
-# general relaxation of binlinear term (McCormick)
+"general relaxation of binlinear term (McCormick)"
 function relaxation_product(m, x, y, z)
     x_ub = getupperbound(x)
     x_lb = getlowerbound(x)

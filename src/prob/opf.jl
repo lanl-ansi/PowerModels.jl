@@ -1,18 +1,22 @@
 export run_opf, run_ac_opf, run_dc_opf
 
+""
 function run_ac_opf(file, solver; kwargs...)
     return run_opf(file, ACPPowerModel, solver; kwargs...)
 end
 
+""
 function run_dc_opf(file, solver; kwargs...)
     return run_opf(file, DCPPowerModel, solver; kwargs...)
 end
 
+""
 function run_opf(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_opf; kwargs...) 
 end
 
-function post_opf{T}(pm::GenericPowerModel{T})
+""
+function post_opf(pm::GenericPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_line_flow(pm)
@@ -36,4 +40,3 @@ function post_opf{T}(pm::GenericPowerModel{T})
         constraint_thermal_limit_to(pm, branch)
     end
 end
-
