@@ -21,6 +21,7 @@ before_install:
   - julia -e 'if "PowerModels" in keys(Pkg.installed()) Pkg.rm("PowerModels"); Pkg.rm("PowerModels") end'
   - julia -e 'Pkg.update()' #make sure we get the latest version of METADATA
   - julia -e 'if !("Coverage" in keys(Pkg.installed())) Pkg.add("Coverage") end'
+  - julia -e 'if !("Documenter" in keys(Pkg.installed())) Pkg.add("Documenter") end'
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
@@ -29,8 +30,7 @@ script:
 
 after_success:
   - echo $TRAVIS_JULIA_VERSION
-  
+
   - export REPO_TOKEN=9c0bd91b-c273-45a8-a221-a4d4e63ac464; julia -e 'using Coverage; cd(Pkg.dir("PowerModels")); Codecov.submit(process_folder("."));'
 
-  - julia -e 'Pkg.add("Documenter")'
   - julia -e 'cd(Pkg.dir("PowerModels")); include(joinpath("docs", "make.jl"))'
