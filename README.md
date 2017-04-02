@@ -5,6 +5,7 @@ Release: [![PowerModels](http://pkg.julialang.org/badges/PowerModels_0.4.svg)](h
 Dev:
 [![Build Status](https://travis-ci.org/lanl-ansi/PowerModels.jl.svg?branch=master)](https://travis-ci.org/lanl-ansi/PowerModels.jl)
 [![codecov](https://codecov.io/gh/lanl-ansi/PowerModels.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/lanl-ansi/PowerModels.jl)
+[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://lanl-ansi.github.io/PowerModels.jl/latest)
 
 PowerModels.jl is a Julia/JuMP package for Steady-State Power Network Optimization.
 It is designed to enable computational evaluation of emerging power network formulations and algorithms in a common platform.
@@ -26,7 +27,7 @@ This enables the definition of a wide variety of power network formulations and 
 **Network Data Formats**
 * Matpower ".m" files (see DATA.md for details)
 
-For further information, consult the documentation in the `/docs/src/` folder.
+For further information, consult the package [documentation](https://lanl-ansi.github.io/PowerModels.jl/latest/).
 
 ## Development
 
