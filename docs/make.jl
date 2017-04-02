@@ -24,7 +24,7 @@ deploydocs(
     deps = nothing,
     make = nothing,
     target = "build",
-    repo = "https://github.com/lanl-ansi/PowerModels.jl.git",
+    repo = "github.com/lanl-ansi/PowerModels.jl.git",
     julia = "0.5",
     osname = "osx"
 )
