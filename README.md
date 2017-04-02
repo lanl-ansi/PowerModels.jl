@@ -25,7 +25,7 @@ This enables the definition of a wide variety of power network formulations and 
 * QC Relaxation (W+L-space)
 
 **Network Data Formats**
-* Matpower ".m" files (see DATA.md for details)
+* Matpower ".m" files
 
 For further information, consult the package [documentation](https://lanl-ansi.github.io/PowerModels.jl/latest/).
 
