@@ -27,24 +27,7 @@ where
 * `setting` usually looks something like `Dict("output" => Dict("line_flows" => true))`, and
 * `ref` is a place to store commonly used pre-computed data from of the data dictionary,
     primarily for converting data-types, filtering out deactivated components, and storing
-    system-wide values that need to be computed globally. Some of the common keys include:
-
-    * `:off_angmin` and `:off_angmax` (see `calc_theta_delta_bounds(data)`),
-    * `:bus` -- the set `{(i, bus) in ref[:bus] : bus["bus_type"] != 4}`,
-    * `:gen` -- the set `{(i, gen) in ref[:gen] : gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus])}`,
-    * `:branch` -- the set of branches that are active in the network (based on the component status values),
-    * `:arcs_from` -- the set `[(i,b["f_bus"],b["t_bus"]) for (i,b) in ref[:branch]]`,
-    * `:arcs_to` -- the set `[(i,b["t_bus"],b["f_bus"]) for (i,b) in ref[:branch]]`,
-    * `:arcs` -- the set of arcs from both `arcs_from` and `arcs_to`,
-    * `:bus_arcs` -- the mapping `Dict(i => [(l,i,j) for (l,i,j) in ref[:arcs]])`,
-    * `:buspairs` -- (see `buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])`), and
-    * `:bus_gens` -- the mapping `Dict(i => [gen["gen_bus"] for (i,gen) in ref[:gen]])`.
-
-    If `:ne_branch` exists, then the following keys are also available with similar semantics:
-
-    * `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`.
-
-    See `build_ref(data)` for further details.
+    system-wide values that need to be computed globally. See `build_ref(data)` for further details.
 
 Methods on `GenericPowerModel` for defining variables and adding constraints should
 
@@ -152,7 +135,28 @@ function solve_generic_model(pm::GenericPowerModel, solver; solution_builder = g
     return build_solution(pm, status, solve_time; solution_builder = solution_builder)
 end
 
-""
+"""
+Returns a dict that stores commonly used pre-computed data from of the data dictionary,
+primarily for converting data-types, filtering out deactivated components, and storing
+system-wide values that need to be computed globally.
+
+Some of the common keys include:
+
+* `:off_angmin` and `:off_angmax` (see `calc_theta_delta_bounds(data)`),
+* `:bus` -- the set `{(i, bus) in ref[:bus] : bus["bus_type"] != 4}`,
+* `:gen` -- the set `{(i, gen) in ref[:gen] : gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus])}`,
+* `:branch` -- the set of branches that are active in the network (based on the component status values),
+* `:arcs_from` -- the set `[(i,b["f_bus"],b["t_bus"]) for (i,b) in ref[:branch]]`,
+* `:arcs_to` -- the set `[(i,b["t_bus"],b["f_bus"]) for (i,b) in ref[:branch]]`,
+* `:arcs` -- the set of arcs from both `arcs_from` and `arcs_to`,
+* `:bus_arcs` -- the mapping `Dict(i => [(l,i,j) for (l,i,j) in ref[:arcs]])`,
+* `:buspairs` -- (see `buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])`), and
+* `:bus_gens` -- the mapping `Dict(i => [gen["gen_bus"] for (i,gen) in ref[:gen]])`.
+
+If `:ne_branch` exists, then the following keys are also available with similar semantics:
+
+* `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`.
+"""
 function build_ref(data::Dict{String,Any})
     ref = Dict{Symbol,Any}()
     for (key, item) in data
