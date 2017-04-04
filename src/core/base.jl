@@ -14,7 +14,52 @@ export
 ""
 @compat abstract type AbstractConicPowerFormulation <: AbstractPowerFormulation end
 
-""
+"""
+```
+type GenericPowerModel{T<:AbstractPowerFormulation}
+    model::JuMP.Model
+    data::Dict{String,Any} 
+    setting::Dict{String,Any}
+    solution::Dict{String,Any}
+    ref::Dict{Symbol,Any} # reference data
+end
+```
+where
+
+* `data` is the original data, usually from reading in a `.json` or `.m` (patpower) file
+* `setting` usually looks something like `Dict("output" => Dict("line_flows" => true))`, and
+* `ref` is a `Dict` with the following keys:
+
+    * `:off_angmin` and `:off_angmax` (see `calc_theta_delta_bounds(data)`),
+    * `:bus` is the set `{(i, bus) in ref[:bus] : bus["bus_type"] != 4}`,
+    * `:gen` is the set `{(i, gen) in ref[:gen] : gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus])}`,
+    * `:branch` is the set `{(i, branch) in ref[:branch]` satisfying the conditions
+
+        (i) `branch["br_status"] == 1`
+
+        (ii) `branch["f_bus"] in keys(ref[:bus])`
+
+        (iii) `branch["t_bus"] in keys(ref[:bus])}`,
+        
+    * `:arcs_from` is the set `[(i,b["f_bus"],b["t_bus"]) for (i,b) in ref[:branch]]`,
+    * `:arcs_to` is the set `[(i,b["t_bus"],b["f_bus"]) for (i,b) in ref[:branch]]`,
+    * `:arcs` is the set of both `arcs_from` and `arcs_to`,
+    * `:bus_arcs` is the mapping `Dict(i => [(l,i,j) for (l,i,j) in ref[:arcs]])`,
+    * `:buspairs` (see `buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])`),
+    * `:bus_gens` is the mapping `Dict(i => [gen["gen_bus"] for (i,gen) in ref[:gen]])`.
+
+    If `:ne_branch` exists, then the following keys are also available with similar semantics:
+
+    * `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`
+
+    See `build_ref(data)` for further details.
+
+Methods on `GenericPowerModel` for defining variables and adding constraints should
+
+* work with the `ref` dict, rather than the original `data` dict,
+* add them to `model::JuMP.Model`, and
+* follow the conventions for variable and constraint names.
+"""
 type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
     model::Model
     data::Dict{String,Any}
