@@ -1,6 +1,6 @@
 # Problem Specifications
 
-## OPF Specifications
+## Optimal Power Flow (OPF) Specifications
 
 ### Objective
 ```julia
@@ -33,7 +33,7 @@ for (i,branch) in pm.ref[:branch]
 end
 ```
 
-## OTS Specifications
+## Optimal Transmission Switching (OTS) Specifications
 
 ### General Assumptions
 
@@ -115,7 +115,7 @@ for (i,branch) in pm.ref[:branch]
 end
 ```
 
-## TNEP Specifications
+## Transmission Network Expansion Planning (TNEP) Specifications
 
 ### Objective
 ```julia
