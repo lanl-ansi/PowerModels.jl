@@ -10,6 +10,7 @@ makedocs(
         "Network Formulations" => "formulations.md",
         "Problem Specifications" => "specifications.md",
         "Model Components" => [
+            "PowerModel" => "model.md",
             "Objective" => "objective.md",
             "Variables" => "variables.md",
             "Constraints" => "constraints.md"
