@@ -6,9 +6,6 @@ export
     run_generic_model, build_generic_model, solve_generic_model
 
 ""
-@compat abstract type AbstractPowerModel end
-
-""
 @compat abstract type AbstractPowerFormulation end
 
 ""
@@ -60,7 +57,7 @@ Methods on `GenericPowerModel` for defining variables and adding constraints sho
 * add them to `model::JuMP.Model`, and
 * follow the conventions for variable and constraint names.
 """
-type GenericPowerModel{T<:AbstractPowerFormulation} <: AbstractPowerModel
+type GenericPowerModel{T<:AbstractPowerFormulation}
     model::Model
     data::Dict{String,Any}
     setting::Dict{String,Any}
