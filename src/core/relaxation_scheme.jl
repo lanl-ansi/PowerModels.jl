@@ -1,4 +1,4 @@
-""
+"constraint: `c^2 + d^2 <= a*b`"
 function relaxation_complex_product(m, a, b, c, d)
     c = @constraint(m, c^2 + d^2 <= a*b)
     return Set([c])
@@ -29,7 +29,13 @@ function cut_complex_product_and_angle_difference(m, wf, wt, wr, wi, angmin, ang
     return Set([c1, c2])
 end
 
-""
+"""
+```
+c^2 + d^2 <= a*b*getupperbound(z)
+c^2 + d^2 <= getupperbound(a)*b*getupperbound(z)
+c^2 + d^2 <= a*getupperbound(b)*z
+```
+"""
 function relaxation_complex_product_on_off(m, a, b, c, d, z)
     # TODO add LNC cuts to this
     @assert getlowerbound(c) <= 0 && getupperbound(c) >= 0
@@ -47,7 +53,7 @@ function relaxation_complex_product_on_off(m, a, b, c, d, z)
     return Set([c1, c2, c3])
 end
 
-""
+"`x - getupperbound(x)*(1-z) <= y <= x - getlowerbound(x)*(1-z)`"
 function relaxation_equality_on_off(m, x, y, z)
     # assumes 0 is in the domain of y when z is 0
 
@@ -60,7 +66,13 @@ function relaxation_equality_on_off(m, x, y, z)
     return Set([c1, c2])
 end
 
-"general relaxation of a square term"
+"""
+general relaxation of a square term
+
+```
+x^2 <= y <= (getupperbound(x)+getlowerbound(x))*x - getupperbound(x)*getlowerbound(x)
+```
+"""
 function relaxation_sqr(m, x, y)
     c1 = @constraint(m, y >= x^2)
     c2 = @constraint(m, y <= (getupperbound(x)+getlowerbound(x))*x - getupperbound(x)*getlowerbound(x))
@@ -104,7 +116,16 @@ function relaxation_cos(m, x, y)
     return Set([c1, c2])
 end
 
-"general relaxation of binlinear term (McCormick)"
+"""
+general relaxation of binlinear term (McCormick)
+
+```
+z >= getlowerbound(x)*y + getlowerbound(y)*x - getlowerbound(x)*getlowerbound(y)
+z >= getupperbound(x)*y + getupperbound(y)*x - getupperbound(x)*getupperbound(y)
+z <= getlowerbound(x)*y + getupperbound(y)*x - getlowerbound(x)*getupperbound(y)
+z <= getupperbound(x)*y + getlowerbound(y)*x - getupperbound(x)*getlowerbound(y)
+```
+"""
 function relaxation_product(m, x, y, z)
     x_ub = getupperbound(x)
     x_lb = getlowerbound(x)
