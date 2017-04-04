@@ -31,6 +31,8 @@ SOCWRPowerModel = GenericPowerModel{SOCWRForm}
 QCWRPowerModel = GenericPowerModel{QCWRForm}
 ```
 
+For details on `GenericPowerModel`, see the section on [Power Model](@ref).
+
 ## User-Defined Abstractions
 
 Consider the class of conic formulations for power flow models. One way of modelling them in this package is through the following type hierarchy:
