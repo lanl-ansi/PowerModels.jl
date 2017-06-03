@@ -3,6 +3,17 @@ This section presents results of running PowerModel.jl on
 collections of established power network test cases from 
 [NESTA](https://arxiv.org/abs/1411.0359). This provides validation of the 
 PowerModel.jl as well as a results baseline for these test cases.
+All models were solved using [IPOPT](https://link.springer.com/article/10.1007/s10107-004-0559-y).
+
+
+## Experimental Setup
+**PowerModels Version:** v0.3.1-13-gf9249b6, f9249b6136bc4fb202c30fc853b3fdff269deda2
+
+**Ipopt Version:** v0.2.6, 959b9c67e396a6e2307fc022d26b0d95692ee6a4
+
+**NESTA Version:** v0.6.1, 466cd045d852c8c2cd86167b91ad8fa842ddf3da
+
+**Hardware:** Dual Intel 2.10GHz CPUs, 128GB RAM
 
 
 ## Typical Operating Conditions (TYP)
