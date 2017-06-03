@@ -18,6 +18,7 @@ makedocs(
         "Relaxation Schemes" => "relaxations.md",
         "File IO" => "parser.md",
         "Data Formats" => "data.md",
+        "Results" => "results.md",
     ]
 )
 
