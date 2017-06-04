@@ -15,17 +15,22 @@ result_qc  = run_opf(case, QCWRPowerModel, IpoptSolver(tol=1e-6))
 ```
 for each case in the NESTA archive.  If the value of `result["status"]` is `:LocalOptimal`
 then the values of `result["objective"]` and `result["solve_time"]` are reported,
-otherwise an `err.` or `--` is displayed.  It is important to note that the `result["solve_time"]`
+otherwise an `err.` or `--` is displayed.  The optimality gap is defined as,
+```
+soc_gap = 100*(result_ac["objective"] - result_soc["objective"])/result_ac["objective"]
+```
+
+It is important to note that the `result["solve_time"]`
 value in this experiment includes Julia's JIT time.  
 Removing the JIT time will reduce the runtime by 2-5 seconds.
 
 
 ## Software Versions
-**PowerModels Version:** v0.3.1-13-gf9249b6, f9249b6136bc4fb202c30fc853b3fdff269deda2
+**[PowerModels.jl](https://github.com/lanl-ansi/PowerModels.jl):** v0.3.1-13-gf9249b6, f9249b6136bc4fb202c30fc853b3fdff269deda2
 
-**Ipopt Version:** v0.2.6, 959b9c67e396a6e2307fc022d26b0d95692ee6a4
+**[Ipopt.jl](https://github.com/JuliaOpt/Ipopt.jl):** v0.2.6, 959b9c67e396a6e2307fc022d26b0d95692ee6a4
 
-**NESTA Version:** v0.6.1, 466cd045d852c8c2cd86167b91ad8fa842ddf3da
+**[NESTA](https://github.com/nicta/nesta):** v0.6.1, 466cd045d852c8c2cd86167b91ad8fa842ddf3da
 
 **Hardware:** Dual Intel 2.10GHz CPUs, 128GB RAM
 
