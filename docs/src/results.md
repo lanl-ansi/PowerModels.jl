@@ -5,8 +5,22 @@ collections of established power network test cases from
 PowerModel.jl as well as a results baseline for these test cases.
 All models were solved using [IPOPT](https://link.springer.com/article/10.1007/s10107-004-0559-y).
 
+## Experiment Design
 
-## Experimental Setup
+This experiment consists of running the following PowerModels commands,
+```
+result_ac  = run_opf(case, ACPPowerModel, IpoptSolver(tol=1e-6))
+result_soc = run_opf(case, SOCWRPowerModel, IpoptSolver(tol=1e-6))
+result_qc  = run_opf(case, QCWRPowerModel, IpoptSolver(tol=1e-6))
+```
+for each case in the NESTA archive.  If the value of `result["status"]` is `:LocalOptimal`
+then the values of `result["objective"]` and `result["solve_time"]` are reported,
+otherwise an `err.` or `--` is displayed.  It is important to note that the `result["solve_time"]`
+value in this experiment includes Julia's JIT time.  
+Removing the JIT time will reduce the runtime by 2-5 seconds.
+
+
+## Software Versions
 **PowerModels Version:** v0.3.1-13-gf9249b6, f9249b6136bc4fb202c30fc853b3fdff269deda2
 
 **Ipopt Version:** v0.2.6, 959b9c67e396a6e2307fc022d26b0d95692ee6a4
