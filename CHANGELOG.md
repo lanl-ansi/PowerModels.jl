@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Updated type declarations to Julia v0.6 syntax
 - Moved documentation to Documenter.jl (thanks to @yeesian)
 - Added basic OPF results to Documentation
+- Extended pm.ref include all fields from pm.data 
 
 ### v0.3.1
 - Added JuMP v0.16 and Julia v0.6 compatibility
