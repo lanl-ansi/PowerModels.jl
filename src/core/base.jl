@@ -163,6 +163,8 @@ function build_ref(data::Dict{String,Any})
         if isa(item, Dict)
             item_lookup = Dict([(parse(Int, k), v) for (k,v) in item])
             ref[Symbol(key)] = item_lookup
+        else
+            ref[Symbol(key)] = item
         end
     end
 
