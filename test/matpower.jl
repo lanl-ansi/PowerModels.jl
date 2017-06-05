@@ -153,5 +153,14 @@ end
         @test data["ne_branch"]["1"]["construction_cost"] == 1
         @test isa(JSON.json(data), String)
     end
+
+    @testset "`build_ref` for 3-bus tnep case" begin
+        data = PowerModels.parse_file("../test/data/case3_tnep.m")
+        ref = PowerModels.build_ref(data)
+        
+        @test haskey(data, "name")
+        @test haskey(ref, :name)
+        @test data["name"] == ref[:name]
+    end
 end
 
