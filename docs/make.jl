@@ -4,6 +4,8 @@ makedocs(
     modules = [PowerModels],
     format = :html,
     sitename = "PowerModels",
+    authors = "Carleton Coffrin, Russell Bent, and contributors.",
+    analytics = "UA-367975-10",
     pages = [
         "Home" => "index.md",
         "Getting Started" => "quickguide.md",
