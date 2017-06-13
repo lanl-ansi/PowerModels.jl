@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- nothing
+
+### v0.3.2
 - Updated type declarations to Julia v0.6 syntax
 - Moved documentation to Documenter.jl (thanks to @yeesian)
 - Added basic OPF results to Documentation
