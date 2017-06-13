@@ -58,8 +58,8 @@ end
 
 ""
 function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
-    WR = getvariable(pm.model, :WR)
-    WI = getvariable(pm.model, :WI)
+    WR = getindex(pm.model, :WR)
+    WI = getindex(pm.model, :WI)
 
     c = @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
 
@@ -75,14 +75,14 @@ constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus) = 
 
 ""
 function constraint_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
-    WR = getvariable(pm.model, :WR)
+    WR = getindex(pm.model, :WR)
     w_index = pm.model.ext[:lookup_w_index][i]
     w = WR[w_index, w_index]
 
-    p = getvariable(pm.model, :p)
-    q = getvariable(pm.model, :q)
-    pg = getvariable(pm.model, :pg)
-    qg = getvariable(pm.model, :qg)
+    p = getindex(pm.model, :p)
+    q = getindex(pm.model, :q)
+    pg = getindex(pm.model, :pg)
+    qg = getindex(pm.model, :qg)
 
     c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*w)
     c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*w)
@@ -91,11 +91,11 @@ end
 
 "Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)"
 function constraint_ohms_yt_from{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    p_fr = getvariable(pm.model, :p)[f_idx]
-    q_fr = getvariable(pm.model, :q)[f_idx]
+    p_fr = getindex(pm.model, :p)[f_idx]
+    q_fr = getindex(pm.model, :q)[f_idx]
 
-    WR = getvariable(pm.model, :WR)
-    WI = getvariable(pm.model, :WI)
+    WR = getindex(pm.model, :WR)
+    WI = getindex(pm.model, :WI)
     w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
     w_to_index = pm.model.ext[:lookup_w_index][t_bus]
 
@@ -111,11 +111,11 @@ end
 
 ""
 function constraint_ohms_yt_to{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    q_to = getvariable(pm.model, :q)[t_idx]
-    p_to = getvariable(pm.model, :p)[t_idx]
+    q_to = getindex(pm.model, :q)[t_idx]
+    p_to = getindex(pm.model, :p)[t_idx]
 
-    WR = getvariable(pm.model, :WR)
-    WI = getvariable(pm.model, :WI)
+    WR = getindex(pm.model, :WR)
+    WI = getindex(pm.model, :WI)
     w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
     w_to_index = pm.model.ext[:lookup_w_index][t_bus]
 
@@ -131,8 +131,8 @@ end
 
 ""
 function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
-    WR = getvariable(pm.model, :WR)
-    WI = getvariable(pm.model, :WI)
+    WR = getindex(pm.model, :WR)
+    WI = getindex(pm.model, :WI)
     w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
     w_to_index = pm.model.ext[:lookup_w_index][t_bus]
 

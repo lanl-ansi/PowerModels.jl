@@ -48,9 +48,9 @@ end
 
 ""
 function constraint_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T})
-    w = getvariable(pm.model, :w)
-    wr = getvariable(pm.model, :wr)
-    wi = getvariable(pm.model, :wi)
+    w = getindex(pm.model, :w)
+    wr = getindex(pm.model, :wr)
+    wi = getindex(pm.model, :wi)
 
     for (i,j) in keys(pm.ref[:buspairs])
         relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
@@ -61,7 +61,7 @@ end
 constraint_theta_ref{T <: AbstractWRForm}(pm::GenericPowerModel{T}, ref_bus) = Set()
 
 function constraint_voltage_magnitude_setpoint{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, vm, epsilon)
-    w = getvariable(pm.model, :w)[i]
+    w = getindex(pm.model, :w)[i]
 
     if epsilon == 0.0
         c = @constraint(pm.model, w == vm^2)
@@ -76,11 +76,11 @@ end
 
 ""
 function constraint_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
-    w = getvariable(pm.model, :w)[i]
-    p = getvariable(pm.model, :p)
-    q = getvariable(pm.model, :q)
-    pg = getvariable(pm.model, :pg)
-    qg = getvariable(pm.model, :qg)
+    w = getindex(pm.model, :w)[i]
+    p = getindex(pm.model, :p)
+    q = getindex(pm.model, :q)
+    pg = getindex(pm.model, :pg)
+    qg = getindex(pm.model, :qg)
 
     c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*w)
     c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*w)
@@ -94,13 +94,13 @@ sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for
 ```
 """
 function constraint_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
-    w = getvariable(pm.model, :w)[i]
-    p = getvariable(pm.model, :p)
-    q = getvariable(pm.model, :q)
-    p_ne = getvariable(pm.model, :p_ne)
-    q_ne = getvariable(pm.model, :q_ne)
-    pg = getvariable(pm.model, :pg)
-    qg = getvariable(pm.model, :qg)
+    w = getindex(pm.model, :w)[i]
+    p = getindex(pm.model, :p)
+    q = getindex(pm.model, :q)
+    p_ne = getindex(pm.model, :p_ne)
+    q_ne = getindex(pm.model, :q_ne)
+    pg = getindex(pm.model, :pg)
+    qg = getindex(pm.model, :qg)
 
     c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*w)
     c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*w)
@@ -116,11 +116,11 @@ q[f_idx] == -(b+c/2)/tm*w[f_bus] - (-b*tr-g*ti)/tm*(wr[f_bus,t_bus]) + (-g*tr+b*
 ```
 """
 function constraint_ohms_yt_from{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    p_fr = getvariable(pm.model, :p)[f_idx]
-    q_fr = getvariable(pm.model, :q)[f_idx]
-    w_fr = getvariable(pm.model, :w)[f_bus]
-    wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
-    wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
+    p_fr = getindex(pm.model, :p)[f_idx]
+    q_fr = getindex(pm.model, :q)[f_idx]
+    w_fr = getindex(pm.model, :w)[f_bus]
+    wr = getindex(pm.model, :wr)[(f_bus, t_bus)]
+    wi = getindex(pm.model, :wi)[(f_bus, t_bus)]
 
     c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
     c2 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
@@ -136,11 +136,11 @@ q[t_idx] == -(b+c/2)*w[t_bus] - (-b*tr+g*ti)/tm*(wr[f_bus,t_bus]) + (-g*tr-b*ti)
 ```
 """
 function constraint_ohms_yt_to{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    q_to = getvariable(pm.model, :q)[t_idx]
-    p_to = getvariable(pm.model, :p)[t_idx]
-    w_to = getvariable(pm.model, :w)[t_bus]
-    wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
-    wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
+    q_to = getindex(pm.model, :q)[t_idx]
+    p_to = getindex(pm.model, :p)[t_idx]
+    w_to = getindex(pm.model, :w)[t_bus]
+    wr = getindex(pm.model, :wr)[(f_bus, t_bus)]
+    wi = getindex(pm.model, :wi)[(f_bus, t_bus)]
 
     c1 = @constraint(pm.model, p_to == g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
     c2 = @constraint(pm.model, q_to == -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
@@ -156,11 +156,11 @@ q[f_idx] == -(b+c/2)/tm*w_from_ne[i] - (-b*tr-g*ti)/tm*(wr_ne[i]) + (-g*tr+b*ti)
 ```
 """
 function constraint_ohms_yt_from_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
-    p_fr = getvariable(pm.model, :p_ne)[f_idx]
-    q_fr = getvariable(pm.model, :q_ne)[f_idx]
-    w_fr = getvariable(pm.model, :w_from_ne)[i]
-    wr = getvariable(pm.model, :wr_ne)[i]
-    wi = getvariable(pm.model, :wi_ne)[i]
+    p_fr = getindex(pm.model, :p_ne)[f_idx]
+    q_fr = getindex(pm.model, :q_ne)[f_idx]
+    w_fr = getindex(pm.model, :w_from_ne)[i]
+    wr = getindex(pm.model, :wr_ne)[i]
+    wi = getindex(pm.model, :wi_ne)[i]
 
     c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
     c2 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
@@ -176,11 +176,11 @@ q[t_idx] == -(b+c/2)*w_to_ne[i] - (-b*tr+g*ti)/tm*(wr_ne[i]) + (-g*tr-b*ti)/tm*(
 ```
 """
 function constraint_ohms_yt_to_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
-    p_to = getvariable(pm.model, :p_ne)[t_idx]
-    q_to = getvariable(pm.model, :q_ne)[t_idx]
-    w_to = getvariable(pm.model, :w_to_ne)[i]
-    wr = getvariable(pm.model, :wr_ne)[i]
-    wi = getvariable(pm.model, :wi_ne)[i]
+    p_to = getindex(pm.model, :p_ne)[t_idx]
+    q_to = getindex(pm.model, :q_ne)[t_idx]
+    w_to = getindex(pm.model, :w_to_ne)[i]
+    wr = getindex(pm.model, :wr_ne)[i]
+    wi = getindex(pm.model, :wi_ne)[i]
 
     c1 = @constraint(pm.model, p_to == g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
     c2 = @constraint(pm.model, q_to == -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
@@ -189,10 +189,10 @@ end
 
 ""
 function constraint_phase_angle_difference{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
-    w_fr = getvariable(pm.model, :w)[f_bus]
-    w_to = getvariable(pm.model, :w)[t_bus]
-    wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
-    wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
+    w_fr = getindex(pm.model, :w)[f_bus]
+    w_to = getindex(pm.model, :w)[t_bus]
+    wr = getindex(pm.model, :wr)[(f_bus, t_bus)]
+    wi = getindex(pm.model, :wi)[(f_bus, t_bus)]
 
     c1 = @constraint(pm.model, wi <= angmax*wr)
     c2 = @constraint(pm.model, wi >= angmin*wr)
@@ -219,13 +219,13 @@ end
 
 ""
 function constraint_voltage_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
-    w = getvariable(pm.model, :w)
-    wr = getvariable(pm.model, :wr)
-    wi = getvariable(pm.model, :wi)
-    z = getvariable(pm.model, :line_z)
+    w = getindex(pm.model, :w)
+    wr = getindex(pm.model, :wr)
+    wi = getindex(pm.model, :wi)
+    z = getindex(pm.model, :line_z)
 
-    w_from = getvariable(pm.model, :w_from)
-    w_to = getvariable(pm.model, :w_to)
+    w_from = getindex(pm.model, :w_from)
+    w_to = getindex(pm.model, :w_to)
 
     cs = Set()
     cs1 = constraint_voltage_magnitude_sqr_from_on_off(pm)
@@ -251,13 +251,13 @@ function constraint_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:ne_buspairs])
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in branches])
           
-    w = getvariable(pm.model, :w)
-    wr = getvariable(pm.model, :wr_ne)
-    wi = getvariable(pm.model, :wi_ne)
-    z = getvariable(pm.model, :line_ne)
+    w = getindex(pm.model, :w)
+    wr = getindex(pm.model, :wr_ne)
+    wi = getindex(pm.model, :wi_ne)
+    z = getindex(pm.model, :line_ne)
 
-    w_from = getvariable(pm.model, :w_from_ne)
-    w_to = getvariable(pm.model, :w_to_ne)
+    w_from = getindex(pm.model, :w_from_ne)
+    w_to = getindex(pm.model, :w_to_ne)
 
     cs = Set()
     for (l,i,j) in pm.ref[:ne_arcs_from]
@@ -285,8 +285,8 @@ function constraint_voltage_magnitude_sqr_from_on_off{T <: AbstractWRForm}(pm::G
     buses = pm.ref[:bus]
     branches = pm.ref[:branch]
 
-    w_from = getvariable(pm.model, :w_from)
-    z = getvariable(pm.model, :line_z)
+    w_from = getindex(pm.model, :w_from)
+    z = getindex(pm.model, :line_z)
 
     cs = Set()
     for (i, branch) in pm.ref[:branch]
@@ -303,8 +303,8 @@ function constraint_voltage_magnitude_sqr_to_on_off{T <: AbstractWRForm}(pm::Gen
     buses = pm.ref[:bus]
     branches = pm.ref[:branch]
 
-    w_to = getvariable(pm.model, :w_to)
-    z = getvariable(pm.model, :line_z)
+    w_to = getindex(pm.model, :w_to)
+    z = getindex(pm.model, :line_z)
 
     cs = Set()
     for (i, branch) in pm.ref[:branch]
@@ -322,9 +322,9 @@ function constraint_voltage_product_on_off{T <: AbstractWRForm}(pm::GenericPower
 
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.ref[:branch]])
 
-    wr = getvariable(pm.model, :wr)
-    wi = getvariable(pm.model, :wi)
-    z = getvariable(pm.model, :line_z)
+    wr = getindex(pm.model, :wr)
+    wi = getindex(pm.model, :wi)
+    z = getindex(pm.model, :line_z)
 
     cs = Set()
     for b in keys(pm.ref[:branch])
@@ -349,11 +349,11 @@ q[f_idx] == -(b+c/2)/tm*w_from[i] - (-b*tr-g*ti)/tm*(wr[i]) + (-g*tr+b*ti)/tm*(w
 ```
 """
 function constraint_ohms_yt_from_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
-    p_fr = getvariable(pm.model, :p)[f_idx]
-    q_fr = getvariable(pm.model, :q)[f_idx]
-    w_fr = getvariable(pm.model, :w_from)[i]
-    wr = getvariable(pm.model, :wr)[i]
-    wi = getvariable(pm.model, :wi)[i]
+    p_fr = getindex(pm.model, :p)[f_idx]
+    q_fr = getindex(pm.model, :q)[f_idx]
+    w_fr = getindex(pm.model, :w_from)[i]
+    wr = getindex(pm.model, :wr)[i]
+    wi = getindex(pm.model, :wi)[i]
 
     c1 = @constraint(pm.model, p_fr ==        g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
     c2 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
@@ -369,11 +369,11 @@ q[t_idx] == -(b+c/2)*w_to[i] - (-b*tr+g*ti)/tm*(wr[i]) + (-g*tr-b*ti)/tm*(-wi[i]
 ```
 """
 function constraint_ohms_yt_to_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
-    p_to = getvariable(pm.model, :p)[t_idx]
-    q_to = getvariable(pm.model, :q)[t_idx]
-    w_to = getvariable(pm.model, :w_to)[i]
-    wr = getvariable(pm.model, :wr)[i]
-    wi = getvariable(pm.model, :wi)[i]
+    p_to = getindex(pm.model, :p)[t_idx]
+    q_to = getindex(pm.model, :q)[t_idx]
+    w_to = getindex(pm.model, :w_to)[i]
+    wr = getindex(pm.model, :wr)[i]
+    wi = getindex(pm.model, :wi)[i]
 
     c1 = @constraint(pm.model, p_to ==        g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
     c2 = @constraint(pm.model, q_to == -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
@@ -382,8 +382,8 @@ end
 
 "`angmin*wr[i] <= wi[i] <= angmax*wr[i]`"
 function constraint_phase_angle_difference_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
-    wr = getvariable(pm.model, :wr)[i]
-    wi = getvariable(pm.model, :wi)[i]
+    wr = getindex(pm.model, :wr)[i]
+    wi = getindex(pm.model, :wi)[i]
 
     c1 = @constraint(pm.model, wi <= angmax*wr)
     c2 = @constraint(pm.model, wi >= angmin*wr)
@@ -392,8 +392,8 @@ end
 
 "`angmin*wr_ne[i] <= wi_ne[i] <= angmax*wr_ne[i]`"
 function constraint_phase_angle_difference_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
-    wr = getvariable(pm.model, :wr_ne)[i]
-    wi = getvariable(pm.model, :wi_ne)[i]
+    wr = getindex(pm.model, :wr_ne)[i]
+    wi = getindex(pm.model, :wi_ne)[i]
 
     c1 = @constraint(pm.model, wi <= angmax*wr)
     c2 = @constraint(pm.model, wi >= angmin*wr)
@@ -513,17 +513,17 @@ end
 
 ""
 function constraint_voltage(pm::QCWRPowerModel)
-    v = getvariable(pm.model, :v)
-    t = getvariable(pm.model, :t)
+    v = getindex(pm.model, :v)
+    t = getindex(pm.model, :t)
 
-    td = getvariable(pm.model, :td)
-    si = getvariable(pm.model, :si)
-    cs = getvariable(pm.model, :cs)
-    vv = getvariable(pm.model, :vv)
+    td = getindex(pm.model, :td)
+    si = getindex(pm.model, :si)
+    cs = getindex(pm.model, :cs)
+    vv = getindex(pm.model, :vv)
 
-    w = getvariable(pm.model, :w)
-    wr = getvariable(pm.model, :wr)
-    wi = getvariable(pm.model, :wi)
+    w = getindex(pm.model, :w)
+    wr = getindex(pm.model, :wr)
+    wi = getindex(pm.model, :wi)
 
     const_set = Set()
     for (i,b) in pm.ref[:bus]
@@ -564,10 +564,10 @@ end
 
 "`p[f_idx]^2 + q[f_idx]^2 <= w[f_bus]/tm*cm[f_bus,t_bus]`"
 function constraint_power_magnitude_sqr(pm::QCWRPowerModel, f_bus, t_bus, f_idx, tm)
-    w_i = getvariable(pm.model, :w)[f_bus]
-    p_fr = getvariable(pm.model, :p)[f_idx]
-    q_fr = getvariable(pm.model, :q)[f_idx]
-    cm = getvariable(pm.model, :cm)[(f_bus, t_bus)]
+    w_i = getindex(pm.model, :w)[f_bus]
+    p_fr = getindex(pm.model, :p)[f_idx]
+    q_fr = getindex(pm.model, :q)[f_idx]
+    cm = getindex(pm.model, :cm)[(f_bus, t_bus)]
 
     c = @constraint(pm.model, p_fr^2 + q_fr^2 <= w_i/tm*cm)
     return Set([c])
@@ -575,12 +575,12 @@ end
 
 "`cm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
 function constraint_power_magnitude_link(pm::QCWRPowerModel, f_bus, t_bus, f_idx, g, b, c, tr, ti, tm)
-    w_fr = getvariable(pm.model, :w)[f_bus]
-    w_to = getvariable(pm.model, :w)[t_bus]
-    q_fr = getvariable(pm.model, :q)[f_idx]
-    wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
-    wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
-    cm = getvariable(pm.model, :cm)[(f_bus, t_bus)]
+    w_fr = getindex(pm.model, :w)[f_bus]
+    w_to = getindex(pm.model, :w)[t_bus]
+    q_fr = getindex(pm.model, :q)[f_idx]
+    wr = getindex(pm.model, :wr)[(f_bus, t_bus)]
+    wi = getindex(pm.model, :wi)[(f_bus, t_bus)]
+    cm = getindex(pm.model, :cm)[(f_bus, t_bus)]
 
     c = @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm + w_to - 2*(tr*wr + ti*wi)/tm) - c*q_fr - ((c/2)/tm)^2*w_fr)
     return Set([c])
@@ -588,11 +588,11 @@ end
 
 "`t[ref_bus] == 0`"
 constraint_theta_ref(pm::QCWRPowerModel, ref_bus) = 
-    @constraint(pm.model, getvariable(pm.model, :t)[ref_bus] == 0)
+    @constraint(pm.model, getindex(pm.model, :t)[ref_bus] == 0)
 
 ""
 function constraint_phase_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, angmin, angmax)
-    td = getvariable(pm.model, :td)[(f_bus, t_bus)]
+    td = getindex(pm.model, :td)[(f_bus, t_bus)]
 
     if getlowerbound(td) < angmin
         setlowerbound(td, angmin)
@@ -602,10 +602,10 @@ function constraint_phase_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, ang
         setupperbound(td, angmax)
     end
 
-    w_fr = getvariable(pm.model, :w)[f_bus]
-    w_to = getvariable(pm.model, :w)[t_bus]
-    wr = getvariable(pm.model, :wr)[(f_bus, t_bus)]
-    wi = getvariable(pm.model, :wi)[(f_bus, t_bus)]
+    w_fr = getindex(pm.model, :w)[f_bus]
+    w_to = getindex(pm.model, :w)[t_bus]
+    wr = getindex(pm.model, :wr)[(f_bus, t_bus)]
+    wi = getindex(pm.model, :wi)[(f_bus, t_bus)]
 
     c1 = @constraint(pm.model, wi <= angmax*wr)
     c2 = @constraint(pm.model, wi >= angmin*wr)
