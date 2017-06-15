@@ -66,8 +66,9 @@ The PowerModels network data dictionary differs from the Matpower format in the 
 - All network parameters are in per-unit and angles are in radians.
 - All non-transformer branches are given nominal transformer values (i.e. a tap of 1.0 and a shift of 0).
 - All branches have a `transformer` field indicating if they are a transformer or not.
+- Only quadratic active power generation cost functions are supported, at this time.
 - When present, the `gencost` data is incorporated into the `gen` data, the column names remain the same.
-- Only quadratic active power generation cost functions are supported at this time.
+- When present, the `bus_names` data is incorporated into the `bus` data under the property `"bus_name"`.
 - Special treatment is given to the optional `ne_branch` matrix to support the TNEP problem.
 
 
