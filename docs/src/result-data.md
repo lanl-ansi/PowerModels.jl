@@ -50,7 +50,8 @@ used when the run command was called.
 The solution object provides detailed information about the solution 
 produced by the run command.  The solution is organized similarly to 
 [The Network Data Dictionary](@ref) with the same nested structure and 
-parameter names, when available.
+parameter names, when available.  A network solution most often only includes
+a small subset of the data included in the network data.
 
 For example the data for a bus, `data["bus"]["1"]` is structured as follows,
 
@@ -75,6 +76,11 @@ A solution specifying a voltage magnitude and angle would for the same case, i.e
 }
 ```
 
+Because the data dictionary and the solution dictionary have the same structure 
+PowerModels provides an `update_data` helper function which can be used to 
+update a data diction with the values from a solution as follows,
 
-
+```
+PowerModels.update_data(data, result["solution"])
+```
 
