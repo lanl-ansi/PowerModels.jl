@@ -8,19 +8,24 @@ makedocs(
     analytics = "UA-367975-10",
     pages = [
         "Home" => "index.md",
-        "Getting Started" => "quickguide.md",
-        "Network Formulations" => "formulations.md",
-        "Problem Specifications" => "specifications.md",
-        "Model Components" => [
-            "PowerModel" => "model.md",
-            "Objective" => "objective.md",
-            "Variables" => "variables.md",
-            "Constraints" => "constraints.md"
+        "Manual" => [
+            "Getting Started" => "quickguide.md",
+            "Data Formats" => "data.md"
         ],
-        "Relaxation Schemes" => "relaxations.md",
-        "File IO" => "parser.md",
-        "Data Formats" => "data.md",
-        "Results" => "results.md",
+        "Library" => [
+            "Network Formulations" => "formulations.md",
+            "Problem Specifications" => "specifications.md",
+            "Modeling Components" => [
+                "PowerModel" => "model.md",
+                "Objective" => "objective.md",
+                "Variables" => "variables.md",
+                "Constraints" => "constraints.md"
+            ],
+            "Relaxation Schemes" => "relaxations.md",
+            "File IO" => "parser.md"
+        ],
+        "Developer" => "developer.md",
+        "Results" => "results.md"
     ]
 )
 

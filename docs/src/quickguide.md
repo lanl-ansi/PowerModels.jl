@@ -1,4 +1,4 @@
-# Quick Guide
+# Quick Start Guide
 
 Once PowerModels is installed, Ipopt is installed, and a network data file (e.g. `"nesta_case3_lmbd.m"`) has been acquired, an AC Optimal Power Flow can be executed with
 
