@@ -1,4 +1,4 @@
-# PowerModels Results
+# PowerModels Experiment Results
 This section presents results of running PowerModel.jl on 
 collections of established power network test cases from 
 [NESTA](https://arxiv.org/abs/1411.0359). This provides validation of the 
