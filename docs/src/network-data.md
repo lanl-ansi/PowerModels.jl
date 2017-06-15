@@ -1,4 +1,4 @@
-# PowerModels Data Format
+# PowerModels Network Data Format
 
 ## The Network Data Dictionary
 

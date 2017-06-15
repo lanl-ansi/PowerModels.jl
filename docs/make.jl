@@ -10,7 +10,8 @@ makedocs(
         "Home" => "index.md",
         "Manual" => [
             "Getting Started" => "quickguide.md",
-            "Data Formats" => "data.md"
+            "Network Data" => "network-data.md",
+            "Result Data" => "result-data.md"
         ],
         "Library" => [
             "Network Formulations" => "formulations.md",
@@ -25,7 +26,7 @@ makedocs(
             "File IO" => "parser.md"
         ],
         "Developer" => "developer.md",
-        "Results" => "results.md"
+        "Experiment Results" => "experiment-results.md"
     ]
 )
 
