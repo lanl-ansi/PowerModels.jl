@@ -224,7 +224,7 @@ function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
         mp_line = "$(mp_line);"
     end
 
-    if contains(mp_line, string(end_char)) 
+    if contains(mp_line, string(end_char))
         prefix = strip(split(mp_line, end_char)[1])
         if length(prefix) > 0 && ! contains(prefix, ";")
             mp_line = replace(mp_line, end_char, ";$(end_char)")
@@ -525,6 +525,7 @@ function parse_matpower_data(data_string::String)
 
                 push!(dclines, dcline_data)
             end
+            case["dcline"] = dclines
 
         else
             name = parsed_matrix["name"]
@@ -543,7 +544,7 @@ function parse_matpower_data(data_string::String)
 
     for parsed_cell in parsed_cells
         #println(parsed_cell)
-        if parsed_cell["name"] == "bus_name" 
+        if parsed_cell["name"] == "bus_name"
             if length(parsed_cell["data"]) != length(case["bus"])
                 error("incorrect Matpower file, the number of bus names ($(length(parsed_cell["data"]))) is inconsistent with the number of buses ($(length(case["bus"]))).\n")
             end
@@ -578,7 +579,7 @@ function build_typed_dict(data, column_names)
     columns = length(data[1])
 
     typed_columns = [type_array([ data[r][c] for r in 1:rows ]) for c in 1:columns]
-    
+
     typed_data = Dict{String,Any}[]
     for r in 1:rows
         data_dict = Dict{String,Any}()
