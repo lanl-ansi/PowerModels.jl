@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- nothing
+
+### v0.3.3
 - Added JuMP v0.17 compatibility
 
 ### v0.3.2
