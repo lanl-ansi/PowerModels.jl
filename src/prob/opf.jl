@@ -23,8 +23,11 @@ function post_opf(pm::GenericPowerModel)
 
     objective_min_fuel_cost(pm)
 
-    constraint_theta_ref(pm)
     constraint_voltage(pm)
+
+    for (i,bus) in pm.ref[:ref_buses]
+        constraint_theta_ref(pm, bus)
+    end
 
     for (i,bus) in pm.ref[:bus]
         constraint_kcl_shunt(pm, bus)

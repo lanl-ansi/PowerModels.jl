@@ -71,7 +71,7 @@ function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
 end
 
 "Do nothing, no way to represent this in these variables"
-constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus) = Set()
+constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus::Int) = Set()
 
 ""
 function constraint_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
