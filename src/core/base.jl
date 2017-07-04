@@ -210,7 +210,7 @@ function build_ref(data::Dict{String,Any})
     end
 
     if length(ref_buses) > 1
-        warn("multiple reference buses found, $(ref_buses), this can cause infeasibility if they are in the same connected component")
+        warn("multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
     end
 
     ref[:ref_buses] = ref_buses
