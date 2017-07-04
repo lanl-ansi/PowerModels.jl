@@ -1,5 +1,3 @@
-
-
 @testset "test ac pf" begin
     @testset "3-bus case" begin
         result = run_ac_pf("../test/data/case3.m", ipopt_solver)
@@ -24,6 +22,16 @@
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
+    end
+    @testset "6-bus case" begin
+        result = run_pf("../test/data/case6.m", ACPPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+        @test isapprox(result["solution"]["bus"]["1"]["vm"], 1.10000; atol = 1e-3)
+        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.00000; atol = 1e-3)
+        @test isapprox(result["solution"]["bus"]["4"]["vm"], 1.10000; atol = 1e-3)
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.00000; atol = 1e-3)
     end
     @testset "24-bus rts case" begin
         result = run_pf("../test/data/case24.m", ACPPowerModel, ipopt_solver)
@@ -53,6 +61,14 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
+    @testset "6-bus case" begin
+        result = run_dc_pf("../test/data/case6.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.00000; atol = 1e-3)
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.00000; atol = 1e-3)
+    end
     @testset "24-bus rts case" begin
         result = run_pf("../test/data/case24.m", DCPPowerModel, ipopt_solver)
 
@@ -80,6 +96,14 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
+    end
+    @testset "6-bus case" begin
+        result = run_pf("../test/data/case6.m", SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+        @test isapprox(result["solution"]["bus"]["1"]["vm"], 1.09999; atol = 1e-3)
+        @test isapprox(result["solution"]["bus"]["4"]["vm"], 1.09999; atol = 1e-3)
     end
     @testset "24-bus rts case" begin
         result = run_pf("../test/data/case24.m", SOCWRPowerModel, ipopt_solver)

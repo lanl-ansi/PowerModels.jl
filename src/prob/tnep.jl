@@ -20,9 +20,12 @@ function post_tnep(pm::GenericPowerModel)
 
     objective_tnep_cost(pm)
        
-    constraint_theta_ref(pm)
     constraint_voltage(pm)
     constraint_voltage_ne(pm)
+
+    for (i,bus) in pm.ref[:ref_buses]
+        constraint_theta_ref(pm, bus)
+    end
 
     for (i,bus) in pm.ref[:bus]
         constraint_kcl_shunt_ne(pm, bus)

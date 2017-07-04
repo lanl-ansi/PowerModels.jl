@@ -71,7 +71,7 @@ constraint_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T}) = nothing
 constraint_voltage_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}) = nothing
 
 ""
-constraint_theta_ref{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, ref_bus) =
+constraint_theta_ref{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, ref_bus::Int) =
     Set([@constraint(pm.model, getindex(pm.model, :t)[ref_bus] == 0)])
 
 "do nothing, this model does not have voltage variables"

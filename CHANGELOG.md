@@ -2,10 +2,12 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- nothing
+- Added support for multiple refrence buses
+- Fixed bug when no refrence bus was specified
 
 ### v0.3.3
 - Added JuMP v0.17 compatibility
+- Reorganized documentation into Manual, Library, Developer, and Experimental Results 
 
 ### v0.3.2
 - Updated type declarations to Julia v0.6 syntax

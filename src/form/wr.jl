@@ -58,7 +58,7 @@ function constraint_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T})
 end
 
 "Do nothing, no way to represent this in these variables"
-constraint_theta_ref{T <: AbstractWRForm}(pm::GenericPowerModel{T}, ref_bus) = Set()
+constraint_theta_ref{T <: AbstractWRForm}(pm::GenericPowerModel{T}, ref_bus::Int) = Set()
 
 function constraint_voltage_magnitude_setpoint{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, vm, epsilon)
     w = getindex(pm.model, :w)[i]
@@ -587,7 +587,7 @@ function constraint_power_magnitude_link(pm::QCWRPowerModel, f_bus, t_bus, f_idx
 end
 
 "`t[ref_bus] == 0`"
-constraint_theta_ref(pm::QCWRPowerModel, ref_bus) = 
+constraint_theta_ref(pm::QCWRPowerModel, ref_bus::Int) = 
     @constraint(pm.model, getindex(pm.model, :t)[ref_bus] == 0)
 
 ""

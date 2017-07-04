@@ -27,13 +27,6 @@ include("output.jl")
 
 include("modify.jl")
 
-# used by OTS and Loadshed TS models
-function check_br_status(sol)
-    for (idx,val) in sol["branch"]
-        @test val["br_status"] == 0.0 || val["br_status"] == 1.0
-    end
-end
-
 include("pf.jl")
 
 include("opf.jl")
