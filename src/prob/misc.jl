@@ -23,8 +23,11 @@ function post_api_opf(pm::GenericPowerModel)
     #objective_max_loading_voltage_norm(pm)
     #objective_max_loading_gen_output(pm)
 
-    constraint_theta_ref(pm)
     constraint_voltage(pm)
+
+    for (i,bus) in pm.ref[:ref_buses]
+        constraint_theta_ref(pm, bus)
+    end
 
     for (i,gen) in pm.ref[:gen]
         pg = getindex(pm.model, :pg)[i]
@@ -60,8 +63,11 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
 
     @objective(pm.model, Min, theta_delta_bound)
 
-    constraint_theta_ref(pm)
     constraint_voltage(pm)
+
+    for (i,bus) in pm.ref[:ref_buses]
+        constraint_theta_ref(pm, bus)
+    end
 
     for (i,bus) in pm.ref[:bus]
         constraint_kcl_shunt(pm, bus)

@@ -25,8 +25,8 @@ end
 ### Bus - Setpoint Constraints ###
 
 ""
-function constraint_theta_ref(pm::GenericPowerModel)
-    return constraint_theta_ref(pm, pm.ref[:ref_bus])
+function constraint_theta_ref(pm::GenericPowerModel, bus)
+    return constraint_theta_ref(pm, bus["index"])
 end
 
 ""
