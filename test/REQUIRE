@@ -4,5 +4,7 @@ Ipopt
 SCS
 GLPKMathProgInterface
 Pajarito 0.4.0
+AmplNLWriter
+CoinOptServices
 
 Logging 0.3.1
