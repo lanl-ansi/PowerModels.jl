@@ -1,5 +1,6 @@
 using JSON
 
+
 @testset "test matpower parser" begin
     @testset "30-bus case file" begin
         result = run_opf("../test/data/case30.m", ACPPowerModel, ipopt_solver)
@@ -32,6 +33,7 @@ using JSON
     end
 end
 
+
 @testset "test matpower data coercion" begin
     @testset "ACP Model" begin
         result = run_opf("../test/data/case14.m", ACPPowerModel, ipopt_solver)
@@ -53,6 +55,7 @@ end
         @test isapprox(result["objective"], 8075.1; atol = 1e0)
     end
 end
+
 
 @testset "test matpower extentions parser" begin
     @testset "3-bus extended constants" begin
@@ -98,7 +101,6 @@ end
         @test data["branch"]["3"]["rate_p"] == 30
         @test isa(JSON.json(data), String)
     end
-
 
     @testset "3-bus extended matrix from cell" begin
         data = PowerModels.parse_file("../test/data/case3.m")

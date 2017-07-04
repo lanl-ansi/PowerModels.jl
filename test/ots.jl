@@ -1,3 +1,4 @@
+
 # used by OTS models
 function check_br_status(sol)
     for (i,branch) in sol["branch"]
@@ -5,8 +6,8 @@ function check_br_status(sol)
     end
 end
 
-if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
 
+if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
     @testset "test ac ots" begin
         #Omitting this test, until bugs can be resolved, bonmin does not report a integral solution
         #@testset "3-bus case" begin
@@ -36,7 +37,6 @@ if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices")
         #    @test isapprox(result["objective"], 15174; atol = 1e0)
         #end
     end
-
 end
 
 
@@ -67,6 +67,7 @@ end
     end
 end
 
+
 @testset "test dc-losses ots" begin
     @testset "3-bus case" begin
         result = run_ots("../test/data/case3.m", DCPLLPowerModel, pajarito_solver)
@@ -93,6 +94,7 @@ end
         @test isapprox(result["objective"], 11515.6; atol = 1e0)
     end
 end
+
 
 @testset "test soc ots" begin
     @testset "3-bus case" begin

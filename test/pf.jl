@@ -1,5 +1,3 @@
-
-
 @testset "test ac pf" begin
     @testset "3-bus case" begin
         result = run_ac_pf("../test/data/case3.m", ipopt_solver)
