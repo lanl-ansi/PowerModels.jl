@@ -105,7 +105,7 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 5736.2; atol = 1e0)
     end
-    @testset "5-bus rts case" begin
+    @testset "5-bus case" begin
         result = run_ots("../test/data/case5.m", SOCWRPowerModel, pajarito_solver)
 
         check_br_status(result["solution"])
@@ -123,3 +123,30 @@ end
     end
 end
 
+
+@testset "test qc ots" begin
+    @testset "3-bus case" begin
+        result = run_ots("../test/data/case3.m", QCWRPowerModel, pajarito_solver)
+
+        check_br_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 5736.2; atol = 1e0)
+    end
+    @testset "5-bus case" begin
+        result = run_ots("../test/data/case5.m", QCWRPowerModel, pajarito_solver)
+
+        check_br_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 15001.6; atol = 1e0)
+    end
+    @testset "6-bus case" begin
+        result = run_ots("../test/data/case6.m", QCWRPowerModel, pajarito_solver)
+
+        check_br_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 11567.1; atol = 1e0)
+    end
+end
