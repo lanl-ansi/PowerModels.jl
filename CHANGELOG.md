@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added support for QC-OTS
 - Added support for multiple refrence buses
 - Fixed bug when no refrence bus was specified
 
