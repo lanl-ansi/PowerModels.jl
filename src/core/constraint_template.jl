@@ -200,6 +200,7 @@ function constraint_ohms_yt_to_ne(pm::GenericPowerModel, branch)
     return constraint_ohms_yt_to_ne(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
 end
 
+
 ### Branch - Current ### 
 
 ""
@@ -207,12 +208,23 @@ function constraint_power_magnitude_sqr(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
-    pair = (f_bus, t_bus)
-    f_idx = (i, f_bus, t_bus)
+    arc_from = (i, f_bus, t_bus)
 
     tm = branch["tap"]^2
 
-    return constraint_power_magnitude_sqr(pm, f_bus, t_bus, f_idx, tm)
+    return constraint_power_magnitude_sqr(pm, f_bus, t_bus, arc_from, tm)
+end
+
+""
+function constraint_power_magnitude_sqr_on_off(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    arc_from = (i, f_bus, t_bus)
+
+    tm = branch["tap"]^2
+
+    return constraint_power_magnitude_sqr_on_off(pm, i, f_bus, arc_from, tm)
 end
 
 ""
@@ -220,15 +232,29 @@ function constraint_power_magnitude_link(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
-    pair = (f_bus, t_bus)
-    f_idx = (i, f_bus, t_bus)
+    arc_from = (i, f_bus, t_bus)
 
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
     tm = branch["tap"]^2 
 
-    return constraint_power_magnitude_link(pm, f_bus, t_bus, f_idx, g, b, c, tr, ti, tm)
+    return constraint_power_magnitude_link(pm, f_bus, t_bus, arc_from, g, b, c, tr, ti, tm)
+end
+
+""
+function constraint_power_magnitude_link_on_off(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    arc_from = (i, f_bus, t_bus)
+
+    g, b = calc_branch_y(branch)
+    tr, ti = calc_branch_t(branch)
+    c = branch["br_b"]
+    tm = branch["tap"]^2 
+
+    return constraint_power_magnitude_link_on_off(pm, i, arc_from, g, b, c, tr, ti, tm)
 end
 
 ### Branch - Thermal Limit Constraints ### 

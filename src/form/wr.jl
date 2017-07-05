@@ -280,6 +280,44 @@ function constraint_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     return cs
 end
 
+
+""
+function constraint_voltage_magnitude_from_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+    buses = pm.ref[:bus]
+    branches = pm.ref[:branch]
+
+    v_from = getindex(pm.model, :v_from)
+    z = getindex(pm.model, :line_z)
+
+    cs = Set()
+    for (i, branch) in pm.ref[:branch]
+        c1 = @constraint(pm.model, v_from[i] <= z[i]*buses[branch["f_bus"]]["vmax"])
+        c2 = @constraint(pm.model, v_from[i] >= z[i]*buses[branch["f_bus"]]["vmin"])
+        push!(cs, c1)
+        push!(cs, c2)
+    end
+    return cs
+end
+
+""
+function constraint_voltage_magnitude_to_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
+    buses = pm.ref[:bus]
+    branches = pm.ref[:branch]
+
+    v_to = getindex(pm.model, :v_to)
+    z = getindex(pm.model, :line_z)
+
+    cs = Set()
+    for (i, branch) in pm.ref[:branch]
+        c1 = @constraint(pm.model, v_to[i] <= z[i]*buses[branch["t_bus"]]["vmax"])
+        c2 = @constraint(pm.model, v_to[i] >= z[i]*buses[branch["t_bus"]]["vmin"])
+        push!(cs, c1)
+        push!(cs, c2)
+    end
+    return cs
+end
+
+
 ""
 function constraint_voltage_magnitude_sqr_from_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     buses = pm.ref[:bus]
@@ -563,10 +601,10 @@ function constraint_voltage(pm::QCWRPowerModel)
 end
 
 "`p[f_idx]^2 + q[f_idx]^2 <= w[f_bus]/tm*cm[f_bus,t_bus]`"
-function constraint_power_magnitude_sqr(pm::QCWRPowerModel, f_bus, t_bus, f_idx, tm)
+function constraint_power_magnitude_sqr(pm::QCWRPowerModel, f_bus, t_bus, arc_from, tm)
     w_i = getindex(pm.model, :w)[f_bus]
-    p_fr = getindex(pm.model, :p)[f_idx]
-    q_fr = getindex(pm.model, :q)[f_idx]
+    p_fr = getindex(pm.model, :p)[arc_from]
+    q_fr = getindex(pm.model, :q)[arc_from]
     cm = getindex(pm.model, :cm)[(f_bus, t_bus)]
 
     c = @constraint(pm.model, p_fr^2 + q_fr^2 <= w_i/tm*cm)
@@ -574,10 +612,10 @@ function constraint_power_magnitude_sqr(pm::QCWRPowerModel, f_bus, t_bus, f_idx,
 end
 
 "`cm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
-function constraint_power_magnitude_link(pm::QCWRPowerModel, f_bus, t_bus, f_idx, g, b, c, tr, ti, tm)
+function constraint_power_magnitude_link(pm::QCWRPowerModel, f_bus, t_bus, arc_from, g, b, c, tr, ti, tm)
     w_fr = getindex(pm.model, :w)[f_bus]
     w_to = getindex(pm.model, :w)[t_bus]
-    q_fr = getindex(pm.model, :q)[f_idx]
+    q_fr = getindex(pm.model, :q)[arc_from]
     wr = getindex(pm.model, :wr)[(f_bus, t_bus)]
     wi = getindex(pm.model, :wi)[(f_bus, t_bus)]
     cm = getindex(pm.model, :cm)[(f_bus, t_bus)]
@@ -628,6 +666,8 @@ end
 function variable_voltage_on_off(pm::QCWRPowerModel; kwargs...)
     variable_phase_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
+    variable_voltage_magnitude_from_on_off(pm; kwargs...)
+    variable_voltage_magnitude_to_on_off(pm; kwargs...)
 
     variable_voltage_magnitude_sqr(pm; kwargs...)
     variable_voltage_magnitude_sqr_from_on_off(pm; kwargs...)
@@ -650,8 +690,8 @@ end
 
 ""
 function variable_voltage_magnitude_product_on_off{T}(pm::GenericPowerModel{T})
-    vv_min = Dict([(l, pm.ref[:bus[branch["f_bus"]]]["vmin"]*pm.ref[:bus[branch["t_bus"]]]["vmin"]) for (l, branch) in pm.ref[:branch]])
-    vv_max = Dict([(l, pm.ref[:bus[branch["f_bus"]]]["vmax"]*pm.ref[:bus[branch["t_bus"]]]["vmax"]) for (l, branch) in pm.ref[:branch]])
+    vv_min = Dict([(l, pm.ref[:bus][branch["f_bus"]]["vmin"]*pm.ref[:bus][branch["t_bus"]]["vmin"]) for (l, branch) in pm.ref[:branch]])
+    vv_max = Dict([(l, pm.ref[:bus][branch["f_bus"]]["vmax"]*pm.ref[:bus][branch["t_bus"]]["vmax"]) for (l, branch) in pm.ref[:branch]])
 
     @variable(pm.model,  min(0, vv_min[l]) <= vv[l in keys(pm.ref[:branch])] <=  max(0, vv_max[l]), start = getstart(pm.ref[:branch], l, "vv_start", 1.0))
     return vv
@@ -665,26 +705,26 @@ function variable_cosine_on_off{T}(pm::GenericPowerModel{T})
 
     for (l, branch) in pm.ref[:branch]
         if branch["angmin"] >= 0
-            cos_max[bp] = cos(branch["angmin"])
-            cos_min[bp] = cos(branch["angmax"])
+            cos_max[l] = cos(branch["angmin"])
+            cos_min[l] = cos(branch["angmax"])
         end
         if branch["angmax"] <= 0
-            cos_max[bp] = cos(branch["angmax"])
-            cos_min[bp] = cos(branch["angmin"])
+            cos_max[l] = cos(branch["angmax"])
+            cos_min[l] = cos(branch["angmin"])
         end
         if branch["angmin"] < 0 && branch["angmax"] > 0
-            cos_max[bp] = 1.0
-            cos_min[bp] = min(cos(branch["angmin"]), cos(branch["angmax"]))
+            cos_max[l] = 1.0
+            cos_min[l] = min(cos(branch["angmin"]), cos(branch["angmax"]))
         end
     end
 
-    @variable(pm.model, min(0, cos_min[bp]) <= cs[l in keys(pm.ref[:branch])] <= max(0, cos_max[bp]), start = getstart(pm.ref[:branch], l, "cs_start", 1.0))
+    @variable(pm.model, min(0, cos_min[l]) <= cs[l in keys(pm.ref[:branch])] <= max(0, cos_max[l]), start = getstart(pm.ref[:branch], l, "cs_start", 1.0))
     return cs
 end
 
 ""
 function variable_sine_on_off(pm::GenericPowerModel)
-    @variable(pm.model, min(0, sin(pm.ref[:branch][l]["angmin"])) <= si[l in keys(pm.ref[:branch])] <= max(0, sin(pm.ref[:branch][l]["angmax"])), start = getstart(pm.ref[:buspairs], bp, "si_start"))
+    @variable(pm.model, min(0, sin(pm.ref[:branch][l]["angmin"])) <= si[l in keys(pm.ref[:branch])] <= max(0, sin(pm.ref[:branch][l]["angmax"])), start = getstart(pm.ref[:branch], l, "si_start"))
     return si
 end
 
@@ -694,7 +734,7 @@ function variable_current_magnitude_sqr_on_off{T}(pm::GenericPowerModel{T})
     cm_min = Dict([(l, 0) for l in keys(pm.ref[:branch])])
     cm_max = Dict([(l, (branch["rate_a"]*branch["tap"]/pm.ref[:bus][branch["f_bus"]]["vmin"])^2) for (l, branch) in pm.ref[:branch]])
 
-    @variable(pm.model, cm_min[l] <= cm[l in keys(pm.ref[:branch])] <= cm_max[l], start = getstart(pm.ref[:branch], bp, "cm_start"))
+    @variable(pm.model, cm_min[l] <= cm[l in keys(pm.ref[:branch])] <= cm_max[l], start = getstart(pm.ref[:branch], l, "cm_start"))
     return cm
 end
 
@@ -703,6 +743,8 @@ end
 function constraint_voltage_on_off(pm::QCWRPowerModel)
     v = getindex(pm.model, :v)
     t = getindex(pm.model, :t)
+    v_from = getindex(pm.model, :v_from)
+    v_to = getindex(pm.model, :v_to)
 
     td = getindex(pm.model, :td)
     si = getindex(pm.model, :si)
@@ -718,51 +760,90 @@ function constraint_voltage_on_off(pm::QCWRPowerModel)
 
     z = getindex(pm.model, :line_z)
 
+    td_lb = pm.ref[:off_angmin]
+    td_ub = pm.ref[:off_angmax]
+    td_max = max(abs(td_lb), abs(td_ub))
 
-    const_set = Set()
+    #cs = Set()
     for (i,b) in pm.ref[:bus]
         cs1 = relaxation_sqr(pm.model, v[i], w[i])
-        const_set = union(const_set, cs1)
+        #cs = union(cs, cs1)
     end
 
-    cs = Set()
-    cs1 = constraint_voltage_magnitude_sqr_from_on_off(pm) # bounds on w_from
-    cs2 = constraint_voltage_magnitude_sqr_to_on_off(pm) # bounds on w_to
-    cs3 = constraint_voltage_product_on_off(pm) # bounds on wr, wi
-    cs = union(cs, cs1, cs2, cs3)
+    cs1 = constraint_voltage_magnitude_from_on_off(pm) # bounds on v_from
+    cs2 = constraint_voltage_magnitude_to_on_off(pm) # bounds on v_to
+    cs3 = constraint_voltage_magnitude_sqr_from_on_off(pm) # bounds on w_from
+    cs4 = constraint_voltage_magnitude_sqr_to_on_off(pm) # bounds on w_to
+    cs5 = constraint_voltage_product_on_off(pm) # bounds on wr, wi
+    #cs = union(cs, cs1, cs2, cs3, cs4, cs5)
 
-    for bp in keys(pm.ref[:buspairs])
-        i,j = bp
-        c1 = @constraint(pm.model, t[i] - t[j] == td[bp])
-        push!(const_set, c1)
+    for (l,branch) in pm.ref[:branch]
+        i = branch["f_bus"]
+        j = branch["t_bus"]
 
-        cs1 = relaxation_sin(pm.model, td[bp], si[bp])
-        cs2 = relaxation_cos(pm.model, td[bp], cs[bp])
-        cs3 = relaxation_product(pm.model, v[i], v[j], vv[bp])
-        cs4 = relaxation_product(pm.model, vv[bp], cs[bp], wr[bp])
-        cs5 = relaxation_product(pm.model, vv[bp], si[bp], wi[bp])
+        c1 = @constraint(pm.model, t[i] - t[j] >= td[l] + td_lb*(1-z[l]))
+        c2 = @constraint(pm.model, t[i] - t[j] <= td[l] + td_ub*(1-z[l]))
+        #cs = union(cs, Set([c1, c2]))
 
-        const_set = union(const_set, cs1, cs2, cs3, cs4, cs5)
+        cs1 = relaxation_sin_on_off(pm.model, td[l], si[l], z[l], td_max)
+        cs2 = relaxation_cos_on_off(pm.model, td[l], cs[l], z[l], td_max)
+        cs3 = relaxation_product_on_off(pm.model, v_from[i], v_to[j], vv[l], z[l])
+        cs4 = relaxation_product_on_off(pm.model, vv[l], cs[l], wr[l], z[l])
+        cs5 = relaxation_product_on_off(pm.model, vv[l], si[l], wi[l], z[l])
+        #const_set = union(const_set, cs1, cs2, cs3, cs4, cs5)
+
         # this constraint is redudant and useful for debugging
-        #relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])
-   end
+        #relaxation_complex_product(pm.model, w[i], w[j], wr[l], wi[l])
 
-   for (i,branch) in pm.ref[:branch]
-        pair = (branch["f_bus"], branch["t_bus"])
-        buspair = pm.ref[:buspairs][pair]
-
-        #
-        cs4 = relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
-        cs5 = relaxation_equality_on_off(pm.model, w[i], w_from[l], z[l])
-        cs6 = relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
+        #cs4 = relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
+        cs6 = relaxation_equality_on_off(pm.model, v[i], v_from[l], z[l])
+        cs7 = relaxation_equality_on_off(pm.model, v[j], v_to[l], z[l])
+        cs8 = relaxation_equality_on_off(pm.model, w[i], w_from[l], z[l])
+        cs9 = relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
+        #cs = union(cs, cs6, cs7, cs8, cs9)
 
         # to prevent this constraint from being posted on multiple parallel lines
-        if buspair["line"] == i
-            cs1 = constraint_power_magnitude_sqr(pm, branch)
-            cs2 = constraint_power_magnitude_link(pm, branch)
-            const_set = union(const_set, cs1, cs2)
-        end
+        # TODO needs on/off variant
+        cs1 = constraint_power_magnitude_sqr_on_off(pm, branch)
+        cs2 = constraint_power_magnitude_link_on_off(pm, branch) # different index set
+        #cs = union(cs, cs1, cs2)
     end
 
-    return const_set
+    return Set()
 end
+
+
+"`p[arc_from]^2 + q[arc_from]^2 <= w[f_bus]/tm*cm[i]`"
+function constraint_power_magnitude_sqr_on_off(pm::QCWRPowerModel, i, f_bus, arc_from, tm)
+    w = getindex(pm.model, :w)[f_bus]
+    p_fr = getindex(pm.model, :p)[arc_from]
+    q_fr = getindex(pm.model, :q)[arc_from]
+    cm = getindex(pm.model, :cm)[i]
+    z = getindex(pm.model, :line_z)[i]
+
+    # TODO see if there is a way to leverage relaxation_complex_product_on_off here
+    w_ub = getupperbound(w)
+    cm_ub = getupperbound(cm)
+    z_ub = getupperbound(z)
+
+    c1 = @constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm*z_ub/tm)
+    c2 = @constraint(pm.model, p_fr^2 + q_fr^2 <= w_ub*cm*z/tm)
+    c3 = @constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm_ub*z/tm)
+
+    return Set([c1, c2, c3])
+end
+
+"`cm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
+function constraint_power_magnitude_link_on_off(pm::QCWRPowerModel, i, arc_from, g, b, c, tr, ti, tm)
+    w_fr = getindex(pm.model, :w_from)[i]
+    w_to = getindex(pm.model, :w_to)[i]
+    q_fr = getindex(pm.model, :q)[arc_from]
+    wr = getindex(pm.model, :wr)[i]
+    wi = getindex(pm.model, :wi)[i]
+    cm = getindex(pm.model, :cm)[i]
+
+    c = @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm + w_to - 2*(tr*wr + ti*wi)/tm) - c*q_fr - ((c/2)/tm)^2*w_fr)
+    return Set([c])
+end
+
+
