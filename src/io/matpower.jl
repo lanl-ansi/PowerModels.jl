@@ -515,12 +515,12 @@ function parse_matpower_data(data_string::String)
                     "loss1" => parse(Float64, dcline_row[17]),
                 )
                 if length(dcline_row) > 17
-                    branch_data["mu_pmin"] = parse(Float64, dcline_row[18])
-                    branch_data["mu_pmax"] = parse(Float64, dcline_row[19])
-                    branch_data["mu_qminf"] = parse(Float64, dcline_row[20])
-                    branch_data["mu_qmaxf"] = parse(Float64, dcline_row[21])
-                    branch_data["mu_qmint"] = parse(Float64, dcline_row[22])
-                    branch_data["mu_qmaxt"] = parse(Float64, dcline_row[23])
+                    dcline_data["mu_pmin"] = parse(Float64, dcline_row[18])
+                    dcline_data["mu_pmax"] = parse(Float64, dcline_row[19])
+                    dcline_data["mu_qminf"] = parse(Float64, dcline_row[20])
+                    dcline_data["mu_qmaxf"] = parse(Float64, dcline_row[21])
+                    dcline_data["mu_qmint"] = parse(Float64, dcline_row[22])
+                    dcline_data["mu_qmaxt"] = parse(Float64, dcline_row[23])
                 end
 
                 push!(dclines, dcline_data)
