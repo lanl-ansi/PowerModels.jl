@@ -15,7 +15,7 @@ export
 ```
 type GenericPowerModel{T<:AbstractPowerFormulation}
     model::JuMP.Model
-    data::Dict{String,Any} 
+    data::Dict{String,Any}
     setting::Dict{String,Any}
     solution::Dict{String,Any}
     ref::Dict{Symbol,Any} # reference data
@@ -181,6 +181,14 @@ function build_ref(data::Dict{String,Any})
     ref[:arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:branch]]
     ref[:arcs] = [ref[:arcs_from]; ref[:arcs_to]]
 
+#############################DC LINES##############
+    if haskey(ref, :dcline)
+        ref[:arcs_from_dc] = [(i,dcline["f_bus"],dcline["t_bus"]) for (i,dcline) in ref[:dcline]]
+        ref[:arcs_to_dc]   = [(i,dcline["t_bus"],dcline["f_bus"]) for (i,dcline) in ref[:dcline]]
+        ref[:arcs_dc] = [ref[:arcs_from]; ref[:arcs_to]]
+    end
+###################################################
+
     bus_gens = Dict([(i, []) for (i,bus) in ref[:bus]])
     for (i,gen) in ref[:gen]
         push!(bus_gens[gen["gen_bus"]], i)
@@ -193,6 +201,16 @@ function build_ref(data::Dict{String,Any})
     end
     ref[:bus_arcs] = bus_arcs
 
+######################### DC LINES ###################################
+    if haskey(ref, :dcline)
+        bus_arcs_dc = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (l,i,j) in ref[:arcs_dc]
+            push!(bus_arcs_dc[i], (l,i,j))
+        end
+        ref[:bus_arcs_dc] = bus_arcs_dc
+    end
+#################################################################
+
     ref_bus = Union{}
     for (k,v) in ref[:bus]
         if v["bus_type"] == 3
@@ -203,6 +221,11 @@ function build_ref(data::Dict{String,Any})
     ref[:ref_bus] = ref_bus
 
     ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])
+    ############################ DC LINES##########################################
+    if haskey(ref, :dcline)
+        ref[:buspairs_dc] = buspair_parameters_dc(ref[:arcs_from_dc], ref[:dcline], ref[:bus])
+    end
+    ###############################################################################
 
     if haskey(ref, :ne_branch)
         ref[:ne_branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:ne_branch])
@@ -253,4 +276,42 @@ function buspair_parameters(arcs_from, branches, buses)
         )) for (i,j) in buspair_indexes])
 
     return buspairs
+end
+
+"compute bus pair level structures for DC"
+function buspair_parameters_dc(arcs_from_dc, dclines, buses)
+    buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from_dc]))
+
+    bp_angmin = Dict([(bp, -Inf) for bp in buspair_indexes])
+    bp_angmax = Dict([(bp, Inf) for bp in buspair_indexes])
+    bp_line = Dict([(bp, Inf) for bp in buspair_indexes])
+
+    for (l,dcline) in dclines
+        i = dcline["f_bus"]
+        j = dcline["t_bus"]
+
+        bp_line[(i,j)] = min(bp_line[(i,j)], l)
+    end
+
+    buspairs_dc = Dict([((i,j), Dict(
+        "line"=>bp_line[(i,j)],
+        "pmin"=>dclines[bp_line[(i,j)]]["pmin"],
+        "pmax"=>dclines[bp_line[(i,j)]]["pmax"],
+        "qminf"=>dclines[bp_line[(i,j)]]["qminf"],
+        "qmaxf"=>dclines[bp_line[(i,j)]]["qmaxf"],
+        "qmint"=>dclines[bp_line[(i,j)]]["qmint"],
+        "qmaxt"=>dclines[bp_line[(i,j)]]["qmaxt"],
+        "pf"=>dclines[bp_line[(i,j)]]["pf"],
+        "pt"=>dclines[bp_line[(i,j)]]["pt"],
+        "qf"=>dclines[bp_line[(i,j)]]["qf"],
+        "qt"=>dclines[bp_line[(i,j)]]["qt"],
+        "vf"=>dclines[bp_line[(i,j)]]["vf"],
+        "vt"=>dclines[bp_line[(i,j)]]["vt"],
+        "v_from_min"=>buses[i]["vmin"],
+        "v_from_max"=>buses[i]["vmax"],
+        "v_to_min"=>buses[j]["vmin"],
+        "v_to_max"=>buses[j]["vmax"]
+        )) for (i,j) in buspair_indexes])
+
+    return buspairs_dc
 end
