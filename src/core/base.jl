@@ -285,18 +285,38 @@ function buspair_parameters_dc(arcs_from_dc, dclines, buses)
     bp_angmin = Dict([(bp, -Inf) for bp in buspair_indexes])
     bp_angmax = Dict([(bp, Inf) for bp in buspair_indexes])
     bp_line = Dict([(bp, Inf) for bp in buspair_indexes])
+    pmint = Dict([(bp, Inf) for bp in buspair_indexes])
+    pminf = Dict([(bp, Inf) for bp in buspair_indexes])
+    pmaxt = Dict([(bp, Inf) for bp in buspair_indexes])
+    pmaxf = Dict([(bp, Inf) for bp in buspair_indexes])
 
     for (l,dcline) in dclines
         i = dcline["f_bus"]
         j = dcline["t_bus"]
 
         bp_line[(i,j)] = min(bp_line[(i,j)], l)
+        if dcline["pmin"] > 0
+            pminf[(i,j)]=>dclines[bp_line[(i,j)]]["pmin"]
+            pmint[(i,j)]=>-min(abs(pminf[(i,j)]),abs(dcline["pmax"]))
+        else
+            pmint[(i,j)]=>dclines[bp_line[(i,j)]]["pmin"]
+            pminf[(i,j)]=>-min(abs(pmint[(i,j)]),abs(dcline["pmax"]))
+        end
+        if dcline["pmax"] > 0
+            pmaxf[(i,j)]=>dclines[bp_line[(i,j)]]["pmax"]
+            pmaxt[(i,j)]=>max(abs(pmaxf[(i,j)]),abs(dcline["pmin"]))
+        else
+            pmaxt[(i,j)]=>dclines[bp_line[(i,j)]]["pmax"]
+            pmaxf[(i,j)]=>max(abs(pmaxt[(i,j)]),abs(dcline["pmin"]))
+        end
     end
 
     buspairs_dc = Dict([((i,j), Dict(
         "line"=>bp_line[(i,j)],
-        "pmin"=>dclines[bp_line[(i,j)]]["pmin"],
-        "pmax"=>dclines[bp_line[(i,j)]]["pmax"],
+        "pmint"=>pmint[(i,j)],
+        "pmaxt"=>pmaxt[(i,j)],
+        "pminf"=>pminf[(i,j)],
+        "pmaxf"=>pmaxf[(i,j)],
         "qminf"=>dclines[bp_line[(i,j)]]["qminf"],
         "qmaxf"=>dclines[bp_line[(i,j)]]["qmaxf"],
         "qmint"=>dclines[bp_line[(i,j)]]["qmint"],
