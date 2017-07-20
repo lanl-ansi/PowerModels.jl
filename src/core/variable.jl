@@ -86,6 +86,7 @@ function variable_line_flow(pm::GenericPowerModel; kwargs...)
     variable_reactive_line_flow(pm; kwargs...)
 end
 
+
 "variable: `p[l,i,j]` for `(l,i,j)` in `arcs`"
 function variable_active_line_flow(pm::GenericPowerModel; bounded = true)
     if bounded
@@ -105,6 +106,40 @@ function variable_reactive_line_flow(pm::GenericPowerModel; bounded = true)
     end
     return q
 end
+
+############## DC Lines ############################################
+function variable_line_flow_dc(pm::GenericPowerModel; kwargs...)
+    variable_active_line_flow_dc(pm; kwargs...)
+    variable_reactive_line_flow_dc(pm; kwargs...)
+end
+
+"variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
+function variable_active_line_flow_dc(pm::GenericPowerModel; bounded = true)
+    if bounded
+        @variable(pm.model, p_dc[(l,i,j) in pm.ref[:arcs_dc]])
+    else
+        #@variable(pm.model, p[(l,i,j) in pm.ref[:arcs]], start = getstart(pm.ref[:branch], l, "p_start"))
+        @variable(pm.model, p_dc[(l,i,j) in pm.ref[:arcs_dc]])
+    end
+    @show pm.ref[:arcs_dc]
+    @show p_dc
+    return p_dc
+end
+
+"variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
+function variable_reactive_line_flow_dc(pm::GenericPowerModel; bounded = true)
+    if bounded
+        @variable(pm.model, q_dc[(l,i,j) in pm.ref[:arcs_dc]])
+        #@constraint(pm.model, pm.ref[:buspairs_dc][i,j]["qmint"] <= q_dc[(l,i,j) in pm.ref[:arcs_to_dc]] <= pm.ref[:buspairs_dc][i,j]["qmaxt"])
+        #@constraint(pm.model, pm.ref[:buspairs_dc][i,j]["qminf"] <= q_dc[(l,i,j) in pm.ref[:arcs_from_dc]] <= pm.ref[:buspairs_dc][i,j]["qmaxf"])
+    else
+        #@variable(pm.model, p[(l,i,j) in pm.ref[:arcs]], start = getstart(pm.ref[:branch], l, "p_start"))
+        @variable(pm.model, q_dc[(l,i,j) in pm.ref[:arcs_dc]])
+    end
+    return q_dc
+end
+
+##################################################################
 
 "generates variables for both `active` and `reactive` `line_flow_ne`"
 function variable_line_flow_ne(pm::GenericPowerModel; kwargs...)
@@ -136,4 +171,3 @@ function variable_line_ne(pm::GenericPowerModel)
     @variable(pm.model, 0 <= line_ne[l in keys(branches)] <= 1, Int, start = getstart(branches, l, "line_tnep_start", 1.0))
     return line_ne
 end
-

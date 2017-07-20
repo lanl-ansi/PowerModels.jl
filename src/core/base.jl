@@ -185,7 +185,7 @@ function build_ref(data::Dict{String,Any})
     if haskey(ref, :dcline)
         ref[:arcs_from_dc] = [(i,dcline["f_bus"],dcline["t_bus"]) for (i,dcline) in ref[:dcline]]
         ref[:arcs_to_dc]   = [(i,dcline["t_bus"],dcline["f_bus"]) for (i,dcline) in ref[:dcline]]
-        ref[:arcs_dc] = [ref[:arcs_from]; ref[:arcs_to]]
+        ref[:arcs_dc] = [ref[:arcs_from_dc]; ref[:arcs_to_dc]]
     end
 ###################################################
 
@@ -295,28 +295,14 @@ function buspair_parameters_dc(arcs_from_dc, dclines, buses)
         j = dcline["t_bus"]
 
         bp_line[(i,j)] = min(bp_line[(i,j)], l)
-        if dcline["pmin"] > 0
-            pminf[(i,j)]=>dclines[bp_line[(i,j)]]["pmin"]
-            pmint[(i,j)]=>-min(abs(pminf[(i,j)]),abs(dcline["pmax"]))
-        else
-            pmint[(i,j)]=>dclines[bp_line[(i,j)]]["pmin"]
-            pminf[(i,j)]=>-min(abs(pmint[(i,j)]),abs(dcline["pmax"]))
-        end
-        if dcline["pmax"] > 0
-            pmaxf[(i,j)]=>dclines[bp_line[(i,j)]]["pmax"]
-            pmaxt[(i,j)]=>max(abs(pmaxf[(i,j)]),abs(dcline["pmin"]))
-        else
-            pmaxt[(i,j)]=>dclines[bp_line[(i,j)]]["pmax"]
-            pmaxf[(i,j)]=>max(abs(pmaxt[(i,j)]),abs(dcline["pmin"]))
-        end
     end
 
     buspairs_dc = Dict([((i,j), Dict(
         "line"=>bp_line[(i,j)],
-        "pmint"=>pmint[(i,j)],
-        "pmaxt"=>pmaxt[(i,j)],
-        "pminf"=>pminf[(i,j)],
-        "pmaxf"=>pmaxf[(i,j)],
+        "pminf"=>dclines[bp_line[(i,j)]]["pminf"],
+        "pmaxf"=>dclines[bp_line[(i,j)]]["pmaxf"],
+        "pmint"=>dclines[bp_line[(i,j)]]["pmint"],
+        "pmaxt"=>dclines[bp_line[(i,j)]]["pmaxt"],
         "qminf"=>dclines[bp_line[(i,j)]]["qminf"],
         "qmaxf"=>dclines[bp_line[(i,j)]]["qmaxf"],
         "qmint"=>dclines[bp_line[(i,j)]]["qmint"],

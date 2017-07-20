@@ -80,9 +80,11 @@ function constraint_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T},
     q_ne = getindex(pm.model, :q_ne)
     pg = getindex(pm.model, :pg)
     qg = getindex(pm.model, :qg)
+    p_dc = getindex(pm.model, :p_dc)
+    q_dc = getindex(pm.model, :q_dc)
 
-    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*v^2)
-    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*v^2)
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*v^2)
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*v^2)
     return Set([c1, c2])
 end
 
@@ -106,6 +108,40 @@ function constraint_ohms_yt_from{T <: AbstractACPForm}(pm::GenericPowerModel{T},
     c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*v_fr^2 - (-b*tr-g*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-g*tr+b*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
     return Set([c1, c2])
 end
+
+"""
+Creates Ohms constraints for DC Lines (yt post fix indicates that Y and T values are in rectangular form)
+
+```
+p_fr + p_to == loss0 + loss1 * p_fr
+```
+"""
+function constraint_ohms_yt_dc{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, br_status, loss0, loss1)
+    p_fr = getindex(pm.model, :p_dc)[f_idx]
+    p_to = getindex(pm.model, :p_dc)[t_idx]
+
+    c1 = @constraint(pm.model, p_fr + p_to == loss0 + loss1 .* p_fr)
+    return Set([c1])
+end
+
+"""
+Creates Voltage constraints for DC Lines (AC bus seen as PV node)
+
+```
+if br_status = 1: v_f == vf
+if br_status = 1: v_t == vt
+```
+"""
+function constraint_voltage_dc{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, br_status, vf, vt)
+    v_f = getindex(pm.model, :v)[f_bus]
+    v_t = getindex(pm.model, :v)[t_bus]
+
+    c1 = @constraint(pm.model, br_status * v_f == br_status * vf)
+    c2 = @constraint(pm.model, br_status * v_t == br_status * vt)
+
+    return Set([c1,c2])
+end
+
 
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)

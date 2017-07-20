@@ -494,6 +494,21 @@ function parse_matpower_data(data_string::String)
             dclines = []
 
             for (i, dcline_row) in enumerate(parsed_matrix["data"])
+                if parse(Float64, dcline_row[10]) > 0
+                    pminf = parse(Float64, dcline_row[10])
+                    pmint = -min(abs(parse(Float64, dcline_row[10])),abs(parse(Float64, dcline_row[11])))
+                else
+                    pmint = parse(Float64, dcline_row[10])
+                    pminf = -min(abs(parse(Float64, dcline_row[10])),abs(parse(Float64, dcline_row[11])))
+                end
+                if parse(Float64, dcline_row[11]) > 0
+                    pmaxf = parse(Float64, dcline_row[11])
+                    pmaxt = max(abs(parse(Float64, dcline_row[11])),abs(parse(Float64, dcline_row[10])))
+                else
+                    pmaxt = parse(Float64, dcline_row[11])
+                    pmaxf = max(abs(parse(Float64, dcline_row[11])),abs(parse(Float64, dcline_row[10])))
+                end
+
                 dcline_data = Dict{String,Any}(
                     "index" => i,
                     "f_bus" => parse(Int, dcline_row[1]),
@@ -505,7 +520,10 @@ function parse_matpower_data(data_string::String)
                     "qt" => parse(Float64, dcline_row[7]),
                     "vf" => parse(Float64, dcline_row[8]),
                     "vt" => parse(Float64, dcline_row[9]),
-                    "pmin" => parse(Float64, dcline_row[10]),
+                    "pmint" => pmint,
+                    "pminf" => pminf,
+                    "pmaxt" => pmaxt,
+                    "pmaxf" => pmaxf,
                     "pmax" => parse(Float64, dcline_row[11]),
                     "qminf" => parse(Float64, dcline_row[12]),
                     "qmaxf" => parse(Float64, dcline_row[13]),

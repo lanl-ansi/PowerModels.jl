@@ -1,9 +1,9 @@
 #
 # Constraint Template Definitions
-# Constraint templates help simplify data wrangling across multiple Power 
+# Constraint templates help simplify data wrangling across multiple Power
 # Flow formulations by providing an abstraction layer between the network data
-# and network constraint definitions.  The constraint template's job is to 
-# extract the required parameters from a given network data structure and 
+# and network constraint definitions.  The constraint template's job is to
+# extract the required parameters from a given network data structure and
 # pass the data as named arguments to the Power Flow formulations.
 #
 # Constraint templates should always be defined over "GenericPowerModel"
@@ -56,7 +56,7 @@ function constraint_kcl_shunt_ne(pm::GenericPowerModel, bus)
     return constraint_kcl_shunt_ne(pm, i, bus_arcs, bus_arcs_ne, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
 end
 
-### Branch - Ohm's Law Constraints ### 
+### Branch - Ohm's Law Constraints ###
 
 ""
 function constraint_ohms_yt_from(pm::GenericPowerModel, branch)
@@ -73,6 +73,38 @@ function constraint_ohms_yt_from(pm::GenericPowerModel, branch)
 
     return constraint_ohms_yt_from(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
 end
+
+### Branch - Loss Constraints DC LINES###
+
+""
+function constraint_ohms_yt_dc(pm::GenericPowerModel, dcline)
+    i = dcline["index"]
+    f_bus = dcline["f_bus"]
+    t_bus = dcline["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+    br_status = dcline["br_status"]
+    loss0 = dcline["loss0"]
+    loss1 = dcline["loss1"]
+
+    return constraint_ohms_yt_dc(pm, f_bus, t_bus, f_idx, t_idx, br_status, loss0, loss1)
+end
+
+
+### Branch - Voltage Constraints DC LINES###
+
+""
+function constraint_voltage_dc(pm::GenericPowerModel, dcline)
+    i = dcline["index"]
+    f_bus = dcline["f_bus"]
+    t_bus = dcline["t_bus"]
+    br_status = dcline["br_status"]
+    vt = dcline["vf"]
+    vf = dcline["vt"]
+
+    return constraint_voltage_dc(pm, f_bus, t_bus, br_status, vf, vt)
+end
+
 
 ""
 function constraint_ohms_yt_to(pm::GenericPowerModel, branch)
@@ -122,7 +154,7 @@ function constraint_ohms_y_to(pm::GenericPowerModel, branch)
     return constraint_ohms_y_to(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
 end
 
-### Branch - On/Off Ohm's Law Constraints ### 
+### Branch - On/Off Ohm's Law Constraints ###
 
 ""
 function constraint_ohms_yt_from_on_off(pm::GenericPowerModel, branch)
@@ -135,7 +167,7 @@ function constraint_ohms_yt_from_on_off(pm::GenericPowerModel, branch)
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tm = branch["tap"]^2 
+    tm = branch["tap"]^2
 
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
@@ -154,7 +186,7 @@ function constraint_ohms_yt_to_on_off(pm::GenericPowerModel, branch)
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tm = branch["tap"]^2 
+    tm = branch["tap"]^2
 
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
@@ -192,7 +224,7 @@ function constraint_ohms_yt_to_ne(pm::GenericPowerModel, branch)
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tm = branch["tap"]^2 
+    tm = branch["tap"]^2
 
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
@@ -200,7 +232,7 @@ function constraint_ohms_yt_to_ne(pm::GenericPowerModel, branch)
     return constraint_ohms_yt_to_ne(pm, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
 end
 
-### Branch - Current ### 
+### Branch - Current ###
 
 ""
 function constraint_power_magnitude_sqr(pm::GenericPowerModel, branch)
@@ -226,12 +258,12 @@ function constraint_power_magnitude_link(pm::GenericPowerModel, branch)
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tm = branch["tap"]^2 
+    tm = branch["tap"]^2
 
     return constraint_power_magnitude_link(pm, f_bus, t_bus, f_idx, g, b, c, tr, ti, tm)
 end
 
-### Branch - Thermal Limit Constraints ### 
+### Branch - Thermal Limit Constraints ###
 
 ""
 function constraint_thermal_limit_from(pm::GenericPowerModel, branch; scale = 1.0)
@@ -241,6 +273,28 @@ function constraint_thermal_limit_from(pm::GenericPowerModel, branch; scale = 1.
     f_idx = (i, f_bus, t_bus)
 
     return constraint_thermal_limit_from(pm, f_idx, branch["rate_a"]*scale)
+end
+
+### Branch - Thermal Limit Constraints DC LINES###
+
+""
+function constraint_thermal_limit_dc(pm::GenericPowerModel, dcline; scale = 1.0)
+    i = dcline["index"]
+    f_bus = dcline["f_bus"]
+    t_bus = dcline["t_bus"]
+    br_status = dcline["br_status"]
+    pmaxf = dcline["pmaxf"]
+    pmaxt = dcline["pmaxt"]
+    pminf = dcline["pminf"]
+    pmint = dcline["pmint"]
+    qmaxf = dcline["qmaxf"]
+    qmaxt = dcline["qmaxt"]
+    qminf = dcline["qminf"]
+    qmint = dcline["qmint"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    return constraint_thermal_limit_dc(pm, f_idx, t_idx, f_bus, t_bus, br_status, pmaxf*scale, pmaxt*scale, pminf*scale, pmint*scale, qmaxf*scale, qmaxt*scale, qminf*scale, qmint*scale)
 end
 
 ""
@@ -293,7 +347,7 @@ function constraint_thermal_limit_to_ne(pm::GenericPowerModel, branch)
     return constraint_thermal_limit_to_ne(pm, i, t_idx, branch["rate_a"])
 end
 
-### Branch - Phase Angle Difference Constraints ### 
+### Branch - Phase Angle Difference Constraints ###
 
 ""
 function constraint_phase_angle_difference(pm::GenericPowerModel, branch)
@@ -333,7 +387,7 @@ function constraint_phase_angle_difference_ne(pm::GenericPowerModel, branch)
     return constraint_phase_angle_difference_ne(pm, i, f_bus, t_bus, branch["angmin"], branch["angmax"], t_min, t_max)
 end
 
-### Branch - Loss Constraints ### 
+### Branch - Loss Constraints ###
 
 ""
 function constraint_loss_lb(pm::GenericPowerModel, branch)

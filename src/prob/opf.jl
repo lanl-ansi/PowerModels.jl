@@ -12,7 +12,7 @@ end
 
 ""
 function run_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_opf; kwargs...) 
+    return run_generic_model(file, model_constructor, solver, post_opf; kwargs...)
 end
 
 ""
@@ -20,6 +20,7 @@ function post_opf(pm::GenericPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_line_flow(pm)
+    variable_line_flow_dc(pm)
 
     objective_min_fuel_cost(pm)
 
@@ -38,5 +39,10 @@ function post_opf(pm::GenericPowerModel)
 
         constraint_thermal_limit_from(pm, branch)
         constraint_thermal_limit_to(pm, branch)
+    end
+    for (i,dcline) in pm.ref[:dcline]
+        constraint_ohms_yt_dc(pm, dcline)
+        constraint_thermal_limit_dc(pm, dcline)
+        constraint_voltage_dc(pm, dcline)
     end
 end

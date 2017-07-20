@@ -12,7 +12,7 @@ end
 
 ""
 function run_pf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_pf; kwargs...) 
+    return run_generic_model(file, model_constructor, solver, post_pf; kwargs...)
 end
 
 ""
@@ -20,6 +20,7 @@ function post_pf(pm::GenericPowerModel)
     variable_voltage(pm, bounded = false)
     variable_generation(pm, bounded = false)
     variable_line_flow(pm, bounded = false)
+    variable_line_flow_dc(pm, bounded = false)
 
     constraint_theta_ref(pm)
     constraint_voltage_magnitude_setpoint(pm, pm.ref[:bus][pm.ref[:ref_bus]])

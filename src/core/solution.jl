@@ -98,6 +98,10 @@ function add_branch_status_setpoint(sol, pm::GenericPowerModel)
   add_setpoint(sol, pm, "branch", "index", "br_status", :line_z; default_value = (item) -> 1)
 end
 
+function add_branch_status_setpoint_dc(sol, pm::GenericPowerModel)
+  add_setpoint(sol, pm, "dcline", "index", "br_status", :line_z; default_value = (item) -> 1)
+end
+
 ""
 function add_branch_ne_setpoint(sol, pm::GenericPowerModel)
   add_setpoint(sol, pm, "ne_branch", "index", "built", :line_ne; default_value = (item) -> 1)
