@@ -387,8 +387,8 @@ function constraint_ohms_yt_from{T <: AbstractACRForm}(pm::GenericPowerModel{T},
     vi_fr = getindex(pm.model, :vi)[f_bus]
     vi_to = getindex(pm.model, :vi)[t_bus]
 
-    c1 = @constraint(pm.model, p_fr == g/tm*(vr_fr^2 + vi_fr^2) + (-g*tr+b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr-g*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
-    c2 = @constraint(pm.model, q_fr == -(b+c/2)/tm*(vr_fr^2 + vi_fr^2) - (-b*tr-g*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr+b*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
+    c1 = @NLconstraint(pm.model, p_fr == g/tm*(vr_fr^2 + vi_fr^2) + (-g*tr+b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr-g*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
+    c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*(vr_fr^2 + vi_fr^2) - (-b*tr-g*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr+b*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
     return Set([c1, c2])
 end
 
@@ -403,8 +403,8 @@ function constraint_ohms_yt_to{T <: AbstractACRForm}(pm::GenericPowerModel{T}, f
     vi_fr = getindex(pm.model, :vi)[f_bus]
     vi_to = getindex(pm.model, :vi)[t_bus]
 
-    c1 = @constraint(pm.model, p_to == g*(vr_to^2 + vi_to^2) + (-g*tr-b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr+g*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
-    c2 = @constraint(pm.model, q_to == -(b+c/2)*(vr_to^2 + vi_to^2) - (-b*tr+g*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr-b*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
+    c1 = @NLconstraint(pm.model, p_to == g*(vr_to^2 + vi_to^2) + (-g*tr-b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr+g*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
+    c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*(vr_to^2 + vi_to^2) - (-b*tr+g*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr-b*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
     return Set([c1, c2])
 end
 
@@ -418,8 +418,9 @@ function constraint_phase_angle_difference{T <: AbstractACRForm}(pm::GenericPowe
     vi_fr = getindex(pm.model, :vi)[f_bus]
     vi_to = getindex(pm.model, :vi)[t_bus]
 
-    c1 = @constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) <= angmax*(vr_fr*vr_to + vi_fr*vi_to))
-    c2 = @constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= angmin*(vr_fr*vr_to + vi_fr*vi_to))
+    c1 = @NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) <= angmax*(vr_fr*vr_to + vi_fr*vi_to))
+    c2 = @NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= angmin*(vr_fr*vr_to + vi_fr*vi_to))
+
     return Set([c1, c2])
 end
 
