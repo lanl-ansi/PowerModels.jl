@@ -141,8 +141,8 @@ function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowe
     wr   = WR[w_fr_index, w_to_index]
     wi   = WI[w_fr_index, w_to_index]
 
-    c1 = @constraint(pm.model, wi <= angmax*wr)
-    c2 = @constraint(pm.model, wi >= angmin*wr)
+    c1 = @constraint(pm.model, wi <= tan(angmax)*wr)
+    c2 = @constraint(pm.model, wi >= tan(angmin)*wr)
 
     c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 
