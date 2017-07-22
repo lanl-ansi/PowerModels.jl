@@ -194,8 +194,8 @@ function constraint_phase_angle_difference{T <: AbstractWRForm}(pm::GenericPower
     wr = getindex(pm.model, :wr)[(f_bus, t_bus)]
     wi = getindex(pm.model, :wi)[(f_bus, t_bus)]
 
-    c1 = @constraint(pm.model, wi <= angmax*wr)
-    c2 = @constraint(pm.model, wi >= angmin*wr)
+    c1 = @constraint(pm.model, wi <= tan(angmax)*wr)
+    c2 = @constraint(pm.model, wi >= tan(angmin)*wr)
     c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 
     return Set([c1, c2, c3])
@@ -423,8 +423,8 @@ function constraint_phase_angle_difference_on_off{T <: AbstractWRForm}(pm::Gener
     wr = getindex(pm.model, :wr)[i]
     wi = getindex(pm.model, :wi)[i]
 
-    c1 = @constraint(pm.model, wi <= angmax*wr)
-    c2 = @constraint(pm.model, wi >= angmin*wr)
+    c1 = @constraint(pm.model, wi <= tan(angmax)*wr)
+    c2 = @constraint(pm.model, wi >= tan(angmin)*wr)
     return Set([c1, c2])
 end
 
@@ -433,8 +433,8 @@ function constraint_phase_angle_difference_ne{T <: AbstractWRForm}(pm::GenericPo
     wr = getindex(pm.model, :wr_ne)[i]
     wi = getindex(pm.model, :wi_ne)[i]
 
-    c1 = @constraint(pm.model, wi <= angmax*wr)
-    c2 = @constraint(pm.model, wi >= angmin*wr)
+    c1 = @constraint(pm.model, wi <= tan(angmax)*wr)
+    c2 = @constraint(pm.model, wi >= tan(angmin)*wr)
     return Set([c1, c2])
 end
 
@@ -645,8 +645,8 @@ function constraint_phase_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, ang
     wr = getindex(pm.model, :wr)[(f_bus, t_bus)]
     wi = getindex(pm.model, :wi)[(f_bus, t_bus)]
 
-    c1 = @constraint(pm.model, wi <= angmax*wr)
-    c2 = @constraint(pm.model, wi >= angmin*wr)
+    c1 = @constraint(pm.model, wi <= tan(angmax)*wr)
+    c2 = @constraint(pm.model, wi >= tan(angmin)*wr)
 
     c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 
