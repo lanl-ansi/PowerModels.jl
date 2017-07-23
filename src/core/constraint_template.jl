@@ -29,6 +29,13 @@ function constraint_theta_ref(pm::GenericPowerModel, bus)
     return constraint_theta_ref(pm, bus["index"])
 end
 
+"deprecated in favor of explicit bus-based reference"
+function constraint_theta_ref(pm::GenericPowerModel)
+    (i,bus) = first(pm.ref[:ref_buses])
+    Base.depwarn("constraint_theta_ref(pm) without an explicit bus object is deprecated use constraint_theta_ref(pm, bus) instead; using bus $(i) of $(length(pm.ref[:ref_buses])) specified reference buses", :constraint_theta_ref)
+    return constraint_theta_ref(pm, bus["index"])
+end
+
 ""
 function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, bus; epsilon = 0.0)
     @assert epsilon >= 0.0
