@@ -115,7 +115,7 @@ end
         result = run_opf("../test/data/case24.m", SOCWRPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 70831.9; atol = 1e0)
+        @test isapprox(result["objective"], 70690.7; atol = 1e0)
     end
 end
 
@@ -145,7 +145,7 @@ end
         result = run_opf("../test/data/case24.m", QCWRPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 76934.8; atol = 1e0)
+        @test isapprox(result["objective"], 76599.9; atol = 1e0)
     end
 end
 
