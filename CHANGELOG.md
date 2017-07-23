@@ -4,8 +4,9 @@ PowerModels.jl Change Log
 ### Staged
 - Added support for QC-OTS
 - Added support for multiple refrence buses
-- Fixed dcline parsing bug
+- Fixed bug in constants for w-space phase angle difference constraints
 - Fixed bug when no refrence bus was specified
+- Fixed dcline parsing bug
 
 ### v0.3.3
 - Added JuMP v0.17 compatibility
