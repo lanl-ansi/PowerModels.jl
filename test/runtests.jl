@@ -17,8 +17,7 @@ end
 using Base.Test
 
 # default setup for solvers
-# tol=1e-7 needed for ACRPowerModel formulation, tol=1e-6 causes an error on some cases
-ipopt_solver = IpoptSolver(tol=1e-7, print_level=0)
+ipopt_solver = IpoptSolver(tol=1e-6, print_level=0)
 pajarito_solver = PajaritoSolver(mip_solver=GLPKSolverMIP(), cont_solver=ipopt_solver, log_level=0)
 scs_solver = SCSSolver(max_iters=1000000, verbose=0)
 
