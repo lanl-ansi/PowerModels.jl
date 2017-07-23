@@ -31,25 +31,20 @@ end
 
 
 @testset "test ac rect opf" begin
-    # tol=1e-7 needed for ACRPowerModel formulation, tol=1e-6 causes an error on case5_asym and case24.m
-    # seems to the phase angle difference constraint and a weak linear solver
-    # https://list.coin-or.org/pipermail/ipopt/2012-June/002947.html
-    ipopt_solver_ac_rect = IpoptSolver(tol=1e-7, print_level=0)
-
     @testset "3-bus case" begin
-        result = run_opf("../test/data/case3.m", ACRPowerModel, ipopt_solver_ac_rect)
+        result = run_opf("../test/data/case3.m", ACRPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5812; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
-        result = run_opf("../test/data/case5_asym.m", ACRPowerModel, ipopt_solver_ac_rect)
+        result = run_opf("../test/data/case5_asym.m", ACRPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17551; atol = 1e0)
     end
     @testset "6-bus case" begin
-        result = run_opf("../test/data/case6.m", ACRPowerModel, ipopt_solver_ac_rect)
+        result = run_opf("../test/data/case6.m", ACRPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11567; atol = 1e0)
@@ -57,7 +52,7 @@ end
         @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4) 
     end
     @testset "24-bus rts case" begin
-        result = run_opf("../test/data/case24.m", ACRPowerModel, ipopt_solver_ac_rect)
+        result = run_opf("../test/data/case24.m", ACRPowerModel, ipopt_solver)
 
         # note the model above shows this case is not infeasible, but this formulation has an issue
         @test result["status"] == :LocalInfeasible
