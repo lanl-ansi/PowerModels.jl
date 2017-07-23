@@ -14,6 +14,10 @@ function parse_matpower(file_string::String)
     merge_bus_name_data(mp_data)
     merge_generator_cost_data(mp_data)
 
+    if length(mp_data["dcline"]) > 0
+        warn("this cases includes $(length(mp_data["dcline"])) dc lines, which are not currently supported by PowerModels problem formulations")
+    end
+
     # after this call, Matpower data is consistent with PowerModels data
     mp_data_to_pm_data(mp_data)
 
@@ -515,16 +519,18 @@ function parse_matpower_data(data_string::String)
                     "loss1" => parse(Float64, dcline_row[17]),
                 )
                 if length(dcline_row) > 17
-                    branch_data["mu_pmin"] = parse(Float64, dcline_row[18])
-                    branch_data["mu_pmax"] = parse(Float64, dcline_row[19])
-                    branch_data["mu_qminf"] = parse(Float64, dcline_row[20])
-                    branch_data["mu_qmaxf"] = parse(Float64, dcline_row[21])
-                    branch_data["mu_qmint"] = parse(Float64, dcline_row[22])
-                    branch_data["mu_qmaxt"] = parse(Float64, dcline_row[23])
+                    dcline_data["mu_pmin"] = parse(Float64, dcline_row[18])
+                    dcline_data["mu_pmax"] = parse(Float64, dcline_row[19])
+                    dcline_data["mu_qminf"] = parse(Float64, dcline_row[20])
+                    dcline_data["mu_qmaxf"] = parse(Float64, dcline_row[21])
+                    dcline_data["mu_qmint"] = parse(Float64, dcline_row[22])
+                    dcline_data["mu_qmaxt"] = parse(Float64, dcline_row[23])
                 end
 
                 push!(dclines, dcline_data)
             end
+
+            case["dcline"] = dclines
 
         else
             name = parsed_matrix["name"]

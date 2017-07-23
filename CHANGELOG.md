@@ -6,6 +6,7 @@ PowerModels.jl Change Log
 - Added support for multiple refrence buses
 - Fixed bug in constants for w-space phase angle difference constraints
 - Fixed bug when no refrence bus was specified
+- Fixed dcline parsing bug
 
 ### v0.3.3
 - Added JuMP v0.17 compatibility

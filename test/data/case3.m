@@ -1,6 +1,6 @@
 % Case to test adding data to matpower file
-% based on NESTA v0.6.0
-function mpc = nesta_case3_lmbd
+% based on nesta_case3_lmbd from NESTA v0.6.0
+function mpc = case3
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 
@@ -28,6 +28,9 @@ mpc.branch = [
 	1	 2	 0.042	 0.9	 0.3	 9000.0	 0.0	 0.0	 0.0	 0.0	 1	 -30.0	 30.0;
 ];
 
+mpc.dcline = [
+	10	 20	 1	 0	 0	 0	 0	 1	 1	 0	 inf -inf inf -inf inf	 0	 0	 0	 0	 0	 0	 0	 0
+]
 
 % matpower data format extentions
 
