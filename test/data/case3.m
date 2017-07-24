@@ -29,7 +29,7 @@ mpc.branch = [
 ];
 
 mpc.dcline = [
-	10	 20	 1	 0	 0	 0	 0	 1	 1	 0	 inf -inf inf -inf inf	 0	 0	 0	 0	 0	 0	 0	 0
+	1	 2	 0	 0	 0	 0	 0	 1	 1	 0	 inf -900 900 -900 900	 0	 0	 0	 0	 0	 0	 0	 0
 ]
 
 % matpower data format extentions
@@ -83,7 +83,3 @@ mpc.branch_names = {
 	'Branch 2'	456;
 	'Branch 3'	789;
 };
-
-
-
-

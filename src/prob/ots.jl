@@ -8,7 +8,7 @@ export run_ots
 
 ""
 function run_ots(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_ots; solution_builder = get_ots_solution, kwargs...) 
+    return run_generic_model(file, model_constructor, solver, post_ots; solution_builder = get_ots_solution, kwargs...)
 end
 
 ""
@@ -17,6 +17,8 @@ function post_ots(pm::GenericPowerModel)
     variable_voltage_on_off(pm)
     variable_generation(pm)
     variable_line_flow(pm)
+    variable_line_flow_dc(pm)
+
 
     objective_min_fuel_cost(pm)
 
@@ -38,6 +40,10 @@ function post_ots(pm::GenericPowerModel)
 
         constraint_thermal_limit_from_on_off(pm, branch)
         constraint_thermal_limit_to_on_off(pm, branch)
+    end
+
+    for (i,dcline) in pm.ref[:dcline]
+        constraint_ohms_yt_dc(pm, dcline)
     end
 end
 

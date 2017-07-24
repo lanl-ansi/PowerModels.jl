@@ -136,51 +136,54 @@ end
 
 "variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
 function variable_active_line_flow_dc(pm::GenericPowerModel; bounded = true)
+  pmin = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  pref = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  pmax = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  loss0 = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  br_status = Dict([(a, 0) for a in pm.ref[:arcs_dc]])
+  for (l,i,j) in pm.ref[:arcs_from_dc]
+      pmin[(l,i,j)] =  pm.ref[:dcline][l]["pminf"]
+      pmax[(l,i,j)] =  pm.ref[:dcline][l]["pmaxf"]
+      pmin[(l,j,i)] =  pm.ref[:dcline][l]["pmint"]
+      pmax[(l,j,i)] =  pm.ref[:dcline][l]["pmaxt"]
+      pref[(l,i,j)] =  pm.ref[:dcline][l]["pf"]
+      pref[(l,j,i)] =  pm.ref[:dcline][l]["pt"]
+      loss0[(l,i,j)] =  0
+      loss0[(l,j,i)] =  pm.ref[:dcline][l]["loss0"]
+      br_status[(l,i,j)] =  pm.ref[:dcline][l]["br_status"]
+      br_status[(l,j,i)] =  pm.ref[:dcline][l]["br_status"]
+  end
     if bounded
-        pmin = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
-        pref = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
-        pmax = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
-        loss0 = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
-        br_status = Dict([(a, 0) for a in pm.ref[:arcs_dc]])
-        for (l,i,j) in pm.ref[:arcs_from_dc]
-            pmin[(l,i,j)] =  pm.ref[:dcline][l]["pminf"]
-            pmax[(l,i,j)] =  pm.ref[:dcline][l]["pmaxf"]
-            pmin[(l,j,i)] =  pm.ref[:dcline][l]["pmint"]
-            pmax[(l,j,i)] =  pm.ref[:dcline][l]["pmaxt"]
-            pref[(l,i,j)] =  pm.ref[:dcline][l]["pf"]
-            pref[(l,j,i)] =  pm.ref[:dcline][l]["pt"]
-            loss0[(l,i,j)] =  0
-            loss0[(l,j,i)] =  pm.ref[:dcline][l]["loss0"]
-            br_status[(l,i,j)] =  pm.ref[:dcline][l]["br_status"]
-            br_status[(l,j,i)] =  pm.ref[:dcline][l]["br_status"]
-        end
         @variable(pm.model, br_status[(l,i,j)] * (pmin[(l,i,j)] + (loss0[(l,i,j)])) <= p_dc[(l,i,j) in pm.ref[:arcs_dc]] <= br_status[(l,i,j)] * (pmax[(l,i,j)] + (loss0[(l,i,j)])), start = pref[(l,i,j)])
     else
-        @variable(pm.model, p_dc[(l,i,j) in pm.ref[:arcs_dc]], start = 0)
+        M = 5;
+        @variable(pm.model, M*br_status[(l,i,j)] * (pmin[(l,i,j)] + (loss0[(l,i,j)])) <= p_dc[(l,i,j) in pm.ref[:arcs_dc]] <= M*br_status[(l,i,j)] * (pmax[(l,i,j)] + (loss0[(l,i,j)])), start = pref[(l,i,j)])
     end
     return p_dc
 end
 
 "variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
 function variable_reactive_line_flow_dc(pm::GenericPowerModel; bounded = true)
+  qmin = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  qref = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  qmax = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  br_status = Dict([(a, 0) for a in pm.ref[:arcs_dc]])
+  for (l,i,j) in pm.ref[:arcs_from_dc]
+      qmin[(l,i,j)] =  pm.ref[:dcline][l]["qminf"]
+      qmax[(l,i,j)] =  pm.ref[:dcline][l]["qmaxf"]
+      qmin[(l,j,i)] =  pm.ref[:dcline][l]["qmint"]
+      qmax[(l,j,i)] =  pm.ref[:dcline][l]["qmaxt"]
+      qref[(l,i,j)] =  pm.ref[:dcline][l]["qf"]
+      qref[(l,j,i)] =  pm.ref[:dcline][l]["qt"]
+      br_status[(l,i,j)] =  pm.ref[:dcline][l]["br_status"]
+      br_status[(l,j,i)] =  pm.ref[:dcline][l]["br_status"]
+  end
     if bounded
-        qmin = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
-        qref = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
-        qmax = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
-        br_status = Dict([(a, 0) for a in pm.ref[:arcs_dc]])
-        for (l,i,j) in pm.ref[:arcs_from_dc]
-            qmin[(l,i,j)] =  pm.ref[:dcline][l]["qminf"]
-            qmax[(l,i,j)] =  pm.ref[:dcline][l]["qmaxf"]
-            qmin[(l,j,i)] =  pm.ref[:dcline][l]["qmint"]
-            qmax[(l,j,i)] =  pm.ref[:dcline][l]["qmaxt"]
-            qref[(l,i,j)] =  pm.ref[:dcline][l]["qf"]
-            qref[(l,j,i)] =  pm.ref[:dcline][l]["qt"]
-            br_status[(l,i,j)] =  pm.ref[:dcline][l]["br_status"]
-            br_status[(l,j,i)] =  pm.ref[:dcline][l]["br_status"]
-        end
-        @variable(pm.model, br_status[(l,i,j)] * qmin[(l,i,j)] <= q_dc[(l,i,j) in pm.ref[:arcs_dc]] <= br_status[(l,i,j)] * qmax[(l,i,j)], start = qref[(l,i,j)])
+
+      @variable(pm.model, br_status[(l,i,j)] * qmin[(l,i,j)] <= q_dc[(l,i,j) in pm.ref[:arcs_dc]] <= br_status[(l,i,j)] * qmax[(l,i,j)], start = qref[(l,i,j)])
     else
-        @variable(pm.model, q_dc[(l,i,j) in pm.ref[:arcs_dc]], start = 0)
+      M = 5;
+      @variable(pm.model, M*br_status[(l,i,j)] * qmin[(l,i,j)] <= q_dc[(l,i,j) in pm.ref[:arcs_dc]] <= M*br_status[(l,i,j)] * qmax[(l,i,j)], start = qref[(l,i,j)])
     end
     return q_dc
 end

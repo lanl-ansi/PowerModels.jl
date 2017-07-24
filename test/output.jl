@@ -12,7 +12,7 @@
         @test haskey(result, "data") == true
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "branch") == false
-        
+
         @test !isnan(result["solve_time"])
 
         @test length(result["solution"]["bus"]) == 24
@@ -33,7 +33,7 @@ end
         @test haskey(result, "data") == true
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "branch") == true
-        
+
         @test length(result["solution"]["bus"]) == 24
         @test length(result["solution"]["gen"]) == 33
         @test length(result["solution"]["branch"]) == 38
@@ -52,7 +52,7 @@ end
 
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "branch") == true
-        
+
         @test length(result["solution"]["bus"]) == 3
         @test length(result["solution"]["gen"]) == 3
         @test length(result["solution"]["branch"]) == 3

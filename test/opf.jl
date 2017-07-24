@@ -19,7 +19,7 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11567; atol = 1e0)
         @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4) 
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
     @testset "24-bus rts case" begin
         result = run_opf("../test/data/case24.m", ACPPowerModel, ipopt_solver)
@@ -49,7 +49,7 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11396; atol = 1e0)
         @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4) 
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
     # TODO verify this is really infeasible
     #@testset "24-bus rts case" begin
@@ -108,7 +108,7 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11567; atol = 1e0)
         @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4) 
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
     @testset "24-bus rts case" begin
         result = run_opf("../test/data/case24.m", QCWRPowerModel, ipopt_solver)
@@ -121,7 +121,7 @@ end
 
 @testset "test sdp opf" begin
     @testset "3-bus case" begin
-        result = run_opf("../test/data/case3.m", SDPWRMPowerModel, scs_solver)
+        result = run_opf("../test/data/case3_dc.m", SDPWRMPowerModel, scs_solver)
 
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 5788.7; atol = 1e0)
@@ -147,7 +147,3 @@ end
     #    @test isapprox(result["objective"], 75153; atol = 1e0)
     #end
 end
-
-
-
-

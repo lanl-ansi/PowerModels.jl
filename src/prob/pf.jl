@@ -49,4 +49,8 @@ function post_pf(pm::GenericPowerModel)
         constraint_ohms_yt_from(pm, branch)
         constraint_ohms_yt_to(pm, branch)
     end
+
+    for (i,dcline) in pm.ref[:dcline]
+        constraint_ohms_yt_dc(pm, dcline)
+    end
 end
