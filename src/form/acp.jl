@@ -31,7 +31,7 @@ constraint_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}) = Set()
 constraint_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}) = nothing
 
 "`t[ref_bus] == 0`"
-constraint_theta_ref{T <: AbstractACPForm}(pm::GenericPowerModel{T}, ref_bus) =
+constraint_theta_ref{T <: AbstractACPForm}(pm::GenericPowerModel{T}, ref_bus::Int) =
     Set([@constraint(pm.model, getindex(pm.model, :t)[ref_bus] == 0)])
 
 "`vm - epsilon <= v[i] <= vm + epsilon`"

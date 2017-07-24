@@ -22,15 +22,18 @@ function post_pf(pm::GenericPowerModel)
     variable_line_flow(pm, bounded = false)
     variable_line_flow_dc(pm, bounded = false)
 
-    constraint_theta_ref(pm)
-    constraint_voltage_magnitude_setpoint(pm, pm.ref[:bus][pm.ref[:ref_bus]])
     constraint_voltage(pm)
+
+    for (i,bus) in pm.ref[:ref_buses]
+        constraint_theta_ref(pm, bus)
+        constraint_voltage_magnitude_setpoint(pm, bus)
+    end
 
     for (i,bus) in pm.ref[:bus]
         constraint_kcl_shunt(pm, bus)
 
         # PV Bus Constraints
-        if length(pm.ref[:bus_gens][i]) > 0 && i != pm.ref[:ref_bus]
+        if length(pm.ref[:bus_gens][i]) > 0 && !(i in keys(pm.ref[:ref_buses]))
             # this assumes inactive generators are filtered out of bus_gens
             @assert bus["bus_type"] == 2
 

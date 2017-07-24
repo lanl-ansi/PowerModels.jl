@@ -25,8 +25,15 @@ end
 ### Bus - Setpoint Constraints ###
 
 ""
+function constraint_theta_ref(pm::GenericPowerModel, bus)
+    return constraint_theta_ref(pm, bus["index"])
+end
+
+"deprecated in favor of explicit bus-based reference"
 function constraint_theta_ref(pm::GenericPowerModel)
-    return constraint_theta_ref(pm, pm.ref[:ref_bus])
+    (i,bus) = first(pm.ref[:ref_buses])
+    Base.depwarn("constraint_theta_ref(pm) without an explicit bus object is deprecated use constraint_theta_ref(pm, bus) instead; using bus $(i) of $(length(pm.ref[:ref_buses])) specified reference buses", :constraint_theta_ref)
+    return constraint_theta_ref(pm, bus["index"])
 end
 
 ""
@@ -239,12 +246,23 @@ function constraint_power_magnitude_sqr(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
-    pair = (f_bus, t_bus)
-    f_idx = (i, f_bus, t_bus)
+    arc_from = (i, f_bus, t_bus)
 
     tm = branch["tap"]^2
 
-    return constraint_power_magnitude_sqr(pm, f_bus, t_bus, f_idx, tm)
+    return constraint_power_magnitude_sqr(pm, f_bus, t_bus, arc_from, tm)
+end
+
+""
+function constraint_power_magnitude_sqr_on_off(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    arc_from = (i, f_bus, t_bus)
+
+    tm = branch["tap"]^2
+
+    return constraint_power_magnitude_sqr_on_off(pm, i, f_bus, arc_from, tm)
 end
 
 ""
@@ -252,15 +270,29 @@ function constraint_power_magnitude_link(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
-    pair = (f_bus, t_bus)
-    f_idx = (i, f_bus, t_bus)
+    arc_from = (i, f_bus, t_bus)
 
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
     tm = branch["tap"]^2
 
-    return constraint_power_magnitude_link(pm, f_bus, t_bus, f_idx, g, b, c, tr, ti, tm)
+    return constraint_power_magnitude_link(pm, f_bus, t_bus, arc_from, g, b, c, tr, ti, tm)
+end
+
+""
+function constraint_power_magnitude_link_on_off(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    arc_from = (i, f_bus, t_bus)
+
+    g, b = calc_branch_y(branch)
+    tr, ti = calc_branch_t(branch)
+    c = branch["br_b"]
+    tm = branch["tap"]^2
+
+    return constraint_power_magnitude_link_on_off(pm, i, arc_from, g, b, c, tr, ti, tm)
 end
 
 ### Branch - Thermal Limit Constraints ###

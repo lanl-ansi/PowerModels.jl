@@ -71,7 +71,7 @@ function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
 end
 
 "Do nothing, no way to represent this in these variables"
-constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus) = Set()
+constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus::Int) = Set()
 
 ""
 function constraint_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
@@ -141,8 +141,8 @@ function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowe
     wr   = WR[w_fr_index, w_to_index]
     wi   = WI[w_fr_index, w_to_index]
 
-    c1 = @constraint(pm.model, wi <= angmax*wr)
-    c2 = @constraint(pm.model, wi >= angmin*wr)
+    c1 = @constraint(pm.model, wi <= tan(angmax)*wr)
+    c2 = @constraint(pm.model, wi >= tan(angmin)*wr)
 
     c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 

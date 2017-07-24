@@ -14,6 +14,10 @@ function parse_matpower(file_string::String)
     merge_bus_name_data(mp_data)
     merge_generator_cost_data(mp_data)
 
+    if length(mp_data["dcline"]) > 0
+        warn("this cases includes $(length(mp_data["dcline"])) dc lines, which are not currently supported by PowerModels problem formulations")
+    end
+
     # after this call, Matpower data is consistent with PowerModels data
     mp_data_to_pm_data(mp_data)
 
@@ -543,6 +547,8 @@ function parse_matpower_data(data_string::String)
 
                 push!(dclines, dcline_data)
             end
+            case["dcline"] = dclines
+
             case["dcline"] = dclines
 
         else

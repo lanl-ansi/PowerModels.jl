@@ -201,6 +201,7 @@ function build_ref(data::Dict{String,Any})
     end
     ref[:bus_arcs] = bus_arcs
 
+
 ######################### DC LINES ###################################
     if haskey(ref, :dcline)
         bus_arcs_dc = Dict([(i, []) for (i,bus) in ref[:bus]])
@@ -211,14 +212,28 @@ function build_ref(data::Dict{String,Any})
     end
 #################################################################
 
-    ref_bus = Union{}
+
+    # a set of buses to support multiple connected components
+    ref_buses = Dict()
     for (k,v) in ref[:bus]
         if v["bus_type"] == 3
-            ref_bus = k
-            break
+            ref_buses[k] = v
         end
     end
-    ref[:ref_bus] = ref_bus
+
+    if length(ref_buses) == 0
+        big_gen = biggest_generator(ref[:gen])
+        gen_bus = big_gen["gen_bus"]
+        ref_buses[gen_bus] = ref[:bus][gen_bus]
+        warn("no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
+    end
+
+    if length(ref_buses) > 1
+        warn("multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
+    end
+
+    ref[:ref_buses] = ref_buses
+
 
     ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])
     ############################ DC LINES##########################################
@@ -245,6 +260,22 @@ function build_ref(data::Dict{String,Any})
 
     return ref
 end
+
+
+"find the largest active generator in the network"
+function biggest_generator(gens)
+    biggest_gen = nothing
+    biggest_value = -Inf
+    for (k,gen) in gens
+        if gen["pmax"] > biggest_value
+            biggest_gen = gen
+            biggest_value = gen["pmax"]
+        end
+    end
+    assert(biggest_gen != nothing)
+    return biggest_gen
+end
+
 
 "compute bus pair level structures"
 function buspair_parameters(arcs_from, branches, buses)
