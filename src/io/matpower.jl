@@ -528,7 +528,6 @@ function parse_matpower_data(data_string::String)
                     "pminf" => pminf,
                     "pmaxt" => pmaxt,
                     "pmaxf" => pmaxf,
-                    "pmax" => parse(Float64, dcline_row[11]),
                     "qminf" => parse(Float64, dcline_row[12]),
                     "qmaxf" => parse(Float64, dcline_row[13]),
                     "qmint" => parse(Float64, dcline_row[14]),

@@ -1,4 +1,4 @@
-export 
+export
     ACPPowerModel, StandardACPForm,
     APIACPPowerModel, APIACPForm
 
@@ -12,7 +12,7 @@ export
 const ACPPowerModel = GenericPowerModel{StandardACPForm}
 
 "default AC constructor"
-ACPPowerModel(data::Dict{String,Any}; kwargs...) = 
+ACPPowerModel(data::Dict{String,Any}; kwargs...) =
     GenericPowerModel(data, StandardACPForm; kwargs...)
 
 ""
@@ -50,19 +50,21 @@ end
 
 """
 ```
-sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*v^2
-sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*v^2
+sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*v^2
+sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*v^2
 ```
 """
-function constraint_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     v = getindex(pm.model, :v)[i]
     p = getindex(pm.model, :p)
     q = getindex(pm.model, :q)
     pg = getindex(pm.model, :pg)
     qg = getindex(pm.model, :qg)
+    p_dc = getindex(pm.model, :p_dc)
+    q_dc = getindex(pm.model, :q_dc)
 
-    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*v^2)
-    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*v^2)
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*v^2)
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*v^2)
     return Set([c1, c2])
 end
 
@@ -126,6 +128,21 @@ function constraint_ohms_yt_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f
     c1 = @NLconstraint(pm.model, p_to == g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
     c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
     return Set([c1, c2])
+end
+
+"""
+Creates Ohms constraints for DC Lines (yt post fix indicates that Y and T values are in rectangular form)
+
+```
+(1-loss1) * p_fr + (p_to - loss0 * br_status) == 0
+```
+"""
+function constraint_ohms_yt_dc{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, br_status, loss0, loss1)
+    p_fr = getindex(pm.model, :p_dc)[f_idx]
+    p_to = getindex(pm.model, :p_dc)[t_idx]
+
+    c1 = @constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0 * br_status) == 0)
+    return Set([c1])
 end
 
 """
@@ -330,7 +347,7 @@ variable_load_factor(pm::GenericPowerModel) =
     @variable(pm.model, load_factor >= 1.0, start = 1.0)
 
 "objective: Max. load_factor"
-objective_max_loading(pm::GenericPowerModel) = 
+objective_max_loading(pm::GenericPowerModel) =
     @objective(pm.model, Max, getindex(pm.model, :load_factor))
 
 ""
@@ -368,7 +385,7 @@ end
 ""
 function upperbound_negative_active_generation(pm::APIACPPowerModel)
     for (i,gen) in pm.ref[:gen]
-        if gen["pmax"] <= 0 
+        if gen["pmax"] <= 0
             pg = getindex(pm.model, :pg)[i]
             setupperbound(pg, gen["pmax"])
         end

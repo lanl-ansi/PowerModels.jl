@@ -136,6 +136,11 @@ function make_per_unit(data::Dict{String,Any})
         if haskey(data, "branch")
             append!(branches, values(data["branch"]))
         end
+        dclines =[]
+        if haskey(data, "dcline")
+            append!(dclines, values(data["dcline"]))
+        end
+
         if haskey(data, "ne_branch")
             append!(branches, values(data["ne_branch"]))
         end
@@ -148,6 +153,18 @@ function make_per_unit(data::Dict{String,Any})
             apply_func(branch, "shift", deg2rad)
             apply_func(branch, "angmax", deg2rad)
             apply_func(branch, "angmin", deg2rad)
+        end
+
+        for dcline in dclines
+            apply_func(dcline, "loss0", rescale)
+            apply_func(dcline, "pmaxt", rescale)
+            apply_func(dcline, "pmint", rescale)
+            apply_func(dcline, "pmaxf", rescale)
+            apply_func(dcline, "pminf", rescale)
+            apply_func(dcline, "qmaxt", rescale)
+            apply_func(dcline, "qmint", rescale)
+            apply_func(dcline, "qmaxf", rescale)
+            apply_func(dcline, "qminf", rescale)
         end
 
         if haskey(data, "gen")

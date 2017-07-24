@@ -57,7 +57,7 @@ end
 ""
 function variable_active_line_flow_ne{T <: StandardDCPForm}(pm::GenericPowerModel{T})
     @variable(pm.model, -pm.ref[:ne_branch][l]["rate_a"] <= p_ne[(l,i,j) in pm.ref[:ne_arcs_from]] <= pm.ref[:ne_branch][l]["rate_a"], start = getstart(pm.ref[:ne_branch], l, "p_start"))
- 
+
     p_ne_expr = Dict([((l,i,j), 1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]])
     p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]]))
 
@@ -81,11 +81,12 @@ constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::GenericPowerMode
 constraint_reactive_gen_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, qg) = Set()
 
 ""
-function constraint_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     pg = getindex(pm.model, :pg)
     p_expr = pm.model.ext[:p_expr]
+    p_dc = getindex(pm.model, :p_dc)
 
-    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
+    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
     # omit reactive constraint
     return Set([c])
 end
@@ -129,6 +130,21 @@ function constraint_ohms_yt_from_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{
     c1 = @constraint(pm.model, p_fr <= -b*(t_fr - t_to + t_max*(1-z)) )
     c2 = @constraint(pm.model, p_fr >= -b*(t_fr - t_to + t_min*(1-z)) )
     return Set([c1, c2])
+end
+
+"""
+Creates Ohms constraints for DC Lines (yt post fix indicates that Y and T values are in rectangular form)
+
+```
+p_fr + p_to == loss0 + loss1 * p_fr
+```
+"""
+function constraint_ohms_yt_dc{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, br_status, loss0, loss1)
+    p_fr = getindex(pm.model, :p_dc)[f_idx]
+    p_to = getindex(pm.model, :p_dc)[t_idx]
+
+    c1 = @constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0 * br_status) == 0)
+    return Set([c1])
 end
 
 "Do nothing, this model is symmetric"

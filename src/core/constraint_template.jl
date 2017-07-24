@@ -48,9 +48,10 @@ end
 function constraint_kcl_shunt(pm::GenericPowerModel, bus)
     i = bus["index"]
     bus_arcs = pm.ref[:bus_arcs][i]
+    bus_arcs_dc = pm.ref[:bus_arcs_dc][i]
     bus_gens = pm.ref[:bus_gens][i]
 
-    return constraint_kcl_shunt(pm, i, bus_arcs, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
+    return constraint_kcl_shunt(pm, i, bus_arcs, bus_arcs_dc, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
 end
 
 ""
@@ -96,22 +97,6 @@ function constraint_ohms_yt_dc(pm::GenericPowerModel, dcline)
 
     return constraint_ohms_yt_dc(pm, f_bus, t_bus, f_idx, t_idx, br_status, loss0, loss1)
 end
-
-
-### Branch - Voltage Constraints DC LINES###
-
-""
-function constraint_voltage_dc(pm::GenericPowerModel, dcline)
-    i = dcline["index"]
-    f_bus = dcline["f_bus"]
-    t_bus = dcline["t_bus"]
-    br_status = dcline["br_status"]
-    vt = dcline["vf"]
-    vf = dcline["vt"]
-
-    return constraint_voltage_dc(pm, f_bus, t_bus, br_status, vf, vt)
-end
-
 
 ""
 function constraint_ohms_yt_to(pm::GenericPowerModel, branch)
@@ -305,28 +290,6 @@ function constraint_thermal_limit_from(pm::GenericPowerModel, branch; scale = 1.
     f_idx = (i, f_bus, t_bus)
 
     return constraint_thermal_limit_from(pm, f_idx, branch["rate_a"]*scale)
-end
-
-### Branch - Thermal Limit Constraints DC LINES###
-
-""
-function constraint_thermal_limit_dc(pm::GenericPowerModel, dcline; scale = 1.0)
-    i = dcline["index"]
-    f_bus = dcline["f_bus"]
-    t_bus = dcline["t_bus"]
-    br_status = dcline["br_status"]
-    pmaxf = dcline["pmaxf"]
-    pmaxt = dcline["pmaxt"]
-    pminf = dcline["pminf"]
-    pmint = dcline["pmint"]
-    qmaxf = dcline["qmaxf"]
-    qmaxt = dcline["qmaxt"]
-    qminf = dcline["qminf"]
-    qmint = dcline["qmint"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
-    return constraint_thermal_limit_dc(pm, f_idx, t_idx, f_bus, t_bus, br_status, pmaxf*scale, pmaxt*scale, pminf*scale, pmint*scale, qmaxf*scale, qmaxt*scale, qminf*scale, qmint*scale)
 end
 
 ""

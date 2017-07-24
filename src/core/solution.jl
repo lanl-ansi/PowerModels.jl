@@ -44,6 +44,7 @@ function get_solution(pm::GenericPowerModel)
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
+    add_branch_flow_setpoint_dc(sol, pm)
     return sol
 end
 
@@ -77,6 +78,19 @@ function add_branch_flow_setpoint(sol, pm::GenericPowerModel)
         add_setpoint(sol, pm, "branch", "index", "q_from", :q; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
         add_setpoint(sol, pm, "branch", "index",   "p_to", :p; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
         add_setpoint(sol, pm, "branch", "index",   "q_to", :q; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+    end
+end
+
+""
+function add_branch_flow_setpoint_dc(sol, pm::GenericPowerModel)
+    # check the line flows were requested
+    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
+        mva_base = pm.data["baseMVA"]
+
+        add_setpoint(sol, pm, "dcline", "index", "p_from", :p_dc; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "dcline", "index", "q_from", :q_dc; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "dcline", "index",   "p_to", :p_dc; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint(sol, pm, "dcline", "index",   "q_to", :q_dc; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
     end
 end
 

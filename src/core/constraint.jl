@@ -21,20 +21,6 @@ function constraint_thermal_limit_to(pm::GenericPowerModel, t_idx, rate_a)
     return Set([c])
 end
 
-function constraint_thermal_limit_dc(pm::GenericPowerModel, f_idx, t_idx, f_bus, t_bus, br_status, pmaxf, pmaxt, pminf, pmint, qmaxf, qmaxt, qminf, qmint)
-    p_fr = getindex(pm.model, :p_dc)[f_idx]
-    p_to = getindex(pm.model, :p_dc)[t_idx]
-    q_fr = getindex(pm.model, :q_dc)[f_idx]
-    q_to = getindex(pm.model, :q_dc)[t_idx]
-
-    c1 = @constraint(pm.model, br_status * pminf <= p_fr <= br_status * pmaxf)
-    c2 = @constraint(pm.model, br_status * pmint <= p_to <= br_status * pmaxt)
-    c3 = @constraint(pm.model, br_status * qminf <= q_fr <= br_status * qmaxf)
-    c4 = @constraint(pm.model, br_status * qmint <= q_to <= br_status * qmaxt)
-
-    return Set([c1,c2,c3,c4])
-end
-
 "`norm([p[f_idx]; q[f_idx]]) <= rate_a`"
 function constraint_thermal_limit_from{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, f_idx, rate_a)
     p_fr = getindex(pm.model, :p)[f_idx]
