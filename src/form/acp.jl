@@ -352,19 +352,35 @@ function constraint_voltage{T <: AbstractACRForm}(pm::GenericPowerModel{T}; kwar
         push!(cs, Set([c1, c2]))
     end
 
+    # does not seem to improve convergence
+    #wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
+    #for bp in keys(pm.ref[:buspairs])
+    #    i,j = bp
+    #    c1 = @constraint(pm.model, wr_min[bp] <= vr[i]*vr[j] + vi[i]*vi[j])
+    #    c2 = @constraint(pm.model, wr_max[bp] >= vr[i]*vr[j] + vi[i]*vi[j])
+    #
+    #    c3 = @constraint(pm.model, wi_min[bp] <= vi[i]*vr[j] - vr[i]*vi[j])
+    #    c4 = @constraint(pm.model, wi_max[bp] >= vi[i]*vr[j] - vr[i]*vi[j])
+    #
+    #    push!(cs, Set([c1, c2, c3, c4]))
+    #end
+
     return cs
 end
 
 
-"`t[ref_bus] == 0`"
-constraint_theta_ref{T <: AbstractACRForm}(pm::GenericPowerModel{T}, ref_bus::Int) =
-    Set([@constraint(pm.model, getindex(pm.model, :vi)[ref_bus] == 0)])
+"reference bus angle constraint"
+function constraint_theta_ref{T <: AbstractACRForm}(pm::GenericPowerModel{T}, ref_bus::Int)
+    vi = getindex(pm.model, :vi)
+    c = @constraint(pm.model, vi[ref_bus] == 0)
+    return Set([c])
+end
 
 
 ""
 function constraint_kcl_shunt{T <: AbstractACRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
     vr = getindex(pm.model, :vr)[i]
-    vi = getindex(pm.model, :vr)[i]
+    vi = getindex(pm.model, :vi)[i]
     p = getindex(pm.model, :p)
     q = getindex(pm.model, :q)
     pg = getindex(pm.model, :pg)
@@ -387,7 +403,7 @@ function constraint_ohms_yt_from{T <: AbstractACRForm}(pm::GenericPowerModel{T},
     vi_fr = getindex(pm.model, :vi)[f_bus]
     vi_to = getindex(pm.model, :vi)[t_bus]
 
-    c1 = @NLconstraint(pm.model, p_fr == g/tm*(vr_fr^2 + vi_fr^2) + (-g*tr+b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr-g*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
+    c1 = @NLconstraint(pm.model, p_fr ==        g/tm*(vr_fr^2 + vi_fr^2) + (-g*tr+b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr-g*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
     c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*(vr_fr^2 + vi_fr^2) - (-b*tr-g*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr+b*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
     return Set([c1, c2])
 end
@@ -403,7 +419,7 @@ function constraint_ohms_yt_to{T <: AbstractACRForm}(pm::GenericPowerModel{T}, f
     vi_fr = getindex(pm.model, :vi)[f_bus]
     vi_to = getindex(pm.model, :vi)[t_bus]
 
-    c1 = @NLconstraint(pm.model, p_to == g*(vr_to^2 + vi_to^2) + (-g*tr-b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr+g*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
+    c1 = @NLconstraint(pm.model, p_to ==        g*(vr_to^2 + vi_to^2) + (-g*tr-b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr+g*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
     c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*(vr_to^2 + vi_to^2) - (-b*tr+g*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr-b*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
     return Set([c1, c2])
 end
