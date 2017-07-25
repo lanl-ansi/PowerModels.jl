@@ -494,20 +494,26 @@ function parse_matpower_data(data_string::String)
             dclines = []
 
             for (i, dcline_row) in enumerate(parsed_matrix["data"])
-                if parse(Float64, dcline_row[10]) > 0
-                    pminf = parse(Float64, dcline_row[10])
-                    pmint = -min(abs(parse(Float64, dcline_row[10])),abs(parse(Float64, dcline_row[11])))
-                else
-                    pmint = parse(Float64, dcline_row[10])
-                    pminf = -min(abs(parse(Float64, dcline_row[10])),abs(parse(Float64, dcline_row[11])))
+                pmin = parse(Float64, dcline_row[10])
+                pmax = parse(Float64, dcline_row[11])
+                pmaxt = Inf
+                pmaxf = Inf
+                pminf = -Inf
+                pmint = -Inf
+
+                if pmin >= 0
+                    pminf = pmin  # fg(k, PMAX)     = -dc(k, c.PMIN);
                 end
-                if parse(Float64, dcline_row[11]) > 0
-                    pmaxf = parse(Float64, dcline_row[11])
-                    pmaxt = max(abs(parse(Float64, dcline_row[11])),abs(parse(Float64, dcline_row[10])))
-                else
-                    pmaxt = parse(Float64, dcline_row[11])
-                    pmaxf = max(abs(parse(Float64, dcline_row[11])),abs(parse(Float64, dcline_row[10])))
+                if pmax >= 0
+                    pmaxf = pmax # fg(k, PMIN)     = -dc(k, c.PMAX);
                 end
+                if pmin <0
+                    pmaxt = -pmin # tg(k, PMIN)     =  dc(k, c.PMIN);
+                end
+                if pmax < 0
+                    pmint = pmax # tg(k, PMAX)     =  dc(k, c.PMAX);
+                end
+                print([pmin pmax pminf pmaxf pmint pmaxt])
 
                 dcline_data = Dict{String,Any}(
                     "index" => i,
@@ -515,9 +521,9 @@ function parse_matpower_data(data_string::String)
                     "t_bus" => parse(Int, dcline_row[2]),
                     "br_status" => parse(Int, dcline_row[3]),
                     "pf" => parse(Float64, dcline_row[4]),
-                    "pt" => parse(Float64, dcline_row[5]),
-                    "qf" => parse(Float64, dcline_row[6]),
-                    "qt" => parse(Float64, dcline_row[7]),
+                    "pt" => -parse(Float64, dcline_row[5]), # matpower has opposite convention
+                    "qf" => -parse(Float64, dcline_row[6]), # matpower has opposite convention TODO futher validate starting point signs
+                    "qt" => -parse(Float64, dcline_row[7]), # matpower has opposite convention
                     "vf" => parse(Float64, dcline_row[8]),
                     "vt" => parse(Float64, dcline_row[9]),
                     "pmint" => pmint,

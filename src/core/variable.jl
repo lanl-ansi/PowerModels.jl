@@ -131,6 +131,7 @@ end
 ############## DC Lines ############################################
 function variable_line_flow_dc(pm::GenericPowerModel; kwargs...)
     variable_active_line_flow_dc(pm; kwargs...)
+
     variable_reactive_line_flow_dc(pm; kwargs...)
 end
 
@@ -148,17 +149,18 @@ function variable_active_line_flow_dc(pm::GenericPowerModel; bounded = true)
       pmax[(l,j,i)] =  pm.ref[:dcline][l]["pmaxt"]
       pref[(l,i,j)] =  pm.ref[:dcline][l]["pf"]
       pref[(l,j,i)] =  pm.ref[:dcline][l]["pt"]
-      loss0[(l,i,j)] =  0
-      loss0[(l,j,i)] =  pm.ref[:dcline][l]["loss0"]
+      loss0[(l,i,j)] =  0 #loss completely assigned to to side as per matpower
+      loss0[(l,j,i)] =  pm.ref[:dcline][l]["loss0"]  #loss completely assigned to to side as per matpower
       br_status[(l,i,j)] =  pm.ref[:dcline][l]["br_status"]
       br_status[(l,j,i)] =  pm.ref[:dcline][l]["br_status"]
   end
-    if bounded
-        @variable(pm.model, br_status[(l,i,j)] * (pmin[(l,i,j)] + (loss0[(l,i,j)])) <= p_dc[(l,i,j) in pm.ref[:arcs_dc]] <= br_status[(l,i,j)] * (pmax[(l,i,j)] + (loss0[(l,i,j)])), start = pref[(l,i,j)])
-    else
-        M = 5;
-        @variable(pm.model, M*br_status[(l,i,j)] * (pmin[(l,i,j)] + (loss0[(l,i,j)])) <= p_dc[(l,i,j) in pm.ref[:arcs_dc]] <= M*br_status[(l,i,j)] * (pmax[(l,i,j)] + (loss0[(l,i,j)])), start = pref[(l,i,j)])
-    end
+
+  if bounded
+      @variable(pm.model,   br_status[(l,i,j)] * pmin[(l,i,j)] <= p_dc[(l,i,j) in pm.ref[:arcs_dc]] <=   br_status[(l,i,j)] * pmax[(l,i,j)], start = pref[(l,i,j)])
+  else
+      @variable(pm.model, M*br_status[(l,i,j)] * pmin[(l,i,j)] <= p_dc[(l,i,j) in pm.ref[:arcs_dc]] <= M*br_status[(l,i,j)] * pmax[(l,i,j)], start = pref[(l,i,j)])
+  end
+  print(p_dc)
     return p_dc
 end
 
