@@ -55,11 +55,6 @@ function variable_voltage_magnitude_sqr(pm::GenericPowerModel; bounded = true)
     return w
 end
 
-function variable_current_magnitude_sqr(pm::GenericPowerModel)
-    @variable(pm.model, i_sq[i in keys(pm.ref[:branch])] >= 0)
-    return i_sq
-end
-
 "variable: `0 <= w_from[l] <= buses[branches[l][\"f_bus\"]][\"vmax\"]^2` for `l` in `branch`es"
 function variable_voltage_magnitude_sqr_from_on_off(pm::GenericPowerModel)
     buses = pm.ref[:bus]
