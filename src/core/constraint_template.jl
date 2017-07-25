@@ -58,10 +58,11 @@ end
 function constraint_kcl_shunt_ne(pm::GenericPowerModel, bus)
     i = bus["index"]
     bus_arcs = pm.ref[:bus_arcs][i]
+    bus_arcs_dc = pm.ref[:bus_arcs_dc][i]
     bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
     bus_gens = pm.ref[:bus_gens][i]
 
-    return constraint_kcl_shunt_ne(pm, i, bus_arcs, bus_arcs_ne, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
+    return constraint_kcl_shunt_ne(pm, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
 end
 
 ### Branch - Ohm's Law Constraints ###
