@@ -51,6 +51,8 @@ function post_pf(pm::GenericPowerModel)
     end
 
     for (i,dcline) in pm.ref[:dcline]
-        constraint_ohms_yt_dc(pm, dcline)
+        #constraint_dc_line(pm, dcline)
+        constraint_active_dc_line_setpoint(pm, dcline; epsilon = 0.0)
+        constraint_dc_line_voltage(pm, dcline; epsilon = 0.00001)
     end
 end

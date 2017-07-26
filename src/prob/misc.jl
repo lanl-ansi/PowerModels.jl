@@ -52,7 +52,7 @@ function post_api_opf(pm::GenericPowerModel)
 
 
     for (i,dcline) in pm.ref[:dcline]
-        constraint_ohms_yt_dc(pm, dcline)
+        constraint_dc_line(pm, dcline)
     end
 end
 
@@ -98,6 +98,6 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
     end
 
     for (i,dcline) in pm.ref[:dcline]
-        constraint_ohms_yt_dc(pm, dcline)
+        constraint_dc_line(pm, dcline)
     end
 end

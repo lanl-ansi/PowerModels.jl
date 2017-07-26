@@ -86,17 +86,54 @@ end
 ### Branch - Loss Constraints DC LINES###
 
 ""
-function constraint_ohms_yt_dc(pm::GenericPowerModel, dcline)
+function constraint_dc_line(pm::GenericPowerModel, dcline)
     i = dcline["index"]
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
-    br_status = dcline["br_status"]
     loss0 = dcline["loss0"]
     loss1 = dcline["loss1"]
 
-    return constraint_ohms_yt_dc(pm, f_bus, t_bus, f_idx, t_idx, br_status, loss0, loss1)
+    return constraint_dc_line(pm, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
+end
+
+"""
+Creates Line Flow constraint for DC Lines (Matpower Formulation)
+
+```
+p_fr + p_to == loss0 + p_fr * loss1
+```
+"""
+function constraint_dc_line{T}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
+    p_fr = getindex(pm.model, :p_dc)[f_idx]
+    p_to = getindex(pm.model, :p_dc)[t_idx]
+
+    c1 = @constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0) == 0)
+    return Set([c1])
+end
+
+""
+function constraint_dc_line_voltage(pm::GenericPowerModel, dcline; epsilon = 0.0)
+    @assert epsilon >= 0.0
+    i = dcline["index"]
+    f_bus = dcline["f_bus"]
+    t_bus = dcline["t_bus"]
+    vf = dcline["vf"]
+    vt = dcline["vt"]
+
+    return constraint_dc_line_voltage(pm, f_bus, t_bus, vf, vt, epsilon)
+end
+
+function constraint_active_dc_line_setpoint(pm::GenericPowerModel, dcline; epsilon = 0.0)
+    i = dcline["index"]
+    f_bus = dcline["f_bus"]
+    t_bus = dcline["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+    pf = dcline["pf"]
+    pt = dcline["pt"]
+    return constraint_active_dc_line_setpoint(pm, i, f_idx, t_idx, pf, pt, epsilon)
 end
 
 ""

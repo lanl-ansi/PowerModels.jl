@@ -49,6 +49,30 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::Generic
 end
 
 """
+for DC line power flow:
+'''
+v_from  - epsilon <= v[i] <= v_from + epsilon
+v_to  - epsilon <= v[i] <= v_to + epsilon
+'''
+"""
+function constraint_dc_line_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
+    v_f = getindex(pm.model, :v)[f_bus]
+    v_t = getindex(pm.model, :v)[t_bus]
+
+    if epsilon == 0.0
+        c1 = @constraint(pm.model, v_f == vf)
+        c2 = @constraint(pm.model, v_t == vt)
+        return Set([c1, c2])
+    else
+        c1 = @constraint(pm.model, v_f <= vf + epsilon)
+        c2 = @constraint(pm.model, v_f >= vf - epsilon)
+        c3 = @constraint(pm.model, v_t <= vt + epsilon)
+        c4 = @constraint(pm.model, v_t >= vt - epsilon)
+        return Set([c1, c2, c3, c4])
+    end
+end
+
+"""
 ```
 sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*v^2
 sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*v^2
@@ -128,21 +152,6 @@ function constraint_ohms_yt_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f
     c1 = @NLconstraint(pm.model, p_to == g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
     c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
     return Set([c1, c2])
-end
-
-"""
-Creates Ohms constraints for DC Lines (yt post fix indicates that Y and T values are in rectangular form)
-
-```
-(1-loss1) * p_fr + (p_to - loss0 * br_status) == 0
-```
-"""
-function constraint_ohms_yt_dc{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, br_status, loss0, loss1)
-    p_fr = getindex(pm.model, :p_dc)[f_idx]
-    p_to = getindex(pm.model, :p_dc)[t_idx]
-
-    c1 = @constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0 * br_status) == 0)
-    return Set([c1])
 end
 
 """

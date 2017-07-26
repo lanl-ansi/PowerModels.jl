@@ -7,11 +7,23 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5812; atol = 1e0)
     end
+    @testset "3-bus case with active DC Line" begin
+        result = run_ac_opf("../test/data/case3_dc.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 5906.88; atol = 1e0)
+    end
     @testset "5-bus asymmetric case" begin
         result = run_ac_opf("../test/data/case5_asym.m", ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17551; atol = 1e0)
+    end
+    @testset "5-bus with active DC line" begin
+        result = run_ac_opf("../test/data/case5_dc.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 17756.17; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_ac_opf("../test/data/case6.m", ipopt_solver)
@@ -121,7 +133,7 @@ end
 
 @testset "test sdp opf" begin
     @testset "3-bus case" begin
-        result = run_opf("../test/data/case3_dc.m", SDPWRMPowerModel, scs_solver)
+        result = run_opf("../test/data/case3.m", SDPWRMPowerModel, scs_solver)
 
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 5788.7; atol = 1e0)

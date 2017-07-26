@@ -157,6 +157,10 @@ function make_per_unit(data::Dict{String,Any})
 
         for dcline in dclines
             apply_func(dcline, "loss0", rescale)
+            apply_func(dcline, "pf", rescale)
+            apply_func(dcline, "pt", rescale)
+            apply_func(dcline, "qf", rescale)
+            apply_func(dcline, "qt", rescale)
             apply_func(dcline, "pmaxt", rescale)
             apply_func(dcline, "pmint", rescale)
             apply_func(dcline, "pmaxf", rescale)
@@ -240,6 +244,10 @@ function make_mixed_units(data::Dict{String,Any})
 
         for dcline in dclines
             apply_func(dcline, "loss0", rescale)
+            apply_func(dcline, "pf", rescale)
+            apply_func(dcline, "pt", rescale)
+            apply_func(dcline, "qf", rescale)
+            apply_func(dcline, "qt", rescale)
             apply_func(dcline, "pmaxt", rescale)
             apply_func(dcline, "pmint", rescale)
             apply_func(dcline, "pmaxf", rescale)

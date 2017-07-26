@@ -88,3 +88,22 @@ function constraint_reactive_gen_setpoint(pm::GenericPowerModel, i, qg)
     c = @constraint(pm.model, qg_var == qg)
     return Set([c])
 end
+
+"`pf[i] == pf, pt[i] == pt`"
+function constraint_active_dc_line_setpoint(pm::GenericPowerModel, i, f_idx, t_idx, pf, pt, epsilon)
+    p_fr = getindex(pm.model, :p_dc)[f_idx]
+    p_to = getindex(pm.model, :p_dc)[t_idx]
+
+    if epsilon == 0.0
+        c1 = @constraint(pm.model, p_fr == pf)
+        c2 = @constraint(pm.model, p_to == pt)
+        return Set([c1,c2])
+    else
+        c1 = @constraint(pm.model, p_fr >= pf - epsilon)
+        c2 = @constraint(pm.model, p_to >= pt - epsilon)
+        c3 = @constraint(pm.model, p_fr <= pf + epsilon)
+        c4 = @constraint(pm.model, p_to <= pt + epsilon)
+        return Set([c1,c2,c3,c4])
+    end
+
+end

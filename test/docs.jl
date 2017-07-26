@@ -31,10 +31,10 @@
         #pretty print the model to the terminal
         #print(pm.model)
 
-        @test MathProgBase.numlinconstr(pm.model) == 8
+        @test MathProgBase.numlinconstr(pm.model) == 7
         @test MathProgBase.numquadconstr(pm.model) == 12
         @test MathProgBase.numconstr(pm.model) - MathProgBase.numlinconstr(pm.model) - MathProgBase.numquadconstr(pm.model) == 12
-        @test MathProgBase.numvar(pm.model) == 28
+        @test MathProgBase.numvar(pm.model) == 24
 
         result = solve_generic_model(pm, IpoptSolver(print_level=0))
 

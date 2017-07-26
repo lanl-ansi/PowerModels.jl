@@ -492,6 +492,7 @@ function parse_matpower_data(data_string::String)
 
         elseif parsed_matrix["name"] == "dcline"
             dclines = []
+            warn("DC Line costs are not considered")
 
             for (i, dcline_row) in enumerate(parsed_matrix["data"])
                 pmin = parse(Float64, dcline_row[10])
@@ -513,7 +514,6 @@ function parse_matpower_data(data_string::String)
                 if pmax < 0
                     pmint = pmax # tg(k, PMAX)     =  dc(k, c.PMAX);
                 end
-                print([pmin pmax pminf pmaxf pmint pmaxt])
 
                 dcline_data = Dict{String,Any}(
                     "index" => i,
@@ -522,7 +522,7 @@ function parse_matpower_data(data_string::String)
                     "br_status" => parse(Int, dcline_row[3]),
                     "pf" => parse(Float64, dcline_row[4]),
                     "pt" => -parse(Float64, dcline_row[5]), # matpower has opposite convention
-                    "qf" => -parse(Float64, dcline_row[6]), # matpower has opposite convention TODO futher validate starting point signs
+                    "qf" => -parse(Float64, dcline_row[6]), # matpower has opposite convention
                     "qt" => -parse(Float64, dcline_row[7]), # matpower has opposite convention
                     "vf" => parse(Float64, dcline_row[8]),
                     "vt" => parse(Float64, dcline_row[9]),

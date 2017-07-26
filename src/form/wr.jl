@@ -74,6 +74,29 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractWRForm}(pm::GenericP
     end
 end
 
+"""
+for DC line voltage:
+'''
+(v_from  - epsilon)^2 <= w[i] <= (v_from + epsilon)^2
+(v_to  - epsilon)^2 <= w[i] <= (v_to + epsilon)^2
+'''
+"""
+function constraint_dc_line_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
+    w_f = getindex(pm.model, :w)[f_bus]
+    w_t = getindex(pm.model, :w)[t_bus]
+    if epsilon == 0.0
+        c1 = @constraint(pm.model, w_f == vf^2)
+        c2 = @constraint(pm.model, w_t == vt^2)
+        return Set([c1, c2])
+    else
+        c1 = @constraint(pm.model, w_f <= (vf + epsilon)^2)
+        c2 = @constraint(pm.model, w_f >= (vf - epsilon)^2)
+        c3 = @constraint(pm.model, w_t <= (vt + epsilon)^2)
+        c4 = @constraint(pm.model, w_t >= (vt - epsilon)^2)
+        return Set([c1, c2, c3, c4])
+    end
+end
+
 ""
 function constraint_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     w = getindex(pm.model, :w)[i]
@@ -147,21 +170,6 @@ function constraint_ohms_yt_to{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_
     c1 = @constraint(pm.model, p_to == g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
     c2 = @constraint(pm.model, q_to == -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
     return Set([c1, c2])
-end
-
-"""
-Creates Ohms constraints for DC Lines (yt post fix indicates that Y and T values are in rectangular form)
-
-```
-p_fr + p_to == loss0 + loss1 * p_fr
-```
-"""
-function constraint_ohms_yt_dc{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, br_status, loss0, loss1)
-    p_fr = getindex(pm.model, :p_dc)[f_idx]
-    p_to = getindex(pm.model, :p_dc)[t_idx]
-
-    c1 = @constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0 * br_status) == 0)
-    return Set([c1])
 end
 
 """

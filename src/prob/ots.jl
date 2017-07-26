@@ -43,7 +43,7 @@ function post_ots(pm::GenericPowerModel)
     end
 
     for (i,dcline) in pm.ref[:dcline]
-        constraint_ohms_yt_dc(pm, dcline)
+        constraint_dc_line(pm, dcline)
     end
 end
 

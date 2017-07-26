@@ -44,6 +44,6 @@ function post_opf(pm::GenericPowerModel)
         constraint_thermal_limit_to(pm, branch)
     end
     for (i,dcline) in pm.ref[:dcline]
-        constraint_ohms_yt_dc(pm, dcline)
+        constraint_dc_line(pm, dcline)
     end
 end

@@ -131,21 +131,6 @@ function constraint_ohms_yt_to{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f
     return Set([c1, c2])
 end
 
-"""
-Creates Ohms constraints for DC Lines (yt post fix indicates that Y and T values are in rectangular form)
-
-```
-p_fr + p_to == loss0 + loss1 * p_fr
-```
-"""
-function constraint_ohms_yt_dc{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, br_status, loss0, loss1)
-    p_fr = getindex(pm.model, :p_dc)[f_idx]
-    p_to = getindex(pm.model, :p_dc)[t_idx]
-
-    c1 = @constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0 * br_status) == 0)
-    return Set([c1])
-end
-
 ""
 function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
     WR = getindex(pm.model, :WR)
@@ -173,3 +158,6 @@ function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerMod
     # What should the default value be?
     #add_setpoint(sol, pm, "bus", "bus_i", "va", :t; default_value = 0)
 end
+
+"DC Line voltage constraint not supported"
+constraint_dc_line_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon) = Set()

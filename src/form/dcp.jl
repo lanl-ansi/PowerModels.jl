@@ -80,6 +80,9 @@ constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::GenericPowerMode
 "do nothing, this model does not have reactive variables"
 constraint_reactive_gen_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, qg) = Set()
 
+"do nothing, this model does not have voltage variables"
+constraint_dc_line_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon) = Set()
+
 ""
 function constraint_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     pg = getindex(pm.model, :pg)
@@ -130,21 +133,6 @@ function constraint_ohms_yt_from_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{
     c1 = @constraint(pm.model, p_fr <= -b*(t_fr - t_to + t_max*(1-z)) )
     c2 = @constraint(pm.model, p_fr >= -b*(t_fr - t_to + t_min*(1-z)) )
     return Set([c1, c2])
-end
-
-"""
-Creates Ohms constraints for DC Lines (yt post fix indicates that Y and T values are in rectangular form)
-
-```
-p_fr + p_to == loss0 + loss1 * p_fr
-```
-"""
-function constraint_ohms_yt_dc{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, br_status, loss0, loss1)
-    p_fr = getindex(pm.model, :p_dc)[f_idx]
-    p_to = getindex(pm.model, :p_dc)[t_idx]
-
-    c1 = @constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0 * br_status) == 0)
-    return Set([c1])
 end
 
 "Do nothing, this model is symmetric"

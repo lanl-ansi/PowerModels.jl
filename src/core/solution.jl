@@ -44,7 +44,7 @@ function get_solution(pm::GenericPowerModel)
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
-    add_branch_flow_setpoint_dc(sol, pm)
+    add_dc_line_flow_setpoint(sol, pm)
     return sol
 end
 
@@ -82,7 +82,7 @@ function add_branch_flow_setpoint(sol, pm::GenericPowerModel)
 end
 
 ""
-function add_branch_flow_setpoint_dc(sol, pm::GenericPowerModel)
+function add_dc_line_flow_setpoint(sol, pm::GenericPowerModel)
     # check the line flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
         mva_base = pm.data["baseMVA"]

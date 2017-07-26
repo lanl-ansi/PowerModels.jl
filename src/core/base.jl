@@ -176,18 +176,15 @@ function build_ref(data::Dict{String,Any})
     ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
     ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
     ref[:branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
+    ref[:dcline] = filter((i, dcline) -> dcline["br_status"] == 1 && dcline["f_bus"] in keys(ref[:bus]) && dcline["t_bus"] in keys(ref[:bus]), ref[:dcline])
 
     ref[:arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:branch]]
     ref[:arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:branch]]
     ref[:arcs] = [ref[:arcs_from]; ref[:arcs_to]]
 
-#############################DC LINES##############
-    if haskey(ref, :dcline)
-        ref[:arcs_from_dc] = [(i,dcline["f_bus"],dcline["t_bus"]) for (i,dcline) in ref[:dcline]]
-        ref[:arcs_to_dc]   = [(i,dcline["t_bus"],dcline["f_bus"]) for (i,dcline) in ref[:dcline]]
-        ref[:arcs_dc] = [ref[:arcs_from_dc]; ref[:arcs_to_dc]]
-    end
-###################################################
+    ref[:arcs_from_dc] = [(i,dcline["f_bus"],dcline["t_bus"]) for (i,dcline) in ref[:dcline]]
+    ref[:arcs_to_dc]   = [(i,dcline["t_bus"],dcline["f_bus"]) for (i,dcline) in ref[:dcline]]
+    ref[:arcs_dc] = [ref[:arcs_from_dc]; ref[:arcs_to_dc]]
 
     bus_gens = Dict([(i, []) for (i,bus) in ref[:bus]])
     for (i,gen) in ref[:gen]
@@ -201,17 +198,11 @@ function build_ref(data::Dict{String,Any})
     end
     ref[:bus_arcs] = bus_arcs
 
-
-######################### DC LINES ###################################
-    if haskey(ref, :dcline)
-        bus_arcs_dc = Dict([(i, []) for (i,bus) in ref[:bus]])
-        for (l,i,j) in ref[:arcs_dc]
-            push!(bus_arcs_dc[i], (l,i,j))
-        end
-        ref[:bus_arcs_dc] = bus_arcs_dc
+    bus_arcs_dc = Dict([(i, []) for (i,bus) in ref[:bus]])
+    for (l,i,j) in ref[:arcs_dc]
+        push!(bus_arcs_dc[i], (l,i,j))
     end
-#################################################################
-
+    ref[:bus_arcs_dc] = bus_arcs_dc
 
     # a set of buses to support multiple connected components
     ref_buses = Dict()
@@ -343,11 +334,7 @@ function buspair_parameters_dc(arcs_from_dc, dclines, buses)
         "qf"=>dclines[bp_line[(i,j)]]["qf"],
         "qt"=>dclines[bp_line[(i,j)]]["qt"],
         "vf"=>dclines[bp_line[(i,j)]]["vf"],
-        "vt"=>dclines[bp_line[(i,j)]]["vt"],
-        "v_from_min"=>buses[i]["vmin"],
-        "v_from_max"=>buses[i]["vmax"],
-        "v_to_min"=>buses[j]["vmin"],
-        "v_to_max"=>buses[j]["vmax"]
+        "vt"=>dclines[bp_line[(i,j)]]["vt"]
         )) for (i,j) in buspair_indexes])
 
     return buspairs_dc
