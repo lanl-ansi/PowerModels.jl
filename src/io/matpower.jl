@@ -497,22 +497,32 @@ function parse_matpower_data(data_string::String)
             for (i, dcline_row) in enumerate(parsed_matrix["data"])
                 pmin = parse(Float64, dcline_row[10])
                 pmax = parse(Float64, dcline_row[11])
-                pmaxt = Inf
-                pmaxf = Inf
-                pminf = -Inf
-                pmint = -Inf
+                loss0 = parse(Float64, dcline_row[16])
+                loss1 = parse(Float64, dcline_row[17])
 
-                if pmin >= 0
-                    pminf = pmin  # fg(k, PMAX)     = -dc(k, c.PMIN);
+                if pmin >= 0 && pmax >=0
+                    pminf = pmin
+                    pmaxf = pmax
+                    pmint = loss0 - pmaxf * (1 - loss1)
+                    pmaxt = loss0 - pminf * (1 - loss1)
                 end
-                if pmax >= 0
-                    pmaxf = pmax # fg(k, PMIN)     = -dc(k, c.PMAX);
+                if pmin >= 0 && pmax < 0
+                    pminf = pmin
+                    pmint = pmax
+                    pmaxf = (-pmint + loss0) / (1-loss1)
+                    pmaxt = loss0 - pminf * (1 - loss1)
                 end
-                if pmin <0
-                    pmaxt = -pmin # tg(k, PMIN)     =  dc(k, c.PMIN);
+                if pmin < 0 && pmax >= 0
+                    pmaxt = -pmin
+                    pmaxf = pmax
+                    pminf = (-pmaxt + loss0) / (1-loss1)
+                    pmint = loss0 - pmaxf * (1 - loss1)
                 end
-                if pmax < 0
-                    pmint = pmax # tg(k, PMAX)     =  dc(k, c.PMAX);
+                if pmin < 0 && pmax < 0
+                    pmaxt = -pmin
+                    pmint = pmax
+                    pmaxf = (-pmint + loss0) / (1-loss1)
+                    pminf = (-pmaxt + loss0) / (1-loss1)
                 end
 
                 dcline_data = Dict{String,Any}(
