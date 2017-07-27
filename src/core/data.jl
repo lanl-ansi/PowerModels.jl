@@ -393,24 +393,23 @@ function check_bus_types(data)
 
 end
 
-
-"checks that flow bounds for dc lines are reasonable"
+"checks that parameters for dc lines are reasonable"
 function check_dc_line_limits(data)
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
     for (i, dcline) in data["dcline"]
-      if dcline["loss0"] < 0.0
-          new_rate = 0.0
-          warn("this code only supports positive loss0 values, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
-          dcline["loss0"] = new_rate
-      end
+        if dcline["loss0"] < 0.0
+            new_rate = 0.0
+            warn("this code only supports positive loss0 values, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
+            dcline["loss0"] = new_rate
+          end
 
-      if dcline["loss0"] >= dcline["pmaxf"]*(1-dcline["loss1"] )+ dcline["pmaxt"]
-          new_rate = 0.0
-          warn("this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
-          dcline["loss0"] = new_rate
-      end
+        if dcline["loss0"] >= dcline["pmaxf"]*(1-dcline["loss1"] )+ dcline["pmaxt"]
+            new_rate = 0.0
+            warn("this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
+            dcline["loss0"] = new_rate
+          end
 
         if dcline["loss1"] < 0.0
             new_rate = 0.0
@@ -426,9 +425,8 @@ function check_dc_line_limits(data)
 
         if dcline["pmint"] <0.0 && dcline["loss1"] > 0.0
             #new_rate = 0.0
-            warn("the dc line model is not meant to be used bi-directionally when loss1 > 0, be careful interpreting the results as the dc line losses can now be negative")
-            #branch["loss0"] = new_rate
+            warn("the dc line model is not meant to be used bi-directionally when loss1 > 0, be careful interpreting the results as the dc line losses can now be negative. change loss1 to 0 to avoid this warning")
+            #dcline["loss0"] = new_rate
         end
-
     end
 end
