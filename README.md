@@ -32,7 +32,7 @@ For further information, consult the package [documentation](https://lanl-ansi.g
 
 ## Development
 
-Community-driven development and enhancement of PowerModels are welcome and encouraged. Please fork this repository and share your contributions to the master with pull requests.
+Community-driven development and enhancement of PowerModels are welcome and encouraged. Please fork this repository and share your contributions to the master with pull requests.  See [CONTRIBUTING.md](https://github.com/lanl-ansi/PowerModels.jl/blob/master/CONTRIBUTING.md) for code contribution guidelines.
 
 
 ## Acknowledgments
