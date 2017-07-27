@@ -67,7 +67,7 @@ mpc.branch_limit = [
 % adding extra cell values
 
 mpc.areas_cells = {
-	'Area 1'	123	987	'Slack Bus 1'	1.23	;
+	'Area 1'	123	987	'Slack \"Bus\" 1'	1.23	;
 	'Area 2'	456	987	'Slack Bus 3'	4.56	;
 };
 
