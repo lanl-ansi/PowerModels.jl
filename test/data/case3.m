@@ -28,10 +28,6 @@ mpc.branch = [
 	1	 2	 0.042	 0.9	 0.3	 9000.0	 0.0	 0.0	 0.0	 0.0	 1	 -30.0	 30.0;
 ];
 
-mpc.dcline = [
-	1	 2	 0	 0	 0	 0	 0	 1	 1	 0	 inf -900 900 -900 900	 0	 0	 0	 0	 0	 0	 0	 0
-]
-
 % matpower data format extentions
 
 % adding single values

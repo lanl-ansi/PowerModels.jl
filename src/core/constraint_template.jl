@@ -86,7 +86,7 @@ end
 ### Branch - Loss Constraints DC LINES###
 
 ""
-function constraint_dc_line(pm::GenericPowerModel, dcline)
+function constraint_dcline(pm::GenericPowerModel, dcline)
     i = dcline["index"]
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
@@ -95,7 +95,7 @@ function constraint_dc_line(pm::GenericPowerModel, dcline)
     loss0 = dcline["loss0"]
     loss1 = dcline["loss1"]
 
-    return constraint_dc_line(pm, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
+    return constraint_dcline(pm, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
 end
 
 """
@@ -105,7 +105,7 @@ Creates Line Flow constraint for DC Lines (Matpower Formulation)
 p_fr + p_to == loss0 + p_fr * loss1
 ```
 """
-function constraint_dc_line{T}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
+function constraint_dcline{T}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
     p_fr = getindex(pm.model, :p_dc)[f_idx]
     p_to = getindex(pm.model, :p_dc)[t_idx]
 
@@ -114,7 +114,7 @@ function constraint_dc_line{T}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_
 end
 
 ""
-function constraint_dc_line_voltage(pm::GenericPowerModel, dcline; epsilon = 0.0)
+function constraint_dcline_voltage(pm::GenericPowerModel, dcline; epsilon = 0.0)
     @assert epsilon >= 0.0
     i = dcline["index"]
     f_bus = dcline["f_bus"]
@@ -122,10 +122,10 @@ function constraint_dc_line_voltage(pm::GenericPowerModel, dcline; epsilon = 0.0
     vf = dcline["vf"]
     vt = dcline["vt"]
 
-    return constraint_dc_line_voltage(pm, f_bus, t_bus, vf, vt, epsilon)
+    return constraint_dcline_voltage(pm, f_bus, t_bus, vf, vt, epsilon)
 end
 
-function constraint_active_dc_line_setpoint(pm::GenericPowerModel, dcline; epsilon = 0.0)
+function constraint_active_dcline_setpoint(pm::GenericPowerModel, dcline; epsilon = 0.0)
     i = dcline["index"]
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
@@ -133,7 +133,7 @@ function constraint_active_dc_line_setpoint(pm::GenericPowerModel, dcline; epsil
     t_idx = (i, t_bus, f_bus)
     pf = dcline["pf"]
     pt = dcline["pt"]
-    return constraint_active_dc_line_setpoint(pm, i, f_idx, t_idx, pf, pt, epsilon)
+    return constraint_active_dcline_setpoint(pm, i, f_idx, t_idx, pf, pt, epsilon)
 end
 
 ""

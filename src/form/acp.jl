@@ -55,7 +55,7 @@ v_from  - epsilon <= v[i] <= v_from + epsilon
 v_to  - epsilon <= v[i] <= v_to + epsilon
 '''
 """
-function constraint_dc_line_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
+function constraint_dcline_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
     v_f = getindex(pm.model, :v)[f_bus]
     v_t = getindex(pm.model, :v)[t_bus]
 
@@ -94,11 +94,11 @@ end
 
 """
 ```
-sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*v^2
-sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*v^2
+sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*v^2
+sum(q[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*v^2
 ```
 """
-function constraint_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
     v = getindex(pm.model, :v)[i]
     p = getindex(pm.model, :p)
     q = getindex(pm.model, :q)
@@ -106,9 +106,11 @@ function constraint_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T},
     q_ne = getindex(pm.model, :q_ne)
     pg = getindex(pm.model, :pg)
     qg = getindex(pm.model, :qg)
+    p_dc = getindex(pm.model, :p_dc)
+    q_dc = getindex(pm.model, :q_dc)
 
-    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*v^2)
-    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*v^2)
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)  + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*v^2)
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)  + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*v^2)
     return Set([c1, c2])
 end
 

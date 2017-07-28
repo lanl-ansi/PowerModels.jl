@@ -128,14 +128,13 @@ function variable_reactive_line_flow(pm::GenericPowerModel; bounded = true)
     return q
 end
 
-############## DC Lines ############################################
-function variable_line_flow_dc(pm::GenericPowerModel; kwargs...)
-    variable_active_line_flow_dc(pm; kwargs...)
-    variable_reactive_line_flow_dc(pm; kwargs...)
+function variable_dcline_flow(pm::GenericPowerModel; kwargs...)
+    variable_active_dcline_flow(pm; kwargs...)
+    variable_reactive_dcline_flow(pm; kwargs...)
 end
 
 "variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
-function variable_active_line_flow_dc(pm::GenericPowerModel; bounded = true)
+function variable_active_dcline_flow(pm::GenericPowerModel; bounded = true)
   pmin = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
   pref = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
   pmax = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
@@ -159,7 +158,7 @@ function variable_active_line_flow_dc(pm::GenericPowerModel; bounded = true)
 end
 
 "variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
-function variable_reactive_line_flow_dc(pm::GenericPowerModel; bounded = true)
+function variable_reactive_dcline_flow(pm::GenericPowerModel; bounded = true)
   qmin = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
   qref = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
   qmax = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])

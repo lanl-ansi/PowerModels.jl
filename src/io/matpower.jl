@@ -492,8 +492,6 @@ function parse_matpower_data(data_string::String)
 
         elseif parsed_matrix["name"] == "dcline"
             dclines = []
-            warn("DC Line costs are not considered")
-
             for (i, dcline_row) in enumerate(parsed_matrix["data"])
                 pmin = parse(Float64, dcline_row[10])
                 pmax = parse(Float64, dcline_row[11])
@@ -555,13 +553,12 @@ function parse_matpower_data(data_string::String)
                     dcline_data["mu_qmint"] = parse(Float64, dcline_row[22])
                     dcline_data["mu_qmaxt"] = parse(Float64, dcline_row[23])
                 end
-
                 push!(dclines, dcline_data)
             end
             case["dcline"] = dclines
-
-            case["dcline"] = dclines
-
+        elseif parsed_matrix["name"] == "dclinecost"
+            case["dclinecost"] = []
+            warn("DC Line costs are not considered")
         else
             name = parsed_matrix["name"]
             data = parsed_matrix["data"]

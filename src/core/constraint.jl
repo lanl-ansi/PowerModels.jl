@@ -90,7 +90,7 @@ function constraint_reactive_gen_setpoint(pm::GenericPowerModel, i, qg)
 end
 
 "`pf[i] == pf, pt[i] == pt`"
-function constraint_active_dc_line_setpoint(pm::GenericPowerModel, i, f_idx, t_idx, pf, pt, epsilon)
+function constraint_active_dcline_setpoint(pm::GenericPowerModel, i, f_idx, t_idx, pf, pt, epsilon)
     p_fr = getindex(pm.model, :p_dc)[f_idx]
     p_to = getindex(pm.model, :p_dc)[t_idx]
 

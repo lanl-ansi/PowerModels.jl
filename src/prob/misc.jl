@@ -15,7 +15,7 @@ function post_api_opf(pm::GenericPowerModel)
     upperbound_negative_active_generation(pm)
 
     variable_line_flow(pm)
-    variable_line_flow_dc(pm)
+    variable_dcline_flow(pm)
 
 
     variable_load_factor(pm)
@@ -52,7 +52,7 @@ function post_api_opf(pm::GenericPowerModel)
 
 
     for (i,dcline) in pm.ref[:dcline]
-        constraint_dc_line(pm, dcline)
+        constraint_dcline(pm, dcline)
     end
 end
 
@@ -66,7 +66,7 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
     variable_voltage(pm)
     variable_generation(pm)
     variable_line_flow(pm)
-    variable_line_flow_dc(pm, bounded = false)
+    variable_dcline_flow(pm, bounded = false)
 
     @variable(pm.model, theta_delta_bound >= 0.0, start = 0.523598776)
 
@@ -98,6 +98,6 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
     end
 
     for (i,dcline) in pm.ref[:dcline]
-        constraint_dc_line(pm, dcline)
+        constraint_dcline(pm, dcline)
     end
 end

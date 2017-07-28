@@ -81,7 +81,7 @@ for DC line voltage:
 (v_to  - epsilon)^2 <= w[i] <= (v_to + epsilon)^2
 '''
 """
-function constraint_dc_line_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
+function constraint_dcline_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
     w_f = getindex(pm.model, :w)[f_bus]
     w_t = getindex(pm.model, :w)[t_bus]
     if epsilon == 0.0
@@ -97,7 +97,12 @@ function constraint_dc_line_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T
     end
 end
 
-""
+"""
+```
+sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w[i]
+sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w[i]
+```
+"""
 function constraint_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     w = getindex(pm.model, :w)[i]
     p = getindex(pm.model, :p)
@@ -114,8 +119,8 @@ end
 
 """
 ```
-sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*w[i]
-sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*w[i]
+sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w[i]
+sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w[i]
 ```
 """
 function constraint_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, pd, qd, gs, bs)

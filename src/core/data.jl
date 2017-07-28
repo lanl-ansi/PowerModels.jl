@@ -394,7 +394,7 @@ function check_bus_types(data)
 end
 
 "checks that parameters for dc lines are reasonable"
-function check_dc_line_limits(data)
+function check_dcline_limits(data)
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 

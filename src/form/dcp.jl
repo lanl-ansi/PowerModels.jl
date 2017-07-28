@@ -81,7 +81,7 @@ constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::GenericPowerMode
 constraint_reactive_gen_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, qg) = Set()
 
 "do nothing, this model does not have voltage variables"
-constraint_dc_line_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon) = Set()
+constraint_dcline_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon) = Set()
 
 ""
 function constraint_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
@@ -100,7 +100,7 @@ function constraint_kcl_shunt_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T},
     p_expr = pm.model.ext[:p_expr]
     p_ne_expr = pm.model.ext[:p_ne_expr]
 
-    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) + sum(p_ne_expr[a] for a in bus_arcs_ne)  + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)== sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
+    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) + sum(p_ne_expr[a] for a in bus_arcs_ne)  + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
     return Set([c])
 end
 
