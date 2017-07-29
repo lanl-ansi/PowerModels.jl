@@ -76,7 +76,7 @@ For additional details about the network data, see the [PowerModels Network Data
 ## Inspecting AC and DC branch flow results
 The flow AC and DC branch results are not written to the result by default. To inspect the flow results, pass a settings Dict
 ```julia
-result = run_opf("nesta_case3_dc.m", ACPPowerModel, IpoptSolver(), setting = Dict("output" => Dict("line_flows" => true)))
+result = run_opf("case3_dc.m", ACPPowerModel, IpoptSolver(), setting = Dict("output" => Dict("line_flows" => true)))
 result["solution"]["dcline"]["1"]
 result["solution"]["branch"]["2"]
 ```
