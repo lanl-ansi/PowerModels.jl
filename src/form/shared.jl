@@ -37,19 +37,44 @@ end
 
 
 """
+enforces pv-like buses on both sides of a dcline
 """
-function constraint_kcl_shunt{T <: AbstractWRForms}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
+function constraint_dcline_voltage{T <: AbstractWRForms}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
+    w_f = getindex(pm.model, :w)[f_bus]
+    w_t = getindex(pm.model, :w)[t_bus]
+    if epsilon == 0.0
+        c1 = @constraint(pm.model, w_f == vf^2)
+        c2 = @constraint(pm.model, w_t == vt^2)
+        return Set([c1, c2])
+    else
+        c1 = @constraint(pm.model, w_f <= (vf + epsilon)^2)
+        c2 = @constraint(pm.model, w_f >= (vf - epsilon)^2)
+        c3 = @constraint(pm.model, w_t <= (vt + epsilon)^2)
+        c4 = @constraint(pm.model, w_t >= (vt - epsilon)^2)
+        return Set([c1, c2, c3, c4])
+    end
+end
+
+
+"""
+```
+sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w[i]
+sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w[i]
+```
+"""
+function constraint_kcl_shunt{T <: AbstractWRForms}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     w = getindex(pm.model, :w)[i]
     p = getindex(pm.model, :p)
     q = getindex(pm.model, :q)
     pg = getindex(pm.model, :pg)
     qg = getindex(pm.model, :qg)
+    p_dc = getindex(pm.model, :p_dc)
+    q_dc = getindex(pm.model, :q_dc)
 
-    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*w)
-    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*w)
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w)
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w)
     return Set([c1, c2])
 end
-
 
 
 """

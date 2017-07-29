@@ -135,6 +135,7 @@ function variable_line_flow(pm::GenericPowerModel; kwargs...)
     variable_reactive_line_flow(pm; kwargs...)
 end
 
+
 "variable: `p[l,i,j]` for `(l,i,j)` in `arcs`"
 function variable_active_line_flow(pm::GenericPowerModel; bounded = true)
     if bounded
@@ -154,6 +155,59 @@ function variable_reactive_line_flow(pm::GenericPowerModel; bounded = true)
     end
     return q
 end
+
+function variable_dcline_flow(pm::GenericPowerModel; kwargs...)
+    variable_active_dcline_flow(pm; kwargs...)
+    variable_reactive_dcline_flow(pm; kwargs...)
+end
+
+"variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
+function variable_active_dcline_flow(pm::GenericPowerModel; bounded = true)
+  pmin = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  pref = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  pmax = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  loss0 = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  for (l,i,j) in pm.ref[:arcs_from_dc]
+      pmin[(l,i,j)] =  pm.ref[:dcline][l]["pminf"]
+      pmax[(l,i,j)] =  pm.ref[:dcline][l]["pmaxf"]
+      pmin[(l,j,i)] =  pm.ref[:dcline][l]["pmint"]
+      pmax[(l,j,i)] =  pm.ref[:dcline][l]["pmaxt"]
+      pref[(l,i,j)] =  pm.ref[:dcline][l]["pf"]
+      pref[(l,j,i)] =  pm.ref[:dcline][l]["pt"]
+      loss0[(l,i,j)] =  0 #loss completely assigned to to side as per matpower
+      loss0[(l,j,i)] =  pm.ref[:dcline][l]["loss0"]  #loss completely assigned to to side as per matpower
+  end
+  if bounded
+      @variable(pm.model,   pmin[(l,i,j)] <= p_dc[(l,i,j) in pm.ref[:arcs_dc]] <= pmax[(l,i,j)], start = pref[(l,i,j)])
+  else
+      @variable(pm.model, p_dc[(l,i,j) in pm.ref[:arcs_dc]], start = pref[(l,i,j)])
+  end
+    return p_dc
+end
+
+"variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
+function variable_reactive_dcline_flow(pm::GenericPowerModel; bounded = true)
+  qmin = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  qref = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  qmax = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  for (l,i,j) in pm.ref[:arcs_from_dc]
+      qmin[(l,i,j)] =  pm.ref[:dcline][l]["qminf"]
+      qmax[(l,i,j)] =  pm.ref[:dcline][l]["qmaxf"]
+      qmin[(l,j,i)] =  pm.ref[:dcline][l]["qmint"]
+      qmax[(l,j,i)] =  pm.ref[:dcline][l]["qmaxt"]
+      qref[(l,i,j)] =  pm.ref[:dcline][l]["qf"]
+      qref[(l,j,i)] =  pm.ref[:dcline][l]["qt"]
+    end
+    if bounded
+
+      @variable(pm.model, qmin[(l,i,j)] <= q_dc[(l,i,j) in pm.ref[:arcs_dc]] <= qmax[(l,i,j)], start = qref[(l,i,j)])
+    else
+      @variable(pm.model, q_dc[(l,i,j) in pm.ref[:arcs_dc]], start = qref[(l,i,j)])
+    end
+    return q_dc
+end
+
+##################################################################
 
 "generates variables for both `active` and `reactive` `line_flow_ne`"
 function variable_line_flow_ne(pm::GenericPowerModel; kwargs...)
@@ -185,4 +239,3 @@ function variable_line_ne(pm::GenericPowerModel)
     @variable(pm.model, 0 <= line_ne[l in keys(branches)] <= 1, Int, start = getstart(branches, l, "line_tnep_start", 1.0))
     return line_ne
 end
-

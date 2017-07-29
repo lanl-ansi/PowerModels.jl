@@ -1,6 +1,6 @@
-## Comments, Questions, Bug Reports
+## Comments, Questions, Feature Requests, Bug Reports
 
-At this time, any kind of comment/question/bug report is welcome in the issue tracker.  If you are asking a question, please search the issues for an answer before making a post. 
+At this time, any kind of comment, question, feature request or bug report is welcome in the issue tracker.  If you are asking a question, please search the issues for an answer before making a post. 
 
 ## Code Contributions
 
