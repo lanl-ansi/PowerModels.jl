@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added W-Theta formulation of the AC-OPF 
 - Added support for QC-OTS
 - Added support for multiple refrence buses
 - Fixed bug in constants for w-space phase angle difference constraints
