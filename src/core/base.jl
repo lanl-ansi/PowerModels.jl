@@ -54,6 +54,8 @@ end
 function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{String,Any}(), solver = JuMP.UnsetSolver())
 
     check_cost_models(data)
+    # TODO is may also be a good place to check component validity
+    # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
 
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
