@@ -7,7 +7,7 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5812; atol = 1e0)
     end
-    @testset "3-bus case with active DC Line" begin
+    @testset "3-bus case with active hvdc line" begin
         result = run_ac_opf("../test/data/case3_dc.m", ipopt_solver)
 
         @test result["status"] == :LocalOptimal
