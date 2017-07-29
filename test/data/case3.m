@@ -32,6 +32,10 @@ mpc.dcline = [
 	1	 2	 1	 10	 10	 25.91	 -4.16	 1.1	 0.92617	 10	 900 -900 900 -900 900	 0	 0	 0	 0	 0	 0	 0	 0
 ]
 
+mpc.dclinecost = [
+	2	 0.0	 0.0	 1	   0.0;
+];
+
 
 % matpower data format extentions
 

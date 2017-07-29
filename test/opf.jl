@@ -13,11 +13,11 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17551; atol = 1e0)
     end
-    @testset "5-bus with hvdc line costs" begin
+    @testset "5-bus with dcline costs" begin
         result = run_ac_opf("../test/data/case5_dc.m", ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 17756.17; atol = 1e0)
+        @test isapprox(result["objective"], 17760.2; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_ac_opf("../test/data/case6.m", ipopt_solver)

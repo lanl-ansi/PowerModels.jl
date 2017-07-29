@@ -390,7 +390,6 @@ function check_bus_types(data)
 
         end
     end
-
 end
 
 "checks that parameters for dc lines are reasonable"
@@ -430,3 +429,28 @@ function check_dcline_limits(data)
         end
     end
 end
+
+
+#=
+"""
+checks that each generator and dcline has cost model parameters
+"""
+function check_cost_models(data)
+    for (i, gen) in data["gen"]
+        if !haskey(gen, "model")
+            gen["model"] = 2
+        end
+        if !haskey(gen, "cost")
+            gen["cost"] = [0.0, 0.0, 0.0]
+        end
+    end
+    for (i, dcline) in data["dcline"]
+        if !haskey(dcline, "model")
+            dcline["model"] = 2
+        end
+        if !haskey(dcline, "cost")
+            dcline["cost"] = [0.0, 0.0, 0.0]
+        end
+    end
+end
+=#
