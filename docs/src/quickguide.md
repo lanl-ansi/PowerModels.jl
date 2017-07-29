@@ -73,6 +73,21 @@ run_opf(network_data, ACPPowerModel, IpoptSolver())
 
 For additional details about the network data, see the [PowerModels Network Data Format](@ref) section.
 
+## Inspecting AC and DC branch flow results
+The flow AC and DC branch results are not written to the result by default. To inspect the flow results, pass a settings Dict
+```julia
+result = run_opf("nesta_case3_dc.m", ACPPowerModel, IpoptSolver(), setting = Dict("output" => Dict("line_flows" => true)))
+result["solution"]["dcline"]["1"]
+result["solution"]["branch"]["2"]
+```
+
+The losses of a AC or DC branch can be derived:
+```julia
+loss_ac =  Dict(name => data["p_to"]+data["p_from"] for (name, data) in result["solution"]["branch"])
+loss_dc =  Dict(name => data["p_to"]+data["p_from"] for (name, data) in result["solution"]["dcline"])
+```
+
+
 ## Inspecting the Formulation
 The following example demonstrates how to break a `run_opf` call into seperate model building and solving steps.  This allows inspection of the JuMP model created by PowerModels for the AC-OPF problem,
 

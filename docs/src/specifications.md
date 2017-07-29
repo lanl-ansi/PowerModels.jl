@@ -13,7 +13,7 @@ variable_voltage(pm)
 variable_active_generation(pm)
 variable_reactive_generation(pm)
 variable_line_flow(pm)
-variable_line_flow_dc(pm)
+variable_dcline_flow(pm)
 ```
 
 ### Constraints
@@ -33,7 +33,7 @@ for (i,branch) in pm.ref[:branch]
     constraint_thermal_limit_to(pm, branch)
 end
 for (i,dcline) in pm.ref[:dcline]
-    constraint_dc_line(pm, dcline)
+    constraint_dcline(pm, dcline)
 end
 ```
 
@@ -52,7 +52,7 @@ variable_voltage_on_off(pm)
 variable_active_generation(pm)
 variable_reactive_generation(pm)
 variable_line_flow(pm)
-variable_line_flow_dc(pm)
+variable_dcline_flow(pm)
 ```
 
 ### Objective
@@ -79,7 +79,7 @@ for (i,branch) in pm.ref[:branch]
     constraint_thermal_limit_to_on_off(pm, branch)
 end
 for (i,dcline) in pm.ref[:dcline]
-    constraint_dc_line(pm, dcline)
+    constraint_dcline(pm, dcline)
 end
 ```
 
@@ -93,7 +93,7 @@ variable_voltage(pm, bounded = false)
 variable_active_generation(pm, bounded = false)
 variable_reactive_generation(pm, bounded = false)
 variable_line_flow(pm, bounded = false)
-variable_line_flow_dc(pm, bounded = false)
+variable_dcline_flow(pm, bounded = false)
 ```
 
 ### Constraints
@@ -125,7 +125,7 @@ for (i,branch) in pm.ref[:branch]
 end
 for (i,dcline) in pm.ref[:dcline]
     constraint_active_dc_line_setpoint(pm, dcline)
-    constraint_dc_line_voltage(pm, dcline; epsilon = 0.00001)
+    constraint_dcline_voltage(pm, dcline; epsilon = 0.00001)
 end
 ```
 
@@ -144,7 +144,7 @@ variable_voltage_ne(pm)
 variable_active_generation(pm)
 variable_reactive_generation(pm)
 variable_line_flow(pm)
-variable_line_flow_dc(pm)
+variable_dcline_flow(pm)
 variable_line_flow_ne(pm)
 ```
 
@@ -178,6 +178,6 @@ for (i,branch) in pm.ref[:ne_branch]
     constraint_thermal_limit_to_ne(pm, branch)
 end
 for (i,dcline) in pm.ref[:dcline]
-    constraint_dc_line(pm, dcline)
+    constraint_dcline(pm, dcline)
 end
 ```

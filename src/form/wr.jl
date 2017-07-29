@@ -75,7 +75,6 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractWRForm}(pm::GenericP
 end
 
 """
-for DC line voltage:
 '''
 (v_from  - epsilon)^2 <= w[i] <= (v_from + epsilon)^2
 (v_to  - epsilon)^2 <= w[i] <= (v_to + epsilon)^2

@@ -49,7 +49,6 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::Generic
 end
 
 """
-for DC line power flow:
 '''
 v_from  - epsilon <= v[i] <= v_from + epsilon
 v_to  - epsilon <= v[i] <= v_to + epsilon
