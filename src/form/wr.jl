@@ -74,26 +74,55 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractWRForm}(pm::GenericP
     end
 end
 
-""
-function constraint_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
+"""
+'''
+(v_from  - epsilon)^2 <= w[i] <= (v_from + epsilon)^2
+(v_to  - epsilon)^2 <= w[i] <= (v_to + epsilon)^2
+'''
+"""
+function constraint_dcline_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
+    w_f = getindex(pm.model, :w)[f_bus]
+    w_t = getindex(pm.model, :w)[t_bus]
+    if epsilon == 0.0
+        c1 = @constraint(pm.model, w_f == vf^2)
+        c2 = @constraint(pm.model, w_t == vt^2)
+        return Set([c1, c2])
+    else
+        c1 = @constraint(pm.model, w_f <= (vf + epsilon)^2)
+        c2 = @constraint(pm.model, w_f >= (vf - epsilon)^2)
+        c3 = @constraint(pm.model, w_t <= (vt + epsilon)^2)
+        c4 = @constraint(pm.model, w_t >= (vt - epsilon)^2)
+        return Set([c1, c2, c3, c4])
+    end
+end
+
+"""
+```
+sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w[i]
+sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w[i]
+```
+"""
+function constraint_kcl_shunt{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     w = getindex(pm.model, :w)[i]
     p = getindex(pm.model, :p)
     q = getindex(pm.model, :q)
     pg = getindex(pm.model, :pg)
     qg = getindex(pm.model, :qg)
+    p_dc = getindex(pm.model, :p_dc)
+    q_dc = getindex(pm.model, :q_dc)
 
-    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*w)
-    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*w)
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w)
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w)
     return Set([c1, c2])
 end
 
 """
 ```
-sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*w[i]
-sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*w[i]
+sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w[i]
+sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w[i]
 ```
 """
-function constraint_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
     w = getindex(pm.model, :w)[i]
     p = getindex(pm.model, :p)
     q = getindex(pm.model, :q)
@@ -102,8 +131,8 @@ function constraint_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, 
     pg = getindex(pm.model, :pg)
     qg = getindex(pm.model, :qg)
 
-    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*w)
-    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*w)
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w)
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w)
     return Set([c1, c2])
 end
 
@@ -247,10 +276,10 @@ end
 function constraint_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     buses = pm.ref[:bus]
     branches = pm.ref[:ne_branch]
-    
+
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:ne_buspairs])
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in branches])
-          
+
     w = getindex(pm.model, :w)
     wr = getindex(pm.model, :wr_ne)
     wi = getindex(pm.model, :wi_ne)
@@ -263,19 +292,19 @@ function constraint_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     for (l,i,j) in pm.ref[:ne_arcs_from]
         c1 = @constraint(pm.model, w_from[l] <= z[l]*buses[branches[l]["f_bus"]]["vmax"]^2)
         c2 = @constraint(pm.model, w_from[l] >= z[l]*buses[branches[l]["f_bus"]]["vmin"]^2)
-            
+
         c3 = @constraint(pm.model, wr[l] <= z[l]*wr_max[bi_bp[l]])
         c4 = @constraint(pm.model, wr[l] >= z[l]*wr_min[bi_bp[l]])
         c5 = @constraint(pm.model, wi[l] <= z[l]*wi_max[bi_bp[l]])
         c6 = @constraint(pm.model, wi[l] >= z[l]*wi_min[bi_bp[l]])
-              
+
         c7 = @constraint(pm.model, w_to[l] <= z[l]*buses[branches[l]["t_bus"]]["vmax"]^2)
         c8 = @constraint(pm.model, w_to[l] >= z[l]*buses[branches[l]["t_bus"]]["vmin"]^2)
-         
+
         c9 = relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
         c10 = relaxation_equality_on_off(pm.model, w[i], w_from[l], z[l])
         c11 = relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
-        cs = Set([cs, c1, c2, c3, c4, c5, c6, c7, c8,c9, c10, c11])    
+        cs = Set([cs, c1, c2, c3, c4, c5, c6, c7, c8,c9, c10, c11])
     end
     return cs
 end
@@ -625,7 +654,7 @@ function constraint_power_magnitude_link(pm::QCWRPowerModel, f_bus, t_bus, arc_f
 end
 
 "`t[ref_bus] == 0`"
-constraint_theta_ref(pm::QCWRPowerModel, ref_bus::Int) = 
+constraint_theta_ref(pm::QCWRPowerModel, ref_bus::Int) =
     @constraint(pm.model, getindex(pm.model, :t)[ref_bus] == 0)
 
 ""
@@ -650,7 +679,7 @@ function constraint_phase_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, ang
 
     c3 = cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 
-    return Set([c1, c2, c3]) 
+    return Set([c1, c2, c3])
 end
 
 ""
@@ -845,5 +874,3 @@ function constraint_power_magnitude_link_on_off(pm::QCWRPowerModel, i, arc_from,
     c = @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm + w_to - 2*(tr*wr + ti*wi)/tm) - c*q_fr - ((c/2)/tm)^2*w_fr)
     return Set([c])
 end
-
-

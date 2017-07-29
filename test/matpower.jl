@@ -108,7 +108,7 @@ end
         @test haskey(data, "areas_cells")
         @test data["areas_cells"]["1"]["col_1"] == "Area 1"
         @test data["areas_cells"]["1"]["col_2"] == 123
-        @test data["areas_cells"]["1"]["col_4"] == "Slack 'Bus' 1"
+        @test data["areas_cells"]["1"]["col_4"] == "Slack \\\"Bus\\\" 1"
         @test data["areas_cells"]["1"]["col_5"] == 1.23
         @test data["areas_cells"]["2"]["col_1"] == "Area 2"
         @test data["areas_cells"]["2"]["col_2"] == 456
@@ -159,10 +159,9 @@ end
     @testset "`build_ref` for 3-bus tnep case" begin
         data = PowerModels.parse_file("../test/data/case3_tnep.m")
         ref = PowerModels.build_ref(data)
-        
+
         @test haskey(data, "name")
         @test haskey(ref, :name)
         @test data["name"] == ref[:name]
     end
 end
-

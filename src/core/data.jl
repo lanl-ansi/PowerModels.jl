@@ -136,6 +136,11 @@ function make_per_unit(data::Dict{String,Any})
         if haskey(data, "branch")
             append!(branches, values(data["branch"]))
         end
+        dclines =[]
+        if haskey(data, "dcline")
+            append!(dclines, values(data["dcline"]))
+        end
+
         if haskey(data, "ne_branch")
             append!(branches, values(data["ne_branch"]))
         end
@@ -148,6 +153,22 @@ function make_per_unit(data::Dict{String,Any})
             apply_func(branch, "shift", deg2rad)
             apply_func(branch, "angmax", deg2rad)
             apply_func(branch, "angmin", deg2rad)
+        end
+
+        for dcline in dclines
+            apply_func(dcline, "loss0", rescale)
+            apply_func(dcline, "pf", rescale)
+            apply_func(dcline, "pt", rescale)
+            apply_func(dcline, "qf", rescale)
+            apply_func(dcline, "qt", rescale)
+            apply_func(dcline, "pmaxt", rescale)
+            apply_func(dcline, "pmint", rescale)
+            apply_func(dcline, "pmaxf", rescale)
+            apply_func(dcline, "pminf", rescale)
+            apply_func(dcline, "qmaxt", rescale)
+            apply_func(dcline, "qmint", rescale)
+            apply_func(dcline, "qmaxf", rescale)
+            apply_func(dcline, "qminf", rescale)
         end
 
         if haskey(data, "gen")
@@ -201,6 +222,12 @@ function make_mixed_units(data::Dict{String,Any})
         if haskey(data, "branch")
             append!(branches, values(data["branch"]))
         end
+
+        dclines =[]
+        if haskey(data, "dcline")
+            append!(dclines, values(data["dcline"]))
+        end
+
         if haskey(data, "ne_branch")
             append!(branches, values(data["ne_branch"]))
         end
@@ -213,6 +240,22 @@ function make_mixed_units(data::Dict{String,Any})
             apply_func(branch, "shift", rad2deg)
             apply_func(branch, "angmax", rad2deg)
             apply_func(branch, "angmin", rad2deg)
+        end
+
+        for dcline in dclines
+            apply_func(dcline, "loss0", rescale)
+            apply_func(dcline, "pf", rescale)
+            apply_func(dcline, "pt", rescale)
+            apply_func(dcline, "qf", rescale)
+            apply_func(dcline, "qt", rescale)
+            apply_func(dcline, "pmaxt", rescale)
+            apply_func(dcline, "pmint", rescale)
+            apply_func(dcline, "pmaxf", rescale)
+            apply_func(dcline, "pminf", rescale)
+            apply_func(dcline, "qmaxt", rescale)
+            apply_func(dcline, "qmint", rescale)
+            apply_func(dcline, "qmaxf", rescale)
+            apply_func(dcline, "qminf", rescale)
         end
 
         if haskey(data, "gen")
@@ -348,4 +391,42 @@ function check_bus_types(data)
         end
     end
 
+end
+
+"checks that parameters for dc lines are reasonable"
+function check_dcline_limits(data)
+    assert("per_unit" in keys(data) && data["per_unit"])
+    mva_base = data["baseMVA"]
+
+    for (i, dcline) in data["dcline"]
+        if dcline["loss0"] < 0.0
+            new_rate = 0.0
+            warn("this code only supports positive loss0 values, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
+            dcline["loss0"] = new_rate
+          end
+
+        if dcline["loss0"] >= dcline["pmaxf"]*(1-dcline["loss1"] )+ dcline["pmaxt"]
+            new_rate = 0.0
+            warn("this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
+            dcline["loss0"] = new_rate
+          end
+
+        if dcline["loss1"] < 0.0
+            new_rate = 0.0
+            warn("this code only supports positive loss1 values, changing the value on dcline $(dcline["index"]) from $(dcline["loss1"]) to $(new_rate)")
+            dcline["loss1"] = new_rate
+        end
+
+        if dcline["loss1"] >= 1.0
+            new_rate = 0.0
+            warn("this code only supports loss1 values < 1, changing the value on dcline $(dcline["index"]) from $(dcline["loss1"]) to $(new_rate)")
+            dcline["loss1"] = new_rate
+        end
+
+        if dcline["pmint"] <0.0 && dcline["loss1"] > 0.0
+            #new_rate = 0.0
+            warn("the dc line model is not meant to be used bi-directionally when loss1 > 0, be careful interpreting the results as the dc line losses can now be negative. change loss1 to 0 to avoid this warning")
+            #dcline["loss0"] = new_rate
+        end
+    end
 end

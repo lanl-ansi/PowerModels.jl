@@ -1,4 +1,4 @@
-PowerModels.jl Change Log 
+PowerModels.jl Change Log
 =================
 
 ### Staged
@@ -7,16 +7,17 @@ PowerModels.jl Change Log
 - Fixed bug in constants for w-space phase angle difference constraints
 - Fixed bug when no refrence bus was specified
 - Fixed dcline parsing bug
+- Support for DC Line formulation compatible with matpower
 
 ### v0.3.3
 - Added JuMP v0.17 compatibility
-- Reorganized documentation into Manual, Library, Developer, and Experimental Results 
+- Reorganized documentation into Manual, Library, Developer, and Experimental Results
 
 ### v0.3.2
 - Updated type declarations to Julia v0.6 syntax
 - Moved documentation to Documenter.jl (thanks to @yeesian)
 - Added basic OPF results to Documentation
-- Extended pm.ref include all fields from pm.data 
+- Extended pm.ref include all fields from pm.data
 
 ### v0.3.1
 - Added JuMP v0.16 and Julia v0.6 compatibility
@@ -46,7 +47,7 @@ PowerModels.jl Change Log
   - Added support Matlab cell arrays
   - Added support for Matpower bus_names
   - Added ability for reading non-standard Matpower data elements
-- Added JuMP version v0.14 upper bound 
+- Added JuMP version v0.14 upper bound
 
 ### v0.2.2
 - Added Transmission Network Expansion Planning (tnep) problem.

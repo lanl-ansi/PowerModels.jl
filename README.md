@@ -1,6 +1,6 @@
-# PowerModels.jl 
+# PowerModels.jl
 
-Release: [![PowerModels](http://pkg.julialang.org/badges/PowerModels_0.4.svg)](http://pkg.julialang.org/?pkg=PowerModels), [![PowerModels](http://pkg.julialang.org/badges/PowerModels_0.5.svg)](http://pkg.julialang.org/?pkg=PowerModels), [![PowerModels](http://pkg.julialang.org/badges/PowerModels_0.6.svg)](http://pkg.julialang.org/?pkg=PowerModels), 
+Release: [![PowerModels](http://pkg.julialang.org/badges/PowerModels_0.4.svg)](http://pkg.julialang.org/?pkg=PowerModels), [![PowerModels](http://pkg.julialang.org/badges/PowerModels_0.5.svg)](http://pkg.julialang.org/?pkg=PowerModels), [![PowerModels](http://pkg.julialang.org/badges/PowerModels_0.6.svg)](http://pkg.julialang.org/?pkg=PowerModels),
 [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://lanl-ansi.github.io/PowerModels.jl/stable)
 
 Dev:
@@ -42,6 +42,7 @@ The primary developer is Carleton Coffrin, with significant contributions from R
 
 Special thanks to Miles Lubin for his assistance in integrating with Julia/JuMP.
 
+Frederik Geth and Hakan Ergun (both KU Leuven) contributed to the Matpower-compatible DC Line formulation.
 
 ## License
 

@@ -42,4 +42,3 @@
         @test isapprox(result["objective"], 5812.64; atol = 1e0)
     end
 end
-

@@ -12,7 +12,7 @@ end
 
 ""
 function run_pf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_pf; kwargs...) 
+    return run_generic_model(file, model_constructor, solver, post_pf; kwargs...)
 end
 
 ""
@@ -20,6 +20,7 @@ function post_pf(pm::GenericPowerModel)
     variable_voltage(pm, bounded = false)
     variable_generation(pm, bounded = false)
     variable_line_flow(pm, bounded = false)
+    variable_dcline_flow(pm, bounded = false)
 
     constraint_voltage(pm)
 
@@ -47,5 +48,11 @@ function post_pf(pm::GenericPowerModel)
     for (i,branch) in pm.ref[:branch]
         constraint_ohms_yt_from(pm, branch)
         constraint_ohms_yt_to(pm, branch)
+    end
+
+    for (i,dcline) in pm.ref[:dcline]
+        #constraint_dcline(pm, dcline) not needed, active power flow fully defined by dc line setpoints
+        constraint_active_dcline_setpoint(pm, dcline)
+        constraint_dcline_voltage(pm, dcline; epsilon = 0.00001)
     end
 end

@@ -13,6 +13,7 @@ variable_voltage(pm)
 variable_active_generation(pm)
 variable_reactive_generation(pm)
 variable_line_flow(pm)
+variable_dcline_flow(pm)
 ```
 
 ### Constraints
@@ -31,6 +32,9 @@ for (i,branch) in pm.ref[:branch]
     constraint_thermal_limit_from(pm, branch)
     constraint_thermal_limit_to(pm, branch)
 end
+for (i,dcline) in pm.ref[:dcline]
+    constraint_dcline(pm, dcline)
+end
 ```
 
 ## Optimal Transmission Switching (OTS)
@@ -48,6 +52,7 @@ variable_voltage_on_off(pm)
 variable_active_generation(pm)
 variable_reactive_generation(pm)
 variable_line_flow(pm)
+variable_dcline_flow(pm)
 ```
 
 ### Objective
@@ -73,6 +78,9 @@ for (i,branch) in pm.ref[:branch]
     constraint_thermal_limit_from_on_off(pm, branch)
     constraint_thermal_limit_to_on_off(pm, branch)
 end
+for (i,dcline) in pm.ref[:dcline]
+    constraint_dcline(pm, dcline)
+end
 ```
 
 ## Power Flow (PF)
@@ -85,6 +93,7 @@ variable_voltage(pm, bounded = false)
 variable_active_generation(pm, bounded = false)
 variable_reactive_generation(pm, bounded = false)
 variable_line_flow(pm, bounded = false)
+variable_dcline_flow(pm, bounded = false)
 ```
 
 ### Constraints
@@ -92,6 +101,7 @@ variable_line_flow(pm, bounded = false)
 constraint_theta_ref(pm)
 constraint_voltage_magnitude_setpoint(pm, pm.ref[:bus][pm.ref[:ref_bus]])
 constraint_voltage(pm)
+
 
 for (i,bus) in pm.ref[:bus]
     constraint_kcl_shunt(pm, bus)
@@ -113,6 +123,10 @@ for (i,branch) in pm.ref[:branch]
     constraint_ohms_yt_from(pm, branch)
     constraint_ohms_yt_to(pm, branch)
 end
+for (i,dcline) in pm.ref[:dcline]
+    constraint_active_dc_line_setpoint(pm, dcline)
+    constraint_dcline_voltage(pm, dcline; epsilon = 0.00001)
+end
 ```
 
 ## Transmission Network Expansion Planning (TNEP)
@@ -124,12 +138,13 @@ objective_tnep_cost(pm)
 
 ### Variables
 ```julia
-variable_line_ne(pm) 
+variable_line_ne(pm)
 variable_voltage(pm)
 variable_voltage_ne(pm)
 variable_active_generation(pm)
 variable_reactive_generation(pm)
 variable_line_flow(pm)
+variable_dcline_flow(pm)
 variable_line_flow_ne(pm)
 ```
 
@@ -151,15 +166,18 @@ for (i,branch) in pm.ref[:branch]
 
     constraint_thermal_limit_from(pm, branch)
     constraint_thermal_limit_to(pm, branch)
-end 
+end
 
 for (i,branch) in pm.ref[:ne_branch]
     constraint_ohms_yt_from_ne(pm, branch)
-    constraint_ohms_yt_to_ne(pm, branch) 
+    constraint_ohms_yt_to_ne(pm, branch)
 
     constraint_phase_angle_difference_ne(pm, branch)
 
     constraint_thermal_limit_from_ne(pm, branch)
     constraint_thermal_limit_to_ne(pm, branch)
+end
+for (i,dcline) in pm.ref[:dcline]
+    constraint_dcline(pm, dcline)
 end
 ```

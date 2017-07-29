@@ -78,6 +78,8 @@ The data exchange via JSON files is ideal for building algorithms, however it is
 
 In addition to parsing the standard Matpower parameters, PowerModels also supports extending the standard Matpower format in a number of ways as illustrated by the following examples.  In these examples JSON document fragments are used to indicate the structure of the PowerModel dictionary.
 
+Note that for DC lines, the flow results are returned using the same convention as for the AC lines, i.e. positive values for `p_from`/`q_from `and `p_to`/`q_to` indicating power flow from the 'to' node or 'from' node into the line. This means that w.r.t matpower the sign is identical for `p_from`, but opposite for `q_from`/`p_to`/`q_to`.
+
 ### Single Values
 Single values are added to the root of the dictionary as follows,
 

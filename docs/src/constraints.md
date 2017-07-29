@@ -84,6 +84,13 @@ constraint_phase_angle_difference_ne
 constraint_loss_lb
 ```
 
+## DC Line Constraints
+### Network Flow Constraints
+
+```@docs
+constraint_dcline
+```
+
 ## Commonly Used Constraints
 The following methods generally assume that the model contains `p` and `q` values for branches line flows and bus flow conservation.
 
