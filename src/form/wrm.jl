@@ -1,4 +1,4 @@
-export 
+export
     SDPWRMPowerModel, SDPWRMForm
 
 ""
@@ -74,7 +74,7 @@ end
 constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus::Int) = Set()
 
 ""
-function constraint_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     WR = getindex(pm.model, :WR)
     w_index = pm.model.ext[:lookup_w_index][i]
     w = WR[w_index, w_index]
@@ -83,9 +83,11 @@ function constraint_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i,
     q = getindex(pm.model, :q)
     pg = getindex(pm.model, :pg)
     qg = getindex(pm.model, :qg)
+    p_dc = getindex(pm.model, :p_dc)
+    q_dc = getindex(pm.model, :q_dc)
 
-    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*w)
-    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*w)
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w)
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w)
     return Set([c1, c2])
 end
 
@@ -156,3 +158,6 @@ function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerMod
     # What should the default value be?
     #add_setpoint(sol, pm, "bus", "bus_i", "va", :t; default_value = 0)
 end
+
+"DC Line voltage constraint not supported"
+constraint_dcline_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon) = Set()

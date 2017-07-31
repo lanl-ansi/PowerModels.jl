@@ -57,7 +57,7 @@ end
 ""
 function variable_active_line_flow_ne{T <: StandardDCPForm}(pm::GenericPowerModel{T})
     @variable(pm.model, -pm.ref[:ne_branch][l]["rate_a"] <= p_ne[(l,i,j) in pm.ref[:ne_arcs_from]] <= pm.ref[:ne_branch][l]["rate_a"], start = getstart(pm.ref[:ne_branch], l, "p_start"))
- 
+
     p_ne_expr = Dict([((l,i,j), 1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]])
     p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*p_ne[(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]]))
 
@@ -80,23 +80,27 @@ constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::GenericPowerMode
 "do nothing, this model does not have reactive variables"
 constraint_reactive_gen_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, qg) = Set()
 
+"do nothing, this model does not have voltage variables"
+constraint_dcline_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon) = Set()
+
 ""
-function constraint_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     pg = getindex(pm.model, :pg)
     p_expr = pm.model.ext[:p_expr]
+    p_dc = getindex(pm.model, :p_dc)
 
-    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
+    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
     # omit reactive constraint
     return Set([c])
 end
 
 ""
-function constraint_kcl_shunt_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
     pg = getindex(pm.model, :pg)
     p_expr = pm.model.ext[:p_expr]
     p_ne_expr = pm.model.ext[:p_ne_expr]
 
-    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) + sum(p_ne_expr[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
+    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) + sum(p_ne_expr[a] for a in bus_arcs_ne)  + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
     return Set([c])
 end
 
@@ -172,12 +176,10 @@ end
 function add_branch_flow_setpoint{T <: AbstractDCPForm}(sol, pm::GenericPowerModel{T})
     # check the line flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
-        mva_base = pm.data["baseMVA"]
-
-        add_setpoint(sol, pm, "branch", "index", "p_from", :p; scale = (x,item) ->  x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch", "index", "q_from", :q; scale = (x,item) ->  x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch", "index",   "p_to", :p; scale = (x,item) -> -x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch", "index",   "q_to", :q; scale = (x,item) -> -x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "index", "pf", :p; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "index", "qf", :q; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "index", "pt", :p; scale = (x,item) -> -x, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "index", "qt", :q; scale = (x,item) -> -x, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
     end
 end
 
@@ -274,22 +276,24 @@ const DCPLLPowerModel = GenericPowerModel{StandardDCPLLForm}
 "default DC constructor"
 DCPLLPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, StandardDCPLLForm; kwargs...)
 
-"`sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2`"
-function constraint_kcl_shunt{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
+"`sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)== sum(pg[g] for g in bus_gens) - pd - gs*1.0^2`"
+function constraint_kcl_shunt{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     pg = getindex(pm.model, :pg)
     p = getindex(pm.model, :p)
+    p_dc = getindex(pm.model, :p_dc)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
     return Set([c])
 end
 
-"`sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2`"
-function constraint_kcl_shunt_ne{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
+"`sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2`"
+function constraint_kcl_shunt_ne{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
     p = getindex(pm.model, :p)
     p_ne = getindex(pm.model, :p_ne)
+    p_dc = getindex(pm.model, :p_dc)
     pg = getindex(pm.model, :pg)
 
-    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
     return Set([c])
 end
 

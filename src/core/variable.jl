@@ -93,6 +93,34 @@ function variable_voltage_magnitude_sqr_to_on_off(pm::GenericPowerModel)
     return w_to
 end
 
+
+""
+function variable_voltage_product(pm::GenericPowerModel; bounded = true)
+    if bounded
+        wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
+
+        @variable(pm.model, wr_min[bp] <= wr[bp in keys(pm.ref[:buspairs])] <= wr_max[bp], start = getstart(pm.ref[:buspairs], bp, "wr_start", 1.0))
+        @variable(pm.model, wi_min[bp] <= wi[bp in keys(pm.ref[:buspairs])] <= wi_max[bp], start = getstart(pm.ref[:buspairs], bp, "wi_start"))
+    else
+        @variable(pm.model, wr[bp in keys(pm.ref[:buspairs])], start = getstart(pm.ref[:buspairs], bp, "wr_start", 1.0))
+        @variable(pm.model, wi[bp in keys(pm.ref[:buspairs])], start = getstart(pm.ref[:buspairs], bp, "wi_start"))
+    end
+    return wr, wi
+end
+
+""
+function variable_voltage_product_on_off(pm::GenericPowerModel)
+    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
+
+    bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.ref[:branch]])
+
+    @variable(pm.model, min(0, wr_min[bi_bp[b]]) <= wr[b in keys(pm.ref[:branch])] <= max(0, wr_max[bi_bp[b]]), start = getstart(pm.ref[:buspairs], bi_bp[b], "wr_start", 1.0))
+    @variable(pm.model, min(0, wi_min[bi_bp[b]]) <= wi[b in keys(pm.ref[:branch])] <= max(0, wi_max[bi_bp[b]]), start = getstart(pm.ref[:buspairs], bi_bp[b], "wi_start"))
+
+    return wr, wi
+end
+
+
 "generates variables for both `active` and `reactive` generation"
 function variable_generation(pm::GenericPowerModel; kwargs...)
     variable_active_generation(pm; kwargs...)
@@ -125,6 +153,7 @@ function variable_line_flow(pm::GenericPowerModel; kwargs...)
     variable_reactive_line_flow(pm; kwargs...)
 end
 
+
 "variable: `p[l,i,j]` for `(l,i,j)` in `arcs`"
 function variable_active_line_flow(pm::GenericPowerModel; bounded = true)
     if bounded
@@ -144,6 +173,59 @@ function variable_reactive_line_flow(pm::GenericPowerModel; bounded = true)
     end
     return q
 end
+
+function variable_dcline_flow(pm::GenericPowerModel; kwargs...)
+    variable_active_dcline_flow(pm; kwargs...)
+    variable_reactive_dcline_flow(pm; kwargs...)
+end
+
+"variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
+function variable_active_dcline_flow(pm::GenericPowerModel; bounded = true)
+  pmin = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  pref = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  pmax = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  loss0 = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  for (l,i,j) in pm.ref[:arcs_from_dc]
+      pmin[(l,i,j)] =  pm.ref[:dcline][l]["pminf"]
+      pmax[(l,i,j)] =  pm.ref[:dcline][l]["pmaxf"]
+      pmin[(l,j,i)] =  pm.ref[:dcline][l]["pmint"]
+      pmax[(l,j,i)] =  pm.ref[:dcline][l]["pmaxt"]
+      pref[(l,i,j)] =  pm.ref[:dcline][l]["pf"]
+      pref[(l,j,i)] =  pm.ref[:dcline][l]["pt"]
+      loss0[(l,i,j)] =  0 #loss completely assigned to to side as per matpower
+      loss0[(l,j,i)] =  pm.ref[:dcline][l]["loss0"]  #loss completely assigned to to side as per matpower
+  end
+  if bounded
+      @variable(pm.model,   pmin[(l,i,j)] <= p_dc[(l,i,j) in pm.ref[:arcs_dc]] <= pmax[(l,i,j)], start = pref[(l,i,j)])
+  else
+      @variable(pm.model, p_dc[(l,i,j) in pm.ref[:arcs_dc]], start = pref[(l,i,j)])
+  end
+    return p_dc
+end
+
+"variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
+function variable_reactive_dcline_flow(pm::GenericPowerModel; bounded = true)
+  qmin = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  qref = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  qmax = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+  for (l,i,j) in pm.ref[:arcs_from_dc]
+      qmin[(l,i,j)] =  pm.ref[:dcline][l]["qminf"]
+      qmax[(l,i,j)] =  pm.ref[:dcline][l]["qmaxf"]
+      qmin[(l,j,i)] =  pm.ref[:dcline][l]["qmint"]
+      qmax[(l,j,i)] =  pm.ref[:dcline][l]["qmaxt"]
+      qref[(l,i,j)] =  pm.ref[:dcline][l]["qf"]
+      qref[(l,j,i)] =  pm.ref[:dcline][l]["qt"]
+    end
+    if bounded
+
+      @variable(pm.model, qmin[(l,i,j)] <= q_dc[(l,i,j) in pm.ref[:arcs_dc]] <= qmax[(l,i,j)], start = qref[(l,i,j)])
+    else
+      @variable(pm.model, q_dc[(l,i,j) in pm.ref[:arcs_dc]], start = qref[(l,i,j)])
+    end
+    return q_dc
+end
+
+##################################################################
 
 "generates variables for both `active` and `reactive` `line_flow_ne`"
 function variable_line_flow_ne(pm::GenericPowerModel; kwargs...)
@@ -175,4 +257,3 @@ function variable_line_ne(pm::GenericPowerModel)
     @variable(pm.model, 0 <= line_ne[l in keys(branches)] <= 1, Int, start = getstart(branches, l, "line_tnep_start", 1.0))
     return line_ne
 end
-

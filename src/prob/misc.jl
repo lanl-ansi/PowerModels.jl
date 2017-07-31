@@ -1,9 +1,9 @@
-export 
+export
     run_api_opf, run_sad_opf
 
 ""
 function run_api_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_api_opf; kwargs...) 
+    return run_generic_model(file, model_constructor, solver, post_api_opf; kwargs...)
 end
 
 ""
@@ -15,6 +15,8 @@ function post_api_opf(pm::GenericPowerModel)
     upperbound_negative_active_generation(pm)
 
     variable_line_flow(pm)
+    variable_dcline_flow(pm)
+
 
     variable_load_factor(pm)
 
@@ -47,11 +49,16 @@ function post_api_opf(pm::GenericPowerModel)
         constraint_thermal_limit_from(pm, branch; scale = 0.999)
         constraint_thermal_limit_to(pm, branch; scale = 0.999)
     end
+
+
+    for (i,dcline) in pm.ref[:dcline]
+        constraint_dcline(pm, dcline)
+    end
 end
 
 ""
 function run_sad_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_sad_opf; kwargs...) 
+    return run_generic_model(file, model_constructor, solver, post_sad_opf; kwargs...)
 end
 
 ""
@@ -59,6 +66,8 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
     variable_voltage(pm)
     variable_generation(pm)
     variable_line_flow(pm)
+    variable_dcline_flow(pm, bounded = false)
+
     @variable(pm.model, theta_delta_bound >= 0.0, start = 0.523598776)
 
     @objective(pm.model, Min, theta_delta_bound)
@@ -86,5 +95,9 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
 
         constraint_thermal_limit_from(pm, branch; scale = 0.999)
         constraint_thermal_limit_to(pm, branch; scale = 0.999)
+    end
+
+    for (i,dcline) in pm.ref[:dcline]
+        constraint_dcline(pm, dcline)
     end
 end

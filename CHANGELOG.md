@@ -1,23 +1,26 @@
-PowerModels.jl Change Log 
+PowerModels.jl Change Log
 =================
 
 ### Staged
-- Added support for AC-OPF with rectangular voltages
+- Added support for Matpower data with dclines
 - Added support for QC-OTS
 - Added support for multiple refrence buses
+- Added rectangular voltage formulation of AC-OPF
+- Added W-Theta formulation of AC-OPF
+- Made branch flow solution values consistent with Matpower data
 - Fixed bug in constants for w-space phase angle difference constraints
 - Fixed bug when no refrence bus was specified
 - Fixed dcline parsing bug
 
 ### v0.3.3
 - Added JuMP v0.17 compatibility
-- Reorganized documentation into Manual, Library, Developer, and Experimental Results 
+- Reorganized documentation into Manual, Library, Developer, and Experimental Results
 
 ### v0.3.2
 - Updated type declarations to Julia v0.6 syntax
 - Moved documentation to Documenter.jl (thanks to @yeesian)
 - Added basic OPF results to Documentation
-- Extended pm.ref include all fields from pm.data 
+- Extended pm.ref include all fields from pm.data
 
 ### v0.3.1
 - Added JuMP v0.16 and Julia v0.6 compatibility
@@ -47,7 +50,7 @@ PowerModels.jl Change Log
   - Added support Matlab cell arrays
   - Added support for Matpower bus_names
   - Added ability for reading non-standard Matpower data elements
-- Added JuMP version v0.14 upper bound 
+- Added JuMP version v0.14 upper bound
 
 ### v0.2.2
 - Added Transmission Network Expansion Planning (tnep) problem.

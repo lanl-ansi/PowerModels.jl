@@ -14,25 +14,30 @@ function parse_matpower(file_string::String)
     merge_bus_name_data(mp_data)
     merge_generator_cost_data(mp_data)
 
-    if length(mp_data["dcline"]) > 0
-        warn("this cases includes $(length(mp_data["dcline"])) dc lines, which are not currently supported by PowerModels problem formulations")
-    end
-
     # after this call, Matpower data is consistent with PowerModels data
     mp_data_to_pm_data(mp_data)
 
     return mp_data
 end
 
-"ensures all costs functions are quadratic and reverses their order"
+"ensures all polynomial costs functions have at least three terms"
 function standardize_cost_order(data::Dict{String,Any})
     for gencost in data["gencost"]
         if gencost["model"] == 2 && length(gencost["cost"]) < 3
             #println("std gen cost: ",gencost["cost"])
-            cost_3 = [zeros(1,3 - length(gencost["cost"])); gencost["cost"]]
+            cost_3 = append!(vec(fill(0.0, (1,3 - length(gencost["cost"])))), gencost["cost"])
             gencost["cost"] = cost_3
             #println("   ",gencost["cost"])
             warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
+        end
+    end
+    for dclinecost in data["dclinecost"]
+        if dclinecost["model"] == 2 && length(dclinecost["cost"]) < 3
+            #println("std gen cost: ",dclinecost["cost"])
+            cost_3 = append!(vec(fill(0.0, (1,3 - length(dclinecost["cost"])))), dclinecost["cost"])
+            dclinecost["cost"] = cost_3
+            #println("   ",dclinecost["cost"])
+            warn("added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
         end
     end
 end
@@ -67,6 +72,19 @@ function merge_generator_cost_data(data::Dict{String,Any})
             merge!(gen, gencost)
         end
         delete!(data, "gencost")
+    end
+    if haskey(data, "dclinecost")
+        # can assume same length is same as dcline
+        # this is validated during parsing
+        for (i, dclinecost) in enumerate(data["dclinecost"])
+            dcline = data["dcline"][i]
+            assert(dcline["index"] == dclinecost["index"])
+            delete!(dclinecost, "index")
+
+            check_keys(dcline, keys(dclinecost))
+            merge!(dcline, dclinecost)
+        end
+        delete!(data, "dclinecost")
     end
 end
 
@@ -228,7 +246,7 @@ function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
         mp_line = "$(mp_line);"
     end
 
-    if contains(mp_line, string(end_char)) 
+    if contains(mp_line, string(end_char))
         prefix = strip(split(mp_line, end_char)[1])
         if length(prefix) > 0 && ! contains(prefix, ";")
             mp_line = replace(mp_line, end_char, ";$(end_char)")
@@ -301,13 +319,15 @@ function parse_matpower_data(data_string::String)
     branch = -1
     gencost = -1
     dcline = -1
+    dclinecost = -1
 
     parsed_matrixes = []
     parsed_cells = []
 
     case = Dict{String,Any}(
         "dcline" => [],
-        "gencost" => []
+        "gencost" => [],
+        "dclinecost" => []
     )
 
     last_index = length(data_lines)
@@ -477,14 +497,7 @@ function parse_matpower_data(data_string::String)
             gencost = []
 
             for (i, gencost_row) in enumerate(parsed_matrix["data"])
-                gencost_data = Dict{String,Any}(
-                    "index" => i,
-                    "model" => parse(Int, gencost_row[1]),
-                    "startup" => parse(Float64, gencost_row[2]),
-                    "shutdown" => parse(Float64, gencost_row[3]),
-                    "ncost" => parse(Int, gencost_row[4]),
-                    "cost" => [parse(Float64, x) for x in gencost_row[5:length(gencost_row)]]
-                )
+                gencost_data = cost_data(i, gencost_row)
                 push!(gencost, gencost_data)
             end
 
@@ -496,21 +509,52 @@ function parse_matpower_data(data_string::String)
 
         elseif parsed_matrix["name"] == "dcline"
             dclines = []
-
             for (i, dcline_row) in enumerate(parsed_matrix["data"])
+                pmin = parse(Float64, dcline_row[10])
+                pmax = parse(Float64, dcline_row[11])
+                loss0 = parse(Float64, dcline_row[16])
+                loss1 = parse(Float64, dcline_row[17])
+
+                if pmin >= 0 && pmax >=0
+                    pminf = pmin
+                    pmaxf = pmax
+                    pmint = loss0 - pmaxf * (1 - loss1)
+                    pmaxt = loss0 - pminf * (1 - loss1)
+                end
+                if pmin >= 0 && pmax < 0
+                    pminf = pmin
+                    pmint = pmax
+                    pmaxf = (-pmint + loss0) / (1-loss1)
+                    pmaxt = loss0 - pminf * (1 - loss1)
+                end
+                if pmin < 0 && pmax >= 0
+                    pmaxt = -pmin
+                    pmaxf = pmax
+                    pminf = (-pmaxt + loss0) / (1-loss1)
+                    pmint = loss0 - pmaxf * (1 - loss1)
+                end
+                if pmin < 0 && pmax < 0
+                    pmaxt = -pmin
+                    pmint = pmax
+                    pmaxf = (-pmint + loss0) / (1-loss1)
+                    pminf = (-pmaxt + loss0) / (1-loss1)
+                end
+
                 dcline_data = Dict{String,Any}(
                     "index" => i,
                     "f_bus" => parse(Int, dcline_row[1]),
                     "t_bus" => parse(Int, dcline_row[2]),
                     "br_status" => parse(Int, dcline_row[3]),
                     "pf" => parse(Float64, dcline_row[4]),
-                    "pt" => parse(Float64, dcline_row[5]),
-                    "qf" => parse(Float64, dcline_row[6]),
-                    "qt" => parse(Float64, dcline_row[7]),
+                    "pt" => -parse(Float64, dcline_row[5]), # matpower has opposite convention
+                    "qf" => -parse(Float64, dcline_row[6]), # matpower has opposite convention
+                    "qt" => -parse(Float64, dcline_row[7]), # matpower has opposite convention
                     "vf" => parse(Float64, dcline_row[8]),
                     "vt" => parse(Float64, dcline_row[9]),
-                    "pmin" => parse(Float64, dcline_row[10]),
-                    "pmax" => parse(Float64, dcline_row[11]),
+                    "pmint" => pmint,
+                    "pminf" => pminf,
+                    "pmaxt" => pmaxt,
+                    "pmaxf" => pmaxf,
                     "qminf" => parse(Float64, dcline_row[12]),
                     "qmaxf" => parse(Float64, dcline_row[13]),
                     "qmint" => parse(Float64, dcline_row[14]),
@@ -526,12 +570,22 @@ function parse_matpower_data(data_string::String)
                     dcline_data["mu_qmint"] = parse(Float64, dcline_row[22])
                     dcline_data["mu_qmaxt"] = parse(Float64, dcline_row[23])
                 end
-
                 push!(dclines, dcline_data)
             end
-
             case["dcline"] = dclines
+        elseif parsed_matrix["name"] == "dclinecost"
+            dclinecost = []
 
+            for (i, dclinecost_row) in enumerate(parsed_matrix["data"])
+                dclinecost_data = cost_data(i, dclinecost_row)
+                push!(dclinecost, dclinecost_data)
+            end
+
+            case["dclinecost"] = dclinecost
+
+            if length(case["dclinecost"]) != length(case["dcline"])
+                error("incorrect Matpower file, the number of dcline cost functions ($(length(case["dclinecost"]))) is inconsistent with the number of dclines ($(length(case["dcline"]))).\n")
+            end
         else
             name = parsed_matrix["name"]
             data = parsed_matrix["data"]
@@ -549,7 +603,7 @@ function parse_matpower_data(data_string::String)
 
     for parsed_cell in parsed_cells
         #println(parsed_cell)
-        if parsed_cell["name"] == "bus_name" 
+        if parsed_cell["name"] == "bus_name"
             if length(parsed_cell["data"]) != length(case["bus"])
                 error("incorrect Matpower file, the number of bus names ($(length(parsed_cell["data"]))) is inconsistent with the number of buses ($(length(case["bus"]))).\n")
             end
@@ -577,6 +631,20 @@ function parse_matpower_data(data_string::String)
     return case
 end
 
+
+function cost_data(index, costrow)
+    cost_data = Dict{String,Any}(
+        "index" => index,
+        "model" => parse(Int, costrow[1]),
+        "startup" => parse(Float64, costrow[2]),
+        "shutdown" => parse(Float64, costrow[3]),
+        "ncost" => parse(Int, costrow[4]),
+        "cost" => [parse(Float64, x) for x in costrow[5:length(costrow)]]
+    )
+    return cost_data
+end
+
+
 "takes a list of list of strings and turns it into a list of typed dictionaries"
 function build_typed_dict(data, column_names)
     # TODO see if there is a more julia-y way of doing this
@@ -584,7 +652,7 @@ function build_typed_dict(data, column_names)
     columns = length(data[1])
 
     typed_columns = [type_array([ data[r][c] for r in 1:rows ]) for c in 1:columns]
-    
+
     typed_data = Dict{String,Any}[]
     for r in 1:rows
         data_dict = Dict{String,Any}()

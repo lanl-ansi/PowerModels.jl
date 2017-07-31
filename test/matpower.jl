@@ -19,9 +19,15 @@ using JSON
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
     end
 
-    @testset "14-bus case file with names" begin
+    @testset "14-bus case file with bus names" begin
         data = PowerModels.parse_file("../test/data/case14.m")
         @test data["bus"]["1"]["bus_name"] == "Bus 1     HV"
+        @test isa(JSON.json(data), String)
+    end
+
+    @testset "3-bus case file with hvdc lines" begin
+        data = PowerModels.parse_file("../test/data/case3.m")
+        @test length(data["dcline"]) > 0
         @test isa(JSON.json(data), String)
     end
 
@@ -108,7 +114,7 @@ end
         @test haskey(data, "areas_cells")
         @test data["areas_cells"]["1"]["col_1"] == "Area 1"
         @test data["areas_cells"]["1"]["col_2"] == 123
-        @test data["areas_cells"]["1"]["col_4"] == "Slack 'Bus' 1"
+        @test data["areas_cells"]["1"]["col_4"] == "Slack \\\"Bus\\\" 1"
         @test data["areas_cells"]["1"]["col_5"] == 1.23
         @test data["areas_cells"]["2"]["col_1"] == "Area 2"
         @test data["areas_cells"]["2"]["col_2"] == 456
@@ -159,10 +165,9 @@ end
     @testset "`build_ref` for 3-bus tnep case" begin
         data = PowerModels.parse_file("../test/data/case3_tnep.m")
         ref = PowerModels.build_ref(data)
-        
+
         @test haskey(data, "name")
         @test haskey(ref, :name)
         @test data["name"] == ref[:name]
     end
 end
-

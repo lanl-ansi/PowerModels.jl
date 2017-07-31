@@ -1,4 +1,4 @@
-export 
+export
     ACPPowerModel, StandardACPForm,
     ACRPowerModel, StandardACRForm,
     APIACPPowerModel, APIACPForm
@@ -13,7 +13,7 @@ export
 const ACPPowerModel = GenericPowerModel{StandardACPForm}
 
 "default AC constructor"
-ACPPowerModel(data::Dict{String,Any}; kwargs...) = 
+ACPPowerModel(data::Dict{String,Any}; kwargs...) =
     GenericPowerModel(data, StandardACPForm; kwargs...)
 
 ""
@@ -50,30 +50,55 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::Generic
 end
 
 """
+'''
+v_from  - epsilon <= v[i] <= v_from + epsilon
+v_to  - epsilon <= v[i] <= v_to + epsilon
+'''
+"""
+function constraint_dcline_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
+    v_f = getindex(pm.model, :v)[f_bus]
+    v_t = getindex(pm.model, :v)[t_bus]
+
+    if epsilon == 0.0
+        c1 = @constraint(pm.model, v_f == vf)
+        c2 = @constraint(pm.model, v_t == vt)
+        return Set([c1, c2])
+    else
+        c1 = @constraint(pm.model, v_f <= vf + epsilon)
+        c2 = @constraint(pm.model, v_f >= vf - epsilon)
+        c3 = @constraint(pm.model, v_t <= vt + epsilon)
+        c4 = @constraint(pm.model, v_t >= vt - epsilon)
+        return Set([c1, c2, c3, c4])
+    end
+end
+
+"""
 ```
-sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*v^2
-sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*v^2
+sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*v^2
+sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*v^2
 ```
 """
-function constraint_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     v = getindex(pm.model, :v)[i]
     p = getindex(pm.model, :p)
     q = getindex(pm.model, :q)
     pg = getindex(pm.model, :pg)
     qg = getindex(pm.model, :qg)
+    p_dc = getindex(pm.model, :p_dc)
+    q_dc = getindex(pm.model, :q_dc)
 
-    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*v^2)
-    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*v^2)
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*v^2)
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*v^2)
     return Set([c1, c2])
 end
 
 """
 ```
-sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*v^2
-sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*v^2
+sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*v^2
+sum(q[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*v^2
 ```
 """
-function constraint_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
     v = getindex(pm.model, :v)[i]
     p = getindex(pm.model, :p)
     q = getindex(pm.model, :q)
@@ -81,9 +106,11 @@ function constraint_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T},
     q_ne = getindex(pm.model, :q_ne)
     pg = getindex(pm.model, :pg)
     qg = getindex(pm.model, :qg)
+    p_dc = getindex(pm.model, :p_dc)
+    q_dc = getindex(pm.model, :q_dc)
 
-    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*v^2)
-    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*v^2)
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)  + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*v^2)
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)  + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*v^2)
     return Set([c1, c2])
 end
 
@@ -493,7 +520,7 @@ variable_load_factor(pm::GenericPowerModel) =
     @variable(pm.model, load_factor >= 1.0, start = 1.0)
 
 "objective: Max. load_factor"
-objective_max_loading(pm::GenericPowerModel) = 
+objective_max_loading(pm::GenericPowerModel) =
     @objective(pm.model, Max, getindex(pm.model, :load_factor))
 
 ""
@@ -531,7 +558,7 @@ end
 ""
 function upperbound_negative_active_generation(pm::APIACPPowerModel)
     for (i,gen) in pm.ref[:gen]
-        if gen["pmax"] <= 0 
+        if gen["pmax"] <= 0
             pg = getindex(pm.model, :pg)[i]
             setupperbound(pg, gen["pmax"])
         end
