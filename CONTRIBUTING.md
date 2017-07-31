@@ -20,6 +20,7 @@ To that end, the following code quality controls are necessary for all contribut
 - naming conventions must be consistent
 - core features must have documentation
 - code style must be consistent (e.g. 4 spaces for indetnation)
-Due to these quality control requirements, pull request to PowerModels may require length discussion and review (e.g. see [#111](https://github.com/lanl-ansi/PowerModels.jl/pull/111)).
+
+Due to these quality control requirements, pull request to PowerModels may require lengthy discussion and code review (e.g. see [#111](https://github.com/lanl-ansi/PowerModels.jl/pull/111)).
 
 PowerModels contributions that do not meet these scope or quality requirements are always welcome in [PowerModelsAnnex.jl](https://github.com/lanl-ansi/PowerModelsAnnex.jl)
