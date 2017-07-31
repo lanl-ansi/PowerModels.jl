@@ -20,7 +20,7 @@ This enables the definition of a wide variety of power network formulations and 
 * Transmission Network Expansion Planning (tnep)
 
 **Core Network Formulations**
-* AC (polar coordinates)
+* AC (polar and rectangular coordinates)
 * DC Approximation (polar coordinates)
 * SOC Relaxation (W-space)
 * QC Relaxation (W+L-space)

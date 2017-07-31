@@ -8,6 +8,7 @@ function getstart(set, item_key, value_key, default = 0.0)
     return get(get(set, item_key, Dict()), value_key, default)
 end
 
+
 "variable: `t[i]` for `i` in `bus`es"
 function variable_phase_angle(pm::GenericPowerModel; bounded::Bool = true)
     @variable(pm.model, t[i in keys(pm.ref[:bus])], start = getstart(pm.ref[:bus], i, "t_start"))
@@ -23,6 +24,23 @@ function variable_voltage_magnitude(pm::GenericPowerModel; bounded = true)
     end
     return v
 end
+
+
+"real part of the voltage variable `i` in `bus`es"
+function variable_voltage_real(pm::GenericPowerModel; bounded::Bool = true)
+    vm_ub = Dict(i => bus["vmax"] for (i,bus) in pm.ref[:bus])
+    @variable(pm.model, -vm_ub[i] <= vr[i in keys(pm.ref[:bus])] <= vm_ub[i], start = getstart(pm.ref[:bus], i, "vr_start", 1.0))
+    return vr
+end
+
+"real part of the voltage variable `i` in `bus`es"
+function variable_voltage_imaginary(pm::GenericPowerModel; bounded::Bool = true)
+    vm_ub = Dict(i => bus["vmax"] for (i,bus) in pm.ref[:bus])
+    @variable(pm.model, -vm_ub[i] <= vi[i in keys(pm.ref[:bus])] <= vm_ub[i], start = getstart(pm.ref[:bus], i, "vi_start"))
+    return vi
+end
+
+
 
 "variable: `0 <= v_from[l] <= buses[branches[l][\"f_bus\"]][\"vmax\"]` for `l` in `branch`es"
 function variable_voltage_magnitude_from_on_off(pm::GenericPowerModel)
