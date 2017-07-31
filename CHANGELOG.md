@@ -7,6 +7,7 @@ PowerModels.jl Change Log
 - Added support for multiple refrence buses
 - Added rectangular voltage formulation of AC-OPF
 - Added W-Theta formulation of AC-OPF
+- Added data units checks to update_data
 - Made branch flow solution values consistent with Matpower data
 - Fixed bug in constants for w-space phase angle difference constraints
 - Fixed bug when no refrence bus was specified
