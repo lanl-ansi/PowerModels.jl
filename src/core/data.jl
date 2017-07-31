@@ -89,13 +89,26 @@ function check_keys(data, keys)
     end
 end
 
-"Recursively applies new_data to data, overwritting information"
+
+"recursively applies new_data to data, overwriting information"
 function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
+    if haskey(data, "per_unit") && haskey(new_data, "per_unit")
+        if data["per_unit"] != new_data["per_unit"]
+            error("update_data requires datasets in the same units, try make_per_unit and make_mixed_units")
+        end
+    else
+        warn("running update_data with data that does not include per_unit field, units may be incorrect")
+    end
+    _update_data(data, new_data)
+end
+
+"recursive call of _update_data"
+function _update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
     for (key, new_v) in new_data
         if haskey(data, key)
             v = data[key]
             if isa(v, Dict) && isa(new_v, Dict)
-                update_data(v, new_v)
+                _update_data(v, new_v)
             else
                 data[key] = new_v
             end
@@ -104,6 +117,7 @@ function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
         end
     end
 end
+
 
 ""
 function apply_func(data::Dict{String,Any}, key::String, func)
