@@ -240,6 +240,11 @@ function make_mixed_units(data::Dict{String,Any})
             apply_func(branch, "shift", rad2deg)
             apply_func(branch, "angmax", rad2deg)
             apply_func(branch, "angmin", rad2deg)
+
+            apply_func(branch, "pf", rescale)
+            apply_func(branch, "pt", rescale)
+            apply_func(branch, "qf", rescale)
+            apply_func(branch, "qt", rescale)
         end
 
         for dcline in dclines
@@ -390,7 +395,6 @@ function check_bus_types(data)
 
         end
     end
-
 end
 
 "checks that parameters for dc lines are reasonable"
@@ -430,3 +434,4 @@ function check_dcline_limits(data)
         end
     end
 end
+

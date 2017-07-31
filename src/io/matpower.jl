@@ -20,15 +20,24 @@ function parse_matpower(file_string::String)
     return mp_data
 end
 
-"ensures all costs functions are quadratic and reverses their order"
+"ensures all polynomial costs functions have at least three terms"
 function standardize_cost_order(data::Dict{String,Any})
     for gencost in data["gencost"]
         if gencost["model"] == 2 && length(gencost["cost"]) < 3
             #println("std gen cost: ",gencost["cost"])
-            cost_3 = [zeros(1,3 - length(gencost["cost"])); gencost["cost"]]
+            cost_3 = append!(vec(fill(0.0, (1,3 - length(gencost["cost"])))), gencost["cost"])
             gencost["cost"] = cost_3
             #println("   ",gencost["cost"])
             warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
+        end
+    end
+    for dclinecost in data["dclinecost"]
+        if dclinecost["model"] == 2 && length(dclinecost["cost"]) < 3
+            #println("std gen cost: ",dclinecost["cost"])
+            cost_3 = append!(vec(fill(0.0, (1,3 - length(dclinecost["cost"])))), dclinecost["cost"])
+            dclinecost["cost"] = cost_3
+            #println("   ",dclinecost["cost"])
+            warn("added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
         end
     end
 end
@@ -63,6 +72,19 @@ function merge_generator_cost_data(data::Dict{String,Any})
             merge!(gen, gencost)
         end
         delete!(data, "gencost")
+    end
+    if haskey(data, "dclinecost")
+        # can assume same length is same as dcline
+        # this is validated during parsing
+        for (i, dclinecost) in enumerate(data["dclinecost"])
+            dcline = data["dcline"][i]
+            assert(dcline["index"] == dclinecost["index"])
+            delete!(dclinecost, "index")
+
+            check_keys(dcline, keys(dclinecost))
+            merge!(dcline, dclinecost)
+        end
+        delete!(data, "dclinecost")
     end
 end
 
@@ -297,13 +319,15 @@ function parse_matpower_data(data_string::String)
     branch = -1
     gencost = -1
     dcline = -1
+    dclinecost = -1
 
     parsed_matrixes = []
     parsed_cells = []
 
     case = Dict{String,Any}(
         "dcline" => [],
-        "gencost" => []
+        "gencost" => [],
+        "dclinecost" => []
     )
 
     last_index = length(data_lines)
@@ -473,14 +497,7 @@ function parse_matpower_data(data_string::String)
             gencost = []
 
             for (i, gencost_row) in enumerate(parsed_matrix["data"])
-                gencost_data = Dict{String,Any}(
-                    "index" => i,
-                    "model" => parse(Int, gencost_row[1]),
-                    "startup" => parse(Float64, gencost_row[2]),
-                    "shutdown" => parse(Float64, gencost_row[3]),
-                    "ncost" => parse(Int, gencost_row[4]),
-                    "cost" => [parse(Float64, x) for x in gencost_row[5:length(gencost_row)]]
-                )
+                gencost_data = cost_data(i, gencost_row)
                 push!(gencost, gencost_data)
             end
 
@@ -557,8 +574,18 @@ function parse_matpower_data(data_string::String)
             end
             case["dcline"] = dclines
         elseif parsed_matrix["name"] == "dclinecost"
-            case["dclinecost"] = []
-            warn("DC Line costs are not considered")
+            dclinecost = []
+
+            for (i, dclinecost_row) in enumerate(parsed_matrix["data"])
+                dclinecost_data = cost_data(i, dclinecost_row)
+                push!(dclinecost, dclinecost_data)
+            end
+
+            case["dclinecost"] = dclinecost
+
+            if length(case["dclinecost"]) != length(case["dcline"])
+                error("incorrect Matpower file, the number of dcline cost functions ($(length(case["dclinecost"]))) is inconsistent with the number of dclines ($(length(case["dcline"]))).\n")
+            end
         else
             name = parsed_matrix["name"]
             data = parsed_matrix["data"]
@@ -603,6 +630,20 @@ function parse_matpower_data(data_string::String)
 
     return case
 end
+
+
+function cost_data(index, costrow)
+    cost_data = Dict{String,Any}(
+        "index" => index,
+        "model" => parse(Int, costrow[1]),
+        "startup" => parse(Float64, costrow[2]),
+        "shutdown" => parse(Float64, costrow[3]),
+        "ncost" => parse(Int, costrow[4]),
+        "cost" => [parse(Float64, x) for x in costrow[5:length(costrow)]]
+    )
+    return cost_data
+end
+
 
 "takes a list of list of strings and turns it into a list of typed dictionaries"
 function build_typed_dict(data, column_names)

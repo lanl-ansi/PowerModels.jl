@@ -53,6 +53,10 @@ end
 # default generic constructor
 function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{String,Any}(), solver = JuMP.UnsetSolver())
 
+    check_cost_models(data)
+    # TODO is may also be a good place to check component validity
+    # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
+
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
         data, # data
@@ -63,6 +67,29 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{S
     )
 
     return pm
+end
+
+
+"""
+Checks that all cost models are polynomials, quadratic or less
+"""
+function check_cost_models(data::Dict{String,Any})
+    for (i,gen) in data["gen"]
+        if haskey(gen, "cost") && gen["model"] != 2
+            error("only cost model 2 is supported at this time, given cost model $(gen["model"]) on generator $(i)")
+        end
+        if haskey(gen, "cost") && length(gen["cost"]) > 3
+            error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(gen["cost"])) on generator $(i)")
+        end
+    end
+    for (i,dcline) in data["dcline"]
+        if haskey(dcline, "model") && dcline["model"] != 2
+            error("only cost model 2 is supported at this time, given cost model $(dcline["model"]) on generator $(i)")
+        end
+        if haskey(dcline, "cost") && length(dcline["cost"]) > 3
+            error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(dcline["cost"])) on dcline $(i)")
+        end
+    end
 end
 
 #
