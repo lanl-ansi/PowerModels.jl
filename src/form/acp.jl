@@ -404,17 +404,18 @@ function constraint_theta_ref{T <: AbstractACRForm}(pm::GenericPowerModel{T}, re
 end
 
 
-""
-function constraint_kcl_shunt{T <: AbstractACRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt{T <: AbstractACRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     vr = getindex(pm.model, :vr)[i]
     vi = getindex(pm.model, :vi)[i]
     p = getindex(pm.model, :p)
     q = getindex(pm.model, :q)
     pg = getindex(pm.model, :pg)
     qg = getindex(pm.model, :qg)
+    p_dc = getindex(pm.model, :p_dc)
+    q_dc = getindex(pm.model, :q_dc)
 
-    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - pd - gs*(vr^2 + vi^2))
-    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) == sum(qg[g] for g in bus_gens) - qd + bs*(vr^2 + vi^2))
+    c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*(vr^2 + vi^2))
+    c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*(vr^2 + vi^2))
     return Set([c1, c2])
 end
 
