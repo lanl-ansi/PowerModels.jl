@@ -13,9 +13,10 @@
         @test isapprox(result["solution"]["bus"]["2"]["vm"], 0.92617; atol = 1e-3)
         @test isapprox(result["solution"]["bus"]["3"]["vm"], 0.90000; atol = 1e-3)
 
-        @test isapprox(result["solution"]["dcline"]["1"]["p_from"], 10; atol = 1e-3)
-        @test isapprox(result["solution"]["dcline"]["1"]["p_to"], -10; atol = 1e-3)
-
+        @test isapprox(result["solution"]["dcline"]["1"]["pf"],  10; atol = 1e-3)
+        @test isapprox(result["solution"]["dcline"]["1"]["pt"], -10; atol = 1e-3)
+        @test isapprox(result["solution"]["dcline"]["1"]["qf"], -40.3045; atol = 1e-3)
+        @test isapprox(result["solution"]["dcline"]["1"]["qt"],   6.47562; atol = 1e-3)
     end
     @testset "5-bus asymmetric case" begin
         result = run_pf("../test/data/case5_asym.m", ACPPowerModel, ipopt_solver)
@@ -39,8 +40,8 @@
         @test isapprox(result["solution"]["bus"]["5"]["vm"], 1.0530; atol = 1e-3)
 
 
-        @test isapprox(result["solution"]["dcline"]["1"]["p_from"], 10; atol = 1e-3)
-        @test isapprox(result["solution"]["dcline"]["1"]["p_to"], -8.9; atol = 1e-3)
+        @test isapprox(result["solution"]["dcline"]["1"]["pf"], 10; atol = 1e-3)
+        @test isapprox(result["solution"]["dcline"]["1"]["pt"], -8.9; atol = 1e-3)
 
     end
     @testset "6-bus case" begin
