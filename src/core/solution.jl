@@ -8,7 +8,6 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
     end
 
     sol = solution_builder(pm)
-    make_mixed_units(sol)
 
     solution = Dict{String,Any}(
         "solver" => string(typeof(pm.model.solver)),
