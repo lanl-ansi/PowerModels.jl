@@ -83,15 +83,12 @@ end
 
 ""
 function add_dcline_flow_setpoint(sol, pm::GenericPowerModel)
-    # check the line flows were requested
-    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
-        mva_base = pm.data["baseMVA"]
+    mva_base = pm.data["baseMVA"]
 
-        add_setpoint(sol, pm, "dcline", "index", "p_from", :p_dc; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "dcline", "index", "q_from", :q_dc; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "dcline", "index",   "p_to", :p_dc; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-        add_setpoint(sol, pm, "dcline", "index",   "q_to", :q_dc; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-    end
+    add_setpoint(sol, pm, "dcline", "index", "pf", :p_dc; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+    add_setpoint(sol, pm, "dcline", "index", "qf", :q_dc; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+    add_setpoint(sol, pm, "dcline", "index", "pt", :p_dc; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+    add_setpoint(sol, pm, "dcline", "index", "qt", :q_dc; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
 end
 
 ""
@@ -123,7 +120,10 @@ end
 
 ""
 function add_setpoint(sol, pm::GenericPowerModel, dict_name, index_name, param_name, variable_symbol; default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
-    sol_dict = sol[dict_name] = get(sol, dict_name, Dict{String,Any}())
+    sol_dict = get(sol, dict_name, Dict{String,Any}())
+    if length(pm.data[dict_name]) > 0
+        sol[dict_name] = sol_dict
+    end
     for (i,item) in pm.data[dict_name]
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
