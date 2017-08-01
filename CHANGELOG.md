@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- none
+- Moved check_cost_models into the objective building function
+- Fixed out of range bug in calc_theta_delta_bounds
 
 ### v0.3.4
 - Added support for Matpower data with dclines (thanks to @frederikgeth, @hakanergun)

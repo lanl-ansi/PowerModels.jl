@@ -3,8 +3,33 @@
 # This will hopefully make everything more compositional
 ################################################################################
 
+"""
+Checks that all cost models are polynomials, quadratic or less
+"""
+function check_cost_models(pm::GenericPowerModel)
+    for (i,gen) in pm.ref[:gen]
+        if haskey(gen, "cost") && gen["model"] != 2
+            error("only cost model 2 is supported at this time, given cost model $(gen["model"]) on generator $(i)")
+        end
+        if haskey(gen, "cost") && length(gen["cost"]) > 3
+            error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(gen["cost"])) on generator $(i)")
+        end
+    end
+    for (i,dcline) in pm.ref[:dcline]
+        if haskey(dcline, "model") && dcline["model"] != 2
+            error("only cost model 2 is supported at this time, given cost model $(dcline["model"]) on generator $(i)")
+        end
+        if haskey(dcline, "cost") && length(dcline["cost"]) > 3
+            error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(dcline["cost"])) on dcline $(i)")
+        end
+    end
+end
+
+
 ""
 function objective_min_fuel_cost(pm::GenericPowerModel)
+    check_cost_models(pm)
+
     pg = getindex(pm.model, :pg)
     dc_p = getindex(pm.model, :p_dc)
     from_idx = Dict(arc[1] => arc for arc in pm.ref[:arcs_from_dc])
@@ -17,9 +42,7 @@ end
 
 ""
 function objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T})
-    #if length(pm.ref[:dcline]) > 0
-    #    error("ConicPowerFormulations do not currently support dcline cost functions")
-    #end
+    check_cost_models(pm)
 
     pg = getindex(pm.model, :pg)
     dc_p = getindex(pm.model, :p_dc)
