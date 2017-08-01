@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- none
+
+### v0.3.4
 - Added support for Matpower data with dclines (thanks to @frederikgeth, @hakanergun)
 - Added support for QC-OTS
 - Added support for multiple refrence buses
