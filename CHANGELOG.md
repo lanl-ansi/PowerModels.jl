@@ -2,13 +2,13 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- Added support for Matpower data with dclines
+- Added support for Matpower data with dclines (thanks to @frederikgeth, @hakanergun)
 - Added support for QC-OTS
 - Added support for multiple refrence buses
 - Added rectangular voltage formulation of AC-OPF
-- Added W-Theta formulation of AC-OPF
+- Added w-theta formulation of AC-OPF
 - Added data units checks to update_data
-- Made branch flow solution values consistent with Matpower data
+- Made branch flow parameter names consistent with Matpower
 - Fixed bug in constants for w-space phase angle difference constraints
 - Fixed bug when no refrence bus was specified
 - Fixed dcline parsing bug
