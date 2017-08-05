@@ -40,10 +40,10 @@ end
 
         branches = result["solution"]["branch"]
 
-        @test isapprox(branches["2"]["pf"],  20.01; atol = 1e-1)
-        @test isapprox(branches["2"]["pt"],   -19.80; atol = 1e-1)
-        @test isapprox(branches["2"]["qf"],   0.55; atol = 1e-1)
-        @test isapprox(branches["2"]["qt"],    -5.71; atol = 1e-1)
+        @test isapprox(branches["2"]["pf"],  0.2001; atol = 1e-3)
+        @test isapprox(branches["2"]["pt"], -0.1980; atol = 1e-3)
+        @test isapprox(branches["2"]["qf"],  0.0055; atol = 1e-3)
+        @test isapprox(branches["2"]["qt"], -0.0571; atol = 1e-3)
     end
 
     # A DCPPowerModel test is important because it does have variables for the reverse side of the lines
@@ -60,8 +60,8 @@ end
 
         branches = result["solution"]["branch"]
 
-        @test isapprox(branches["3"]["pf"], -10.3497; atol = 1e-1)
-        @test isapprox(branches["3"]["pt"],  10.3497; atol = 1e-1)
+        @test isapprox(branches["3"]["pf"], -0.103497; atol = 1e-3)
+        @test isapprox(branches["3"]["pt"],  0.103497; atol = 1e-3)
         @test isnan(branches["3"]["qf"])
         @test isnan(branches["3"]["qt"])
     end
@@ -75,14 +75,12 @@ end
         opf_result = run_ac_opf(data, ipopt_solver)
         @test opf_result["status"] == :LocalOptimal
         @test isapprox(opf_result["objective"], 5907; atol = 1e0)
-        PowerModels.make_per_unit(opf_result["solution"])
 
         PowerModels.update_data(data, opf_result["solution"])
 
         pf_result = run_ac_pf(data, ipopt_solver)
         @test pf_result["status"] == :LocalOptimal
         @test isapprox(pf_result["objective"], 0.0; atol = 1e-3)
-        PowerModels.make_per_unit(pf_result["solution"])
 
         for (i,bus) in data["bus"]
             @test isapprox(opf_result["solution"]["bus"][i]["va"], pf_result["solution"]["bus"][i]["va"]; atol = 1e-3)
