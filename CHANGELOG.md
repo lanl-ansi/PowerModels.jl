@@ -3,7 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Made solution default units, per unit (breaking)
-- Removed deprecated bus-less constraint_theta_ref function
+- Removed deprecated bus-less constraint_theta_ref function (breaking)
 - Moved check_cost_models into the objective building function
 - Fixed out of range bug in calc_theta_delta_bounds
 
