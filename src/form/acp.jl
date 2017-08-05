@@ -96,15 +96,15 @@ sum(q[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(q_ne
 ```
 """
 function constraint_kcl_shunt_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
-    v = getindex(pm.model, :v)[i]
-    p = getindex(pm.model, :p)
-    q = getindex(pm.model, :q)
-    p_ne = getindex(pm.model, :p_ne)
-    q_ne = getindex(pm.model, :q_ne)
-    pg = getindex(pm.model, :pg)
-    qg = getindex(pm.model, :qg)
-    p_dc = getindex(pm.model, :p_dc)
-    q_dc = getindex(pm.model, :q_dc)
+    v = pm.var[:v][i]
+    p = pm.var[:p]
+    q = pm.var[:q]
+    p_ne = pm.var[:p_ne]
+    q_ne = pm.var[:q_ne]
+    pg = pm.var[:pg]
+    qg = pm.var[:qg]
+    p_dc = pm.var[:p_dc]
+    q_dc = pm.var[:q_dc]
 
     c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)  + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - pd - gs*v^2)
     c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)  + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - qd + bs*v^2)
@@ -162,12 +162,12 @@ q[f_idx] == -(b+c/2)*(v[f_bus]/tr)^2 + b*v[f_bus]/tr*v[t_bus]*cos(t[f_bus]-t[t_b
 ```
 """
 function constraint_ohms_y_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
-    p_fr = getindex(pm.model, :p)[f_idx]
-    q_fr = getindex(pm.model, :q)[f_idx]
-    v_fr = getindex(pm.model, :v)[f_bus]
-    v_to = getindex(pm.model, :v)[t_bus]
-    t_fr = getindex(pm.model, :t)[f_bus]
-    t_to = getindex(pm.model, :t)[t_bus]
+    p_fr = pm.var[:p][f_idx]
+    q_fr = pm.var[:q][f_idx]
+    v_fr = pm.var[:v][f_bus]
+    v_to = pm.var[:v][t_bus]
+    t_fr = pm.var[:t][f_bus]
+    t_to = pm.var[:t][t_bus]
 
     c1 = @NLconstraint(pm.model, p_fr == g*(v_fr/tr)^2 + -g*v_fr/tr*v_to*cos(t_fr-t_to-as) + -b*v_fr/tr*v_to*sin(t_fr-t_to-as) )
     c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)*(v_fr/tr)^2 + b*v_fr/tr*v_to*cos(t_fr-t_to-as) + -g*v_fr/tr*v_to*sin(t_fr-t_to-as) )
@@ -183,12 +183,12 @@ q_to == -(b+c/2)*v[t_bus]^2 + b*v[t_bus]*v[f_bus]/tr*cos(t[f_bus]-t[t_bus]+as) +
 ```
 """
 function constraint_ohms_y_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
-    p_to = getindex(pm.model, :p)[t_idx]
-    q_to = getindex(pm.model, :q)[t_idx]
-    v_fr = getindex(pm.model, :v)[f_bus]
-    v_to = getindex(pm.model, :v)[t_bus]
-    t_fr = getindex(pm.model, :t)[f_bus]
-    t_to = getindex(pm.model, :t)[t_bus]
+    p_to = pm.var[:p][t_idx]
+    q_to = pm.var[:q][t_idx]
+    v_fr = pm.var[:v][f_bus]
+    v_to = pm.var[:v][t_bus]
+    t_fr = pm.var[:t][f_bus]
+    t_to = pm.var[:t][t_bus]
 
     c1 = @NLconstraint(pm.model, p_to == g*v_to^2 + -g*v_to*v_fr/tr*cos(t_to-t_fr+as) + -b*v_to*v_fr/tr*sin(t_to-t_fr+as) )
     c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*v_to^2 + b*v_to*v_fr/tr*cos(t_fr-t_to+as) + -g*v_to*v_fr/tr*sin(t_to-t_fr+as) )
@@ -212,13 +212,13 @@ q[f_idx] == z*(-(b+c/2)/tm*v[f_bus]^2 - (-b*tr-g*ti)/tm*(v[f_bus]*v[t_bus]*cos(t
 ```
 """
 function constraint_ohms_yt_from_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
-    p_fr = getindex(pm.model, :p)[f_idx]
-    q_fr = getindex(pm.model, :q)[f_idx]
-    v_fr = getindex(pm.model, :v)[f_bus]
-    v_to = getindex(pm.model, :v)[t_bus]
-    t_fr = getindex(pm.model, :t)[f_bus]
-    t_to = getindex(pm.model, :t)[t_bus]
-    z = getindex(pm.model, :line_z)[i]
+    p_fr = pm.var[:p][f_idx]
+    q_fr = pm.var[:q][f_idx]
+    v_fr = pm.var[:v][f_bus]
+    v_to = pm.var[:v][t_bus]
+    t_fr = pm.var[:t][f_bus]
+    t_to = pm.var[:t][t_bus]
+    z = pm.var[:line_z][i]
 
     c1 = @NLconstraint(pm.model, p_fr == z*(g/tm*v_fr^2 + (-g*tr+b*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-b*tr-g*ti)/tm*(v_fr*v_to*sin(t_fr-t_to))) )
     c2 = @NLconstraint(pm.model, q_fr == z*(-(b+c/2)/tm*v_fr^2 - (-b*tr-g*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-g*tr+b*ti)/tm*(v_fr*v_to*sin(t_fr-t_to))) )
@@ -232,13 +232,13 @@ q[t_idx] == z*(-(b+c/2)*v[t_bus]^2 - (-b*tr+g*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[f_
 ```
 """
 function constraint_ohms_yt_to_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
-    p_to = getindex(pm.model, :p)[t_idx]
-    q_to = getindex(pm.model, :q)[t_idx]
-    v_fr = getindex(pm.model, :v)[f_bus]
-    v_to = getindex(pm.model, :v)[t_bus]
-    t_fr = getindex(pm.model, :t)[f_bus]
-    t_to = getindex(pm.model, :t)[t_bus]
-    z = getindex(pm.model, :line_z)[i]
+    p_to = pm.var[:p][t_idx]
+    q_to = pm.var[:q][t_idx]
+    v_fr = pm.var[:v][f_bus]
+    v_to = pm.var[:v][t_bus]
+    t_fr = pm.var[:t][f_bus]
+    t_to = pm.var[:t][t_bus]
+    z = pm.var[:line_z][i]
 
     c1 = @NLconstraint(pm.model, p_to == z*(g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )
     c2 = @NLconstraint(pm.model, q_to == z*(-(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )
@@ -252,13 +252,13 @@ q_ne[f_idx] == z*(-(b+c/2)/tm*v[f_bus]^2 - (-b*tr-g*ti)/tm*(v[f_bus]*v[t_bus]*co
 ```
 """
 function constraint_ohms_yt_from_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
-    p_fr = getindex(pm.model, :p_ne)[f_idx]
-    q_fr = getindex(pm.model, :q_ne)[f_idx]
-    v_fr = getindex(pm.model, :v)[f_bus]
-    v_to = getindex(pm.model, :v)[t_bus]
-    t_fr = getindex(pm.model, :t)[f_bus]
-    t_to = getindex(pm.model, :t)[t_bus]
-    z = getindex(pm.model, :line_ne)[i]
+    p_fr = pm.var[:p_ne][f_idx]
+    q_fr = pm.var[:q_ne][f_idx]
+    v_fr = pm.var[:v][f_bus]
+    v_to = pm.var[:v][t_bus]
+    t_fr = pm.var[:t][f_bus]
+    t_to = pm.var[:t][t_bus]
+    z = pm.var[:line_ne][i]
 
     c1 = @NLconstraint(pm.model, p_fr == z*(g/tm*v_fr^2 + (-g*tr+b*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-b*tr-g*ti)/tm*(v_fr*v_to*sin(t_fr-t_to))) )
     c2 = @NLconstraint(pm.model, q_fr == z*(-(b+c/2)/tm*v_fr^2 - (-b*tr-g*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-g*tr+b*ti)/tm*(v_fr*v_to*sin(t_fr-t_to))) )
@@ -272,13 +272,13 @@ q_ne[t_idx] == z*(-(b+c/2)*v[t_bus]^2 - (-b*tr+g*ti)/tm*(v[t_bus]*v[f_bus]*cos(t
 ```
 """
 function constraint_ohms_yt_to_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
-    p_to = getindex(pm.model, :p_ne)[t_idx]
-    q_to = getindex(pm.model, :q_ne)[t_idx]
-    v_fr = getindex(pm.model, :v)[f_bus]
-    v_to = getindex(pm.model, :v)[t_bus]
-    t_fr = getindex(pm.model, :t)[f_bus]
-    t_to = getindex(pm.model, :t)[t_bus]
-    z = getindex(pm.model, :line_ne)[i]
+    p_to = pm.var[:p_ne][t_idx]
+    q_to = pm.var[:q_ne][t_idx]
+    v_fr = pm.var[:v][f_bus]
+    v_to = pm.var[:v][t_bus]
+    t_fr = pm.var[:t][f_bus]
+    t_to = pm.var[:t][t_bus]
+    z = pm.var[:line_ne][i]
 
     c1 = @NLconstraint(pm.model, p_to == z*(g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )
     c2 = @NLconstraint(pm.model, q_to == z*(-(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr))) )
@@ -287,9 +287,9 @@ end
 
 "`angmin <= line_z[i]*(t[f_bus] - t[t_bus]) <= angmax`"
 function constraint_phase_angle_difference_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
-    t_fr = getindex(pm.model, :t)[f_bus]
-    t_to = getindex(pm.model, :t)[t_bus]
-    z = getindex(pm.model, :line_z)[i]
+    t_fr = pm.var[:t][f_bus]
+    t_to = pm.var[:t][t_bus]
+    z = pm.var[:line_z][i]
 
     c1 = @constraint(pm.model, z*(t_fr - t_to) <= angmax)
     c2 = @constraint(pm.model, z*(t_fr - t_to) >= angmin)
@@ -298,9 +298,9 @@ end
 
 "`angmin <= line_ne[i]*(t[f_bus] - t[t_bus]) <= angmax`"
 function constraint_phase_angle_difference_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
-    t_fr = getindex(pm.model, :t)[f_bus]
-    t_to = getindex(pm.model, :t)[t_bus]
-    z = getindex(pm.model, :line_ne)[i]
+    t_fr = pm.var[:t][f_bus]
+    t_to = pm.var[:t][t_bus]
+    z = pm.var[:line_ne][i]
 
     c1 = @constraint(pm.model, z*(t_fr - t_to) <= angmax)
     c2 = @constraint(pm.model, z*(t_fr - t_to) >= angmin)
@@ -314,12 +314,12 @@ q[f_idx] + q[t_idx] >= -c/2*(v[f_bus]^2/tr^2 + v[t_bus]^2)
 ```
 """
 function constraint_loss_lb{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, c, tr)
-    v_fr = getindex(pm.model, :v)[f_bus]
-    v_to = getindex(pm.model, :v)[t_bus]
-    p_fr = getindex(pm.model, :p)[f_idx]
-    q_fr = getindex(pm.model, :q)[f_idx]
-    p_to = getindex(pm.model, :p)[t_idx]
-    q_to = getindex(pm.model, :q)[t_idx]
+    v_fr = pm.var[:v][f_bus]
+    v_to = pm.var[:v][t_bus]
+    p_fr = pm.var[:p][f_idx]
+    q_fr = pm.var[:q][f_idx]
+    p_to = pm.var[:p][t_idx]
+    q_to = pm.var[:q][t_idx]
 
     c1 = @constraint(m, p_fr + p_to >= 0)
     c2 = @constraint(m, q_fr + q_to >= -c/2*(v_fr^2/tr^2 + v_to^2))
@@ -339,32 +339,38 @@ APIACPPowerModel(data::Dict{String,Any}; kwargs...) =
     GenericPowerModel(data, APIACPForm; kwargs...)
 
 "variable: load_factor >= 1.0"
-variable_load_factor(pm::GenericPowerModel) =
-    @variable(pm.model, load_factor >= 1.0, start = 1.0)
+function variable_load_factor(pm::GenericPowerModel)
+    pm.var[:load_factor] = @variable(pm.model,
+        basename="load_factor",
+        lowerbound=1.0,
+        start = 1.0
+    )
+    return pm.var[:load_factor]
+end
 
 "objective: Max. load_factor"
 objective_max_loading(pm::GenericPowerModel) =
-    @objective(pm.model, Max, getindex(pm.model, :load_factor))
+    @objective(pm.model, Max, pm.var[:load_factor])
 
 ""
 function objective_max_loading_voltage_norm(pm::GenericPowerModel)
     # Seems to create too much reactive power and makes even small models hard to converge
-    load_factor = getindex(pm.model, :load_factor)
+    load_factor = pm.var[:load_factor]
 
     scale = length(pm.ref[:bus])
-    v = getindex(pm.model, :v)
+    v = pm.var[:v]
 
-    return @objective(pm.model, Max, 10*scale*load_factor - sum(((bus["vmin"] + bus["vmax"])/2 - v[i])^2 for (i,bus) in pm.ref[:bus] ))
+    return @objective(pm.model, Max, 10*scale*load_factor - sum(((bus["vmin"] + bus["vmax"])/2 - v[i])^2 for (i,bus) in pm.ref[:bus]))
 end
 
 ""
 function objective_max_loading_gen_output(pm::GenericPowerModel)
     # Works but adds unnecessary runtime
-    load_factor = getindex(pm.model, :load_factor)
+    load_factor = pm.var[:load_factor]
 
     scale = length(pm.ref[:gen])
-    pg = getindex(pm.model, :pg)
-    qg = getindex(pm.model, :qg)
+    pg = pm.var[:pg]
+    qg = pm.var[:qg]
 
     return @NLobjective(pm.model, Max, 100*scale*load_factor - sum( (pg[i]^2 - (2*qg[i])^2)^2 for (i,gen) in pm.ref[:gen] ))
 end
@@ -372,7 +378,7 @@ end
 ""
 function bounds_tighten_voltage(pm::APIACPPowerModel; epsilon = 0.001)
     for (i,bus) in pm.ref[:bus]
-        v = getindex(pm.model, :v)[i]
+        v = pm.var[:v][i]
         setupperbound(v, bus["vmax"]*(1.0-epsilon))
         setlowerbound(v, bus["vmin"]*(1.0+epsilon))
     end
@@ -382,7 +388,7 @@ end
 function upperbound_negative_active_generation(pm::APIACPPowerModel)
     for (i,gen) in pm.ref[:gen]
         if gen["pmax"] <= 0
-            pg = getindex(pm.model, :pg)[i]
+            pg = pm.var[:pg][i]
             setupperbound(pg, gen["pmax"])
         end
     end
@@ -394,12 +400,12 @@ function constraint_kcl_shunt_scaled(pm::APIACPPowerModel, bus)
     bus_arcs = pm.ref[:bus_arcs][i]
     bus_gens = pm.ref[:bus_gens][i]
 
-    load_factor = getindex(pm.model, :load_factor)
-    v = getindex(pm.model, :v)
-    p = getindex(pm.model, :p)
-    q = getindex(pm.model, :q)
-    pg = getindex(pm.model, :pg)
-    qg = getindex(pm.model, :qg)
+    load_factor = pm.var[:load_factor]
+    v = pm.var[:v]
+    p = pm.var[:p]
+    q = pm.var[:q]
+    pg = pm.var[:pg]
+    qg = pm.var[:qg]
 
     if bus["pd"] > 0 && bus["qd"] > 0
         c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - bus["pd"]*load_factor - bus["gs"]*v[i]^2)

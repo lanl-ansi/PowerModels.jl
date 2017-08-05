@@ -41,36 +41,36 @@ end
 
 "`p[f_idx]^2 + q[f_idx]^2 <= (rate_a * line_z[i])^2`"
 function constraint_thermal_limit_from_on_off(pm::GenericPowerModel, i, f_idx, rate_a)
-    p_fr = getindex(pm.model, :p)[f_idx]
-    q_fr = getindex(pm.model, :q)[f_idx]
-    z = getindex(pm.model, :line_z)[i]
+    p_fr = pm.var[:p][f_idx]
+    q_fr = pm.var[:q][f_idx]
+    z = pm.var[:line_z][i]
     c = @constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2*z^2)
     return Set([c])
 end
 
 "`p[t_idx]^2 + q[t_idx]^2 <= (rate_a * line_z[i])^2`"
 function constraint_thermal_limit_to_on_off(pm::GenericPowerModel, i, t_idx, rate_a)
-    p_to = getindex(pm.model, :p)[t_idx]
-    q_to = getindex(pm.model, :q)[t_idx]
-    z = getindex(pm.model, :line_z)[i]
+    p_to = pm.var[:p][t_idx]
+    q_to = pm.var[:q][t_idx]
+    z = pm.var[:line_z][i]
     c = @constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2*z^2)
     return Set([c])
 end
 
 "`p_ne[f_idx]^2 + q_ne[f_idx]^2 <= (rate_a * line_ne[i])^2`"
 function constraint_thermal_limit_from_ne(pm::GenericPowerModel, i, f_idx, rate_a)
-    p_fr = getindex(pm.model, :p_ne)[f_idx]
-    q_fr = getindex(pm.model, :q_ne)[f_idx]
-    z = getindex(pm.model, :line_ne)[i]
+    p_fr = pm.var[:p_ne][f_idx]
+    q_fr = pm.var[:q_ne][f_idx]
+    z = pm.var[:line_ne][i]
     c = @constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2*z^2)
     return Set([c])
 end
 
 "`p_ne[t_idx]^2 + q_ne[t_idx]^2 <= (rate_a * line_ne[i])^2`"
 function constraint_thermal_limit_to_ne(pm::GenericPowerModel, i, t_idx, rate_a)
-    p_to = getindex(pm.model, :p_ne)[t_idx]
-    q_to = getindex(pm.model, :q_ne)[t_idx]
-    z = getindex(pm.model, :line_ne)[i]
+    p_to = pm.var[:p_ne][t_idx]
+    q_to = pm.var[:q_ne][t_idx]
+    z = pm.var[:line_ne][i]
     c = @constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2*z^2)
     return Set([c])
 end

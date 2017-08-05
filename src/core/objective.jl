@@ -75,7 +75,7 @@ end
 
 "Cost of building lines"
 function objective_tnep_cost(pm::GenericPowerModel)
-    line_ne = getindex(pm.model, :line_ne)
+    line_ne = pm.var[:line_ne]
     branches = pm.ref[:ne_branch]
     return @objective(pm.model, Min, sum( branches[i]["construction_cost"]*line_ne[i] for (i,branch) in branches) )
 end

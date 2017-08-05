@@ -16,13 +16,6 @@ SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SD
 ""
 variable_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}; kwargs...) = variable_voltage_product_matrix(pm; kwargs...)
 
-#        pm.var[:v] = @variable(pm.model,
-#            [i in keys(pm.ref[:bus])], basename="v",
-#            lowerbound = pm.ref[:bus][i]["vmin"],
-#            upperbound = pm.ref[:bus][i]["vmax"],
-#            start = getstart(pm.ref[:bus], i, "v_start", 1.0)
-#        )
-
 ""
 function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
