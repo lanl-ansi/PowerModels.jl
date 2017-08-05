@@ -87,7 +87,7 @@ constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::GenericPowerMode
 constraint_reactive_gen_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, qg) = Set()
 
 "do nothing, this model does not have voltage variables"
-constraint_dcline_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon) = Set()
+constraint_voltage_dcline_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon) = Set()
 
 ""
 function constraint_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)

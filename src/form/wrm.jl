@@ -163,5 +163,3 @@ function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerMod
     #add_setpoint(sol, pm, "bus", "bus_i", "va", :t; default_value = 0)
 end
 
-"DC Line voltage constraint not supported"
-#constraint_dcline_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon) = Set()

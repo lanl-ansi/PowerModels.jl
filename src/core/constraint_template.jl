@@ -93,7 +93,7 @@ end
 
 
 ""
-function constraint_dcline_voltage(pm::GenericPowerModel, dcline; epsilon = 0.0)
+function constraint_voltage_dcline_setpoint(pm::GenericPowerModel, dcline; epsilon = 0.0)
     @assert epsilon >= 0.0
     i = dcline["index"]
     f_bus = dcline["f_bus"]
@@ -101,7 +101,7 @@ function constraint_dcline_voltage(pm::GenericPowerModel, dcline; epsilon = 0.0)
     vf = dcline["vf"]
     vt = dcline["vt"]
 
-    return constraint_dcline_voltage(pm, f_bus, t_bus, vf, vt, epsilon)
+    return constraint_voltage_dcline_setpoint(pm, f_bus, t_bus, vf, vt, epsilon)
 end
 
 function constraint_active_dcline_setpoint(pm::GenericPowerModel, dcline; epsilon = 0.0)
@@ -112,6 +112,7 @@ function constraint_active_dcline_setpoint(pm::GenericPowerModel, dcline; epsilo
     t_idx = (i, t_bus, f_bus)
     pf = dcline["pf"]
     pt = dcline["pt"]
+
     return constraint_active_dcline_setpoint(pm, i, f_idx, t_idx, pf, pt, epsilon)
 end
 

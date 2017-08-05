@@ -59,7 +59,7 @@ end
 """
 enforces pv-like buses on both sides of a dcline
 """
-function constraint_dcline_voltage{T <: AbstractWRForms}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
+function constraint_voltage_dcline_setpoint{T <: AbstractWRForms}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
     w_f = pm.var[:w][f_bus]
     w_t = pm.var[:w][t_bus]
     if epsilon == 0.0

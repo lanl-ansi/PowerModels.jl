@@ -52,7 +52,7 @@ v_from  - epsilon <= v[i] <= v_from + epsilon
 v_to  - epsilon <= v[i] <= v_to + epsilon
 '''
 """
-function constraint_dcline_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
+function constraint_voltage_dcline_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
     v_f = pm.var[:v][f_bus]
     v_t = pm.var[:v][t_bus]
 
