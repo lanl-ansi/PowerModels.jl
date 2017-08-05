@@ -41,7 +41,9 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
     setting::Dict{String,Any}
     solution::Dict{String,Any}
 
-    ref::Dict{Symbol,Any}
+    ref::Dict{Symbol,Any} # data reference data
+
+    var::Dict{Symbol,Any} # JuMP variables
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -62,25 +64,13 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{S
         setting, # setting
         Dict{String,Any}(), # solution
         build_ref(data), # refrence data
+        Dict{Symbol,Any}(), # vars
         Dict{Symbol,Any}() # ext
     )
 
     return pm
 end
 
-
-#
-# Just seems too hard to maintain with the default constructor
-#
-#function setdata{T}(pm::GenericPowerModel{T}, data::Dict{String,Any})
-#    data, sets = process_raw_data(data)
-
-#    pm.model = Model()
-#    pm.set = sets
-#    pm.solution = Dict{String,Any}()
-#    pm.data = data
-
-#end
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
 function JuMP.setsolver(pm::GenericPowerModel, solver::MathProgBase.AbstractMathProgSolver)

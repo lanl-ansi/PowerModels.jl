@@ -16,6 +16,13 @@ SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SD
 ""
 variable_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}; kwargs...) = variable_voltage_product_matrix(pm; kwargs...)
 
+#        pm.var[:v] = @variable(pm.model,
+#            [i in keys(pm.ref[:bus])], basename="v",
+#            lowerbound = pm.ref[:bus][i]["vmin"],
+#            upperbound = pm.ref[:bus][i]["vmax"],
+#            start = getstart(pm.ref[:bus], i, "v_start", 1.0)
+#        )
+
 ""
 function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
@@ -23,8 +30,12 @@ function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerM
     w_index = 1:length(keys(pm.ref[:bus]))
     lookup_w_index = Dict([(bi, i) for (i,bi) in enumerate(keys(pm.ref[:bus]))])
 
-    @variable(pm.model, WR[1:length(keys(pm.ref[:bus])), 1:length(keys(pm.ref[:bus]))], Symmetric)
-    @variable(pm.model, WI[1:length(keys(pm.ref[:bus])), 1:length(keys(pm.ref[:bus]))])
+    WR = pm.var[:WR] = @variable(pm.model, 
+        [1:length(keys(pm.ref[:bus])), 1:length(keys(pm.ref[:bus]))], Symmetric, basename="WR"
+    )
+    WI = pm.var[:WI] = @variable(pm.model, 
+        [1:length(keys(pm.ref[:bus])), 1:length(keys(pm.ref[:bus]))], basename="WI"
+    )
 
     # bounds on diagonal
     for (i, bus) in pm.ref[:bus]
@@ -58,8 +69,8 @@ end
 
 ""
 function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
-    WR = getindex(pm.model, :WR)
-    WI = getindex(pm.model, :WI)
+    WR = pm.var[:WR]
+    WI = pm.var[:WI]
 
     c = @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
 
@@ -75,16 +86,15 @@ constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus::In
 
 ""
 function constraint_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
-    WR = getindex(pm.model, :WR)
     w_index = pm.model.ext[:lookup_w_index][i]
-    w = WR[w_index, w_index]
+    w = pm.var[:WR][w_index, w_index]
 
-    p = getindex(pm.model, :p)
-    q = getindex(pm.model, :q)
-    pg = getindex(pm.model, :pg)
-    qg = getindex(pm.model, :qg)
-    p_dc = getindex(pm.model, :p_dc)
-    q_dc = getindex(pm.model, :q_dc)
+    p = pm.var[:p]
+    q = pm.var[:q]
+    pg = pm.var[:pg]
+    qg = pm.var[:qg]
+    p_dc = pm.var[:p_dc]
+    q_dc = pm.var[:q_dc]
 
     c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w)
     c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w)
@@ -93,18 +103,16 @@ end
 
 "Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)"
 function constraint_ohms_yt_from{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    p_fr = getindex(pm.model, :p)[f_idx]
-    q_fr = getindex(pm.model, :q)[f_idx]
+    p_fr = pm.var[:p][f_idx]
+    q_fr = pm.var[:q][f_idx]
 
-    WR = getindex(pm.model, :WR)
-    WI = getindex(pm.model, :WI)
     w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
     w_to_index = pm.model.ext[:lookup_w_index][t_bus]
 
-    w_fr = WR[w_fr_index, w_fr_index]
-    w_to = WR[w_to_index, w_to_index]
-    wr   = WR[w_fr_index, w_to_index]
-    wi   = WI[w_fr_index, w_to_index]
+    w_fr = pm.var[:WR][w_fr_index, w_fr_index]
+    w_to = pm.var[:WR][w_to_index, w_to_index]
+    wr   = pm.var[:WR][w_fr_index, w_to_index]
+    wi   = pm.var[:WI][w_fr_index, w_to_index]
 
     c1 = @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
     c2 = @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
@@ -113,18 +121,16 @@ end
 
 ""
 function constraint_ohms_yt_to{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    q_to = getindex(pm.model, :q)[t_idx]
-    p_to = getindex(pm.model, :p)[t_idx]
+    q_to = pm.var[:q][t_idx]
+    p_to = pm.var[:p][t_idx]
 
-    WR = getindex(pm.model, :WR)
-    WI = getindex(pm.model, :WI)
     w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
     w_to_index = pm.model.ext[:lookup_w_index][t_bus]
 
-    w_fr = WR[w_fr_index, w_fr_index]
-    w_to = WR[w_to_index, w_to_index]
-    wr   = WR[w_fr_index, w_to_index]
-    wi   = WI[w_fr_index, w_to_index]
+    w_fr = pm.var[:WR][w_fr_index, w_fr_index]
+    w_to = pm.var[:WR][w_to_index, w_to_index]
+    wr   = pm.var[:WR][w_fr_index, w_to_index]
+    wi   = pm.var[:WI][w_fr_index, w_to_index]
 
     c1 = @constraint(pm.model, p_to ==    g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
     c2 = @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
@@ -133,15 +139,13 @@ end
 
 ""
 function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
-    WR = getindex(pm.model, :WR)
-    WI = getindex(pm.model, :WI)
     w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
     w_to_index = pm.model.ext[:lookup_w_index][t_bus]
 
-    w_fr = WR[w_fr_index, w_fr_index]
-    w_to = WR[w_to_index, w_to_index]
-    wr   = WR[w_fr_index, w_to_index]
-    wi   = WI[w_fr_index, w_to_index]
+    w_fr = pm.var[:WR][w_fr_index, w_fr_index]
+    w_to = pm.var[:WR][w_to_index, w_to_index]
+    wr   = pm.var[:WR][w_fr_index, w_to_index]
+    wi   = pm.var[:WI][w_fr_index, w_to_index]
 
     c1 = @constraint(pm.model, wi <= tan(angmax)*wr)
     c2 = @constraint(pm.model, wi >= tan(angmin)*wr)
@@ -160,4 +164,4 @@ function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerMod
 end
 
 "DC Line voltage constraint not supported"
-constraint_dcline_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon) = Set()
+#constraint_dcline_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon) = Set()

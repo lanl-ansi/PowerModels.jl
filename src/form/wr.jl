@@ -22,9 +22,9 @@ end
 
 ""
 function constraint_voltage{T <: AbstractWRForm}(pm::GenericPowerModel{T})
-    w = getindex(pm.model, :w)
-    wr = getindex(pm.model, :wr)
-    wi = getindex(pm.model, :wi)
+    w = pm.var[:w]
+    wr = pm.var[:wr]
+    wi = pm.var[:wi]
 
     for (i,j) in keys(pm.ref[:buspairs])
         relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
@@ -99,10 +99,10 @@ end
 
 ""
 function constraint_phase_angle_difference{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
-    w_fr = getindex(pm.model, :w)[f_bus]
-    w_to = getindex(pm.model, :w)[t_bus]
-    wr = getindex(pm.model, :wr)[(f_bus, t_bus)]
-    wi = getindex(pm.model, :wi)[(f_bus, t_bus)]
+    w_fr = pm.var[:w][f_bus]
+    w_to = pm.var[:w][t_bus]
+    wr = pm.var[:wr][(f_bus, t_bus)]
+    wi = pm.var[:wi][(f_bus, t_bus)]
 
     c1 = @constraint(pm.model, wi <= tan(angmax)*wr)
     c2 = @constraint(pm.model, wi >= tan(angmin)*wr)
@@ -391,19 +391,30 @@ function QCWRPowerModel(data::Dict{String,Any}; kwargs...)
     return GenericPowerModel(data, QCWRForm; kwargs...)
 end
 
+
+
+
 "Creates variables associated with differences in phase angles"
 function variable_phase_angle_difference{T}(pm::GenericPowerModel{T})
-    @variable(pm.model, pm.ref[:buspairs][bp]["angmin"] <= td[bp in keys(pm.ref[:buspairs])] <= pm.ref[:buspairs][bp]["angmax"], start = getstart(pm.ref[:buspairs], bp, "td_start"))
-    return td
+    pm.var[:td] = @variable(pm.model,
+        [bp in keys(pm.ref[:buspairs])], basename="td",
+        lowerbound = pm.ref[:buspairs][bp]["angmin"],
+        upperbound = pm.ref[:buspairs][bp]["angmax"], 
+        start = getstart(pm.ref[:buspairs], bp, "td_start")
+    )
+    return pm.var[:td]
 end
 
 "Creates the voltage magnitude product variables"
 function variable_voltage_magnitude_product{T}(pm::GenericPowerModel{T})
-    vv_min = Dict([(bp, buspair["v_from_min"]*buspair["v_to_min"]) for (bp, buspair) in pm.ref[:buspairs]])
-    vv_max = Dict([(bp, buspair["v_from_max"]*buspair["v_to_max"]) for (bp, buspair) in pm.ref[:buspairs]])
-
-    @variable(pm.model,  vv_min[bp] <= vv[bp in keys(pm.ref[:buspairs])] <=  vv_max[bp], start = getstart(pm.ref[:buspairs], bp, "vv_start", 1.0))
-    return vv
+    buspairs = pm.ref[:buspairs]
+    pm.var[:vv] = @variable(pm.model, 
+        [bp in keys(pm.ref[:buspairs])], basename="vv",
+        lowerbound = buspairs[bp]["v_from_min"]*buspairs[bp]["v_to_min"],
+        upperbound = buspairs[bp]["v_from_max"]*buspairs[bp]["v_to_max"],
+        start = getstart(pm.ref[:buspairs], bp, "vv_start", 1.0)
+    )
+    return pm.var[:vv]
 end
 
 ""
@@ -426,22 +437,36 @@ function variable_cosine{T}(pm::GenericPowerModel{T})
         end
     end
 
-    @variable(pm.model, cos_min[bp] <= cs[bp in keys(pm.ref[:buspairs])] <= cos_max[bp], start = getstart(pm.ref[:buspairs], bp, "cs_start", 1.0))
-    return cs
+    pm.var[:cs] = @variable(pm.model,
+        [bp in keys(pm.ref[:buspairs])], basename="cs",
+        lowerbound = cos_min[bp],
+        upperbound = cos_max[bp],
+        start = getstart(pm.ref[:buspairs], bp, "cs_start", 1.0)
+    )
+    return pm.var[:cs]
 end
 
 ""
-variable_sine(pm::GenericPowerModel) =
-    @variable(pm.model, sin(pm.ref[:buspairs][bp]["angmin"]) <= si[bp in keys(pm.ref[:buspairs])] <= sin(pm.ref[:buspairs][bp]["angmax"]), start = getstart(pm.ref[:buspairs], bp, "si_start"))
+function variable_sine(pm::GenericPowerModel)
+    pm.var[:si] = @variable(pm.model, 
+        [bp in keys(pm.ref[:buspairs])], basename="si",
+        lowerbound = sin(pm.ref[:buspairs][bp]["angmin"]),
+        upperbound = sin(pm.ref[:buspairs][bp]["angmax"]), 
+        start = getstart(pm.ref[:buspairs], bp, "si_start")
+    )
+    return pm.var[:si]
+end
 
 ""
 function variable_current_magnitude_sqr{T}(pm::GenericPowerModel{T})
     buspairs = pm.ref[:buspairs]
-    cm_min = Dict([(bp, 0) for bp in keys(pm.ref[:buspairs])])
-    cm_max = Dict([(bp, (buspair["rate_a"]*buspair["tap"]/buspair["v_from_min"])^2) for (bp, buspair) in pm.ref[:buspairs]])
-
-    @variable(pm.model, cm_min[bp] <= cm[bp in keys(pm.ref[:buspairs])] <=  cm_max[bp], start = getstart(pm.ref[:buspairs], bp, "cm_start"))
-    return cm
+    pm.var[:cm] = @variable(pm.model,
+        cm[bp in keys(pm.ref[:buspairs])], basename="cm",
+        lowerbound = 0,
+        upperbound = (buspairs[bp]["rate_a"]*buspairs[bp]["tap"]/buspairs[bp]["v_from_min"])^2,
+        start = getstart(pm.ref[:buspairs], bp, "cm_start")
+    )
+    return pm.var[:cm]
 end
 
 ""
@@ -461,17 +486,17 @@ end
 
 ""
 function constraint_voltage(pm::QCWRPowerModel)
-    v = getindex(pm.model, :v)
-    t = getindex(pm.model, :t)
+    v = pm.var[:v]
+    t = pm.var[:t]
 
-    td = getindex(pm.model, :td)
-    si = getindex(pm.model, :si)
-    cs = getindex(pm.model, :cs)
-    vv = getindex(pm.model, :vv)
+    td = pm.var[:td]
+    si = pm.var[:si]
+    cs = pm.var[:cs]
+    vv = pm.var[:vv]
 
-    w = getindex(pm.model, :w)
-    wr = getindex(pm.model, :wr)
-    wi = getindex(pm.model, :wi)
+    w = pm.var[:w]
+    wr = pm.var[:wr]
+    wi = pm.var[:wi]
 
     const_set = Set()
     for (i,b) in pm.ref[:bus]
@@ -512,10 +537,10 @@ end
 
 "`p[f_idx]^2 + q[f_idx]^2 <= w[f_bus]/tm*cm[f_bus,t_bus]`"
 function constraint_power_magnitude_sqr(pm::QCWRPowerModel, f_bus, t_bus, arc_from, tm)
-    w_i = getindex(pm.model, :w)[f_bus]
-    p_fr = getindex(pm.model, :p)[arc_from]
-    q_fr = getindex(pm.model, :q)[arc_from]
-    cm = getindex(pm.model, :cm)[(f_bus, t_bus)]
+    w_i = pm.var[:w][f_bus]
+    p_fr = pm.var[:p][arc_from]
+    q_fr = pm.var[:q][arc_from]
+    cm = pm.var[:cm][(f_bus, t_bus)]
 
     c = @constraint(pm.model, p_fr^2 + q_fr^2 <= w_i/tm*cm)
     return Set([c])
@@ -523,12 +548,12 @@ end
 
 "`cm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
 function constraint_power_magnitude_link(pm::QCWRPowerModel, f_bus, t_bus, arc_from, g, b, c, tr, ti, tm)
-    w_fr = getindex(pm.model, :w)[f_bus]
-    w_to = getindex(pm.model, :w)[t_bus]
-    q_fr = getindex(pm.model, :q)[arc_from]
-    wr = getindex(pm.model, :wr)[(f_bus, t_bus)]
-    wi = getindex(pm.model, :wi)[(f_bus, t_bus)]
-    cm = getindex(pm.model, :cm)[(f_bus, t_bus)]
+    w_fr = pm.var[:w][f_bus]
+    w_to = pm.var[:w][t_bus]
+    q_fr = pm.var[:q][arc_from]
+    wr = pm.var[:wr][(f_bus, t_bus)]
+    wi = pm.var[:wi][(f_bus, t_bus)]
+    cm = pm.var[:cm][(f_bus, t_bus)]
 
     c = @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm + w_to - 2*(tr*wr + ti*wi)/tm) - c*q_fr - ((c/2)/tm)^2*w_fr)
     return Set([c])
@@ -536,11 +561,11 @@ end
 
 "`t[ref_bus] == 0`"
 constraint_theta_ref(pm::QCWRPowerModel, ref_bus::Int) =
-    @constraint(pm.model, getindex(pm.model, :t)[ref_bus] == 0)
+    Set([@constraint(pm.model, pm.var[:t][ref_bus] == 0)])
 
 ""
 function constraint_phase_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, angmin, angmax)
-    td = getindex(pm.model, :td)[(f_bus, t_bus)]
+    td = pm.var[:td][(f_bus, t_bus)]
 
     if getlowerbound(td) < angmin
         setlowerbound(td, angmin)
@@ -550,10 +575,10 @@ function constraint_phase_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, ang
         setupperbound(td, angmax)
     end
 
-    w_fr = getindex(pm.model, :w)[f_bus]
-    w_to = getindex(pm.model, :w)[t_bus]
-    wr = getindex(pm.model, :wr)[(f_bus, t_bus)]
-    wi = getindex(pm.model, :wi)[(f_bus, t_bus)]
+    w_fr = pm.var[:w][f_bus]
+    w_to = pm.var[:w][t_bus]
+    wr = pm.var[:wr][(f_bus, t_bus)]
+    wi = pm.var[:wi][(f_bus, t_bus)]
 
     c1 = @constraint(pm.model, wi <= tan(angmax)*wr)
     c2 = @constraint(pm.model, wi >= tan(angmin)*wr)

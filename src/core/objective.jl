@@ -30,8 +30,9 @@ end
 function objective_min_fuel_cost(pm::GenericPowerModel)
     check_cost_models(pm)
 
-    pg = getindex(pm.model, :pg)
-    dc_p = getindex(pm.model, :p_dc)
+    pg = pm.var[:pg]
+    dc_p = pm.var[:p_dc]
+
     from_idx = Dict(arc[1] => arc for arc in pm.ref[:arcs_from_dc])
 
     return @objective(pm.model, Min, 
@@ -44,16 +45,24 @@ end
 function objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T})
     check_cost_models(pm)
 
-    pg = getindex(pm.model, :pg)
-    dc_p = getindex(pm.model, :p_dc)
+    pg = pm.var[:pg]
+    dc_p = pm.var[:p_dc]
     from_idx = Dict(arc[1] => arc for arc in pm.ref[:arcs_from_dc])
 
-    @variable(pm.model, pm.ref[:gen][i]["pmin"]^2 <= pg_sqr[i in keys(pm.ref[:gen])] <= pm.ref[:gen][i]["pmax"]^2)
+    pg_sqr = pm.var[:pg_sqr] = @variable(pm.model, 
+        [i in keys(pm.ref[:gen])], basename="pg_sqr",
+        lowerbound = pm.ref[:gen][i]["pmin"]^2,
+        upperbound = pm.ref[:gen][i]["pmax"]^2
+    )
     for (i, gen) in pm.ref[:gen]
         @constraint(pm.model, norm([2*pg[i], pg_sqr[i]-1]) <= pg_sqr[i]+1)
     end
 
-    @variable(pm.model, pm.ref[:dcline][i]["pminf"]^2 <= dc_p_sqr[i in keys(pm.ref[:dcline])] <= pm.ref[:dcline][i]["pmaxf"]^2)
+    dc_p_sqr = pm.var[:dc_p_sqr] = @variable(pm.model, 
+        dc_p_sqr[i in keys(pm.ref[:dcline])], basename="dc_p_sqr",
+        lowerbound = pm.ref[:dcline][i]["pminf"]^2,
+        upperbound = pm.ref[:dcline][i]["pmaxf"]^2
+    )
     for (i, dcline) in pm.ref[:dcline]
         @constraint(pm.model, norm([2*dc_p[from_idx[i]], dc_p_sqr[i]-1]) <= dc_p_sqr[i]+1)
     end

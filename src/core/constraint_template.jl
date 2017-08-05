@@ -91,20 +91,6 @@ function constraint_dcline(pm::GenericPowerModel, dcline)
     return constraint_dcline(pm, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
 end
 
-"""
-Creates Line Flow constraint for DC Lines (Matpower Formulation)
-
-```
-p_fr + p_to == loss0 + p_fr * loss1
-```
-"""
-function constraint_dcline{T}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
-    p_fr = getindex(pm.model, :p_dc)[f_idx]
-    p_to = getindex(pm.model, :p_dc)[t_idx]
-
-    c1 = @constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0) == 0)
-    return Set([c1])
-end
 
 ""
 function constraint_dcline_voltage(pm::GenericPowerModel, dcline; epsilon = 0.0)
