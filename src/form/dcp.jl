@@ -19,26 +19,37 @@ DCPPowerModel(data::Dict{String,Any}; kwargs...) =
 variable_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...) =
     variable_phase_angle(pm; kwargs...)
 
-""
-variable_voltage_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...) = nothing
+"nothing to add, there are no voltage variables on branches"
+variable_voltage_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...) = Set([])
 
-""
-function variable_generation{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...)
-    variable_active_generation(pm; kwargs...)
-    # omit reactive variables
-end
+#""
+#function variable_generation{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...)
+#    variable_active_generation(pm; kwargs...)
+#    # omit reactive variables
+#end
 
-""
-function variable_line_flow{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...)
-    variable_active_line_flow(pm; kwargs...)
-    # omit reactive variables
-end
+"dc models ignore reactive power flows"
+variable_reactive_generation{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; bounded = true) = Set()
 
-""
-function variable_line_flow_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...)
-    # do nothing, this model does not have reactive variables
-    variable_active_line_flow_ne(pm; kwargs...)
-end
+#""
+#function variable_line_flow{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...)
+#    variable_active_line_flow(pm; kwargs...)
+#    # omit reactive variables
+#end
+
+"dc models ignore reactive power flows"
+variable_reactive_line_flow{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; bounded = true) = Set()
+
+
+#""
+#function variable_line_flow_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...)
+#    # do nothing, this model does not have reactive variables
+#    variable_active_line_flow_ne(pm; kwargs...)
+#end
+
+"dc models ignore reactive power flows"
+variable_reactive_line_flow_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}) = Set([])
+
 
 ""
 function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T}; bounded = true)
