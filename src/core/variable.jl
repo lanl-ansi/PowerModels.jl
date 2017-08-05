@@ -92,7 +92,7 @@ function variable_voltage_magnitude_sqr(pm::GenericPowerModel; bounded = true)
             start = getstart(pm.ref[:bus], i, "w_start", 1.001)
         )
     else
-        @variable(pm.model, 
+        pm.var[:w] = @variable(pm.model, 
             [i in keys(pm.ref[:bus])], basename="w",
             lowerbound = 0,
             start = getstart(pm.ref[:bus], i, "w_start", 1.001)

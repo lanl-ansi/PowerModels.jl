@@ -50,7 +50,7 @@ function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T
             start = getstart(pm.ref[:branch], l, "p_start")
         )
     else
-        @variable(pm.model,
+        pm.var[:p] = @variable(pm.model,
             [(l,i,j) in pm.ref[:arcs_from]], basename="p",
             start = getstart(pm.ref[:branch], l, "p_start")
         )
