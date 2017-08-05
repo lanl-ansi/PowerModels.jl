@@ -21,6 +21,7 @@ include("core/objective.jl")
 include("core/solution.jl")
 
 include("form/acp.jl")
+include("form/acr.jl")
 include("form/act.jl")
 include("form/dcp.jl")
 include("form/wr.jl")

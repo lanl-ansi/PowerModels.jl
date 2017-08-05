@@ -1,4 +1,4 @@
-### W-Theta form non-convex AC equations
+### w-theta form of the non-convex AC equations
 
 export 
     ACTPowerModel, StandardACTForm
