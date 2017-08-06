@@ -82,14 +82,25 @@ end
 
 ### Helper functions for ignoring the basecase
 
-getref(pm::GenericPowerModel, key::Symbol) = getref(pm, 0, key)
-getref(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ref[:nw][n][key]
+#nw_data(pm::GenericPowerModel, key::String) = nw_ref(pm, 0, key)
+#nw_data(pm::GenericPowerModel, key::String, idx::String) = nw_ref(pm, 0, key, idx)
+#nw_data(pm::GenericPowerModel, n::String, key::String) = pm.data["nw"][n][key]
+#nw_data(pm::GenericPowerModel, n::String, key::String, idx::String) = pm.data[:nw][n][key][idx]
 
-getvar(pm::GenericPowerModel, key::Symbol) = getref(pm, 0, key)
-getvar(pm::GenericPowerModel, n::Int, key::Symbol) = pm.var[:nw][n][key]
+nw_ref(pm::GenericPowerModel, key::Symbol) = nw_ref(pm, 0, key)
+nw_ref(pm::GenericPowerModel, key::Symbol, idx) = nw_ref(pm, 0, key, idx)
+nw_ref(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ref[:nw][n][key]
+nw_ref(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ref[:nw][n][key][idx]
 
-getext(pm::GenericPowerModel, key::Symbol) = getref(pm, 0, key)
-getext(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ext[:nw][n][key]
+nw_var(pm::GenericPowerModel, key::Symbol) = nw_var(pm, 0, key)
+nw_var(pm::GenericPowerModel, key::Symbol, idx) = nw_var(pm, 0, key, idx)
+nw_var(pm::GenericPowerModel, n::Int, key::Symbol) = pm.var[:nw][n][key]
+nw_var(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.var[:nw][n][key][idx]
+
+nw_ext(pm::GenericPowerModel, key::Symbol) = nw_ext(pm, 0, key)
+nw_ext(pm::GenericPowerModel, key::Symbol, idx) = nw_ext(pm, 0, key, idx)
+nw_ext(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ext[:nw][n][key]
+nw_ext(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ext[:nw][n][key][idx]
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in

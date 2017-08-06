@@ -27,7 +27,7 @@ end
 variable_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...) = nothing
 
 "do nothing, this model does not have complex voltage constraints"
-constraint_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Symbol=:base) = Set()
+constraint_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int=0) = Set()
 
 "do nothing, this model does not have complex voltage constraints"
 constraint_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}) = nothing
