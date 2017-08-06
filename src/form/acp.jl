@@ -18,16 +18,16 @@ ACPPowerModel(data::Dict{String,Any}; kwargs...) =
     GenericPowerModel(data, StandardACPForm; kwargs...)
 
 ""
-function variable_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...)
-    variable_phase_angle(pm; kwargs...)
-    variable_voltage_magnitude(pm; kwargs...)
+function variable_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Symbol=:base; kwargs...)
+    variable_phase_angle(pm, n; kwargs...)
+    variable_voltage_magnitude(pm, n; kwargs...)
 end
 
 ""
 variable_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...) = nothing
 
 "do nothing, this model does not have complex voltage constraints"
-constraint_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}) = Set()
+constraint_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Symbol=:base) = Set()
 
 "do nothing, this model does not have complex voltage constraints"
 constraint_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}) = nothing

@@ -195,9 +195,9 @@ end
 
 
 "generates variables for both `active` and `reactive` generation"
-function variable_generation(pm::GenericPowerModel; kwargs...)
-    variable_active_generation(pm; kwargs...)
-    variable_reactive_generation(pm; kwargs...)
+function variable_generation(pm::GenericPowerModel, n::Symbol=:base; kwargs...)
+    variable_active_generation(pm, n; kwargs...)
+    variable_reactive_generation(pm, n; kwargs...)
 end
 
 
@@ -238,9 +238,9 @@ function variable_reactive_generation(pm::GenericPowerModel, n::Symbol=:base; bo
 end
 
 ""
-function variable_line_flow(pm::GenericPowerModel; kwargs...)
-    variable_active_line_flow(pm; kwargs...)
-    variable_reactive_line_flow(pm; kwargs...)
+function variable_line_flow(pm::GenericPowerModel, n::Symbol=:base; kwargs...)
+    variable_active_line_flow(pm, n; kwargs...)
+    variable_reactive_line_flow(pm, n; kwargs...)
 end
 
 
@@ -280,9 +280,9 @@ function variable_reactive_line_flow(pm::GenericPowerModel, n::Symbol=:base; bou
     return pm.var[n][:q]
 end
 
-function variable_dcline_flow(pm::GenericPowerModel; kwargs...)
-    variable_active_dcline_flow(pm; kwargs...)
-    variable_reactive_dcline_flow(pm; kwargs...)
+function variable_dcline_flow(pm::GenericPowerModel, n::Symbol=:base; kwargs...)
+    variable_active_dcline_flow(pm, n; kwargs...)
+    variable_reactive_dcline_flow(pm, n; kwargs...)
 end
 
 "variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"

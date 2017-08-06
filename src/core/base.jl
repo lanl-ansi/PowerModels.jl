@@ -81,7 +81,7 @@ getref(pm::GenericPowerModel, key::Symbol) = getref(pm, :base, key)
 getref(pm::GenericPowerModel, n::Symbol, key::Symbol) = pm.ref[n][key]
 
 getvar(pm::GenericPowerModel, key::Symbol) = getref(pm, :base, key)
-getvar(pm::GenericPowerModel, n::Symbol, key::Symbol) = pm.vars[n][key]
+getvar(pm::GenericPowerModel, n::Symbol, key::Symbol) = pm.var[n][key]
 
 getext(pm::GenericPowerModel, key::Symbol) = getref(pm, :base, key)
 getext(pm::GenericPowerModel, n::Symbol, key::Symbol) = pm.ext[n][key]
