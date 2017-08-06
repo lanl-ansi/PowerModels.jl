@@ -287,19 +287,19 @@ end
 
 "variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
 function variable_active_dcline_flow(pm::GenericPowerModel; bounded = true)
-    pmin = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
-    pref = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
-    pmax = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
-    loss0 = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+    # build bounds lookups based over arcs set
+    pmin = Dict()
+    pref = Dict()
+    pmax = Dict()
     for (l,i,j) in pm.ref[:arcs_from_dc]
-        pmin[(l,i,j)] =  pm.ref[:dcline][l]["pminf"]
-        pmax[(l,i,j)] =  pm.ref[:dcline][l]["pmaxf"]
-        pmin[(l,j,i)] =  pm.ref[:dcline][l]["pmint"]
-        pmax[(l,j,i)] =  pm.ref[:dcline][l]["pmaxt"]
-        pref[(l,i,j)] =  pm.ref[:dcline][l]["pf"]
-        pref[(l,j,i)] =  pm.ref[:dcline][l]["pt"]
-        loss0[(l,i,j)] =  0 #loss completely assigned to to side as per matpower
-        loss0[(l,j,i)] =  pm.ref[:dcline][l]["loss0"]  #loss completely assigned to to side as per matpower
+        pmin[(l,i,j)] = pm.ref[:dcline][l]["pminf"]
+        pmax[(l,i,j)] = pm.ref[:dcline][l]["pmaxf"]
+        pref[(l,i,j)] = pm.ref[:dcline][l]["pf"]
+    end
+    for (l,i,j) in pm.ref[:arcs_to_dc]
+        pmin[(l,i,j)] = pm.ref[:dcline][l]["pmint"]
+        pmax[(l,i,j)] = pm.ref[:dcline][l]["pmaxt"]
+        pref[(l,i,j)] = pm.ref[:dcline][l]["pt"]
     end
 
     if bounded
@@ -320,16 +320,19 @@ end
 
 "variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
 function variable_reactive_dcline_flow(pm::GenericPowerModel; bounded = true)
-    qmin = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
-    qref = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
-    qmax = Dict([(a, 0.0) for a in pm.ref[:arcs_dc]])
+    # build bounds lookups based over arcs set
+    qmin = Dict()
+    qref = Dict()
+    qmax = Dict()
     for (l,i,j) in pm.ref[:arcs_from_dc]
-        qmin[(l,i,j)] =  pm.ref[:dcline][l]["qminf"]
-        qmax[(l,i,j)] =  pm.ref[:dcline][l]["qmaxf"]
-        qmin[(l,j,i)] =  pm.ref[:dcline][l]["qmint"]
-        qmax[(l,j,i)] =  pm.ref[:dcline][l]["qmaxt"]
-        qref[(l,i,j)] =  pm.ref[:dcline][l]["qf"]
-        qref[(l,j,i)] =  pm.ref[:dcline][l]["qt"]
+        qmin[(l,i,j)] = pm.ref[:dcline][l]["qminf"]
+        qmax[(l,i,j)] = pm.ref[:dcline][l]["qmaxf"]
+        qref[(l,i,j)] = pm.ref[:dcline][l]["qf"]
+    end
+    for (l,i,j) in pm.ref[:arcs_to_dc]
+        qmin[(l,i,j)] = pm.ref[:dcline][l]["qmint"]
+        qmax[(l,i,j)] = pm.ref[:dcline][l]["qmaxt"]
+        qref[(l,i,j)] = pm.ref[:dcline][l]["qt"]
     end
 
     if bounded
