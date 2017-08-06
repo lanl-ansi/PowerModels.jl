@@ -9,10 +9,14 @@ end
 ""
 function post_api_opf(pm::GenericPowerModel)
     variable_voltage(pm)
-    bounds_tighten_voltage(pm)
+    for (i,bus) in nw_ref(pm, :bus)
+        bounds_tighten_voltage(pm, bus)
+    end
 
     variable_generation(pm, bounded = false)
-    upperbound_negative_active_generation(pm)
+    for (i,gen) in nw_ref(pm, :gen)
+        upperbound_negative_active_generation(pm, gen)
+    end
 
     variable_line_flow(pm)
     variable_dcline_flow(pm)
@@ -22,25 +26,23 @@ function post_api_opf(pm::GenericPowerModel)
 
 
     objective_max_loading(pm)
-    #objective_max_loading_voltage_norm(pm)
-    #objective_max_loading_gen_output(pm)
 
     constraint_voltage(pm)
 
-    for (i,bus) in pm.ref[:ref_buses]
+    for (i,bus) in nw_ref(pm, :ref_buses)
         constraint_theta_ref(pm, bus)
     end
 
-    for (i,gen) in pm.ref[:gen]
-        pg = pm.var[:pg][i]
+    for (i,gen) in nw_ref(pm, :gen)
+        pg = nw_var(pm, :pg)[i]
         @constraint(pm.model, pg >= gen["pmin"])
     end
 
-    for (i,bus) in pm.ref[:bus]
+    for (i,bus) in nw_ref(pm, :bus)
         constraint_kcl_shunt_scaled(pm, bus)
     end
 
-    for (i,branch) in pm.ref[:branch]
+    for (i,branch) in nw_ref(pm, :branch)
         constraint_ohms_yt_from(pm, branch)
         constraint_ohms_yt_to(pm, branch)
 
@@ -50,8 +52,7 @@ function post_api_opf(pm::GenericPowerModel)
         constraint_thermal_limit_to(pm, branch; scale = 0.999)
     end
 
-
-    for (i,dcline) in pm.ref[:dcline]
+    for (i,dcline) in nw_ref(pm, :dcline)
         constraint_dcline(pm, dcline)
     end
 end
@@ -74,21 +75,21 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
 
     constraint_voltage(pm)
 
-    for (i,bus) in pm.ref[:ref_buses]
+    for (i,bus) in nw_ref(pm, :ref_buses)
         constraint_theta_ref(pm, bus)
     end
 
-    for (i,bus) in pm.ref[:bus]
+    for (i,bus) in nw_ref(pm, :bus)
         constraint_kcl_shunt(pm, bus)
     end
 
-    for (i,branch) in pm.ref[:branch]
+    for (i,branch) in nw_ref(pm, :branch)
         constraint_ohms_yt_from(pm, branch)
         constraint_ohms_yt_to(pm, branch)
 
         constraint_phase_angle_difference(pm, branch)
-        theta_fr = pm.var[:t][branch["f_bus"]]
-        theta_to = pm.var[:t][branch["t_bus"]]
+        theta_fr = nw_var(pm, :t)[branch["f_bus"]]
+        theta_to = nw_var(pm, :t)[branch["t_bus"]]
 
         @constraint(pm.model, theta_fr - theta_to <=  theta_delta_bound)
         @constraint(pm.model, theta_fr - theta_to >= -theta_delta_bound)
@@ -97,7 +98,7 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
         constraint_thermal_limit_to(pm, branch; scale = 0.999)
     end
 
-    for (i,dcline) in pm.ref[:dcline]
+    for (i,dcline) in nw_ref(pm, :dcline)
         constraint_dcline(pm, dcline)
     end
 end

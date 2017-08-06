@@ -21,13 +21,13 @@ using JSON
 
     @testset "14-bus case file with bus names" begin
         data = PowerModels.parse_file("../test/data/case14.m")
-        @test data["base"]["bus"]["1"]["bus_name"] == "Bus 1     HV"
+        @test data["nw"]["0"]["bus"]["1"]["bus_name"] == "Bus 1     HV"
         @test isa(JSON.json(data), String)
     end
 
     @testset "3-bus case file with hvdc lines" begin
         data = PowerModels.parse_file("../test/data/case3.m")
-        @test length(data["base"]["dcline"]) > 0
+        @test length(data["nw"]["0"]["dcline"]) > 0
         @test isa(JSON.json(data), String)
     end
 
@@ -67,98 +67,98 @@ end
     @testset "3-bus extended constants" begin
         data = PowerModels.parse_file("../test/data/case3.m")
 
-        @test data["base"]["const_int"] == 123
-        @test data["base"]["const_float"] == 4.56
-        @test data["base"]["const_str"] == "a string"
+        @test data["nw"]["0"]["const_int"] == 123
+        @test data["nw"]["0"]["const_float"] == 4.56
+        @test data["nw"]["0"]["const_str"] == "a string"
         @test isa(JSON.json(data), String)
     end
 
     @testset "3-bus extended matrix" begin
         data = PowerModels.parse_file("../test/data/case3.m")
 
-        @test haskey(data["base"], "areas")
-        @test data["base"]["areas"]["1"]["col_1"] == 1
-        @test data["base"]["areas"]["1"]["col_2"] == 1
-        @test data["base"]["areas"]["2"]["col_1"] == 2
-        @test data["base"]["areas"]["2"]["col_2"] == 3
+        @test haskey(data["nw"]["0"], "areas")
+        @test data["nw"]["0"]["areas"]["1"]["col_1"] == 1
+        @test data["nw"]["0"]["areas"]["1"]["col_2"] == 1
+        @test data["nw"]["0"]["areas"]["2"]["col_1"] == 2
+        @test data["nw"]["0"]["areas"]["2"]["col_2"] == 3
         @test isa(JSON.json(data), String)
     end
 
     @testset "3-bus extended named matrix" begin
         data = PowerModels.parse_file("../test/data/case3.m")
 
-        @test haskey(data["base"], "areas_named")
-        @test data["base"]["areas_named"]["1"]["area"] == 4
-        @test data["base"]["areas_named"]["1"]["refbus"] == 5
-        @test data["base"]["areas_named"]["2"]["area"] == 5
-        @test data["base"]["areas_named"]["2"]["refbus"] == 6
+        @test haskey(data["nw"]["0"], "areas_named")
+        @test data["nw"]["0"]["areas_named"]["1"]["area"] == 4
+        @test data["nw"]["0"]["areas_named"]["1"]["refbus"] == 5
+        @test data["nw"]["0"]["areas_named"]["2"]["area"] == 5
+        @test data["nw"]["0"]["areas_named"]["2"]["refbus"] == 6
         @test isa(JSON.json(data), String)
     end
 
     @testset "3-bus extended predefined matrix" begin
         data = PowerModels.parse_file("../test/data/case3.m")
 
-        @test haskey(data["base"], "areas_named")
-        @test data["base"]["branch"]["1"]["rate_i"] == 50.2
-        @test data["base"]["branch"]["1"]["rate_p"] == 45
-        @test data["base"]["branch"]["2"]["rate_i"] == 36
-        @test data["base"]["branch"]["2"]["rate_p"] == 60.1
-        @test data["base"]["branch"]["3"]["rate_i"] == 12
-        @test data["base"]["branch"]["3"]["rate_p"] == 30
+        @test haskey(data["nw"]["0"], "areas_named")
+        @test data["nw"]["0"]["branch"]["1"]["rate_i"] == 50.2
+        @test data["nw"]["0"]["branch"]["1"]["rate_p"] == 45
+        @test data["nw"]["0"]["branch"]["2"]["rate_i"] == 36
+        @test data["nw"]["0"]["branch"]["2"]["rate_p"] == 60.1
+        @test data["nw"]["0"]["branch"]["3"]["rate_i"] == 12
+        @test data["nw"]["0"]["branch"]["3"]["rate_p"] == 30
         @test isa(JSON.json(data), String)
     end
 
     @testset "3-bus extended matrix from cell" begin
         data = PowerModels.parse_file("../test/data/case3.m")
 
-        @test haskey(data["base"], "areas_cells")
-        @test data["base"]["areas_cells"]["1"]["col_1"] == "Area 1"
-        @test data["base"]["areas_cells"]["1"]["col_2"] == 123
-        @test data["base"]["areas_cells"]["1"]["col_4"] == "Slack \\\"Bus\\\" 1"
-        @test data["base"]["areas_cells"]["1"]["col_5"] == 1.23
-        @test data["base"]["areas_cells"]["2"]["col_1"] == "Area 2"
-        @test data["base"]["areas_cells"]["2"]["col_2"] == 456
-        @test data["base"]["areas_cells"]["2"]["col_4"] == "Slack Bus 3"
-        @test data["base"]["areas_cells"]["2"]["col_5"] == 4.56
+        @test haskey(data["nw"]["0"], "areas_cells")
+        @test data["nw"]["0"]["areas_cells"]["1"]["col_1"] == "Area 1"
+        @test data["nw"]["0"]["areas_cells"]["1"]["col_2"] == 123
+        @test data["nw"]["0"]["areas_cells"]["1"]["col_4"] == "Slack \\\"Bus\\\" 1"
+        @test data["nw"]["0"]["areas_cells"]["1"]["col_5"] == 1.23
+        @test data["nw"]["0"]["areas_cells"]["2"]["col_1"] == "Area 2"
+        @test data["nw"]["0"]["areas_cells"]["2"]["col_2"] == 456
+        @test data["nw"]["0"]["areas_cells"]["2"]["col_4"] == "Slack Bus 3"
+        @test data["nw"]["0"]["areas_cells"]["2"]["col_5"] == 4.56
         @test isa(JSON.json(data), String)
     end
 
     @testset "3-bus extended named matrix from cell" begin
         data = PowerModels.parse_file("../test/data/case3.m")
 
-        @test haskey(data["base"], "areas_named_cells")
-        @test data["base"]["areas_named_cells"]["1"]["area_name"] == "Area 1"
-        @test data["base"]["areas_named_cells"]["1"]["area"] == 123
-        @test data["base"]["areas_named_cells"]["1"]["area2"] == 987
-        @test data["base"]["areas_named_cells"]["1"]["refbus_name"] == "Slack Bus 1"
-        @test data["base"]["areas_named_cells"]["1"]["refbus"] == 1.23
-        @test data["base"]["areas_named_cells"]["2"]["area_name"] == "Area 2"
-        @test data["base"]["areas_named_cells"]["2"]["area"] == 456
-        @test data["base"]["areas_named_cells"]["2"]["area2"] == 987
-        @test data["base"]["areas_named_cells"]["2"]["refbus_name"] == "Slack Bus 3"
-        @test data["base"]["areas_named_cells"]["2"]["refbus"] == 4.56
+        @test haskey(data["nw"]["0"], "areas_named_cells")
+        @test data["nw"]["0"]["areas_named_cells"]["1"]["area_name"] == "Area 1"
+        @test data["nw"]["0"]["areas_named_cells"]["1"]["area"] == 123
+        @test data["nw"]["0"]["areas_named_cells"]["1"]["area2"] == 987
+        @test data["nw"]["0"]["areas_named_cells"]["1"]["refbus_name"] == "Slack Bus 1"
+        @test data["nw"]["0"]["areas_named_cells"]["1"]["refbus"] == 1.23
+        @test data["nw"]["0"]["areas_named_cells"]["2"]["area_name"] == "Area 2"
+        @test data["nw"]["0"]["areas_named_cells"]["2"]["area"] == 456
+        @test data["nw"]["0"]["areas_named_cells"]["2"]["area2"] == 987
+        @test data["nw"]["0"]["areas_named_cells"]["2"]["refbus_name"] == "Slack Bus 3"
+        @test data["nw"]["0"]["areas_named_cells"]["2"]["refbus"] == 4.56
         @test isa(JSON.json(data), String)
     end
 
     @testset "3-bus extended predefined matrix from cell" begin
         data = PowerModels.parse_file("../test/data/case3.m")
 
-        @test haskey(data["base"], "areas_named")
-        @test data["base"]["branch"]["1"]["name"] == "Branch 1"
-        @test data["base"]["branch"]["1"]["number_id"] == 123
-        @test data["base"]["branch"]["2"]["name"] == "Branch 2"
-        @test data["base"]["branch"]["2"]["number_id"] == 456
-        @test data["base"]["branch"]["3"]["name"] == "Branch 3"
-        @test data["base"]["branch"]["3"]["number_id"] == 789
+        @test haskey(data["nw"]["0"], "areas_named")
+        @test data["nw"]["0"]["branch"]["1"]["name"] == "Branch 1"
+        @test data["nw"]["0"]["branch"]["1"]["number_id"] == 123
+        @test data["nw"]["0"]["branch"]["2"]["name"] == "Branch 2"
+        @test data["nw"]["0"]["branch"]["2"]["number_id"] == 456
+        @test data["nw"]["0"]["branch"]["3"]["name"] == "Branch 3"
+        @test data["nw"]["0"]["branch"]["3"]["number_id"] == 789
         @test isa(JSON.json(data), String)
     end
 
     @testset "3-bus tnep case" begin
         data = PowerModels.parse_file("../test/data/case3_tnep.m")
 
-        @test haskey(data["base"], "ne_branch")
-        @test data["base"]["ne_branch"]["1"]["f_bus"] == 1
-        @test data["base"]["ne_branch"]["1"]["construction_cost"] == 1
+        @test haskey(data["nw"]["0"], "ne_branch")
+        @test data["nw"]["0"]["ne_branch"]["1"]["f_bus"] == 1
+        @test data["nw"]["0"]["ne_branch"]["1"]["construction_cost"] == 1
         @test isa(JSON.json(data), String)
     end
 
@@ -166,8 +166,8 @@ end
         data = PowerModels.parse_file("../test/data/case3_tnep.m")
         ref = PowerModels.build_ref(data)
 
-        @test haskey(data["base"], "name")
-        @test haskey(ref[:base], :name)
-        @test data["base"]["name"] == ref[:base][:name]
+        @test haskey(data["nw"]["0"], "name")
+        @test haskey(ref[:nw][0], :name)
+        @test data["nw"]["0"]["name"] == ref[:nw][0][:name]
     end
 end

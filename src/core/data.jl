@@ -131,7 +131,7 @@ end
 
 
 function make_per_unit(data::Dict{String,Any})
-    for (n,network_data) in data
+    for (n,network_data) in data["nw"]
         make_network_per_unit(network_data)
     end
 end
@@ -224,7 +224,7 @@ end
 
 
 function make_mixed_units(data::Dict{String,Any})
-    for (n,network_data) in data
+    for (n,network_data) in data["nw"]
         make_network_mixed_units(network_data)
     end
 end

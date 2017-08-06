@@ -33,8 +33,8 @@ constraint_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int=0) = S
 constraint_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}) = nothing
 
 "`vm - epsilon <= v[i] <= vm + epsilon`"
-function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, vm, epsilon)
-    v = pm.var[:v][i]
+function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, i, vm, epsilon)
+    v = pm.var[:nw][n][:v][i]
 
     if epsilon == 0.0
         c = @constraint(pm.model, v == vm)
@@ -52,9 +52,9 @@ v_from  - epsilon <= v[i] <= v_from + epsilon
 v_to  - epsilon <= v[i] <= v_to + epsilon
 '''
 """
-function constraint_voltage_dcline_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
-    v_f = pm.var[:v][f_bus]
-    v_t = pm.var[:v][t_bus]
+function constraint_voltage_dcline_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, vf, vt, epsilon)
+    v_f = pm.var[:nw][n][:v][f_bus]
+    v_t = pm.var[:nw][n][:v][t_bus]
 
     if epsilon == 0.0
         c1 = @constraint(pm.model, v_f == vf)
@@ -339,19 +339,20 @@ APIACPPowerModel(data::Dict{String,Any}; kwargs...) =
     GenericPowerModel(data, APIACPForm; kwargs...)
 
 "variable: load_factor >= 1.0"
-function variable_load_factor(pm::GenericPowerModel)
-    pm.var[:load_factor] = @variable(pm.model,
+function variable_load_factor(pm::GenericPowerModel, n::Int=0)
+    pm.var[:nw][n][:load_factor] = @variable(pm.model,
         basename="load_factor",
         lowerbound=1.0,
         start = 1.0
     )
-    return pm.var[:load_factor]
+    return pm.var[:nw][n][:load_factor]
 end
 
 "objective: Max. load_factor"
-objective_max_loading(pm::GenericPowerModel) =
-    @objective(pm.model, Max, pm.var[:load_factor])
+objective_max_loading(pm::GenericPowerModel, n::Int=0) =
+    @objective(pm.model, Max, pm.var[:nw][n][:load_factor])
 
+#=
 ""
 function objective_max_loading_voltage_norm(pm::GenericPowerModel)
     # Seems to create too much reactive power and makes even small models hard to converge
@@ -374,38 +375,38 @@ function objective_max_loading_gen_output(pm::GenericPowerModel)
 
     return @NLobjective(pm.model, Max, 100*scale*load_factor - sum( (pg[i]^2 - (2*qg[i])^2)^2 for (i,gen) in pm.ref[:gen] ))
 end
+=#
 
 ""
-function bounds_tighten_voltage(pm::APIACPPowerModel; epsilon = 0.001)
-    for (i,bus) in pm.ref[:bus]
-        v = pm.var[:v][i]
-        setupperbound(v, bus["vmax"]*(1.0-epsilon))
-        setlowerbound(v, bus["vmin"]*(1.0+epsilon))
+bounds_tighten_voltage(pm::APIACPPowerModel, bus; kwargs...) = bounds_tighten_voltage(pm, 0, bus; kwargs...)
+function bounds_tighten_voltage(pm::APIACPPowerModel, n::Int, bus; epsilon = 0.001)
+    v = pm.var[:nw][n][:v][bus["index"]]
+    setupperbound(v, bus["vmax"]*(1.0-epsilon))
+    setlowerbound(v, bus["vmin"]*(1.0+epsilon))
+end
+
+""
+upperbound_negative_active_generation(pm::APIACPPowerModel, gen; kwargs...) = upperbound_negative_active_generation(pm, 0, gen; kwargs...)
+function upperbound_negative_active_generation(pm::APIACPPowerModel, n::Int, gen)
+    if gen["pmax"] <= 0
+        pg = pm.var[:nw][n][:pg][gen["index"]]
+        setupperbound(pg, gen["pmax"])
     end
 end
 
 ""
-function upperbound_negative_active_generation(pm::APIACPPowerModel)
-    for (i,gen) in pm.ref[:gen]
-        if gen["pmax"] <= 0
-            pg = pm.var[:pg][i]
-            setupperbound(pg, gen["pmax"])
-        end
-    end
-end
-
-""
-function constraint_kcl_shunt_scaled(pm::APIACPPowerModel, bus)
+constraint_kcl_shunt_scaled(pm::APIACPPowerModel, bus) = constraint_kcl_shunt_scaled(pm, 0, bus)
+function constraint_kcl_shunt_scaled(pm::APIACPPowerModel, n::Int, bus)
     i = bus["index"]
-    bus_arcs = pm.ref[:bus_arcs][i]
-    bus_gens = pm.ref[:bus_gens][i]
+    bus_arcs = pm.ref[:nw][n][:bus_arcs][i]
+    bus_gens = pm.ref[:nw][n][:bus_gens][i]
 
-    load_factor = pm.var[:load_factor]
-    v = pm.var[:v]
-    p = pm.var[:p]
-    q = pm.var[:q]
-    pg = pm.var[:pg]
-    qg = pm.var[:qg]
+    load_factor = pm.var[:nw][n][:load_factor]
+    v = pm.var[:nw][n][:v]
+    p = pm.var[:nw][n][:p]
+    q = pm.var[:nw][n][:q]
+    pg = pm.var[:nw][n][:pg]
+    qg = pm.var[:nw][n][:qg]
 
     if bus["pd"] > 0 && bus["qd"] > 0
         c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) == sum(pg[g] for g in bus_gens) - bus["pd"]*load_factor - bus["gs"]*v[i]^2)
@@ -420,22 +421,21 @@ function constraint_kcl_shunt_scaled(pm::APIACPPowerModel, bus)
 end
 
 ""
-function get_solution(pm::APIACPPowerModel)
+function get_solution(pm::APIACPPowerModel, n::String)
     # super fallback
-    sol = init_solution(pm)
-    add_bus_voltage_setpoint(sol, pm)
-    add_generator_power_setpoint(sol, pm)
-    add_branch_flow_setpoint(sol, pm)
+    sol = init_solution(pm, n)
+    add_bus_voltage_setpoint(sol, pm, n)
+    add_generator_power_setpoint(sol, pm, n)
+    add_branch_flow_setpoint(sol, pm, n)
 
     # extension
-    add_bus_demand_setpoint(sol, pm)
+    add_bus_demand_setpoint(sol, pm, n)
 
     return sol
 end
 
 ""
-function add_bus_demand_setpoint(sol, pm::APIACPPowerModel)
-    mva_base = pm.data["baseMVA"]
-    add_setpoint(sol, pm, "bus", "bus_i", "pd", :load_factor; default_value = (item) -> item["pd"], scale = (x,item) -> item["pd"] > 0 && item["qd"] > 0 ? x*item["pd"] : item["pd"], extract_var = (var,idx,item) -> var)
-    add_setpoint(sol, pm, "bus", "bus_i", "qd", :load_factor; default_value = (item) -> item["qd"], scale = (x,item) -> item["qd"], extract_var = (var,idx,item) -> var)
+function add_bus_demand_setpoint(sol, pm::APIACPPowerModel, n::String)
+    add_setpoint(sol, pm, n, "bus", "bus_i", "pd", :load_factor; default_value = (item) -> item["pd"], scale = (x,item) -> item["pd"] > 0 && item["qd"] > 0 ? x*item["pd"] : item["pd"], extract_var = (var,idx,item) -> var)
+    add_setpoint(sol, pm, n, "bus", "bus_i", "qd", :load_factor; default_value = (item) -> item["qd"], scale = (x,item) -> item["qd"], extract_var = (var,idx,item) -> var)
 end

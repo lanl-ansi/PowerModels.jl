@@ -24,8 +24,8 @@
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11567; atol = 1e0)
-        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["nw"]["0"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["nw"]["0"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
     @testset "24-bus rts case" begin
         result = run_opf("../test/data/case24.m", ACPPowerModel, ipopt_solver)
@@ -55,8 +55,8 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11567; atol = 1e0)
-        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4) 
+        @test isapprox(result["solution"]["nw"]["0"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["nw"]["0"]["bus"]["4"]["va"], 0.0; atol = 1e-4) 
     end
     @testset "24-bus rts case" begin
         result = run_opf("../test/data/case24.m", ACRPowerModel, ipopt_solver)
@@ -85,8 +85,8 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11567; atol = 1e0)
-        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4) 
+        @test isapprox(result["solution"]["nw"]["0"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["nw"]["0"]["bus"]["4"]["va"], 0.0; atol = 1e-4) 
     end
     @testset "24-bus rts case" begin
         result = run_opf("../test/data/case24.m", ACTPowerModel, ipopt_solver)
@@ -115,8 +115,8 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11396; atol = 1e0)
-        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["nw"]["0"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["nw"]["0"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
     # TODO verify this is really infeasible
     #@testset "24-bus rts case" begin
@@ -174,8 +174,8 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11567; atol = 1e0)
-        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["nw"]["0"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["nw"]["0"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
     @testset "24-bus rts case" begin
         result = run_opf("../test/data/case24.m", QCWRPowerModel, ipopt_solver)
