@@ -122,7 +122,7 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, index_name, param_n
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
         sol_item[param_name] = default_value(item)
         try
-            var = extract_var(getindex(pm.model, variable_symbol), idx, item)
+            var = extract_var(pm.var[variable_symbol], idx, item)
             sol_item[param_name] = scale(getvalue(var), item)
         catch
         end

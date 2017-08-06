@@ -2,7 +2,9 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- Made solution default units, per unit (breaking)
+- Added pm.var and made all JuMP variables anonymous (breaking)
+- Eliminated usage of pm.model.ext, for details see [#149](https://github.com/lanl-ansi/PowerModels.jl/pull/149)
+- Made solution default units per-unit (breaking)
 - Removed deprecated bus-less constraint_theta_ref function (breaking)
 - Moved check_cost_models into the objective building function
 - Fixed out of range bug in calc_theta_delta_bounds
@@ -10,13 +12,13 @@ PowerModels.jl Change Log
 ### v0.3.4
 - Added support for Matpower data with dclines (thanks to @frederikgeth, @hakanergun)
 - Added support for QC-OTS
-- Added support for multiple refrence buses
+- Added support for multiple reference buses
 - Added rectangular voltage formulation of AC-OPF
 - Added w-theta formulation of AC-OPF
 - Added data units checks to update_data
 - Made branch flow parameter names consistent with Matpower
 - Fixed bug in constants for w-space phase angle difference constraints
-- Fixed bug when no refrence bus was specified
+- Fixed bug when no reference bus was specified
 - Fixed dcline parsing bug
 
 ### v0.3.3
