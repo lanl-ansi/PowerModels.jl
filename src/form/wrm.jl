@@ -56,7 +56,7 @@ function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerM
         setlowerbound(WI[wi_idx, wj_idx], wi_min[(i,j)])
     end
 
-    pm.model.ext[:lookup_w_index] = lookup_w_index
+    pm.ext[:lookup_w_index] = lookup_w_index
     return WR, WI
 end
 
@@ -79,7 +79,7 @@ constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, ref_bus::In
 
 ""
 function constraint_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
-    w_index = pm.model.ext[:lookup_w_index][i]
+    w_index = pm.ext[:lookup_w_index][i]
     w = pm.var[:WR][w_index, w_index]
 
     p = pm.var[:p]
@@ -99,8 +99,8 @@ function constraint_ohms_yt_from{T <: AbstractWRMForm}(pm::GenericPowerModel{T},
     p_fr = pm.var[:p][f_idx]
     q_fr = pm.var[:q][f_idx]
 
-    w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
-    w_to_index = pm.model.ext[:lookup_w_index][t_bus]
+    w_fr_index = pm.ext[:lookup_w_index][f_bus]
+    w_to_index = pm.ext[:lookup_w_index][t_bus]
 
     w_fr = pm.var[:WR][w_fr_index, w_fr_index]
     w_to = pm.var[:WR][w_to_index, w_to_index]
@@ -117,8 +117,8 @@ function constraint_ohms_yt_to{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f
     q_to = pm.var[:q][t_idx]
     p_to = pm.var[:p][t_idx]
 
-    w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
-    w_to_index = pm.model.ext[:lookup_w_index][t_bus]
+    w_fr_index = pm.ext[:lookup_w_index][f_bus]
+    w_to_index = pm.ext[:lookup_w_index][t_bus]
 
     w_fr = pm.var[:WR][w_fr_index, w_fr_index]
     w_to = pm.var[:WR][w_to_index, w_to_index]
@@ -132,8 +132,8 @@ end
 
 ""
 function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
-    w_fr_index = pm.model.ext[:lookup_w_index][f_bus]
-    w_to_index = pm.model.ext[:lookup_w_index][t_bus]
+    w_fr_index = pm.ext[:lookup_w_index][f_bus]
+    w_to_index = pm.ext[:lookup_w_index][t_bus]
 
     w_fr = pm.var[:WR][w_fr_index, w_fr_index]
     w_to = pm.var[:WR][w_to_index, w_to_index]
@@ -150,7 +150,7 @@ end
 
 ""
 function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerModel{T})
-    add_setpoint(sol, pm, "bus", "bus_i", "vm", :WR; scale = (x,item) -> sqrt(x), extract_var = (var,idx,item) -> var[pm.model.ext[:lookup_w_index][idx], pm.model.ext[:lookup_w_index][idx]])
+    add_setpoint(sol, pm, "bus", "bus_i", "vm", :WR; scale = (x,item) -> sqrt(x), extract_var = (var,idx,item) -> var[pm.ext[:lookup_w_index][idx], pm.ext[:lookup_w_index][idx]])
 
     # What should the default value be?
     #add_setpoint(sol, pm, "bus", "bus_i", "va", :t; default_value = 0)

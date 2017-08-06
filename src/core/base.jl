@@ -18,7 +18,9 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
     data::Dict{String,Any}
     setting::Dict{String,Any}
     solution::Dict{String,Any}
+    var::Dict{Symbol,Any} # model variable lookup
     ref::Dict{Symbol,Any} # reference data
+    ext::Dict{Symbol,Any} # user extentions
 end
 ```
 where
