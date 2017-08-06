@@ -1,4 +1,7 @@
-export run_mpopf, run_ac_mpopf, run_dc_mpopf
+#
+# NOTE: This is not a formulation of any particular problem
+# It is only for testing and illustration purposes
+#
 
 ""
 function run_ac_mpopf(file, solver; kwargs...)
