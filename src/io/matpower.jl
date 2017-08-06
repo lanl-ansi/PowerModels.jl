@@ -17,7 +17,7 @@ function parse_matpower(file_string::String)
     # after this call, Matpower data is consistent with PowerModels data
     mp_data_to_pm_data(mp_data)
 
-    data = Dict{String,Any}("base" => mp_data)
+    data = Dict{String,Any}("nw" => Dict{String,Any}("0" => mp_data))
 
     return data
 end

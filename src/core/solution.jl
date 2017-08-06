@@ -10,12 +10,15 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
     sol = Dict{String,Any}()
     data = Dict{String,Any}()
 
-    for (n,network_data) in pm.data
-        sol[n] = solution_builder(pm, n)
-        data[n] = Dict(
-            "name" => network_data["name"],
-            "bus_count" => length(network_data["bus"]),
-            "branch_count" => length(network_data["branch"])
+    sol_nw = sol["nw"] = Dict{String,Any}()
+    data_nw = data["nw"] = Dict{String,Any}()
+
+    for (n,nw_data) in pm.data["nw"]
+        sol_nw[n] = solution_builder(pm, n)
+        data_nw[n] = Dict(
+            "name" => nw_data["name"],
+            "bus_count" => length(nw_data["bus"]),
+            "branch_count" => length(nw_data["branch"])
         )
     end
 
@@ -40,7 +43,7 @@ end
 
 ""
 function init_solution(pm::GenericPowerModel, n::String)
-    return Dict{String,Any}(key => pm.data[n][key] for key in ["per_unit", "baseMVA"])
+    return Dict{String,Any}(key => pm.data["nw"][n][key] for key in ["per_unit", "baseMVA"])
 end
 
 ""
@@ -118,16 +121,16 @@ end
 ""
 function add_setpoint(sol, pm::GenericPowerModel, n::String, dict_name, index_name, param_name, variable_symbol; default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
     sol_dict = get(sol, dict_name, Dict{String,Any}())
-    if length(pm.data[n][dict_name]) > 0
+    if length(pm.data["nw"][n][dict_name]) > 0
         sol[dict_name] = sol_dict
     end
-    for (i,item) in pm.data[n][dict_name]
+    for (i,item) in pm.data["nw"][n][dict_name]
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
         sol_item[param_name] = default_value(item)
         try
-            ns = Symbol(n)
-            var = extract_var(pm.var[ns][variable_symbol], idx, item)
+            ns = parse(Int, n)
+            var = extract_var(pm.var[:nw][ns][variable_symbol], idx, item)
             sol_item[param_name] = scale(getvalue(var), item)
         catch
         end

@@ -7,7 +7,7 @@
 Checks that all cost models are polynomials, quadratic or less
 """
 function check_cost_models(pm::GenericPowerModel)
-    for (r,ref) in pm.ref
+    for (n,ref) in pm.ref[:nw]
         for (i,gen) in ref[:gen]
             if haskey(gen, "cost") && gen["model"] != 2
                 error("only cost model 2 is supported at this time, given cost model $(gen["model"]) on generator $(i)")
@@ -32,19 +32,19 @@ end
 function objective_min_fuel_cost(pm::GenericPowerModel)
     check_cost_models(pm)
 
-    pg = Dict(r => pm.var[r][:pg] for (r,ref) in pm.ref)
-    dc_p = Dict(r => pm.var[r][:p_dc] for (r,ref) in pm.ref)
+    pg = Dict(n => pm.var[:nw][n][:pg] for (n,ref) in pm.ref[:nw])
+    dc_p = Dict(n => pm.var[:nw][n][:p_dc] for (n,ref) in pm.ref[:nw])
 
     from_idx = Dict()
-    for (r,ref) in pm.ref
-        from_idx[r] = Dict(arc[1] => arc for arc in ref[:arcs_from_dc])
+    for (n,ref) in pm.ref[:nw]
+        from_idx[n] = Dict(arc[1] => arc for arc in ref[:arcs_from_dc])
     end
 
     return @objective(pm.model, Min, 
         sum(
-            sum(gen["cost"][1]*pg[r][i]^2 + gen["cost"][2]*pg[r][i] + gen["cost"][3] for (i,gen) in ref[:gen]) +
-            sum(dcline["cost"][1]*dc_p[r][from_idx[r][i]]^2 + dcline["cost"][2]*dc_p[r][from_idx[r][i]] + dcline["cost"][3] for (i,dcline) in ref[:dcline])
-        for (r,ref) in pm.ref)
+            sum(gen["cost"][1]*pg[n][i]^2 + gen["cost"][2]*pg[n][i] + gen["cost"][3] for (i,gen) in ref[:gen]) +
+            sum(dcline["cost"][1]*dc_p[n][from_idx[n][i]]^2 + dcline["cost"][2]*dc_p[n][from_idx[n][i]] + dcline["cost"][3] for (i,dcline) in ref[:dcline])
+        for (n,ref) in pm.ref[:nw])
     )
 end
 

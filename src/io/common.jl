@@ -13,12 +13,12 @@ end
 
 ""
 function check_network_data(data::Dict{String,Any})
-    for (i,network_data) in data
-        make_network_per_unit(network_data)
-        check_transformer_parameters(network_data)
-        check_phase_angle_differences(network_data)
-        check_thermal_limits(network_data)
-        check_bus_types(network_data)
-        check_dcline_limits(network_data)
+    for (n,nw_data) in data["nw"]
+        make_network_per_unit(nw_data)
+        check_transformer_parameters(nw_data)
+        check_phase_angle_differences(nw_data)
+        check_thermal_limits(nw_data)
+        check_bus_types(nw_data)
+        check_dcline_limits(nw_data)
     end
 end

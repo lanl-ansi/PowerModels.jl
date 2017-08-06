@@ -18,7 +18,7 @@ ACPPowerModel(data::Dict{String,Any}; kwargs...) =
     GenericPowerModel(data, StandardACPForm; kwargs...)
 
 ""
-function variable_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Symbol=:base; kwargs...)
+function variable_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int=0; kwargs...)
     variable_phase_angle(pm, n; kwargs...)
     variable_voltage_magnitude(pm, n; kwargs...)
 end
@@ -75,14 +75,14 @@ sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[
 sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*v^2
 ```
 """
-function constraint_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Symbol, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
-    v = pm.var[n][:v][i]
-    p = pm.var[n][:p]
-    q = pm.var[n][:q]
-    pg = pm.var[n][:pg]
-    qg = pm.var[n][:qg]
-    p_dc = pm.var[n][:p_dc]
-    q_dc = pm.var[n][:q_dc]
+function constraint_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
+    v = pm.var[:nw][n][:v][i]
+    p = pm.var[:nw][n][:p]
+    q = pm.var[:nw][n][:q]
+    pg = pm.var[:nw][n][:pg]
+    qg = pm.var[:nw][n][:qg]
+    p_dc = pm.var[:nw][n][:p_dc]
+    q_dc = pm.var[:nw][n][:q_dc]
 
     c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*v^2)
     c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*v^2)
@@ -119,13 +119,13 @@ p[f_idx] == g/tm*v[f_bus]^2 + (-g*tr+b*ti)/tm*(v[f_bus]*v[t_bus]*cos(t[f_bus]-t[
 q[f_idx] == -(b+c/2)/tm*v[f_bus]^2 - (-b*tr-g*ti)/tm*(v[f_bus]*v[t_bus]*cos(t[f_bus]-t[t_bus])) + (-g*tr+b*ti)/tm*(v[f_bus]*v[t_bus]*sin(t[f_bus]-t[t_bus]))
 ```
 """
-function constraint_ohms_yt_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Symbol, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    p_fr = pm.var[n][:p][f_idx]
-    q_fr = pm.var[n][:q][f_idx]
-    v_fr = pm.var[n][:v][f_bus]
-    v_to = pm.var[n][:v][t_bus]
-    t_fr = pm.var[n][:t][f_bus]
-    t_to = pm.var[n][:t][t_bus]
+function constraint_ohms_yt_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    p_fr = pm.var[:nw][n][:p][f_idx]
+    q_fr = pm.var[:nw][n][:q][f_idx]
+    v_fr = pm.var[:nw][n][:v][f_bus]
+    v_to = pm.var[:nw][n][:v][t_bus]
+    t_fr = pm.var[:nw][n][:t][f_bus]
+    t_to = pm.var[:nw][n][:t][t_bus]
 
     c1 = @NLconstraint(pm.model, p_fr == g/tm*v_fr^2 + (-g*tr+b*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-b*tr-g*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
     c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*v_fr^2 - (-b*tr-g*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-g*tr+b*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
@@ -140,13 +140,13 @@ p[t_idx] == g*v[t_bus]^2 + (-g*tr-b*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[t_bus]-t[f_b
 q[t_idx] == -(b+c/2)*v[t_bus]^2 - (-b*tr+g*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[f_bus]-t[t_bus])) + (-g*tr-b*ti)/tm*(v[t_bus]*v[f_bus]*sin(t[t_bus]-t[f_bus]))
 ```
 """
-function constraint_ohms_yt_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Symbol, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    p_to = pm.var[n][:p][t_idx]
-    q_to = pm.var[n][:q][t_idx]
-    v_fr = pm.var[n][:v][f_bus]
-    v_to = pm.var[n][:v][t_bus]
-    t_fr = pm.var[n][:t][f_bus]
-    t_to = pm.var[n][:t][t_bus]
+function constraint_ohms_yt_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    p_to = pm.var[:nw][n][:p][t_idx]
+    q_to = pm.var[:nw][n][:q][t_idx]
+    v_fr = pm.var[:nw][n][:v][f_bus]
+    v_to = pm.var[:nw][n][:v][t_bus]
+    t_fr = pm.var[:nw][n][:t][f_bus]
+    t_to = pm.var[:nw][n][:t][t_bus]
 
     c1 = @NLconstraint(pm.model, p_to == g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
     c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )

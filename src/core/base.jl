@@ -58,8 +58,13 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{S
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
 
     ref = build_ref(data)
-    vars = Dict{Symbol,Any}(n => Dict{Symbol,Any}() for n in keys(ref))
-    ext = Dict{Symbol,Any}(n => Dict{Symbol,Any}() for n in keys(ref))
+    
+    var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
+    ext = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
+    for nw_id in keys(ref[:nw])
+        var[:nw][nw_id] = Dict{Symbol,Any}()
+        ext[:nw][nw_id] = Dict{Symbol,Any}()
+    end
 
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
@@ -67,7 +72,7 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{S
         setting, # setting
         Dict{String,Any}(), # solution
         ref,
-        vars,
+        var,
         ext
     )
 
@@ -77,14 +82,14 @@ end
 
 ### Helper functions for ignoring the basecase
 
-getref(pm::GenericPowerModel, key::Symbol) = getref(pm, :base, key)
-getref(pm::GenericPowerModel, n::Symbol, key::Symbol) = pm.ref[n][key]
+getref(pm::GenericPowerModel, key::Symbol) = getref(pm, 0, key)
+getref(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ref[:nw][n][key]
 
-getvar(pm::GenericPowerModel, key::Symbol) = getref(pm, :base, key)
-getvar(pm::GenericPowerModel, n::Symbol, key::Symbol) = pm.var[n][key]
+getvar(pm::GenericPowerModel, key::Symbol) = getref(pm, 0, key)
+getvar(pm::GenericPowerModel, n::Int, key::Symbol) = pm.var[:nw][n][key]
 
-getext(pm::GenericPowerModel, key::Symbol) = getref(pm, :base, key)
-getext(pm::GenericPowerModel, n::Symbol, key::Symbol) = pm.ext[n][key]
+getext(pm::GenericPowerModel, key::Symbol) = getref(pm, 0, key)
+getext(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ext[:nw][n][key]
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
@@ -173,12 +178,13 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 """
 function build_ref(data::Dict{String,Any})
     refs = Dict{Symbol,Any}()
+    nws = refs[:nw] = Dict{Int,Any}()
 
-    for (n,network_data) in data
-        network_id = Symbol(n)
-        ref = refs[network_id] = Dict{Symbol,Any}()
+    for (n,nw_data) in data["nw"]
+        nw_id = parse(Int, n)
+        ref = nws[nw_id] = Dict{Symbol,Any}()
 
-        for (key, item) in network_data
+        for (key, item) in nw_data
             if isa(item, Dict)
                 item_lookup = Dict([(parse(Int, k), v) for (k,v) in item])
                 ref[Symbol(key)] = item_lookup
@@ -187,7 +193,7 @@ function build_ref(data::Dict{String,Any})
             end
         end
 
-        off_angmin, off_angmax = calc_theta_delta_bounds(network_data)
+        off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
         ref[:off_angmin] = off_angmin
         ref[:off_angmax] = off_angmax
 
