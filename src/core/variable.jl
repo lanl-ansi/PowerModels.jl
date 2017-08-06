@@ -10,30 +10,30 @@ end
 
 
 "variable: `t[i]` for `i` in `bus`es"
-function variable_phase_angle(pm::GenericPowerModel; bounded::Bool = true)
-    pm.var[:t] = @variable(pm.model,
-        [i in keys(pm.ref[:bus])], basename="t",
-        start = getstart(pm.ref[:bus], i, "t_start")
+function variable_phase_angle(pm::GenericPowerModel, r::Symbol=:base; bounded::Bool = true)
+    pm.var[r][:t] = @variable(pm.model,
+        [i in keys(pm.ref[r][:bus])], basename="$(r)_t",
+        start = getstart(pm.ref[r][:bus], i, "t_start")
     )
-    return pm.var[:t]
+    return pm.var[r][:t]
 end
 
 "variable: `v[i]` for `i` in `bus`es"
-function variable_voltage_magnitude(pm::GenericPowerModel; bounded = true)
+function variable_voltage_magnitude(pm::GenericPowerModel, r::Symbol=:base; bounded = true)
     if bounded
-        pm.var[:v] = @variable(pm.model,
-            [i in keys(pm.ref[:bus])], basename="v",
-            lowerbound = pm.ref[:bus][i]["vmin"],
-            upperbound = pm.ref[:bus][i]["vmax"],
-            start = getstart(pm.ref[:bus], i, "v_start", 1.0)
+        pm.var[r][:v] = @variable(pm.model,
+            [i in keys(pm.ref[r][:bus])], basename="$(r)_v",
+            lowerbound = pm.ref[r][:bus][i]["vmin"],
+            upperbound = pm.ref[r][:bus][i]["vmax"],
+            start = getstart(pm.ref[r][:bus], i, "v_start", 1.0)
         )
     else
-        pm.var[:v] = @variable(pm.model,
-            [i in keys(pm.ref[:bus])], basename="v",
+        pm.var[r][:v] = @variable(pm.model,
+            [i in keys(pm.ref[r][:bus])], basename="$(r)_v",
             lowerbound = 0,
-            start = getstart(pm.ref[:bus], i, "v_start", 1.0))
+            start = getstart(pm.ref[r][:bus], i, "v_start", 1.0))
     end
-    return pm.var[:v]
+    return pm.var[r][:v]
 end
 
 
@@ -202,39 +202,39 @@ end
 
 
 "variable: `pg[j]` for `j` in `gen`"
-function variable_active_generation(pm::GenericPowerModel; bounded = true)
+function variable_active_generation(pm::GenericPowerModel, r::Symbol=:base; bounded = true)
     if bounded
-        pm.var[:pg] = @variable(pm.model,
-            [i in keys(pm.ref[:gen])], basename="pg",
-            lowerbound = pm.ref[:gen][i]["pmin"],
-            upperbound = pm.ref[:gen][i]["pmax"],
-            start = getstart(pm.ref[:gen], i, "pg_start")
+        pm.var[r][:pg] = @variable(pm.model,
+            [i in keys(pm.ref[r][:gen])], basename="$(r)_pg",
+            lowerbound = pm.ref[r][:gen][i]["pmin"],
+            upperbound = pm.ref[r][:gen][i]["pmax"],
+            start = getstart(pm.ref[r][:gen], i, "pg_start")
         )
     else
-        pm.var[:pg] = @variable(pm.model,
-            [i in keys(pm.ref[:gen])], basename="pg",
-            start = getstart(pm.ref[:gen], i, "pg_start")
+        pm.var[r][:pg] = @variable(pm.model,
+            [i in keys(pm.ref[r][:gen])], basename="$(r)_pg",
+            start = getstart(pm.ref[r][:gen], i, "pg_start")
         )
     end
-    return pm.var[:pg]
+    return pm.var[r][:pg]
 end
 
 "variable: `qq[j]` for `j` in `gen`"
-function variable_reactive_generation(pm::GenericPowerModel; bounded = true)
+function variable_reactive_generation(pm::GenericPowerModel, r::Symbol=:base; bounded = true)
     if bounded
-        pm.var[:qg] = @variable(pm.model,
-            [i in keys(pm.ref[:gen])], basename="qg",
-            lowerbound = pm.ref[:gen][i]["qmin"],
-            upperbound = pm.ref[:gen][i]["qmax"],
-            start = getstart(pm.ref[:gen], i, "qg_start")
+        pm.var[r][:qg] = @variable(pm.model,
+            [i in keys(pm.ref[r][:gen])], basename="$(r)_qg",
+            lowerbound = pm.ref[r][:gen][i]["qmin"],
+            upperbound = pm.ref[r][:gen][i]["qmax"],
+            start = getstart(pm.ref[r][:gen], i, "qg_start")
         )
     else
         pm.var[:qg] = @variable(pm.model,
-            [i in keys(pm.ref[:gen])], basename="qg",
-            start = getstart(pm.ref[:gen], i, "qg_start")
+            [i in keys(pm.ref[r][:gen])], basename="$(r)_qg",
+            start = getstart(pm.ref[r][:gen], i, "qg_start")
         )
     end
-    return pm.var[:qg]
+    return pm.var[r][:qg]
 end
 
 ""
@@ -245,39 +245,39 @@ end
 
 
 "variable: `p[l,i,j]` for `(l,i,j)` in `arcs`"
-function variable_active_line_flow(pm::GenericPowerModel; bounded = true)
+function variable_active_line_flow(pm::GenericPowerModel, r::Symbol=:base; bounded = true)
     if bounded
-        pm.var[:p] = @variable(pm.model,
-            [(l,i,j) in pm.ref[:arcs]], basename="p",
-            lowerbound = -pm.ref[:branch][l]["rate_a"],
-            upperbound =  pm.ref[:branch][l]["rate_a"],
-            start = getstart(pm.ref[:branch], l, "p_start")
+        pm.var[r][:p] = @variable(pm.model,
+            [(l,i,j) in pm.ref[r][:arcs]], basename="$(r)_p",
+            lowerbound = -pm.ref[r][:branch][l]["rate_a"],
+            upperbound =  pm.ref[r][:branch][l]["rate_a"],
+            start = getstart(pm.ref[r][:branch], l, "p_start")
         )
     else
         pm.var[:p] = @variable(pm.model,
-            [(l,i,j) in pm.ref[:arcs]], basename="p",
-            start = getstart(pm.ref[:branch], l, "p_start")
+            [(l,i,j) in pm.ref[r][:arcs]], basename="$(r)_p",
+            start = getstart(pm.ref[r][:branch], l, "p_start")
         )
     end
-    return pm.var[:p]
+    return pm.var[r][:p]
 end
 
 "variable: `q[l,i,j]` for `(l,i,j)` in `arcs`"
-function variable_reactive_line_flow(pm::GenericPowerModel; bounded = true)
+function variable_reactive_line_flow(pm::GenericPowerModel, r::Symbol=:base; bounded = true)
     if bounded
-        pm.var[:q] = @variable(pm.model,
-            [(l,i,j) in pm.ref[:arcs]], basename="q",
-            lowerbound = -pm.ref[:branch][l]["rate_a"],
-            upperbound =  pm.ref[:branch][l]["rate_a"],
-            start = getstart(pm.ref[:branch], l, "q_start")
+        pm.var[r][:q] = @variable(pm.model,
+            [(l,i,j) in pm.ref[r][:arcs]], basename="$(r)_q",
+            lowerbound = -pm.ref[r][:branch][l]["rate_a"],
+            upperbound =  pm.ref[r][:branch][l]["rate_a"],
+            start = getstart(pm.ref[r][:branch], l, "q_start")
         )
     else
         pm.var[:q] = @variable(pm.model, 
-            [(l,i,j) in pm.ref[:arcs]], basename="q",
-            start = getstart(pm.ref[:branch], l, "q_start")
+            [(l,i,j) in pm.ref[r][:arcs]], basename="$(r)_q",
+            start = getstart(pm.ref[r][:branch], l, "q_start")
         )
     end
-    return pm.var[:q]
+    return pm.var[r][:q]
 end
 
 function variable_dcline_flow(pm::GenericPowerModel; kwargs...)
@@ -286,69 +286,69 @@ function variable_dcline_flow(pm::GenericPowerModel; kwargs...)
 end
 
 "variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
-function variable_active_dcline_flow(pm::GenericPowerModel; bounded = true)
+function variable_active_dcline_flow(pm::GenericPowerModel, r::Symbol=:base; bounded = true)
     # build bounds lookups based over arcs set
     pmin = Dict()
     pref = Dict()
     pmax = Dict()
-    for (l,i,j) in pm.ref[:arcs_from_dc]
-        pmin[(l,i,j)] = pm.ref[:dcline][l]["pminf"]
-        pmax[(l,i,j)] = pm.ref[:dcline][l]["pmaxf"]
-        pref[(l,i,j)] = pm.ref[:dcline][l]["pf"]
+    for (l,i,j) in pm.ref[r][:arcs_from_dc]
+        pmin[(l,i,j)] = pm.ref[r][:dcline][l]["pminf"]
+        pmax[(l,i,j)] = pm.ref[r][:dcline][l]["pmaxf"]
+        pref[(l,i,j)] = pm.ref[r][:dcline][l]["pf"]
     end
-    for (l,i,j) in pm.ref[:arcs_to_dc]
-        pmin[(l,i,j)] = pm.ref[:dcline][l]["pmint"]
-        pmax[(l,i,j)] = pm.ref[:dcline][l]["pmaxt"]
-        pref[(l,i,j)] = pm.ref[:dcline][l]["pt"]
+    for (l,i,j) in pm.ref[r][:arcs_to_dc]
+        pmin[(l,i,j)] = pm.ref[r][:dcline][l]["pmint"]
+        pmax[(l,i,j)] = pm.ref[r][:dcline][l]["pmaxt"]
+        pref[(l,i,j)] = pm.ref[r][:dcline][l]["pt"]
     end
 
     if bounded
-        pm.var[:p_dc] = @variable(pm.model,
-            [(l,i,j) in pm.ref[:arcs_dc]], basename="p_dc",
+        pm.var[r][:p_dc] = @variable(pm.model,
+            [(l,i,j) in pm.ref[r][:arcs_dc]], basename="$(r)_p_dc",
             lowerbound = pmin[(l,i,j)],
             upperbound = pmax[(l,i,j)], 
             start = pref[(l,i,j)]
         )
     else
-        pm.var[:p_dc] = @variable(pm.model,
-            [(l,i,j) in pm.ref[:arcs_dc]], basename="p_dc",
+        pm.var[r][:p_dc] = @variable(pm.model,
+            [(l,i,j) in pm.ref[r][:arcs_dc]], basename="$(r)_p_dc",
             start = pref[(l,i,j)]
         )
     end
-    return pm.var[:p_dc]
+    return pm.var[r][:p_dc]
 end
 
 "variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
-function variable_reactive_dcline_flow(pm::GenericPowerModel; bounded = true)
+function variable_reactive_dcline_flow(pm::GenericPowerModel, r::Symbol=:base; bounded = true)
     # build bounds lookups based over arcs set
     qmin = Dict()
     qref = Dict()
     qmax = Dict()
-    for (l,i,j) in pm.ref[:arcs_from_dc]
-        qmin[(l,i,j)] = pm.ref[:dcline][l]["qminf"]
-        qmax[(l,i,j)] = pm.ref[:dcline][l]["qmaxf"]
-        qref[(l,i,j)] = pm.ref[:dcline][l]["qf"]
+    for (l,i,j) in pm.ref[r][:arcs_from_dc]
+        qmin[(l,i,j)] = pm.ref[r][:dcline][l]["qminf"]
+        qmax[(l,i,j)] = pm.ref[r][:dcline][l]["qmaxf"]
+        qref[(l,i,j)] = pm.ref[r][:dcline][l]["qf"]
     end
-    for (l,i,j) in pm.ref[:arcs_to_dc]
-        qmin[(l,i,j)] = pm.ref[:dcline][l]["qmint"]
-        qmax[(l,i,j)] = pm.ref[:dcline][l]["qmaxt"]
-        qref[(l,i,j)] = pm.ref[:dcline][l]["qt"]
+    for (l,i,j) in pm.ref[r][:arcs_to_dc]
+        qmin[(l,i,j)] = pm.ref[r][:dcline][l]["qmint"]
+        qmax[(l,i,j)] = pm.ref[r][:dcline][l]["qmaxt"]
+        qref[(l,i,j)] = pm.ref[r][:dcline][l]["qt"]
     end
 
     if bounded
-        pm.var[:q_dc] = @variable(pm.model, 
-            q_dc[(l,i,j) in pm.ref[:arcs_dc]], basename="q_dc",
+        pm.var[r][:q_dc] = @variable(pm.model, 
+            q_dc[(l,i,j) in pm.ref[r][:arcs_dc]], basename="$(r)_q_dc",
             lowerbound = qmin[(l,i,j)],
             upperbound = qmax[(l,i,j)],
             start = qref[(l,i,j)]
         )
     else
-        pm.var[:q_dc] = @variable(pm.model,
-            [(l,i,j) in pm.ref[:arcs_dc]], basename="q_dc",
+        pm.var[r][:q_dc] = @variable(pm.model,
+            [(l,i,j) in pm.ref[r][:arcs_dc]], basename="$(r)_q_dc",
             start = qref[(l,i,j)]
         )
     end
-    return pm.var[:q_dc]
+    return pm.var[r][:q_dc]
 end
 
 ##################################################################

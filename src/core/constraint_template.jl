@@ -25,9 +25,11 @@ end
 ### Bus - Setpoint Constraints ###
 
 ""
-function constraint_theta_ref(pm::GenericPowerModel, bus)
-    return constraint_theta_ref(pm, bus["index"])
+constraint_theta_ref(pm::GenericPowerModel, bus) = constraint_theta_ref(pm, :base, bus)
+function constraint_theta_ref(pm::GenericPowerModel, r::Symbol, bus)
+    return constraint_theta_ref(pm, r, bus["index"])
 end
+
 
 ""
 function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, bus; epsilon = 0.0)
@@ -38,13 +40,14 @@ end
 ### Bus - KCL Constraints ###
 
 ""
-function constraint_kcl_shunt(pm::GenericPowerModel, bus)
+constraint_kcl_shunt(pm::GenericPowerModel, bus) = constraint_kcl_shunt(pm, :base, bus)
+function constraint_kcl_shunt(pm::GenericPowerModel, r::Symbol, bus)
     i = bus["index"]
-    bus_arcs = pm.ref[:bus_arcs][i]
-    bus_arcs_dc = pm.ref[:bus_arcs_dc][i]
-    bus_gens = pm.ref[:bus_gens][i]
+    bus_arcs = pm.ref[r][:bus_arcs][i]
+    bus_arcs_dc = pm.ref[r][:bus_arcs_dc][i]
+    bus_gens = pm.ref[r][:bus_gens][i]
 
-    return constraint_kcl_shunt(pm, i, bus_arcs, bus_arcs_dc, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
+    return constraint_kcl_shunt(pm, r, i, bus_arcs, bus_arcs_dc, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
 end
 
 ""
@@ -60,8 +63,10 @@ end
 
 ### Branch - Ohm's Law Constraints ###
 
+
 ""
-function constraint_ohms_yt_from(pm::GenericPowerModel, branch)
+constraint_ohms_yt_from(pm::GenericPowerModel, branch) = constraint_ohms_yt_from(pm, :base, branch)
+function constraint_ohms_yt_from(pm::GenericPowerModel, r::Symbol, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -73,8 +78,27 @@ function constraint_ohms_yt_from(pm::GenericPowerModel, branch)
     c = branch["br_b"]
     tm = branch["tap"]^2
 
-    return constraint_ohms_yt_from(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    return constraint_ohms_yt_from(pm, r, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
 end
+
+
+""
+constraint_ohms_yt_to(pm::GenericPowerModel, branch) = constraint_ohms_yt_to(pm, :base, branch)
+function constraint_ohms_yt_to(pm::GenericPowerModel, r::Symbol, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    g, b = calc_branch_y(branch)
+    tr, ti = calc_branch_t(branch)
+    c = branch["br_b"]
+    tm = branch["tap"]^2
+
+    return constraint_ohms_yt_to(pm, r, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+end
+
 
 ### Branch - Loss Constraints DC LINES###
 
@@ -116,21 +140,7 @@ function constraint_active_dcline_setpoint(pm::GenericPowerModel, dcline; epsilo
     return constraint_active_dcline_setpoint(pm, i, f_idx, t_idx, pf, pt, epsilon)
 end
 
-""
-function constraint_ohms_yt_to(pm::GenericPowerModel, branch)
-    i = branch["index"]
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
 
-    g, b = calc_branch_y(branch)
-    tr, ti = calc_branch_t(branch)
-    c = branch["br_b"]
-    tm = branch["tap"]^2
-
-    return constraint_ohms_yt_to(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-end
 
 ""
 function constraint_ohms_y_from(pm::GenericPowerModel, branch)
@@ -301,23 +311,25 @@ end
 ### Branch - Thermal Limit Constraints ###
 
 ""
-function constraint_thermal_limit_from(pm::GenericPowerModel, branch; scale = 1.0)
+constraint_thermal_limit_from(pm::GenericPowerModel, branch; kwargs...) = constraint_thermal_limit_from(pm, :base, branch; kwargs...)
+function constraint_thermal_limit_from(pm::GenericPowerModel, r::Symbol, branch; scale = 1.0)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
 
-    return constraint_thermal_limit_from(pm, f_idx, branch["rate_a"]*scale)
+    return constraint_thermal_limit_from(pm, r, f_idx, branch["rate_a"]*scale)
 end
 
 ""
-function constraint_thermal_limit_to(pm::GenericPowerModel, branch; scale = 1.0)
+constraint_thermal_limit_to(pm::GenericPowerModel, branch; kwargs...) = constraint_thermal_limit_to(pm, :base, branch; kwargs...)
+function constraint_thermal_limit_to(pm::GenericPowerModel, r::Symbol, branch; scale = 1.0)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     t_idx = (i, t_bus, f_bus)
 
-    return constraint_thermal_limit_to(pm, t_idx, branch["rate_a"]*scale)
+    return constraint_thermal_limit_to(pm, r, t_idx, branch["rate_a"]*scale)
 end
 
 ""
@@ -363,15 +375,16 @@ end
 ### Branch - Phase Angle Difference Constraints ###
 
 ""
-function constraint_phase_angle_difference(pm::GenericPowerModel, branch)
+constraint_phase_angle_difference(pm::GenericPowerModel, branch) = constraint_phase_angle_difference(pm, :base, branch)
+function constraint_phase_angle_difference(pm::GenericPowerModel, r::Symbol, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     pair = (f_bus, t_bus)
-    buspair = pm.ref[:buspairs][pair]
+    buspair = pm.ref[r][:buspairs][pair]
 
     if buspair["line"] == i
-        return constraint_phase_angle_difference(pm, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
+        return constraint_phase_angle_difference(pm, r, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
     end
     return Set()
 end
