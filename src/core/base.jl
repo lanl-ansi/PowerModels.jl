@@ -75,6 +75,18 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{S
 end
 
 
+### Helper functions for ignoring the basecase
+
+getref(pm::GenericPowerModel, key::Symbol) = getref(pm, :base, key)
+getref(pm::GenericPowerModel, n::Symbol, key::Symbol) = pm.ref[n][key]
+
+getvar(pm::GenericPowerModel, key::Symbol) = getref(pm, :base, key)
+getvar(pm::GenericPowerModel, n::Symbol, key::Symbol) = pm.vars[n][key]
+
+getext(pm::GenericPowerModel, key::Symbol) = getref(pm, :base, key)
+getext(pm::GenericPowerModel, n::Symbol, key::Symbol) = pm.ext[n][key]
+
+
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
 function JuMP.setsolver(pm::GenericPowerModel, solver::MathProgBase.AbstractMathProgSolver)
     setsolver(pm.model, solver)
