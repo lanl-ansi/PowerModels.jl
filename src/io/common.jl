@@ -1,24 +1,24 @@
 ""
 function parse_file(file::String)
     if endswith(file, ".m")
-        pm_data = PowerModels.parse_matpower(file)
+        data = PowerModels.parse_matpower(file)
     else
-        pm_data = PowerModels.parse_json(file)
+        data = PowerModels.parse_json(file)
     end
 
-    check_network_data(pm_data)
+    check_network_data(data)
 
-    return pm_data
+    return data
 end
 
 ""
-function check_network_data(networks::Dict{String,Any})
-    for (i,data) in networks
-        make_per_unit(data)
-        check_transformer_parameters(data)
-        check_phase_angle_differences(data)
-        check_thermal_limits(data)
-        check_bus_types(data)
-        check_dcline_limits(data)
+function check_network_data(data::Dict{String,Any})
+    for (i,network_data) in data
+        make_per_unit(network_data)
+        check_transformer_parameters(network_data)
+        check_phase_angle_differences(network_data)
+        check_thermal_limits(network_data)
+        check_bus_types(network_data)
+        check_dcline_limits(network_data)
     end
 end

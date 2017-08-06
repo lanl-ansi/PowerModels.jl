@@ -26,8 +26,8 @@ end
 
 ""
 constraint_theta_ref(pm::GenericPowerModel, bus) = constraint_theta_ref(pm, :base, bus)
-function constraint_theta_ref(pm::GenericPowerModel, r::Symbol, bus)
-    return constraint_theta_ref(pm, r, bus["index"])
+function constraint_theta_ref(pm::GenericPowerModel, n::Symbol, bus)
+    return constraint_theta_ref(pm, n, bus["index"])
 end
 
 
@@ -41,13 +41,13 @@ end
 
 ""
 constraint_kcl_shunt(pm::GenericPowerModel, bus) = constraint_kcl_shunt(pm, :base, bus)
-function constraint_kcl_shunt(pm::GenericPowerModel, r::Symbol, bus)
+function constraint_kcl_shunt(pm::GenericPowerModel, n::Symbol, bus)
     i = bus["index"]
-    bus_arcs = pm.ref[r][:bus_arcs][i]
-    bus_arcs_dc = pm.ref[r][:bus_arcs_dc][i]
-    bus_gens = pm.ref[r][:bus_gens][i]
+    bus_arcs = pm.ref[n][:bus_arcs][i]
+    bus_arcs_dc = pm.ref[n][:bus_arcs_dc][i]
+    bus_gens = pm.ref[n][:bus_gens][i]
 
-    return constraint_kcl_shunt(pm, r, i, bus_arcs, bus_arcs_dc, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
+    return constraint_kcl_shunt(pm, n, i, bus_arcs, bus_arcs_dc, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
 end
 
 ""
@@ -66,7 +66,7 @@ end
 
 ""
 constraint_ohms_yt_from(pm::GenericPowerModel, branch) = constraint_ohms_yt_from(pm, :base, branch)
-function constraint_ohms_yt_from(pm::GenericPowerModel, r::Symbol, branch)
+function constraint_ohms_yt_from(pm::GenericPowerModel, n::Symbol, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -78,13 +78,13 @@ function constraint_ohms_yt_from(pm::GenericPowerModel, r::Symbol, branch)
     c = branch["br_b"]
     tm = branch["tap"]^2
 
-    return constraint_ohms_yt_from(pm, r, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    return constraint_ohms_yt_from(pm, n, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
 end
 
 
 ""
 constraint_ohms_yt_to(pm::GenericPowerModel, branch) = constraint_ohms_yt_to(pm, :base, branch)
-function constraint_ohms_yt_to(pm::GenericPowerModel, r::Symbol, branch)
+function constraint_ohms_yt_to(pm::GenericPowerModel, n::Symbol, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -96,7 +96,7 @@ function constraint_ohms_yt_to(pm::GenericPowerModel, r::Symbol, branch)
     c = branch["br_b"]
     tm = branch["tap"]^2
 
-    return constraint_ohms_yt_to(pm, r, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    return constraint_ohms_yt_to(pm, n, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
 end
 
 
@@ -312,24 +312,24 @@ end
 
 ""
 constraint_thermal_limit_from(pm::GenericPowerModel, branch; kwargs...) = constraint_thermal_limit_from(pm, :base, branch; kwargs...)
-function constraint_thermal_limit_from(pm::GenericPowerModel, r::Symbol, branch; scale = 1.0)
+function constraint_thermal_limit_from(pm::GenericPowerModel, n::Symbol, branch; scale = 1.0)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
 
-    return constraint_thermal_limit_from(pm, r, f_idx, branch["rate_a"]*scale)
+    return constraint_thermal_limit_from(pm, n, f_idx, branch["rate_a"]*scale)
 end
 
 ""
 constraint_thermal_limit_to(pm::GenericPowerModel, branch; kwargs...) = constraint_thermal_limit_to(pm, :base, branch; kwargs...)
-function constraint_thermal_limit_to(pm::GenericPowerModel, r::Symbol, branch; scale = 1.0)
+function constraint_thermal_limit_to(pm::GenericPowerModel, n::Symbol, branch; scale = 1.0)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     t_idx = (i, t_bus, f_bus)
 
-    return constraint_thermal_limit_to(pm, r, t_idx, branch["rate_a"]*scale)
+    return constraint_thermal_limit_to(pm, n, t_idx, branch["rate_a"]*scale)
 end
 
 ""
@@ -376,15 +376,15 @@ end
 
 ""
 constraint_phase_angle_difference(pm::GenericPowerModel, branch) = constraint_phase_angle_difference(pm, :base, branch)
-function constraint_phase_angle_difference(pm::GenericPowerModel, r::Symbol, branch)
+function constraint_phase_angle_difference(pm::GenericPowerModel, n::Symbol, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     pair = (f_bus, t_bus)
-    buspair = pm.ref[r][:buspairs][pair]
+    buspair = pm.ref[n][:buspairs][pair]
 
     if buspair["line"] == i
-        return constraint_phase_angle_difference(pm, r, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
+        return constraint_phase_angle_difference(pm, n, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
     end
     return Set()
 end

@@ -42,11 +42,8 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
     data::Dict{String,Any}
     setting::Dict{String,Any}
     solution::Dict{String,Any}
-
     ref::Dict{Symbol,Any} # data reference data
-
     var::Dict{Symbol,Any} # JuMP variables
-
     # Extension dictionary
     # Extensions should define a type to hold information particular to
     # their functionality, and store an instance of the type in this
@@ -59,9 +56,10 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{S
 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
+
     ref = build_ref(data)
-    vars = Dict{Symbol,Any}(r => Dict{Symbol,Any}() for r in keys(ref))
-    ext = Dict{Symbol,Any}(r => Dict{Symbol,Any}() for r in keys(ref))
+    vars = Dict{Symbol,Any}(n => Dict{Symbol,Any}() for n in keys(ref))
+    ext = Dict{Symbol,Any}(n => Dict{Symbol,Any}() for n in keys(ref))
 
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
@@ -161,15 +159,14 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 
 * `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`.
 """
-function build_ref(networks::Dict{String,Any})
+function build_ref(data::Dict{String,Any})
     refs = Dict{Symbol,Any}()
 
-    for (i,data) in networks
-        network_id = Symbol(i)
-
+    for (n,network_data) in data
+        network_id = Symbol(n)
         ref = refs[network_id] = Dict{Symbol,Any}()
 
-        for (key, item) in data
+        for (key, item) in network_data
             if isa(item, Dict)
                 item_lookup = Dict([(parse(Int, k), v) for (k,v) in item])
                 ref[Symbol(key)] = item_lookup
@@ -178,7 +175,7 @@ function build_ref(networks::Dict{String,Any})
             end
         end
 
-        off_angmin, off_angmax = calc_theta_delta_bounds(data)
+        off_angmin, off_angmax = calc_theta_delta_bounds(network_data)
         ref[:off_angmin] = off_angmin
         ref[:off_angmax] = off_angmax
 
