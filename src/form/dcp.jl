@@ -48,10 +48,10 @@ function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T
         )
     end
 
-    p_expr = Dict([((l,i,j), 1.0*pm.var[:p][(l,i,j)]) for (l,i,j) in pm.ref[:arcs_from]])
+    # this explicit type erasure is necessary 
+    p_expr = Dict{Any,Any}([((l,i,j), pm.var[:p][(l,i,j)]) for (l,i,j) in pm.ref[:arcs_from]])
     p_expr = merge(p_expr, Dict([((l,j,i), -1.0*pm.var[:p][(l,i,j)]) for (l,i,j) in pm.ref[:arcs_from]]))
-
-    pm.model.ext[:p_expr] = p_expr
+    pm.var[:p] = p_expr
 
     return pm.var[:p]
 end
@@ -65,10 +65,10 @@ function variable_active_line_flow_ne{T <: StandardDCPForm}(pm::GenericPowerMode
         start = getstart(pm.ref[:ne_branch], l, "p_start")
     )
 
-    p_ne_expr = Dict([((l,i,j), 1.0*pm.var[:p_ne][(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]])
+    # this explicit type erasure is necessary 
+    p_ne_expr = Dict{Any,Any}([((l,i,j), 1.0*pm.var[:p_ne][(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]])
     p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*pm.var[:p_ne][(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]]))
-
-    pm.model.ext[:p_ne_expr] = p_ne_expr
+    pm.var[:p_ne] = p_ne_expr
 
     return pm.var[:p_ne]
 end
@@ -91,10 +91,10 @@ constraint_voltage_dcline_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T
 ""
 function constraint_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     pg = pm.var[:pg]
-    p_expr = pm.model.ext[:p_expr]
+    p = pm.var[:p]
     p_dc = pm.var[:p_dc]
 
-    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
     # omit reactive constraint
     return Set([c])
 end
@@ -102,10 +102,11 @@ end
 ""
 function constraint_kcl_shunt_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
     pg = pm.var[:pg]
-    p_expr = pm.model.ext[:p_expr]
-    p_ne_expr = pm.model.ext[:p_ne_expr]
+    p = pm.var[:p]
+    p_ne = pm.var[:p_ne]
+    p_dc = pm.var[:p_dc]
 
-    c = @constraint(pm.model, sum(p_expr[a] for a in bus_arcs) + sum(p_ne_expr[a] for a in bus_arcs_ne)  + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
+    c = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
     return Set([c])
 end
 
@@ -166,17 +167,6 @@ constraint_thermal_limit_to{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, t_id
 function add_bus_voltage_setpoint{T <: AbstractDCPForm}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :v; default_value = (item) -> 1)
     add_setpoint(sol, pm, "bus", "bus_i", "va", :t)
-end
-
-""
-function add_branch_flow_setpoint{T <: AbstractDCPForm}(sol, pm::GenericPowerModel{T})
-    # check the line flows were requested
-    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
-        add_setpoint(sol, pm, "branch", "index", "pf", :p; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch", "index", "qf", :q; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch", "index", "pt", :p; scale = (x,item) -> -x, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch", "index", "qt", :q; scale = (x,item) -> -x, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-    end
 end
 
 ""

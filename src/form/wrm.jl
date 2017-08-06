@@ -21,7 +21,7 @@ function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerM
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
 
     w_index = 1:length(keys(pm.ref[:bus]))
-    lookup_w_index = Dict([(bi, i) for (i,bi) in enumerate(keys(pm.ref[:bus]))])
+    lookup_w_index = Dict([(bi,i) for (i,bi) in enumerate(keys(pm.ref[:bus]))])
 
     WR = pm.var[:WR] = @variable(pm.model, 
         [1:length(keys(pm.ref[:bus])), 1:length(keys(pm.ref[:bus]))], Symmetric, basename="WR"
