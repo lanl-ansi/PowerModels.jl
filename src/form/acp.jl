@@ -126,9 +126,13 @@ function constraint_ohms_yt_from{T <: AbstractACPForm}(pm::GenericPowerModel{T},
     v_to = pm.var[:v][t_bus]
     t_fr = pm.var[:t][f_bus]
     t_to = pm.var[:t][t_bus]
+    t_shift_fr = pm.var[:t_shift][f_idx]
+    t_shift_to = pm.var[:t_shift][t_idx]
 
-    c1 = @NLconstraint(pm.model, p_fr == g/tm*v_fr^2 + (-g*tr+b*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-b*tr-g*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
-    c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*v_fr^2 - (-b*tr-g*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-g*tr+b*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
+#    c1 = @NLconstraint(pm.model, p_fr == g/tm*v_fr^2 + (-g*tr+b*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-b*tr-g*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
+#    c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*v_fr^2 - (-b*tr-g*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-g*tr+b*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
+    c1 = @NLconstraint(pm.model, p_fr == g*v_fr^2 + (-g)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-b)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to))))
+    c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)*v_fr^2 - (-b)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-g)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to))))
     return Set([c1, c2])
 end
 
@@ -147,9 +151,13 @@ function constraint_ohms_yt_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f
     v_to = pm.var[:v][t_bus]
     t_fr = pm.var[:t][f_bus]
     t_to = pm.var[:t][t_bus]
+    t_shift_fr = pm.var[:t_shift][f_idx]
+    t_shift_to = pm.var[:t_shift][t_idx]
 
-    c1 = @NLconstraint(pm.model, p_to == g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
-    c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
+    #c1 = @NLconstraint(pm.model, p_to == g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
+    #c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
+    c1 = @NLconstraint(pm.model, p_to == g*v_to^2 + (-g)*(v_to*v_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-b)*(v_to*v_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr))))
+    c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*v_to^2 - (-b)*(v_to*v_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-g)*(v_to*v_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr))))
     return Set([c1, c2])
 end
 

@@ -351,6 +351,40 @@ function variable_reactive_dcline_flow(pm::GenericPowerModel; bounded = true)
     return pm.var[:q_dc]
 end
 
+"variable: `t_shift[l,i,j]` for `(l,i,j)` in `arcs`"
+function variable_phase_shift(pm::GenericPowerModel; bounded = true)
+
+    shift_min = Dict()
+    shift_max = Dict()
+    shift = Dict()
+    for (l,i,j) in pm.ref[:arcs_from]
+        shift_min[(l,i,j)] = pm.ref[:branch][l]["shift_fr_min"]
+        shift_max[(l,i,j)] = pm.ref[:branch][l]["shift_fr_max"]
+        shift[(l,i,j)] = pm.ref[:branch][l]["shift"]
+    end
+    for (l,i,j) in pm.ref[:arcs_to]
+        shift_min[(l,i,j)] = pm.ref[:branch][l]["shift_to_min"]
+        shift_max[(l,i,j)] = pm.ref[:branch][l]["shift_to_max"]
+        shift[(l,i,j)] = 0
+    end
+
+
+    if bounded
+        pm.var[:t_shift] = @variable(pm.model,
+            [(l,i,j) in pm.ref[:arcs]], basename="t_shift",
+            lowerbound = shift_min[(l,i,j)],
+            upperbound = shift_max[(l,i,j)],
+            start = shift[(l,i,j)]
+        )
+    else
+        pm.var[:t_shift] = @variable(pm.model,
+            [(l,i,j) in pm.ref[:arcs]], basename="t_shift",
+            start = shift[(l,i,j)]
+        )
+    end
+    return pm.var[:t_shift]
+end
+
 ##################################################################
 
 "generates variables for both `active` and `reactive` `line_flow_ne`"

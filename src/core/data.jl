@@ -168,6 +168,10 @@ function make_per_unit(data::Dict{String,Any})
             apply_func(branch, "rate_c", rescale)
 
             apply_func(branch, "shift", deg2rad)
+            apply_func(branch, "shift_to_min", deg2rad)
+            apply_func(branch, "shift_to_max", deg2rad)
+            apply_func(branch, "shift_fr_min", deg2rad)
+            apply_func(branch, "shift_fr_max", deg2rad)
             apply_func(branch, "angmax", deg2rad)
             apply_func(branch, "angmin", deg2rad)
         end
@@ -255,6 +259,10 @@ function make_mixed_units(data::Dict{String,Any})
             apply_func(branch, "rate_c", rescale)
 
             apply_func(branch, "shift", rad2deg)
+            apply_func(branch, "shift_to_min", rad2deg)
+            apply_func(branch, "shift_to_max", rad2deg)
+            apply_func(branch, "shift_fr_min", rad2deg)
+            apply_func(branch, "shift_fr_max", rad2deg)
             apply_func(branch, "angmax", rad2deg)
             apply_func(branch, "angmin", rad2deg)
 

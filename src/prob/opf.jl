@@ -21,6 +21,7 @@ function post_opf(pm::GenericPowerModel)
     variable_generation(pm)
     variable_line_flow(pm)
     variable_dcline_flow(pm)
+    variable_phase_shift(pm)
 
     objective_min_fuel_cost(pm)
 
