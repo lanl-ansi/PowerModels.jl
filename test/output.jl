@@ -40,10 +40,10 @@ end
 
         branches = result["solution"]["branch"]
 
-        @test isapprox(branches["2"]["p_from"],  20.01; atol = 1e-1)
-        @test isapprox(branches["2"]["p_to"],   -19.80; atol = 1e-1)
-        @test isapprox(branches["2"]["q_from"],   0.55; atol = 1e-1)
-        @test isapprox(branches["2"]["q_to"],    -5.71; atol = 1e-1)
+        @test isapprox(branches["2"]["pf"],  0.2001; atol = 1e-3)
+        @test isapprox(branches["2"]["pt"], -0.1980; atol = 1e-3)
+        @test isapprox(branches["2"]["qf"],  0.0055; atol = 1e-3)
+        @test isapprox(branches["2"]["qt"], -0.0571; atol = 1e-3)
     end
 
     # A DCPPowerModel test is important because it does have variables for the reverse side of the lines
@@ -56,12 +56,47 @@ end
         @test length(result["solution"]["bus"]) == 3
         @test length(result["solution"]["gen"]) == 3
         @test length(result["solution"]["branch"]) == 3
+        @test length(result["solution"]["dcline"]) == 1
 
         branches = result["solution"]["branch"]
 
-        @test isapprox(branches["3"]["p_from"], -10.34; atol = 1e-1)
-        @test isapprox(branches["3"]["p_to"],    10.34; atol = 1e-1)
-        @test isnan(branches["3"]["q_from"])
-        @test isnan(branches["3"]["q_to"])
+        @test isapprox(branches["3"]["pf"], -0.103497; atol = 1e-3)
+        @test isapprox(branches["3"]["pt"],  0.103497; atol = 1e-3)
+        @test isnan(branches["3"]["qf"])
+        @test isnan(branches["3"]["qt"])
     end
+end
+
+
+# recomended by @lroald
+@testset "test solution feedback" begin
+    @testset "3-bus case" begin
+        data = PowerModels.parse_file("../test/data/case3.m")
+        opf_result = run_ac_opf(data, ipopt_solver)
+        @test opf_result["status"] == :LocalOptimal
+        @test isapprox(opf_result["objective"], 5907; atol = 1e0)
+
+        PowerModels.update_data(data, opf_result["solution"])
+
+        pf_result = run_ac_pf(data, ipopt_solver)
+        @test pf_result["status"] == :LocalOptimal
+        @test isapprox(pf_result["objective"], 0.0; atol = 1e-3)
+
+        for (i,bus) in data["bus"]
+            @test isapprox(opf_result["solution"]["bus"][i]["va"], pf_result["solution"]["bus"][i]["va"]; atol = 1e-3)
+            @test isapprox(opf_result["solution"]["bus"][i]["vm"], pf_result["solution"]["bus"][i]["vm"]; atol = 1e-3)
+        end
+
+        for (i,gen) in data["gen"]
+            @test isapprox(opf_result["solution"]["gen"][i]["pg"], pf_result["solution"]["gen"][i]["pg"]; atol = 1e-3)
+            # cannot check this value solution does not appeat to be unique; verify this!
+            #@test isapprox(opf_result["solution"]["gen"][i]["qg"], pf_result["solution"]["gen"][i]["qg"]; atol = 1e-3)
+        end
+
+        for (i,dcline) in data["dcline"]
+            @test isapprox(opf_result["solution"]["dcline"][i]["pf"], pf_result["solution"]["dcline"][i]["pf"]; atol = 1e-3)
+            @test isapprox(opf_result["solution"]["dcline"][i]["pt"], pf_result["solution"]["dcline"][i]["pt"]; atol = 1e-3)
+        end
+    end
+
 end

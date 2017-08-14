@@ -19,9 +19,15 @@ using JSON
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
     end
 
-    @testset "14-bus case file with names" begin
+    @testset "14-bus case file with bus names" begin
         data = PowerModels.parse_file("../test/data/case14.m")
         @test data["bus"]["1"]["bus_name"] == "Bus 1     HV"
+        @test isa(JSON.json(data), String)
+    end
+
+    @testset "3-bus case file with hvdc lines" begin
+        data = PowerModels.parse_file("../test/data/case3.m")
+        @test length(data["dcline"]) > 0
         @test isa(JSON.json(data), String)
     end
 

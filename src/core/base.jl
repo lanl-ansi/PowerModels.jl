@@ -18,7 +18,9 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
     data::Dict{String,Any}
     setting::Dict{String,Any}
     solution::Dict{String,Any}
+    var::Dict{Symbol,Any} # model variable lookup
     ref::Dict{Symbol,Any} # reference data
+    ext::Dict{Symbol,Any} # user extentions
 end
 ```
 where
@@ -41,7 +43,9 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
     setting::Dict{String,Any}
     solution::Dict{String,Any}
 
-    ref::Dict{Symbol,Any}
+    ref::Dict{Symbol,Any} # data reference data
+
+    var::Dict{Symbol,Any} # JuMP variables
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -53,30 +57,22 @@ end
 # default generic constructor
 function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{String,Any}(), solver = JuMP.UnsetSolver())
 
+    # TODO is may be a good place to check component connectivity validity
+    # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
+
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
         data, # data
         setting, # setting
         Dict{String,Any}(), # solution
         build_ref(data), # refrence data
+        Dict{Symbol,Any}(), # vars
         Dict{Symbol,Any}() # ext
     )
 
     return pm
 end
 
-#
-# Just seems too hard to maintain with the default constructor
-#
-#function setdata{T}(pm::GenericPowerModel{T}, data::Dict{String,Any})
-#    data, sets = process_raw_data(data)
-
-#    pm.model = Model()
-#    pm.set = sets
-#    pm.solution = Dict{String,Any}()
-#    pm.data = data
-
-#end
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
 function JuMP.setsolver(pm::GenericPowerModel, solver::MathProgBase.AbstractMathProgSolver)

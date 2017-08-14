@@ -32,7 +32,7 @@ function post_api_opf(pm::GenericPowerModel)
     end
 
     for (i,gen) in pm.ref[:gen]
-        pg = getindex(pm.model, :pg)[i]
+        pg = pm.var[:pg][i]
         @constraint(pm.model, pg >= gen["pmin"])
     end
 
@@ -87,8 +87,8 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
         constraint_ohms_yt_to(pm, branch)
 
         constraint_phase_angle_difference(pm, branch)
-        theta_fr = getindex(pm.model, :t)[branch["f_bus"]]
-        theta_to = getindex(pm.model, :t)[branch["t_bus"]]
+        theta_fr = pm.var[:t][branch["f_bus"]]
+        theta_to = pm.var[:t][branch["t_bus"]]
 
         @constraint(pm.model, theta_fr - theta_to <=  theta_delta_bound)
         @constraint(pm.model, theta_fr - theta_to >= -theta_delta_bound)

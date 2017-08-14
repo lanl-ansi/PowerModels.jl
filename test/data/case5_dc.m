@@ -1,8 +1,13 @@
+<<<<<<< HEAD
 % NESTA v0.6.0
+=======
+% based on NESTA v0.6.0
+>>>>>>> pr/2
 function mpc = nesta_case5_pjm
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 
+<<<<<<< HEAD
 %% area data
 %	area	refbus
 mpc.areas = [
@@ -17,6 +22,16 @@ mpc.bus = [
 	3	 1	 300.0	 98.61	 0.0	 0.0	 1	    1.1             	   -0.649253101490103	 230.0	 1	    1.10000	    0.90000;
 	4	 3	 400.0	 131.47	 0.0	 0.0	 1	    1.06414         	    0.00000              230.0	 1	    1.10000	    0.90000;
 	5	 1	 0.0	 0.0	 0.0	 0.0	 1	    1.05303670911989        3.70098518514844	 230.0	 1	    1.10000	    0.90000;
+=======
+%% bus data
+%	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
+mpc.bus = [
+	1	 1	   0.0	   0.00	 0.0	 0.0	 1	    1.06355	    2.87619	 230.0	 1	    1.10000	    0.90000;
+	2	 1	 300.0	  98.61	 0.0	 0.0	 1	    1.08009	   -0.79708	 230.0	 1	    1.10000	    0.90000;
+	3	 1	 300.0	  98.61	 0.0	 0.0	 1	    1.10000	   -0.64925	 230.0	 1	    1.10000	    0.90000;
+	4	 3	 400.0	 131.47	 0.0	 0.0	 1	    1.06414	    0.00000	 230.0	 1	    1.10000	    0.90000;
+	5	 1	   0.0	   0.00	 0.0	 0.0	 1	    1.05304	    3.70099	 230.0	 1	    1.10000	    0.90000;
+>>>>>>> pr/2
 ];
 
 %% generator data
@@ -50,16 +65,27 @@ mpc.branch = [
 	4	 5	 0.00297	 0.0297	 0.00674	 240.0	 240.0	 240.0	 0.0	 0.0	 1	 -30.0	 30.0;
 ];
 
+<<<<<<< HEAD
 
 %%-----  DC Line Data  -----
+=======
+%% dcline data
+>>>>>>> pr/2
 %	fbus	tbus	status	Pf	Pt	Qf	Qt	Vf	Vt	Pmin	Pmax	QminF	QmaxF	QminT	QmaxT	loss0	loss1
 mpc.dcline = [
 	3	5	1	10	8.9	99.9934	-10.4049	1.1	1.05303670911989	10	100 	-100	100	-100 100	1	0.01;
 ];
 
+<<<<<<< HEAD
 %% DC line cost data
 %	1	startup	shutdown	n	x1	y1	...	xn	yn
 %	2	startup	shutdown	n	c(n-1)	...	c0
 mpc.dclinecost = [
 	2	0	0	2	0	0	0	0	0	0	0	0	0	0;
+=======
+%% dcline cost data
+%	2	startup	shutdown	n	c(n-1)	...	c0
+mpc.dclinecost = [
+	2	 0.0	 0.0	 3	   0.000000	  40.000000	   0.000000;
+>>>>>>> pr/2
 ];

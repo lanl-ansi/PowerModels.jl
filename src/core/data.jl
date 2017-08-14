@@ -48,8 +48,11 @@ function calc_theta_delta_bounds(data::Dict{String,Any})
     sort!(angle_maxs, rev=true)
 
     if length(angle_mins) > 1
-        angle_min = sum(angle_mins[1:bus_count-1])
-        angle_max = sum(angle_maxs[1:bus_count-1])
+        # note that, this can occur when dclines are present
+        angle_count = min(bus_count-1, length(branches))
+
+        angle_min = sum(angle_mins[1:angle_count])
+        angle_max = sum(angle_maxs[1:angle_count])
     else
         angle_min = angle_mins[1]
         angle_max = angle_maxs[1]
@@ -89,13 +92,26 @@ function check_keys(data, keys)
     end
 end
 
-"Recursively applies new_data to data, overwritting information"
+
+"recursively applies new_data to data, overwriting information"
 function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
+    if haskey(data, "per_unit") && haskey(new_data, "per_unit")
+        if data["per_unit"] != new_data["per_unit"]
+            error("update_data requires datasets in the same units, try make_per_unit and make_mixed_units")
+        end
+    else
+        warn("running update_data with data that does not include per_unit field, units may be incorrect")
+    end
+    _update_data(data, new_data)
+end
+
+"recursive call of _update_data"
+function _update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
     for (key, new_v) in new_data
         if haskey(data, key)
             v = data[key]
             if isa(v, Dict) && isa(new_v, Dict)
-                update_data(v, new_v)
+                _update_data(v, new_v)
             else
                 data[key] = new_v
             end
@@ -104,6 +120,7 @@ function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
         end
     end
 end
+
 
 ""
 function apply_func(data::Dict{String,Any}, key::String, func)
@@ -240,6 +257,27 @@ function make_mixed_units(data::Dict{String,Any})
             apply_func(branch, "shift", rad2deg)
             apply_func(branch, "angmax", rad2deg)
             apply_func(branch, "angmin", rad2deg)
+
+            apply_func(branch, "pf", rescale)
+            apply_func(branch, "pt", rescale)
+            apply_func(branch, "qf", rescale)
+            apply_func(branch, "qt", rescale)
+        end
+
+        for dcline in dclines
+            apply_func(dcline, "loss0", rescale)
+            apply_func(dcline, "pf", rescale)
+            apply_func(dcline, "pt", rescale)
+            apply_func(dcline, "qf", rescale)
+            apply_func(dcline, "qt", rescale)
+            apply_func(dcline, "pmaxt", rescale)
+            apply_func(dcline, "pmint", rescale)
+            apply_func(dcline, "pmaxf", rescale)
+            apply_func(dcline, "pminf", rescale)
+            apply_func(dcline, "qmaxt", rescale)
+            apply_func(dcline, "qmint", rescale)
+            apply_func(dcline, "qmaxf", rescale)
+            apply_func(dcline, "qminf", rescale)
         end
 
         for dcline in dclines
@@ -390,7 +428,6 @@ function check_bus_types(data)
 
         end
     end
-
 end
 
 "checks that parameters for dc lines are reasonable"

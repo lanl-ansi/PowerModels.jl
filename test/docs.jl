@@ -14,7 +14,7 @@
         result = run_opf(network_data, ACPPowerModel, IpoptSolver(print_level=0))
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 5812.64; atol = 1e0)
+        @test isapprox(result["objective"], 5906.88; atol = 1e0)
 
         network_data["bus"]["3"]["pd"] = 0.0
         network_data["bus"]["3"]["qd"] = 0.0
@@ -22,7 +22,7 @@
         result = run_opf(network_data, ACPPowerModel, IpoptSolver(print_level=0))
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 2933.85; atol = 1e0)
+        @test isapprox(result["objective"], 2937.16; atol = 1e0)
     end
 
     @testset "README.md - JuMP Model Inspection" begin
@@ -31,14 +31,14 @@
         #pretty print the model to the terminal
         #print(pm.model)
 
-        @test MathProgBase.numlinconstr(pm.model) == 7
+        @test MathProgBase.numlinconstr(pm.model) == 8
         @test MathProgBase.numquadconstr(pm.model) == 12
         @test MathProgBase.numconstr(pm.model) - MathProgBase.numlinconstr(pm.model) - MathProgBase.numquadconstr(pm.model) == 12
-        @test MathProgBase.numvar(pm.model) == 24
+        @test MathProgBase.numvar(pm.model) == 28
 
         result = solve_generic_model(pm, IpoptSolver(print_level=0))
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 5812.64; atol = 1e0)
+        @test isapprox(result["objective"], 5906.88; atol = 1e0)
     end
 end

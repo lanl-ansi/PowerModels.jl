@@ -124,8 +124,8 @@ for (i,branch) in pm.ref[:branch]
     constraint_ohms_yt_to(pm, branch)
 end
 for (i,dcline) in pm.ref[:dcline]
-    constraint_active_dc_line_setpoint(pm, dcline)
-    constraint_dcline_voltage(pm, dcline; epsilon = 0.00001)
+    constraint_active_dcline_setpoint(pm, dcline)
+    constraint_voltage_dcline_setpoint(pm, dcline; epsilon = 0.00001)
 end
 ```
 

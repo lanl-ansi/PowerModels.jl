@@ -20,7 +20,7 @@ This enables the definition of a wide variety of power network formulations and 
 * Transmission Network Expansion Planning (tnep)
 
 **Core Network Formulations**
-* AC (polar coordinates)
+* AC (polar and rectangular coordinates)
 * DC Approximation (polar coordinates)
 * SOC Relaxation (W-space)
 * QC Relaxation (W+L-space)
@@ -30,17 +30,20 @@ This enables the definition of a wide variety of power network formulations and 
 
 For further information, consult the package [documentation](https://lanl-ansi.github.io/PowerModels.jl/stable/).
 
+
 ## Development
 
-Community-driven development and enhancement of PowerModels are welcome and encouraged. Please fork this repository and share your contributions to the master with pull requests.
+Community-driven development and enhancement of PowerModels are welcome and encouraged. Please fork this repository and share your contributions to the master with pull requests.  See [CONTRIBUTING.md](https://github.com/lanl-ansi/PowerModels.jl/blob/master/CONTRIBUTING.md) for code contribution guidelines.
 
 
 ## Acknowledgments
 
 This code has been developed as part of the Advanced Network Science Initiative at Los Alamos National Laboratory.
-The primary developer is Carleton Coffrin, with significant contributions from Russell Bent.
-
-Special thanks to Miles Lubin for his assistance in integrating with Julia/JuMP.
+The primary developer is Carleton Coffrin with support from the following contributors,
+- Russell Bent (@rb004f) LANL, TNEP problem specification
+- Frederik Geth(@frederikgeth) and Hakan Ergun(@hakanergun) KU Leuven, HVDC line implementation
+- Miles Lubin (@mlubin) MIT, Julia/JuMP advise
+- Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 
 Frederik Geth and Hakan Ergun (both KU Leuven) contributed to the Matpower-compatible DC Line formulation.
 
