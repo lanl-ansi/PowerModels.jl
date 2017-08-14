@@ -53,10 +53,6 @@ function post_pf(pm::GenericPowerModel)
     for (i,dcline) in pm.ref[:dcline]
         #constraint_dcline(pm, dcline) not needed, active power flow fully defined by dc line setpoints
         constraint_active_dcline_setpoint(pm, dcline)
-<<<<<<< HEAD
-        constraint_dcline_voltage(pm, dcline; epsilon = 0.00001)
-=======
         constraint_voltage_dcline_setpoint(pm, dcline; epsilon = 0.00001)
->>>>>>> pr/2
     end
 end

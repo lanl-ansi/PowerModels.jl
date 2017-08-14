@@ -28,8 +28,6 @@ mpc.branch = [
 	1	 2	 0.042	 0.9	 0.3	 9000.0	 0.0	 0.0	 0.0	 0.0	 1	 -30.0	 30.0;
 ];
 
-<<<<<<< HEAD
-=======
 mpc.dcline = [
 	1	 2	 1	 10	 10	 25.91	 -4.16	 1.1	 0.92617	 10	 900 -900 900 -900 900	 0	 0	 0	 0	 0	 0	 0	 0
 ]
@@ -39,7 +37,6 @@ mpc.dclinecost = [
 ];
 
 
->>>>>>> pr/2
 % matpower data format extentions
 
 % adding single values
