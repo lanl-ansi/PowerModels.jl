@@ -475,6 +475,7 @@ function parse_matpower_data(data_string::String)
                     "shift_fr_max" => parse(Float64, branch_row[10]),
                     "shift_to_min" => 0,
                     "shift_to_max" => 0,
+                    "shiftable" => false,
                     "br_status" => parse(Int, branch_row[11]),
                     "angmin" => parse(Float64, branch_row[12]),
                     "angmax" => parse(Float64, branch_row[13]),

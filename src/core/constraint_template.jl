@@ -76,6 +76,22 @@ function constraint_ohms_yt_from(pm::GenericPowerModel, branch)
     return constraint_ohms_yt_from(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
 end
 
+### Branch - Ohm's Law Constraints for shiftable PSTs ###
+
+""
+function constraint_ohms_yt_from_shiftable(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    g, b = calc_branch_y(branch)
+    c = branch["br_b"]
+
+    return constraint_ohms_yt_from_shiftable(pm, f_bus, t_bus, f_idx, t_idx, g, b, c)
+end
+
 ### Branch - Loss Constraints DC LINES###
 
 ""
@@ -130,6 +146,20 @@ function constraint_ohms_yt_to(pm::GenericPowerModel, branch)
     tm = branch["tap"]^2
 
     return constraint_ohms_yt_to(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+end
+
+""
+function constraint_ohms_yt_to_shiftable(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    g, b = calc_branch_y(branch)
+    c = branch["br_b"]
+
+    return constraint_ohms_yt_to_shiftable(pm, f_bus, t_bus, f_idx, t_idx, g, b, c)
 end
 
 ""

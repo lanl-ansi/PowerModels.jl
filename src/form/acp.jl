@@ -126,13 +126,9 @@ function constraint_ohms_yt_from{T <: AbstractACPForm}(pm::GenericPowerModel{T},
     v_to = pm.var[:v][t_bus]
     t_fr = pm.var[:t][f_bus]
     t_to = pm.var[:t][t_bus]
-    t_shift_fr = pm.var[:t_shift][f_idx]
-    t_shift_to = pm.var[:t_shift][t_idx]
 
-#    c1 = @NLconstraint(pm.model, p_fr == g/tm*v_fr^2 + (-g*tr+b*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-b*tr-g*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
-#    c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*v_fr^2 - (-b*tr-g*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-g*tr+b*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
-    c1 = @NLconstraint(pm.model, p_fr == g*v_fr^2 + (-g)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-b)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to))))
-    c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)*v_fr^2 - (-b)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-g)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to))))
+    c1 = @NLconstraint(pm.model, p_fr == g/tm*v_fr^2 + (-g*tr+b*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-b*tr-g*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
+    c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*v_fr^2 - (-b*tr-g*ti)/tm*(v_fr*v_to*cos(t_fr-t_to)) + (-g*tr+b*ti)/tm*(v_fr*v_to*sin(t_fr-t_to)) )
     return Set([c1, c2])
 end
 
@@ -151,11 +147,53 @@ function constraint_ohms_yt_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f
     v_to = pm.var[:v][t_bus]
     t_fr = pm.var[:t][f_bus]
     t_to = pm.var[:t][t_bus]
+
+    c1 = @NLconstraint(pm.model, p_to == g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
+    c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
+    return Set([c1, c2])
+end
+
+"""
+Creates Ohms constraints for shiftable PSTs (yt post fix indicates that Y and T values are in rectangular form)
+
+```
+p[f_idx] == g*v_fr^2 + (-g)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-b)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to)))
+q[f_idx] == -(b+c/2)*v_fr^2 - (-b)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-g)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to)))
+```
+"""
+function constraint_ohms_yt_from_shiftable{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c)
+    p_fr = pm.var[:p][f_idx]
+    q_fr = pm.var[:q][f_idx]
+    v_fr = pm.var[:v][f_bus]
+    v_to = pm.var[:v][t_bus]
+    t_fr = pm.var[:t][f_bus]
+    t_to = pm.var[:t][t_bus]
     t_shift_fr = pm.var[:t_shift][f_idx]
     t_shift_to = pm.var[:t_shift][t_idx]
 
-    #c1 = @NLconstraint(pm.model, p_to == g*v_to^2 + (-g*tr-b*ti)/tm*(v_to*v_fr*cos(t_to-t_fr)) + (-b*tr+g*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
-    #c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*v_to^2 - (-b*tr+g*ti)/tm*(v_to*v_fr*cos(t_fr-t_to)) + (-g*tr-b*ti)/tm*(v_to*v_fr*sin(t_to-t_fr)) )
+    c1 = @NLconstraint(pm.model, p_fr == g*v_fr^2 + (-g)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-b)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to))))
+    c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)*v_fr^2 - (-b)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-g)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to))))
+    return Set([c1, c2])
+end
+
+"""
+Creates Ohms constraints for shiftable PSTs (yt post fix indicates that Y and T values are in rectangular form)
+
+```
+p[t_idx] == g*v_to^2 + (-g)*(v_to*v_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-b)*(v_to*v_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr)))
+q[t_idx] == -(b+c/2)*v_to^2 - (-b)*(v_to*v_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-g)*(v_to*v_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr)))
+```
+"""
+function constraint_ohms_yt_to_shiftable{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c)
+    p_to = pm.var[:p][t_idx]
+    q_to = pm.var[:q][t_idx]
+    v_fr = pm.var[:v][f_bus]
+    v_to = pm.var[:v][t_bus]
+    t_fr = pm.var[:t][f_bus]
+    t_to = pm.var[:t][t_bus]
+    t_shift_fr = pm.var[:t_shift][f_idx]
+    t_shift_to = pm.var[:t_shift][t_idx]
+
     c1 = @NLconstraint(pm.model, p_to == g*v_to^2 + (-g)*(v_to*v_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-b)*(v_to*v_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr))))
     c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*v_to^2 - (-b)*(v_to*v_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-g)*(v_to*v_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr))))
     return Set([c1, c2])
