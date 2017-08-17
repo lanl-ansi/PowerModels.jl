@@ -161,7 +161,7 @@ p[f_idx] == g*v_fr^2 + (-g)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift
 q[f_idx] == -(b+c/2)*v_fr^2 - (-b)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-g)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to)))
 ```
 """
-function constraint_ohms_yt_from_shiftable{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c)
+function constraint_ohms_yt_from_shiftable{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tap_min, tap_max)
     p_fr = pm.var[:p][f_idx]
     q_fr = pm.var[:q][f_idx]
     v_fr = pm.var[:v][f_bus]
@@ -170,10 +170,14 @@ function constraint_ohms_yt_from_shiftable{T <: AbstractACPForm}(pm::GenericPowe
     t_to = pm.var[:t][t_bus]
     t_shift_fr = pm.var[:t_shift][f_idx]
     t_shift_to = pm.var[:t_shift][t_idx]
+    vtap_fr = pm.var[:vtap][f_idx]
+    vtap_to = pm.var[:vtap][t_idx]
 
-    c1 = @NLconstraint(pm.model, p_fr == g*v_fr^2 + (-g)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-b)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to))))
-    c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)*v_fr^2 - (-b)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-g)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to))))
-    return Set([c1, c2])
+    c1 = @NLconstraint(pm.model, p_fr == g*(vtap_fr^2 + (-g)*(vtap_fr*vtap_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-b)*(vtap_fr*vtap_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to))))
+    c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)*vtap_fr^2 - (-b)*(vtap_fr*vtap_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-g)*(vtap_fr*vtap_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to))))
+    c3 = @constraint(pm.model, vtap_fr * tapmin <= v_fr)
+    c4 = @constraint(pm.model, v_fr <= vtap_fr * tapmax)
+    return Set([c1, c2, c3, c4])
 end
 
 """
@@ -184,7 +188,7 @@ p[t_idx] == g*v_to^2 + (-g)*(v_to*v_fr*cos((t_to - t_shift_to) - (t_fr - t_shift
 q[t_idx] == -(b+c/2)*v_to^2 - (-b)*(v_to*v_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-g)*(v_to*v_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr)))
 ```
 """
-function constraint_ohms_yt_to_shiftable{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c)
+function constraint_ohms_yt_to_shiftable{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tap_min, tap_max)
     p_to = pm.var[:p][t_idx]
     q_to = pm.var[:q][t_idx]
     v_fr = pm.var[:v][f_bus]
@@ -193,10 +197,14 @@ function constraint_ohms_yt_to_shiftable{T <: AbstractACPForm}(pm::GenericPowerM
     t_to = pm.var[:t][t_bus]
     t_shift_fr = pm.var[:t_shift][f_idx]
     t_shift_to = pm.var[:t_shift][t_idx]
+    vtap_fr = pm.var[:vtap][f_idx]
+    vtap_to = pm.var[:vtap][t_idx]
 
-    c1 = @NLconstraint(pm.model, p_to == g*v_to^2 + (-g)*(v_to*v_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-b)*(v_to*v_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr))))
-    c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*v_to^2 - (-b)*(v_to*v_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-g)*(v_to*v_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr))))
-    return Set([c1, c2])
+    c1 = @NLconstraint(pm.model, p_to == g*vtap_to^2 + (-g)*(vtap_to*vtap_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-b)*(vtap_to*vtap_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr))))
+    c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*vtap_to^2 - (-b)*(vtap_to*vtap_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-g)*(vtap_to*vtap_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr))))
+    c3 = @constraint(pm.model, vtap_to * tapmin <= v_to)
+    c4 = @constraint(pm.model, v_to <= vtap_to * tapmax)
+    return Set([c1, c2, c3, c4])
 end
 
 """

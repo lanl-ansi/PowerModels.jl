@@ -385,6 +385,39 @@ function variable_phase_shift(pm::GenericPowerModel; bounded = true)
     return pm.var[:t_shift]
 end
 
+"variable: `t_shift[l,i,j]` for `(l,i,j)` in `arcs`"
+function variable_voltage_tap(pm::GenericPowerModel; bounded = true)
+
+    vtap_min = Dict()
+    vtap_max = Dict()
+    vtap = Dict()
+    for (l,i,j) in pm.ref[:arcs_from]
+        vtap_min[(l,i,j)] = pm.ref[:bus][i]["vmin"] / pm.ref[:branch][l]["tap_fr_min"]
+        vtap_max[(l,i,j)] = pm.ref[:bus][i]["vmax"] / pm.ref[:branch][l]["tap_fr_max"]
+        vtap[(l,i,j)] = pm.ref[:bus][i]["vm"] /pm.ref[:branch][l]["tap"]
+    end
+    for (l,j,i) in pm.ref[:arcs_to]
+        vtap_min[(l,j,i)] = pm.ref[:bus][j]["vmin"] / pm.ref[:branch][l]["tap_to_min"]
+        vtap_max[(l,j,i)] = pm.ref[:bus][j]["vmax"] / pm.ref[:branch][l]["tap_to_max"]
+        vtap[(l,j,i)] = 1
+    end
+
+    if bounded
+        pm.var[:vtap] = @variable(pm.model,
+            [(l,i,j) in pm.ref[:arcs]], basename="vtap",
+            lowerbound = vtap_min[(l,i,j)],
+            upperbound = vtap_max[(l,i,j)],
+            start = vtap[(l,i,j)]
+        )
+    else
+        pm.var[:vtap] = @variable(pm.model,
+            [(l,i,j) in pm.ref[:arcs]], basename="vtap",
+            start = vtap[(l,i,j)]
+        )
+    end
+    return pm.var[:vtap]
+end
+
 ##################################################################
 
 "generates variables for both `active` and `reactive` `line_flow_ne`"

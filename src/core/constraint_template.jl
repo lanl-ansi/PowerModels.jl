@@ -88,8 +88,10 @@ function constraint_ohms_yt_from_shiftable(pm::GenericPowerModel, branch)
 
     g, b = calc_branch_y(branch)
     c = branch["br_b"]
+    tap_min = branch["tap_fr_min"]
+    tap_max = branch["tap_fr_max"]
 
-    return constraint_ohms_yt_from_shiftable(pm, f_bus, t_bus, f_idx, t_idx, g, b, c)
+    return constraint_ohms_yt_from_shiftable(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tap_min, tap_max)
 end
 
 ### Branch - Loss Constraints DC LINES###
@@ -158,8 +160,10 @@ function constraint_ohms_yt_to_shiftable(pm::GenericPowerModel, branch)
 
     g, b = calc_branch_y(branch)
     c = branch["br_b"]
+    tap_min = branch["tap_to_min"]
+    tap_max = branch["tap_to_max"]
 
-    return constraint_ohms_yt_to_shiftable(pm, f_bus, t_bus, f_idx, t_idx, g, b, c)
+    return constraint_ohms_yt_to_shiftable(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tap_min, tap_max)
 end
 
 ""
