@@ -20,7 +20,6 @@ PowerModels.jl Change Log
 - Fixed bug in constants for w-space phase angle difference constraints
 - Fixed bug when no reference bus was specified
 - Fixed dcline parsing bug
-- Support for DC Line formulation compatible with matpower
 
 ### v0.3.3
 - Added JuMP v0.17 compatibility

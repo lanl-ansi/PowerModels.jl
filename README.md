@@ -45,8 +45,6 @@ The primary developer is Carleton Coffrin with support from the following contri
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 
-Frederik Geth and Hakan Ergun (both KU Leuven) contributed to the Matpower-compatible DC Line formulation.
-
 ## License
 
 This code is provided under a BSD license as part of the Multi-Infrastructure Control and Optimization Toolkit (MICOT) project, LA-CC-13-108.

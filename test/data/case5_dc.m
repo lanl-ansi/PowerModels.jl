@@ -1,18 +1,7 @@
-<<<<<<< HEAD
-% NESTA v0.6.0
-=======
 % based on NESTA v0.6.0
->>>>>>> pr/2
 function mpc = nesta_case5_pjm
 mpc.version = '2';
 mpc.baseMVA = 100.0;
-
-<<<<<<< HEAD
-%% area data
-%	area	refbus
-mpc.areas = [
-	1	 4;
-];
 
 %% bus data
 %	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
