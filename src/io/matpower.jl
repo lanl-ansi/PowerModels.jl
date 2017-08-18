@@ -53,8 +53,6 @@ function update_branch_transformer_settings(data::Dict{String,Any})
             branch["transformer"] = false
             branch["tap"] = 1.0
             branch["tap_fr"] = 1.0
-            branch["tap_fr_min"] = 1.0
-            branch["tap_fr_max"] = 1.0
         else
             branch["transformer"] = true
         end
@@ -475,19 +473,19 @@ function parse_matpower_data(data_string::String)
                     "tap" => parse(Float64, branch_row[9]),
                     "tap_fr" => parse(Float64, branch_row[9]),
                     "tap_to" => 1,
-                    "tap_fr_min" => parse(Float64, branch_row[9]),
-                    "tap_fr_max" => parse(Float64, branch_row[9]),
-                    "tap_to_min" => 1,
-                    "tap_to_max" => 1,
-                    "tappable" => false,
+                    #"tap_fr_min" => parse(Float64, branch_row[9]),
+                    #"tap_fr_max" => parse(Float64, branch_row[9]),
+                    #"tap_to_min" => 1,
+                    #"tap_to_max" => 1,
+                    #"tappable" => false,
                     "shift" => parse(Float64, branch_row[10]),
                     "shift_fr" => parse(Float64, branch_row[10]),
                     "shift_to" => 0,
-                    "shift_fr_min" => parse(Float64, branch_row[10]),
-                    "shift_fr_max" => parse(Float64, branch_row[10]),
-                    "shift_to_min" => 0,
-                    "shift_to_max" => 0,
-                    "shiftable" => false,
+                    #"shift_fr_min" => parse(Float64, branch_row[10]),
+                    #"shift_fr_max" => parse(Float64, branch_row[10]),
+                    #"shift_to_min" => 0,
+                    #"shift_to_max" => 0,
+                    #"shiftable" => false,
                     "br_status" => parse(Int, branch_row[11]),
                     "angmin" => parse(Float64, branch_row[12]),
                     "angmax" => parse(Float64, branch_row[13]),

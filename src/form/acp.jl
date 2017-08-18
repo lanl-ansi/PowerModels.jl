@@ -157,8 +157,9 @@ end
 Creates Ohms constraints for shiftable PSTs / OLTCs
 
 ```
-p[f_idx] == g*v_fr^2 + (-g)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-b)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to)))
-q[f_idx] == -(b+c/2)*v_fr^2 - (-b)*(v_fr*v_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-g)*(v_fr*v_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to)))
+p[f_idx] == g*vtap[f_idx]^2 + (-g)*(vtap[f_idx]*vtap[t_idx]*cos((t[f_bus] - t_shift[f_idx]) - (t[t_bus] - t_shift[t_idx]))) + (-b)*(vtap[f_idx]*vtap[t_idx]*sin((t[f_bus] - t_shift[f_idx]) - (t[t_bus] - t_shift[t_idx]))))
+q[f_idx] == -(b+c/2)*vtap[f_idx]^2 - (-b)*(vtap[f_idx]*vtap[t_idx]*cos((t[f_bus] - t_shift[f_idx]) - (t[t_bus] - t_shift[t_idx]))) + (-g)*(vtap[f_idx]*vtap[t_idx]*sin((t[f_bus] - t_shift[f_idx]) - (t[t_bus] - t_shift[t_idx]))))
+vtap[f_idx] * tap_min <= v[f_bus] <= vtap[f_idx] * tap_max
 ```
 """
 function constraint_variable_transformer_y_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tap_min, tap_max)
@@ -184,8 +185,9 @@ end
 Creates Ohms constraints for shiftable PSTs / OLTCs
 
 ```
-p[t_idx] == g*v_to^2 + (-g)*(v_to*v_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-b)*(v_to*v_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr)))
-q[t_idx] == -(b+c/2)*v_to^2 - (-b)*(v_to*v_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-g)*(v_to*v_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr)))
+p[t_idx] == g*vtap[t_idx]^2 + (-g)*(vtap[t_idx]*vtap[f_idx]*cos((t[t_bus] - t_shift[t_idx]) - (t[f_bus] - t_shift[f_idx]))) + (-b)*(vtap[t_idx]*vtap[f_idx]*sin((t[t_bus] - t_shift[t_idx]) - (t[f_bus] - t_shift[f_idx]))))
+q[t_idx] == -(b+c/2)*vtap[t_idx]^2 - (-b)*(vtap[t_idx]*vtap[f_idx]*cos((t[t_bus] - t_shift[t_idx]) - (t[f_bus] - t_shift[f_idx]))) + (-g)*(vtap[t_idx]*vtap[f_idx]*sin((t[t_bus] - t_shift[t_idx]) - (t[f_bus] - t_shift[f_idx]))))
+vtap[t_idx] * tap_min <= v[t_bus] <= vtap[t_idx] * tap_max
 ```
 """
 function constraint_variable_transformer_y_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tap_min, tap_max)
@@ -207,9 +209,16 @@ function constraint_variable_transformer_y_to{T <: AbstractACPForm}(pm::GenericP
     return Set([c1, c2, c3, c4])
 end
 
+"""
+Links voltage magnitudes of not tappable transformers with node voltage magnitudes
 
+```
+vtap[f_idx] * tap == v[f_bus]
+vtap[t_idx] * tap == v[t_bus]
+```
+"""
 
-function constraint_link_voltage_magnitudes(pm, f_bus, t_bus, f_idx, t_idx, tap_fr, tap_to)
+function constraint_link_voltage_magnitudes{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, tap_fr, tap_to)
     v_fr = pm.var[:v][f_bus]
     v_to = pm.var[:v][t_bus]
     vtap_fr = pm.var[:vtap][f_idx]
