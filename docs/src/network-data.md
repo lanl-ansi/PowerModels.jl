@@ -45,6 +45,17 @@ The network data dictionary structure is roughly as follows:
     },
     "2":{...},
     ...
+},
+"dcline":{
+    "1":{
+        "index":<int>,
+        "f_bus":<int>,
+        "t_bus":<int>,
+        "br_r":<int>,
+        ...
+    },
+    "2":{...},
+    ...
 }
 }
 ```
