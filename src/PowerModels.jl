@@ -30,6 +30,7 @@ include("form/shared.jl")
 
 include("prob/pf.jl")
 include("prob/opf.jl")
+include("prob/tfopf.jl")
 include("prob/ots.jl")
 include("prob/misc.jl")
 include("prob/tnep.jl")

@@ -79,7 +79,7 @@ end
 ### Branch - Ohm's Law Constraints for shiftable PSTs ###
 
 ""
-function constraint_ohms_yt_from_shiftable(pm::GenericPowerModel, branch)
+function constraint_variable_transformer_y_from(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -91,7 +91,21 @@ function constraint_ohms_yt_from_shiftable(pm::GenericPowerModel, branch)
     tap_min = branch["tap_fr_min"]
     tap_max = branch["tap_fr_max"]
 
-    return constraint_ohms_yt_from_shiftable(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tap_min, tap_max)
+    return constraint_variable_transformer_y_from(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tap_min, tap_max)
+end
+
+""
+function constraint_link_voltage_magnitudes(pm::GenericPowerModel, branch)
+    i = branch["index"]
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    tap_fr = branch["tap_fr"]
+    tap_to = branch["tap_to"]
+
+    return constraint_link_voltage_magnitudes(pm, f_bus, t_bus, f_idx, t_idx, tap_fr, tap_to)
 end
 
 ### Branch - Loss Constraints DC LINES###
@@ -151,7 +165,7 @@ function constraint_ohms_yt_to(pm::GenericPowerModel, branch)
 end
 
 ""
-function constraint_ohms_yt_to_shiftable(pm::GenericPowerModel, branch)
+function constraint_variable_transformer_y_to(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -163,7 +177,7 @@ function constraint_ohms_yt_to_shiftable(pm::GenericPowerModel, branch)
     tap_min = branch["tap_to_min"]
     tap_max = branch["tap_to_max"]
 
-    return constraint_ohms_yt_to_shiftable(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tap_min, tap_max)
+    return constraint_variable_transformer_y_to(pm, f_bus, t_bus, f_idx, t_idx, g, b, c, tap_min, tap_max)
 end
 
 ""

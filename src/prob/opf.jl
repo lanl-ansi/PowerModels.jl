@@ -21,7 +21,6 @@ function post_opf(pm::GenericPowerModel)
     variable_generation(pm)
     variable_line_flow(pm)
     variable_dcline_flow(pm)
-    variable_phase_shift(pm)
 
     objective_min_fuel_cost(pm)
 
@@ -36,13 +35,9 @@ function post_opf(pm::GenericPowerModel)
     end
 
     for (i,branch) in pm.ref[:branch]
-        if branch["shiftable"] == false
-            constraint_ohms_yt_from(pm, branch)
-            constraint_ohms_yt_to(pm, branch)
-        else
-            constraint_ohms_yt_from_shiftable(pm, branch)
-            constraint_ohms_yt_to_shiftable(pm, branch)
-        end
+        constraint_ohms_yt_from(pm, branch)
+        constraint_ohms_yt_to(pm, branch)
+
         constraint_phase_angle_difference(pm, branch)
 
         constraint_thermal_limit_from(pm, branch)
