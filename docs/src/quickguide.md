@@ -83,8 +83,8 @@ result["solution"]["branch"]["2"]
 
 The losses of a AC or DC branch can be derived:
 ```julia
-loss_ac =  Dict(name => data["p_to"]+data["p_from"] for (name, data) in result["solution"]["branch"])
-loss_dc =  Dict(name => data["p_to"]+data["p_from"] for (name, data) in result["solution"]["dcline"])
+loss_ac =  Dict(name => data["pt"]+data["pf"] for (name, data) in result["solution"]["branch"])
+loss_dc =  Dict(name => data["pt"]+data["pf"] for (name, data) in result["solution"]["dcline"])
 ```
 
 
