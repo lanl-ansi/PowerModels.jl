@@ -8,6 +8,7 @@ PowerModels.jl Change Log
 - Removed deprecated bus-less constraint_theta_ref function (breaking)
 - Moved check_cost_models into the objective building function
 - Fixed out of range bug in calc_theta_delta_bounds
+- Fixed bug in phase angle differences in AbstractACPForms
 
 ### v0.3.4
 - Added support for Matpower data with dclines (thanks to @frederikgeth, @hakanergun)
