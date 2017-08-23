@@ -287,32 +287,17 @@ end
 
 "variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
 function variable_active_dcline_flow(pm::GenericPowerModel; bounded = true)
-    # build bounds lookups based over arcs set
-    pmin = Dict()
-    pref = Dict()
-    pmax = Dict()
-    for (l,i,j) in pm.ref[:arcs_from_dc]
-        pmin[(l,i,j)] = pm.ref[:dcline][l]["pminf"]
-        pmax[(l,i,j)] = pm.ref[:dcline][l]["pmaxf"]
-        pref[(l,i,j)] = pm.ref[:dcline][l]["pf"]
-    end
-    for (l,i,j) in pm.ref[:arcs_to_dc]
-        pmin[(l,i,j)] = pm.ref[:dcline][l]["pmint"]
-        pmax[(l,i,j)] = pm.ref[:dcline][l]["pmaxt"]
-        pref[(l,i,j)] = pm.ref[:dcline][l]["pt"]
-    end
-
     if bounded
         pm.var[:p_dc] = @variable(pm.model,
-            [(l,i,j) in pm.ref[:arcs_dc]], basename="p_dc",
-            lowerbound = pmin[(l,i,j)],
-            upperbound = pmax[(l,i,j)], 
-            start = pref[(l,i,j)]
+            [a in pm.ref[:arcs_dc]], basename="p_dc",
+            lowerbound = pm.ref[:arcs_dc_param][a]["pmin"],
+            upperbound = pm.ref[:arcs_dc_param][a]["pmax"], 
+            start = pm.ref[:arcs_dc_param][a]["pref"]
         )
     else
         pm.var[:p_dc] = @variable(pm.model,
-            [(l,i,j) in pm.ref[:arcs_dc]], basename="p_dc",
-            start = pref[(l,i,j)]
+            [a in pm.ref[:arcs_dc]], basename="p_dc",
+            start = pm.ref[:arcs_dc_param][a]["pref"]
         )
     end
     return pm.var[:p_dc]
@@ -320,32 +305,17 @@ end
 
 "variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
 function variable_reactive_dcline_flow(pm::GenericPowerModel; bounded = true)
-    # build bounds lookups based over arcs set
-    qmin = Dict()
-    qref = Dict()
-    qmax = Dict()
-    for (l,i,j) in pm.ref[:arcs_from_dc]
-        qmin[(l,i,j)] = pm.ref[:dcline][l]["qminf"]
-        qmax[(l,i,j)] = pm.ref[:dcline][l]["qmaxf"]
-        qref[(l,i,j)] = pm.ref[:dcline][l]["qf"]
-    end
-    for (l,i,j) in pm.ref[:arcs_to_dc]
-        qmin[(l,i,j)] = pm.ref[:dcline][l]["qmint"]
-        qmax[(l,i,j)] = pm.ref[:dcline][l]["qmaxt"]
-        qref[(l,i,j)] = pm.ref[:dcline][l]["qt"]
-    end
-
     if bounded
         pm.var[:q_dc] = @variable(pm.model, 
-            q_dc[(l,i,j) in pm.ref[:arcs_dc]], basename="q_dc",
-            lowerbound = qmin[(l,i,j)],
-            upperbound = qmax[(l,i,j)],
-            start = qref[(l,i,j)]
+            q_dc[a in pm.ref[:arcs_dc]], basename="q_dc",
+            lowerbound = pm.ref[:arcs_dc_param][a]["qmin"],
+            upperbound = pm.ref[:arcs_dc_param][a]["qmax"],
+            start = pm.ref[:arcs_dc_param][a]["qref"]
         )
     else
         pm.var[:q_dc] = @variable(pm.model,
-            [(l,i,j) in pm.ref[:arcs_dc]], basename="q_dc",
-            start = qref[(l,i,j)]
+            [a in pm.ref[:arcs_dc]], basename="q_dc",
+            start = pm.ref[:arcs_dc_param][a]["qref"]
         )
     end
     return pm.var[:q_dc]
