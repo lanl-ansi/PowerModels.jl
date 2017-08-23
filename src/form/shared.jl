@@ -32,11 +32,11 @@ t[f_bus] - t[t_bus] >= angmin
 ```
 """
 function constraint_voltage_angle_difference{T <: AbstractPForms}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
-    t_fr = pm.var[:va][f_bus]
-    t_to = pm.var[:va][t_bus]
+    va_fr = pm.var[:va][f_bus]
+    va_to = pm.var[:va][t_bus]
 
-    c1 = @constraint(pm.model, t_fr - t_to <= angmax)
-    c2 = @constraint(pm.model, t_fr - t_to >= angmin)
+    c1 = @constraint(pm.model, va_fr - va_to <= angmax)
+    c2 = @constraint(pm.model, va_fr - va_to >= angmin)
     return Set([c1, c2])
 end
 
