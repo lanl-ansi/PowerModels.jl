@@ -422,7 +422,7 @@ end
 
 
 "Creates variables associated with differences in phase angles"
-function variable_phase_angle_difference{T}(pm::GenericPowerModel{T})
+function variable_voltage_angle_difference{T}(pm::GenericPowerModel{T})
     pm.var[:td] = @variable(pm.model,
         [bp in keys(pm.ref[:buspairs])], basename="td",
         lowerbound = pm.ref[:buspairs][bp]["angmin"],
@@ -504,7 +504,7 @@ function variable_voltage(pm::QCWRPowerModel; kwargs...)
     variable_voltage_magnitude_sqr(pm; kwargs...)
     variable_voltage_product(pm; kwargs...)
 
-    variable_phase_angle_difference(pm; kwargs...)
+    variable_voltage_angle_difference(pm; kwargs...)
     variable_voltage_magnitude_product(pm; kwargs...)
     variable_cosine(pm; kwargs...)
     variable_sine(pm; kwargs...)
@@ -637,7 +637,7 @@ function variable_voltage_on_off(pm::QCWRPowerModel; kwargs...)
 
     variable_voltage_product_on_off(pm; kwargs...)
 
-    variable_phase_angle_difference_on_off(pm; kwargs...)
+    variable_voltage_angle_difference_on_off(pm; kwargs...)
     variable_voltage_magnitude_product_on_off(pm; kwargs...)
     variable_cosine_on_off(pm; kwargs...)
     variable_sine_on_off(pm; kwargs...)
@@ -645,7 +645,7 @@ function variable_voltage_on_off(pm::QCWRPowerModel; kwargs...)
 end
 
 ""
-function variable_phase_angle_difference_on_off{T}(pm::GenericPowerModel{T})
+function variable_voltage_angle_difference_on_off{T}(pm::GenericPowerModel{T})
     pm.var[:td] = @variable(pm.model,
         td[l in keys(pm.ref[:branch])], basename="td",
         lowerbound = min(0, pm.ref[:branch][l]["angmin"]),
