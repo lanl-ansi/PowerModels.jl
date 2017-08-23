@@ -115,7 +115,7 @@ end
 function add_bus_voltage_setpoint{T <: AbstractWRForm}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :w; scale = (x,item) -> sqrt(x))
     # What should the default value be?
-    #add_setpoint(sol, pm, "bus", "bus_i", "va", :t; default_value = 0)
+    #add_setpoint(sol, pm, "bus", "bus_i", "va", :va; default_value = 0)
 end
 
 ""
@@ -513,8 +513,8 @@ end
 
 ""
 function constraint_voltage(pm::QCWRPowerModel)
-    v = pm.var[:v]
-    t = pm.var[:t]
+    v = pm.var[:vm]
+    t = pm.var[:va]
 
     td = pm.var[:td]
     si = pm.var[:si]
@@ -588,7 +588,7 @@ end
 
 "`t[ref_bus] == 0`"
 constraint_theta_ref(pm::QCWRPowerModel, ref_bus::Int) =
-    Set([@constraint(pm.model, pm.var[:t][ref_bus] == 0)])
+    Set([@constraint(pm.model, pm.var[:va][ref_bus] == 0)])
 
 ""
 function constraint_voltage_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, angmin, angmax)
@@ -617,8 +617,8 @@ end
 
 ""
 function add_bus_voltage_setpoint(sol, pm::QCWRPowerModel)
-    add_setpoint(sol, pm, "bus", "bus_i", "vm", :v)
-    add_setpoint(sol, pm, "bus", "bus_i", "va", :t)
+    add_setpoint(sol, pm, "bus", "bus_i", "vm", :vm)
+    add_setpoint(sol, pm, "bus", "bus_i", "va", :va)
 end
 
 
@@ -731,8 +731,8 @@ end
 
 ""
 function constraint_voltage_on_off(pm::QCWRPowerModel)
-    v = pm.var[:v]
-    t = pm.var[:t]
+    v = pm.var[:vm]
+    t = pm.var[:va]
     v_from = pm.var[:v_from]
     v_to = pm.var[:v_to]
 

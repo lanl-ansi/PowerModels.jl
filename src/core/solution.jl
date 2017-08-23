@@ -49,8 +49,8 @@ end
 
 ""
 function add_bus_voltage_setpoint(sol, pm::GenericPowerModel)
-    add_setpoint(sol, pm, "bus", "bus_i", "vm", :v)
-    add_setpoint(sol, pm, "bus", "bus_i", "va", :t)
+    add_setpoint(sol, pm, "bus", "bus_i", "vm", :vm)
+    add_setpoint(sol, pm, "bus", "bus_i", "va", :va)
 end
 
 ""

@@ -87,8 +87,8 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
         constraint_ohms_yt_to(pm, branch)
 
         constraint_voltage_angle_difference(pm, branch)
-        theta_fr = pm.var[:t][branch["f_bus"]]
-        theta_to = pm.var[:t][branch["t_bus"]]
+        theta_fr = pm.var[:va][branch["f_bus"]]
+        theta_to = pm.var[:va][branch["t_bus"]]
 
         @constraint(pm.model, theta_fr - theta_to <=  theta_delta_bound)
         @constraint(pm.model, theta_fr - theta_to >= -theta_delta_bound)

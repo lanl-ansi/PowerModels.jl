@@ -153,6 +153,6 @@ function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerMod
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :WR; scale = (x,item) -> sqrt(x), extract_var = (var,idx,item) -> var[pm.ext[:lookup_w_index][idx], pm.ext[:lookup_w_index][idx]])
 
     # What should the default value be?
-    #add_setpoint(sol, pm, "bus", "bus_i", "va", :t; default_value = 0)
+    #add_setpoint(sol, pm, "bus", "bus_i", "va", :va; default_value = 0)
 end
 

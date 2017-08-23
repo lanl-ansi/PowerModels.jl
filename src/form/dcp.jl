@@ -119,8 +119,8 @@ p[f_idx] == -b*(t[f_bus] - t[t_bus])
 """
 function constraint_ohms_yt_from{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
     p_fr = pm.var[:p][f_idx]
-    t_fr = pm.var[:t][f_bus]
-    t_to = pm.var[:t][t_bus]
+    t_fr = pm.var[:va][f_bus]
+    t_to = pm.var[:va][t_bus]
 
     c = @constraint(pm.model, p_fr == -b*(t_fr - t_to))
     # omit reactive constraint
@@ -132,8 +132,8 @@ constraint_ohms_yt_to{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_b
 
 function constraint_ohms_yt_from_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = pm.var[:p_ne][f_idx]
-    t_fr = pm.var[:t][f_bus]
-    t_to = pm.var[:t][t_bus]
+    t_fr = pm.var[:va][f_bus]
+    t_to = pm.var[:va][t_bus]
     z = pm.var[:line_ne][i]
 
     c1 = @constraint(pm.model, p_fr <= -b*(t_fr - t_to + t_max*(1-z)) )
@@ -165,8 +165,8 @@ constraint_thermal_limit_to{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, t_id
 
 ""
 function add_bus_voltage_setpoint{T <: AbstractDCPForm}(sol, pm::GenericPowerModel{T})
-    add_setpoint(sol, pm, "bus", "bus_i", "vm", :v; default_value = (item) -> 1)
-    add_setpoint(sol, pm, "bus", "bus_i", "va", :t)
+    add_setpoint(sol, pm, "bus", "bus_i", "vm", :vm; default_value = (item) -> 1)
+    add_setpoint(sol, pm, "bus", "bus_i", "va", :va)
 end
 
 ""
@@ -178,8 +178,8 @@ constraint_voltage_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}) = noth
 "`-b*(t[f_bus] - t[t_bus] + t_min*(1-line_z[i])) <= p[f_idx] <= -b*(t[f_bus] - t[t_bus] + t_max*(1-line_z[i]))`"
 function constraint_ohms_yt_from_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = pm.var[:p][f_idx]
-    t_fr = pm.var[:t][f_bus]
-    t_to = pm.var[:t][t_bus]
+    t_fr = pm.var[:va][f_bus]
+    t_to = pm.var[:va][t_bus]
     z = pm.var[:line_z][i]
 
     c1 = @constraint(pm.model, p_fr <= -b*(t_fr - t_to + t_max*(1-z)) )
@@ -230,8 +230,8 @@ constraint_thermal_limit_to_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i
 
 "`angmin*line_z[i] + t_min*(1-line_z[i]) <= t[f_bus] - t[t_bus] <= angmax*line_z[i] + t_max*(1-line_z[i])`"
 function constraint_voltage_angle_difference_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
-    t_fr = pm.var[:t][f_bus]
-    t_to = pm.var[:t][t_bus]
+    t_fr = pm.var[:va][f_bus]
+    t_to = pm.var[:va][t_bus]
     z = pm.var[:line_z][i]
 
     c1 = @constraint(pm.model, t_fr - t_to <= angmax*z + t_max*(1-z))
@@ -241,8 +241,8 @@ end
 
 "`angmin*line_ne[i] + t_min*(1-line_ne[i]) <= t[f_bus] - t[t_bus] <= angmax*line_ne[i] + t_max*(1-line_ne[i])`"
 function constraint_voltage_angle_difference_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
-    t_fr = pm.var[:t][f_bus]
-    t_to = pm.var[:t][t_bus]
+    t_fr = pm.var[:va][f_bus]
+    t_to = pm.var[:va][t_bus]
     z = pm.var[:line_ne][i]
 
     c1 = @constraint(pm.model, t_fr - t_to <= angmax*z + t_max*(1-z))
@@ -293,8 +293,8 @@ Creates Ohms constraints (yt post fix indicates that Y and T values are in recta
 function constraint_ohms_yt_from_on_off{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = pm.var[:p][f_idx]
     p_to = pm.var[:p][t_idx]
-    t_fr = pm.var[:t][f_bus]
-    t_to = pm.var[:t][t_bus]
+    t_fr = pm.var[:va][f_bus]
+    t_to = pm.var[:va][t_bus]
     z = pm.var[:line_z][i]
 
     c1 = @constraint(pm.model, p_fr <= -b*(t_fr - t_to + t_max*(1-z)) )
@@ -314,8 +314,8 @@ where `r = g/(g^2 + b^2)` and `t_m = max(|t_min|, |t_max|)`
 function constraint_ohms_yt_to_on_off{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = pm.var[:p][f_idx]
     p_to = pm.var[:p][t_idx]
-    t_fr = pm.var[:t][f_bus]
-    t_to = pm.var[:t][t_bus]
+    t_fr = pm.var[:va][f_bus]
+    t_to = pm.var[:va][t_bus]
     z = pm.var[:line_z][i]
 
     r = g/(g^2 + b^2)
@@ -334,8 +334,8 @@ Creates Ohms constraints (yt post fix indicates that Y and T values are in recta
 function constraint_ohms_yt_from_ne{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = pm.var[:p_ne][f_idx]
     p_to = pm.var[:p_ne][t_idx]
-    t_fr = pm.var[:t][f_bus]
-    t_to = pm.var[:t][t_bus]
+    t_fr = pm.var[:va][f_bus]
+    t_to = pm.var[:va][t_bus]
     z = pm.var[:line_ne][i]
 
     c1 = @constraint(pm.model, p_fr <= -b*(t_fr - t_to + t_max*(1-z)) )
@@ -355,8 +355,8 @@ where `r = g/(g^2 + b^2)` and `t_m = max(|t_min|, |t_max|)`
 function constraint_ohms_yt_to_ne{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = pm.var[:p_ne][f_idx]
     p_to = pm.var[:p_ne][t_idx]
-    t_fr = pm.var[:t][f_bus]
-    t_to = pm.var[:t][t_bus]
+    t_fr = pm.var[:va][f_bus]
+    t_to = pm.var[:va][t_bus]
     z = pm.var[:line_ne][i]
 
     r = g/(g^2 + b^2)
