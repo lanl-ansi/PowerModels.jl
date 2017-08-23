@@ -31,7 +31,7 @@ t[f_bus] - t[t_bus] <= angmax
 t[f_bus] - t[t_bus] >= angmin
 ```
 """
-function constraint_phase_angle_difference{T <: AbstractPForms}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
+function constraint_voltage_angle_difference{T <: AbstractPForms}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
     t_fr = pm.var[:t][f_bus]
     t_to = pm.var[:t][t_bus]
 

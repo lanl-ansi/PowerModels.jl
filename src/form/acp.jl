@@ -286,7 +286,7 @@ function constraint_ohms_yt_to_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}
 end
 
 "`angmin <= line_z[i]*(t[f_bus] - t[t_bus]) <= angmax`"
-function constraint_phase_angle_difference_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
+function constraint_voltage_angle_difference_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     t_fr = pm.var[:t][f_bus]
     t_to = pm.var[:t][t_bus]
     z = pm.var[:line_z][i]
@@ -297,7 +297,7 @@ function constraint_phase_angle_difference_on_off{T <: AbstractACPForm}(pm::Gene
 end
 
 "`angmin <= line_ne[i]*(t[f_bus] - t[t_bus]) <= angmax`"
-function constraint_phase_angle_difference_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
+function constraint_voltage_angle_difference_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     t_fr = pm.var[:t][f_bus]
     t_to = pm.var[:t][t_bus]
     z = pm.var[:line_ne][i]

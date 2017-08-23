@@ -244,7 +244,7 @@ end
             PMs.constraint_ohms_y_from(pm, branch)
             PMs.constraint_ohms_y_to(pm, branch)
 
-            PMs.constraint_phase_angle_difference(pm, branch)
+            PMs.constraint_voltage_angle_difference(pm, branch)
 
             PMs.constraint_thermal_limit_from(pm, branch)
             PMs.constraint_thermal_limit_to(pm, branch)

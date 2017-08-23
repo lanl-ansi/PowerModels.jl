@@ -363,7 +363,7 @@ end
 ### Branch - Phase Angle Difference Constraints ###
 
 ""
-function constraint_phase_angle_difference(pm::GenericPowerModel, branch)
+function constraint_voltage_angle_difference(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -371,13 +371,13 @@ function constraint_phase_angle_difference(pm::GenericPowerModel, branch)
     buspair = pm.ref[:buspairs][pair]
 
     if buspair["line"] == i
-        return constraint_phase_angle_difference(pm, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
+        return constraint_voltage_angle_difference(pm, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
     end
     return Set()
 end
 
 ""
-function constraint_phase_angle_difference_on_off(pm::GenericPowerModel, branch)
+function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -385,11 +385,11 @@ function constraint_phase_angle_difference_on_off(pm::GenericPowerModel, branch)
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
 
-    return constraint_phase_angle_difference_on_off(pm, i, f_bus, t_bus, branch["angmin"], branch["angmax"], t_min, t_max)
+    return constraint_voltage_angle_difference_on_off(pm, i, f_bus, t_bus, branch["angmin"], branch["angmax"], t_min, t_max)
 end
 
 ""
-function constraint_phase_angle_difference_ne(pm::GenericPowerModel, branch)
+function constraint_voltage_angle_difference_ne(pm::GenericPowerModel, branch)
     i = branch["index"]
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -397,7 +397,7 @@ function constraint_phase_angle_difference_ne(pm::GenericPowerModel, branch)
     t_min = pm.ref[:off_angmin]
     t_max = pm.ref[:off_angmax]
 
-    return constraint_phase_angle_difference_ne(pm, i, f_bus, t_bus, branch["angmin"], branch["angmax"], t_min, t_max)
+    return constraint_voltage_angle_difference_ne(pm, i, f_bus, t_bus, branch["angmin"], branch["angmax"], t_min, t_max)
 end
 
 ### Branch - Loss Constraints ###

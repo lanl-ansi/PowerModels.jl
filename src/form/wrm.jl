@@ -131,7 +131,7 @@ function constraint_ohms_yt_to{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f
 end
 
 ""
-function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
+function constraint_voltage_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
     w_fr_index = pm.ext[:lookup_w_index][f_bus]
     w_to_index = pm.ext[:lookup_w_index][t_bus]
 

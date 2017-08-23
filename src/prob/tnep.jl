@@ -36,7 +36,7 @@ function post_tnep(pm::GenericPowerModel)
         constraint_ohms_yt_from(pm, branch)
         constraint_ohms_yt_to(pm, branch)
 
-        constraint_phase_angle_difference(pm, branch)
+        constraint_voltage_angle_difference(pm, branch)
 
         constraint_thermal_limit_from(pm, branch)
         constraint_thermal_limit_to(pm, branch)
@@ -46,7 +46,7 @@ function post_tnep(pm::GenericPowerModel)
         constraint_ohms_yt_from_ne(pm, branch)
         constraint_ohms_yt_to_ne(pm, branch)
 
-        constraint_phase_angle_difference_ne(pm, branch)
+        constraint_voltage_angle_difference_ne(pm, branch)
 
         constraint_thermal_limit_from_ne(pm, branch)
         constraint_thermal_limit_to_ne(pm, branch)

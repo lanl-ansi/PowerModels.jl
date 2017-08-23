@@ -98,7 +98,7 @@ function constraint_ohms_yt_to_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T},
 end
 
 ""
-function constraint_phase_angle_difference{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
+function constraint_voltage_angle_difference{T <: AbstractWRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
     w_fr = pm.var[:w][f_bus]
     w_to = pm.var[:w][t_bus]
     wr = pm.var[:wr][(f_bus, t_bus)]
@@ -329,7 +329,7 @@ function constraint_ohms_yt_to_on_off{T <: AbstractWRForm}(pm::GenericPowerModel
 end
 
 "`angmin*wr[i] <= wi[i] <= angmax*wr[i]`"
-function constraint_phase_angle_difference_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
+function constraint_voltage_angle_difference_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     wr = pm.var[:wr][i]
     wi = pm.var[:wi][i]
 
@@ -339,7 +339,7 @@ function constraint_phase_angle_difference_on_off{T <: AbstractWRForm}(pm::Gener
 end
 
 "`angmin*wr_ne[i] <= wi_ne[i] <= angmax*wr_ne[i]`"
-function constraint_phase_angle_difference_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
+function constraint_voltage_angle_difference_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     wr = pm.var[:wr_ne][i]
     wi = pm.var[:wi_ne][i]
 
@@ -591,7 +591,7 @@ constraint_theta_ref(pm::QCWRPowerModel, ref_bus::Int) =
     Set([@constraint(pm.model, pm.var[:t][ref_bus] == 0)])
 
 ""
-function constraint_phase_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, angmin, angmax)
+function constraint_voltage_angle_difference(pm::QCWRPowerModel, f_bus, t_bus, angmin, angmax)
     td = pm.var[:td][(f_bus, t_bus)]
 
     if getlowerbound(td) < angmin

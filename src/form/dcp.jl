@@ -229,7 +229,7 @@ constraint_thermal_limit_to_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T
 constraint_thermal_limit_to_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, t_idx, rate_a) = Set()
 
 "`angmin*line_z[i] + t_min*(1-line_z[i]) <= t[f_bus] - t[t_bus] <= angmax*line_z[i] + t_max*(1-line_z[i])`"
-function constraint_phase_angle_difference_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
+function constraint_voltage_angle_difference_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     t_fr = pm.var[:t][f_bus]
     t_to = pm.var[:t][t_bus]
     z = pm.var[:line_z][i]
@@ -240,7 +240,7 @@ function constraint_phase_angle_difference_on_off{T <: AbstractDCPForm}(pm::Gene
 end
 
 "`angmin*line_ne[i] + t_min*(1-line_ne[i]) <= t[f_bus] - t[t_bus] <= angmax*line_ne[i] + t_max*(1-line_ne[i])`"
-function constraint_phase_angle_difference_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
+function constraint_voltage_angle_difference_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     t_fr = pm.var[:t][f_bus]
     t_to = pm.var[:t][t_bus]
     z = pm.var[:line_ne][i]
