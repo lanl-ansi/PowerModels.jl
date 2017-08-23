@@ -38,6 +38,6 @@ end
 
 ""
 function add_bus_voltage_setpoint{T <: AbstractACTForm}(sol, pm::GenericPowerModel{T})
-    add_setpoint(sol, pm, "bus", "bus_i", "vm", :w; scale = (x,item) -> sqrt(x))
-    add_setpoint(sol, pm, "bus", "bus_i", "va", :va)
+    add_setpoint(sol, pm, "bus", "vm", :w; scale = (x,item) -> sqrt(x))
+    add_setpoint(sol, pm, "bus", "va", :va)
 end
