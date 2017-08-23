@@ -6,6 +6,7 @@ PowerModels.jl Change Log
 - Eliminated usage of pm.model.ext, for details see [#149](https://github.com/lanl-ansi/PowerModels.jl/pull/149)
 - Made solution default units per-unit (breaking)
 - Removed deprecated bus-less constraint_theta_ref function (breaking)
+- Removed variable and constraint function return values (breaking)
 - Moved check_cost_models into the objective building function
 - Fixed out of range bug in calc_theta_delta_bounds
 - Fixed bug in phase angle differences in AbstractACPForms
