@@ -98,5 +98,4 @@ end
             @test isapprox(opf_result["solution"]["dcline"][i]["pt"], pf_result["solution"]["dcline"][i]["pt"]; atol = 1e-3)
         end
     end
-
 end
