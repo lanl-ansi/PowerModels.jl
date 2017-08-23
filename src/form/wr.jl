@@ -498,7 +498,7 @@ end
 
 ""
 function variable_voltage(pm::QCWRPowerModel; kwargs...)
-    variable_phase_angle(pm; kwargs...)
+    variable_voltage_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
 
     variable_voltage_magnitude_sqr(pm; kwargs...)
@@ -626,7 +626,7 @@ end
 
 ""
 function variable_voltage_on_off(pm::QCWRPowerModel; kwargs...)
-    variable_phase_angle(pm; kwargs...)
+    variable_voltage_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
     variable_voltage_magnitude_from_on_off(pm; kwargs...)
     variable_voltage_magnitude_to_on_off(pm; kwargs...)

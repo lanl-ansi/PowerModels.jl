@@ -10,7 +10,7 @@ end
 
 
 "variable: `t[i]` for `i` in `bus`es"
-function variable_phase_angle(pm::GenericPowerModel; bounded::Bool = true)
+function variable_voltage_angle(pm::GenericPowerModel; bounded::Bool = true)
     pm.var[:t] = @variable(pm.model,
         [i in keys(pm.ref[:bus])], basename="t",
         start = getstart(pm.ref[:bus], i, "t_start")

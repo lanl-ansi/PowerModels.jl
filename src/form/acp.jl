@@ -19,7 +19,7 @@ ACPPowerModel(data::Dict{String,Any}; kwargs...) =
 
 ""
 function variable_voltage{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...)
-    variable_phase_angle(pm; kwargs...)
+    variable_voltage_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
 end
 
@@ -198,7 +198,7 @@ end
 
 ""
 function variable_voltage_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}; kwargs...)
-    variable_phase_angle(pm; kwargs...)
+    variable_voltage_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
 end
 

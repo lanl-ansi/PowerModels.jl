@@ -18,7 +18,7 @@ ACTPowerModel(data::Dict{String,Any}; kwargs...) =
 
 ""
 function variable_voltage{T <: AbstractACTForm}(pm::GenericPowerModel{T}; kwargs...)
-    variable_phase_angle(pm; kwargs...)
+    variable_voltage_angle(pm; kwargs...)
     variable_voltage_magnitude_sqr(pm; kwargs...)
     variable_voltage_product(pm; kwargs...)
 end

@@ -17,7 +17,7 @@ DCPPowerModel(data::Dict{String,Any}; kwargs...) =
 
 ""
 variable_voltage{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...) =
-    variable_phase_angle(pm; kwargs...)
+    variable_voltage_angle(pm; kwargs...)
 
 "nothing to add, there are no voltage variables on branches"
 variable_voltage_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...) = Set([])
@@ -170,7 +170,7 @@ function add_bus_voltage_setpoint{T <: AbstractDCPForm}(sol, pm::GenericPowerMod
 end
 
 ""
-variable_voltage_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...) = variable_phase_angle(pm; kwargs...)
+variable_voltage_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}; kwargs...) = variable_voltage_angle(pm; kwargs...)
 
 "do nothing, this model does not have complex voltage variables"
 constraint_voltage_on_off{T <: AbstractDCPForm}(pm::GenericPowerModel{T}) = nothing
