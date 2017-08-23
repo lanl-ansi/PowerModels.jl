@@ -8,6 +8,7 @@ PowerModels.jl Change Log
 - Removed deprecated bus-less constraint_theta_ref function (breaking)
 - Renamed polar voltage variables v,t to vm,va (breaking)
 - Renamed functions with phase_angle to voltage_angle (breaking)
+- Renamed v_from and w_from variables to v_fr w_fr (breaking)
 - Moved check_cost_models into the objective building function
 - Fixed out of range bug in calc_theta_delta_bounds
 - Fixed bug in phase angle differences in AbstractACPForms
