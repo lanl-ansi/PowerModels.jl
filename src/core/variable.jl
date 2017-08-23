@@ -10,9 +10,9 @@ end
 
 
 "variable: `t[i]` for `i` in `bus`es"
-function variable_phase_angle(pm::GenericPowerModel; bounded::Bool = true)
-    pm.var[:t] = @variable(pm.model,
-        [i in keys(pm.ref[:bus])], basename="t",
+function variable_voltage_angle(pm::GenericPowerModel; bounded::Bool = true)
+    pm.var[:va] = @variable(pm.model,
+        [i in keys(pm.ref[:bus])], basename="va",
         start = getstart(pm.ref[:bus], i, "t_start")
     )
 end
@@ -20,15 +20,15 @@ end
 "variable: `v[i]` for `i` in `bus`es"
 function variable_voltage_magnitude(pm::GenericPowerModel; bounded = true)
     if bounded
-        pm.var[:v] = @variable(pm.model,
-            [i in keys(pm.ref[:bus])], basename="v",
+        pm.var[:vm] = @variable(pm.model,
+            [i in keys(pm.ref[:bus])], basename="vm",
             lowerbound = pm.ref[:bus][i]["vmin"],
             upperbound = pm.ref[:bus][i]["vmax"],
             start = getstart(pm.ref[:bus], i, "v_start", 1.0)
         )
     else
-        pm.var[:v] = @variable(pm.model,
-            [i in keys(pm.ref[:bus])], basename="v",
+        pm.var[:vm] = @variable(pm.model,
+            [i in keys(pm.ref[:bus])], basename="vm",
             lowerbound = 0,
             start = getstart(pm.ref[:bus], i, "v_start", 1.0))
     end
@@ -57,29 +57,29 @@ end
 
 
 
-"variable: `0 <= v_from[l] <= buses[branches[l][\"f_bus\"]][\"vmax\"]` for `l` in `branch`es"
+"variable: `0 <= vm_fr[l] <= buses[branches[l][\"f_bus\"]][\"vmax\"]` for `l` in `branch`es"
 function variable_voltage_magnitude_from_on_off(pm::GenericPowerModel)
     buses = pm.ref[:bus]
     branches = pm.ref[:branch]
 
-    pm.var[:v_from] = @variable(pm.model,
-        [i in keys(pm.ref[:branch])], basename="v_from",
+    pm.var[:vm_fr] = @variable(pm.model,
+        [i in keys(pm.ref[:branch])], basename="vm_fr",
         lowerbound = 0,
         upperbound = buses[branches[i]["f_bus"]]["vmax"],
-        start = getstart(pm.ref[:bus], i, "v_from_start", 1.0)
+        start = getstart(pm.ref[:bus], i, "vm_fr_start", 1.0)
     )
 end
 
-"variable: `0 <= v_to[l] <= buses[branches[l][\"t_bus\"]][\"vmax\"]` for `l` in `branch`es"
+"variable: `0 <= vm_to[l] <= buses[branches[l][\"t_bus\"]][\"vmax\"]` for `l` in `branch`es"
 function variable_voltage_magnitude_to_on_off(pm::GenericPowerModel)
     buses = pm.ref[:bus]
     branches = pm.ref[:branch]
 
-    pm.var[:v_to] = @variable(pm.model,
-        [i in keys(pm.ref[:branch])], basename="v_to",
+    pm.var[:vm_to] = @variable(pm.model,
+        [i in keys(pm.ref[:branch])], basename="vm_to",
         lowerbound = 0,
         upperbound = buses[branches[i]["t_bus"]]["vmax"],
-        start = getstart(pm.ref[:bus], i, "v_to_start", 1.0)
+        start = getstart(pm.ref[:bus], i, "vm_to_start", 1.0)
     )
 end
 
@@ -102,16 +102,16 @@ function variable_voltage_magnitude_sqr(pm::GenericPowerModel; bounded = true)
     end
 end
 
-"variable: `0 <= w_from[l] <= buses[branches[l][\"f_bus\"]][\"vmax\"]^2` for `l` in `branch`es"
+"variable: `0 <= w_fr[l] <= buses[branches[l][\"f_bus\"]][\"vmax\"]^2` for `l` in `branch`es"
 function variable_voltage_magnitude_sqr_from_on_off(pm::GenericPowerModel)
     buses = pm.ref[:bus]
     branches = pm.ref[:branch]
 
-    pm.var[:w_from] = @variable(pm.model,
-        [i in keys(pm.ref[:branch])], basename="w_from",
+    pm.var[:w_fr] = @variable(pm.model,
+        [i in keys(pm.ref[:branch])], basename="w_fr",
         lowerbound = 0,
         upperbound = buses[branches[i]["f_bus"]]["vmax"]^2,
-        start = getstart(pm.ref[:bus], i, "w_from_start", 1.001)
+        start = getstart(pm.ref[:bus], i, "w_fr_start", 1.001)
     )
 end
 

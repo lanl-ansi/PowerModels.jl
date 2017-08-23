@@ -309,10 +309,10 @@ function buspair_parameters(arcs_from, branches, buses)
         "angmax"=>bp_angmax[(i,j)],
         "rate_a"=>branches[bp_line[(i,j)]]["rate_a"],
         "tap"=>branches[bp_line[(i,j)]]["tap"],
-        "v_from_min"=>buses[i]["vmin"],
-        "v_from_max"=>buses[i]["vmax"],
-        "v_to_min"=>buses[j]["vmin"],
-        "v_to_max"=>buses[j]["vmax"]
+        "vm_fr_min"=>buses[i]["vmin"],
+        "vm_fr_max"=>buses[i]["vmax"],
+        "vm_to_min"=>buses[j]["vmin"],
+        "vm_to_max"=>buses[j]["vmax"]
         )) for (i,j) in buspair_indexes])
 
     return buspairs

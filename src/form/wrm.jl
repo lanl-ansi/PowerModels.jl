@@ -126,7 +126,7 @@ function constraint_ohms_yt_to{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f
 end
 
 ""
-function constraint_phase_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
+function constraint_voltage_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
     w_fr_index = pm.ext[:lookup_w_index][f_bus]
     w_to_index = pm.ext[:lookup_w_index][t_bus]
 
@@ -146,6 +146,6 @@ function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerMod
     add_setpoint(sol, pm, "bus", "bus_i", "vm", :WR; scale = (x,item) -> sqrt(x), extract_var = (var,idx,item) -> var[pm.ext[:lookup_w_index][idx], pm.ext[:lookup_w_index][idx]])
 
     # What should the default value be?
-    #add_setpoint(sol, pm, "bus", "bus_i", "va", :t; default_value = 0)
+    #add_setpoint(sol, pm, "bus", "bus_i", "va", :va; default_value = 0)
 end
 

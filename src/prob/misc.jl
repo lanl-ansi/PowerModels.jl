@@ -44,7 +44,7 @@ function post_api_opf(pm::GenericPowerModel)
         constraint_ohms_yt_from(pm, branch)
         constraint_ohms_yt_to(pm, branch)
 
-        constraint_phase_angle_difference(pm, branch)
+        constraint_voltage_angle_difference(pm, branch)
 
         constraint_thermal_limit_from(pm, branch; scale = 0.999)
         constraint_thermal_limit_to(pm, branch; scale = 0.999)
@@ -86,9 +86,9 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
         constraint_ohms_yt_from(pm, branch)
         constraint_ohms_yt_to(pm, branch)
 
-        constraint_phase_angle_difference(pm, branch)
-        theta_fr = pm.var[:t][branch["f_bus"]]
-        theta_to = pm.var[:t][branch["t_bus"]]
+        constraint_voltage_angle_difference(pm, branch)
+        theta_fr = pm.var[:va][branch["f_bus"]]
+        theta_to = pm.var[:va][branch["t_bus"]]
 
         @constraint(pm.model, theta_fr - theta_to <=  theta_delta_bound)
         @constraint(pm.model, theta_fr - theta_to >= -theta_delta_bound)
