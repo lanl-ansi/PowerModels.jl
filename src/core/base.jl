@@ -55,7 +55,7 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
 end
 
 # default generic constructor
-function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{String,Any}(), solver = JuMP.UnsetSolver())
+function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{String,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver())
 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
@@ -67,7 +67,7 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{S
         Dict{String,Any}(), # solution
         build_ref(data), # refrence data
         Dict{Symbol,Any}(), # vars
-        Dict{Symbol,Any}() # ext
+        ext # ext
     )
 
     return pm
