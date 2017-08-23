@@ -12,7 +12,7 @@ end
 "variable: `t[i]` for `i` in `bus`es"
 function variable_voltage_angle(pm::GenericPowerModel; bounded::Bool = true)
     pm.var[:va] = @variable(pm.model,
-        [i in keys(pm.ref[:bus])], basename="t",
+        [i in keys(pm.ref[:bus])], basename="va",
         start = getstart(pm.ref[:bus], i, "t_start")
     )
     return pm.var[:va]
@@ -22,14 +22,14 @@ end
 function variable_voltage_magnitude(pm::GenericPowerModel; bounded = true)
     if bounded
         pm.var[:vm] = @variable(pm.model,
-            [i in keys(pm.ref[:bus])], basename="v",
+            [i in keys(pm.ref[:bus])], basename="vm",
             lowerbound = pm.ref[:bus][i]["vmin"],
             upperbound = pm.ref[:bus][i]["vmax"],
             start = getstart(pm.ref[:bus], i, "v_start", 1.0)
         )
     else
         pm.var[:vm] = @variable(pm.model,
-            [i in keys(pm.ref[:bus])], basename="v",
+            [i in keys(pm.ref[:bus])], basename="vm",
             lowerbound = 0,
             start = getstart(pm.ref[:bus], i, "v_start", 1.0))
     end
