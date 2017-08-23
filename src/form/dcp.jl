@@ -166,8 +166,8 @@ constraint_thermal_limit_to{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, t_id
 
 ""
 function add_bus_voltage_setpoint{T <: AbstractDCPForm}(sol, pm::GenericPowerModel{T})
-    add_setpoint(sol, pm, "bus", "bus_i", "vm", :vm; default_value = (item) -> 1)
-    add_setpoint(sol, pm, "bus", "bus_i", "va", :va)
+    add_setpoint(sol, pm, "bus", "vm", :vm; default_value = (item) -> 1)
+    add_setpoint(sol, pm, "bus", "va", :va)
 end
 
 ""

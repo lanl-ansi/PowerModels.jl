@@ -49,70 +49,70 @@ end
 
 ""
 function add_bus_voltage_setpoint(sol, pm::GenericPowerModel)
-    add_setpoint(sol, pm, "bus", "bus_i", "vm", :vm)
-    add_setpoint(sol, pm, "bus", "bus_i", "va", :va)
+    add_setpoint(sol, pm, "bus", "vm", :vm)
+    add_setpoint(sol, pm, "bus", "va", :va)
 end
 
 ""
 function add_generator_power_setpoint(sol, pm::GenericPowerModel)
     mva_base = pm.data["baseMVA"]
-    add_setpoint(sol, pm, "gen", "index", "pg", :pg)
-    add_setpoint(sol, pm, "gen", "index", "qg", :qg)
+    add_setpoint(sol, pm, "gen", "pg", :pg)
+    add_setpoint(sol, pm, "gen", "qg", :qg)
 end
 
 ""
 function add_bus_demand_setpoint(sol, pm::GenericPowerModel)
     mva_base = pm.data["baseMVA"]
-    add_setpoint(sol, pm, "bus", "bus_i", "pd", :pd; default_value = (item) -> item["pd"]*mva_base)
-    add_setpoint(sol, pm, "bus", "bus_i", "qd", :qd; default_value = (item) -> item["qd"]*mva_base)
+    add_setpoint(sol, pm, "bus", "pd", :pd; default_value = (item) -> item["pd"]*mva_base)
+    add_setpoint(sol, pm, "bus", "qd", :qd; default_value = (item) -> item["qd"]*mva_base)
 end
 
 ""
 function add_branch_flow_setpoint(sol, pm::GenericPowerModel)
     # check the line flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
-        add_setpoint(sol, pm, "branch", "index", "pf", :p; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch", "index", "qf", :q; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch", "index", "pt", :p; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-        add_setpoint(sol, pm, "branch", "index", "qt", :q; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint(sol, pm, "branch", "pf", :p; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "qf", :q; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "branch", "pt", :p; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint(sol, pm, "branch", "qt", :q; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
     end
 end
 
 ""
 function add_dcline_flow_setpoint(sol, pm::GenericPowerModel)
-    add_setpoint(sol, pm, "dcline", "index", "pf", :p_dc; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-    add_setpoint(sol, pm, "dcline", "index", "qf", :q_dc; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-    add_setpoint(sol, pm, "dcline", "index", "pt", :p_dc; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-    add_setpoint(sol, pm, "dcline", "index", "qt", :q_dc; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+    add_setpoint(sol, pm, "dcline", "pf", :p_dc; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+    add_setpoint(sol, pm, "dcline", "qf", :q_dc; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+    add_setpoint(sol, pm, "dcline", "pt", :p_dc; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+    add_setpoint(sol, pm, "dcline", "qt", :q_dc; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
 end
 
 ""
 function add_branch_flow_setpoint_ne(sol, pm::GenericPowerModel)
     # check the line flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
-        add_setpoint(sol, pm, "ne_branch", "index", "pf", :p_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "ne_branch", "index", "qf", :q_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "ne_branch", "index", "pt", :p_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-        add_setpoint(sol, pm, "ne_branch", "index", "qt", :q_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint(sol, pm, "ne_branch", "pf", :p_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "ne_branch", "qf", :q_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint(sol, pm, "ne_branch", "pt", :p_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint(sol, pm, "ne_branch", "qt", :q_ne; scale = (x,item) -> x*mva_base, extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
     end
 end
 
 ""
 function add_branch_status_setpoint(sol, pm::GenericPowerModel)
-  add_setpoint(sol, pm, "branch", "index", "br_status", :line_z; default_value = (item) -> 1)
+  add_setpoint(sol, pm, "branch", "br_status", :line_z; default_value = (item) -> 1)
 end
 
 function add_branch_status_setpoint_dc(sol, pm::GenericPowerModel)
-  add_setpoint(sol, pm, "dcline", "index", "br_status", :line_z; default_value = (item) -> 1)
+  add_setpoint(sol, pm, "dcline", "br_status", :line_z; default_value = (item) -> 1)
 end
 
 ""
 function add_branch_ne_setpoint(sol, pm::GenericPowerModel)
-  add_setpoint(sol, pm, "ne_branch", "index", "built", :line_ne; default_value = (item) -> 1)
+  add_setpoint(sol, pm, "ne_branch", "built", :line_ne; default_value = (item) -> 1)
 end
 
 ""
-function add_setpoint(sol, pm::GenericPowerModel, dict_name, index_name, param_name, variable_symbol; default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
+function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variable_symbol; index_name = "index", default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
     sol_dict = get(sol, dict_name, Dict{String,Any}())
     if length(pm.data[dict_name]) > 0
         sol[dict_name] = sol_dict
