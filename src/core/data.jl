@@ -308,7 +308,7 @@ function make_mixed_units(data::Dict{String,Any})
 end
 
 "checks that phase angle differences are within 90 deg., if not tightens"
-function check_phase_angle_differences(data, default_pad = 1.0472)
+function check_voltage_angle_differences(data, default_pad = 1.0472)
     assert("per_unit" in keys(data) && data["per_unit"])
 
     for (i, branch) in data["branch"]
