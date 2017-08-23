@@ -19,7 +19,7 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
     setting::Dict{String,Any}
     solution::Dict{String,Any}
     var::Dict{Symbol,Any} # model variable lookup
-    ref::Dict{Symbol,Any} # reference data
+    ref::Dict{Int,Any} # reference data
     ext::Dict{Symbol,Any} # user extentions
 end
 ```
@@ -42,11 +42,8 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
     data::Dict{String,Any}
     setting::Dict{String,Any}
     solution::Dict{String,Any}
-
     ref::Dict{Symbol,Any} # data reference data
-
     var::Dict{Symbol,Any} # JuMP variables
-
     # Extension dictionary
     # Extensions should define a type to hold information particular to
     # their functionality, and store an instance of the type in this
@@ -60,18 +57,50 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; setting = Dict{S
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
 
+    ref = build_ref(data)
+    
+    var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
+    ext = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
+    for nw_id in keys(ref[:nw])
+        var[:nw][nw_id] = Dict{Symbol,Any}()
+        ext[:nw][nw_id] = Dict{Symbol,Any}()
+    end
+
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
         data, # data
         setting, # setting
         Dict{String,Any}(), # solution
-        build_ref(data), # refrence data
-        Dict{Symbol,Any}(), # vars
-        Dict{Symbol,Any}() # ext
+        ref,
+        var,
+        ext
     )
 
     return pm
 end
+
+
+### Helper functions for ignoring the basecase
+
+#nw_data(pm::GenericPowerModel, key::String) = nw_ref(pm, 0, key)
+#nw_data(pm::GenericPowerModel, key::String, idx::String) = nw_ref(pm, 0, key, idx)
+#nw_data(pm::GenericPowerModel, n::String, key::String) = pm.data["nw"][n][key]
+#nw_data(pm::GenericPowerModel, n::String, key::String, idx::String) = pm.data[:nw][n][key][idx]
+
+nw_ref(pm::GenericPowerModel, key::Symbol) = nw_ref(pm, 0, key)
+nw_ref(pm::GenericPowerModel, key::Symbol, idx) = nw_ref(pm, 0, key, idx)
+nw_ref(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ref[:nw][n][key]
+nw_ref(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ref[:nw][n][key][idx]
+
+nw_var(pm::GenericPowerModel, key::Symbol) = nw_var(pm, 0, key)
+nw_var(pm::GenericPowerModel, key::Symbol, idx) = nw_var(pm, 0, key, idx)
+nw_var(pm::GenericPowerModel, n::Int, key::Symbol) = pm.var[:nw][n][key]
+nw_var(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.var[:nw][n][key][idx]
+
+nw_ext(pm::GenericPowerModel, key::Symbol) = nw_ext(pm, 0, key)
+nw_ext(pm::GenericPowerModel, key::Symbol, idx) = nw_ext(pm, 0, key, idx)
+nw_ext(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ext[:nw][n][key]
+nw_ext(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ext[:nw][n][key][idx]
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
@@ -159,98 +188,106 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 * `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`.
 """
 function build_ref(data::Dict{String,Any})
-    ref = Dict{Symbol,Any}()
-    for (key, item) in data
-        if isa(item, Dict)
-            item_lookup = Dict([(parse(Int, k), v) for (k,v) in item])
-            ref[Symbol(key)] = item_lookup
-        else
-            ref[Symbol(key)] = item
+    refs = Dict{Symbol,Any}()
+    nws = refs[:nw] = Dict{Int,Any}()
+
+    for (n,nw_data) in data["nw"]
+        nw_id = parse(Int, n)
+        ref = nws[nw_id] = Dict{Symbol,Any}()
+
+        for (key, item) in nw_data
+            if isa(item, Dict)
+                item_lookup = Dict([(parse(Int, k), v) for (k,v) in item])
+                ref[Symbol(key)] = item_lookup
+            else
+                ref[Symbol(key)] = item
+            end
         end
-    end
 
-    off_angmin, off_angmax = calc_theta_delta_bounds(data)
-    ref[:off_angmin] = off_angmin
-    ref[:off_angmax] = off_angmax
+        off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
+        ref[:off_angmin] = off_angmin
+        ref[:off_angmax] = off_angmax
 
-    # filter turned off stuff
-    ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
-    ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
-    ref[:branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
-    ref[:dcline] = filter((i, dcline) -> dcline["br_status"] == 1 && dcline["f_bus"] in keys(ref[:bus]) && dcline["t_bus"] in keys(ref[:bus]), ref[:dcline])
+        # filter turned off stuff
+        ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
+        ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
+        ref[:branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
+        ref[:dcline] = filter((i, dcline) -> dcline["br_status"] == 1 && dcline["f_bus"] in keys(ref[:bus]) && dcline["t_bus"] in keys(ref[:bus]), ref[:dcline])
 
-    ref[:arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:branch]]
-    ref[:arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:branch]]
-    ref[:arcs] = [ref[:arcs_from]; ref[:arcs_to]]
+        ref[:arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:branch]]
+        ref[:arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:branch]]
+        ref[:arcs] = [ref[:arcs_from]; ref[:arcs_to]]
 
-    ref[:arcs_from_dc] = [(i,dcline["f_bus"],dcline["t_bus"]) for (i,dcline) in ref[:dcline]]
-    ref[:arcs_to_dc]   = [(i,dcline["t_bus"],dcline["f_bus"]) for (i,dcline) in ref[:dcline]]
-    ref[:arcs_dc] = [ref[:arcs_from_dc]; ref[:arcs_to_dc]]
+        ref[:arcs_from_dc] = [(i,dcline["f_bus"],dcline["t_bus"]) for (i,dcline) in ref[:dcline]]
+        ref[:arcs_to_dc]   = [(i,dcline["t_bus"],dcline["f_bus"]) for (i,dcline) in ref[:dcline]]
+        ref[:arcs_dc] = [ref[:arcs_from_dc]; ref[:arcs_to_dc]]
 
-    bus_gens = Dict([(i, []) for (i,bus) in ref[:bus]])
-    for (i,gen) in ref[:gen]
-        push!(bus_gens[gen["gen_bus"]], i)
-    end
-    ref[:bus_gens] = bus_gens
-
-    bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
-    for (l,i,j) in ref[:arcs]
-        push!(bus_arcs[i], (l,i,j))
-    end
-    ref[:bus_arcs] = bus_arcs
-
-    bus_arcs_dc = Dict([(i, []) for (i,bus) in ref[:bus]])
-    for (l,i,j) in ref[:arcs_dc]
-        push!(bus_arcs_dc[i], (l,i,j))
-    end
-    ref[:bus_arcs_dc] = bus_arcs_dc
-
-    # a set of buses to support multiple connected components
-    ref_buses = Dict()
-    for (k,v) in ref[:bus]
-        if v["bus_type"] == 3
-            ref_buses[k] = v
+        bus_gens = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (i,gen) in ref[:gen]
+            push!(bus_gens[gen["gen_bus"]], i)
         end
-    end
+        ref[:bus_gens] = bus_gens
 
-    if length(ref_buses) == 0
-        big_gen = biggest_generator(ref[:gen])
-        gen_bus = big_gen["gen_bus"]
-        ref_buses[gen_bus] = ref[:bus][gen_bus]
-        warn("no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
-    end
-
-    if length(ref_buses) > 1
-        warn("multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
-    end
-
-    ref[:ref_buses] = ref_buses
-
-
-    ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])
-    ############################ DC LINES##########################################
-    if haskey(ref, :dcline)
-        ref[:buspairs_dc] = buspair_parameters_dc(ref[:arcs_from_dc], ref[:dcline], ref[:bus])
-    end
-    ###############################################################################
-
-    if haskey(ref, :ne_branch)
-        ref[:ne_branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:ne_branch])
-
-        ref[:ne_arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:ne_branch]]
-        ref[:ne_arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:ne_branch]]
-        ref[:ne_arcs] = [ref[:ne_arcs_from]; ref[:ne_arcs_to]]
-
-        ne_bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
-        for (l,i,j) in ref[:ne_arcs]
-            push!(ne_bus_arcs[i], (l,i,j))
+        bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (l,i,j) in ref[:arcs]
+            push!(bus_arcs[i], (l,i,j))
         end
-        ref[:ne_bus_arcs] = ne_bus_arcs
+        ref[:bus_arcs] = bus_arcs
 
-        ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus])
+        bus_arcs_dc = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (l,i,j) in ref[:arcs_dc]
+            push!(bus_arcs_dc[i], (l,i,j))
+        end
+        ref[:bus_arcs_dc] = bus_arcs_dc
+
+        # a set of buses to support multiple connected components
+        ref_buses = Dict()
+        for (k,v) in ref[:bus]
+            if v["bus_type"] == 3
+                ref_buses[k] = v
+            end
+        end
+
+        if length(ref_buses) == 0
+            big_gen = biggest_generator(ref[:gen])
+            gen_bus = big_gen["gen_bus"]
+            ref_buses[gen_bus] = ref[:bus][gen_bus]
+            warn("no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
+        end
+
+        if length(ref_buses) > 1
+            warn("multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
+        end
+
+        ref[:ref_buses] = ref_buses
+
+
+        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])
+        ############################ DC LINES##########################################
+        if haskey(ref, :dcline)
+            ref[:buspairs_dc] = buspair_parameters_dc(ref[:arcs_from_dc], ref[:dcline], ref[:bus])
+        end
+        ###############################################################################
+
+        if haskey(ref, :ne_branch)
+            ref[:ne_branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:ne_branch])
+
+            ref[:ne_arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:ne_branch]]
+            ref[:ne_arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:ne_branch]]
+            ref[:ne_arcs] = [ref[:ne_arcs_from]; ref[:ne_arcs_to]]
+
+            ne_bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
+            for (l,i,j) in ref[:ne_arcs]
+                push!(ne_bus_arcs[i], (l,i,j))
+            end
+            ref[:ne_bus_arcs] = ne_bus_arcs
+
+            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus])
+        end
+
     end
 
-    return ref
+    return refs
 end
 
 

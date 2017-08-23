@@ -17,7 +17,9 @@ function parse_matpower(file_string::String)
     # after this call, Matpower data is consistent with PowerModels data
     mp_data_to_pm_data(mp_data)
 
-    return mp_data
+    data = Dict{String,Any}("nw" => Dict{String,Any}("0" => mp_data))
+
+    return data
 end
 
 "ensures all polynomial costs functions have at least three terms"

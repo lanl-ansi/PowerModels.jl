@@ -18,19 +18,19 @@ ACRPowerModel(data::Dict{String,Any}; kwargs...) =
 
 
 ""
-function variable_voltage{T <: AbstractACRForm}(pm::GenericPowerModel{T}; kwargs...)
-    variable_voltage_real(pm; kwargs...)
-    variable_voltage_imaginary(pm; kwargs...)
+function variable_voltage{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int=0; kwargs...)
+    variable_voltage_real(pm, n; kwargs...)
+    variable_voltage_imaginary(pm, n; kwargs...)
 end
 
 
 "add constraints for voltage magnitude"
-function constraint_voltage{T <: AbstractACRForm}(pm::GenericPowerModel{T}; kwargs...)
-    vr = pm.var[:vr]
-    vi = pm.var[:vi]
+function constraint_voltage{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int=0; kwargs...)
+    vr = pm.var[:nw][n][:vr]
+    vi = pm.var[:nw][n][:vi]
 
     cs = Set([])
-    for (i,bus) in pm.ref[:bus]
+    for (i,bus) in pm.ref[:nw][n][:bus]
         c1 = @constraint(pm.model, bus["vmin"]^2 <= (vr[i]^2 + vi[i]^2))
         c2 = @constraint(pm.model, bus["vmax"]^2 >= (vr[i]^2 + vi[i]^2))
         push!(cs, Set([c1, c2]))
@@ -54,21 +54,21 @@ end
 
 
 "reference bus angle constraint"
-function constraint_theta_ref{T <: AbstractACRForm}(pm::GenericPowerModel{T}, ref_bus::Int)
-    c = @constraint(pm.model, pm.var[:vi][ref_bus] == 0)
+function constraint_theta_ref{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, ref_bus::Int)
+    c = @constraint(pm.model, pm.var[:nw][n][:vi][ref_bus] == 0)
     return Set([c])
 end
 
 
-function constraint_kcl_shunt{T <: AbstractACRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
-    vr = pm.var[:vr][i]
-    vi = pm.var[:vi][i]
-    p = pm.var[:p]
-    q = pm.var[:q]
-    pg = pm.var[:pg]
-    qg = pm.var[:qg]
-    p_dc = pm.var[:p_dc]
-    q_dc = pm.var[:q_dc]
+function constraint_kcl_shunt{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
+    vr = pm.var[:nw][n][:vr][i]
+    vi = pm.var[:nw][n][:vi][i]
+    p = pm.var[:nw][n][:p]
+    q = pm.var[:nw][n][:q]
+    pg = pm.var[:nw][n][:pg]
+    qg = pm.var[:nw][n][:qg]
+    p_dc = pm.var[:nw][n][:p_dc]
+    q_dc = pm.var[:nw][n][:q_dc]
 
     c1 = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*(vr^2 + vi^2))
     c2 = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*(vr^2 + vi^2))
@@ -79,13 +79,13 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_from{T <: AbstractACRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    p_fr = pm.var[:p][f_idx]
-    q_fr = pm.var[:q][f_idx]
-    vr_fr = pm.var[:vr][f_bus]
-    vr_to = pm.var[:vr][t_bus]
-    vi_fr = pm.var[:vi][f_bus]
-    vi_to = pm.var[:vi][t_bus]
+function constraint_ohms_yt_from{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    p_fr = pm.var[:nw][n][:p][f_idx]
+    q_fr = pm.var[:nw][n][:q][f_idx]
+    vr_fr = pm.var[:nw][n][:vr][f_bus]
+    vr_to = pm.var[:nw][n][:vr][t_bus]
+    vi_fr = pm.var[:nw][n][:vi][f_bus]
+    vi_to = pm.var[:nw][n][:vi][t_bus]
 
     c1 = @NLconstraint(pm.model, p_fr ==        g/tm*(vr_fr^2 + vi_fr^2) + (-g*tr+b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr-g*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
     c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*(vr_fr^2 + vi_fr^2) - (-b*tr-g*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr+b*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
@@ -95,13 +95,13 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_to{T <: AbstractACRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    p_to = pm.var[:p][t_idx]
-    q_to = pm.var[:q][t_idx]
-    vr_fr = pm.var[:vr][f_bus]
-    vr_to = pm.var[:vr][t_bus]
-    vi_fr = pm.var[:vi][f_bus]
-    vi_to = pm.var[:vi][t_bus]
+function constraint_ohms_yt_to{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    p_to = pm.var[:nw][n][:p][t_idx]
+    q_to = pm.var[:nw][n][:q][t_idx]
+    vr_fr = pm.var[:nw][n][:vr][f_bus]
+    vr_to = pm.var[:nw][n][:vr][t_bus]
+    vi_fr = pm.var[:nw][n][:vi][f_bus]
+    vi_to = pm.var[:nw][n][:vi][t_bus]
 
     c1 = @NLconstraint(pm.model, p_to ==        g*(vr_to^2 + vi_to^2) + (-g*tr-b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr+g*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
     c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*(vr_to^2 + vi_to^2) - (-b*tr+g*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr-b*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
@@ -112,11 +112,11 @@ end
 """
 branch phase angle difference bounds
 """
-function constraint_phase_angle_difference{T <: AbstractACRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
-    vr_fr = pm.var[:vr][f_bus]
-    vr_to = pm.var[:vr][t_bus]
-    vi_fr = pm.var[:vi][f_bus]
-    vi_to = pm.var[:vi][t_bus]
+function constraint_phase_angle_difference{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, angmin, angmax)
+    vr_fr = pm.var[:nw][n][:vr][f_bus]
+    vr_to = pm.var[:nw][n][:vr][t_bus]
+    vi_fr = pm.var[:nw][n][:vi][f_bus]
+    vi_to = pm.var[:nw][n][:vi][t_bus]
 
     # this form appears to be more numerically stable than the one below
     c1 = @NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to)/(vr_fr*vr_to + vi_fr*vi_to) <= tan(angmax))
@@ -130,16 +130,17 @@ end
 
 
 "extracts voltage set points from rectangular voltage form and converts into polar voltage form"
-function add_bus_voltage_setpoint{T <: AbstractACRForm}(sol, pm::GenericPowerModel{T})
+function add_bus_voltage_setpoint{T <: AbstractACRForm}(sol, pm::GenericPowerModel{T}, n::String)
     sol_dict = sol["bus"] = get(sol, "bus", Dict{String,Any}())
-    for (i,item) in pm.data["bus"]
+    for (i,item) in pm.data["nw"][n]["bus"]
         idx = Int(item["bus_i"])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
         sol_item["vm"] = NaN
         sol_item["va"] = NaN
         try
-            vr = getvalue(pm.var[:vr][idx])
-            vi = getvalue(pm.var[:vi][idx])
+            ns = parse(Int, n)
+            vr = getvalue(pm.var[:nw][ns][:vr][idx])
+            vi = getvalue(pm.var[:nw][ns][:vi][idx])
             
             vm = sqrt(vr^2 + vi^2)
             sol_item["vm"] = vm

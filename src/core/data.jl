@@ -129,8 +129,15 @@ function apply_func(data::Dict{String,Any}, key::String, func)
     end
 end
 
-"Transforms network data into per-unit"
+
 function make_per_unit(data::Dict{String,Any})
+    for (n,network_data) in data["nw"]
+        make_network_per_unit(network_data)
+    end
+end
+
+"Transforms network data into per-unit"
+function make_network_per_unit(data::Dict{String,Any})
     if !haskey(data, "per_unit") || data["per_unit"] == false
         data["per_unit"] = true
         mva_base = data["baseMVA"]
@@ -215,8 +222,15 @@ function make_per_unit(data::Dict{String,Any})
     end
 end
 
-"Transforms network data into mixed-units (inverse of per-unit)"
+
 function make_mixed_units(data::Dict{String,Any})
+    for (n,network_data) in data["nw"]
+        make_network_mixed_units(network_data)
+    end
+end
+
+"Transforms network data into mixed-units (inverse of per-unit)"
+function make_network_mixed_units(data::Dict{String,Any})
     if haskey(data, "per_unit") && data["per_unit"] == true
         data["per_unit"] = false
         mva_base = data["baseMVA"]

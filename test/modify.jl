@@ -8,20 +8,20 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
 
-        data["branch"]["6"]["br_status"] = 0
+        data["nw"]["0"]["branch"]["6"]["br_status"] = 0
 
         result = run_opf(data, ACPPowerModel, ipopt_solver)
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 195.25; atol = 1e-1)
 
-        data["gen"]["6"]["gen_status"] = 0
+        data["nw"]["0"]["gen"]["6"]["gen_status"] = 0
 
         result = run_opf(data, ACPPowerModel, ipopt_solver)
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 195.896; atol = 1e-1)
 
-        data["bus"]["5"]["pd"] = 0
-        data["bus"]["5"]["qd"] = 0
+        data["nw"]["0"]["bus"]["5"]["pd"] = 0
+        data["nw"]["0"]["bus"]["5"]["qd"] = 0
 
         result = run_opf(data, ACPPowerModel, ipopt_solver)
         @test result["status"] == :LocalOptimal
@@ -32,24 +32,26 @@
         data = PowerModels.parse_file("../test/data/case30.m")
 
         data_delta = JSON.parse("
-        {
-            \"branch\":{
-                \"6\":{
-                    \"br_status\":0
-                }
-            },
-            \"gen\":{
-                \"6\":{
-                    \"gen_status\":0
-                }
-            },
-            \"bus\":{
-                \"5\":{
-                    \"pd\":0,
-                    \"qd\":0
+        {\"nw\":{
+            \"0\":{
+                \"branch\":{
+                    \"6\":{
+                        \"br_status\":0
+                    }
+                },
+                \"gen\":{
+                    \"6\":{
+                        \"gen_status\":0
+                    }
+                },
+                \"bus\":{
+                    \"5\":{
+                        \"pd\":0,
+                        \"qd\":0
+                    }
                 }
             }
-        }")
+        }}")
 
         PowerModels.update_data(data, data_delta)
 

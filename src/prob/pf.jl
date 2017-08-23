@@ -24,33 +24,33 @@ function post_pf(pm::GenericPowerModel)
 
     constraint_voltage(pm)
 
-    for (i,bus) in pm.ref[:ref_buses]
+    for (i,bus) in nw_ref(pm, :ref_buses)
         constraint_theta_ref(pm, bus)
         constraint_voltage_magnitude_setpoint(pm, bus)
     end
 
-    for (i,bus) in pm.ref[:bus]
+    for (i,bus) in nw_ref(pm, :bus)
         constraint_kcl_shunt(pm, bus)
 
         # PV Bus Constraints
-        if length(pm.ref[:bus_gens][i]) > 0 && !(i in keys(pm.ref[:ref_buses]))
+        if length(nw_ref(pm, :bus_gens)[i]) > 0 && !(i in keys(nw_ref(pm, :ref_buses)))
             # this assumes inactive generators are filtered out of bus_gens
             @assert bus["bus_type"] == 2
 
             # soft equality needed becouse v in file is not precice enough to ensure feasiblity
             constraint_voltage_magnitude_setpoint(pm, bus; epsilon = 0.00001)
-            for j in pm.ref[:bus_gens][i]
-                constraint_active_gen_setpoint(pm, pm.ref[:gen][j])
+            for j in nw_ref(pm, :bus_gens)[i]
+                constraint_active_gen_setpoint(pm, nw_ref(pm, :gen)[j])
             end
         end
     end
 
-    for (i,branch) in pm.ref[:branch]
+    for (i,branch) in nw_ref(pm, :branch)
         constraint_ohms_yt_from(pm, branch)
         constraint_ohms_yt_to(pm, branch)
     end
 
-    for (i,dcline) in pm.ref[:dcline]
+    for (i,dcline) in nw_ref(pm, :dcline)
         #constraint_dcline(pm, dcline) not needed, active power flow fully defined by dc line setpoints
         constraint_active_dcline_setpoint(pm, dcline)
         constraint_voltage_dcline_setpoint(pm, dcline; epsilon = 0.00001)
