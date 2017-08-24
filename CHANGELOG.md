@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added JuMP v0.18 compatibility
 - Added pm.var and made all JuMP variables anonymous (breaking)
 - Eliminated usage of pm.model.ext, for details see [#149](https://github.com/lanl-ansi/PowerModels.jl/pull/149)
 - Made solution default units per-unit (breaking)
