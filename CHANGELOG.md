@@ -6,8 +6,14 @@ PowerModels.jl Change Log
 - Eliminated usage of pm.model.ext, for details see [#149](https://github.com/lanl-ansi/PowerModels.jl/pull/149)
 - Made solution default units per-unit (breaking)
 - Removed deprecated bus-less constraint_theta_ref function (breaking)
+- Renamed polar voltage variables v,t to vm,va (breaking)
+- Renamed functions with phase_angle to voltage_angle (breaking)
+- Renamed v_from and w_from variables to v_fr w_fr (breaking)
+- Removed variable and constraint function return values (breaking)
+- Made index_name an optional parameter in add_setpoint (breaking)
 - Moved check_cost_models into the objective building function
 - Fixed out of range bug in calc_theta_delta_bounds
+- Fixed bug in phase angle differences in AbstractACPForms
 
 ### v0.3.4
 - Added support for Matpower data with dclines (thanks to @frederikgeth, @hakanergun)

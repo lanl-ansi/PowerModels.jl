@@ -39,7 +39,7 @@ Community-driven development and enhancement of PowerModels are welcome and enco
 ## Acknowledgments
 
 This code has been developed as part of the Advanced Network Science Initiative at Los Alamos National Laboratory.
-The primary developer is Carleton Coffrin with support from the following contributors,
+The primary developer is Carleton Coffrin(@ccoffrin) with support from the following contributors,
 - Russell Bent (@rb004f) LANL, TNEP problem specification
 - Frederik Geth(@frederikgeth) and Hakan Ergun(@hakanergun) KU Leuven, HVDC line implementation
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise

@@ -220,3 +220,77 @@ end
     #    @test isapprox(result["objective"], 75153; atol = 1e0)
     #end
 end
+
+
+
+
+@testset "test ac v+t polar opf" begin
+    PMs = PowerModels
+
+    function post_opf_var(pm::GenericPowerModel)
+        PMs.variable_voltage(pm)
+        PMs.variable_generation(pm)
+        PMs.variable_line_flow(pm)
+        PMs.variable_dcline_flow(pm)
+
+        PMs.objective_min_fuel_cost(pm)
+
+        PMs.constraint_voltage(pm)
+
+        for (i,bus) in pm.ref[:ref_buses]
+            PMs.constraint_theta_ref(pm, bus)
+        end
+
+        for (i,bus) in pm.ref[:bus]
+            PMs.constraint_kcl_shunt(pm, bus)
+        end
+
+        for (i,branch) in pm.ref[:branch]
+            # these are the functions to be tested
+            PMs.constraint_ohms_y_from(pm, branch)
+            PMs.constraint_ohms_y_to(pm, branch)
+
+            PMs.constraint_voltage_angle_difference(pm, branch)
+
+            PMs.constraint_thermal_limit_from(pm, branch)
+            PMs.constraint_thermal_limit_to(pm, branch)
+        end
+        for (i,dcline) in pm.ref[:dcline]
+            PMs.constraint_dcline(pm, dcline)
+        end
+    end
+
+    @testset "3-bus case" begin
+        result = run_generic_model("../test/data/case3.m", ACPPowerModel, ipopt_solver, post_opf_var)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 5907; atol = 1e0)
+    end
+    @testset "5-bus asymmetric case" begin
+        result = run_generic_model("../test/data/case5_asym.m", ACPPowerModel, ipopt_solver, post_opf_var)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 17551; atol = 1e0)
+    end
+    @testset "5-bus with dcline costs" begin
+        result = run_generic_model("../test/data/case5_dc.m", ACPPowerModel, ipopt_solver, post_opf_var)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 17760.2; atol = 1e0)
+    end
+    @testset "6-bus case" begin
+        result = run_generic_model("../test/data/case6.m", ACPPowerModel, ipopt_solver, post_opf_var)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 11567; atol = 1e0)
+        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
+    end
+    @testset "24-bus rts case" begin
+        result = run_generic_model("../test/data/case24.m", ACPPowerModel, ipopt_solver, post_opf_var)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 79805; atol = 1e0)
+    end
+end
+

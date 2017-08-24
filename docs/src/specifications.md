@@ -27,7 +27,7 @@ for (i,branch) in pm.ref[:branch]
     constraint_ohms_yt_from(pm, branch)
     constraint_ohms_yt_to(pm, branch)
 
-    constraint_phase_angle_difference(pm, branch)
+    constraint_voltage_angle_difference(pm, branch)
 
     constraint_thermal_limit_from(pm, branch)
     constraint_thermal_limit_to(pm, branch)
@@ -73,7 +73,7 @@ for (i,branch) in pm.ref[:branch]
     constraint_ohms_yt_from_on_off(pm, branch)
     constraint_ohms_yt_to_on_off(pm, branch)
 
-    constraint_phase_angle_difference_on_off(pm, branch)
+    constraint_voltage_angle_difference_on_off(pm, branch)
 
     constraint_thermal_limit_from_on_off(pm, branch)
     constraint_thermal_limit_to_on_off(pm, branch)
@@ -162,7 +162,7 @@ for (i,branch) in pm.ref[:branch]
     constraint_ohms_yt_from(pm, branch)
     constraint_ohms_yt_to(pm, branch)
 
-    constraint_phase_angle_difference(pm, branch)
+    constraint_voltage_angle_difference(pm, branch)
 
     constraint_thermal_limit_from(pm, branch)
     constraint_thermal_limit_to(pm, branch)
@@ -172,7 +172,7 @@ for (i,branch) in pm.ref[:ne_branch]
     constraint_ohms_yt_from_ne(pm, branch)
     constraint_ohms_yt_to_ne(pm, branch)
 
-    constraint_phase_angle_difference_ne(pm, branch)
+    constraint_voltage_angle_difference_ne(pm, branch)
 
     constraint_thermal_limit_from_ne(pm, branch)
     constraint_thermal_limit_to_ne(pm, branch)

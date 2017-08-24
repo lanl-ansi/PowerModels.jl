@@ -73,9 +73,9 @@ constraint_thermal_limit_to_ne
 ### Phase Angle Difference Constraints
 
 ```@docs
-constraint_phase_angle_difference
-constraint_phase_angle_difference_on_off
-constraint_phase_angle_difference_ne
+constraint_voltage_angle_difference
+constraint_voltage_angle_difference_on_off
+constraint_voltage_angle_difference_ne
 ```
 
 ### Loss Constraints
