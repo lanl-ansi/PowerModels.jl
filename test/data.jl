@@ -59,7 +59,7 @@ end
 
         pm = build_generic_model("../test/data/case3.m", ACPPowerModel, PowerModels.post_opf, ext = Dict(:some_data => "bloop"))
 
-        println(pm.ext)
+        #println(pm.ext)
 
         @test haskey(pm.ext, :some_data)
         @test pm.ext[:some_data] == "bloop"
