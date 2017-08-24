@@ -299,7 +299,7 @@ function variable_reactive_dcline_flow(pm::GenericPowerModel; bounded = true)
     end
 end
 
-"variable: `t_shift[l,i,j]` for `(l,i,j)` in `arcs`"
+"variable: `va_shift[l,i,j]` for `(l,i,j)` in `arcs`"
 function variable_phase_shift(pm::GenericPowerModel; bounded = true)
 
     shift_min = Dict()
@@ -316,41 +316,41 @@ function variable_phase_shift(pm::GenericPowerModel; bounded = true)
         shift[(l,i,j)] = pm.ref[:branch][l]["shift_to"]
     end
 
-    pm.var[:t_shift] = @variable(pm.model,
-        [(l,i,j) in pm.ref[:arcs]], basename="t_shift",
+    pm.var[:va_shift] = @variable(pm.model,
+        [(l,i,j) in pm.ref[:arcs]], basename="va_shift",
         lowerbound = shift_min[(l,i,j)],
         upperbound = shift_max[(l,i,j)],
         start = shift[(l,i,j)]
     )
 
-    return pm.var[:t_shift]
+    return pm.var[:va_shift]
 end
 
-"variable: `vtap[(l,i,j)]` for `(l,i,j)` in `arcs`"
+"variable: `vm_tap[(l,i,j)]` for `(l,i,j)` in `arcs`"
 function variable_voltage_tap(pm::GenericPowerModel; bounded = true)
 
-    vtap_min = Dict()
-    vtap_max = Dict()
-    vtap = Dict()
+    vm_tap_min = Dict()
+    vm_tap_max = Dict()
+    vm_tap = Dict()
     for (l,i,j) in pm.ref[:arcs_from]
-        vtap_min[(l,i,j)] = pm.ref[:bus][i]["vmin"] / pm.ref[:branch][l]["tap_fr_max"]
-        vtap_max[(l,i,j)] = pm.ref[:bus][i]["vmax"] / pm.ref[:branch][l]["tap_fr_min"]
-        vtap[(l,i,j)] = pm.ref[:bus][i]["vm"] /pm.ref[:branch][l]["tap_fr"]
+        vm_tap_min[(l,i,j)] = pm.ref[:bus][i]["vmin"] / pm.ref[:branch][l]["tap_fr_max"]
+        vm_tap_max[(l,i,j)] = pm.ref[:bus][i]["vmax"] / pm.ref[:branch][l]["tap_fr_min"]
+        vm_tap[(l,i,j)] = pm.ref[:bus][i]["vm"] /pm.ref[:branch][l]["tap_fr"]
     end
     for (l,j,i) in pm.ref[:arcs_to]
-        vtap_min[(l,j,i)] = pm.ref[:bus][j]["vmin"] / pm.ref[:branch][l]["tap_to_max"]
-        vtap_max[(l,j,i)] = pm.ref[:bus][j]["vmax"] / pm.ref[:branch][l]["tap_to_min"]
-        vtap[(l,j,i)] = pm.ref[:bus][i]["vm"] /pm.ref[:branch][l]["tap_to"]
+        vm_tap_min[(l,j,i)] = pm.ref[:bus][j]["vmin"] / pm.ref[:branch][l]["tap_to_max"]
+        vm_tap_max[(l,j,i)] = pm.ref[:bus][j]["vmax"] / pm.ref[:branch][l]["tap_to_min"]
+        vm_tap[(l,j,i)] = pm.ref[:bus][i]["vm"] /pm.ref[:branch][l]["tap_to"]
     end
 
-    pm.var[:vtap] = @variable(pm.model,
-        [(l,i,j) in pm.ref[:arcs]], basename="vtap",
-        lowerbound = vtap_min[(l,i,j)],
-        upperbound = vtap_max[(l,i,j)],
-        start = vtap[(l,i,j)]
+    pm.var[:vm_tap] = @variable(pm.model,
+        [(l,i,j) in pm.ref[:arcs]], basename="vm_tap",
+        lowerbound = vm_tap_min[(l,i,j)],
+        upperbound = vm_tap_max[(l,i,j)],
+        start = vm_tap[(l,i,j)]
     )
 
-    return pm.var[:vtap]
+    return pm.var[:vm_tap]
 end
 
 ##################################################################

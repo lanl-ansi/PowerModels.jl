@@ -110,8 +110,8 @@ end
 
 ""
 function add_branch_shift_setpoint(sol, pm::GenericPowerModel)
-  add_setpoint(sol, pm, "branch", "index", "shiftf", :t_shift; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])], default_value = (item) -> 0)
-  add_setpoint(sol, pm, "branch", "index", "shiftt", :t_shift; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])], default_value = (item) -> 0)
+  add_setpoint(sol, pm, "branch", "shiftf", :va_shift; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])], default_value = (item) -> 0)
+  add_setpoint(sol, pm, "branch", "shiftt", :va_shift; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])], default_value = (item) -> 0)
 end
 
 ""
@@ -132,10 +132,10 @@ function add_branch_tap_setpoint(sol, pm::GenericPowerModel)
         try
             extract_vtap_fr = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])]
             extract_vtap_to = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])]
-            vtap_fr = getvalue(extract_vtap_fr(pm.var[:vtap], idx, item))
-            vtap_to = getvalue(extract_vtap_to(pm.var[:vtap], idx, item))
-            vf = getvalue(pm.var[:v])[fbus]
-            vt = getvalue(pm.var[:v])[tbus]
+            vtap_fr = getvalue(extract_vtap_fr(pm.var[:vm_tap], idx, item))
+            vtap_to = getvalue(extract_vtap_to(pm.var[:vm_tap], idx, item))
+            vf = getvalue(pm.var[:vm])[fbus]
+            vt = getvalue(pm.var[:vm])[tbus]
             sol_item["tapf"] = vf / vtap_fr
             sol_item["tapt"] = vt / vtap_to
         catch

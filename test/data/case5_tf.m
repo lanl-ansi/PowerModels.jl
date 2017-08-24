@@ -50,12 +50,12 @@ mpc.branch = [
 	4	 5	 0.00297	 0.0297	 0.00674	 240.0	 240.0	 240.0	 0.0	 0.0	 1	 -30.0	 30.0;
 ];
 
-%column_names%  shiftable  shift_fr_max shift_fr_min shift_to_max shift_to_min tappable tap_fr_max tap_fr_min tap_to_max tap_to_min
+%column_names%  g_shunt shiftable  shift_fr_max shift_fr_min shift_to_max shift_to_min tappable tap_fr_max tap_fr_min tap_to_max tap_to_min
 mpc.branch_variable_transformer = [
-    0 0 0 0 0						0 1 1 1 1;
-    0 0 0 0 0						0 1 1 1 1;
-    0 0 0 0 0						0 1 1 1 1;
-		1 30 -30 0 0				0 1 1 1 1;
-		0 0 0 0 0						1 1.1 0.9 1 1;
-		0 0 0 0 0						0 1 1 1 1;
+0    0 0 0 0 0						0 1 1 1 1;
+0    0 0 0 0 0						0 1 1 1 1;
+0    0 0 0 0 0						0 1 1 1 1;
+0		 1 30 -30 0 0				  0 1 1 1 1;
+0		 0 0 0 0 0						1 1.1 0.9 1 1;
+0		 0 0 0 0 0						0 1 1 1 1;
 ];

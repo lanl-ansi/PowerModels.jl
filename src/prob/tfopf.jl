@@ -27,7 +27,6 @@ function post_tfopf(pm::GenericPowerModel)
     objective_min_fuel_cost(pm)
 
     constraint_voltage(pm)
-
     for (i,bus) in pm.ref[:ref_buses]
         constraint_theta_ref(pm, bus)
     end
@@ -45,7 +44,7 @@ function post_tfopf(pm::GenericPowerModel)
             constraint_variable_transformer_y_from(pm, branch)
             constraint_variable_transformer_y_to(pm, branch)
         end
-        constraint_phase_angle_difference(pm, branch)
+        constraint_voltage_angle_difference(pm, branch)
 
         constraint_thermal_limit_from(pm, branch)
         constraint_thermal_limit_to(pm, branch)

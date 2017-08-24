@@ -152,75 +152,72 @@ end
 Creates Ohms constraints for shiftable PSTs / OLTCs
 
 ```
-p[f_idx] == g*vtap[f_idx]^2 + (-g)*(vtap[f_idx]*vtap[t_idx]*cos((t[f_bus] - t_shift[f_idx]) - (t[t_bus] - t_shift[t_idx]))) + (-b)*(vtap[f_idx]*vtap[t_idx]*sin((t[f_bus] - t_shift[f_idx]) - (t[t_bus] - t_shift[t_idx]))))
-q[f_idx] == -(b+c/2)*vtap[f_idx]^2 - (-b)*(vtap[f_idx]*vtap[t_idx]*cos((t[f_bus] - t_shift[f_idx]) - (t[t_bus] - t_shift[t_idx]))) + (-g)*(vtap[f_idx]*vtap[t_idx]*sin((t[f_bus] - t_shift[f_idx]) - (t[t_bus] - t_shift[t_idx]))))
-vtap[f_idx] * tap_min <= v[f_bus] <= vtap[f_idx] * tap_max
+p[f_idx] == g*vm_tap[f_idx]^2 + (-g)*(vm_tap[f_idx]*vm_tap[t_idx]*cos((va[f_bus] - va_shift[f_idx]) - (va[t_bus] - va_shift[t_idx]))) + (-b)*(vm_tap[f_idx]*vm_tap[t_idx]*sin((va[f_bus] - va_shift[f_idx]) - (va[t_bus] - va_shift[t_idx]))))
+q[f_idx] == -(b+c/2)*vm_tap[f_idx]^2 - (-b)*(vm_tap[f_idx]*vm_tap[t_idx]*cos((va[f_bus] - va_shift[f_idx]) - (va[t_bus] - va_shift[t_idx]))) + (-g)*(vm_tap[f_idx]*vm_tap[t_idx]*sin((va[f_bus] - va_shift[f_idx]) - (va[t_bus] - va_shift[t_idx]))))
+vm_tap[f_idx] * tap_min <= vm[f_bus] <= vm_tap[f_idx] * tap_max
 ```
 """
-function constraint_variable_transformer_y_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tap_min, tap_max)
+function constraint_variable_transformer_y_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, g_shunt, tap_min, tap_max)
     p_fr = pm.var[:p][f_idx]
     q_fr = pm.var[:q][f_idx]
-    v_fr = pm.var[:v][f_bus]
-    v_to = pm.var[:v][t_bus]
-    t_fr = pm.var[:t][f_bus]
-    t_to = pm.var[:t][t_bus]
-    t_shift_fr = pm.var[:t_shift][f_idx]
-    t_shift_to = pm.var[:t_shift][t_idx]
-    vtap_fr = pm.var[:vtap][f_idx]
-    vtap_to = pm.var[:vtap][t_idx]
+    vm_fr = pm.var[:vm][f_bus]
+    vm_to = pm.var[:vm][t_bus]
+    va_fr = pm.var[:va][f_bus]
+    va_to = pm.var[:va][t_bus]
+    va_shift_fr = pm.var[:va_shift][f_idx]
+    va_shift_to = pm.var[:va_shift][t_idx]
+    vm_tap_fr = pm.var[:vm_tap][f_idx]
+    vm_tap_to = pm.var[:vm_tap][t_idx]
 
-    c1 = @NLconstraint(pm.model, p_fr == g*vtap_fr^2 + (-g)*(vtap_fr*vtap_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-b)*(vtap_fr*vtap_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to))))
-    c2 = @NLconstraint(pm.model, q_fr == -(b+c/2)*vtap_fr^2 - (-b)*(vtap_fr*vtap_to*cos((t_fr - t_shift_fr) - (t_to - t_shift_to))) + (-g)*(vtap_fr*vtap_to*sin((t_fr - t_shift_fr) - (t_to - t_shift_to))))
-    c3 = @constraint(pm.model, vtap_fr * tap_min <= v_fr)
-    c4 = @constraint(pm.model, v_fr <= vtap_fr * tap_max)
-    return Set([c1, c2, c3, c4])
+    @NLconstraint(pm.model, p_fr == (g + g_shunt / 2)*vm_tap_fr^2 + (-g)*(vm_tap_fr*vm_tap_to*cos((va_fr - va_shift_fr) - (va_to - va_shift_to))) + (-b)*(vm_tap_fr*vm_tap_to*sin((va_fr - va_shift_fr) - (va_to - va_shift_to))))
+    @NLconstraint(pm.model, q_fr == -(b+c/2)*vm_tap_fr^2 - (-b)*(vm_tap_fr*vm_tap_to*cos((va_fr - va_shift_fr) - (va_to - va_shift_to))) + (-g)*(vm_tap_fr*vm_tap_to*sin((va_fr - va_shift_fr) - (va_to - va_shift_to))))
+    @constraint(pm.model, vm_tap_fr * tap_min <= vm_fr)
+    @constraint(pm.model, vm_fr <= vm_tap_fr * tap_max)
 end
 
 """
 Creates Ohms constraints for shiftable PSTs / OLTCs
 
 ```
-p[t_idx] == g*vtap[t_idx]^2 + (-g)*(vtap[t_idx]*vtap[f_idx]*cos((t[t_bus] - t_shift[t_idx]) - (t[f_bus] - t_shift[f_idx]))) + (-b)*(vtap[t_idx]*vtap[f_idx]*sin((t[t_bus] - t_shift[t_idx]) - (t[f_bus] - t_shift[f_idx]))))
-q[t_idx] == -(b+c/2)*vtap[t_idx]^2 - (-b)*(vtap[t_idx]*vtap[f_idx]*cos((t[t_bus] - t_shift[t_idx]) - (t[f_bus] - t_shift[f_idx]))) + (-g)*(vtap[t_idx]*vtap[f_idx]*sin((t[t_bus] - t_shift[t_idx]) - (t[f_bus] - t_shift[f_idx]))))
-vtap[t_idx] * tap_min <= v[t_bus] <= vtap[t_idx] * tap_max
+p[t_idx] == g*vm_tap[t_idx]^2 + (-g)*(vm_tap[t_idx]*vm_tap[f_idx]*cos((va[t_bus] - va_shift[t_idx]) - (va[f_bus] - va_shift[f_idx]))) + (-b)*(vm_tap[t_idx]*vm_tap[f_idx]*sin((va[t_bus] - va_shift[t_idx]) - (va[f_bus] - va_shift[f_idx]))))
+q[t_idx] == -(b+c/2)*vm_tap[t_idx]^2 - (-b)*(vm_tap[t_idx]*vm_tap[f_idx]*cos((va[t_bus] - va_shift[t_idx]) - (va[f_bus] - va_shift[f_idx]))) + (-g)*(vm_tap[t_idx]*vm_tap[f_idx]*sin((va[t_bus] - va_shift[t_idx]) - (va[f_bus] - va_shift[f_idx]))))
+vm_tap[t_idx] * tap_min <= vm[t_bus] <= vm_tap[t_idx] * tap_max
 ```
 """
-function constraint_variable_transformer_y_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tap_min, tap_max)
+function constraint_variable_transformer_y_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, g_shunt, tap_min, tap_max)
     p_to = pm.var[:p][t_idx]
     q_to = pm.var[:q][t_idx]
-    v_fr = pm.var[:v][f_bus]
-    v_to = pm.var[:v][t_bus]
-    t_fr = pm.var[:t][f_bus]
-    t_to = pm.var[:t][t_bus]
-    t_shift_fr = pm.var[:t_shift][f_idx]
-    t_shift_to = pm.var[:t_shift][t_idx]
-    vtap_fr = pm.var[:vtap][f_idx]
-    vtap_to = pm.var[:vtap][t_idx]
+    vm_fr = pm.var[:vm][f_bus]
+    vm_to = pm.var[:vm][t_bus]
+    va_fr = pm.var[:va][f_bus]
+    va_to = pm.var[:va][t_bus]
+    va_shift_fr = pm.var[:va_shift][f_idx]
+    va_shift_to = pm.var[:va_shift][t_idx]
+    vm_tap_fr = pm.var[:vm_tap][f_idx]
+    vm_tap_to = pm.var[:vm_tap][t_idx]
 
-    c1 = @NLconstraint(pm.model, p_to == g*vtap_to^2 + (-g)*(vtap_to*vtap_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-b)*(vtap_to*vtap_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr))))
-    c2 = @NLconstraint(pm.model, q_to == -(b+c/2)*vtap_to^2 - (-b)*(vtap_to*vtap_fr*cos((t_to - t_shift_to) - (t_fr - t_shift_fr))) + (-g)*(vtap_to*vtap_fr*sin((t_to - t_shift_to) - (t_fr - t_shift_fr))))
-    c3 = @constraint(pm.model, vtap_to * tap_min <= v_to)
-    c4 = @constraint(pm.model, v_to <= vtap_to * tap_max)
-    return Set([c1, c2, c3, c4])
+    @NLconstraint(pm.model, p_to == (g + g_shunt / 2)*vm_tap_to^2 + (-g)*(vm_tap_to*vm_tap_fr*cos((va_to - va_shift_to) - (va_fr - va_shift_fr))) + (-b)*(vm_tap_to*vm_tap_fr*sin((va_to - va_shift_to) - (va_fr - va_shift_fr))))
+    @NLconstraint(pm.model, q_to == -(b+c/2)*vm_tap_to^2 - (-b)*(vm_tap_to*vm_tap_fr*cos((va_to - va_shift_to) - (va_fr - va_shift_fr))) + (-g)*(vm_tap_to*vm_tap_fr*sin((va_to - va_shift_to) - (va_fr - va_shift_fr))))
+    @constraint(pm.model, vm_tap_to * tap_min <= vm_to)
+    @constraint(pm.model, vm_to <= vm_tap_to * tap_max)
 end
 
 """
 Links voltage magnitudes of not tappable transformers with node voltage magnitudes
 
 ```
-vtap[f_idx] * tap == v[f_bus]
-vtap[t_idx] * tap == v[t_bus]
+vm_tap[f_idx] * tap == vm[f_bus]
+vm_tap[t_idx] * tap == vm[t_bus]
 ```
 """
 
 function constraint_link_voltage_magnitudes{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, tap_fr, tap_to)
-    v_fr = pm.var[:v][f_bus]
-    v_to = pm.var[:v][t_bus]
-    vtap_fr = pm.var[:vtap][f_idx]
-    vtap_to = pm.var[:vtap][t_idx]
-    c1 = @constraint(pm.model, vtap_fr * tap_fr == v_fr)
-    c2 = @constraint(pm.model, vtap_to * tap_to == v_to)
-    return Set([c1,c2])
+    vm_fr = pm.var[:vm][f_bus]
+    vm_to = pm.var[:vm][t_bus]
+    vm_tap_fr = pm.var[:vm_tap][f_idx]
+    vm_tap_to = pm.var[:vm_tap][t_idx]
+    @constraint(pm.model, vm_tap_fr * tap_fr == vm_fr)
+    @constraint(pm.model, vm_tap_to * tap_to == vm_to)
 end
 
 """
