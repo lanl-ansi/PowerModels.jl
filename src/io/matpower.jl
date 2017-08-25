@@ -49,8 +49,16 @@ function update_branch_transformer_settings(data::Dict{String,Any})
         append!(branches, data["ne_branch"])
     end
     for branch in branches
-        if branch["tap"] == 0.0
-            branch["transformer"] = false
+        if branch["tap"] == 0.0 && branch["shift"] == 0.0
+            if haskey(branch,"tap_fr_max")
+                if branch["tappable"] == 1 || branch["shiftable"] == 1
+                    branch["transformer"] = true
+                else
+                    branch["transformer"] = false
+                end
+            else
+                branch["transformer"] = false
+            end
             branch["tap"] = 1.0
             branch["tap_fr"] = 1.0
         else
