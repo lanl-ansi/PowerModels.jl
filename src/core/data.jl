@@ -258,6 +258,7 @@ function make_mixed_units(data::Dict{String,Any})
             apply_func(branch, "rate_b", rescale)
             apply_func(branch, "rate_c", rescale)
 
+            apply_func(branch, "shift", rad2deg)
             apply_func(branch, "shiftf", rad2deg)
             apply_func(branch, "shiftt", rad2deg)
             apply_func(branch, "shift_to_min", rad2deg)

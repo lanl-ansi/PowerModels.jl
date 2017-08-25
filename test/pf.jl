@@ -18,24 +18,6 @@
         @test isapprox(result["solution"]["dcline"]["1"]["qf"], -0.403045; atol = 1e-5)
         @test isapprox(result["solution"]["dcline"]["1"]["qt"],  0.0647562; atol = 1e-5)
     end
-    @testset "3-bus case with active DC line" begin
-        result = run_ac_pf("../test/data/case3_dc.m", ipopt_solver, setting = Dict("output" => Dict("line_flows" => true)))
-
-        @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 0; atol = 1e-2)
-
-        @test isapprox(result["solution"]["gen"]["2"]["pg"], 160.0063; atol = 1e-1)
-        @test isapprox(result["solution"]["gen"]["3"]["pg"], 0; atol = 1e-1)
-
-        @test isapprox(result["solution"]["bus"]["1"]["vm"], 1.10000; atol = 1e-3)
-        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.00000; atol = 1e-3)
-        @test isapprox(result["solution"]["bus"]["2"]["vm"], 0.92617; atol = 1e-3)
-        @test isapprox(result["solution"]["bus"]["3"]["vm"], 0.90000; atol = 1e-3)
-
-        @test isapprox(result["solution"]["dcline"]["1"]["p_from"], 10; atol = 1e-3)
-        @test isapprox(result["solution"]["dcline"]["1"]["p_to"], -10; atol = 1e-3)
-
-    end
     @testset "5-bus asymmetric case" begin
         result = run_pf("../test/data/case5_asym.m", ACPPowerModel, ipopt_solver)
 
