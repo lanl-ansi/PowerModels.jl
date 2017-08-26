@@ -7,7 +7,33 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
         status = solver_status_dict(Symbol(typeof(pm.model.solver).name.module), status)
     end
 
-    sol = solution_builder(pm)
+    sol = Dict{String,Any}()
+    data = Dict{String,Any}()
+
+    if pm.data["multinetwork"]
+        sol_nw = sol["nw"] = Dict{String,Any}()
+        data_nw = data["nw"] = Dict{String,Any}()
+
+        for (n,nw_data) in pm.data["nw"]
+            pm.cnw = parse(Int, n)
+            sol_nw[n] = solution_builder(pm, n)
+            data_nw[n] = Dict(
+                "name" => nw_data["name"],
+                "bus_count" => length(nw_data["bus"]),
+                "branch_count" => length(nw_data["branch"])
+            )
+        end
+
+        sol = sol_nw
+        data = data_nw
+    else
+        sol = solution_builder(pm)
+        data = Dict(
+            "name" => pm.data["name"],
+            "bus_count" => length(pm.data["bus"]),
+            "branch_count" => length(pm.data["branch"])
+        )
+    end
 
     solution = Dict{String,Any}(
         "solver" => string(typeof(pm.model.solver)),
@@ -20,12 +46,8 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
             "cpu" => Sys.cpu_info()[1].model,
             "memory" => string(Sys.total_memory()/2^30, " Gb")
             ),
-        "data" => Dict(
-            "name" => pm.data["name"],
-            "bus_count" => length(pm.data["bus"]),
-            "branch_count" => length(pm.data["branch"])
-            )
-        )
+        "data" => data
+    )
 
     pm.solution = solution
 
@@ -34,7 +56,13 @@ end
 
 ""
 function init_solution(pm::GenericPowerModel)
-    return Dict{String,Any}(key => pm.data[key] for key in ["per_unit", "baseMVA"])
+    data_keys = ["per_unit", "baseMVA"]
+    cn = "$(pm.cnw)"
+    if pm.data["multinetwork"]
+        return Dict{String,Any}(key => pm.data["nw"][cn][key] for key in data_keys)
+    else
+        return Dict{String,Any}(key => pm.data[key] for key in data_keys)
+    end
 end
 
 ""
@@ -122,8 +150,8 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
         sol_item[param_name] = default_value(item)
         try
-            var = extract_var(pm.var[variable_symbol], idx, item)
-            sol_item[param_name] = scale(getvalue(var), item)
+            variable = extract_var(var(pm, variable_symbol), idx, item)
+            sol_item[param_name] = scale(getvalue(variable), item)
         catch
         end
     end
