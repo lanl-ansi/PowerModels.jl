@@ -127,6 +127,35 @@ end
     #end
 end
 
+@testset "test dc+ll opf" begin
+    @testset "3-bus case" begin
+        result = run_opf("../test/data/case3.m", DCPLLPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 5885; atol = 1e0)
+    end
+    @testset "5-bus asymmetric case" begin
+        result = run_opf("../test/data/case5_asym.m", DCPLLPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 17693; atol = 1e0)
+    end
+    @testset "6-bus case" begin
+        result = run_opf("../test/data/case6.m", DCPLLPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 11515; atol = 1e0)
+        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
+    end
+    @testset "24-bus rts case" begin
+        result = run_opf("../test/data/case24.m", DCPLLPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 82240; atol = 1e0)
+    end
+end
+
 
 @testset "test soc opf" begin
     @testset "3-bus case" begin

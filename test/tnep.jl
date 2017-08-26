@@ -64,7 +64,7 @@ end
         check_tnep_status(result["solution"])
 
         @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 0; atol = 1e-2)
+        @test isapprox(result["objective"], 1; atol = 1e-2)
     end
 end
 
