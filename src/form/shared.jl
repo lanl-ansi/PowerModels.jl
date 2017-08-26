@@ -58,16 +58,16 @@ end
 enforces pv-like buses on both sides of a dcline
 """
 function constraint_voltage_dcline_setpoint{T <: AbstractWRForms}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
-    w_f = pm.var[:w][f_bus]
-    w_t = pm.var[:w][t_bus]
+    w_fr = pm.var[:w][f_bus]
+    w_to = pm.var[:w][t_bus]
     if epsilon == 0.0
-        @constraint(pm.model, w_f == vf^2)
-        @constraint(pm.model, w_t == vt^2)
+        @constraint(pm.model, w_fr == vf^2)
+        @constraint(pm.model, w_to == vt^2)
     else
-        @constraint(pm.model, w_f <= (vf + epsilon)^2)
-        @constraint(pm.model, w_f >= (vf - epsilon)^2)
-        @constraint(pm.model, w_t <= (vt + epsilon)^2)
-        @constraint(pm.model, w_t >= (vt - epsilon)^2)
+        @constraint(pm.model, w_fr <= (vf + epsilon)^2)
+        @constraint(pm.model, w_fr >= (vf - epsilon)^2)
+        @constraint(pm.model, w_to <= (vt + epsilon)^2)
+        @constraint(pm.model, w_to >= (vt - epsilon)^2)
     end
 end
 

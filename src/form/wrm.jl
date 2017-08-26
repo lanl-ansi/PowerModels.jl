@@ -17,7 +17,7 @@ SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SD
 variable_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}; kwargs...) = variable_voltage_product_matrix(pm; kwargs...)
 
 ""
-function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerModel{T})
+function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerModel{T}; bounded = true)
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
 
     w_index = 1:length(keys(pm.ref[:bus]))
@@ -36,12 +36,16 @@ function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerM
         wr_ii = WR[w_idx,w_idx]
         wi_ii = WR[w_idx,w_idx]
 
-        setlowerbound(wr_ii, bus["vmin"]^2)
-        setupperbound(wr_ii, bus["vmax"]^2)
+        if bounded
+            setlowerbound(wr_ii, bus["vmin"]^2)
+            setupperbound(wr_ii, bus["vmax"]^2)
 
-        #this breaks SCS on the 3 bus exmple
-        #setlowerbound(wi_ii, 0)
-        #setupperbound(wi_ii, 0)
+            #this breaks SCS on the 3 bus exmple
+            #setlowerbound(wi_ii, 0)
+            #setupperbound(wi_ii, 0)
+        else
+             setlowerbound(wr_ii, 0)
+        end
     end
 
     # bounds on off-diagonal
@@ -49,11 +53,13 @@ function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerM
         wi_idx = lookup_w_index[i]
         wj_idx = lookup_w_index[j]
 
-        setupperbound(WR[wi_idx, wj_idx], wr_max[(i,j)])
-        setlowerbound(WR[wi_idx, wj_idx], wr_min[(i,j)])
+        if bounded
+            setupperbound(WR[wi_idx, wj_idx], wr_max[(i,j)])
+            setlowerbound(WR[wi_idx, wj_idx], wr_min[(i,j)])
 
-        setupperbound(WI[wi_idx, wj_idx], wi_max[(i,j)])
-        setlowerbound(WI[wi_idx, wj_idx], wi_min[(i,j)])
+            setupperbound(WI[wi_idx, wj_idx], wi_max[(i,j)])
+            setlowerbound(WI[wi_idx, wj_idx], wi_min[(i,j)])
+        end
     end
 
     pm.ext[:lookup_w_index] = lookup_w_index
@@ -149,3 +155,38 @@ function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerMod
     #add_setpoint(sol, pm, "bus", "va", :va; default_value = 0)
 end
 
+
+function constraint_voltage_magnitude_setpoint{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, vm, epsilon)
+    w_index = pm.ext[:lookup_w_index][i]
+    w = pm.var[:WR][w_index, w_index]
+
+    if epsilon == 0.0
+        @constraint(pm.model, w == vm^2)
+    else
+        @assert epsilon > 0.0
+        @constraint(pm.model, w <= (vm + epsilon)^2)
+        @constraint(pm.model, w >= (vm - epsilon)^2)
+    end
+end
+
+
+"""
+enforces pv-like buses on both sides of a dcline
+"""
+function constraint_voltage_dcline_setpoint{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
+    w_fr_index = pm.ext[:lookup_w_index][f_bus]
+    w_to_index = pm.ext[:lookup_w_index][t_bus]
+
+    w_fr = pm.var[:WR][w_fr_index, w_fr_index]
+    w_to = pm.var[:WR][w_to_index, w_to_index]
+
+    if epsilon == 0.0
+        @constraint(pm.model, w_fr == vf^2)
+        @constraint(pm.model, w_to == vt^2)
+    else
+        @constraint(pm.model, w_fr <= (vf + epsilon)^2)
+        @constraint(pm.model, w_fr >= (vf - epsilon)^2)
+        @constraint(pm.model, w_to <= (vt + epsilon)^2)
+        @constraint(pm.model, w_to >= (vt - epsilon)^2)
+    end
+end
