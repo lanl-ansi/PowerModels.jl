@@ -20,7 +20,7 @@
     end
 end
 
-@testset "test line flow output" begin
+@testset "test branch flow output" begin
     @testset "24-bus rts case ac opf" begin
         result = run_opf("../test/data/case24.m", ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("line_flows" => true)))
 

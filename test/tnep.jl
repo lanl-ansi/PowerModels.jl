@@ -83,7 +83,7 @@ if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices")
 end
 
 
-@testset "test tnep line_flows" begin
+@testset "test tnep branch flow output" begin
     @testset "3-bus case" begin
         result = run_tnep("../test/data/case3_tnep.m", SOCWRPowerModel, pajarito_solver; setting = Dict("output" => Dict("line_flows" => true)))
 
