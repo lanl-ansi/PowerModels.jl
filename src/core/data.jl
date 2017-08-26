@@ -168,6 +168,10 @@ function make_per_unit(data::Dict{String,Any})
             apply_func(branch, "rate_c", rescale)
 
             apply_func(branch, "shift", deg2rad)
+            apply_func(branch, "shift_to_min", deg2rad)
+            apply_func(branch, "shift_to_max", deg2rad)
+            apply_func(branch, "shift_fr_min", deg2rad)
+            apply_func(branch, "shift_fr_max", deg2rad)
             apply_func(branch, "angmax", deg2rad)
             apply_func(branch, "angmin", deg2rad)
         end
@@ -255,6 +259,12 @@ function make_mixed_units(data::Dict{String,Any})
             apply_func(branch, "rate_c", rescale)
 
             apply_func(branch, "shift", rad2deg)
+            apply_func(branch, "shiftf", rad2deg)
+            apply_func(branch, "shiftt", rad2deg)
+            apply_func(branch, "shift_to_min", rad2deg)
+            apply_func(branch, "shift_to_max", rad2deg)
+            apply_func(branch, "shift_fr_min", rad2deg)
+            apply_func(branch, "shift_fr_max", rad2deg)
             apply_func(branch, "angmax", rad2deg)
             apply_func(branch, "angmin", rad2deg)
 
@@ -262,6 +272,22 @@ function make_mixed_units(data::Dict{String,Any})
             apply_func(branch, "pt", rescale)
             apply_func(branch, "qf", rescale)
             apply_func(branch, "qt", rescale)
+        end
+
+        for dcline in dclines
+            apply_func(dcline, "loss0", rescale)
+            apply_func(dcline, "pf", rescale)
+            apply_func(dcline, "pt", rescale)
+            apply_func(dcline, "qf", rescale)
+            apply_func(dcline, "qt", rescale)
+            apply_func(dcline, "pmaxt", rescale)
+            apply_func(dcline, "pmint", rescale)
+            apply_func(dcline, "pmaxf", rescale)
+            apply_func(dcline, "pminf", rescale)
+            apply_func(dcline, "qmaxt", rescale)
+            apply_func(dcline, "qmint", rescale)
+            apply_func(dcline, "qmaxf", rescale)
+            apply_func(dcline, "qminf", rescale)
         end
 
         for dcline in dclines
@@ -451,4 +477,3 @@ function check_dcline_limits(data)
         end
     end
 end
-

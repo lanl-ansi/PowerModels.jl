@@ -49,9 +49,18 @@ function update_branch_transformer_settings(data::Dict{String,Any})
         append!(branches, data["ne_branch"])
     end
     for branch in branches
-        if branch["tap"] == 0.0
-            branch["transformer"] = false
+        if branch["tap"] == 0.0 && branch["shift"] == 0.0
+            if haskey(branch,"tap_fr_max")
+                if branch["tappable"] == 1 || branch["shiftable"] == 1
+                    branch["transformer"] = true
+                else
+                    branch["transformer"] = false
+                end
+            else
+                branch["transformer"] = false
+            end
             branch["tap"] = 1.0
+            branch["tap_fr"] = 1.0
         else
             branch["transformer"] = true
         end
@@ -470,7 +479,11 @@ function parse_matpower_data(data_string::String)
                     "rate_b" => parse(Float64, branch_row[7]),
                     "rate_c" => parse(Float64, branch_row[8]),
                     "tap" => parse(Float64, branch_row[9]),
+                    "tap_fr" => parse(Float64, branch_row[9]),
+                    "tap_to" => 1,
                     "shift" => parse(Float64, branch_row[10]),
+                    "shift_fr" => parse(Float64, branch_row[10]),
+                    "shift_to" => 0,
                     "br_status" => parse(Int, branch_row[11]),
                     "angmin" => parse(Float64, branch_row[12]),
                     "angmax" => parse(Float64, branch_row[13]),

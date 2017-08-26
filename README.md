@@ -45,7 +45,6 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 
-
 ## License
 
 This code is provided under a BSD license as part of the Multi-Infrastructure Control and Optimization Toolkit (MICOT) project, LA-CC-13-108.

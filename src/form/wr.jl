@@ -333,7 +333,7 @@ end
 function variable_voltage_magnitude_sqr_to_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     buses = pm.ref[:bus]
     branches = pm.ref[:ne_branch]
-    
+
     pm.var[:w_to_ne] = @variable(pm.model,
         [i in keys(pm.ref[:ne_branch])], basename="w_to_ne",
         lowerbound = 0,
@@ -346,18 +346,18 @@ end
 function variable_voltage_product_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T})
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:ne_buspairs])
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in pm.ref[:ne_branch]])
-    
+
     pm.var[:wr_ne] = @variable(pm.model,
         [b in keys(pm.ref[:ne_branch])], basename="wr_ne",
-        lowerbound = min(0, wr_min[bi_bp[b]]), 
+        lowerbound = min(0, wr_min[bi_bp[b]]),
         upperbound = max(0, wr_max[bi_bp[b]]),
         start = getstart(pm.ref[:ne_buspairs], bi_bp[b], "wr_start", 1.0)
     )
-    
+
     pm.var[:wi_ne] = @variable(pm.model,
         [b in keys(pm.ref[:ne_branch])], basename="wi_ne",
         lowerbound = min(0, wi_min[bi_bp[b]]),
-        upperbound = max(0, wi_max[bi_bp[b]]), 
+        upperbound = max(0, wi_max[bi_bp[b]]),
         start = getstart(pm.ref[:ne_buspairs], bi_bp[b], "wi_start")
     )
 end
@@ -381,7 +381,7 @@ function variable_voltage_angle_difference{T}(pm::GenericPowerModel{T})
     pm.var[:td] = @variable(pm.model,
         [bp in keys(pm.ref[:buspairs])], basename="td",
         lowerbound = pm.ref[:buspairs][bp]["angmin"],
-        upperbound = pm.ref[:buspairs][bp]["angmax"], 
+        upperbound = pm.ref[:buspairs][bp]["angmax"],
         start = getstart(pm.ref[:buspairs], bp, "td_start")
     )
 end
@@ -389,7 +389,7 @@ end
 "Creates the voltage magnitude product variables"
 function variable_voltage_magnitude_product{T}(pm::GenericPowerModel{T})
     buspairs = pm.ref[:buspairs]
-    pm.var[:vv] = @variable(pm.model, 
+    pm.var[:vv] = @variable(pm.model,
         [bp in keys(pm.ref[:buspairs])], basename="vv",
         lowerbound = buspairs[bp]["vm_fr_min"]*buspairs[bp]["vm_to_min"],
         upperbound = buspairs[bp]["vm_fr_max"]*buspairs[bp]["vm_to_max"],
@@ -427,10 +427,10 @@ end
 
 ""
 function variable_sine(pm::GenericPowerModel)
-    pm.var[:si] = @variable(pm.model, 
+    pm.var[:si] = @variable(pm.model,
         [bp in keys(pm.ref[:buspairs])], basename="si",
         lowerbound = sin(pm.ref[:buspairs][bp]["angmin"]),
-        upperbound = sin(pm.ref[:buspairs][bp]["angmax"]), 
+        upperbound = sin(pm.ref[:buspairs][bp]["angmax"]),
         start = getstart(pm.ref[:buspairs], bp, "si_start")
     )
 end
@@ -628,17 +628,17 @@ function variable_cosine_on_off{T}(pm::GenericPowerModel{T})
         end
     end
 
-    pm.var[:cs] = @variable(pm.model, 
+    pm.var[:cs] = @variable(pm.model,
         [l in keys(pm.ref[:branch])], basename="cs",
         lowerbound = min(0, cos_min[l]),
-        upperbound = max(0, cos_max[l]), 
+        upperbound = max(0, cos_max[l]),
         start = getstart(pm.ref[:branch], l, "cs_start", 1.0)
     )
 end
 
 ""
 function variable_sine_on_off(pm::GenericPowerModel)
-    pm.var[:si] = @variable(pm.model, 
+    pm.var[:si] = @variable(pm.model,
         [l in keys(pm.ref[:branch])], basename="si",
         lowerbound = min(0, sin(pm.ref[:branch][l]["angmin"])),
         upperbound = max(0, sin(pm.ref[:branch][l]["angmax"])),

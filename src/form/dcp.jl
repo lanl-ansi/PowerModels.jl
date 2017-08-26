@@ -41,7 +41,7 @@ end
 ""
 function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T}; bounded = true)
     if bounded
-        pm.var[:p] = @variable(pm.model, 
+        pm.var[:p] = @variable(pm.model,
             [(l,i,j) in pm.ref[:arcs_from]], basename="p",
             lowerbound = -pm.ref[:branch][l]["rate_a"],
             upperbound =  pm.ref[:branch][l]["rate_a"],
@@ -54,7 +54,7 @@ function variable_active_line_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T
         )
     end
 
-    # this explicit type erasure is necessary 
+    # this explicit type erasure is necessary
     p_expr = Dict{Any,Any}([((l,i,j), pm.var[:p][(l,i,j)]) for (l,i,j) in pm.ref[:arcs_from]])
     p_expr = merge(p_expr, Dict([((l,j,i), -1.0*pm.var[:p][(l,i,j)]) for (l,i,j) in pm.ref[:arcs_from]]))
     pm.var[:p] = p_expr
@@ -62,14 +62,14 @@ end
 
 ""
 function variable_active_line_flow_ne{T <: StandardDCPForm}(pm::GenericPowerModel{T})
-    pm.var[:p_ne] = @variable(pm.model, 
+    pm.var[:p_ne] = @variable(pm.model,
         [(l,i,j) in pm.ref[:ne_arcs_from]], basename="p_ne",
         lowerbound = -pm.ref[:ne_branch][l]["rate_a"],
         upperbound =  pm.ref[:ne_branch][l]["rate_a"],
         start = getstart(pm.ref[:ne_branch], l, "p_start")
     )
 
-    # this explicit type erasure is necessary 
+    # this explicit type erasure is necessary
     p_ne_expr = Dict{Any,Any}([((l,i,j), 1.0*pm.var[:p_ne][(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]])
     p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*pm.var[:p_ne][(l,i,j)]) for (l,i,j) in pm.ref[:ne_arcs_from]]))
     pm.var[:p_ne] = p_ne_expr
@@ -133,6 +133,31 @@ end
 
 "Do nothing, this model is symmetric"
 constraint_ohms_yt_to{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) = Set()
+
+"""
+Creates Ohms constraints for shiftable PSTs / OLTCs
+
+```
+p[f_idx] == -b*((t[f_bus] - t_shift[f_idx]) - (t[t_bus] - t_shift[t_idx]))
+```
+"""
+function constraint_variable_transformer_y_from{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, g_shunt, tap_min, tap_max)
+    p_fr = pm.var[:p][f_idx]
+    va_fr = pm.var[:va][f_bus]
+    va_to = pm.var[:va][t_bus]
+    va_shift_fr = pm.var[:va_shift][f_idx]
+    va_shift_to = pm.var[:va_shift][t_idx]
+
+    @constraint(pm.model, p_fr ==  g_shunt/2 + (-b)*((va_fr - va_shift_fr) - (va_to - va_shift_to)))
+    # omit reactive constraint
+end
+
+"Do nothing, this model is symmetric"
+constraint_variable_transformer_y_to{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, g_shunt, tap_min, tap_max) = Set()
+
+"Do nothing, there are no voltage magnitude variables"
+constraint_link_voltage_magnitudes{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, tap_fr, tap_to) = Set()
+
 
 function constraint_ohms_yt_from_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
     p_fr = pm.var[:p_ne][f_idx]
