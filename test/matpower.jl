@@ -32,10 +32,10 @@ using JSON
     end
 
     @testset "2-bus case file with spaces" begin
-        result = run_opf("../test/data/case2.m", ACPPowerModel, ipopt_solver)
+        result = run_pf("../test/data/case2.m", ACPPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 184.70; atol = 1e-1)
+        @test isapprox(result["objective"], 0.0; atol = 1e-1)
     end
 end
 

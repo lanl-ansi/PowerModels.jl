@@ -36,27 +36,6 @@ constraint_theta_ref{T <: AbstractWRForm}(pm::GenericPowerModel{T}, ref_bus::Int
 
 
 """
-```
-sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w[i]
-sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w[i]
-```
-"""
-function constraint_kcl_shunt_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
-    w = pm.var[:w][i]
-    p = pm.var[:p]
-    q = pm.var[:q]
-    p_ne = pm.var[:p_ne]
-    q_ne = pm.var[:q_ne]
-    pg = pm.var[:pg]
-    qg = pm.var[:qg]
-
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w)
-    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w)
-end
-
-
-
-"""
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 
 ```

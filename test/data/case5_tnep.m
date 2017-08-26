@@ -56,3 +56,15 @@ mpc.ne_branch = [
 	1	 4	 0.00304	 0.0304	 0.00658	 426	 426	 426	 0.0	 0.0	 1	 -30.0	 30.0	 1;
 	1	 4	 0.00304	 0.0304	 0.00658	 0.0	 0.0	 0.0	 0.0	 0.0	 1	 -30.0	 30.0	 0;
 ];
+
+%% dcline data
+%	fbus	tbus	status	Pf	Pt	Qf	Qt	Vf	Vt	Pmin	Pmax	QminF	QmaxF	QminT	QmaxT	loss0	loss1
+mpc.dcline = [
+	3	5	1	10	8.9	99.9934	-10.4049	1.1	1.05304	10	100 	-100	100	-100 100	1	0.01;
+];
+
+%% dcline cost data
+%	2	startup	shutdown	n	c(n-1)	...	c0
+mpc.dclinecost = [
+	2	 0.0	 0.0	 3	   0.000000	  40.000000	   0.000000;
+];
