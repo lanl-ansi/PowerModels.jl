@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Added JuMP v0.18 compatibility
 - Added pm.var and made all JuMP variables anonymous (breaking)
 - Added support for SDP, ACR, and ACT Power Flow formulations
+- Added cost model zero filtering to matpower parser
 - Eliminated usage of pm.model.ext, for details see [#149](https://github.com/lanl-ansi/PowerModels.jl/pull/149)
 - Made solution default units per-unit (breaking)
 - Removed deprecated bus-less constraint_theta_ref function (breaking)
