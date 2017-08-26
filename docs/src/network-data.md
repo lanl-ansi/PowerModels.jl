@@ -73,13 +73,39 @@ The PowerModels network data dictionary differs from the Matpower format in the 
 - Special treatment is given to the optional `ne_branch` matrix to support the TNEP problem.
 
 
+## Working with the Network Data Dictionary
+
+Data exchange via JSON files is ideal for building algorithms, however it is hard to for humans to read and process.  To that end PowerModels provides various helper functions for manipulating the network data dictionary.
+
+The first of these helper functions are `make_per_unit` and `make_mixed_units`, which convert the units of the data inside a network data dictionary.  The *mixed units* format follows the unit conventions from Matpower and other common power network formats where some of the values are in per unit and others are the true values.  These functions can be used as follows,
+
+```
+network_data = PowerModels.parse_file("nesta_case3_lmbd.m")
+display(network_data) # default per-unit form
+PowerModels.make_mixed_units(network_data)
+display(network_data) # mixed units form
+```
+
+Another useful helper function is `update_data`, which takes two network data dictionaries and updates the values in the first dictionary with the values from the second dictionary.  This is particularly helpful when applying sparse updates to network data.  A good example is using the solution of one computation to update the data in preparation for a second computation, like so,
+```
+data = PowerModels.parse_file("nesta_case3_lmbd.m")
+opf_result = run_ac_opf(data, IpoptSolver())
+
+PowerModels.update_data(data, opf_result["solution"])
+pf_result = run_ac_pf(data, IpoptSolver())
+``` 
+
+For details on all of the network data helper functions see, `src/core/data.jl`. 
+
+
 ## Working with Matpower Data Files
 
-The data exchange via JSON files is ideal for building algorithms, however it is hard to for humans to read and process.  To that end PowerModels also has extensive support for parsing Matpower network files in the `.m` format.
+PowerModels has extensive support for parsing Matpower network files in the `.m` format.
 
 In addition to parsing the standard Matpower parameters, PowerModels also supports extending the standard Matpower format in a number of ways as illustrated by the following examples.  In these examples JSON document fragments are used to indicate the structure of the PowerModel dictionary.
 
 Note that for DC lines, the flow results are returned using the same convention as for the AC lines, i.e. positive values for `p_from`/`q_from `and `p_to`/`q_to` indicating power flow from the 'to' node or 'from' node into the line. This means that w.r.t matpower the sign is identical for `p_from`, but opposite for `q_from`/`p_to`/`q_to`.
+
 
 ### Single Values
 Single values are added to the root of the dictionary as follows,
