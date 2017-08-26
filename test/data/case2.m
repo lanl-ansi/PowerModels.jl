@@ -1,5 +1,6 @@
 % Case to test space based matlab matrix
 % And other hard to parse cases
+% also test data without a generator cost model
 
 function mpc = case2
 mpc.version = '2';

@@ -6,9 +6,10 @@ function check_tnep_status(sol)
     end
 end
 
+
 @testset "test soc tnep" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/case3_tnep.m", SOCWRPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/case3_tnep.m", SOCWRPowerModel, pajarito_solver; setting = Dict("output" => Dict("line_flows" => true)))
 
         check_tnep_status(result["solution"])
 
@@ -24,9 +25,6 @@ end
         @test isapprox(result["objective"], 1; atol = 1e-2)
     end
 end
-
-
-
 
 @testset "test dc tnep" begin
     @testset "3-bus case" begin
@@ -69,7 +67,6 @@ end
 end
 
 
-
 if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
 
     @testset "test ac tnep" begin
@@ -80,6 +77,30 @@ if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices")
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 1; atol = 1e-2)
+        end
+    end
+
+end
+
+
+@testset "test tnep line_flows" begin
+    @testset "3-bus case" begin
+        result = run_tnep("../test/data/case3_tnep.m", SOCWRPowerModel, pajarito_solver; setting = Dict("output" => Dict("line_flows" => true)))
+
+        check_tnep_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 2; atol = 1e-2)
+
+        branches = result["solution"]["branch"]
+        ne_branches = result["solution"]["ne_branch"]
+        flow_keys = ["pf","qf","pt","qt"]
+
+        for fk in flow_keys
+            @test !isnan(branches["1"][fk])
+            @test !isnan(ne_branches["1"][fk])
+            @test !isnan(ne_branches["2"][fk])
+            @test !isnan(ne_branches["3"][fk])
         end
     end
 end
