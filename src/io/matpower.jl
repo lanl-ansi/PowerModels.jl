@@ -17,6 +17,8 @@ function parse_matpower(file_string::String)
     # after this call, Matpower data is consistent with PowerModels data
     mp_data_to_pm_data(mp_data)
 
+    mp_data["multinetwork"] = false
+
     return mp_data
 end
 

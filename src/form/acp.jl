@@ -74,14 +74,14 @@ sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[
 sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*v^2
 ```
 """
-function constraint_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
-    vm = pm.var[:vm][i]
-    p = pm.var[:p]
-    q = pm.var[:q]
-    pg = pm.var[:pg]
-    qg = pm.var[:qg]
-    p_dc = pm.var[:p_dc]
-    q_dc = pm.var[:q_dc]
+function constraint_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
+    vm = pm.var[:nw][n][:vm][i]
+    p = pm.var[:nw][n][:p]
+    q = pm.var[:nw][n][:q]
+    pg = pm.var[:nw][n][:pg]
+    qg = pm.var[:nw][n][:qg]
+    p_dc = pm.var[:nw][n][:p_dc]
+    q_dc = pm.var[:nw][n][:q_dc]
 
     @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*vm^2)
     @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*vm^2)
@@ -116,13 +116,13 @@ p[f_idx] == g/tm*v[f_bus]^2 + (-g*tr+b*ti)/tm*(v[f_bus]*v[t_bus]*cos(t[f_bus]-t[
 q[f_idx] == -(b+c/2)/tm*v[f_bus]^2 - (-b*tr-g*ti)/tm*(v[f_bus]*v[t_bus]*cos(t[f_bus]-t[t_bus])) + (-g*tr+b*ti)/tm*(v[f_bus]*v[t_bus]*sin(t[f_bus]-t[t_bus]))
 ```
 """
-function constraint_ohms_yt_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    p_fr = pm.var[:p][f_idx]
-    q_fr = pm.var[:q][f_idx]
-    vm_fr = pm.var[:vm][f_bus]
-    vm_to = pm.var[:vm][t_bus]
-    va_fr = pm.var[:va][f_bus]
-    va_to = pm.var[:va][t_bus]
+function constraint_ohms_yt_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    p_fr = pm.var[:nw][n][:p][f_idx]
+    q_fr = pm.var[:nw][n][:q][f_idx]
+    vm_fr = pm.var[:nw][n][:vm][f_bus]
+    vm_to = pm.var[:nw][n][:vm][t_bus]
+    va_fr = pm.var[:nw][n][:va][f_bus]
+    va_to = pm.var[:nw][n][:va][t_bus]
 
     @NLconstraint(pm.model, p_fr == g/tm*vm_fr^2 + (-g*tr+b*ti)/tm*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm*(vm_fr*vm_to*sin(va_fr-va_to)) )
     @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*vm_fr^2 - (-b*tr-g*ti)/tm*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm*(vm_fr*vm_to*sin(va_fr-va_to)) )
@@ -136,13 +136,13 @@ p[t_idx] == g*v[t_bus]^2 + (-g*tr-b*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[t_bus]-t[f_b
 q[t_idx] == -(b+c/2)*v[t_bus]^2 - (-b*tr+g*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[f_bus]-t[t_bus])) + (-g*tr-b*ti)/tm*(v[t_bus]*v[f_bus]*sin(t[t_bus]-t[f_bus]))
 ```
 """
-function constraint_ohms_yt_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    p_to = pm.var[:p][t_idx]
-    q_to = pm.var[:q][t_idx]
-    vm_fr = pm.var[:vm][f_bus]
-    vm_to = pm.var[:vm][t_bus]
-    va_fr = pm.var[:va][f_bus]
-    va_to = pm.var[:va][t_bus]
+function constraint_ohms_yt_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    p_to = pm.var[:nw][n][:p][t_idx]
+    q_to = pm.var[:nw][n][:q][t_idx]
+    vm_fr = pm.var[:nw][n][:vm][f_bus]
+    vm_to = pm.var[:nw][n][:vm][t_bus]
+    va_fr = pm.var[:nw][n][:va][f_bus]
+    va_to = pm.var[:nw][n][:va][t_bus]
 
     @NLconstraint(pm.model, p_to == g*vm_to^2 + (-g*tr-b*ti)/tm*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm*(vm_to*vm_fr*sin(va_to-va_fr)) )
     @NLconstraint(pm.model, q_to == -(b+c/2)*vm_to^2 - (-b*tr+g*ti)/tm*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm*(vm_to*vm_fr*sin(va_to-va_fr)) )

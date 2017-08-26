@@ -22,8 +22,8 @@ AbstractWRForms = Union{AbstractACTForm, AbstractWRForm}
 AbstractPForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm}
 
 "`t[ref_bus] == 0`"
-function constraint_theta_ref{T <: AbstractPForms}(pm::GenericPowerModel{T}, ref_bus::Int)
-    @constraint(pm.model, pm.var[:va][ref_bus] == 0)
+function constraint_theta_ref{T <: AbstractPForms}(pm::GenericPowerModel{T}, n::Int, i::Int)
+    @constraint(pm.model, pm.var[:nw][n][:va][i] == 0)
 end
 
 """
@@ -32,9 +32,9 @@ t[f_bus] - t[t_bus] <= angmax
 t[f_bus] - t[t_bus] >= angmin
 ```
 """
-function constraint_voltage_angle_difference{T <: AbstractPForms}(pm::GenericPowerModel{T}, f_bus, t_bus, angmin, angmax)
-    va_fr = pm.var[:va][f_bus]
-    va_to = pm.var[:va][t_bus]
+function constraint_voltage_angle_difference{T <: AbstractPForms}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, angmin, angmax)
+    va_fr = pm.var[:nw][n][:va][f_bus]
+    va_to = pm.var[:nw][n][:va][t_bus]
 
     @constraint(pm.model, va_fr - va_to <= angmax)
     @constraint(pm.model, va_fr - va_to >= angmin)
