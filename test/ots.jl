@@ -68,7 +68,7 @@ end
 end
 
 
-@testset "test dc-losses ots" begin
+@testset "test dc+ll ots" begin
     @testset "3-bus case" begin
         result = run_ots("../test/data/case3.m", DCPLLPowerModel, pajarito_solver)
 
