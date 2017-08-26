@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- none
+
+### v0.4.0
 - Added JuMP v0.18 compatibility
 - Added pm.var and made all JuMP variables anonymous (breaking)
 - Added support for SDP, ACR, and ACT Power Flow formulations
