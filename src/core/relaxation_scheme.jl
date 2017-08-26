@@ -1,5 +1,6 @@
 "constraint: `c^2 + d^2 <= a*b`"
 function relaxation_complex_product(m, a, b, c, d)
+    @assert (getlowerbound(a) >= 0 && getlowerbound(b) >= 0) || (getupperbound(a) <= 0 && getupperbound(b) <= 0)
     @constraint(m, c^2 + d^2 <= a*b)
 end
 
@@ -171,9 +172,13 @@ end
 
 """
 On/Off variant of binlinear term (McCormick)
-NOTE: assumes all variables (x,y,z) go to zero with ind
+requires that all variables (x,y,z) go to zero with ind
 """
 function relaxation_product_on_off(m, x, y, z, ind)
+    @assert getlowerbound(x) <= 0 && getupperbound(x) >= 0
+    @assert getlowerbound(y) <= 0 && getupperbound(y) >= 0
+    @assert getlowerbound(z) <= 0 && getupperbound(z) >= 0
+
     x_ub = getupperbound(x)
     x_lb = getlowerbound(x)
     y_ub = getupperbound(y)
@@ -184,3 +189,4 @@ function relaxation_product_on_off(m, x, y, z, ind)
     @constraint(m, z <= x_lb*y + y_ub*x - ind*x_lb*y_ub)
     @constraint(m, z <= x_ub*y + y_lb*x - ind*x_ub*y_lb)
 end
+
