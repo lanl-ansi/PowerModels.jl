@@ -27,34 +27,34 @@ function post_api_opf(pm::GenericPowerModel)
 
     constraint_voltage(pm)
 
-    for (i,bus) in pm.ref[:ref_buses]
-        constraint_theta_ref(pm, bus)
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
     end
 
-    for (i,gen) in pm.ref[:gen]
-        pg = pm.var[:pg][i]
+    for (i,gen) in ref(pm, :gen)
+        pg = var(pm,:pg,i)
         @constraint(pm.model, pg >= gen["pmin"])
     end
 
-    for (i,bus) in pm.ref[:bus]
-        constraint_kcl_shunt_scaled(pm, bus)
+    for i in ids(pm, :bus)
+        constraint_kcl_shunt_scaled(pm, i)
     end
 
-    for (i,branch) in pm.ref[:branch]
-        constraint_ohms_yt_from(pm, branch)
-        constraint_ohms_yt_to(pm, branch)
+    for i in ids(pm, :branch)
+        constraint_ohms_yt_from(pm, i)
+        constraint_ohms_yt_to(pm, i)
 
-        constraint_voltage_angle_difference(pm, branch)
+        constraint_voltage_angle_difference(pm, i)
 
-        constraint_thermal_limit_from(pm, branch; scale = 0.999)
-        constraint_thermal_limit_to(pm, branch; scale = 0.999)
+        constraint_thermal_limit_from(pm, i; scale = 0.999)
+        constraint_thermal_limit_to(pm, i; scale = 0.999)
     end
 
-
-    for (i,dcline) in pm.ref[:dcline]
-        constraint_dcline(pm, dcline)
+    for i in ids(pm, :dcline)
+        constraint_dcline(pm, i)
     end
 end
+
 
 ""
 function run_sad_opf(file, model_constructor, solver; kwargs...)
@@ -62,7 +62,7 @@ function run_sad_opf(file, model_constructor, solver; kwargs...)
 end
 
 ""
-function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericPowerModel{T})
+function post_sad_opf{T <: AbstractPForms}(pm::GenericPowerModel{T})
     variable_voltage(pm)
     variable_generation(pm)
     variable_line_flow(pm)
@@ -74,30 +74,30 @@ function post_sad_opf{T <: Union{AbstractACPForm, AbstractDCPForm}}(pm::GenericP
 
     constraint_voltage(pm)
 
-    for (i,bus) in pm.ref[:ref_buses]
-        constraint_theta_ref(pm, bus)
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
     end
 
-    for (i,bus) in pm.ref[:bus]
-        constraint_kcl_shunt(pm, bus)
+    for i in ids(pm, :bus)
+        constraint_kcl_shunt(pm, i)
     end
 
-    for (i,branch) in pm.ref[:branch]
-        constraint_ohms_yt_from(pm, branch)
-        constraint_ohms_yt_to(pm, branch)
+    for (i,branch) in ref(pm, :branch)
+        constraint_ohms_yt_from(pm, i)
+        constraint_ohms_yt_to(pm, i)
 
-        constraint_voltage_angle_difference(pm, branch)
-        theta_fr = pm.var[:va][branch["f_bus"]]
-        theta_to = pm.var[:va][branch["t_bus"]]
+        constraint_voltage_angle_difference(pm, i)
+        theta_fr = var(pm, :va, branch["f_bus"])
+        theta_to = var(pm, :va, branch["t_bus"])
 
         @constraint(pm.model, theta_fr - theta_to <=  theta_delta_bound)
         @constraint(pm.model, theta_fr - theta_to >= -theta_delta_bound)
 
-        constraint_thermal_limit_from(pm, branch; scale = 0.999)
-        constraint_thermal_limit_to(pm, branch; scale = 0.999)
+        constraint_thermal_limit_from(pm, i; scale = 0.999)
+        constraint_thermal_limit_to(pm, i; scale = 0.999)
     end
 
-    for (i,dcline) in pm.ref[:dcline]
-        constraint_dcline(pm, dcline)
+    for i in ids(pm, :dcline)
+        constraint_dcline(pm, i)
     end
 end
