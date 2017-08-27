@@ -78,14 +78,14 @@ sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[
 sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w[i]
 ```
 """
-function constraint_kcl_shunt{T <: AbstractWRForms}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
-    w = pm.var[:w][i]
-    p = pm.var[:p]
-    q = pm.var[:q]
-    pg = pm.var[:pg]
-    qg = pm.var[:qg]
-    p_dc = pm.var[:p_dc]
-    q_dc = pm.var[:q_dc]
+function constraint_kcl_shunt{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
+    w = pm.var[:nw][n][:w][i]
+    p = pm.var[:nw][n][:p]
+    q = pm.var[:nw][n][:q]
+    pg = pm.var[:nw][n][:pg]
+    qg = pm.var[:nw][n][:qg]
+    p_dc = pm.var[:nw][n][:p_dc]
+    q_dc = pm.var[:nw][n][:q_dc]
 
     @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w)
     @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w)
@@ -117,12 +117,12 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_from{T <: AbstractWRForms}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    p_fr = pm.var[:p][f_idx]
-    q_fr = pm.var[:q][f_idx]
-    w_fr = pm.var[:w][f_bus]
-    wr = pm.var[:wr][(f_bus, t_bus)]
-    wi = pm.var[:wi][(f_bus, t_bus)]
+function constraint_ohms_yt_from{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    p_fr = pm.var[:nw][n][:p][f_idx]
+    q_fr = pm.var[:nw][n][:q][f_idx]
+    w_fr = pm.var[:nw][n][:w][f_bus]
+    wr = pm.var[:nw][n][:wr][(f_bus, t_bus)]
+    wi = pm.var[:nw][n][:wi][(f_bus, t_bus)]
 
     @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
     @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
@@ -132,12 +132,12 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_to{T <: AbstractWRForms}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
-    q_to = pm.var[:q][t_idx]
-    p_to = pm.var[:p][t_idx]
-    w_to = pm.var[:w][t_bus]
-    wr = pm.var[:wr][(f_bus, t_bus)]
-    wi = pm.var[:wi][(f_bus, t_bus)]
+function constraint_ohms_yt_to{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+    q_to = pm.var[:nw][n][:q][t_idx]
+    p_to = pm.var[:nw][n][:p][t_idx]
+    w_to = pm.var[:nw][n][:w][t_bus]
+    wr = pm.var[:nw][n][:wr][(f_bus, t_bus)]
+    wi = pm.var[:nw][n][:wi][(f_bus, t_bus)]
 
     @constraint(pm.model, p_to == g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
     @constraint(pm.model, q_to == -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )

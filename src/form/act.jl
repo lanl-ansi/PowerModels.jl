@@ -17,19 +17,19 @@ ACTPowerModel(data::Dict{String,Any}; kwargs...) =
     GenericPowerModel(data, StandardACTForm; kwargs...)
 
 ""
-function variable_voltage{T <: AbstractACTForm}(pm::GenericPowerModel{T}; kwargs...)
-    variable_voltage_angle(pm; kwargs...)
-    variable_voltage_magnitude_sqr(pm; kwargs...)
-    variable_voltage_product(pm; kwargs...)
+function variable_voltage{T <: AbstractACTForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...)
+    variable_voltage_angle(pm, n; kwargs...)
+    variable_voltage_magnitude_sqr(pm, n; kwargs...)
+    variable_voltage_product(pm, n; kwargs...)
 end
 
-function constraint_voltage{T <: StandardACTForm}(pm::GenericPowerModel{T})
-    t = pm.var[:va]
-    w = pm.var[:w]
-    wr = pm.var[:wr]
-    wi = pm.var[:wi]
+function constraint_voltage{T <: StandardACTForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw)
+    t = pm.var[:nw][n][:va]
+    w = pm.var[:nw][n][:w]
+    wr = pm.var[:nw][n][:wr]
+    wi = pm.var[:nw][n][:wi]
 
-    for (i,j) in keys(pm.ref[:buspairs])
+    for (i,j) in keys(pm.ref[:nw][n][:buspairs])
         @NLconstraint(pm.model, wr[(i,j)]^2 + wi[(i,j)]^2 == w[i]*w[j])
         @NLconstraint(pm.model, wi[(i,j)]/wr[(i,j)] == tan(t[i] - t[j]))
     end

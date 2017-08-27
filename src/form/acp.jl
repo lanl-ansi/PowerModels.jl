@@ -156,13 +156,13 @@ p[f_idx] == g*(v[f_bus]/tr)^2 + -g*v[f_bus]/tr*v[t_bus]*cos(t[f_bus]-t[t_bus]-as
 q[f_idx] == -(b+c/2)*(v[f_bus]/tr)^2 + b*v[f_bus]/tr*v[t_bus]*cos(t[f_bus]-t[t_bus]-as) + -g*v[f_bus]/tr*v[t_bus]*sin(t[f_bus]-t[t_bus]-as)
 ```
 """
-function constraint_ohms_y_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
-    p_fr = pm.var[:p][f_idx]
-    q_fr = pm.var[:q][f_idx]
-    vm_fr = pm.var[:vm][f_bus]
-    vm_to = pm.var[:vm][t_bus]
-    va_fr = pm.var[:va][f_bus]
-    va_to = pm.var[:va][t_bus]
+function constraint_ohms_y_from{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
+    p_fr = pm.var[:nw][n][:p][f_idx]
+    q_fr = pm.var[:nw][n][:q][f_idx]
+    vm_fr = pm.var[:nw][n][:vm][f_bus]
+    vm_to = pm.var[:nw][n][:vm][t_bus]
+    va_fr = pm.var[:nw][n][:va][f_bus]
+    va_to = pm.var[:nw][n][:va][t_bus]
 
     @NLconstraint(pm.model, p_fr == g*(vm_fr/tr)^2 + -g*vm_fr/tr*vm_to*cos(va_fr-va_to-as) + -b*vm_fr/tr*vm_to*sin(va_fr-va_to-as) )
     @NLconstraint(pm.model, q_fr == -(b+c/2)*(vm_fr/tr)^2 + b*vm_fr/tr*vm_to*cos(va_fr-va_to-as) + -g*vm_fr/tr*vm_to*sin(va_fr-va_to-as) )
@@ -176,13 +176,13 @@ p[t_idx] == g*v[t_bus]^2 + -g*v[t_bus]*v[f_bus]/tr*cos(t[t_bus]-t[f_bus]+as) + -
 q_to == -(b+c/2)*v[t_bus]^2 + b*v[t_bus]*v[f_bus]/tr*cos(t[f_bus]-t[t_bus]+as) + -g*v[t_bus]*v[f_bus]/tr*sin(t[t_bus]-t[f_bus]+as)
 ```
 """
-function constraint_ohms_y_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
-    p_to = pm.var[:p][t_idx]
-    q_to = pm.var[:q][t_idx]
-    vm_fr = pm.var[:vm][f_bus]
-    vm_to = pm.var[:vm][t_bus]
-    va_fr = pm.var[:va][f_bus]
-    va_to = pm.var[:va][t_bus]
+function constraint_ohms_y_to{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
+    p_to = pm.var[:nw][n][:p][t_idx]
+    q_to = pm.var[:nw][n][:q][t_idx]
+    vm_fr = pm.var[:nw][n][:vm][f_bus]
+    vm_to = pm.var[:nw][n][:vm][t_bus]
+    va_fr = pm.var[:nw][n][:va][f_bus]
+    va_to = pm.var[:nw][n][:va][t_bus]
 
     @NLconstraint(pm.model, p_to == g*vm_to^2 + -g*vm_to*vm_fr/tr*cos(va_to-va_fr+as) + -b*vm_to*vm_fr/tr*sin(va_to-va_fr+as) )
     @NLconstraint(pm.model, q_to == -(b+c/2)*vm_to^2 + b*vm_to*vm_fr/tr*cos(va_to-va_fr+as) + -g*vm_to*vm_fr/tr*sin(va_to-va_fr+as) )

@@ -20,16 +20,16 @@ function constraint_thermal_limit_to(pm::GenericPowerModel, n::Int, t_idx, rate_
 end
 
 "`norm([p[f_idx]; q[f_idx]]) <= rate_a`"
-function constraint_thermal_limit_from{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, f_idx, rate_a)
-    p_fr = pm.var[:p][f_idx]
-    q_fr = pm.var[:q][f_idx]
+function constraint_thermal_limit_from{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, n::Int, f_idx, rate_a)
+    p_fr = pm.var[:nw][n][:p][f_idx]
+    q_fr = pm.var[:nw][n][:q][f_idx]
     @constraint(pm.model, norm([p_fr; q_fr]) <= rate_a)
 end
 
 "`norm([p[t_idx]; q[t_idx]]) <= rate_a`"
-function constraint_thermal_limit_to{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, t_idx, rate_a)
-    p_to = pm.var[:p][t_idx]
-    q_to = pm.var[:q][t_idx]
+function constraint_thermal_limit_to{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, n::Int, t_idx, rate_a)
+    p_to = pm.var[:nw][n][:p][t_idx]
+    q_to = pm.var[:nw][n][:q][t_idx]
     @constraint(pm.model, norm([p_to; q_to]) <= rate_a)
 end
 
@@ -86,9 +86,9 @@ Creates Line Flow constraint for DC Lines (Matpower Formulation)
 p_fr + p_to == loss0 + p_fr * loss1
 ```
 """
-function constraint_dcline{T}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
-    p_fr = pm.var[:p_dc][f_idx]
-    p_to = pm.var[:p_dc][t_idx]
+function constraint_dcline{T}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
+    p_fr = pm.var[:nw][n][:p_dc][f_idx]
+    p_to = pm.var[:nw][n][:p_dc][t_idx]
 
     @constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0) == 0)
 end

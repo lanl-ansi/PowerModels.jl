@@ -36,22 +36,22 @@ end
 
 
 "real part of the voltage variable `i` in `bus`es"
-function variable_voltage_real(pm::GenericPowerModel; bounded::Bool = true)
-    pm.var[:vr] = @variable(pm.model, 
-        [i in keys(pm.ref[:bus])], basename="vr",
-        lowerbound = -pm.ref[:bus][i]["vmax"],
-        upperbound =  pm.ref[:bus][i]["vmax"], 
-        start = getstart(pm.ref[:bus], i, "vr_start", 1.0)
+function variable_voltage_real(pm::GenericPowerModel, n::Int=pm.cnw; bounded::Bool = true)
+    pm.var[:nw][n][:vr] = @variable(pm.model, 
+        [i in keys(pm.ref[:nw][n][:bus])], basename="$(n)_vr",
+        lowerbound = -pm.ref[:nw][n][:bus][i]["vmax"],
+        upperbound =  pm.ref[:nw][n][:bus][i]["vmax"], 
+        start = getstart(pm.ref[:nw][n][:bus], i, "vr_start", 1.0)
     )
 end
 
 "real part of the voltage variable `i` in `bus`es"
-function variable_voltage_imaginary(pm::GenericPowerModel; bounded::Bool = true)
-    pm.var[:vi] = @variable(pm.model, 
-        [i in keys(pm.ref[:bus])], basename="vi",
-        lowerbound = -pm.ref[:bus][i]["vmax"],
-        upperbound =  pm.ref[:bus][i]["vmax"],
-        start = getstart(pm.ref[:bus], i, "vi_start")
+function variable_voltage_imaginary(pm::GenericPowerModel, n::Int=pm.cnw; bounded::Bool = true)
+    pm.var[:nw][n][:vi] = @variable(pm.model, 
+        [i in keys(pm.ref[:nw][n][:bus])], basename="$(n)_vi",
+        lowerbound = -pm.ref[:nw][n][:bus][i]["vmax"],
+        upperbound =  pm.ref[:nw][n][:bus][i]["vmax"],
+        start = getstart(pm.ref[:nw][n][:bus], i, "vi_start")
     )
 end
 
@@ -85,19 +85,19 @@ end
 
 
 "variable: `w[i] >= 0` for `i` in `bus`es"
-function variable_voltage_magnitude_sqr(pm::GenericPowerModel; bounded = true)
+function variable_voltage_magnitude_sqr(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
     if bounded
-        pm.var[:w] = @variable(pm.model, 
-            [i in keys(pm.ref[:bus])], basename="w",
-            lowerbound = pm.ref[:bus][i]["vmin"]^2,
-            upperbound = pm.ref[:bus][i]["vmax"]^2,
-            start = getstart(pm.ref[:bus], i, "w_start", 1.001)
+        pm.var[:nw][n][:w] = @variable(pm.model, 
+            [i in keys(pm.ref[:nw][n][:bus])], basename="$(n)_w",
+            lowerbound = pm.ref[:nw][n][:bus][i]["vmin"]^2,
+            upperbound = pm.ref[:nw][n][:bus][i]["vmax"]^2,
+            start = getstart(pm.ref[:nw][n][:bus], i, "w_start", 1.001)
         )
     else
-        pm.var[:w] = @variable(pm.model, 
-            [i in keys(pm.ref[:bus])], basename="w",
+        pm.var[:nw][n][:w] = @variable(pm.model, 
+            [i in keys(pm.ref[:nw][n][:bus])], basename="$(n)_w",
             lowerbound = 0,
-            start = getstart(pm.ref[:bus], i, "w_start", 1.001)
+            start = getstart(pm.ref[:nw][n][:bus], i, "w_start", 1.001)
         )
     end
 end
@@ -130,30 +130,30 @@ end
 
 
 ""
-function variable_voltage_product(pm::GenericPowerModel; bounded = true)
+function variable_voltage_product(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
     if bounded
-        wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
+        wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:nw][n][:buspairs])
 
-        pm.var[:wr] = @variable(pm.model, 
-            [bp in keys(pm.ref[:buspairs])], basename="wr",
+        pm.var[:nw][n][:wr] = @variable(pm.model, 
+            [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_wr",
             lowerbound = wr_min[bp],
             upperbound = wr_max[bp],
-            start = getstart(pm.ref[:buspairs], bp, "wr_start", 1.0)
+            start = getstart(pm.ref[:nw][n][:buspairs], bp, "wr_start", 1.0)
         )
-        pm.var[:wi] = @variable(pm.model,
-            wi[bp in keys(pm.ref[:buspairs])], basename="wi",
+        pm.var[:nw][n][:wi] = @variable(pm.model,
+            wi[bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_wi",
             lowerbound = wi_min[bp],
             upperbound = wi_max[bp],
-            start = getstart(pm.ref[:buspairs], bp, "wi_start")
+            start = getstart(pm.ref[:nw][n][:buspairs], bp, "wi_start")
         )
     else
-        pm.var[:wr] = @variable(pm.model,
-            [bp in keys(pm.ref[:buspairs])], basename="wr",
-            start = getstart(pm.ref[:buspairs], bp, "wr_start", 1.0)
+        pm.var[:nw][n][:wr] = @variable(pm.model,
+            [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_wr",
+            start = getstart(pm.ref[:nw][n][:buspairs], bp, "wr_start", 1.0)
         )
-        pm.var[:wi] = @variable(pm.model, 
-            [bp in keys(pm.ref[:buspairs])], basename="wi",
-            start = getstart(pm.ref[:buspairs], bp, "wi_start")
+        pm.var[:nw][n][:wi] = @variable(pm.model, 
+            [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_wi",
+            start = getstart(pm.ref[:nw][n][:buspairs], bp, "wi_start")
         )
     end
 end
