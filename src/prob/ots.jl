@@ -47,11 +47,9 @@ function post_ots(pm::GenericPowerModel)
 end
 
 ""
-function get_ots_solution(pm::GenericPowerModel)
-    sol = init_solution(pm)
+function get_ots_solution(pm::GenericPowerModel, sol::Dict{String,Any})
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
     add_branch_status_setpoint(sol, pm)
-    return sol
 end
