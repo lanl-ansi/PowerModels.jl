@@ -96,14 +96,14 @@ PMs = PowerModels
         t2_pg = var(pm, 2, :pg)
         @constraint(pm.model, t1_pg[2] == t2_pg[4])
 
-        PMs.objective_min_fuel_cost(pm)
+        PMs.objective_min_fuel_cost(pm, keys(pm.ref[:nw]))
     end
 
     @testset "2 period 5-bus asymmetric case" begin
         mn_data = build_mn_data("../test/data/case5_asym.m")
 
         @testset "test ac polar opf" begin
-            result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test)
+            result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 35184.2; atol = 1e0)
@@ -119,7 +119,7 @@ PMs = PowerModels
         mn_data = build_mn_data("../test/data/case14.m", "../test/data/case24.m")
 
         @testset "test ac polar opf" begin
-            result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test)
+            result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 88289.0; atol = 1e0)
@@ -129,6 +129,15 @@ PMs = PowerModels
                 atol = 1e-3
             )
         end
+    end
+
+    @testset "5-bus asymmetric case" begin
+        # this works, but should throw a warning
+        mn_data = build_mn_data("../test/data/case5_asym.m")
+        result = run_ac_opf(mn_data, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 17551; atol = 1e0)
     end
 
     function post_mppf_test(pm::GenericPowerModel)
@@ -175,14 +184,14 @@ PMs = PowerModels
     @testset "test solution feedback" begin
         mn_data = build_mn_data("../test/data/case5_asym.m")
 
-        opf_result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test)
+        opf_result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true)
         @test opf_result["status"] == :LocalOptimal
         @test isapprox(opf_result["objective"], 35184.2; atol = 1e0)
         #@test isapprox(opf_result["objective"], 35533.8; atol = 1e0) # case5_dc (out of date)
 
         PowerModels.update_data(mn_data, opf_result["solution"])
 
-        pf_result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mppf_test)
+        pf_result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mppf_test, multinetwork=true)
         @test pf_result["status"] == :LocalOptimal
         @test isapprox(pf_result["objective"], 0.0; atol = 1e-3)
 

@@ -145,7 +145,11 @@ function build_generic_model(file::String,  model_constructor, post_method; kwar
 end
 
 ""
-function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; kwargs...)
+function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; multinetwork=false, kwargs...)
+    if !multinetwork && data["multinetwork"]
+        warn("building a single network model with multinetwork data, only the first network will be used")
+    end
+
     # NOTE, this model constructor will build the ref dict using the latest info from the data
     pm = model_constructor(data; kwargs...)
 

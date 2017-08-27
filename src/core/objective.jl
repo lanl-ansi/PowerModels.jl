@@ -6,8 +6,9 @@
 """
 Checks that all cost models are polynomials, quadratic or less
 """
-function check_cost_models(pm::GenericPowerModel)
-    for (n,ref) in pm.ref[:nw]
+function check_cost_models(pm::GenericPowerModel, nws)
+    for n in nws
+        ref = pm.ref[:nw][n]
         for (i,gen) in ref[:gen]
             if haskey(gen, "cost")
                 if gen["model"] != 2
@@ -37,40 +38,42 @@ end
 
 
 ""
-function objective_min_fuel_cost(pm::GenericPowerModel)
-    check_cost_models(pm)
+function objective_min_fuel_cost(pm::GenericPowerModel, nws=[pm.cnw])
+    check_cost_models(pm, nws)
 
-    pg = Dict(n => pm.var[:nw][n][:pg] for (n,ref) in pm.ref[:nw])
-    dc_p = Dict(n => pm.var[:nw][n][:p_dc] for (n,ref) in pm.ref[:nw])
+    pg = Dict(n => pm.var[:nw][n][:pg] for n in nws)
+    dc_p = Dict(n => pm.var[:nw][n][:p_dc] for n in nws)
 
     from_idx = Dict()
-    for (n,ref) in pm.ref[:nw]
+    for n in nws
+        ref = pm.ref[:nw][n]
         from_idx[n] = Dict(arc[1] => arc for arc in ref[:arcs_from_dc])
     end
 
     return @objective(pm.model, Min, 
         sum(
-            sum(gen["cost"][1]*pg[n][i]^2 + gen["cost"][2]*pg[n][i] + gen["cost"][3] for (i,gen) in ref[:gen]) +
-            sum(dcline["cost"][1]*dc_p[n][from_idx[n][i]]^2 + dcline["cost"][2]*dc_p[n][from_idx[n][i]] + dcline["cost"][3] for (i,dcline) in ref[:dcline])
-        for (n,ref) in pm.ref[:nw])
+            sum(gen["cost"][1]*pg[n][i]^2 + gen["cost"][2]*pg[n][i] + gen["cost"][3] for (i,gen) in pm.ref[:nw][n][:gen]) +
+            sum(dcline["cost"][1]*dc_p[n][from_idx[n][i]]^2 + dcline["cost"][2]*dc_p[n][from_idx[n][i]] + dcline["cost"][3] for (i,dcline) in pm.ref[:nw][n][:dcline])
+        for n in nws)
     )
 end
 
 ""
-function objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T})
-    check_cost_models(pm)
+function objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, nws=[pm.cnw])
+    check_cost_models(pm, nws)
 
-    pg = Dict(n => pm.var[:nw][n][:pg] for (n,ref) in pm.ref[:nw])
-    dc_p = Dict(n => pm.var[:nw][n][:p_dc] for (n,ref) in pm.ref[:nw])
+    pg = Dict(n => pm.var[:nw][n][:pg] for n in nws)
+    dc_p = Dict(n => pm.var[:nw][n][:p_dc] for n in nws)
 
     from_idx = Dict()
-    for (n,ref) in pm.ref[:nw]
+    for n in nws
+        ref = pm.ref[:nw][n]
         from_idx[n] = Dict(arc[1] => arc for arc in ref[:arcs_from_dc])
     end
 
     pg_sqr = Dict()
     dc_p_sqr = Dict()
-    for (n,ref) in pm.ref[:nw]
+    for n in nws
         pg_sqr[n] = pm.var[:nw][n][:pg_sqr] = @variable(pm.model, 
             [i in keys(pm.ref[:nw][n][:gen])], basename="$(n)_pg_sqr",
             lowerbound = pm.ref[:nw][n][:gen][i]["pmin"]^2,
@@ -93,21 +96,21 @@ function objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::Generic
 
     return @objective(pm.model, Min,
         sum(
-            sum( gen["cost"][1]*pg_sqr[n][i] + gen["cost"][2]*pg[n][i] + gen["cost"][3] for (i,gen) in ref[:gen]) +
-            sum(dcline["cost"][1]*dc_p_sqr[n][i]^2 + dcline["cost"][2]*dc_p[n][from_idx[n][i]] + dcline["cost"][3] for (i,dcline) in ref[:dcline])
-        for (n,ref) in pm.ref[:nw])
+            sum( gen["cost"][1]*pg_sqr[n][i] + gen["cost"][2]*pg[n][i] + gen["cost"][3] for (i,gen) in pm.ref[:nw][n][:gen]) +
+            sum(dcline["cost"][1]*dc_p_sqr[n][i]^2 + dcline["cost"][2]*dc_p[n][from_idx[n][i]] + dcline["cost"][3] for (i,dcline) in pm.ref[:nw][n][:dcline])
+        for n in nws)
     )
 end
 
 
 "Cost of building lines"
-function objective_tnep_cost(pm::GenericPowerModel)
-    line_ne = Dict(n => pm.var[:nw][n][:line_ne] for (n,ref) in pm.ref[:nw])
-    branches = Dict(n => pm.ref[:nw][n][:ne_branch] for (n,ref) in pm.ref[:nw])
+function objective_tnep_cost(pm::GenericPowerModel, nws=[pm.cnw])
+    line_ne = Dict(n => pm.var[:nw][n][:line_ne] for n in nws)
+    branches = Dict(n => pm.ref[:nw][n][:ne_branch] for n in nws)
 
     return @objective(pm.model, Min, 
         sum(
             sum( branch["construction_cost"]*line_ne[n][i] for (i,branch) in branches[n])
-        for (n,ref) in pm.ref[:nw])
+        for n in nws)
     )
 end
