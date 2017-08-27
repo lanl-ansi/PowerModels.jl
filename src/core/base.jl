@@ -46,7 +46,7 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
 
     ref::Dict{Symbol,Any} # data reference data
     var::Dict{Symbol,Any} # JuMP variables
-    cnw::Int  # current network index value
+    cnw::Int # current network index value
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -205,7 +205,7 @@ function build_ref(data::Dict{String,Any})
         nw_id = parse(Int, n)
         ref = nws[nw_id] = Dict{Symbol,Any}()
 
-        for (key, item) in data
+        for (key, item) in nw_data
             if isa(item, Dict)
                 item_lookup = Dict([(parse(Int, k), v) for (k,v) in item])
                 ref[Symbol(key)] = item_lookup
@@ -214,7 +214,7 @@ function build_ref(data::Dict{String,Any})
             end
         end
 
-        off_angmin, off_angmax = calc_theta_delta_bounds(data)
+        off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
         ref[:off_angmin] = off_angmin
         ref[:off_angmax] = off_angmax
 

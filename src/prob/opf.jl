@@ -43,6 +43,7 @@ function post_opf(pm::GenericPowerModel)
         constraint_thermal_limit_from(pm, i)
         constraint_thermal_limit_to(pm, i)
     end
+
     for i in ids(pm,:dcline)
         constraint_dcline(pm, i)
     end
