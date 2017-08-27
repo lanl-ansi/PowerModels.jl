@@ -14,9 +14,11 @@
 
 ### Generator Constraints ###
 ""
-function constraint_active_gen_setpoint(pm::GenericPowerModel, gen)
-    constraint_active_gen_setpoint(pm, gen["index"], gen["pg"])
+function constraint_active_gen_setpoint(pm::GenericPowerModel, n::Int, i::Int)
+    gen = ref(pm, n, :gen, i)
+    constraint_active_gen_setpoint(pm, n, gen["index"], gen["pg"])
 end
+constraint_active_gen_setpoint(pm::GenericPowerModel, i::Int) = constraint_active_gen_setpoint(pm, pm.cnw, i::Int)
 
 ""
 function constraint_reactive_gen_setpoint(pm::GenericPowerModel, gen)
@@ -29,10 +31,13 @@ end
 constraint_theta_ref(pm::GenericPowerModel, i::Int) = constraint_theta_ref(pm, pm.cnw, i)
 
 ""
-function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, bus; epsilon = 0.0)
+function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, n::Int, i::Int; epsilon = 0.0)
     @assert epsilon >= 0.0
-    constraint_voltage_magnitude_setpoint(pm, bus["index"], bus["vm"], epsilon)
+    bus = ref(pm, n, :bus, i)
+    constraint_voltage_magnitude_setpoint(pm, n, bus["index"], bus["vm"], epsilon)
 end
+constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, i::Int; kwargs...) = constraint_voltage_magnitude_setpoint(pm, pm.cnw, i::Int; kwargs...)
+
 
 ### Bus - KCL Constraints ###
 
@@ -151,19 +156,21 @@ constraint_dcline(pm::GenericPowerModel, i::Int) = constraint_dcline(pm, pm.cnw,
 
 
 ""
-function constraint_voltage_dcline_setpoint(pm::GenericPowerModel, dcline; epsilon = 0.0)
+function constraint_voltage_dcline_setpoint(pm::GenericPowerModel, n::Int, i::Int; epsilon = 0.0)
     @assert epsilon >= 0.0
-    i = dcline["index"]
+    dcline = ref(pm, n, :dcline, i)
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
     vf = dcline["vf"]
     vt = dcline["vt"]
 
-    constraint_voltage_dcline_setpoint(pm, f_bus, t_bus, vf, vt, epsilon)
+    constraint_voltage_dcline_setpoint(pm, n, f_bus, t_bus, vf, vt, epsilon)
 end
+constraint_voltage_dcline_setpoint(pm::GenericPowerModel, i::Int; kwargs...) = constraint_voltage_dcline_setpoint(pm, pm.cnw, i; kwargs...)
 
-function constraint_active_dcline_setpoint(pm::GenericPowerModel, dcline; epsilon = 0.0)
-    i = dcline["index"]
+
+function constraint_active_dcline_setpoint(pm::GenericPowerModel, n::Int, i::Int; epsilon = 0.0)
+    dcline = ref(pm, n, :dcline, i)
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
     f_idx = (i, f_bus, t_bus)
@@ -171,9 +178,9 @@ function constraint_active_dcline_setpoint(pm::GenericPowerModel, dcline; epsilo
     pf = dcline["pf"]
     pt = dcline["pt"]
 
-    constraint_active_dcline_setpoint(pm, i, f_idx, t_idx, pf, pt, epsilon)
+    constraint_active_dcline_setpoint(pm, n, f_idx, t_idx, pf, pt, epsilon)
 end
-
+constraint_active_dcline_setpoint(pm::GenericPowerModel, i::Int; kwargs...) = constraint_active_dcline_setpoint(pm, pm.cnw, i; kwargs...)
 
 ### Branch - On/Off Ohm's Law Constraints ###
 

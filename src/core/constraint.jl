@@ -68,14 +68,14 @@ function constraint_thermal_limit_to_ne(pm::GenericPowerModel, i, t_idx, rate_a)
 end
 
 "`pg[i] == pg`"
-function constraint_active_gen_setpoint(pm::GenericPowerModel, i, pg)
-    pg_var = pm.var[:pg][i]
+function constraint_active_gen_setpoint(pm::GenericPowerModel, n::Int, i, pg)
+    pg_var = pm.var[:nw][n][:pg][i]
     @constraint(pm.model, pg_var == pg)
 end
 
 "`qq[i] == qq`"
-function constraint_reactive_gen_setpoint(pm::GenericPowerModel, i, qg)
-    qg_var = pm.var[:qg][i]
+function constraint_reactive_gen_setpoint(pm::GenericPowerModel, n::Int, i, qg)
+    qg_var = pm.var[:nw][n][:qg][i]
     @constraint(pm.model, qg_var == qg)
 end
 
@@ -94,9 +94,9 @@ function constraint_dcline{T}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_
 end
 
 "`pf[i] == pf, pt[i] == pt`"
-function constraint_active_dcline_setpoint(pm::GenericPowerModel, i, f_idx, t_idx, pf, pt, epsilon)
-    p_fr = pm.var[:p_dc][f_idx]
-    p_to = pm.var[:p_dc][t_idx]
+function constraint_active_dcline_setpoint(pm::GenericPowerModel, n::Int, f_idx, t_idx, pf, pt, epsilon)
+    p_fr = pm.var[:nw][n][:p_dc][f_idx]
+    p_to = pm.var[:nw][n][:p_dc][t_idx]
 
     if epsilon == 0.0
         @constraint(pm.model, p_fr == pf)

@@ -36,8 +36,8 @@ function constraint_voltage_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T})
 end
 
 "`vm - epsilon <= v[i] <= vm + epsilon`"
-function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, i, vm, epsilon)
-    v = pm.var[:vm][i]
+function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, i, vm, epsilon)
+    v = pm.var[:nw][n][:vm][i]
 
     if epsilon == 0.0
         @constraint(pm.model, v == vm)
@@ -53,9 +53,9 @@ vm_from  - epsilon <= v[i] <= vm_from + epsilon
 vm_to  - epsilon <= v[i] <= vm_to + epsilon
 '''
 """
-function constraint_voltage_dcline_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
-    vm_fr = pm.var[:vm][f_bus]
-    vm_to = pm.var[:vm][t_bus]
+function constraint_voltage_dcline_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, vf, vt, epsilon)
+    vm_fr = pm.var[:nw][n][:vm][f_bus]
+    vm_to = pm.var[:nw][n][:vm][t_bus]
 
     if epsilon == 0.0
         @constraint(pm.model, vm_fr == vf)

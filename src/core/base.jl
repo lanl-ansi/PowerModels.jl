@@ -65,10 +65,8 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
     ref = build_ref(data) # refrence data
 
     var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
-    ext = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
     for nw_id in keys(ref[:nw])
         var[:nw][nw_id] = Dict{Symbol,Any}()
-        ext[:nw][nw_id] = Dict{Symbol,Any}()
     end
 
     cnw = minimum([k for k in keys(ref[:nw])])

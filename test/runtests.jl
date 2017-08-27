@@ -22,13 +22,13 @@ pajarito_solver = PajaritoSolver(mip_solver=GLPKSolverMIP(), cont_solver=ipopt_s
 scs_solver = SCSSolver(max_iters=1000000, verbose=0)
 
 
-#include("matpower.jl")
+include("matpower.jl")
 
-#include("output.jl")
+include("output.jl")
 
-#include("modify.jl")
+include("modify.jl")
 
-#include("data.jl")
+include("data.jl")
 
 #include("pf.jl")
 

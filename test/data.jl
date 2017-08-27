@@ -54,9 +54,6 @@ end
 
 @testset "test user ext init" begin
     @testset "3-bus case" begin
-        #data = PowerModels.parse_file("../test/data/case3.m")
-        opf_result = run_ac_opf("../test/data/case3.m", ipopt_solver)
-
         pm = build_generic_model("../test/data/case3.m", ACPPowerModel, PowerModels.post_opf, ext = Dict(:some_data => "bloop"))
 
         #println(pm.ext)
@@ -66,7 +63,7 @@ end
 
         result = solve_generic_model(pm, IpoptSolver(print_level=0))
 
-        @test opf_result["status"] == :LocalOptimal
-        @test isapprox(opf_result["objective"], 5907; atol = 1e0)
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 5907; atol = 1e0)
     end
 end
