@@ -3,7 +3,8 @@
 export
     GenericPowerModel,
     setdata, setsolver, solve,
-    run_generic_model, build_generic_model, solve_generic_model
+    run_generic_model, build_generic_model, solve_generic_model,
+    ids, ref, var, ext
 
 ""
 @compat abstract type AbstractPowerFormulation end
@@ -96,10 +97,10 @@ ref(pm::GenericPowerModel, key::Symbol, idx) = ref(pm, pm.cnw, key, idx)
 ref(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ref[:nw][n][key]
 ref(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ref[:nw][n][key][idx]
 
-var(pm::GenericPowerModel, key::Symbol) = var(pm, pm.cnw, key)
-var(pm::GenericPowerModel, key::Symbol, idx) = var(pm, pm.cnw, key, idx)
-var(pm::GenericPowerModel, n::Int, key::Symbol) = pm.var[:nw][n][key]
-var(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.var[:nw][n][key][idx]
+Base.var(pm::GenericPowerModel, key::Symbol) = var(pm, pm.cnw, key)
+Base.var(pm::GenericPowerModel, key::Symbol, idx) = var(pm, pm.cnw, key, idx)
+Base.var(pm::GenericPowerModel, n::Int, key::Symbol) = pm.var[:nw][n][key]
+Base.var(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.var[:nw][n][key][idx]
 
 ext(pm::GenericPowerModel, key::Symbol) = ext(pm, pm.cnw, key)
 ext(pm::GenericPowerModel, key::Symbol, idx) = ext(pm, pm.cnw, key, idx)
