@@ -10,31 +10,51 @@ PMs = PowerModels
 
     function build_mn_data(base_data)
         mp_data = PowerModels.parse_file(base_data)
+        return PowerModels.replicate(mp_data, 2)
+    end
+
+    function build_mn_data(base_data_1, base_data_2)
+        mp_data_1 = PowerModels.parse_file(base_data_1)
+        mp_data_2 = PowerModels.parse_file(base_data_2)
+        
+        @assert mp_data_1["per_unit"] == mp_data_2["per_unit"]
+        @assert mp_data_1["baseMVA"] == mp_data_2["baseMVA"]
 
         mn_data = Dict{String,Any}(
-            "name" => "an awesome multinetwork",
+            "name" => "$(mp_data_1["name"]) + $(mp_data_2["name"])",
             "multinetwork" => true,
-            "per_unit" => mp_data["per_unit"],
-            "baseMVA" => mp_data["baseMVA"]
+            "per_unit" => mp_data_1["per_unit"],
+            "baseMVA" => mp_data_1["baseMVA"],
+            "nw" => Dict{String,Any}()
         )
-        delete!(mp_data, "multinetwork")
-        delete!(mp_data, "per_unit")
-        delete!(mp_data, "baseMVA")
 
-        mn_data["nw"] = Dict{String,Any}()
-        mn_data["nw"]["1"] = deepcopy(mp_data)
-        mn_data["nw"]["2"] = deepcopy(mp_data)
+        delete!(mp_data_1, "multinetwork")
+        delete!(mp_data_1, "per_unit")
+        delete!(mp_data_1, "baseMVA")
+        mn_data["nw"]["1"] = mp_data_1
+
+        delete!(mp_data_2, "multinetwork")
+        delete!(mp_data_2, "per_unit")
+        delete!(mp_data_2, "baseMVA")
+        mn_data["nw"]["2"] = mp_data_2
 
         return mn_data
     end
 
     @testset "idempotent unit transformation" begin
-        @testset "5-bus case" begin
+        @testset "5-bus replicate case" begin
             mn_data = build_mn_data("../test/data/case5_dc.m")
             PowerModels.make_mixed_units(mn_data)
             PowerModels.make_per_unit(mn_data)
 
             @test compare_dict(mn_data, build_mn_data("../test/data/case5_dc.m"))
+        end
+        @testset "14+24 hybrid case" begin
+            mn_data = build_mn_data("../test/data/case14.m", "../test/data/case24.m")
+            PowerModels.make_mixed_units(mn_data)
+            PowerModels.make_per_unit(mn_data)
+
+            @test compare_dict(mn_data, build_mn_data("../test/data/case14.m", "../test/data/case24.m"))
         end
     end
 
@@ -74,7 +94,7 @@ PMs = PowerModels
         # designed to be feasible with two copies of case5_asym.m 
         t1_pg = var(pm, 1, :pg)
         t2_pg = var(pm, 2, :pg)
-        @constraint(pm.model, t1_pg[1] == t2_pg[4])
+        @constraint(pm.model, t1_pg[2] == t2_pg[4])
 
         PMs.objective_min_fuel_cost(pm)
     end
@@ -86,15 +106,30 @@ PMs = PowerModels
             result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 35117.1; atol = 1e0)
+            @test isapprox(result["objective"], 35184.2; atol = 1e0)
             @test isapprox(
-                result["solution"]["nw"]["1"]["gen"]["1"]["pg"],
+                result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
                 result["solution"]["nw"]["2"]["gen"]["4"]["pg"]; 
                 atol = 1e-3
             )
         end
     end
 
+    @testset "hybrid network case" begin
+        mn_data = build_mn_data("../test/data/case14.m", "../test/data/case24.m")
+
+        @testset "test ac polar opf" begin
+            result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 88289.0; atol = 1e0)
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["4"]["pg"]; 
+                atol = 1e-3
+            )
+        end
+    end
 
     function post_mppf_test(pm::GenericPowerModel)
         for (n, network) in pm.ref[:nw]
@@ -142,8 +177,8 @@ PMs = PowerModels
 
         opf_result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test)
         @test opf_result["status"] == :LocalOptimal
-        @test isapprox(opf_result["objective"], 35117.1; atol = 1e0)
-        #@test isapprox(opf_result["objective"], 35533.8; atol = 1e0) # case5_dc
+        @test isapprox(opf_result["objective"], 35184.2; atol = 1e0)
+        #@test isapprox(opf_result["objective"], 35533.8; atol = 1e0) # case5_dc (out of date)
 
         PowerModels.update_data(mn_data, opf_result["solution"])
 
