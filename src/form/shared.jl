@@ -41,8 +41,8 @@ function constraint_voltage_angle_difference{T <: AbstractPForms}(pm::GenericPow
 end
 
 
-function constraint_voltage_magnitude_setpoint{T <: AbstractWRForms}(pm::GenericPowerModel{T}, i, vm, epsilon)
-    w = pm.var[:w][i]
+function constraint_voltage_magnitude_setpoint{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n::Int, i, vm, epsilon)
+    w = pm.var[:nw][n][:w][i]
 
     if epsilon == 0.0
         @constraint(pm.model, w == vm^2)
@@ -57,9 +57,10 @@ end
 """
 enforces pv-like buses on both sides of a dcline
 """
-function constraint_voltage_dcline_setpoint{T <: AbstractWRForms}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
-    w_fr = pm.var[:w][f_bus]
-    w_to = pm.var[:w][t_bus]
+function constraint_voltage_dcline_setpoint{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, vf, vt, epsilon)
+    w_fr = pm.var[:nw][n][:w][f_bus]
+    w_to = pm.var[:nw][n][:w][t_bus]
+
     if epsilon == 0.0
         @constraint(pm.model, w_fr == vf^2)
         @constraint(pm.model, w_to == vt^2)
@@ -80,10 +81,10 @@ sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[
 """
 function constraint_kcl_shunt{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
     w = pm.var[:nw][n][:w][i]
-    p = pm.var[:nw][n][:p]
-    q = pm.var[:nw][n][:q]
     pg = pm.var[:nw][n][:pg]
     qg = pm.var[:nw][n][:qg]
+    p = pm.var[:nw][n][:p]
+    q = pm.var[:nw][n][:q]
     p_dc = pm.var[:nw][n][:p_dc]
     q_dc = pm.var[:nw][n][:q_dc]
 
@@ -98,16 +99,16 @@ sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc]
 sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w[i]
 ```
 """
-function constraint_kcl_shunt_ne{T <: AbstractWRForms}(pm::GenericPowerModel{T}, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
-    w = pm.var[:w][i]
-    p = pm.var[:p]
-    q = pm.var[:q]
-    p_ne = pm.var[:p_ne]
-    q_ne = pm.var[:q_ne]
-    pg = pm.var[:pg]
-    qg = pm.var[:qg]
-    p_dc = pm.var[:p_dc]
-    q_dc = pm.var[:q_dc]
+function constraint_kcl_shunt_ne{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, pd, qd, gs, bs)
+    w = pm.var[:nw][n][:w][i]
+    pg = pm.var[:nw][n][:pg]
+    qg = pm.var[:nw][n][:qg]
+    p = pm.var[:nw][n][:p]
+    q = pm.var[:nw][n][:q]
+    p_ne = pm.var[:nw][n][:p_ne]
+    q_ne = pm.var[:nw][n][:q_ne]
+    p_dc = pm.var[:nw][n][:p_dc]
+    q_dc = pm.var[:nw][n][:q_dc]
 
     @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*w)
     @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*w)

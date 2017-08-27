@@ -25,7 +25,7 @@ end
 
 
 "add constraints for voltage magnitude"
-function constraint_voltage{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...)
+function constraint_voltage{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int)
     vr = pm.var[:nw][n][:vr]
     vi = pm.var[:nw][n][:vi]
 
@@ -61,11 +61,11 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractACRForm}(pm::Generic
 end
 
 ""
-function constraint_voltage_dcline_setpoint{T <: AbstractACRForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
-    vr_fr = pm.var[:vr][f_bus]
-    vi_fr = pm.var[:vi][f_bus]
-    vr_to = pm.var[:vr][t_bus]
-    vi_to = pm.var[:vi][t_bus]
+function constraint_voltage_dcline_setpoint{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, vf, vt, epsilon)
+    vr_fr = pm.var[:nw][n][:vr][f_bus]
+    vi_fr = pm.var[:nw][n][:vi][f_bus]
+    vr_to = pm.var[:nw][n][:vr][t_bus]
+    vi_to = pm.var[:nw][n][:vi][t_bus]
 
     if epsilon == 0.0
         @constraint(pm.model, (vr_fr^2 + vi_fr^2) == vf^2)

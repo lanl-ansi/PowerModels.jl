@@ -14,7 +14,9 @@ const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
 SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPWRMForm; kwargs...)
 
 ""
-variable_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...) = variable_voltage_product_matrix(pm, n; kwargs...)
+function variable_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...)
+    variable_voltage_product_matrix(pm, n; kwargs...)
+end
 
 ""
 function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; bounded = true)
@@ -73,7 +75,7 @@ end
 
 
 ""
-function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw)
+function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int)
     WR = pm.var[:nw][n][:WR]
     WI = pm.var[:nw][n][:WI]
 
@@ -157,16 +159,16 @@ end
 
 ""
 function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerModel{T})
-    add_setpoint(sol, pm, "bus", "vm", :WR; scale = (x,item) -> sqrt(x), extract_var = (var,idx,item) -> var[pm.ext[:lookup_w_index][idx], pm.ext[:lookup_w_index][idx]])
+    add_setpoint(sol, pm, "bus", "vm", :WR; scale = (x,item) -> sqrt(x), extract_var = (var,idx,item) -> var[pm.ext[:nw][pm.cnw][:lookup_w_index][idx], pm.ext[:nw][pm.cnw][:lookup_w_index][idx]])
 
     # What should the default value be?
     #add_setpoint(sol, pm, "bus", "va", :va; default_value = 0)
 end
 
 
-function constraint_voltage_magnitude_setpoint{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, i, vm, epsilon)
-    w_index = pm.ext[:lookup_w_index][i]
-    w = pm.var[:WR][w_index, w_index]
+function constraint_voltage_magnitude_setpoint{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int, i, vm, epsilon)
+    w_index = pm.ext[:nw][n][:lookup_w_index][i]
+    w = pm.var[:nw][n][:WR][w_index, w_index]
 
     if epsilon == 0.0
         @constraint(pm.model, w == vm^2)
@@ -181,12 +183,12 @@ end
 """
 enforces pv-like buses on both sides of a dcline
 """
-function constraint_voltage_dcline_setpoint{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, f_bus, t_bus, vf, vt, epsilon)
-    w_fr_index = pm.ext[:lookup_w_index][f_bus]
-    w_to_index = pm.ext[:lookup_w_index][t_bus]
+function constraint_voltage_dcline_setpoint{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, vf, vt, epsilon)
+    w_fr_index = pm.ext[:nw][n][:lookup_w_index][f_bus]
+    w_to_index = pm.ext[:nw][n][:lookup_w_index][t_bus]
 
-    w_fr = pm.var[:WR][w_fr_index, w_fr_index]
-    w_to = pm.var[:WR][w_to_index, w_to_index]
+    w_fr = pm.var[:nw][n][:WR][w_fr_index, w_fr_index]
+    w_to = pm.var[:nw][n][:WR][w_to_index, w_to_index]
 
     if epsilon == 0.0
         @constraint(pm.model, w_fr == vf^2)

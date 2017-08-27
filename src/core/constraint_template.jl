@@ -12,7 +12,20 @@
 #
 
 
+### Voltage Constraints ###
+
+constraint_voltage(pm::GenericPowerModel) = constraint_voltage(pm, pm.cnw)
+# no data, so no further templating is needed, constraint goes directly to the formulations
+
+constraint_voltage_on_off(pm::GenericPowerModel) = constraint_voltage_on_off(pm, pm.cnw)
+# no data, so no further templating is needed, constraint goes directly to the formulations
+
+constraint_voltage_ne(pm::GenericPowerModel) = constraint_voltage_ne(pm, pm.cnw)
+# no data, so no further templating is needed, constraint goes directly to the formulations
+
+
 ### Generator Constraints ###
+
 ""
 function constraint_active_gen_setpoint(pm::GenericPowerModel, n::Int, i::Int)
     gen = ref(pm, n, :gen, i)
@@ -60,12 +73,12 @@ constraint_kcl_shunt(pm::GenericPowerModel, i::Int) = constraint_kcl_shunt(pm, p
 ""
 function constraint_kcl_shunt_ne(pm::GenericPowerModel, n::Int, i::Int)
     bus = ref(pm, n, :bus, i)
-    bus_arcs = pm.ref[:bus_arcs][i]
-    bus_arcs_dc = pm.ref[:bus_arcs_dc][i]
-    bus_arcs_ne = pm.ref[:ne_bus_arcs][i]
-    bus_gens = pm.ref[:bus_gens][i]
+    bus_arcs = ref(pm, n, :bus_arcs, i)
+    bus_arcs_dc = ref(pm, n, :bus_arcs_dc, i)
+    bus_arcs_ne = ref(pm, n, :ne_bus_arcs, i)
+    bus_gens = ref(pm, n, :bus_gens, i)
 
-    constraint_kcl_shunt_ne(pm, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
+    constraint_kcl_shunt_ne(pm, n, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
 end
 constraint_kcl_shunt_ne(pm::GenericPowerModel, i::Int) = constraint_kcl_shunt_ne(pm, pm.cnw, i::Int)
 

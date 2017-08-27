@@ -23,7 +23,7 @@ function variable_voltage{T <: AbstractACTForm}(pm::GenericPowerModel{T}, n::Int
     variable_voltage_product(pm, n; kwargs...)
 end
 
-function constraint_voltage{T <: StandardACTForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw)
+function constraint_voltage{T <: StandardACTForm}(pm::GenericPowerModel{T}, n::Int)
     t = pm.var[:nw][n][:va]
     w = pm.var[:nw][n][:w]
     wr = pm.var[:nw][n][:wr]

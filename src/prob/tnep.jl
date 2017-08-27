@@ -28,7 +28,7 @@ function post_tnep(pm::GenericPowerModel)
         constraint_theta_ref(pm, i)
     end
 
-    for i in ref(pm, :bus)
+    for i in ids(pm, :bus)
         constraint_kcl_shunt_ne(pm, i)
     end
 
