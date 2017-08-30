@@ -356,26 +356,25 @@ constraint_power_magnitude_link_on_off(pm::GenericPowerModel, i::Int) = constrai
 ### Branch - Thermal Limit Constraints ###
 
 ""
-function constraint_thermal_limit_from(pm::GenericPowerModel, n::Int, i::Int; scale = 1.0)
+function constraint_thermal_limit_from(pm::GenericPowerModel, n::Int, i::Int)
     branch = ref(pm, n, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
-
-    constraint_thermal_limit_from(pm, n, f_idx, branch["rate_a"]*scale)
+    constraint_thermal_limit_from(pm, n, f_idx, branch["rate_a"])
 end
-constraint_thermal_limit_from(pm::GenericPowerModel, i::Int; kwargs...) = constraint_thermal_limit_from(pm, pm.cnw, i; kwargs...)
+constraint_thermal_limit_from(pm::GenericPowerModel, i::Int) = constraint_thermal_limit_from(pm, pm.cnw, i)
 
 ""
-function constraint_thermal_limit_to(pm::GenericPowerModel, n::Int, i::Int; scale = 1.0)
+function constraint_thermal_limit_to(pm::GenericPowerModel, n::Int, i::Int)
     branch = ref(pm, n, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     t_idx = (i, t_bus, f_bus)
 
-    constraint_thermal_limit_to(pm, n, t_idx, branch["rate_a"]*scale)
+    constraint_thermal_limit_to(pm, n, t_idx, branch["rate_a"])
 end
-constraint_thermal_limit_to(pm::GenericPowerModel, i::Int; kwargs...) = constraint_thermal_limit_to(pm, pm.cnw, i; kwargs...)
+constraint_thermal_limit_to(pm::GenericPowerModel, i::Int) = constraint_thermal_limit_to(pm, pm.cnw, i)
 
 ""
 function constraint_thermal_limit_from_on_off(pm::GenericPowerModel, n::Int, i::Int)
