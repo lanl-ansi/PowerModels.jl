@@ -37,8 +37,7 @@ function post_pf(pm::GenericPowerModel)
             # this assumes inactive generators are filtered out of bus_gens
             @assert bus["bus_type"] == 2
 
-            # soft equality needed becouse v in file is not precice enough to ensure feasiblity
-            constraint_voltage_magnitude_setpoint(pm, bus; epsilon = 0.00001)
+            constraint_voltage_magnitude_setpoint(pm, bus)
             for j in pm.ref[:bus_gens][i]
                 constraint_active_gen_setpoint(pm, pm.ref[:gen][j])
             end
@@ -53,6 +52,6 @@ function post_pf(pm::GenericPowerModel)
     for (i,dcline) in pm.ref[:dcline]
         #constraint_dcline(pm, dcline) not needed, active power flow fully defined by dc line setpoints
         constraint_active_dcline_setpoint(pm, dcline)
-        constraint_voltage_dcline_setpoint(pm, dcline; epsilon = 0.00001)
+        constraint_voltage_dcline_setpoint(pm, dcline)
     end
 end
