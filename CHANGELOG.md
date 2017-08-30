@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added support for multiple networks in a JuMP model
 - Moved misc models to PowerModelsAnnex
 
 ### v0.4.0
