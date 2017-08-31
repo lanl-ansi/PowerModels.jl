@@ -52,6 +52,16 @@ function post_pf(pm::GenericPowerModel)
     for (i,dcline) in pm.ref[:dcline]
         #constraint_dcline(pm, dcline) not needed, active power flow fully defined by dc line setpoints
         constraint_active_dcline_setpoint(pm, dcline)
-        constraint_voltage_dcline_setpoint(pm, dcline)
+        #constraint_voltage_dcline_setpoint(pm, dcline)
+
+        f_bus = pm.ref[:bus][dcline["f_bus"]]
+        if f_bus["bus_type"] == 1
+            constraint_voltage_magnitude_setpoint(pm, f_bus)
+        end
+
+        t_bus = pm.ref[:bus][dcline["t_bus"]]
+        if t_bus["bus_type"] == 1
+            constraint_voltage_magnitude_setpoint(pm, t_bus)
+        end
     end
 end
