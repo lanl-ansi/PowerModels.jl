@@ -2,8 +2,8 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- none
 - Removed epsilon parameter from constraint_voltage_magnitude_setpoint
+- Moved misc models to PowerModelsAnnex
 
 ### v0.4.0
 - Added JuMP v0.18 compatibility
