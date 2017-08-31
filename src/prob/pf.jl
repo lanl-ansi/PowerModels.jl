@@ -25,6 +25,8 @@ function post_pf(pm::GenericPowerModel)
     constraint_voltage(pm)
 
     for (i,bus) in pm.ref[:ref_buses]
+        @assert bus["bus_type"] == 3
+
         constraint_theta_ref(pm, bus)
         constraint_voltage_magnitude_setpoint(pm, bus)
     end
@@ -52,7 +54,6 @@ function post_pf(pm::GenericPowerModel)
     for (i,dcline) in pm.ref[:dcline]
         #constraint_dcline(pm, dcline) not needed, active power flow fully defined by dc line setpoints
         constraint_active_dcline_setpoint(pm, dcline)
-        #constraint_voltage_dcline_setpoint(pm, dcline)
 
         f_bus = pm.ref[:bus][dcline["f_bus"]]
         if f_bus["bus_type"] == 1
