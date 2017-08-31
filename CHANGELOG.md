@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Removed epsilon parameter from constraint_voltage_magnitude_setpoint
 - Moved misc models to PowerModelsAnnex
 
 ### v0.4.0

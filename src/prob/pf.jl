@@ -25,6 +25,8 @@ function post_pf(pm::GenericPowerModel)
     constraint_voltage(pm)
 
     for (i,bus) in pm.ref[:ref_buses]
+        @assert bus["bus_type"] == 3
+
         constraint_theta_ref(pm, bus)
         constraint_voltage_magnitude_setpoint(pm, bus)
     end
@@ -37,8 +39,7 @@ function post_pf(pm::GenericPowerModel)
             # this assumes inactive generators are filtered out of bus_gens
             @assert bus["bus_type"] == 2
 
-            # soft equality needed becouse v in file is not precice enough to ensure feasiblity
-            constraint_voltage_magnitude_setpoint(pm, bus; epsilon = 0.00001)
+            constraint_voltage_magnitude_setpoint(pm, bus)
             for j in pm.ref[:bus_gens][i]
                 constraint_active_gen_setpoint(pm, pm.ref[:gen][j])
             end
@@ -53,6 +54,15 @@ function post_pf(pm::GenericPowerModel)
     for (i,dcline) in pm.ref[:dcline]
         #constraint_dcline(pm, dcline) not needed, active power flow fully defined by dc line setpoints
         constraint_active_dcline_setpoint(pm, dcline)
-        constraint_voltage_dcline_setpoint(pm, dcline; epsilon = 0.00001)
+
+        f_bus = pm.ref[:bus][dcline["f_bus"]]
+        if f_bus["bus_type"] == 1
+            constraint_voltage_magnitude_setpoint(pm, f_bus)
+        end
+
+        t_bus = pm.ref[:bus][dcline["t_bus"]]
+        if t_bus["bus_type"] == 1
+            constraint_voltage_magnitude_setpoint(pm, t_bus)
+        end
     end
 end

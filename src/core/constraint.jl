@@ -94,17 +94,10 @@ function constraint_dcline{T}(pm::GenericPowerModel{T}, f_bus, t_bus, f_idx, t_i
 end
 
 "`pf[i] == pf, pt[i] == pt`"
-function constraint_active_dcline_setpoint(pm::GenericPowerModel, i, f_idx, t_idx, pf, pt, epsilon)
+function constraint_active_dcline_setpoint(pm::GenericPowerModel, i, f_idx, t_idx, pf, pt)
     p_fr = pm.var[:p_dc][f_idx]
     p_to = pm.var[:p_dc][t_idx]
 
-    if epsilon == 0.0
-        @constraint(pm.model, p_fr == pf)
-        @constraint(pm.model, p_to == pt)
-    else
-        @constraint(pm.model, p_fr >= pf - epsilon)
-        @constraint(pm.model, p_to >= pt - epsilon)
-        @constraint(pm.model, p_fr <= pf + epsilon)
-        @constraint(pm.model, p_to <= pt + epsilon)
-    end
+    @constraint(pm.model, p_fr == pf)
+    @constraint(pm.model, p_to == pt)
 end

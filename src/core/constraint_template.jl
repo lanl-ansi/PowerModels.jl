@@ -31,9 +31,8 @@ function constraint_theta_ref(pm::GenericPowerModel, bus)
 end
 
 ""
-function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, bus; epsilon = 0.0)
-    @assert epsilon >= 0.0
-    constraint_voltage_magnitude_setpoint(pm, bus["index"], bus["vm"], epsilon)
+function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, bus)
+    constraint_voltage_magnitude_setpoint(pm, bus["index"], bus["vm"])
 end
 
 ### Bus - KCL Constraints ###
@@ -92,20 +91,7 @@ function constraint_dcline(pm::GenericPowerModel, dcline)
     constraint_dcline(pm, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
 end
 
-
-""
-function constraint_voltage_dcline_setpoint(pm::GenericPowerModel, dcline; epsilon = 0.0)
-    @assert epsilon >= 0.0
-    i = dcline["index"]
-    f_bus = dcline["f_bus"]
-    t_bus = dcline["t_bus"]
-    vf = dcline["vf"]
-    vt = dcline["vt"]
-
-    constraint_voltage_dcline_setpoint(pm, f_bus, t_bus, vf, vt, epsilon)
-end
-
-function constraint_active_dcline_setpoint(pm::GenericPowerModel, dcline; epsilon = 0.0)
+function constraint_active_dcline_setpoint(pm::GenericPowerModel, dcline)
     i = dcline["index"]
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
@@ -114,7 +100,7 @@ function constraint_active_dcline_setpoint(pm::GenericPowerModel, dcline; epsilo
     pf = dcline["pf"]
     pt = dcline["pt"]
 
-    constraint_active_dcline_setpoint(pm, i, f_idx, t_idx, pf, pt, epsilon)
+    constraint_active_dcline_setpoint(pm, i, f_idx, t_idx, pf, pt)
 end
 
 ""
