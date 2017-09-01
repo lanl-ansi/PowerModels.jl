@@ -19,40 +19,37 @@ function post_ots(pm::GenericPowerModel)
     variable_line_flow(pm)
     variable_dcline_flow(pm)
 
-
     objective_min_fuel_cost(pm)
 
     constraint_voltage_on_off(pm)
 
-    for (i,bus) in pm.ref[:ref_buses]
-        constraint_theta_ref(pm, bus)
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
     end
 
-    for (i,bus) in pm.ref[:bus]
-        constraint_kcl_shunt(pm, bus)
+    for i in ids(pm, :bus)
+        constraint_kcl_shunt(pm, i)
     end
 
-    for (i,branch) in pm.ref[:branch]
-        constraint_ohms_yt_from_on_off(pm, branch)
-        constraint_ohms_yt_to_on_off(pm, branch)
+    for i in ids(pm, :branch)
+        constraint_ohms_yt_from_on_off(pm, i)
+        constraint_ohms_yt_to_on_off(pm, i)
 
-        constraint_voltage_angle_difference_on_off(pm, branch)
+        constraint_voltage_angle_difference_on_off(pm, i)
 
-        constraint_thermal_limit_from_on_off(pm, branch)
-        constraint_thermal_limit_to_on_off(pm, branch)
+        constraint_thermal_limit_from_on_off(pm, i)
+        constraint_thermal_limit_to_on_off(pm, i)
     end
 
-    for (i,dcline) in pm.ref[:dcline]
-        constraint_dcline(pm, dcline)
+    for i in ids(pm, :dcline)
+        constraint_dcline(pm, i)
     end
 end
 
 ""
-function get_ots_solution(pm::GenericPowerModel)
-    sol = init_solution(pm)
+function get_ots_solution(pm::GenericPowerModel, sol::Dict{String,Any})
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
     add_branch_status_setpoint(sol, pm)
-    return sol
 end

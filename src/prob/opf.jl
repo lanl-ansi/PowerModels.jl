@@ -26,24 +26,25 @@ function post_opf(pm::GenericPowerModel)
 
     constraint_voltage(pm)
 
-    for (i,bus) in pm.ref[:ref_buses]
-        constraint_theta_ref(pm, bus)
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
     end
 
-    for (i,bus) in pm.ref[:bus]
-        constraint_kcl_shunt(pm, bus)
+    for i in ids(pm, :bus)
+        constraint_kcl_shunt(pm, i)
     end
 
-    for (i,branch) in pm.ref[:branch]
-        constraint_ohms_yt_from(pm, branch)
-        constraint_ohms_yt_to(pm, branch)
+    for i in ids(pm, :branch)
+        constraint_ohms_yt_from(pm, i)
+        constraint_ohms_yt_to(pm, i)
 
-        constraint_voltage_angle_difference(pm, branch)
+        constraint_voltage_angle_difference(pm, i)
 
-        constraint_thermal_limit_from(pm, branch)
-        constraint_thermal_limit_to(pm, branch)
+        constraint_thermal_limit_from(pm, i)
+        constraint_thermal_limit_to(pm, i)
     end
-    for (i,dcline) in pm.ref[:dcline]
-        constraint_dcline(pm, dcline)
+
+    for i in ids(pm, :dcline)
+        constraint_dcline(pm, i)
     end
 end

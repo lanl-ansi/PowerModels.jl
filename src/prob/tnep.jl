@@ -24,46 +24,44 @@ function post_tnep(pm::GenericPowerModel)
     constraint_voltage(pm)
     constraint_voltage_ne(pm)
 
-    for (i,bus) in pm.ref[:ref_buses]
-        constraint_theta_ref(pm, bus)
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
     end
 
-    for (i,bus) in pm.ref[:bus]
-        constraint_kcl_shunt_ne(pm, bus)
+    for i in ids(pm, :bus)
+        constraint_kcl_shunt_ne(pm, i)
     end
 
-    for (i,branch) in pm.ref[:branch]
-        constraint_ohms_yt_from(pm, branch)
-        constraint_ohms_yt_to(pm, branch)
+    for i in ids(pm, :branch)
+        constraint_ohms_yt_from(pm, i)
+        constraint_ohms_yt_to(pm, i)
 
-        constraint_voltage_angle_difference(pm, branch)
+        constraint_voltage_angle_difference(pm, i)
 
-        constraint_thermal_limit_from(pm, branch)
-        constraint_thermal_limit_to(pm, branch)
+        constraint_thermal_limit_from(pm, i)
+        constraint_thermal_limit_to(pm, i)
     end
 
-    for (i,branch) in pm.ref[:ne_branch]
-        constraint_ohms_yt_from_ne(pm, branch)
-        constraint_ohms_yt_to_ne(pm, branch)
+    for i in ids(pm, :ne_branch)
+        constraint_ohms_yt_from_ne(pm, i)
+        constraint_ohms_yt_to_ne(pm, i)
 
-        constraint_voltage_angle_difference_ne(pm, branch)
+        constraint_voltage_angle_difference_ne(pm, i)
 
-        constraint_thermal_limit_from_ne(pm, branch)
-        constraint_thermal_limit_to_ne(pm, branch)
+        constraint_thermal_limit_from_ne(pm, i)
+        constraint_thermal_limit_to_ne(pm, i)
     end
 
-    for (i,dcline) in pm.ref[:dcline]
-        constraint_dcline(pm, dcline)
+    for i in ids(pm, :dcline)
+        constraint_dcline(pm, i)
     end
 end
 
 ""
-function get_tnep_solution(pm::GenericPowerModel)
-    sol = init_solution(pm)
+function get_tnep_solution(pm::GenericPowerModel, sol::Dict{String,Any})
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
     add_branch_flow_setpoint_ne(sol, pm)
     add_branch_ne_setpoint(sol, pm)
-    return sol
 end

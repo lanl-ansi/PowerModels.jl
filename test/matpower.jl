@@ -166,6 +166,9 @@ end
         data = PowerModels.parse_file("../test/data/case3_tnep.m")
         ref = PowerModels.build_ref(data)
 
+        @assert !(data["multinetwork"])
+        ref = ref[:nw][0]
+
         @test haskey(data, "name")
         @test haskey(ref, :name)
         @test data["name"] == ref[:name]

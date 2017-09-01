@@ -260,26 +260,27 @@ end
 
         PMs.constraint_voltage(pm)
 
-        for (i,bus) in pm.ref[:ref_buses]
-            PMs.constraint_theta_ref(pm, bus)
+        for i in ids(pm,:ref_buses)
+            PMs.constraint_theta_ref(pm, i)
         end
 
-        for (i,bus) in pm.ref[:bus]
-            PMs.constraint_kcl_shunt(pm, bus)
+        for i in ids(pm,:bus)
+            PMs.constraint_kcl_shunt(pm, i)
         end
 
-        for (i,branch) in pm.ref[:branch]
+        for i in ids(pm,:branch)
             # these are the functions to be tested
-            PMs.constraint_ohms_y_from(pm, branch)
-            PMs.constraint_ohms_y_to(pm, branch)
+            PMs.constraint_ohms_y_from(pm, i)
+            PMs.constraint_ohms_y_to(pm, i)
 
-            PMs.constraint_voltage_angle_difference(pm, branch)
+            PMs.constraint_voltage_angle_difference(pm, i)
 
-            PMs.constraint_thermal_limit_from(pm, branch)
-            PMs.constraint_thermal_limit_to(pm, branch)
+            PMs.constraint_thermal_limit_from(pm, i)
+            PMs.constraint_thermal_limit_to(pm, i)
         end
-        for (i,dcline) in pm.ref[:dcline]
-            PMs.constraint_dcline(pm, dcline)
+
+        for i in ids(pm,:dcline)
+            PMs.constraint_dcline(pm, i)
         end
     end
 
