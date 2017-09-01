@@ -33,8 +33,5 @@ script:
   - julia -e 'Pkg.test("PowerModels", coverage=true)'
 
 after_success:
-  - echo $TRAVIS_JULIA_VERSION
-
-  - export REPO_TOKEN=9c0bd91b-c273-45a8-a221-a4d4e63ac464; julia -e 'using Coverage; cd(Pkg.dir("PowerModels")); Codecov.submit(process_folder("."));'
-
+  - julia -e  'using Coverage; cd(Pkg.dir("PowerModels")); LCOV.writefile("lcov.info", process_folder(".")); run(pipeline(`curl -s https://codecov.io/bash`, `bash`))'
   - julia -e 'cd(Pkg.dir("PowerModels")); include(joinpath("docs", "make.jl"))'
