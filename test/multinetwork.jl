@@ -161,7 +161,7 @@ PMs = PowerModels
                 if length(ref(pm, n, :bus_gens, i)) > 0 && !(i in ids(pm, n, :ref_buses))
                     @assert bus["bus_type"] == 2
 
-                    PMs.constraint_voltage_magnitude_setpoint(pm, n, i; epsilon = 0.00001)
+                    PMs.constraint_voltage_magnitude_setpoint(pm, n, i)
                     for j in ref(pm, n, :bus_gens, i)
                         PMs.constraint_active_gen_setpoint(pm, n, j)
                     end
@@ -173,9 +173,18 @@ PMs = PowerModels
                 PMs.constraint_ohms_yt_to(pm, n, i)
             end
 
-            for i in ids(pm, n, :dcline)
+            for (i,dcline) in ref(pm, n, :dcline)
                 PMs.constraint_active_dcline_setpoint(pm, n, i)
-                PMs.constraint_voltage_dcline_setpoint(pm, n, i; epsilon = 0.00001)
+
+                f_bus = ref(pm, :bus)[dcline["f_bus"]]
+                if f_bus["bus_type"] == 1
+                    PMs.constraint_voltage_magnitude_setpoint(pm, n, f_bus["index"])
+                end
+
+                t_bus = ref(pm, :bus)[dcline["t_bus"]]
+                if t_bus["bus_type"] == 1
+                    PMs.constraint_voltage_magnitude_setpoint(pm, n, t_bus["index"])
+                end
             end
         end
     end

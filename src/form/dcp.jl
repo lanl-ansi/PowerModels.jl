@@ -84,15 +84,11 @@ function constraint_voltage_ne{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, n
 end
 
 "do nothing, this model does not have voltage variables"
-function constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, n::Int, i, vm, epsilon)
+function constraint_voltage_magnitude_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, n::Int, i, vm)
 end
 
 "do nothing, this model does not have reactive variables"
 function constraint_reactive_gen_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, n::Int, i, qg)
-end
-
-"do nothing, this model does not have voltage variables"
-function constraint_voltage_dcline_setpoint{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, vf, vt, epsilon)
 end
 
 ""

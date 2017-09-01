@@ -41,35 +41,10 @@ function constraint_voltage_angle_difference{T <: AbstractPForms}(pm::GenericPow
 end
 
 
-function constraint_voltage_magnitude_setpoint{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n::Int, i, vm, epsilon)
+function constraint_voltage_magnitude_setpoint{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n::Int, i, vm)
     w = pm.var[:nw][n][:w][i]
 
-    if epsilon == 0.0
-        @constraint(pm.model, w == vm^2)
-    else
-        @assert epsilon > 0.0
-        @constraint(pm.model, w <= (vm + epsilon)^2)
-        @constraint(pm.model, w >= (vm - epsilon)^2)
-    end
-end
-
-
-"""
-enforces pv-like buses on both sides of a dcline
-"""
-function constraint_voltage_dcline_setpoint{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, vf, vt, epsilon)
-    w_fr = pm.var[:nw][n][:w][f_bus]
-    w_to = pm.var[:nw][n][:w][t_bus]
-
-    if epsilon == 0.0
-        @constraint(pm.model, w_fr == vf^2)
-        @constraint(pm.model, w_to == vt^2)
-    else
-        @constraint(pm.model, w_fr <= (vf + epsilon)^2)
-        @constraint(pm.model, w_fr >= (vf - epsilon)^2)
-        @constraint(pm.model, w_to <= (vt + epsilon)^2)
-        @constraint(pm.model, w_to >= (vt - epsilon)^2)
-    end
+    @constraint(pm.model, w == vm^2)
 end
 
 

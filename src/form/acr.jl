@@ -47,35 +47,12 @@ function constraint_voltage{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::I
 end
 
 
-"`vm - epsilon <= v[i] <= vm + epsilon`"
-function constraint_voltage_magnitude_setpoint{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, i, vm, epsilon)
+"`v[i] == vm`"
+function constraint_voltage_magnitude_setpoint{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, i, vm)
     vr = pm.var[:nw][n][:vr][i]
     vi = pm.var[:nw][n][:vi][i]
 
-    if epsilon == 0.0
-        @constraint(pm.model, (vr^2 + vi^2) == vm^2)
-    else
-        @constraint(pm.model, (vr^2 + vi^2) <= (vm + epsilon)^2)
-        @constraint(pm.model, (vr^2 + vi^2) >= (vm - epsilon)^2)
-    end
-end
-
-""
-function constraint_voltage_dcline_setpoint{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, vf, vt, epsilon)
-    vr_fr = pm.var[:nw][n][:vr][f_bus]
-    vi_fr = pm.var[:nw][n][:vi][f_bus]
-    vr_to = pm.var[:nw][n][:vr][t_bus]
-    vi_to = pm.var[:nw][n][:vi][t_bus]
-
-    if epsilon == 0.0
-        @constraint(pm.model, (vr_fr^2 + vi_fr^2) == vf^2)
-        @constraint(pm.model, (vr_to^2 + vi_to^2) == vt^2)
-    else
-        @constraint(pm.model, (vr_fr^2 + vi_fr^2) <= (vf + epsilon)^2)
-        @constraint(pm.model, (vr_fr^2 + vi_fr^2) >= (vf - epsilon)^2)
-        @constraint(pm.model, (vr_to^2 + vi_to^2) <= (vt + epsilon)^2)
-        @constraint(pm.model, (vr_to^2 + vi_to^2) >= (vt - epsilon)^2)
-    end
+    @constraint(pm.model, (vr^2 + vi^2) == vm^2)
 end
 
 

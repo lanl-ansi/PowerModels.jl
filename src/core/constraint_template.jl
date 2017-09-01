@@ -48,12 +48,11 @@ constraint_theta_ref(pm::GenericPowerModel, i::Int) = constraint_theta_ref(pm, p
 # no data, so no further templating is needed, constraint goes directly to the formulations
 
 ""
-function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, n::Int, i::Int; epsilon = 0.0)
-    @assert epsilon >= 0.0
+function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, n::Int, i::Int)
     bus = ref(pm, n, :bus, i)
-    constraint_voltage_magnitude_setpoint(pm, n, bus["index"], bus["vm"], epsilon)
+    constraint_voltage_magnitude_setpoint(pm, n, bus["index"], bus["vm"])
 end
-constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, i::Int; kwargs...) = constraint_voltage_magnitude_setpoint(pm, pm.cnw, i::Int; kwargs...)
+constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, i::Int) = constraint_voltage_magnitude_setpoint(pm, pm.cnw, i::Int)
 
 
 ### Bus - KCL Constraints ###
@@ -174,21 +173,7 @@ end
 constraint_dcline(pm::GenericPowerModel, i::Int) = constraint_dcline(pm, pm.cnw, i)
 
 
-""
-function constraint_voltage_dcline_setpoint(pm::GenericPowerModel, n::Int, i::Int; epsilon = 0.0)
-    @assert epsilon >= 0.0
-    dcline = ref(pm, n, :dcline, i)
-    f_bus = dcline["f_bus"]
-    t_bus = dcline["t_bus"]
-    vf = dcline["vf"]
-    vt = dcline["vt"]
-
-    constraint_voltage_dcline_setpoint(pm, n, f_bus, t_bus, vf, vt, epsilon)
-end
-constraint_voltage_dcline_setpoint(pm::GenericPowerModel, i::Int; kwargs...) = constraint_voltage_dcline_setpoint(pm, pm.cnw, i; kwargs...)
-
-
-function constraint_active_dcline_setpoint(pm::GenericPowerModel, n::Int, i::Int; epsilon = 0.0)
+function constraint_active_dcline_setpoint(pm::GenericPowerModel, n::Int, i::Int)
     dcline = ref(pm, n, :dcline, i)
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
@@ -197,9 +182,9 @@ function constraint_active_dcline_setpoint(pm::GenericPowerModel, n::Int, i::Int
     pf = dcline["pf"]
     pt = dcline["pt"]
 
-    constraint_active_dcline_setpoint(pm, n, f_idx, t_idx, pf, pt, epsilon)
+    constraint_active_dcline_setpoint(pm, n, f_idx, t_idx, pf, pt)
 end
-constraint_active_dcline_setpoint(pm::GenericPowerModel, i::Int; kwargs...) = constraint_active_dcline_setpoint(pm, pm.cnw, i; kwargs...)
+constraint_active_dcline_setpoint(pm::GenericPowerModel, i::Int) = constraint_active_dcline_setpoint(pm, pm.cnw, i)
 
 
 
