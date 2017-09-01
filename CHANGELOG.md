@@ -2,9 +2,9 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- Added support for multiple networks in the JuMP model
-- Removed epsilon parameter from constraint_voltage_magnitude_setpoint
-- Moved misc models to PowerModelsAnnex
+- Added support for multiple networks in the JuMP model (breaking)
+- Removed epsilon parameter from constraint_voltage_magnitude_setpoint (breaking)
+- Moved misc models to PowerModelsAnnex (breaking)
 
 ### v0.4.0
 - Added JuMP v0.18 compatibility
