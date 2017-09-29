@@ -118,11 +118,11 @@ function constraint_voltage_angle_difference{T <: AbstractACRForm}(pm::GenericPo
     vi_to = pm.var[:nw][n][:vi][t_bus]
 
     # this form appears to be more numerically stable than the one below
-    @NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to)/(vr_fr*vr_to + vi_fr*vi_to) <= tan(angmax))
-    @NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to)/(vr_fr*vr_to + vi_fr*vi_to) >= tan(angmin))
+    #@NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to)/(vr_fr*vr_to + vi_fr*vi_to) <= tan(angmax))
+    #@NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to)/(vr_fr*vr_to + vi_fr*vi_to) >= tan(angmin))
 
-    #@NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) <= tan(angmax)*(vr_fr*vr_to + vi_fr*vi_to))
-    #@NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to))
+    @NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) <= tan(angmax)*(vr_fr*vr_to + vi_fr*vi_to))
+    @NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to))
 end
 
 
