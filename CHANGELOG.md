@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Added support for multiple networks in the JuMP model (breaking)
 - Removed epsilon parameter from constraint_voltage_magnitude_setpoint (breaking)
 - Moved misc models to PowerModelsAnnex (breaking)
+- Removed unnecessary NL constraints from ACR and ACT formulations
 
 ### v0.4.0
 - Added JuMP v0.18 compatibility
