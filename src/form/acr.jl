@@ -88,8 +88,8 @@ function constraint_ohms_yt_from{T <: AbstractACRForm}(pm::GenericPowerModel{T},
     vi_fr = pm.var[:nw][n][:vi][f_bus]
     vi_to = pm.var[:nw][n][:vi][t_bus]
 
-    @NLconstraint(pm.model, p_fr ==        g/tm*(vr_fr^2 + vi_fr^2) + (-g*tr+b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr-g*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
-    @NLconstraint(pm.model, q_fr == -(b+c/2)/tm*(vr_fr^2 + vi_fr^2) - (-b*tr-g*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr+b*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
+    @constraint(pm.model, p_fr ==        g/tm*(vr_fr^2 + vi_fr^2) + (-g*tr+b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr-g*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
+    @constraint(pm.model, q_fr == -(b+c/2)/tm*(vr_fr^2 + vi_fr^2) - (-b*tr-g*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr+b*ti)/tm*(vi_fr*vr_to - vr_fr*vi_to) )
 end
 
 """
@@ -103,8 +103,8 @@ function constraint_ohms_yt_to{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n
     vi_fr = pm.var[:nw][n][:vi][f_bus]
     vi_to = pm.var[:nw][n][:vi][t_bus]
 
-    @NLconstraint(pm.model, p_to ==        g*(vr_to^2 + vi_to^2) + (-g*tr-b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr+g*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
-    @NLconstraint(pm.model, q_to == -(b+c/2)*(vr_to^2 + vi_to^2) - (-b*tr+g*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr-b*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
+    @constraint(pm.model, p_to ==        g*(vr_to^2 + vi_to^2) + (-g*tr-b*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr+g*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
+    @constraint(pm.model, q_to == -(b+c/2)*(vr_to^2 + vi_to^2) - (-b*tr+g*ti)/tm*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr-b*ti)/tm*(-(vi_fr*vr_to - vr_fr*vi_to)) )
 end
 
 
@@ -117,12 +117,8 @@ function constraint_voltage_angle_difference{T <: AbstractACRForm}(pm::GenericPo
     vi_fr = pm.var[:nw][n][:vi][f_bus]
     vi_to = pm.var[:nw][n][:vi][t_bus]
 
-    # this form appears to be more numerically stable than the one below
-    @NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to)/(vr_fr*vr_to + vi_fr*vi_to) <= tan(angmax))
-    @NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to)/(vr_fr*vr_to + vi_fr*vi_to) >= tan(angmin))
-
-    #@NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) <= tan(angmax)*(vr_fr*vr_to + vi_fr*vi_to))
-    #@NLconstraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to))
+    @constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) <= tan(angmax)*(vr_fr*vr_to + vi_fr*vi_to))
+    @constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to))
 end
 
 

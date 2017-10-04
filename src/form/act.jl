@@ -30,8 +30,8 @@ function constraint_voltage{T <: StandardACTForm}(pm::GenericPowerModel{T}, n::I
     wi = pm.var[:nw][n][:wi]
 
     for (i,j) in keys(pm.ref[:nw][n][:buspairs])
-        @NLconstraint(pm.model, wr[(i,j)]^2 + wi[(i,j)]^2 == w[i]*w[j])
-        @NLconstraint(pm.model, wi[(i,j)]/wr[(i,j)] == tan(t[i] - t[j]))
+        @constraint(pm.model, wr[(i,j)]^2 + wi[(i,j)]^2 == w[i]*w[j])
+        @NLconstraint(pm.model, wi[(i,j)] == tan(t[i] - t[j])*wr[(i,j)])
     end
 end
 
