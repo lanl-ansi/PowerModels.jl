@@ -97,7 +97,7 @@ function constraint_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, n:
     p = pm.var[:nw][n][:p]
     p_dc = pm.var[:nw][n][:p_dc]
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
+    pm.con[:nw][n][:kcl_p][i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
     # omit reactive constraint
 end
 
