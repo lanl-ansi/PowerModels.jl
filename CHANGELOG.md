@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- none
+
+### v0.5.0
 - Standardized around branch name for pi-model lines (breaking)
 - Added checking for inconsistent orientation on parallel branches
 - Added support for multiple networks in the JuMP model (breaking)
