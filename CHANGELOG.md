@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added checking for inconsistent orientation on parallel branches
 - Added support for multiple networks in the JuMP model (breaking)
 - Removed epsilon parameter from constraint_voltage_magnitude_setpoint (breaking)
 - Moved misc models to PowerModelsAnnex (breaking)
