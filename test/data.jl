@@ -3,24 +3,59 @@
 @testset "test idempotent units transformations" begin
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/case3.m")
+        data_base = deepcopy(data)
+
         PowerModels.make_mixed_units(data)
         PowerModels.make_per_unit(data)
 
-        @test compare_dict(data, PowerModels.parse_file("../test/data/case3.m"))
+        @test compare_dict(data, data_base)
     end
     @testset "5-bus case" begin
         data = PowerModels.parse_file("../test/data/case5_asym.m")
+        data_base = deepcopy(data)
+
         PowerModels.make_mixed_units(data)
         PowerModels.make_per_unit(data)
 
-        @test compare_dict(data, PowerModels.parse_file("../test/data/case5_asym.m"))
+        @test compare_dict(data, data_base)
     end
     @testset "24-bus case" begin
         data = PowerModels.parse_file("../test/data/case24.m")
+        data_base = deepcopy(data)
+
         PowerModels.make_mixed_units(data)
         PowerModels.make_per_unit(data)
 
-        @test compare_dict(data, PowerModels.parse_file("../test/data/case24.m"))
+        @test compare_dict(data, data_base)
+    end
+
+
+    @testset "3-bus case solution" begin
+        result = run_ac_opf("../test/data/case3.m", ipopt_solver)
+        result_base = deepcopy(result)
+
+        PowerModels.make_mixed_units(result["solution"])
+        PowerModels.make_per_unit(result["solution"])
+
+        @test compare_dict(result, result_base)
+    end
+    @testset "5-bus case solution" begin
+        result = run_ac_opf("../test/data/case5_asym.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
+        result_base = deepcopy(result)
+
+        PowerModels.make_mixed_units(result["solution"])
+        PowerModels.make_per_unit(result["solution"])
+
+        @test compare_dict(result, result_base)
+    end
+    @testset "24-bus case solution" begin
+        result = run_ac_opf("../test/data/case24.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
+        result_base = deepcopy(result)
+
+        PowerModels.make_mixed_units(result["solution"])
+        PowerModels.make_per_unit(result["solution"])
+
+        @test compare_dict(result, result_base)
     end
 end
 

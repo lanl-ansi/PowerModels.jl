@@ -207,6 +207,11 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "shift", deg2rad)
         apply_func(branch, "angmax", deg2rad)
         apply_func(branch, "angmin", deg2rad)
+
+        apply_func(branch, "pf", rescale)
+        apply_func(branch, "pt", rescale)
+        apply_func(branch, "qf", rescale)
+        apply_func(branch, "qt", rescale)
     end
 
     for dcline in dclines

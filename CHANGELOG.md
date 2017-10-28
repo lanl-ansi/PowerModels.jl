@@ -10,6 +10,7 @@ PowerModels.jl Change Log
 - Removed unnecessary NL constraints from ACR and ACT formulations
 - Removed redundant quadratic constraint from DCPLL formulation
 - Added warning messages for inconsistent voltage set points
+- Fixed branch flow units transformation bug
 
 ### v0.4.0
 - Added JuMP v0.18 compatibility
