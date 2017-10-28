@@ -9,7 +9,7 @@ end
 
 @testset "test soc tnep" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/case3_tnep.m", SOCWRPowerModel, pajarito_solver; setting = Dict("output" => Dict("line_flows" => true)))
+        result = run_tnep("../test/data/case3_tnep.m", SOCWRPowerModel, pajarito_solver; setting = Dict("output" => Dict("branch_flows" => true)))
 
         check_tnep_status(result["solution"])
 
@@ -85,7 +85,7 @@ end
 
 @testset "test tnep branch flow output" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/case3_tnep.m", SOCWRPowerModel, pajarito_solver; setting = Dict("output" => Dict("line_flows" => true)))
+        result = run_tnep("../test/data/case3_tnep.m", SOCWRPowerModel, pajarito_solver; setting = Dict("output" => Dict("branch_flows" => true)))
 
         check_tnep_status(result["solution"])
 

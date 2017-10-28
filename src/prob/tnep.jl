@@ -11,13 +11,13 @@ end
 
 "the general form of the tnep optimization model"
 function post_tnep(pm::GenericPowerModel)
-    variable_line_ne(pm)
+    variable_branch_ne(pm)
     variable_voltage(pm)
     variable_voltage_ne(pm)
     variable_generation(pm)
-    variable_line_flow(pm)
+    variable_branch_flow(pm)
     variable_dcline_flow(pm)
-    variable_line_flow_ne(pm)
+    variable_branch_flow_ne(pm)
 
     objective_tnep_cost(pm)
 

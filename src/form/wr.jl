@@ -106,7 +106,7 @@ function constraint_voltage_on_off{T <: AbstractWRForm}(pm::GenericPowerModel{T}
     w = pm.var[:nw][n][:w]
     wr = pm.var[:nw][n][:wr]
     wi = pm.var[:nw][n][:wi]
-    z = pm.var[:nw][n][:line_z]
+    z = pm.var[:nw][n][:branch_z]
 
     w_fr = pm.var[:nw][n][:w_fr]
     w_to = pm.var[:nw][n][:w_to]
@@ -133,7 +133,7 @@ function constraint_voltage_ne{T <: AbstractWRForm}(pm::GenericPowerModel{T}, n:
     w = pm.var[:nw][n][:w]
     wr = pm.var[:nw][n][:wr_ne]
     wi = pm.var[:nw][n][:wi_ne]
-    z = pm.var[:nw][n][:line_ne]
+    z = pm.var[:nw][n][:branch_ne]
 
     w_fr = pm.var[:nw][n][:w_fr_ne]
     w_to = pm.var[:nw][n][:w_to_ne]
@@ -163,7 +163,7 @@ function constraint_voltage_magnitude_from_on_off{T <: AbstractWRForm}(pm::Gener
     branches = pm.ref[:nw][n][:branch]
 
     vm_fr = pm.var[:nw][n][:vm_fr]
-    z = pm.var[:nw][n][:line_z]
+    z = pm.var[:nw][n][:branch_z]
 
     for (i, branch) in pm.ref[:nw][n][:branch]
         @constraint(pm.model, vm_fr[i] <= z[i]*buses[branch["f_bus"]]["vmax"])
@@ -177,7 +177,7 @@ function constraint_voltage_magnitude_to_on_off{T <: AbstractWRForm}(pm::Generic
     branches = pm.ref[:nw][n][:branch]
 
     vm_to = pm.var[:nw][n][:vm_to]
-    z = pm.var[:nw][n][:line_z]
+    z = pm.var[:nw][n][:branch_z]
 
     for (i, branch) in pm.ref[:nw][n][:branch]
         @constraint(pm.model, vm_to[i] <= z[i]*buses[branch["t_bus"]]["vmax"])
@@ -192,7 +192,7 @@ function constraint_voltage_magnitude_sqr_from_on_off{T <: AbstractWRForm}(pm::G
     branches = pm.ref[:nw][n][:branch]
 
     w_fr = pm.var[:nw][n][:w_fr]
-    z = pm.var[:nw][n][:line_z]
+    z = pm.var[:nw][n][:branch_z]
 
     for (i, branch) in pm.ref[:nw][n][:branch]
         @constraint(pm.model, w_fr[i] <= z[i]*buses[branch["f_bus"]]["vmax"]^2)
@@ -206,7 +206,7 @@ function constraint_voltage_magnitude_sqr_to_on_off{T <: AbstractWRForm}(pm::Gen
     branches = pm.ref[:nw][n][:branch]
 
     w_to = pm.var[:nw][n][:w_to]
-    z = pm.var[:nw][n][:line_z]
+    z = pm.var[:nw][n][:branch_z]
 
     for (i, branch) in pm.ref[:nw][n][:branch]
         @constraint(pm.model, w_to[i] <= z[i]*buses[branch["t_bus"]]["vmax"]^2)
@@ -222,7 +222,7 @@ function constraint_voltage_product_on_off{T <: AbstractWRForm}(pm::GenericPower
 
     wr = pm.var[:nw][n][:wr]
     wi = pm.var[:nw][n][:wi]
-    z = pm.var[:nw][n][:line_z]
+    z = pm.var[:nw][n][:branch_z]
 
     for b in keys(pm.ref[:nw][n][:branch])
         @constraint(pm.model, wr[b] <= z[b]*wr_max[bi_bp[b]])
@@ -478,8 +478,8 @@ function constraint_voltage(pm::QCWRPowerModel, n::Int)
         pair = (branch["f_bus"], branch["t_bus"])
         buspair = pm.ref[:nw][n][:buspairs][pair]
 
-        # to prevent this constraint from being posted on multiple parallel lines
-        if buspair["line"] == i
+        # to prevent this constraint from being posted on multiple parallel branchs
+        if buspair["branch"] == i
             constraint_power_magnitude_sqr(pm, n, i)
             constraint_power_magnitude_link(pm, n, i)
         end
@@ -661,7 +661,7 @@ function constraint_voltage_on_off(pm::QCWRPowerModel, n::Int)
     wr = pm.var[:nw][n][:wr]
     wi = pm.var[:nw][n][:wi]
 
-    z = pm.var[:nw][n][:line_z]
+    z = pm.var[:nw][n][:branch_z]
 
     td_lb = pm.ref[:nw][n][:off_angmin]
     td_ub = pm.ref[:nw][n][:off_angmax]
@@ -699,7 +699,7 @@ function constraint_voltage_on_off(pm::QCWRPowerModel, n::Int)
         relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
         relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
 
-        # to prevent this constraint from being posted on multiple parallel lines
+        # to prevent this constraint from being posted on multiple parallel branchs
         # TODO needs on/off variant
         constraint_power_magnitude_sqr_on_off(pm, n, l)
         constraint_power_magnitude_link_on_off(pm, n, l) # different index set
@@ -713,7 +713,7 @@ function constraint_power_magnitude_sqr_on_off(pm::QCWRPowerModel, n::Int, i, f_
     p_fr = pm.var[:nw][n][:p][arc_from]
     q_fr = pm.var[:nw][n][:q][arc_from]
     cm = pm.var[:nw][n][:cm][i]
-    z = pm.var[:nw][n][:line_z][i]
+    z = pm.var[:nw][n][:branch_z][i]
 
     # TODO see if there is a way to leverage relaxation_complex_product_on_off here
     w_ub = getupperbound(w)

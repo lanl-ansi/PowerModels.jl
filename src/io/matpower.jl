@@ -82,7 +82,7 @@ function standardize_cost_terms(data::Dict{String,Any})
     end
 end
 
-"sets all line transformer taps to 1.0, to simplify line models"
+"sets all branch transformer taps to 1.0, to simplify branch models"
 function update_branch_transformer_settings(data::Dict{String,Any})
     branches = [branch for branch in data["branch"]]
     if haskey(data, "ne_branch")

@@ -12,7 +12,7 @@ objective_min_fuel_cost(pm)
 variable_voltage(pm)
 variable_active_generation(pm)
 variable_reactive_generation(pm)
-variable_line_flow(pm)
+variable_branch_flow(pm)
 variable_dcline_flow(pm)
 ```
 
@@ -47,11 +47,11 @@ end
 ### Variables
 
 ```julia
-variable_line_indicator(pm)
+variable_branch_indicator(pm)
 variable_voltage_on_off(pm)
 variable_active_generation(pm)
 variable_reactive_generation(pm)
-variable_line_flow(pm)
+variable_branch_flow(pm)
 variable_dcline_flow(pm)
 ```
 
@@ -92,7 +92,7 @@ end
 variable_voltage(pm, bounded = false)
 variable_active_generation(pm, bounded = false)
 variable_reactive_generation(pm, bounded = false)
-variable_line_flow(pm, bounded = false)
+variable_branch_flow(pm, bounded = false)
 variable_dcline_flow(pm, bounded = false)
 ```
 
@@ -136,14 +136,14 @@ objective_tnep_cost(pm)
 
 ### Variables
 ```julia
-variable_line_ne(pm)
+variable_branch_ne(pm)
 variable_voltage(pm)
 variable_voltage_ne(pm)
 variable_active_generation(pm)
 variable_reactive_generation(pm)
-variable_line_flow(pm)
+variable_branch_flow(pm)
 variable_dcline_flow(pm)
-variable_line_flow_ne(pm)
+variable_branch_flow_ne(pm)
 ```
 
 ### Constraints

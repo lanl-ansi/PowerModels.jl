@@ -1,7 +1,7 @@
 ###############################################################################
 # This file defines commonly used constraints for power flow models
 # These constraints generally assume that the model contains p and q values
-# for branches line flows and bus flow conservation
+# for branches flows and bus flow conservation
 ###############################################################################
 
 # Generic thermal limit constraint
@@ -35,35 +35,35 @@ end
 
 # Generic on/off thermal limit constraint
 
-"`p[f_idx]^2 + q[f_idx]^2 <= (rate_a * line_z[i])^2`"
+"`p[f_idx]^2 + q[f_idx]^2 <= (rate_a * branch_z[i])^2`"
 function constraint_thermal_limit_from_on_off(pm::GenericPowerModel, n::Int, i, f_idx, rate_a)
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
-    z = pm.var[:nw][n][:line_z][i]
+    z = pm.var[:nw][n][:branch_z][i]
     @constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2*z^2)
 end
 
-"`p[t_idx]^2 + q[t_idx]^2 <= (rate_a * line_z[i])^2`"
+"`p[t_idx]^2 + q[t_idx]^2 <= (rate_a * branch_z[i])^2`"
 function constraint_thermal_limit_to_on_off(pm::GenericPowerModel, n::Int, i, t_idx, rate_a)
     p_to = pm.var[:nw][n][:p][t_idx]
     q_to = pm.var[:nw][n][:q][t_idx]
-    z = pm.var[:nw][n][:line_z][i]
+    z = pm.var[:nw][n][:branch_z][i]
     @constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2*z^2)
 end
 
-"`p_ne[f_idx]^2 + q_ne[f_idx]^2 <= (rate_a * line_ne[i])^2`"
+"`p_ne[f_idx]^2 + q_ne[f_idx]^2 <= (rate_a * branch_ne[i])^2`"
 function constraint_thermal_limit_from_ne(pm::GenericPowerModel, n::Int, i, f_idx, rate_a)
     p_fr = pm.var[:nw][n][:p_ne][f_idx]
     q_fr = pm.var[:nw][n][:q_ne][f_idx]
-    z = pm.var[:nw][n][:line_ne][i]
+    z = pm.var[:nw][n][:branch_ne][i]
     @constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2*z^2)
 end
 
-"`p_ne[t_idx]^2 + q_ne[t_idx]^2 <= (rate_a * line_ne[i])^2`"
+"`p_ne[t_idx]^2 + q_ne[t_idx]^2 <= (rate_a * branch_ne[i])^2`"
 function constraint_thermal_limit_to_ne(pm::GenericPowerModel, n::Int, i, t_idx, rate_a)
     p_to = pm.var[:nw][n][:p_ne][t_idx]
     q_to = pm.var[:nw][n][:q_ne][t_idx]
-    z = pm.var[:nw][n][:line_ne][i]
+    z = pm.var[:nw][n][:branch_ne][i]
     @constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2*z^2)
 end
 
