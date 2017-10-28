@@ -9,6 +9,7 @@ PowerModels.jl Change Log
 - Moved misc models to PowerModelsAnnex (breaking)
 - Removed unnecessary NL constraints from ACR and ACT formulations
 - Added warning messages for inconsistent voltage set points
+- Fixed branch flow units transformation bug
 
 ### v0.4.0
 - Added JuMP v0.18 compatibility
