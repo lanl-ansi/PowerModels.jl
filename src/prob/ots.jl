@@ -13,10 +13,10 @@ end
 
 ""
 function post_ots(pm::GenericPowerModel)
-    variable_line_indicator(pm)
+    variable_branch_indicator(pm)
     variable_voltage_on_off(pm)
     variable_generation(pm)
-    variable_line_flow(pm)
+    variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
     objective_min_fuel_cost(pm)

@@ -187,7 +187,7 @@ function constraint_ohms_yt_from_on_off{T <: AbstractACPForm}(pm::GenericPowerMo
     vm_to = pm.var[:nw][n][:vm][t_bus]
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
-    z = pm.var[:nw][n][:line_z][i]
+    z = pm.var[:nw][n][:branch_z][i]
 
     @NLconstraint(pm.model, p_fr == z*(g/tm*vm_fr^2 + (-g*tr+b*ti)/tm*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm*(vm_fr*vm_to*sin(va_fr-va_to))) )
     @NLconstraint(pm.model, q_fr == z*(-(b+c/2)/tm*vm_fr^2 - (-b*tr-g*ti)/tm*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm*(vm_fr*vm_to*sin(va_fr-va_to))) )
@@ -206,7 +206,7 @@ function constraint_ohms_yt_to_on_off{T <: AbstractACPForm}(pm::GenericPowerMode
     vm_to = pm.var[:nw][n][:vm][t_bus]
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
-    z = pm.var[:nw][n][:line_z][i]
+    z = pm.var[:nw][n][:branch_z][i]
 
     @NLconstraint(pm.model, p_to == z*(g*vm_to^2 + (-g*tr-b*ti)/tm*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm*(vm_to*vm_fr*sin(va_to-va_fr))) )
     @NLconstraint(pm.model, q_to == z*(-(b+c/2)*vm_to^2 - (-b*tr+g*ti)/tm*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm*(vm_to*vm_fr*sin(va_to-va_fr))) )
@@ -225,7 +225,7 @@ function constraint_ohms_yt_from_ne{T <: AbstractACPForm}(pm::GenericPowerModel{
     vm_to = pm.var[:nw][n][:vm][t_bus]
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
-    z = pm.var[:nw][n][:line_ne][i]
+    z = pm.var[:nw][n][:branch_ne][i]
 
     @NLconstraint(pm.model, p_fr == z*(g/tm*vm_fr^2 + (-g*tr+b*ti)/tm*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm*(vm_fr*vm_to*sin(va_fr-va_to))) )
     @NLconstraint(pm.model, q_fr == z*(-(b+c/2)/tm*vm_fr^2 - (-b*tr-g*ti)/tm*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm*(vm_fr*vm_to*sin(va_fr-va_to))) )
@@ -244,27 +244,27 @@ function constraint_ohms_yt_to_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}
     vm_to = pm.var[:nw][n][:vm][t_bus]
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
-    z = pm.var[:nw][n][:line_ne][i]
+    z = pm.var[:nw][n][:branch_ne][i]
 
     @NLconstraint(pm.model, p_to == z*(g*vm_to^2 + (-g*tr-b*ti)/tm*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm*(vm_to*vm_fr*sin(va_to-va_fr))) )
     @NLconstraint(pm.model, q_to == z*(-(b+c/2)*vm_to^2 - (-b*tr+g*ti)/tm*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm*(vm_to*vm_fr*sin(va_to-va_fr))) )
 end
 
-"`angmin <= line_z[i]*(t[f_bus] - t[t_bus]) <= angmax`"
+"`angmin <= branch_z[i]*(t[f_bus] - t[t_bus]) <= angmax`"
 function constraint_voltage_angle_difference_on_off{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
-    z = pm.var[:nw][n][:line_z][i]
+    z = pm.var[:nw][n][:branch_z][i]
 
     @constraint(pm.model, z*(va_fr - va_to) <= angmax)
     @constraint(pm.model, z*(va_fr - va_to) >= angmin)
 end
 
-"`angmin <= line_ne[i]*(t[f_bus] - t[t_bus]) <= angmax`"
+"`angmin <= branch_ne[i]*(t[f_bus] - t[t_bus]) <= angmax`"
 function constraint_voltage_angle_difference_ne{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax, t_min, t_max)
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
-    z = pm.var[:nw][n][:line_ne][i]
+    z = pm.var[:nw][n][:branch_ne][i]
 
     @constraint(pm.model, z*(va_fr - va_to) <= angmax)
     @constraint(pm.model, z*(va_fr - va_to) >= angmin)

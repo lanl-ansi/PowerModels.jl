@@ -220,14 +220,14 @@ function variable_reactive_generation(pm::GenericPowerModel, n::Int=pm.cnw; boun
 end
 
 ""
-function variable_line_flow(pm::GenericPowerModel, n::Int=pm.cnw; kwargs...)
-    variable_active_line_flow(pm, n; kwargs...)
-    variable_reactive_line_flow(pm, n; kwargs...)
+function variable_branch_flow(pm::GenericPowerModel, n::Int=pm.cnw; kwargs...)
+    variable_active_branch_flow(pm, n; kwargs...)
+    variable_reactive_branch_flow(pm, n; kwargs...)
 end
 
 
 "variable: `p[l,i,j]` for `(l,i,j)` in `arcs`"
-function variable_active_line_flow(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
+function variable_active_branch_flow(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
     if bounded
         pm.var[:nw][n][:p] = @variable(pm.model,
             [(l,i,j) in pm.ref[:nw][n][:arcs]], basename="$(n)_p",
@@ -244,7 +244,7 @@ function variable_active_line_flow(pm::GenericPowerModel, n::Int=pm.cnw; bounded
 end
 
 "variable: `q[l,i,j]` for `(l,i,j)` in `arcs`"
-function variable_reactive_line_flow(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
+function variable_reactive_branch_flow(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
     if bounded
         pm.var[:nw][n][:q] = @variable(pm.model,
             [(l,i,j) in pm.ref[:nw][n][:arcs]], basename="$(n)_q",
@@ -302,14 +302,14 @@ end
 
 ##################################################################
 
-"generates variables for both `active` and `reactive` `line_flow_ne`"
-function variable_line_flow_ne(pm::GenericPowerModel, n::Int=pm.cnw; kwargs...)
-    variable_active_line_flow_ne(pm, n; kwargs...)
-    variable_reactive_line_flow_ne(pm, n; kwargs...)
+"generates variables for both `active` and `reactive` `branch_flow_ne`"
+function variable_branch_flow_ne(pm::GenericPowerModel, n::Int=pm.cnw; kwargs...)
+    variable_active_branch_flow_ne(pm, n; kwargs...)
+    variable_reactive_branch_flow_ne(pm, n; kwargs...)
 end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= p_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
-function variable_active_line_flow_ne(pm::GenericPowerModel, n::Int=pm.cnw)
+function variable_active_branch_flow_ne(pm::GenericPowerModel, n::Int=pm.cnw)
     pm.var[:nw][n][:p_ne] = @variable(pm.model,
         [(l,i,j) in pm.ref[:nw][n][:ne_arcs]], basename="$(n)_p_ne",
         lowerbound = -pm.ref[:nw][n][:ne_branch][l]["rate_a"],
@@ -319,7 +319,7 @@ function variable_active_line_flow_ne(pm::GenericPowerModel, n::Int=pm.cnw)
 end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= q_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
-function variable_reactive_line_flow_ne(pm::GenericPowerModel, n::Int=pm.cnw)
+function variable_reactive_branch_flow_ne(pm::GenericPowerModel, n::Int=pm.cnw)
     pm.var[:nw][n][:q_ne] = @variable(pm.model,
         q_ne[(l,i,j) in pm.ref[:nw][n][:ne_arcs]], basename="$(n)_q_ne",
         lowerbound = -pm.ref[:nw][n][:ne_branch][l]["rate_a"],
@@ -328,25 +328,25 @@ function variable_reactive_line_flow_ne(pm::GenericPowerModel, n::Int=pm.cnw)
     )
 end
 
-"variable: `0 <= line_z[l] <= 1` for `l` in `branch`es"
-function variable_line_indicator(pm::GenericPowerModel, n::Int=pm.cnw)
-    pm.var[:nw][n][:line_z] = @variable(pm.model, 
-        [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_line_z",
+"variable: `0 <= branch_z[l] <= 1` for `l` in `branch`es"
+function variable_branch_indicator(pm::GenericPowerModel, n::Int=pm.cnw)
+    pm.var[:nw][n][:branch_z] = @variable(pm.model, 
+        [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_branch_z",
         lowerbound = 0,
         upperbound = 1,
         category = :Int,
-        start = getstart(pm.ref[:nw][n][:branch], l, "line_z_start", 1.0)
+        start = getstart(pm.ref[:nw][n][:branch], l, "branch_z_start", 1.0)
     )
 end
 
-"variable: `0 <= line_ne[l] <= 1` for `l` in `branch`es"
-function variable_line_ne(pm::GenericPowerModel, n::Int=pm.cnw)
+"variable: `0 <= branch_ne[l] <= 1` for `l` in `branch`es"
+function variable_branch_ne(pm::GenericPowerModel, n::Int=pm.cnw)
     branches = pm.ref[:nw][n][:ne_branch]
-    pm.var[:nw][n][:line_ne] = @variable(pm.model, 
-        [l in keys(branches)], basename="$(n)_line_ne",
+    pm.var[:nw][n][:branch_ne] = @variable(pm.model, 
+        [l in keys(branches)], basename="$(n)_branch_ne",
         lowerbound = 0, 
         upperbound = 1,
         category = :Int,
-        start = getstart(branches, l, "line_tnep_start", 1.0)
+        start = getstart(branches, l, "branch_tnep_start", 1.0)
     )
 end

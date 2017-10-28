@@ -377,7 +377,7 @@ function check_voltage_angle_differences(data, default_pad = 1.0472)
     end
 end
 
-"checks that each line has a reasonable line thermal rating, if not computes one"
+"checks that each branch has a reasonable thermal rating, if not computes one"
 function check_thermal_limits(data)
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
@@ -408,7 +408,7 @@ function check_thermal_limits(data)
 end
 
 """
-checks that each line has a reasonable transformer parameters
+checks that each branch has a reasonable transformer parameters
 
 this is important becouse setting tap == 0.0 leads to NaN computations, which are hard to debug
 """

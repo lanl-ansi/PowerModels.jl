@@ -22,7 +22,7 @@ end
 
 @testset "test branch flow output" begin
     @testset "24-bus rts case ac opf" begin
-        result = run_opf("../test/data/case24.m", ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("line_flows" => true)))
+        result = run_opf("../test/data/case24.m", ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
 
         @test haskey(result, "solver") == true
         @test haskey(result, "status") == true
@@ -46,9 +46,9 @@ end
         @test isapprox(branches["2"]["qt"], -0.0571; atol = 1e-3)
     end
 
-    # A DCPPowerModel test is important because it does have variables for the reverse side of the lines
+    # A DCPPowerModel test is important because it does have variables for the reverse side of the branchs
     @testset "3-bus case dc opf" begin
-        result = run_opf("../test/data/case3.m", DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("line_flows" => true)))
+        result = run_opf("../test/data/case3.m", DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
 
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "branch") == true

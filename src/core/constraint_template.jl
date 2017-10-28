@@ -420,7 +420,7 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel, n::Int, i::I
     pair = (f_bus, t_bus)
     buspair = ref(pm, n, :buspairs, pair)
 
-    if buspair["line"] == i
+    if buspair["branch"] == i
         constraint_voltage_angle_difference(pm, n, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
     end
 end

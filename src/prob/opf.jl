@@ -19,7 +19,7 @@ end
 function post_opf(pm::GenericPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
-    variable_line_flow(pm)
+    variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
     objective_min_fuel_cost(pm)

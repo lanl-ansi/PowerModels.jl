@@ -62,7 +62,7 @@ PMs = PowerModels
         for (n, network) in pm.ref[:nw]
             PMs.variable_voltage(pm, n)
             PMs.variable_generation(pm, n)
-            PMs.variable_line_flow(pm, n)
+            PMs.variable_branch_flow(pm, n)
             PMs.variable_dcline_flow(pm, n)
 
             PMs.constraint_voltage(pm, n)
@@ -144,7 +144,7 @@ PMs = PowerModels
         for (n, network) in pm.ref[:nw]
             PMs.variable_voltage(pm, n, bounded = false)
             PMs.variable_generation(pm, n, bounded = false)
-            PMs.variable_line_flow(pm, n, bounded = false)
+            PMs.variable_branch_flow(pm, n, bounded = false)
             PMs.variable_dcline_flow(pm, n, bounded = false)
 
             PMs.constraint_voltage(pm, n)

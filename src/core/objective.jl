@@ -103,14 +103,14 @@ function objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::Generic
 end
 
 
-"Cost of building lines"
+"Cost of building branchs"
 function objective_tnep_cost(pm::GenericPowerModel, nws=[pm.cnw])
-    line_ne = Dict(n => pm.var[:nw][n][:line_ne] for n in nws)
+    branch_ne = Dict(n => pm.var[:nw][n][:branch_ne] for n in nws)
     branches = Dict(n => pm.ref[:nw][n][:ne_branch] for n in nws)
 
     return @objective(pm.model, Min, 
         sum(
-            sum( branch["construction_cost"]*line_ne[n][i] for (i,branch) in branches[n])
+            sum( branch["construction_cost"]*branch_ne[n][i] for (i,branch) in branches[n])
         for n in nws)
     )
 end

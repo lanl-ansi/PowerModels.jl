@@ -85,8 +85,8 @@ end
 
 ""
 function add_branch_flow_setpoint(sol, pm::GenericPowerModel)
-    # check the line flows were requested
-    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
+    # check the branch flows were requested
+    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
         add_setpoint(sol, pm, "branch", "pf", :p; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
         add_setpoint(sol, pm, "branch", "qf", :q; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
         add_setpoint(sol, pm, "branch", "pt", :p; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
@@ -104,8 +104,8 @@ end
 
 ""
 function add_branch_flow_setpoint_ne(sol, pm::GenericPowerModel)
-    # check the line flows were requested
-    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "line_flows") && pm.setting["output"]["line_flows"] == true
+    # check the branch flows were requested
+    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
         add_setpoint(sol, pm, "ne_branch", "pf", :p_ne; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
         add_setpoint(sol, pm, "ne_branch", "qf", :q_ne; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
         add_setpoint(sol, pm, "ne_branch", "pt", :p_ne; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
@@ -115,16 +115,16 @@ end
 
 ""
 function add_branch_status_setpoint(sol, pm::GenericPowerModel)
-  add_setpoint(sol, pm, "branch", "br_status", :line_z; default_value = (item) -> 1)
+  add_setpoint(sol, pm, "branch", "br_status", :branch_z; default_value = (item) -> 1)
 end
 
 function add_branch_status_setpoint_dc(sol, pm::GenericPowerModel)
-  add_setpoint(sol, pm, "dcline", "br_status", :line_z; default_value = (item) -> 1)
+  add_setpoint(sol, pm, "dcline", "br_status", :dcline_z; default_value = (item) -> 1)
 end
 
 ""
 function add_branch_ne_setpoint(sol, pm::GenericPowerModel)
-  add_setpoint(sol, pm, "ne_branch", "built", :line_ne; default_value = (item) -> 1)
+  add_setpoint(sol, pm, "ne_branch", "built", :branch_ne; default_value = (item) -> 1)
 end
 
 ""

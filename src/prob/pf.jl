@@ -19,7 +19,7 @@ end
 function post_pf(pm::GenericPowerModel)
     variable_voltage(pm, bounded = false)
     variable_generation(pm, bounded = false)
-    variable_line_flow(pm, bounded = false)
+    variable_branch_flow(pm, bounded = false)
     variable_dcline_flow(pm, bounded = false)
 
     constraint_voltage(pm)

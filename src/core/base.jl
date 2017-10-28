@@ -27,7 +27,7 @@ end
 where
 
 * `data` is the original data, usually from reading in a `.json` or `.m` (patpower) file,
-* `setting` usually looks something like `Dict("output" => Dict("line_flows" => true))`, and
+* `setting` usually looks something like `Dict("output" => Dict("branch_flows" => true))`, and
 * `ref` is a place to store commonly used pre-computed data from of the data dictionary,
     primarily for converting data-types, filtering out deactivated components, and storing
     system-wide values that need to be computed globally. See `build_ref(data)` for further details.
@@ -342,7 +342,7 @@ function buspair_parameters(arcs_from, branches, buses)
 
     bp_angmin = Dict([(bp, -Inf) for bp in buspair_indexes])
     bp_angmax = Dict([(bp, Inf) for bp in buspair_indexes])
-    bp_line = Dict([(bp, Inf) for bp in buspair_indexes])
+    bp_branch = Dict([(bp, Inf) for bp in buspair_indexes])
 
     for (l,branch) in branches
         i = branch["f_bus"]
@@ -350,15 +350,15 @@ function buspair_parameters(arcs_from, branches, buses)
 
         bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
         bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
-        bp_line[(i,j)] = min(bp_line[(i,j)], l)
+        bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end
 
     buspairs = Dict([((i,j), Dict(
-        "line"=>bp_line[(i,j)],
+        "branch"=>bp_branch[(i,j)],
         "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],
-        "rate_a"=>branches[bp_line[(i,j)]]["rate_a"],
-        "tap"=>branches[bp_line[(i,j)]]["tap"],
+        "rate_a"=>branches[bp_branch[(i,j)]]["rate_a"],
+        "tap"=>branches[bp_branch[(i,j)]]["tap"],
         "vm_fr_min"=>buses[i]["vmin"],
         "vm_fr_max"=>buses[i]["vmax"],
         "vm_to_min"=>buses[j]["vmin"],

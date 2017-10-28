@@ -1,6 +1,6 @@
 @testset "test ac polar pf" begin
     @testset "3-bus case" begin
-        result = run_ac_pf("../test/data/case3.m", ipopt_solver, setting = Dict("output" => Dict("line_flows" => true)))
+        result = run_ac_pf("../test/data/case3.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -25,7 +25,7 @@
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "5-bus case with hvdc line" begin
-        result = run_ac_pf("../test/data/case5_dc.m", ipopt_solver, setting = Dict("output" => Dict("line_flows" => true)))
+        result = run_ac_pf("../test/data/case5_dc.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -73,7 +73,7 @@ end
     #=
     # numerical issues with ipopt, likely div. by zero issue in jacobian
     @testset "5-bus case with hvdc line" begin
-        result = run_pf("../test/data/case5_dc.m", ACRPowerModel, ipopt_solver, setting = Dict("output" => Dict("line_flows" => true)))
+        result = run_pf("../test/data/case5_dc.m", ACRPowerModel, ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -103,7 +103,7 @@ end
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "5-bus case with hvdc line" begin
-        result = run_pf("../test/data/case5_dc.m", ACTPowerModel, ipopt_solver, setting = Dict("output" => Dict("line_flows" => true)))
+        result = run_pf("../test/data/case5_dc.m", ACTPowerModel, ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
