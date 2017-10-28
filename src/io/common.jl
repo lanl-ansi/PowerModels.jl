@@ -20,4 +20,5 @@ function check_network_data(data::Dict{String,Any})
     check_branch_directions(data)
     check_bus_types(data)
     check_dcline_limits(data)
+    check_voltage_setpoints(data)
 end
