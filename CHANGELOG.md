@@ -8,6 +8,7 @@ PowerModels.jl Change Log
 - Removed epsilon parameter from constraint_voltage_magnitude_setpoint (breaking)
 - Moved misc models to PowerModelsAnnex (breaking)
 - Removed unnecessary NL constraints from ACR and ACT formulations
+- Removed redundant quadratic constraint from DCPLL formulation
 - Added warning messages for inconsistent voltage set points
 
 ### v0.4.0

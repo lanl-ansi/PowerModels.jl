@@ -283,10 +283,7 @@ function constraint_ohms_yt_from{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
 
-    r = g/(g^2 + b^2)
-
     @constraint(pm.model, p_fr == -b*(va_fr - va_to))
-    @constraint(pm.model, p_fr + p_to >= r*(p_fr^2))
 end
 
 """
@@ -310,9 +307,6 @@ function constraint_ohms_yt_from_on_off{T <: AbstractDCPLLForm}(pm::GenericPower
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
     z = pm.var[:nw][n][:branch_z][i]
-
-    r = g/(g^2 + b^2)
-    t_m = max(abs(t_min),abs(t_max))
 
     @constraint(pm.model, p_fr <= -b*(va_fr - va_to + t_max*(1-z)) )
     @constraint(pm.model, p_fr >= -b*(va_fr - va_to + t_min*(1-z)) )
@@ -342,9 +336,6 @@ function constraint_ohms_yt_from_ne{T <: AbstractDCPLLForm}(pm::GenericPowerMode
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
     z = pm.var[:nw][n][:branch_ne][i]
-
-    r = g/(g^2 + b^2)
-    t_m = max(abs(t_min),abs(t_max))
 
     @constraint(pm.model, p_fr <= -b*(va_fr - va_to + t_max*(1-z)) )
     @constraint(pm.model, p_fr >= -b*(va_fr - va_to + t_min*(1-z)) )
