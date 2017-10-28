@@ -286,7 +286,7 @@ function constraint_ohms_yt_from{T <: AbstractDCPLLForm}(pm::GenericPowerModel{T
     r = g/(g^2 + b^2)
 
     @constraint(pm.model, p_fr == -b*(va_fr - va_to))
-    @constraint(pm.model, p_fr + p_to >= r*(p_fr^2))
+    #@constraint(pm.model, p_fr + p_to >= r*(p_fr^2))
 end
 
 """
