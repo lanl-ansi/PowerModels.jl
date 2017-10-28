@@ -407,6 +407,32 @@ function check_thermal_limits(data)
     end
 end
 
+
+"checks that all parallel branches have the same orientation"
+function check_branch_directions(data)
+    orientations = Set()
+    for (i, branch) in data["branch"]
+        orientation = (branch["f_bus"], branch["t_bus"])
+        orientation_rev = (branch["t_bus"], branch["f_bus"])
+
+        if in(orientation_rev, orientations)
+            warn("reversing the orientation of branch $(i) $(orientation) to be consistent with other parallel branches")
+            branch_orginal = copy(branch)
+            branch["f_bus"] = branch_orginal["t_bus"]
+            branch["t_bus"] = branch_orginal["f_bus"]
+            branch["tap"] = 1/branch_orginal["tap"]
+            branch["shift"] = -branch_orginal["shift"]
+            branch["angmin"] = -branch_orginal["angmax"]
+            branch["angmax"] = -branch_orginal["angmin"]
+        else
+            push!(orientations, orientation)
+        end
+
+    end
+end
+
+
+
 """
 checks that each branch has a reasonable transformer parameters
 
