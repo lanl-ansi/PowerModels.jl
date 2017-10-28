@@ -1,4 +1,7 @@
 % based on NESTA v0.6.0
+% tests dc line with costs
+% tests generator and dc line voltage setpoint warnings
+
 function mpc = nesta_case5_pjm
 mpc.version = '2';
 mpc.baseMVA = 100.0;
@@ -16,7 +19,7 @@ mpc.bus = [
 %% generator data
 %	bus	Pg	Qg	Qmax	Qmin	Vg	mBase	status	Pmax	Pmin	Pc1	Pc2	Qc1min	Qc1max	Qc2min	Qc2max	ramp_agc	ramp_10	ramp_30	ramp_q	apf
 mpc.gen = [
-	1	 40.0	 30.0	 30.0	 -30.0	 1.07762	 100.0	 1	 40.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0;
+	1	 40.0	 30.0	 30.0	 -30.0	 1.06355	 100.0	 1	 40.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0;
 	1	 170.0	 127.5	 127.5	 -127.5	 1.07762	 100.0	 1	 170.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0;
 	3	 333.6866	 390.0	 390.0	 -390.0	 1.1	 100.0	 1	 520.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0;
 	4	 0.0	 -70.8186	 150.0	 -150.0	 1.06414	 100.0	 1	 200.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0	 0.0;
@@ -47,7 +50,7 @@ mpc.branch = [
 %% dcline data
 %	fbus	tbus	status	Pf	Pt	Qf	Qt	Vf	Vt	Pmin	Pmax	QminF	QmaxF	QminT	QmaxT	loss0	loss1
 mpc.dcline = [
-	3	5	1	10	8.9	99.9934	-10.4049	1.1	1.05304	10	100 	-100	100	-100 100	1	0.01;
+	3	5	1	10	8.9	99.9934	-10.4049	1.1	1.05555	10	100 	-100	100	-100 100	1	0.01;
 ];
 
 %% dcline cost data

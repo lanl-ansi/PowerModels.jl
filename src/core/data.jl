@@ -407,6 +407,31 @@ function check_thermal_limits(data)
     end
 end
 
+
+"checks that all parallel branches have the same orientation"
+function check_branch_directions(data)
+    orientations = Set()
+    for (i, branch) in data["branch"]
+        orientation = (branch["f_bus"], branch["t_bus"])
+        orientation_rev = (branch["t_bus"], branch["f_bus"])
+
+        if in(orientation_rev, orientations)
+            warn("reversing the orientation of branch $(i) $(orientation) to be consistent with other parallel branches")
+            branch_orginal = copy(branch)
+            branch["f_bus"] = branch_orginal["t_bus"]
+            branch["t_bus"] = branch_orginal["f_bus"]
+            branch["tap"] = 1/branch_orginal["tap"]
+            branch["shift"] = -branch_orginal["shift"]
+            branch["angmin"] = -branch_orginal["angmax"]
+            branch["angmax"] = -branch_orginal["angmin"]
+        else
+            push!(orientations, orientation)
+        end
+
+    end
+end
+
+
 """
 checks that each branch has a reasonable transformer parameters
 
@@ -431,6 +456,7 @@ function check_transformer_parameters(data)
         end
     end
 end
+
 
 "checks bus types are consistent with generator connections, if not, fixes them"
 function check_bus_types(data)
@@ -460,6 +486,7 @@ function check_bus_types(data)
         end
     end
 end
+
 
 "checks that parameters for dc lines are reasonable"
 function check_dcline_limits(data)
@@ -499,3 +526,30 @@ function check_dcline_limits(data)
     end
 end
 
+
+"throws warnings if generator and dc line voltage setpoints are not consistent with the bus voltage setpoint"
+function check_voltage_setpoints(data)
+    for (i,gen) in data["gen"]
+        bus_id = gen["gen_bus"]
+        bus = data["bus"]["$(bus_id)"]
+        if gen["vg"] != bus["vm"]
+           warn("the voltage setpoint on generator $(i) does not match the value at bus $(bus_id)")
+        end
+    end
+
+    for (i, dcline) in data["dcline"]
+        bus_fr_id = dcline["f_bus"]
+        bus_to_id = dcline["t_bus"]
+
+        bus_fr = data["bus"]["$(bus_fr_id)"]
+        bus_to = data["bus"]["$(bus_to_id)"]
+
+        if dcline["vf"] != bus_fr["vm"]
+           warn("the from bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_fr_id)")
+        end
+
+        if dcline["vt"] != bus_to["vm"]
+           warn("the to bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_to_id)")
+        end
+    end
+end

@@ -3,10 +3,12 @@ PowerModels.jl Change Log
 
 ### Staged
 - Standardized around branch name for pi-model lines (breaking)
+- Added checking for inconsistent orientation on parallel branches
 - Added support for multiple networks in the JuMP model (breaking)
 - Removed epsilon parameter from constraint_voltage_magnitude_setpoint (breaking)
 - Moved misc models to PowerModelsAnnex (breaking)
 - Removed unnecessary NL constraints from ACR and ACT formulations
+- Added warning messages for inconsistent voltage set points
 
 ### v0.4.0
 - Added JuMP v0.18 compatibility
