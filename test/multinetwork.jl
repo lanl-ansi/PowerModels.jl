@@ -115,7 +115,7 @@ PMs = PowerModels
         end
     end
 
-    @testset "hybrid network case" begin
+    @testset "hybrid network case - polar" begin
         mn_data = build_mn_data("../test/data/case14.m", "../test/data/case24.m")
 
         @testset "test ac polar opf" begin
@@ -130,6 +130,23 @@ PMs = PowerModels
             )
         end
     end
+
+    @testset "hybrid network case - rect" begin
+        mn_data = build_mn_data("../test/data/case14.m", "../test/data/case24.m")
+
+        @testset "test ac polar opf" begin
+            result = run_generic_model(mn_data, ACRPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 88289.0; atol = 1e0)
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["4"]["pg"]; 
+                atol = 1e-3
+            )
+        end
+    end
+
 
     @testset "5-bus asymmetric case" begin
         # this works, but should throw a warning
