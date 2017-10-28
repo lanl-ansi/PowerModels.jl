@@ -124,8 +124,19 @@ end
 
 "extracts voltage set points from rectangular voltage form and converts into polar voltage form"
 function add_bus_voltage_setpoint{T <: AbstractACRForm}(sol, pm::GenericPowerModel{T})
-    sol_dict = sol["bus"] = get(sol, "bus", Dict{String,Any}())
-    for (i,item) in pm.data["bus"]
+    sol_dict = get(sol, "bus", Dict{String,Any}())
+
+    if pm.data["multinetwork"]
+        bus_dict = pm.data["nw"]["$(pm.cnw)"]["bus"]
+    else
+        bus_dict = pm.data["bus"]
+    end
+
+    if length(bus_dict) > 0
+        sol["bus"] = sol_dict
+    end
+
+    for (i,item) in bus_dict
         idx = Int(item["bus_i"])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
         sol_item["vm"] = NaN
