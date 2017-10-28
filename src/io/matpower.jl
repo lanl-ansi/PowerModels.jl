@@ -296,6 +296,16 @@ function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
     return mp_line
 end
 
+function parse_type(typ, str)
+    try
+        value = parse(typ, str)
+        return value
+    catch e
+        error("parsing error, the matlab string \"$(str)\" can not be parsed to $(typ) data")
+        rethrow(e)
+    end
+end
+
 ""
 function extract_assignment(string::AbstractString)
     statement = split(string, ';')[1]
@@ -324,9 +334,9 @@ function type_value(value_string::AbstractString)
     else
         # if value is a float
         if contains(value_string, ".") || contains(value_string, "e")
-            value = parse(Float64, value_string)
+            value = parse_type(Float64, value_string)
         else # otherwise assume it is an int
-            value = parse(Int, value_string)
+            value = parse_type(Int, value_string)
         end
     end
 
@@ -340,9 +350,9 @@ function type_array{T <: AbstractString}(string_array::Vector{T})
     return if any(contains(value_string, "'") for value_string in string_array)
         [strip(value_string, '\'') for value_string in string_array]
     elseif any(contains(value_string, ".") || contains(value_string, "e") for value_string in string_array)
-        [parse(Float64, value_string) for value_string in string_array]
+        [parse_type(Float64, value_string) for value_string in string_array]
     else # otherwise assume it is an int
-        [parse(Int, value_string) for value_string in string_array]
+        [parse_type(Int, value_string) for value_string in string_array]
     end
 end
 
@@ -428,26 +438,26 @@ function parse_matpower_data(data_string::String)
 
             for bus_row in parsed_matrix["data"]
                 bus_data = Dict{String,Any}(
-                    "index" => parse(Int, bus_row[1]),
-                    "bus_i" => parse(Int, bus_row[1]),
-                    "bus_type" => parse(Int, bus_row[2]),
-                    "pd" => parse(Float64, bus_row[3]),
-                    "qd" => parse(Float64, bus_row[4]),
-                    "gs" => parse(Float64, bus_row[5]),
-                    "bs" => parse(Float64, bus_row[6]),
-                    "area" => parse(Int, bus_row[7]),
-                    "vm" => parse(Float64, bus_row[8]),
-                    "va" => parse(Float64, bus_row[9]),
-                    "base_kv" => parse(Float64, bus_row[10]),
-                    "zone" => parse(Int, bus_row[11]),
-                    "vmax" => parse(Float64, bus_row[12]),
-                    "vmin" => parse(Float64, bus_row[13]),
+                    "index" => parse_type(Int, bus_row[1]),
+                    "bus_i" => parse_type(Int, bus_row[1]),
+                    "bus_type" => parse_type(Int, bus_row[2]),
+                    "pd" => parse_type(Float64, bus_row[3]),
+                    "qd" => parse_type(Float64, bus_row[4]),
+                    "gs" => parse_type(Float64, bus_row[5]),
+                    "bs" => parse_type(Float64, bus_row[6]),
+                    "area" => parse_type(Int, bus_row[7]),
+                    "vm" => parse_type(Float64, bus_row[8]),
+                    "va" => parse_type(Float64, bus_row[9]),
+                    "base_kv" => parse_type(Float64, bus_row[10]),
+                    "zone" => parse_type(Int, bus_row[11]),
+                    "vmax" => parse_type(Float64, bus_row[12]),
+                    "vmin" => parse_type(Float64, bus_row[13]),
                 )
                 if length(bus_row) > 13
-                    bus_data["lam_p"] = parse(Float64, bus_row[14])
-                    bus_data["lam_q"] = parse(Float64, bus_row[15])
-                    bus_data["mu_vmax"] = parse(Float64, bus_row[16])
-                    bus_data["mu_vmin"] = parse(Float64, bus_row[17])
+                    bus_data["lam_p"] = parse_type(Float64, bus_row[14])
+                    bus_data["lam_q"] = parse_type(Float64, bus_row[15])
+                    bus_data["mu_vmax"] = parse_type(Float64, bus_row[16])
+                    bus_data["mu_vmin"] = parse_type(Float64, bus_row[17])
                 end
 
                 push!(buses, bus_data)
@@ -461,33 +471,33 @@ function parse_matpower_data(data_string::String)
             for (i, gen_row) in enumerate(parsed_matrix["data"])
                 gen_data = Dict{String,Any}(
                     "index" => i,
-                    "gen_bus" => parse(Int, gen_row[1]),
-                    "pg" => parse(Float64, gen_row[2]),
-                    "qg" => parse(Float64, gen_row[3]),
-                    "qmax" => parse(Float64, gen_row[4]),
-                    "qmin" => parse(Float64, gen_row[5]),
-                    "vg" => parse(Float64, gen_row[6]),
-                    "mbase" => parse(Float64, gen_row[7]),
-                    "gen_status" => parse(Int, gen_row[8]),
-                    "pmax" => parse(Float64, gen_row[9]),
-                    "pmin" => parse(Float64, gen_row[10]),
-                    "pc1" => parse(Float64, gen_row[11]),
-                    "pc2" => parse(Float64, gen_row[12]),
-                    "qc1min" => parse(Float64, gen_row[13]),
-                    "qc1max" => parse(Float64, gen_row[14]),
-                    "qc2min" => parse(Float64, gen_row[15]),
-                    "qc2max" => parse(Float64, gen_row[16]),
-                    "ramp_agc" => parse(Float64, gen_row[17]),
-                    "ramp_10" => parse(Float64, gen_row[18]),
-                    "ramp_30" => parse(Float64, gen_row[19]),
-                    "ramp_q" => parse(Float64, gen_row[20]),
-                    "apf" => parse(Float64, gen_row[21]),
+                    "gen_bus" => parse_type(Int, gen_row[1]),
+                    "pg" => parse_type(Float64, gen_row[2]),
+                    "qg" => parse_type(Float64, gen_row[3]),
+                    "qmax" => parse_type(Float64, gen_row[4]),
+                    "qmin" => parse_type(Float64, gen_row[5]),
+                    "vg" => parse_type(Float64, gen_row[6]),
+                    "mbase" => parse_type(Float64, gen_row[7]),
+                    "gen_status" => parse_type(Int, gen_row[8]),
+                    "pmax" => parse_type(Float64, gen_row[9]),
+                    "pmin" => parse_type(Float64, gen_row[10]),
+                    "pc1" => parse_type(Float64, gen_row[11]),
+                    "pc2" => parse_type(Float64, gen_row[12]),
+                    "qc1min" => parse_type(Float64, gen_row[13]),
+                    "qc1max" => parse_type(Float64, gen_row[14]),
+                    "qc2min" => parse_type(Float64, gen_row[15]),
+                    "qc2max" => parse_type(Float64, gen_row[16]),
+                    "ramp_agc" => parse_type(Float64, gen_row[17]),
+                    "ramp_10" => parse_type(Float64, gen_row[18]),
+                    "ramp_30" => parse_type(Float64, gen_row[19]),
+                    "ramp_q" => parse_type(Float64, gen_row[20]),
+                    "apf" => parse_type(Float64, gen_row[21]),
                 )
                 if length(gen_row) > 21
-                    gen_data["mu_pmax"] = parse(Float64, gen_row[22])
-                    gen_data["mu_pmin"] = parse(Float64, gen_row[23])
-                    gen_data["mu_qmax"] = parse(Float64, gen_row[24])
-                    gen_data["mu_qmin"] = parse(Float64, gen_row[25])
+                    gen_data["mu_pmax"] = parse_type(Float64, gen_row[22])
+                    gen_data["mu_pmin"] = parse_type(Float64, gen_row[23])
+                    gen_data["mu_qmax"] = parse_type(Float64, gen_row[24])
+                    gen_data["mu_qmin"] = parse_type(Float64, gen_row[25])
                 end
 
                 push!(gens, gen_data)
@@ -501,31 +511,31 @@ function parse_matpower_data(data_string::String)
             for (i, branch_row) in enumerate(parsed_matrix["data"])
                 branch_data = Dict{String,Any}(
                     "index" => i,
-                    "f_bus" => parse(Int, branch_row[1]),
-                    "t_bus" => parse(Int, branch_row[2]),
-                    "br_r" => parse(Float64, branch_row[3]),
-                    "br_x" => parse(Float64, branch_row[4]),
-                    "br_b" => parse(Float64, branch_row[5]),
-                    "rate_a" => parse(Float64, branch_row[6]),
-                    "rate_b" => parse(Float64, branch_row[7]),
-                    "rate_c" => parse(Float64, branch_row[8]),
-                    "tap" => parse(Float64, branch_row[9]),
-                    "shift" => parse(Float64, branch_row[10]),
-                    "br_status" => parse(Int, branch_row[11]),
-                    "angmin" => parse(Float64, branch_row[12]),
-                    "angmax" => parse(Float64, branch_row[13]),
+                    "f_bus" => parse_type(Int, branch_row[1]),
+                    "t_bus" => parse_type(Int, branch_row[2]),
+                    "br_r" => parse_type(Float64, branch_row[3]),
+                    "br_x" => parse_type(Float64, branch_row[4]),
+                    "br_b" => parse_type(Float64, branch_row[5]),
+                    "rate_a" => parse_type(Float64, branch_row[6]),
+                    "rate_b" => parse_type(Float64, branch_row[7]),
+                    "rate_c" => parse_type(Float64, branch_row[8]),
+                    "tap" => parse_type(Float64, branch_row[9]),
+                    "shift" => parse_type(Float64, branch_row[10]),
+                    "br_status" => parse_type(Int, branch_row[11]),
+                    "angmin" => parse_type(Float64, branch_row[12]),
+                    "angmax" => parse_type(Float64, branch_row[13]),
                 )
                 if length(branch_row) > 13
-                    branch_data["pf"] = parse(Float64, branch_row[14])
-                    branch_data["qf"] = parse(Float64, branch_row[15])
-                    branch_data["pt"] = parse(Float64, branch_row[16])
-                    branch_data["qt"] = parse(Float64, branch_row[17])
+                    branch_data["pf"] = parse_type(Float64, branch_row[14])
+                    branch_data["qf"] = parse_type(Float64, branch_row[15])
+                    branch_data["pt"] = parse_type(Float64, branch_row[16])
+                    branch_data["qt"] = parse_type(Float64, branch_row[17])
                 end
                 if length(branch_row) > 17
-                    branch_data["mu_sf"] = parse(Float64, branch_row[18])
-                    branch_data["mu_st"] = parse(Float64, branch_row[19])
-                    branch_data["mu_angmin"] = parse(Float64, branch_row[20])
-                    branch_data["mu_angmax"] = parse(Float64, branch_row[21])
+                    branch_data["mu_sf"] = parse_type(Float64, branch_row[18])
+                    branch_data["mu_st"] = parse_type(Float64, branch_row[19])
+                    branch_data["mu_angmin"] = parse_type(Float64, branch_row[20])
+                    branch_data["mu_angmax"] = parse_type(Float64, branch_row[21])
                 end
 
                 push!(branches, branch_data)
@@ -550,10 +560,10 @@ function parse_matpower_data(data_string::String)
         elseif parsed_matrix["name"] == "dcline"
             dclines = []
             for (i, dcline_row) in enumerate(parsed_matrix["data"])
-                pmin = parse(Float64, dcline_row[10])
-                pmax = parse(Float64, dcline_row[11])
-                loss0 = parse(Float64, dcline_row[16])
-                loss1 = parse(Float64, dcline_row[17])
+                pmin = parse_type(Float64, dcline_row[10])
+                pmax = parse_type(Float64, dcline_row[11])
+                loss0 = parse_type(Float64, dcline_row[16])
+                loss1 = parse_type(Float64, dcline_row[17])
 
                 if pmin >= 0 && pmax >=0
                     pminf = pmin
@@ -582,33 +592,33 @@ function parse_matpower_data(data_string::String)
 
                 dcline_data = Dict{String,Any}(
                     "index" => i,
-                    "f_bus" => parse(Int, dcline_row[1]),
-                    "t_bus" => parse(Int, dcline_row[2]),
-                    "br_status" => parse(Int, dcline_row[3]),
-                    "pf" => parse(Float64, dcline_row[4]),
-                    "pt" => -parse(Float64, dcline_row[5]), # matpower has opposite convention
-                    "qf" => -parse(Float64, dcline_row[6]), # matpower has opposite convention
-                    "qt" => -parse(Float64, dcline_row[7]), # matpower has opposite convention
-                    "vf" => parse(Float64, dcline_row[8]),
-                    "vt" => parse(Float64, dcline_row[9]),
+                    "f_bus" => parse_type(Int, dcline_row[1]),
+                    "t_bus" => parse_type(Int, dcline_row[2]),
+                    "br_status" => parse_type(Int, dcline_row[3]),
+                    "pf" => parse_type(Float64, dcline_row[4]),
+                    "pt" => -parse_type(Float64, dcline_row[5]), # matpower has opposite convention
+                    "qf" => -parse_type(Float64, dcline_row[6]), # matpower has opposite convention
+                    "qt" => -parse_type(Float64, dcline_row[7]), # matpower has opposite convention
+                    "vf" => parse_type(Float64, dcline_row[8]),
+                    "vt" => parse_type(Float64, dcline_row[9]),
                     "pmint" => pmint,
                     "pminf" => pminf,
                     "pmaxt" => pmaxt,
                     "pmaxf" => pmaxf,
-                    "qminf" => parse(Float64, dcline_row[12]),
-                    "qmaxf" => parse(Float64, dcline_row[13]),
-                    "qmint" => parse(Float64, dcline_row[14]),
-                    "qmaxt" => parse(Float64, dcline_row[15]),
-                    "loss0" => parse(Float64, dcline_row[16]),
-                    "loss1" => parse(Float64, dcline_row[17]),
+                    "qminf" => parse_type(Float64, dcline_row[12]),
+                    "qmaxf" => parse_type(Float64, dcline_row[13]),
+                    "qmint" => parse_type(Float64, dcline_row[14]),
+                    "qmaxt" => parse_type(Float64, dcline_row[15]),
+                    "loss0" => parse_type(Float64, dcline_row[16]),
+                    "loss1" => parse_type(Float64, dcline_row[17]),
                 )
                 if length(dcline_row) > 17
-                    dcline_data["mu_pmin"] = parse(Float64, dcline_row[18])
-                    dcline_data["mu_pmax"] = parse(Float64, dcline_row[19])
-                    dcline_data["mu_qminf"] = parse(Float64, dcline_row[20])
-                    dcline_data["mu_qmaxf"] = parse(Float64, dcline_row[21])
-                    dcline_data["mu_qmint"] = parse(Float64, dcline_row[22])
-                    dcline_data["mu_qmaxt"] = parse(Float64, dcline_row[23])
+                    dcline_data["mu_pmin"] = parse_type(Float64, dcline_row[18])
+                    dcline_data["mu_pmax"] = parse_type(Float64, dcline_row[19])
+                    dcline_data["mu_qminf"] = parse_type(Float64, dcline_row[20])
+                    dcline_data["mu_qmaxf"] = parse_type(Float64, dcline_row[21])
+                    dcline_data["mu_qmint"] = parse_type(Float64, dcline_row[22])
+                    dcline_data["mu_qmaxt"] = parse_type(Float64, dcline_row[23])
                 end
                 push!(dclines, dcline_data)
             end
@@ -675,11 +685,11 @@ end
 function cost_data(index, costrow)
     cost_data = Dict{String,Any}(
         "index" => index,
-        "model" => parse(Int, costrow[1]),
-        "startup" => parse(Float64, costrow[2]),
-        "shutdown" => parse(Float64, costrow[3]),
-        "ncost" => parse(Int, costrow[4]),
-        "cost" => [parse(Float64, x) for x in costrow[5:length(costrow)]]
+        "model" => parse_type(Int, costrow[1]),
+        "startup" => parse_type(Float64, costrow[2]),
+        "shutdown" => parse_type(Float64, costrow[3]),
+        "ncost" => parse_type(Int, costrow[4]),
+        "cost" => [parse_type(Float64, x) for x in costrow[5:length(costrow)]]
     )
     return cost_data
 end
