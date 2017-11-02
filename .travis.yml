@@ -9,6 +9,8 @@ julia:
 matrix:
   allow_failures:
     - julia: nightly
+    - os: osx
+      julia: 0.5
 cache:
  directories:
    - /home/travis/.julia
