@@ -238,12 +238,6 @@ end
         @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
         @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
-    @testset "24-bus rts case" begin
-        result = run_opf("../test/data/case24.m", QCWRTriPowerModel, ipopt_solver)
-
-        @test result["status"] == :UserLimit
-        @test isapprox(result["objective"], 77662.7; atol = 1e0)
-    end
 end
 
 

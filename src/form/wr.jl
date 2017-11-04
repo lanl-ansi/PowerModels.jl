@@ -539,7 +539,7 @@ function constraint_voltage_angle_difference(pm::QCWRPowerModel, n::Int, f_bus, 
 end
 
 ""
-function add_bus_voltage_setpoint(sol, pm::QCWRPowerModel)
+function add_bus_voltage_setpoint{T <: QCWRForm}(sol, pm::GenericPowerModel{T})
     add_setpoint(sol, pm, "bus", "vm", :vm)
     add_setpoint(sol, pm, "bus", "va", :va)
 end
@@ -758,10 +758,10 @@ end
 "creates lambda variables for convex combination model" 
 function variable_multipliers{T <: QCWRTriForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw)
     buspairs = pm.ref[:nw][n][:buspairs]
-    pm.var[:nw][n][:lambdar] = @variable(pm.model, 
+    pm.var[:nw][n][:lambda_wr] = @variable(pm.model, 
         [bp in keys(pm.ref[:nw][n][:buspairs]), i=1:8], basename="$(n)_lambda",
         lowerbound = 0, upperbound = 1)
-    pm.var[:nw][n][:lambdai] = @variable(pm.model, 
+    pm.var[:nw][n][:lambda_wi] = @variable(pm.model, 
         [bp in keys(pm.ref[:nw][n][:buspairs]), i=1:8], basename="$(n)_lambda",
         lowerbound = 0, upperbound = 1)
 end
@@ -793,9 +793,9 @@ function constraint_voltage(pm::QCWRTriPowerModel, n::Int)
 
     w = pm.var[:nw][n][:w]
     wr = pm.var[:nw][n][:wr]
-    lambdar = pm.var[:nw][n][:lambdar]
+    lambda_wr = pm.var[:nw][n][:lambda_wr]
     wi = pm.var[:nw][n][:wi]
-    lambdai = pm.var[:nw][n][:lambdai]
+    lambda_wi = pm.var[:nw][n][:lambda_wi]
 
     for (i,b) in pm.ref[:nw][n][:bus]
         relaxation_sqr(pm.model, v[i], w[i])
@@ -807,8 +807,8 @@ function constraint_voltage(pm::QCWRTriPowerModel, n::Int)
 
         relaxation_sin(pm.model, td[bp], si[bp])
         relaxation_cos(pm.model, td[bp], cs[bp])
-        relaxation_trilinear(pm.model, v[i], v[j], cs[bp], wr[bp], lambdar[bp,:])
-        relaxation_trilinear(pm.model, v[i], v[j], si[bp], wi[bp], lambdai[bp,:])
+        relaxation_trilinear(pm.model, v[i], v[j], cs[bp], wr[bp], lambda_wr[bp,:])
+        relaxation_trilinear(pm.model, v[i], v[j], si[bp], wi[bp], lambda_wi[bp,:])
 
         # this constraint is redudant and useful for debugging
         #relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])
@@ -827,7 +827,3 @@ function constraint_voltage(pm::QCWRTriPowerModel, n::Int)
 
 end
 
-function add_bus_voltage_setpoint(sol, pm::QCWRTriPowerModel)
-    add_setpoint(sol, pm, "bus", "vm", :vm)
-    add_setpoint(sol, pm, "bus", "va", :va)
-end
