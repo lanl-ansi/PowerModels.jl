@@ -2,8 +2,8 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- Added convex hull relaxation for trilinear terms in QC relaxation
-- Added QCWRTriForm inheriting QCWRForm
+- Added lambda-based convex hull relaxation scheme for trilinear products
+- Added QCWRTri Power Flow formulation
 
 ### v0.5.0
 - Standardized around branch name for pi-model lines (breaking)
