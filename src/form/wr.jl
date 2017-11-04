@@ -429,7 +429,7 @@ function variable_current_magnitude_sqr{T}(pm::GenericPowerModel{T}, n::Int=pm.c
 end
 
 ""
-function variable_voltage(pm::QCWRPowerModel, n::Int=pm.cnw; kwargs...)
+function variable_voltage{T <: QCWRForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...)
     variable_voltage_angle(pm, n; kwargs...)
     variable_voltage_magnitude(pm, n; kwargs...)
 
@@ -444,7 +444,7 @@ function variable_voltage(pm::QCWRPowerModel, n::Int=pm.cnw; kwargs...)
 end
 
 ""
-function constraint_voltage(pm::QCWRPowerModel, n::Int)
+function constraint_voltage{T <: QCWRForm}(pm::GenericPowerModel{T}, n::Int)
     v = pm.var[:nw][n][:vm]
     t = pm.var[:nw][n][:va]
 
@@ -511,12 +511,12 @@ function constraint_power_magnitude_link{T <: QCWRForm}(pm::GenericPowerModel{T}
 end
 
 "`t[ref_bus] == 0`"
-function constraint_theta_ref(pm::QCWRPowerModel, n::Int, i::Int)
+function constraint_theta_ref{T <: QCWRForm}(pm::GenericPowerModel{T}, n::Int, i::Int)
     @constraint(pm.model, pm.var[:nw][n][:va][i] == 0)
 end
 
 ""
-function constraint_voltage_angle_difference(pm::QCWRPowerModel, n::Int, f_bus, t_bus, angmin, angmax)
+function constraint_voltage_angle_difference{T <: QCWRForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, angmin, angmax)
     td = pm.var[:nw][n][:td][(f_bus, t_bus)]
 
     if getlowerbound(td) < angmin
@@ -547,7 +547,7 @@ end
 
 
 ""
-function variable_voltage_on_off(pm::QCWRPowerModel, n::Int=pm.cnw; kwargs...)
+function variable_voltage_on_off{T <: QCWRForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...)
     variable_voltage_angle(pm, n; kwargs...)
     variable_voltage_magnitude(pm, n; kwargs...)
     variable_voltage_magnitude_from_on_off(pm, n; kwargs...)
@@ -644,7 +644,7 @@ end
 
 
 ""
-function constraint_voltage_on_off(pm::QCWRPowerModel, n::Int)
+function constraint_voltage_on_off{T <: QCWRForm}(pm::GenericPowerModel{T}, n::Int)
     v = pm.var[:nw][n][:vm]
     t = pm.var[:nw][n][:va]
     vm_fr = pm.var[:nw][n][:vm_fr]
@@ -709,7 +709,7 @@ end
 
 
 "`p[arc_from]^2 + q[arc_from]^2 <= w[f_bus]/tm*cm[i]`"
-function constraint_power_magnitude_sqr_on_off(pm::QCWRPowerModel, n::Int, i, f_bus, arc_from, tm)
+function constraint_power_magnitude_sqr_on_off{T <: QCWRForm}(pm::GenericPowerModel{T}, n::Int, i, f_bus, arc_from, tm)
     w = pm.var[:nw][n][:w][f_bus]
     p_fr = pm.var[:nw][n][:p][arc_from]
     q_fr = pm.var[:nw][n][:q][arc_from]
@@ -727,7 +727,7 @@ function constraint_power_magnitude_sqr_on_off(pm::QCWRPowerModel, n::Int, i, f_
 end
 
 "`cm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
-function constraint_power_magnitude_link_on_off(pm::QCWRPowerModel, n::Int, i, arc_from, g, b, c, tr, ti, tm)
+function constraint_power_magnitude_link_on_off{T <: QCWRForm}(pm::GenericPowerModel{T}, n::Int, i, arc_from, g, b, c, tr, ti, tm)
     w_fr = pm.var[:nw][n][:w_fr][i]
     w_to = pm.var[:nw][n][:w_to][i]
     q_fr = pm.var[:nw][n][:q][arc_from]
@@ -767,7 +767,7 @@ function variable_multipliers{T <: QCWRTriForm}(pm::GenericPowerModel{T}, n::Int
 end
 
 ""
-function variable_voltage(pm::QCWRTriPowerModel, n::Int=pm.cnw; kwargs...)
+function variable_voltage{T <: QCWRTriForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...)
     variable_voltage_angle(pm, n; kwargs...)
     variable_voltage_magnitude(pm, n; kwargs...)
 
@@ -783,7 +783,7 @@ function variable_voltage(pm::QCWRTriPowerModel, n::Int=pm.cnw; kwargs...)
 end
 
 ""
-function constraint_voltage(pm::QCWRTriPowerModel, n::Int)
+function constraint_voltage{T <: QCWRTriForm}(pm::GenericPowerModel{T}, n::Int)
     v = pm.var[:nw][n][:vm]
     t = pm.var[:nw][n][:va]
 
