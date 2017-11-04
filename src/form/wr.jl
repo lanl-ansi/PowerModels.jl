@@ -826,3 +826,8 @@ function constraint_voltage(pm::QCWRTriPowerModel, n::Int)
     end
 
 end
+
+function add_bus_voltage_setpoint(sol, pm::QCWRTriPowerModel)
+    add_setpoint(sol, pm, "bus", "vm", :vm)
+    add_setpoint(sol, pm, "bus", "va", :va)
+end
