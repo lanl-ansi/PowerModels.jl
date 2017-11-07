@@ -46,17 +46,21 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 
 
+## Citing PowerModels
+
+If you find PowerModels useful in your work, we kindly request that you cite the following [technical report](https://arxiv.org/abs/1711.01728):
+```
+@misc{1711.01728,
+  author = {Carleton Coffrin and Russell Bent and Kaarthik Sundar and Yeesian Ng and Miles Lubin},
+  title = {PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations},
+  year = {2017},
+  eprint = {arXiv:1711.01728},
+  url = {http://arxiv.org/abs/1711.01728}
+}
+```
+Citation of the orginal works for problem denifitions (e.g. OPF) and power flow formulations (e.g. SOC) is also encuraged when publishing works that use PowerModels.
+
+
 ## License
 
 This code is provided under a BSD license as part of the Multi-Infrastructure Control and Optimization Toolkit (MICOT) project, LA-CC-13-108.
-
-## Citing PowerModels
-
-If you find PowerModels useful in your work, we kindly request that you cite the following preprint [arxiv](https://arxiv.org/abs/1711.01728):
-
-    @article{Coffrin2017,
-    author = {Carleton Coffrin and Russell Bent and Kaarthik Sundar and Yeesian Ng and Miles Lubin},
-    title = {PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations},
-    year = {2017},
-    Eprint = {arXiv:1711.01728},
-    }
