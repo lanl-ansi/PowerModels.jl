@@ -59,7 +59,7 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11567; atol = 1e0)
         @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4) 
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
     @testset "24-bus rts case" begin
         result = run_opf("../test/data/case24.m", ACRPowerModel, ipopt_solver)
@@ -89,7 +89,7 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11567; atol = 1e0)
         @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4) 
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
     @testset "24-bus rts case" begin
         result = run_opf("../test/data/case24.m", ACTPowerModel, ipopt_solver)
@@ -350,3 +350,21 @@ end
     end
 end
 
+@testset "Dual variables from OPF" begin
+    settingdict = Dict("output" => Dict("duals" => true))
+    result = run_dc_opf("../test/data/case14.m", ipopt_solver, setting = settingdict)
+    PowerModels.make_mixed_units(result["solution"])
+    @testset "KCL dual variables" begin
+        res = result["solution"]["bus"]
+        for b in keys(res)
+            @test haskey(res[b], "lam_kcl_i")
+            @test haskey(res[b], "lam_kcl_r")
+            @test round(res[b]["lam_kcl_r"], 2) == -39.02 # Expected result for case14
+        end
+    end
+
+    @testset "Thermal limits dual variables" begin
+        @test haskey(result["solution"], "branch_duals")
+        @test length(keys(result["solution"]["branch_duals"]["0"])) == 20
+    end
+end

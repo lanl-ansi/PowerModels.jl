@@ -172,7 +172,8 @@ function make_per_unit(data::Dict{String,Any})
 end
 
 function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
-    rescale = x -> x/mva_base
+    rescale      = x -> x/mva_base
+    rescale_dual = x -> x*mva_base
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
@@ -183,6 +184,9 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
             apply_func(bus, "bs", rescale)
 
             apply_func(bus, "va", deg2rad)
+
+            apply_func(bus, "lam_kcl_r", rescale_dual)
+            apply_func(bus, "lam_kcl_i", rescale_dual)
         end
     end
 
@@ -273,7 +277,8 @@ function make_mixed_units(data::Dict{String,Any})
 end
 
 function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
-    rescale = x -> x*mva_base
+    rescale      = x -> x*mva_base
+    rescale_dual = x -> x/mva_base
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
@@ -284,6 +289,9 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
             apply_func(bus, "bs", rescale)
 
             apply_func(bus, "va", rad2deg)
+
+            apply_func(bus, "lam_kcl_r", rescale_dual)
+            apply_func(bus, "lam_kcl_i", rescale_dual)
         end
     end
 
