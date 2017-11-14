@@ -61,12 +61,22 @@ function get_solution(pm::GenericPowerModel, sol::Dict{String,Any})
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
     add_dcline_flow_setpoint(sol, pm)
+
+    add_kcl_duals(sol, pm)
 end
 
 ""
 function add_bus_voltage_setpoint(sol, pm::GenericPowerModel)
     add_setpoint(sol, pm, "bus", "vm", :vm)
     add_setpoint(sol, pm, "bus", "va", :va)
+end
+
+""
+function add_kcl_duals(sol, pm::GenericPowerModel)
+    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
+        add_dual(sol, pm, "bus", "lam_kcl_r", :kcl_p)
+        add_dual(sol, pm, "bus", "lam_kcl_i", :kcl_q)
+    end
 end
 
 ""
@@ -147,6 +157,33 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
         try
             variable = extract_var(var(pm, variable_symbol), idx, item)
             sol_item[param_name] = scale(getvalue(variable), item)
+        catch
+        end
+    end
+end
+
+
+""
+function add_dual(sol, pm::GenericPowerModel, dict_name, param_name, con_symbol; index_name = "index", default_value = (item) -> NaN, scale = (x,item) -> x, extract_con = (con,idx,item) -> con[idx])
+    sol_dict = get(sol, dict_name, Dict{String,Any}())
+
+    if pm.data["multinetwork"]
+        data_dict = pm.data["nw"]["$(pm.cnw)"][dict_name]
+    else
+        data_dict = pm.data[dict_name]
+    end
+
+    if length(data_dict) > 0
+        sol[dict_name] = sol_dict
+    end
+    for (i,item) in data_dict
+        idx = Int(item[index_name])
+        sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
+        sol_item[param_name] = default_value(item)
+        try
+            constraint = extract_con(con(pm, con_symbol), idx, item)
+            #println(constraint)
+            sol_item[param_name] = scale(getdual(constraint), item)
         catch
         end
     end

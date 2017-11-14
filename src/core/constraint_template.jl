@@ -59,6 +59,13 @@ constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, i::Int) = constrain
 
 ""
 function constraint_kcl_shunt(pm::GenericPowerModel, n::Int, i::Int)
+    if !haskey(pm.con[:nw][n], :kcl_p)
+        pm.con[:nw][n][:kcl_p] = Dict{Int,ConstraintRef}()
+    end
+    if !haskey(pm.con[:nw][n], :kcl_q)
+        pm.con[:nw][n][:kcl_q] = Dict{Int,ConstraintRef}()
+    end
+
     bus = ref(pm, n, :bus, i)
     bus_arcs = ref(pm, n, :bus_arcs, i)
     bus_arcs_dc = ref(pm, n, :bus_arcs_dc, i)
