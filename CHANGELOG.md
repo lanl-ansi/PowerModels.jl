@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Fixed bug in QC-OTS formulation
 - Added lambda-based convex hull relaxation scheme for trilinear products
 - Added QCWRTri Power Flow formulation
 
