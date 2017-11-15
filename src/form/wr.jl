@@ -687,7 +687,7 @@ function constraint_voltage_on_off{T <: QCWRForm}(pm::GenericPowerModel{T}, n::I
 
         relaxation_sin_on_off(pm.model, td[l], si[l], z[l], td_max)
         relaxation_cos_on_off(pm.model, td[l], cs[l], z[l], td_max)
-        relaxation_product_on_off(pm.model, vm_fr[i], vm_to[j], vv[l], z[l])
+        relaxation_product_on_off(pm.model, vm_fr[l], vm_to[l], vv[l], z[l])
         relaxation_product_on_off(pm.model, vv[l], cs[l], wr[l], z[l])
         relaxation_product_on_off(pm.model, vv[l], si[l], wi[l], z[l])
 
