@@ -139,7 +139,7 @@ end
         check_br_status(result["solution"])
 
         @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 15001.6; atol = 1e0)
+        @test isapprox(result["objective"], 14999.7; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
         result = run_ots("../test/data/case5_asym.m", QCWRPowerModel, pajarito_solver)
@@ -147,7 +147,7 @@ end
         check_br_status(result["solution"])
 
         @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 15009.4; atol = 1e0)
+        @test isapprox(result["objective"], 14999.7; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_ots("../test/data/case6.m", QCWRPowerModel, pajarito_solver)
