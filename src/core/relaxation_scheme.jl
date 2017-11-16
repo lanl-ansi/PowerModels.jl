@@ -72,6 +72,24 @@ function relaxation_sqr(m, x, y)
     @constraint(m, y <= (getupperbound(x)+getlowerbound(x))*x - getupperbound(x)*getlowerbound(x))
 end
 
+"""
+exact reformulation square term using linear constraints
+
+```
+y = λ₁*getupperbound(y) + λ₂*getlowerbound(y)
+x =  λ₁*getupperbound(x) + λ₂*getlowerbound(x)
+λ₁ + λ₂ = 1
+λ₁, λ₂ >= 0
+```
+"""
+function reformulate_sqr(m, x, y, lambda)
+    @assert length(lambda) == 2
+
+    @constraint(m, y == lambda[1]*getupperbound(y) + lambda[2]*getlowerbound(y))
+    @constraint(m, x == lambda[1]*getupperbound(x) + lambda[2]*getlowerbound(x))
+    @constraint(m, sum(lambda) == 1)
+end
+
 "general relaxation of a sine term, in -pi/2 to pi/2"
 function relaxation_sin(m, x, y)
     ub = getupperbound(x)
@@ -207,6 +225,7 @@ x = (λ₁ + λ₂ + λ₃ + λ₄)*getlowerbound(x) + (λ₅ + λ₆ + λ₇ + 
 y = (λ₁ + λ₂ + λ₅ + λ₆)*getlowerbound(x) + (λ₃ + λ₄ + λ₇ + λ₈)*getupperbound(x)
 z = (λ₁ + λ₃ + λ₅ + λ₇)*getlowerbound(x) + (λ₂ + λ₄ + λ₆ + λ₈)*getupperbound(x)
 λ₁ + λ₂ + λ₃ + λ₄ + λ₅ + λ₆ + λ₇ + λ₈ = 1
+λᵢ >= 0 for every i ∈ {1,...,8}
 ```
 """
 function relaxation_trilinear(m, x, y, z, w, lambda)
@@ -219,21 +238,21 @@ function relaxation_trilinear(m, x, y, z, w, lambda)
 
     @assert length(lambda) == 8
 
-    w_val = [x_lb * y_lb * z_lb 
-             x_lb * y_lb * z_ub  
+    w_val = [x_lb * y_lb * z_lb
+             x_lb * y_lb * z_ub
              x_lb * y_ub * z_lb
-             x_lb * y_ub * z_ub 
+             x_lb * y_ub * z_ub
              x_ub * y_lb * z_lb
              x_ub * y_lb * z_ub
              x_ub * y_ub * z_lb
              x_ub * y_ub * z_ub]
 
     @constraint(m, w == sum(w_val[i]*lambda[i] for i in 1:8))
-    @constraint(m, x == (lambda[1] + lambda[2] + lambda[3] + lambda[4])*x_lb + 
+    @constraint(m, x == (lambda[1] + lambda[2] + lambda[3] + lambda[4])*x_lb +
                         (lambda[5] + lambda[6] + lambda[7] + lambda[8])*x_ub)
-    @constraint(m, y == (lambda[1] + lambda[2] + lambda[5] + lambda[6])*y_lb + 
+    @constraint(m, y == (lambda[1] + lambda[2] + lambda[5] + lambda[6])*y_lb +
                         (lambda[3] + lambda[4] + lambda[7] + lambda[8])*y_ub)
-    @constraint(m, z == (lambda[1] + lambda[3] + lambda[5] + lambda[7])*z_lb + 
+    @constraint(m, z == (lambda[1] + lambda[3] + lambda[5] + lambda[7])*z_lb +
                         (lambda[2] + lambda[4] + lambda[6] + lambda[8])*z_ub)
     @constraint(m, sum(lambda) == 1)
-end 
+end
