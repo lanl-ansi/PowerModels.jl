@@ -80,46 +80,12 @@ function add_kcl_duals(sol, pm::GenericPowerModel)
     end
 end
 
-"""
-
-    add_sm_duals(sol::Dict{String, Any}, pm::GenericPowerModel)
-
-Add the duals for the thermal limit constraints to the solution Dict.
-
-# Arguments:
-
-- `sol::Dict{String, Any}`: The dictionary storing the properties of the solution for the output
-- `pm::GenericPowerModel`: The power model.
-
-"""
-function add_sm_duals(sol::Dict{String, Any}, pm::GenericPowerModel)
-    dualsdict = Dict{String,Any}()
-    for k in keys(pm.var[:nw])
-        res = Dict{Any,Any}()
-        try
-            aux = pm.var[:nw][k][:p] # This contains the list of variables for the branches
-            if isa(aux, Associative) # NOTE: in DCPPowerModel this is a Dict
-                for h in keys(aux)
-                    isa(aux[h], JuMP.Variable) && (res[h] = getdual(aux[h]))
-                end
-                dualsdict[string(k)] = res
-            elseif isa(aux, JuMP.JuMPArray) # NOTE: in ACPPowerModel this is a:
-                # JuMP.JuMPArray{JuMP.Variable,1,Tuple{Array{Tuple{Int64,Int64,Int64},1}}}
-                # TODO: probably enforce consistency in the types.
-                for (i, idxs) in enumerate(aux.indexsets)
-                    res2 = Dict{Any,Any}()
-                    for h in idxs
-                        isa(aux[h], JuMP.Variable) && (res2[h] = getdual(aux[h]))
-                    end
-                    res[i] =res2
-                end
-                dualsdict[string(k)] = res
-            end
-        catch e
-            warn("Could not find the branch flow variables for key $k: $e")
-        end
+""
+function add_sm_duals(sol, pm::GenericPowerModel)
+    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
+        add_dual(sol, pm, "branch", "mu_sm_fr", :sm_fr)
+        add_dual(sol, pm, "branch", "mu_sm_to", :sm_to)
     end
-    sol["branch_duals"] = dualsdict
 end
 
 ""

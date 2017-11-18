@@ -216,6 +216,9 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "pt", rescale)
         apply_func(branch, "qf", rescale)
         apply_func(branch, "qt", rescale)
+
+        apply_func(branch, "mu_sm_fr", rescale_dual)
+        apply_func(branch, "mu_sm_to", rescale_dual)
     end
 
     for dcline in dclines
@@ -322,6 +325,9 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "pt", rescale)
         apply_func(branch, "qf", rescale)
         apply_func(branch, "qt", rescale)
+
+        apply_func(branch, "mu_sm_fr", rescale_dual)
+        apply_func(branch, "mu_sm_to", rescale_dual)
     end
 
     for dcline in dclines

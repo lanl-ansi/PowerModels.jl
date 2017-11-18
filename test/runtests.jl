@@ -43,4 +43,3 @@ include("tnep.jl")
 include("multinetwork.jl")
 
 include("docs.jl")
-

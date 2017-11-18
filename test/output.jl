@@ -73,18 +73,44 @@ end
     result = run_dc_opf("../test/data/case14.m", ipopt_solver, setting = settings)
 
     PowerModels.make_mixed_units(result["solution"])
-    @testset "kcl duals" begin
-        bus_result = result["solution"]["bus"]
-        for (i, bus) in bus_result
+    @testset "14 bus - kcl duals" begin
+        for (i, bus) in result["solution"]["bus"]
             @test haskey(bus, "lam_kcl_r")
             @test haskey(bus, "lam_kcl_i")
             @test isapprox(bus["lam_kcl_r"], -39.02; atol = 1e-2) # Expected result for case14
+            @test isnan(bus["lam_kcl_i"])
         end
     end
 
-    @testset "thermal limit duals" begin
-        @test haskey(result["solution"], "branch_duals")
-        @test length(keys(result["solution"]["branch_duals"]["0"])) == 20
+    @testset "14 bus - thermal limit duals" begin
+        for (i, branch) in result["solution"]["branch"]
+            @test haskey(branch, "mu_sm_fr")
+            @test haskey(branch, "mu_sm_to")
+            @test isapprox(branch["mu_sm_fr"], 0.0; atol = 1e-2)
+            @test isnan(branch["mu_sm_to"])
+        end
+    end
+
+
+    result = run_dc_opf("../test/data/case5.m", ipopt_solver, setting = settings)
+
+    PowerModels.make_mixed_units(result["solution"])
+    @testset "5 bus - kcl duals" begin
+        for (i, bus) in result["solution"]["bus"]
+            @test bus["lam_kcl_r"] <= -9.00
+            @test bus["lam_kcl_r"] >= -45.00
+        end
+    end
+
+    @testset "5 bus - thermal limit duals" begin
+        for (i, branch) in result["solution"]["branch"]
+            if i != "6"
+                @test isapprox(branch["mu_sm_fr"], 0.0; atol = 1e-2)
+            else
+                @test isapprox(branch["mu_sm_fr"], 62.32; atol = 1e-2)
+            end
+            @test isnan(branch["mu_sm_to"])
+        end
     end
 end
 
