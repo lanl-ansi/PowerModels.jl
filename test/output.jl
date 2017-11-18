@@ -68,6 +68,27 @@ end
 end
 
 
+@testset "test dual value output" begin
+    settings = Dict("output" => Dict("duals" => true))
+    result = run_dc_opf("../test/data/case14.m", ipopt_solver, setting = settings)
+
+    PowerModels.make_mixed_units(result["solution"])
+    @testset "kcl duals" begin
+        bus_result = result["solution"]["bus"]
+        for (i, bus) in bus_result
+            @test haskey(bus, "lam_kcl_r")
+            @test haskey(bus, "lam_kcl_i")
+            @test isapprox(bus["lam_kcl_r"], -39.02; atol = 1e-2) # Expected result for case14
+        end
+    end
+
+    @testset "thermal limit duals" begin
+        @test haskey(result["solution"], "branch_duals")
+        @test length(keys(result["solution"]["branch_duals"]["0"])) == 20
+    end
+end
+
+
 # recomended by @lroald
 @testset "test solution feedback" begin
 

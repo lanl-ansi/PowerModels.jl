@@ -350,21 +350,3 @@ end
     end
 end
 
-@testset "Dual variables from OPF" begin
-    settingdict = Dict("output" => Dict("duals" => true))
-    result = run_dc_opf("../test/data/case14.m", ipopt_solver, setting = settingdict)
-    PowerModels.make_mixed_units(result["solution"])
-    @testset "KCL dual variables" begin
-        res = result["solution"]["bus"]
-        for b in keys(res)
-            @test haskey(res[b], "lam_kcl_i")
-            @test haskey(res[b], "lam_kcl_r")
-            @test round(res[b]["lam_kcl_r"], 2) == -39.02 # Expected result for case14
-        end
-    end
-
-    @testset "Thermal limits dual variables" begin
-        @test haskey(result["solution"], "branch_duals")
-        @test length(keys(result["solution"]["branch_duals"]["0"])) == 20
-    end
-end
