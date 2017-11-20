@@ -61,12 +61,31 @@ function get_solution(pm::GenericPowerModel, sol::Dict{String,Any})
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
     add_dcline_flow_setpoint(sol, pm)
+
+    add_kcl_duals(sol, pm)
+    add_sm_duals(sol, pm) # Adds the duals of the transmission lines' thermal limits.
 end
 
 ""
 function add_bus_voltage_setpoint(sol, pm::GenericPowerModel)
     add_setpoint(sol, pm, "bus", "vm", :vm)
     add_setpoint(sol, pm, "bus", "va", :va)
+end
+
+""
+function add_kcl_duals(sol, pm::GenericPowerModel)
+    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
+        add_dual(sol, pm, "bus", "lam_kcl_r", :kcl_p)
+        add_dual(sol, pm, "bus", "lam_kcl_i", :kcl_q)
+    end
+end
+
+""
+function add_sm_duals(sol, pm::GenericPowerModel)
+    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
+        add_dual(sol, pm, "branch", "mu_sm_fr", :sm_fr)
+        add_dual(sol, pm, "branch", "mu_sm_to", :sm_to)
+    end
 end
 
 ""
@@ -148,6 +167,71 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
             variable = extract_var(var(pm, variable_symbol), idx, item)
             sol_item[param_name] = scale(getvalue(variable), item)
         catch
+        end
+    end
+end
+
+
+"""
+
+    function add_dual(
+        sol::Associative,
+        pm::GenericPowerModel,
+        dict_name::AbstractString,
+        param_name::AbstractString,
+        con_symbol::Symbol;
+        index_name::AbstractString = "index",
+        default_value::Function = (item) -> NaN,
+        scale::Function = (x,item) -> x,
+        extract_con::Function = (con,idx,item) -> con[idx],
+    )
+
+This function takes care of adding the values of dual variables to the solution Dict.
+
+# Arguments
+
+- `sol::Associative`: The dict where the desired final details of the solution are stored;
+- `pm::GenericPowerModel`: The PowerModel which has been considered;
+- `dict_name::AbstractString`: The particular class of items for the solution (e.g. branch, bus);
+- `param_name::AbstractString`: The name associated to the dual variable;
+- `con_symbol::Symbol`: the Symbol attached to the class of constraints;
+- `index_name::AbstractString = "index"`: ;
+- `default_value::Function = (item) -> NaN`: a function that assign to each item a default value, for missing data;
+- `scale::Function = (x,item) -> x`: a function to rescale the values of the dual variables, if needed;
+- `extract_con::Function = (con,idx,item) -> con[idx]`: a method to extract the actual dual variables.
+
+"""
+function add_dual(
+    sol::Associative,
+    pm::GenericPowerModel,
+    dict_name::AbstractString,
+    param_name::AbstractString,
+    con_symbol::Symbol;
+    index_name::AbstractString = "index",
+    default_value::Function = (item) -> NaN,
+    scale::Function = (x,item) -> x,
+    extract_con::Function = (con,idx,item) -> con[idx],
+)
+    sol_dict = get(sol, dict_name, Dict{String,Any}())
+
+    if pm.data["multinetwork"]
+        data_dict = pm.data["nw"]["$(pm.cnw)"][dict_name]
+    else
+        data_dict = pm.data[dict_name]
+    end
+
+    if length(data_dict) > 0
+        sol[dict_name] = sol_dict
+    end
+    for (i,item) in data_dict
+        idx = Int(item[index_name])
+        sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
+        sol_item[param_name] = default_value(item)
+        try
+            constraint = extract_con(con(pm, con_symbol), idx, item)
+            sol_item[param_name] = scale(getdual(constraint), item)
+        catch
+            # info("No constraint: $(con_symbol), $(idx)") # if we want to log this info.
         end
     end
 end

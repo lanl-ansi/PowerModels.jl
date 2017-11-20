@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Fixed bug in QC-OTS formulation
 - Added lambda-based convex hull relaxation scheme for trilinear products
 - Added QCWRTri Power Flow formulation
+- Added support for dual variables (KCL and branch thermal limits)
 
 ### v0.5.0
 - Standardized around branch name for pi-model lines (breaking)
