@@ -355,6 +355,10 @@ Adds the (upper and lower) thermal limit constraints for the desired branch to t
 
 """
 function constraint_thermal_limit_from(pm::GenericPowerModel, n::Int, i::Int)
+    if !haskey(pm.con[:nw][n], :sm_fr)
+        pm.con[:nw][n][:sm_fr] = Dict{Int,Any}() # note this can be a constraint or variable
+    end
+
     branch = ref(pm, n, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -366,6 +370,10 @@ constraint_thermal_limit_from(pm::GenericPowerModel, i::Int) = constraint_therma
 
 ""
 function constraint_thermal_limit_to(pm::GenericPowerModel, n::Int, i::Int)
+    if !haskey(pm.con[:nw][n], :sm_to)
+        pm.con[:nw][n][:sm_to] = Dict{Int,Any}() # note this can be a constraint or variable
+    end
+
     branch = ref(pm, n, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]

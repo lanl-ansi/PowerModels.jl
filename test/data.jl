@@ -57,6 +57,18 @@
 
         @test compare_dict(result, result_base)
     end
+
+
+    @testset "5-bus case solution with duals" begin
+        result = run_dc_opf("../test/data/case5.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true, "duals" => true)))
+        result_base = deepcopy(result)
+
+        PowerModels.make_mixed_units(result["solution"])
+        PowerModels.make_per_unit(result["solution"])
+
+        @test compare_dict(result, result_base)
+    end
+
 end
 
 

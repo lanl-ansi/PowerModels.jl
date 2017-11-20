@@ -147,7 +147,7 @@ end
 
 "`-rate_a <= p[f_idx] <= rate_a`"
 function constraint_thermal_limit_from{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, n::Int, f_idx, rate_a)
-    p_fr = pm.var[:nw][n][:p][f_idx]
+    p_fr = pm.con[:nw][n][:sm_fr][f_idx[1]] = pm.var[:nw][n][:p][f_idx]
     getlowerbound(p_fr) < -rate_a && setlowerbound(p_fr, -rate_a)
     getupperbound(p_fr) > rate_a && setupperbound(p_fr, rate_a)
 end

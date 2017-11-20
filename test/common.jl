@@ -3,23 +3,34 @@
 function compare_dict(d1, d2)
     for (k1,v1) in d1
         if !haskey(d2, k1)
-            #@test false
+            #println(k1)
             return false
         end
         v2 = d2[k1]
 
         if isa(v1, Number)
-            #@test isapprox(v1, v2)
-            if !isapprox(v1, v2)
-                return false
+            if isnan(v1)
+                #println("1.1")
+                if !isnan(v2)
+                    #println(v1, " ", v2)
+                    return false
+                end
+            else
+                #println("1.2")
+                if !isapprox(v1, v2)
+                    #println(v1, " ", v2)
+                    return false
+                end
             end
         elseif isa(v1, Dict)
             if !compare_dict(v1, v2)
+                #println(v1, " ", v2)
                 return false
             end
         else
-            #@test v1 == v2
+            #println("2")
             if v1 != v2
+                #println(v1, " ", v2)
                 return false
             end
         end
