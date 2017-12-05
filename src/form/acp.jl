@@ -38,7 +38,7 @@ end
 "`v[i] == vm`"
 function constraint_voltage_magnitude_setpoint{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::Int, i, vm)
     v = pm.var[:nw][n][:vm][i]
-    
+
     @constraint(pm.model, v == vm)
 end
 
@@ -58,8 +58,8 @@ function constraint_kcl_shunt{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n:
     p_dc = pm.var[:nw][n][:p_dc]
     q_dc = pm.var[:nw][n][:q_dc]
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*vm^2)
-    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*vm^2)
+    pm.con[:nw][n][:kcl_p][i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*vm^2)
+    pm.con[:nw][n][:kcl_q][i] = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - qd + bs*vm^2)
 end
 
 """
@@ -287,4 +287,3 @@ function constraint_loss_lb{T <: AbstractACPForm}(pm::GenericPowerModel{T}, n::I
     @constraint(m, p_fr + p_to >= 0)
     @constraint(m, q_fr + q_to >= -c/2*(vm_fr^2/tr^2 + vm_to^2))
 end
-

@@ -26,10 +26,10 @@ function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerM
     lookup_w_index = Dict([(bi,i) for (i,bi) in enumerate(keys(pm.ref[:nw][n][:bus]))])
 
     WR = pm.var[:nw][n][:WR] = @variable(pm.model, 
-        [1:length(keys(pm.ref[:nw][n][:bus])), 1:length(keys(pm.ref[:nw][n][:bus]))], Symmetric, basename="WR"
+        [1:length(keys(pm.ref[:nw][n][:bus])), 1:length(keys(pm.ref[:nw][n][:bus]))], Symmetric, basename="$(n)_WR"
     )
     WI = pm.var[:nw][n][:WI] = @variable(pm.model, 
-        [1:length(keys(pm.ref[:nw][n][:bus])), 1:length(keys(pm.ref[:nw][n][:bus]))], basename="WI"
+        [1:length(keys(pm.ref[:nw][n][:bus])), 1:length(keys(pm.ref[:nw][n][:bus]))], basename="$(n)_WI"
     )
 
     # bounds on diagonal

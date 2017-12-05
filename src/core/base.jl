@@ -47,6 +47,7 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
 
     ref::Dict{Symbol,Any} # data reference data
     var::Dict{Symbol,Any} # JuMP variables
+    con::Dict{Symbol,Any} # JuMP constraint references
     cnw::Int # current network index value
 
     # Extension dictionary
@@ -65,8 +66,10 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
     ref = build_ref(data) # refrence data
 
     var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
+    con = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
     for nw_id in keys(ref[:nw])
         var[:nw][nw_id] = Dict{Symbol,Any}()
+        con[:nw][nw_id] = Dict{Symbol,Any}()
     end
 
     cnw = minimum([k for k in keys(ref[:nw])])
@@ -78,6 +81,7 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
         Dict{String,Any}(), # solution
         ref,
         var, # vars
+        con,
         cnw,
         ext # ext
     )
@@ -99,6 +103,11 @@ Base.var(pm::GenericPowerModel, key::Symbol) = var(pm, pm.cnw, key)
 Base.var(pm::GenericPowerModel, key::Symbol, idx) = var(pm, pm.cnw, key, idx)
 Base.var(pm::GenericPowerModel, n::Int, key::Symbol) = pm.var[:nw][n][key]
 Base.var(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.var[:nw][n][key][idx]
+
+con(pm::GenericPowerModel, key::Symbol) = con(pm, pm.cnw, key)
+con(pm::GenericPowerModel, key::Symbol, idx) = con(pm, pm.cnw, key, idx)
+con(pm::GenericPowerModel, n::Int, key::Symbol) = pm.con[:nw][n][key]
+con(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.con[:nw][n][key][idx]
 
 ext(pm::GenericPowerModel, key::Symbol) = ext(pm, pm.cnw, key)
 ext(pm::GenericPowerModel, key::Symbol, idx) = ext(pm, pm.cnw, key, idx)
@@ -367,5 +376,3 @@ function buspair_parameters(arcs_from, branches, buses)
 
     return buspairs
 end
-
-

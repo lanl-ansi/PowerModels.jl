@@ -59,6 +59,13 @@ constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, i::Int) = constrain
 
 ""
 function constraint_kcl_shunt(pm::GenericPowerModel, n::Int, i::Int)
+    if !haskey(pm.con[:nw][n], :kcl_p)
+        pm.con[:nw][n][:kcl_p] = Dict{Int,ConstraintRef}()
+    end
+    if !haskey(pm.con[:nw][n], :kcl_q)
+        pm.con[:nw][n][:kcl_q] = Dict{Int,ConstraintRef}()
+    end
+
     bus = ref(pm, n, :bus, i)
     bus_arcs = ref(pm, n, :bus_arcs, i)
     bus_arcs_dc = ref(pm, n, :bus_arcs_dc, i)
@@ -340,18 +347,33 @@ constraint_power_magnitude_link_on_off(pm::GenericPowerModel, i::Int) = constrai
 
 ### Branch - Thermal Limit Constraints ###
 
-""
+"""
+
+    constraint_thermal_limit_from(pm::GenericPowerModel, n::Int, i::Int)
+
+Adds the (upper and lower) thermal limit constraints for the desired branch to the PowerModel.
+
+"""
 function constraint_thermal_limit_from(pm::GenericPowerModel, n::Int, i::Int)
+    if !haskey(pm.con[:nw][n], :sm_fr)
+        pm.con[:nw][n][:sm_fr] = Dict{Int,Any}() # note this can be a constraint or variable
+    end
+
     branch = ref(pm, n, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
+
     constraint_thermal_limit_from(pm, n, f_idx, branch["rate_a"])
 end
 constraint_thermal_limit_from(pm::GenericPowerModel, i::Int) = constraint_thermal_limit_from(pm, pm.cnw, i)
 
 ""
 function constraint_thermal_limit_to(pm::GenericPowerModel, n::Int, i::Int)
+    if !haskey(pm.con[:nw][n], :sm_to)
+        pm.con[:nw][n][:sm_to] = Dict{Int,Any}() # note this can be a constraint or variable
+    end
+
     branch = ref(pm, n, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -473,4 +495,3 @@ function constraint_loss_lb(pm::GenericPowerModel, n::Int, i::Int)
     constraint_loss_lb(pm, n, f_bus, t_bus, f_idx, t_idx, c, tr)
 end
 constraint_loss_lb(pm::GenericPowerModel, i::Int) = constraint_loss_lb(pm, pm.cnw, i)
-

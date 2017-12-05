@@ -41,7 +41,7 @@ end
 ""
 function variable_active_branch_flow{T <: StandardDCPForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; bounded = true)
     if bounded
-        pm.var[:nw][n][:p] = @variable(pm.model, 
+        pm.var[:nw][n][:p] = @variable(pm.model,
             [(l,i,j) in pm.ref[:nw][n][:arcs_from]], basename="$(n)_p",
             lowerbound = -pm.ref[:nw][n][:branch][l]["rate_a"],
             upperbound =  pm.ref[:nw][n][:branch][l]["rate_a"],
@@ -54,7 +54,7 @@ function variable_active_branch_flow{T <: StandardDCPForm}(pm::GenericPowerModel
         )
     end
 
-    # this explicit type erasure is necessary 
+    # this explicit type erasure is necessary
     p_expr = Dict{Any,Any}([((l,i,j), pm.var[:nw][n][:p][(l,i,j)]) for (l,i,j) in pm.ref[:nw][n][:arcs_from]])
     p_expr = merge(p_expr, Dict([((l,j,i), -1.0*pm.var[:nw][n][:p][(l,i,j)]) for (l,i,j) in pm.ref[:nw][n][:arcs_from]]))
     pm.var[:nw][n][:p] = p_expr
@@ -62,14 +62,14 @@ end
 
 ""
 function variable_active_branch_flow_ne{T <: StandardDCPForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw)
-    pm.var[:nw][n][:p_ne] = @variable(pm.model, 
+    pm.var[:nw][n][:p_ne] = @variable(pm.model,
         [(l,i,j) in pm.ref[:nw][n][:ne_arcs_from]], basename="$(n)_p_ne",
         lowerbound = -pm.ref[:nw][n][:ne_branch][l]["rate_a"],
         upperbound =  pm.ref[:nw][n][:ne_branch][l]["rate_a"],
         start = getstart(pm.ref[:nw][n][:ne_branch], l, "p_start")
     )
 
-    # this explicit type erasure is necessary 
+    # this explicit type erasure is necessary
     p_ne_expr = Dict{Any,Any}([((l,i,j), 1.0*pm.var[:nw][n][:p_ne][(l,i,j)]) for (l,i,j) in pm.ref[:nw][n][:ne_arcs_from]])
     p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*pm.var[:nw][n][:p_ne][(l,i,j)]) for (l,i,j) in pm.ref[:nw][n][:ne_arcs_from]]))
     pm.var[:nw][n][:p_ne] = p_ne_expr
@@ -97,7 +97,7 @@ function constraint_kcl_shunt{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, n:
     p = pm.var[:nw][n][:p]
     p_dc = pm.var[:nw][n][:p_dc]
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
+    pm.con[:nw][n][:kcl_p][i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
     # omit reactive constraint
 end
 
@@ -147,15 +147,9 @@ end
 
 "`-rate_a <= p[f_idx] <= rate_a`"
 function constraint_thermal_limit_from{T <: AbstractDCPForm}(pm::GenericPowerModel{T}, n::Int, f_idx, rate_a)
-    p_fr = pm.var[:nw][n][:p][f_idx]
-
-    if getlowerbound(p_fr) < -rate_a
-        setlowerbound(p_fr, -rate_a)
-    end
-
-    if getupperbound(p_fr) > rate_a
-        setupperbound(p_fr, rate_a)
-    end
+    p_fr = pm.con[:nw][n][:sm_fr][f_idx[1]] = pm.var[:nw][n][:p][f_idx]
+    getlowerbound(p_fr) < -rate_a && setlowerbound(p_fr, -rate_a)
+    getupperbound(p_fr) > rate_a && setupperbound(p_fr, rate_a)
 end
 
 "Do nothing, this model is symmetric"
@@ -365,4 +359,3 @@ function constraint_thermal_limit_to_on_off{T <: AbstractDCPLLForm}(pm::GenericP
     @constraint(pm.model, p_to <=  rate_a*z)
     @constraint(pm.model, p_to >= -rate_a*z)
 end
-
