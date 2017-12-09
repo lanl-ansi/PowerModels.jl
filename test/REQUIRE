@@ -3,4 +3,5 @@ julia 0.5
 Ipopt
 SCS
 GLPKMathProgInterface
+Juniper
 Pajarito 0.4.0
