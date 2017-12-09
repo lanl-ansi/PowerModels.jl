@@ -7,36 +7,34 @@ function check_br_status(sol)
 end
 
 
-if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
-    @testset "test ac ots" begin
-        #Omitting this test, until bugs can be resolved, bonmin does not report a integral solution
-        #@testset "3-bus case" begin
-        #    result = run_ots("../test/data/case3.m", ACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
+@testset "test ac ots" begin
+    # why does this return non-integral values?
+    #@testset "3-bus case" begin
+    #    result = run_ots("../test/data/case3.m", ACPPowerModel, juniper_solver)
 
-        #    check_br_status(result["solution"])
+    #    check_br_status(result["solution"])
 
-        #    @test result["status"] == :LocalOptimal
-        #    @test isapprox(result["objective"], 5812; atol = 1e0)
-        #end
-        @testset "5-bus case" begin
-            result = run_ots("../test/data/case5.m", ACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
+    #    @test result["status"] == :LocalOptimal
+    #    @test isapprox(result["objective"], 5812; atol = 1e0)
+    #end
+    @testset "5-bus case" begin
+        result = run_ots("../test/data/case5.m", ACPPowerModel, juniper_solver)
 
-            check_br_status(result["solution"])
+        check_br_status(result["solution"])
 
-            @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 15174; atol = 1e0)
-        end
-        #Omitting this test, returns local infeasible
-        #@testset "6-bus case" begin
-        #    result = run_ots("../test/data/case6.m", ACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
-
-        #    check_br_status(result["solution"])
-
-        #    @test result["status"] == :LocalOptimal
-        #    println(result["objective"])
-        #    @test isapprox(result["objective"], 15174; atol = 1e0)
-        #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 15174; atol = 1e0)
     end
+    #Omitting this test, returns local infeasible
+    #@testset "6-bus case" begin
+    #    result = run_ots("../test/data/case6.m", ACPPowerModel, juniper_solver)
+
+    #    check_br_status(result["solution"])
+
+    #    @test result["status"] == :LocalOptimal
+    #    println(result["objective"])
+    #    @test isapprox(result["objective"], 15174; atol = 1e0)
+    #end
 end
 
 
