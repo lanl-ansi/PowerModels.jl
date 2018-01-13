@@ -40,6 +40,7 @@ function standardize_cost_terms(data::Dict{String,Any})
                     #println(gencost["cost"])
                     gencost["cost"] = gencost["cost"][max_nonzero_index:length(gencost["cost"])]
                     #println(gencost["cost"])
+                    gencost["ncost"] = length(gencost["cost"])
                 end
             end
 
@@ -47,6 +48,7 @@ function standardize_cost_terms(data::Dict{String,Any})
                 #println("std gen cost: ",gencost["cost"])
                 cost_3 = append!(vec(fill(0.0, (1,3 - length(gencost["cost"])))), gencost["cost"])
                 gencost["cost"] = cost_3
+                gencost["ncost"] = 3
                 #println("   ",gencost["cost"])
                 warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
             end
@@ -68,6 +70,7 @@ function standardize_cost_terms(data::Dict{String,Any})
                     #println(dclinecost["cost"])
                     dclinecost["cost"] = dclinecost["cost"][max_nonzero_index:length(dclinecost["cost"])]
                     #println(dclinecost["cost"])
+                    dclinecost["ncost"] = length(dclinecost["cost"])
                 end
             end
 
@@ -75,6 +78,7 @@ function standardize_cost_terms(data::Dict{String,Any})
                 #println("std gen cost: ",dclinecost["cost"])
                 cost_3 = append!(vec(fill(0.0, (1,3 - length(dclinecost["cost"])))), dclinecost["cost"])
                 dclinecost["cost"] = cost_3
+                dclinecost["ncost"] = 3
                 #println("   ",dclinecost["cost"])
                 warn("added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
             end
