@@ -249,13 +249,17 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmin", rescale)
 
             if "model" in keys(gen) && "cost" in keys(gen)
-                if gen["model"] != 2
-                    warn("Skipping generator cost model of type other than 2")
-                else
+                if gen["model"] == 1
+                    for i in 1:2:length(gen["cost"])
+                        gen["cost"][i] = gen["cost"][i]/mva_base
+                    end
+                elseif gen["model"] == 2
                     degree = length(gen["cost"])
                     for (i, item) in enumerate(gen["cost"])
                         gen["cost"][i] = item*mva_base^(degree-i)
                     end
+                else
+                    warn("Skipping generator cost model of type $(gen["model"]) in per unit transformation")
                 end
             end
         end
@@ -358,13 +362,17 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmin", rescale)
 
             if "model" in keys(gen) && "cost" in keys(gen)
-                if gen["model"] != 2
-                    warn("Skipping generator cost model of type other than 2")
-                else
+                if gen["model"] == 1
+                    for i in 1:2:length(gen["cost"])
+                        gen["cost"][i] = gen["cost"][i]*mva_base
+                    end
+                elseif gen["model"] == 2
                     degree = length(gen["cost"])
                     for (i, item) in enumerate(gen["cost"])
                         gen["cost"][i] = item/mva_base^(degree-i)
                     end
+                else
+                    warn("Skipping generator cost model of type $(gen["model"]) in mixed units transformation")
                 end
             end
         end
