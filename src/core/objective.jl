@@ -148,7 +148,108 @@ function objective_min_polynomial_fuel_cost{T <: AbstractConicPowerFormulation}(
 end
 
 
-"Cost of building branchs"
+
+"""
+compute m and b from points pwl points
+"""
+function slope_intercepts{T <: Real}(points::Array{T,1})
+    line_data = []
+
+    for i in 3:2:length(points)
+        x1 = points[i-2]
+        y1 = points[i-1]
+        x2 = points[i-0]
+        y2 = points[i+1]
+
+        m = (y2 - y1)/(x2 - x1)
+        b = y1 - m * x1
+
+        line = Dict{String,Any}(
+            "slope" => m,
+            "intercept" => b
+        )
+        push!(line_data, line)
+    end
+
+    return line_data
+end
+
+
+"""
+compute lines in m and b from from pwl cost models
+data is a list of components
+"""
+function get_lines(data)
+    lines = Dict{Int,Any}()
+    for (i,comp) in data
+        @assert comp["model"] == 1
+        line_data = slope_intercepts(comp["cost"])
+        lines[i] = line_data
+        for i in 2:length(line_data)
+            if line_data[i-1]["slope"] > line_data[i]["slope"]
+                error("non-convex pwl function found in points $(comp["cost"])\nlines: $(line_data)")
+            end
+        end
+    end
+    return lines
+end
+
+
+""
+function objective_min_pwl_fuel_cost(pm::GenericPowerModel, nws=[pm.cnw])
+    #check_polynomial_cost_models(pm, nws)
+
+    pg = Dict(n => pm.var[:nw][n][:pg] for n in nws)
+    dc_p = Dict(n => pm.var[:nw][n][:p_dc] for n in nws)
+
+    pg_cost = Dict()
+    dc_p_cost = Dict()
+    for n in nws
+        pg_cost[n] = pm.var[:nw][n][:pg_cost] = @variable(pm.model, 
+            [i in keys(pm.ref[:nw][n][:gen])], basename="$(n)_pg_cost"
+        )
+
+        # pwl cost
+        gen_lines = get_lines(pm.ref[:nw][n][:gen])
+        for (i, gen) in pm.ref[:nw][n][:gen]
+            for line in gen_lines[i]
+                @constraint(pm.model, pg_cost[n][i] >= line["slope"]*pg[n][i] + line["intercept"])
+            end
+        end
+
+        dc_p_cost[n] = pm.var[:nw][n][:dc_p_cost] = @variable(pm.model, 
+            [i in keys(pm.ref[:nw][n][:dcline])], basename="$(n)_dc_p_cost",
+        )
+
+        # pwl cost
+        dcline_lines = get_lines(pm.ref[:nw][n][:dcline])
+        for (i, dcline) in pm.ref[:nw][n][:dcline]
+            for line in dcline_lines[i]
+                @constraint(pm.model, dc_p_cost[n][i] >= line["slope"]*dc_p[n][i] + line["intercept"])
+            end
+        end
+
+        #for (i, dcline) in pm.ref[:nw][n][:dcline]
+        #    @constraint(pm.model, norm([2*dc_p[n][from_idx[n][i]], dc_p_sqr[n][i]-1]) <= dc_p_sqr[n][i]+1)
+        #end
+    end
+
+    #from_idx = Dict()
+    #for n in nws
+    #    ref = pm.ref[:nw][n]
+    #    from_idx[n] = Dict(arc[1] => arc for arc in ref[:arcs_from_dc])
+    #end
+
+    return @objective(pm.model, Min,
+        sum(
+            sum( pg_cost[n][i] for (i,gen) in pm.ref[:nw][n][:gen]) +
+            sum( dc_p_cost[n][i] for (i,dcline) in pm.ref[:nw][n][:dcline])
+        for n in nws)
+    )
+end
+
+
+"Cost of building branches"
 function objective_tnep_cost(pm::GenericPowerModel, nws=[pm.cnw])
     branch_ne = Dict(n => pm.var[:nw][n][:branch_ne] for n in nws)
     branches = Dict(n => pm.ref[:nw][n][:ne_branch] for n in nws)
