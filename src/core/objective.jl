@@ -4,33 +4,78 @@
 ################################################################################
 
 """
-Checks that all cost models are polynomials, quadratic or less
+Checks that all cost models are present and of the same type
 """
 function check_cost_models(pm::GenericPowerModel, nws)
+    model = nothing
+
     for n in nws
         ref = pm.ref[:nw][n]
         for (i,gen) in ref[:gen]
             if haskey(gen, "cost")
-                if gen["model"] != 2
-                    error("only cost model 2 is supported at this time, given cost model $(gen["model"]) on generator $(i)")
-                end
-                if length(gen["cost"]) > 3
-                    error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(gen["cost"])) on generator $(i)")
+                if model == nothing
+                    model = gen["model"]
+                else
+                    if gen["model"] != model
+                        error("cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
+                    end
                 end
             else
                 error("no cost given for generator $(i)")
             end
         end
         for (i,dcline) in ref[:dcline]
-            if haskey(dcline, "model") 
-                if haskey(dcline, "model") && dcline["model"] != 2
-                    error("only cost model 2 is supported at this time, given cost model $(dcline["model"]) on dcline $(i)")
-                end
-                if haskey(dcline, "cost") && length(dcline["cost"]) > 3
-                    error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(dcline["cost"])) on dcline $(i)")
+            if haskey(dcline, "model")
+                if model == nothing
+                    model = dcline["model"]
+                else
+                    if dcline["model"] != model
+                        error("cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
+                    end
                 end
             else
                 error("no cost given for dcline $(i)")
+            end
+        end
+    end
+
+    return model
+end
+
+
+
+""
+function objective_min_fuel_cost(pm::GenericPowerModel, nws=[pm.cnw])
+    model = check_cost_models(pm, nws)
+
+    if model == 1
+        return objective_min_pwl_fuel_cost(pm, nws)
+    elseif model == 2
+        return objective_min_polynomial_fuel_cost(pm, nws)
+    else
+        error("Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
+    end
+
+end
+
+
+
+"""
+Checks that all cost models are polynomials, quadratic or less
+"""
+function check_polynomial_cost_models(pm::GenericPowerModel, nws)
+    for n in nws
+        ref = pm.ref[:nw][n]
+        for (i,gen) in ref[:gen]
+            @assert gen["model"] == 2
+            if length(gen["cost"]) > 3
+                error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(gen["cost"])) on generator $(i)")
+            end
+        end
+        for (i,dcline) in ref[:dcline]
+            @assert dcline["model"] == 2
+            if length(dcline["cost"]) > 3
+                error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(dcline["cost"])) on dcline $(i)")
             end
         end
     end
@@ -38,8 +83,8 @@ end
 
 
 ""
-function objective_min_fuel_cost(pm::GenericPowerModel, nws=[pm.cnw])
-    check_cost_models(pm, nws)
+function objective_min_polynomial_fuel_cost(pm::GenericPowerModel, nws=[pm.cnw])
+    check_polynomial_cost_models(pm, nws)
 
     pg = Dict(n => pm.var[:nw][n][:pg] for n in nws)
     dc_p = Dict(n => pm.var[:nw][n][:p_dc] for n in nws)
@@ -59,8 +104,8 @@ function objective_min_fuel_cost(pm::GenericPowerModel, nws=[pm.cnw])
 end
 
 ""
-function objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, nws=[pm.cnw])
-    check_cost_models(pm, nws)
+function objective_min_polynomial_fuel_cost{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, nws=[pm.cnw])
+    check_polynomial_cost_models(pm, nws)
 
     pg = Dict(n => pm.var[:nw][n][:pg] for n in nws)
     dc_p = Dict(n => pm.var[:nw][n][:p_dc] for n in nws)
