@@ -598,6 +598,9 @@ function _check_cost_functions(id, comp)
             if length(comp["cost"]) != 2*comp["ncost"]
                 error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values")
             end
+            if length(comp["cost"]) < 4
+                error("cost includes $(comp["ncost"]) points, but at least two points are required")
+            end
             for i in 3:2:length(comp["cost"])
                 if comp["cost"][i-2] >= comp["cost"][i]
                     error("non-increasing x values in pwl cost model")

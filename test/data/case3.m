@@ -1,5 +1,6 @@
 % Case to test adding data to matpower file
 % also tests basic ac and hvdc modeling
+% tests when gencost is present but not dclinecost
 % based on nesta_case3_lmbd from NESTA v0.6.0
 function mpc = case3
 mpc.version = '2';
@@ -31,10 +32,6 @@ mpc.branch = [
 mpc.dcline = [
 	1	 2	 1	 10	 10	 25.91	 -4.16	 1.1	 0.92617	 10	 900 -900 900 -900 900	 0	 0	 0	 0	 0	 0	 0	 0
 ]
-
-mpc.dclinecost = [
-	2	 0.0	 0.0	 1	   0.0;
-];
 
 
 % matpower data format extentions
