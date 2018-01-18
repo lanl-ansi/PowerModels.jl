@@ -479,7 +479,7 @@ function constraint_voltage{T <: QCWRForm}(pm::GenericPowerModel{T}, n::Int)
         pair = (branch["f_bus"], branch["t_bus"])
         buspair = pm.ref[:nw][n][:buspairs][pair]
 
-        # to prevent this constraint from being posted on multiple parallel branchs
+        # to prevent this constraint from being posted on multiple parallel branches
         if buspair["branch"] == i
             constraint_power_magnitude_sqr(pm, n, i)
             constraint_power_magnitude_link(pm, n, i)
