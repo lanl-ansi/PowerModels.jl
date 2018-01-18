@@ -249,13 +249,17 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmin", rescale)
 
             if "model" in keys(gen) && "cost" in keys(gen)
-                if gen["model"] != 2
-                    warn("Skipping generator cost model of type other than 2")
-                else
+                if gen["model"] == 1
+                    for i in 1:2:length(gen["cost"])
+                        gen["cost"][i] = gen["cost"][i]/mva_base
+                    end
+                elseif gen["model"] == 2
                     degree = length(gen["cost"])
                     for (i, item) in enumerate(gen["cost"])
                         gen["cost"][i] = item*mva_base^(degree-i)
                     end
+                else
+                    warn("Skipping generator cost model of type $(gen["model"]) in per unit transformation")
                 end
             end
         end
@@ -358,13 +362,17 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmin", rescale)
 
             if "model" in keys(gen) && "cost" in keys(gen)
-                if gen["model"] != 2
-                    warn("Skipping generator cost model of type other than 2")
-                else
+                if gen["model"] == 1
+                    for i in 1:2:length(gen["cost"])
+                        gen["cost"][i] = gen["cost"][i]*mva_base
+                    end
+                elseif gen["model"] == 2
                     degree = length(gen["cost"])
                     for (i, item) in enumerate(gen["cost"])
                         gen["cost"][i] = item/mva_base^(degree-i)
                     end
+                else
+                    warn("Skipping generator cost model of type $(gen["model"]) in mixed units transformation")
                 end
             end
         end
@@ -569,6 +577,50 @@ function check_voltage_setpoints(data)
 
         if dcline["vt"] != bus_to["vm"]
            warn("the to bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_to_id)")
+        end
+    end
+end
+
+
+"throws warnings if cost functions are malformed"
+function check_cost_functions(data)
+    for (i,gen) in data["gen"]
+        _check_cost_functions(i,gen)
+    end
+    for (i, dcline) in data["dcline"]
+        _check_cost_functions(i,dcline)
+    end
+end
+
+function _check_cost_functions(id, comp)
+    if "model" in keys(comp) && "cost" in keys(comp)
+        if comp["model"] == 1
+            if length(comp["cost"]) != 2*comp["ncost"]
+                error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values")
+            end
+            if length(comp["cost"]) < 4
+                error("cost includes $(comp["ncost"]) points, but at least two points are required")
+            end
+            for i in 3:2:length(comp["cost"])
+                if comp["cost"][i-2] >= comp["cost"][i]
+                    error("non-increasing x values in pwl cost model")
+                end
+            end
+            if "pmin" in keys(comp) && "pmax" in keys(comp)
+                pmin = comp["pmin"]
+                pmax = comp["pmax"]
+                for i in 3:2:length(comp["cost"])
+                    if comp["cost"][i] < pmin || comp["cost"][i] > pmax
+                        warn("pwl x value $(comp["cost"][i]) is outside the generator bounds $(pmin)-$(pmax)")
+                    end
+                end
+            end
+        elseif comp["model"] == 2
+            if length(comp["cost"]) != comp["ncost"]
+                error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values")
+            end
+        else
+            warn("Unknown generator cost model of type $(comp["model"])")
         end
     end
 end

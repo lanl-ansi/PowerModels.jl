@@ -19,6 +19,12 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17760.2; atol = 1e0)
     end
+    @testset "5-bus with pwl costs" begin
+        result = run_ac_opf("../test/data/case5_pwlc.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42895; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_ac_opf("../test/data/case6.m", ipopt_solver)
 
@@ -53,6 +59,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17551; atol = 1e0)
     end
+    @testset "5-bus with pwl costs" begin
+        result = run_ac_opf("../test/data/case5_pwlc.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42895; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_opf("../test/data/case6.m", ACRPowerModel, ipopt_solver)
 
@@ -82,6 +94,12 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17551; atol = 1e0)
+    end
+    @testset "5-bus with pwl costs" begin
+        result = run_ac_opf("../test/data/case5_pwlc.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42895; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_opf("../test/data/case6.m", ACTPowerModel, ipopt_solver)
@@ -113,6 +131,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17479; atol = 1e0)
     end
+    @testset "5-bus with pwl costs" begin
+        result = run_dc_opf("../test/data/case5_pwlc.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42565; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_dc_opf("../test/data/case6.m", ipopt_solver)
 
@@ -142,6 +166,12 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17693; atol = 1e0)
+    end
+    @testset "5-bus with pwl costs" begin
+        result = run_opf("../test/data/case5_pwlc.m", DCPLLPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42937; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_opf("../test/data/case6.m", DCPLLPowerModel, ipopt_solver)
@@ -173,6 +203,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 14999; atol = 1e0)
     end
+    @testset "5-bus with pwl costs" begin
+        result = run_opf("../test/data/case5_pwlc.m", SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42895; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_opf("../test/data/case6.m", SOCWRPowerModel, ipopt_solver)
 
@@ -200,6 +236,12 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 15921; atol = 1e0)
+    end
+    @testset "5-bus with pwl costs" begin
+        result = run_opf("../test/data/case5_pwlc.m", QCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42895; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_opf("../test/data/case6.m", QCWRPowerModel, ipopt_solver)

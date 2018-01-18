@@ -10,6 +10,7 @@ function parse_matpower(file_string::String)
     mp_data = parse_matpower_data(data_string)
 
     update_branch_transformer_settings(mp_data)
+    add_dcline_costs(mp_data)
     standardize_cost_terms(mp_data)
     merge_bus_name_data(mp_data)
     merge_generator_cost_data(mp_data)
@@ -40,6 +41,7 @@ function standardize_cost_terms(data::Dict{String,Any})
                     #println(gencost["cost"])
                     gencost["cost"] = gencost["cost"][max_nonzero_index:length(gencost["cost"])]
                     #println(gencost["cost"])
+                    gencost["ncost"] = length(gencost["cost"])
                 end
             end
 
@@ -47,11 +49,13 @@ function standardize_cost_terms(data::Dict{String,Any})
                 #println("std gen cost: ",gencost["cost"])
                 cost_3 = append!(vec(fill(0.0, (1,3 - length(gencost["cost"])))), gencost["cost"])
                 gencost["cost"] = cost_3
+                gencost["ncost"] = 3
                 #println("   ",gencost["cost"])
                 warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
             end
         end
     end
+
     for dclinecost in data["dclinecost"]
         if dclinecost["model"] == 2
             if length(dclinecost["cost"]) > 3
@@ -68,6 +72,7 @@ function standardize_cost_terms(data::Dict{String,Any})
                     #println(dclinecost["cost"])
                     dclinecost["cost"] = dclinecost["cost"][max_nonzero_index:length(dclinecost["cost"])]
                     #println(dclinecost["cost"])
+                    dclinecost["ncost"] = length(dclinecost["cost"])
                 end
             end
 
@@ -75,6 +80,7 @@ function standardize_cost_terms(data::Dict{String,Any})
                 #println("std gen cost: ",dclinecost["cost"])
                 cost_3 = append!(vec(fill(0.0, (1,3 - length(dclinecost["cost"])))), dclinecost["cost"])
                 dclinecost["cost"] = cost_3
+                dclinecost["ncost"] = 3
                 #println("   ",dclinecost["cost"])
                 warn("added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
             end
@@ -98,34 +104,64 @@ function update_branch_transformer_settings(data::Dict{String,Any})
     end
 end
 
+
+"adds dc line costs, if gencosts exist"
+function add_dcline_costs(data::Dict{String,Any})
+    if length(data["gencost"]) > 0 && length(data["dclinecost"]) <= 0
+        warn("added zero cost function data for dclines")
+        model = data["gencost"][1]["model"]
+        if model == 1
+            for (i, dcline) in enumerate(data["dcline"])
+                dclinecost = Dict(
+                    "index" => i,
+                    "model" => 1,
+                    "startup" => 0.0,
+                    "shutdown" => 0.0,
+                    "ncost" => 2,
+                    "cost" => [0.0, 0.0, 0.0, 0.0]
+                )
+                push!(data["dclinecost"], dclinecost)
+            end
+        else
+            for (i, dcline) in enumerate(data["dcline"])
+                dclinecost = Dict(
+                    "index" => i,
+                    "model" => 2,
+                    "startup" => 0.0,
+                    "shutdown" => 0.0,
+                    "ncost" => 3,
+                    "cost" => [0.0, 0.0, 0.0]
+                )
+                push!(data["dclinecost"], dclinecost)
+            end
+        end
+    end
+end
+
+
 "merges generator cost functions into generator data, if costs exist"
 function merge_generator_cost_data(data::Dict{String,Any})
-    if haskey(data, "gencost")
-        # can assume same length is same as gen (or double)
-        # this is validated during parsing
-        for (i, gencost) in enumerate(data["gencost"])
-            gen = data["gen"][i]
-            assert(gen["index"] == gencost["index"])
-            delete!(gencost, "index")
 
-            check_keys(gen, keys(gencost))
-            merge!(gen, gencost)
-        end
-        delete!(data, "gencost")
-    end
-    if haskey(data, "dclinecost")
-        # can assume same length is same as dcline
-        # this is validated during parsing
-        for (i, dclinecost) in enumerate(data["dclinecost"])
-            dcline = data["dcline"][i]
-            assert(dcline["index"] == dclinecost["index"])
-            delete!(dclinecost, "index")
+    for (i, gencost) in enumerate(data["gencost"])
+        gen = data["gen"][i]
+        assert(gen["index"] == gencost["index"])
+        delete!(gencost, "index")
 
-            check_keys(dcline, keys(dclinecost))
-            merge!(dcline, dclinecost)
-        end
-        delete!(data, "dclinecost")
+        check_keys(gen, keys(gencost))
+        merge!(gen, gencost)
     end
+    delete!(data, "gencost")
+
+    for (i, dclinecost) in enumerate(data["dclinecost"])
+        dcline = data["dcline"][i]
+        assert(dcline["index"] == dclinecost["index"])
+        delete!(dclinecost, "index")
+
+        check_keys(dcline, keys(dclinecost))
+        merge!(dcline, dclinecost)
+    end
+    delete!(data, "dclinecost")
+
 end
 
 "merges bus name data into buses, if names exist"

@@ -25,6 +25,12 @@ using JSON
         @test isa(JSON.json(data), String)
     end
 
+    @testset "5-bus case file with pwl cost functions" begin
+        data = PowerModels.parse_file("../test/data/case5_pwlc.m")
+        @test data["gen"]["1"]["model"] == 1
+        @test isa(JSON.json(data), String)
+    end
+
     @testset "3-bus case file with hvdc lines" begin
         data = PowerModels.parse_file("../test/data/case3.m")
         @test length(data["dcline"]) > 0
