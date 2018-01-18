@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added support for convex piecewise linear cost functions
 - Added lambda-based convex hull relaxation scheme for trilinear products
 - Added QCWRTri Power Flow formulation
 - Added kcl and thermal limit dual values in linear power flow formulations
