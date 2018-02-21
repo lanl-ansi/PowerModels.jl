@@ -22,6 +22,7 @@ __init__() = Memento.register(LOGGER)
 include("io/matpower.jl")
 include("io/common.jl")
 include("io/pti.jl")
+include("io/psse.jl")
 
 include("core/data.jl")
 include("core/base.jl")
