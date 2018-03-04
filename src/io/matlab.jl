@@ -56,30 +56,6 @@ function parse_matlab(data_string::String; extended=false)
             warn("Matlab parser skipping the following line:\n  $(line)")
         end
 
-        #=
-        if contains(line, "function mpc")
-            name = extract_assignment(line)
-            case["name"] = name
-        elseif contains(line, "mpc.version")
-            version = extract_mpc_assignment(line)[2]
-            case["version"] = version
-        elseif contains(line, "mpc.baseMVA")
-            baseMVA = extract_mpc_assignment(line)[2]
-            case["baseMVA"] = baseMVA
-        elseif contains(line, "[")
-            matrix = parse_matrix(data_lines, index)
-            push!(parsed_matrixes, matrix)
-            index = index + matrix["line_count"]-1
-        elseif contains(line, "{")
-            cell = parse_cell(data_lines, index)
-            push!(parsed_cells, cell)
-            index = index + cell["line_count"]-1
-        elseif contains(line, "mpc.")
-            name, value = extract_mpc_assignment(line)
-            case[name] = value
-            info("extending matpower format with value named: $(name)")
-        end
-        =#
         index += 1
     end
 
@@ -202,6 +178,13 @@ function parse_matlab_data(lines, index, start_char, end_char)
             error("matrix parsing error, inconsistent number of items in each row\n$(row)")
         end
     end
+
+    rows = length(matrix)
+    typed_columns = [type_array([ matrix[r][c] for r in 1:rows ]) for c in 1:columns]
+    for r in 1:rows
+        matrix[r] = [typed_columns[c][r] for c in 1:columns]
+    end
+
 
     matrix_dict = Dict("name" => matrix_name, "data" => matrix, "line_count" => line_count)
 
