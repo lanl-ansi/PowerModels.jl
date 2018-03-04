@@ -248,3 +248,14 @@ function split_line(mp_line::AbstractString)
         return split(mp_line)
     end
 end
+
+function parse_type(typ, str)
+    # TODO if not a string check type
+    try
+        value = parse(typ, str)
+        return value
+    catch e
+        error("parsing error, the matlab string \"$(str)\" can not be parsed to $(typ) data")
+        rethrow(e)
+    end
+end

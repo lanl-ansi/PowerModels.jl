@@ -202,16 +202,6 @@ function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
     return mp_line
 end
 
-function parse_type(typ, str)
-    try
-        value = parse(typ, str)
-        return value
-    catch e
-        error("parsing error, the matlab string \"$(str)\" can not be parsed to $(typ) data")
-        rethrow(e)
-    end
-end
-
 #=
 ""
 function extract_mpc_assignment(string::AbstractString)
@@ -257,24 +247,44 @@ function type_array{T <: AbstractString}(string_array::Vector{T})
 end
 =#
 
+mp_bus_columns = [
+    ("bus_i", Int),
+    ("bus_type", Int),
+    ("pd", Float64),
+    ("qd", Float64),
+    ("gs", Float64),
+    ("bs", Float64),
+    ("area", Int),
+    ("vm", Float64),
+    ("va", Float64),
+    ("base_kv", Float64),
+    ("zone", Int),
+    ("vmax", Float64),
+    ("vmin", Float64),
+    ("lam_p", Float64),
+    ("lam_q", Float64),
+    ("mu_vmax", Float64),
+    ("mu_vmin", Float64)
+]
+
+""
+function row_to_dict(row_data, columns)
+    dict_data = Dict{String,Any}()
+    for (i,v) in enumerate(row_data)
+        if i <= length(columns)
+            name, typ = columns[i]
+            println(typ, v)
+            dict_data[name] = parse_type(typ, v)
+        else
+            dict_data["$(i)"] = v
+        end
+    end
+    return dict_data
+end
 
 ""
 function parse_matpower_data(data_string::String)
-    data_lines = split(data_string, '\n')
-
-    version = -1
-    name = -1
-    baseMVA = -1
-
-    bus = -1
-    gen = -1
-    branch = -1
-    gencost = -1
-    dcline = -1
-    dclinecost = -1
-
-    parsed_matrixes = []
-    parsed_cells = []
+    matlab_data, func_name, colnames = parse_matlab(data_string, extended=true)
 
     case = Dict{String,Any}(
         "dcline" => [],
@@ -282,92 +292,42 @@ function parse_matpower_data(data_string::String)
         "dclinecost" => []
     )
 
-    last_index = length(data_lines)
-    index = 1
-    while index <= last_index
-        line = strip(data_lines[index])
-
-        if length(line) <= 0 || strip(line)[1] == '%'
-            index = index + 1
-            continue
-        end
-
-        if contains(line, "function mpc")
-            name = extract_assignment(line)
-            case["name"] = name
-        elseif contains(line, "mpc.version")
-            version = extract_mpc_assignment(line)[2]
-            case["version"] = version
-        elseif contains(line, "mpc.baseMVA")
-            baseMVA = extract_mpc_assignment(line)[2]
-            case["baseMVA"] = baseMVA
-        elseif contains(line, "[")
-            matrix = parse_matrix(data_lines, index)
-            push!(parsed_matrixes, matrix)
-            index = index + matrix["line_count"]-1
-        elseif contains(line, "{")
-            cell = parse_cell(data_lines, index)
-            push!(parsed_cells, cell)
-            index = index + cell["line_count"]-1
-        elseif contains(line, "mpc.")
-            name, value = extract_mpc_assignment(line)
-            case[name] = value
-            info("extending matpower format with value named: $(name)")
-        end
-        index += 1
-    end
-
-    if !haskey(case, "name")
+    if func_name != nothing
+        case["name"] = func_name
+    else
         warn(string("no case name found in matpower file.  The file seems to be missing \"function mpc = ...\""))
         case["name"] = "no_name_found"
     end
 
-    if !haskey(case, "version")
+    if haskey(matlab_data, "mpc.version")
+        case["version"] = matlab_data["mpc.version"]
+    else
         warn(string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
         case["version"] = "unknown"
     end
 
-    if !haskey(case, "baseMVA")
+    if haskey(matlab_data, "mpc.baseMVA")
+        case["baseMVA"] = matlab_data["mpc.baseMVA"]
+    else
         warn(string("no baseMVA found in matpower file.  The file seems to be missing \"mpc.baseMVA = ...\""))
         case["baseMVA"] = 1.0
     end
 
-    for parsed_matrix in parsed_matrixes
-        #println(parsed_matrix)
+    if haskey(matlab_data, "mpc.bus")
+        buses = []
+        for bus_row in matlab_data["mpc.bus"]
+            bus_data = row_to_dict(bus_row, mp_bus_columns)
+            bus_data["index"] = parse_type(Int, bus_row[1])
+            push!(buses, bus_data)
+        end
+        case["bus"] = buses
+    else
+        error(string("no bus table found in matpower file.  The file seems to be missing \"mpc.bus = [...];\""))
+    end
 
-        if parsed_matrix["name"] == "bus"
-            buses = []
-
-            for bus_row in parsed_matrix["data"]
-                bus_data = Dict{String,Any}(
-                    "index" => parse_type(Int, bus_row[1]),
-                    "bus_i" => parse_type(Int, bus_row[1]),
-                    "bus_type" => parse_type(Int, bus_row[2]),
-                    "pd" => parse_type(Float64, bus_row[3]),
-                    "qd" => parse_type(Float64, bus_row[4]),
-                    "gs" => parse_type(Float64, bus_row[5]),
-                    "bs" => parse_type(Float64, bus_row[6]),
-                    "area" => parse_type(Int, bus_row[7]),
-                    "vm" => parse_type(Float64, bus_row[8]),
-                    "va" => parse_type(Float64, bus_row[9]),
-                    "base_kv" => parse_type(Float64, bus_row[10]),
-                    "zone" => parse_type(Int, bus_row[11]),
-                    "vmax" => parse_type(Float64, bus_row[12]),
-                    "vmin" => parse_type(Float64, bus_row[13]),
-                )
-                if length(bus_row) > 13
-                    bus_data["lam_p"] = parse_type(Float64, bus_row[14])
-                    bus_data["lam_q"] = parse_type(Float64, bus_row[15])
-                    bus_data["mu_vmax"] = parse_type(Float64, bus_row[16])
-                    bus_data["mu_vmin"] = parse_type(Float64, bus_row[17])
-                end
-
-                push!(buses, bus_data)
-            end
-
-            case["bus"] = buses
-
-        elseif parsed_matrix["name"] == "gen"
+    return case
+    #=
+    if parsed_matrix["name"] == "gen"
             gens = []
 
             for (i, gen_row) in enumerate(parsed_matrix["data"])
@@ -581,6 +541,7 @@ function parse_matpower_data(data_string::String)
     #println(case)
 
     return case
+    =#
 end
 
 
