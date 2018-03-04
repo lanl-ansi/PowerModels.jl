@@ -180,137 +180,7 @@ function merge_bus_name_data(data::Dict{String,Any})
     end
 end
 
-""
-parse_cell(lines, index) = parse_matlab_data(lines, index, '{', '}')
 
-""
-parse_matrix(lines, index) = parse_matlab_data(lines, index, '[', ']')
-
-""
-function parse_matlab_data(lines, index, start_char, end_char)
-    last_index = length(lines)
-    line_count = 0
-    columns = -1
-
-    assert(contains(lines[index+line_count], "="))
-    matrix_assignment = split(lines[index+line_count], '%')[1]
-    matrix_assignment = strip(matrix_assignment)
-
-    assert(contains(matrix_assignment, "mpc."))
-    matrix_assignment_parts = split(matrix_assignment, '=')
-    matrix_name = strip(replace(matrix_assignment_parts[1], "mpc.", ""))
-
-    matrix_assignment_rhs = ""
-    if length(matrix_assignment_parts) > 1
-        matrix_assignment_rhs = strip(matrix_assignment_parts[2])
-    end
-
-    line_count = line_count + 1
-    matrix_body_lines = [matrix_assignment_rhs]
-    found_close_bracket = contains(matrix_assignment_rhs, string(end_char))
-
-    while index + line_count < last_index && !found_close_bracket
-        line = strip(lines[index+line_count])
-
-        if length(line) == 0 || line[1] == '%'
-            line_count += 1
-            continue
-        end
-
-        line = strip(split(line, '%')[1])
-
-        if contains(line, string(end_char))
-            found_close_bracket = true
-        end
-
-        push!(matrix_body_lines, line)
-
-        line_count = line_count + 1
-    end
-
-    #print(matrix_body_lines)
-    matrix_body_lines = [add_line_delimiter(line, start_char, end_char) for line in matrix_body_lines]
-    #print(matrix_body_lines)
-
-    matrix_body = join(matrix_body_lines, ' ')
-    matrix_body = strip(replace(strip(strip(matrix_body), start_char), "$(end_char);", ""))
-    matrix_body_rows = split(matrix_body, ';')
-    matrix_body_rows = matrix_body_rows[1:(length(matrix_body_rows)-1)]
-
-    matrix = []
-    for row in matrix_body_rows
-        row_items = split_line(strip(row))
-        #println(row_items)
-        push!(matrix, row_items)
-        if columns < 0
-            columns = length(row_items)
-        elseif columns != length(row_items)
-            error("matrix parsing error, inconsistent number of items in each row\n$(row)")
-        end
-    end
-
-    matrix_dict = Dict("name" => matrix_name, "data" => matrix, "line_count" => line_count)
-
-    if index > 1 && contains(lines[index-1], "%column_names%")
-        column_names_string = lines[index-1]
-        column_names_string = replace(column_names_string, "%column_names%", "")
-        column_names = split(column_names_string)
-        if length(matrix[1]) != length(column_names)
-            error("column name parsing error, data rows $(length(matrix[1])), column names $(length(column_names)) \n$(column_names)")
-        end
-        if any([column_name == "index" for column_name in column_names])
-            error("column name parsing error, \"index\" is a reserved column name \n$(column_names)")
-        end
-        matrix_dict["column_names"] = column_names
-    end
-
-    return matrix_dict
-end
-
-const single_quote_expr = r"\'((\\.|[^\'])*?)\'"
-
-""
-function split_line(mp_line::AbstractString)
-    if ismatch(single_quote_expr, mp_line)
-        # splits a string on white space while escaping text quoted with "'"
-        # note that quotes will be stripped later, when data typing occurs
-
-        #println(mp_line)
-        tokens = []
-        while length(mp_line) > 0 && ismatch(single_quote_expr, mp_line)
-            #println(mp_line)
-            m = match(single_quote_expr, mp_line)
-
-            if m.offset > 1
-                push!(tokens, mp_line[1:m.offset-1])
-            end
-            push!(tokens, replace(m.match, "\\'", "'")) # replace escaped quotes
-
-            mp_line = mp_line[m.offset+length(m.match):end]
-        end
-        if length(mp_line) > 0
-            push!(tokens, mp_line)
-        end
-        #println(tokens)
-
-        items = []
-        for token in tokens
-            if contains(token, "'")
-                push!(items, strip(token))
-            else
-                for parts in split(token)
-                    push!(items, strip(parts))
-                end
-            end
-        end
-        #println(items)
-
-        #return [strip(mp_line, '\'')]
-        return items
-    else
-        return split(mp_line)
-    end
-end
 
 ""
 function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
@@ -342,13 +212,7 @@ function parse_type(typ, str)
     end
 end
 
-""
-function extract_assignment(string::AbstractString)
-    statement = split(string, ';')[1]
-    value = split(statement, '=')[2]
-    return strip(value)
-end
-
+#=
 ""
 function extract_mpc_assignment(string::AbstractString)
     assert(contains(string, "mpc."))
@@ -391,6 +255,8 @@ function type_array{T <: AbstractString}(string_array::Vector{T})
         [parse_type(Int, value_string) for value_string in string_array]
     end
 end
+=#
+
 
 ""
 function parse_matpower_data(data_string::String)
