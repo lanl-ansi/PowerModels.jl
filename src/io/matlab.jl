@@ -87,9 +87,9 @@ function type_value(value_string::AbstractString)
     else
         # if value is a float
         if contains(value_string, ".") || contains(value_string, "e")
-            value = parse_type(Float64, value_string)
+            value = check_type(Float64, value_string)
         else # otherwise assume it is an int
-            value = parse_type(Int, value_string)
+            value = check_type(Int, value_string)
         end
     end
 
@@ -103,9 +103,9 @@ function type_array{T <: AbstractString}(string_array::Vector{T})
     return if any(contains(value_string, "'") for value_string in string_array)
         [strip(value_string, '\'') for value_string in string_array]
     elseif any(contains(value_string, ".") || contains(value_string, "e") for value_string in string_array)
-        [parse_type(Float64, value_string) for value_string in string_array]
+        [check_type(Float64, value_string) for value_string in string_array]
     else # otherwise assume it is an int
-        [parse_type(Int, value_string) for value_string in string_array]
+        [check_type(Int, value_string) for value_string in string_array]
     end
 end
 
@@ -249,13 +249,25 @@ function split_line(mp_line::AbstractString)
     end
 end
 
-function parse_type(typ, str)
-    # TODO if not a string check type
-    try
-        value = parse(typ, str)
+"Checks if the given value is of a given type, if not tries to make it that type"
+function check_type(typ, value)
+    if isa(value, typ)
         return value
-    catch e
-        error("parsing error, the matlab string \"$(str)\" can not be parsed to $(typ) data")
-        rethrow(e)
+    elseif isa(value, String) || isa(value, SubString)
+        try
+            value = parse(typ, value)
+            return value
+        catch e
+            error("parsing error, the matlab string \"$(value)\" can not be parsed to $(typ) data")
+            rethrow(e)
+        end
+    else
+        try
+            value = typ(value)
+            return value
+        catch e
+            error("parsing error, the matlab value $(value) of type $(typeof(value)) can not be parsed to $(typ) data")
+            rethrow(e)
+        end
     end
 end
