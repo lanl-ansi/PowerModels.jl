@@ -7,6 +7,7 @@ using MathProgBase
 using JuMP
 using Compat
 
+include("io/matlab.jl")
 include("io/matpower.jl")
 include("io/json.jl")
 include("io/common.jl")

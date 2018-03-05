@@ -6,22 +6,365 @@
 
 ""
 function parse_matpower(file_string::String)
-    data_string = readstring(open(file_string))
-    mp_data = parse_matpower_data(data_string)
+    mp_data = parse_matpower_file(file_string)
+    #display(mp_data)
 
-    update_branch_transformer_settings(mp_data)
-    add_dcline_costs(mp_data)
-    standardize_cost_terms(mp_data)
-    merge_bus_name_data(mp_data)
-    merge_generator_cost_data(mp_data)
+    pm_data = matpower_to_powermodels(mp_data)
 
-    # after this call, Matpower data is consistent with PowerModels data
-    mp_data_to_pm_data(mp_data)
-
-    mp_data["multinetwork"] = false
-
-    return mp_data
+    return pm_data
 end
+
+
+### very generic helper functions ###
+
+"takes a row from a matrix and assigns the values names and types"
+function row_to_typed_dict(row_data, columns)
+    dict_data = Dict{String,Any}()
+    for (i,v) in enumerate(row_data)
+        if i <= length(columns)
+            name, typ = columns[i]
+            dict_data[name] = check_type(typ, v)
+        else
+            dict_data["col_$(i)"] = v
+        end
+    end
+    return dict_data
+end
+
+"takes a row from a matrix and assigns the values names"
+function row_to_dict(row_data, columns)
+    dict_data = Dict{String,Any}()
+    for (i,v) in enumerate(row_data)
+        if i <= length(columns)
+            dict_data[columns[i]] = v
+        else
+            dict_data["col_$(i)"] = v
+        end
+    end
+    return dict_data
+end
+
+
+
+### Data and functions specific to Matpower format ###
+
+mp_data_names = ["mpc.version", "mpc.baseMVA", "mpc.bus", "mpc.gen",
+    "mpc.branch", "mpc.dcline", "mpc.gencost", "mpc.dclinecost",
+    "mpc.bus_name"
+]
+
+mp_bus_columns = [
+    ("bus_i", Int),
+    ("bus_type", Int),
+    ("pd", Float64), ("qd", Float64),
+    ("gs", Float64), ("bs", Float64),
+    ("area", Int),
+    ("vm", Float64), ("va", Float64),
+    ("base_kv", Float64),
+    ("zone", Int),
+    ("vmax", Float64), ("vmin", Float64),
+    ("lam_p", Float64), ("lam_q", Float64),
+    ("mu_vmax", Float64), ("mu_vmin", Float64)
+]
+
+mp_bus_name_columns = [
+    ("bus_name", String)
+]
+
+mp_gen_columns = [
+    ("gen_bus", Int),
+    ("pg", Float64), ("qg", Float64),
+    ("qmax", Float64), ("qmin", Float64),
+    ("vg", Float64),
+    ("mbase", Float64),
+    ("gen_status", Int),
+    ("pmax", Float64), ("pmin", Float64),
+    ("pc1", Float64),
+    ("pc2", Float64),
+    ("qc1min", Float64), ("qc1max", Float64),
+    ("qc2min", Float64), ("qc2max", Float64),
+    ("ramp_agc", Float64),
+    ("ramp_10", Float64),
+    ("ramp_30", Float64),
+    ("ramp_q", Float64),
+    ("apf", Float64),
+    ("mu_pmax", Float64), ("mu_pmin", Float64),
+    ("mu_qmax", Float64), ("mu_qmin", Float64)
+]
+
+mp_branch_columns = [
+    ("f_bus", Int),
+    ("t_bus", Int),
+    ("br_r", Float64), ("br_x", Float64),
+    ("br_b", Float64),
+    ("rate_a", Float64),
+    ("rate_b", Float64),
+    ("rate_c", Float64),
+    ("tap", Float64), ("shift", Float64),
+    ("br_status", Int),
+    ("angmin", Float64), ("angmax", Float64),
+    ("pf", Float64), ("qf", Float64),
+    ("pt", Float64), ("qt", Float64),
+    ("mu_sf", Float64), ("mu_st", Float64),
+    ("mu_angmin", Float64), ("mu_angmax", Float64)
+]
+
+mp_dcline_columns = [
+    ("f_bus", Int),
+    ("t_bus", Int),
+    ("br_status", Int),
+    ("pf", Float64), ("pt", Float64),
+    ("qf", Float64), ("qt", Float64),
+    ("vf", Float64), ("vt", Float64),
+    ("pmin", Float64), ("pmax", Float64),
+    ("qminf", Float64), ("qmaxf", Float64),
+    ("qmint", Float64), ("qmaxt", Float64),
+    ("loss0", Float64),
+    ("loss1", Float64),
+    ("mu_pmin", Float64), ("mu_pmax", Float64),
+    ("mu_qminf", Float64), ("mu_qmaxf", Float64),
+    ("mu_qmint", Float64), ("mu_qmaxt", Float64)
+]
+
+
+""
+function parse_matpower_file(file_string::String)
+    data_string = readstring(open(file_string))
+    return parse_matpower_string(data_string)
+end
+
+
+""
+function parse_matpower_string(data_string::String)
+    matlab_data, func_name, colnames = parse_matlab_string(data_string, extended=true)
+
+    case = Dict{String,Any}()
+
+    if func_name != nothing
+        case["name"] = func_name
+    else
+        warn(string("no case name found in matpower file.  The file seems to be missing \"function mpc = ...\""))
+        case["name"] = "no_name_found"
+    end
+
+    if haskey(matlab_data, "mpc.version")
+        case["version"] = matlab_data["mpc.version"]
+    else
+        warn(string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
+        case["version"] = "unknown"
+    end
+
+    if haskey(matlab_data, "mpc.baseMVA")
+        case["baseMVA"] = matlab_data["mpc.baseMVA"]
+    else
+        warn(string("no baseMVA found in matpower file.  The file seems to be missing \"mpc.baseMVA = ...\""))
+        case["baseMVA"] = 1.0
+    end
+
+
+    if haskey(matlab_data, "mpc.bus")
+        buses = []
+        for bus_row in matlab_data["mpc.bus"]
+            bus_data = row_to_typed_dict(bus_row, mp_bus_columns)
+            bus_data["index"] = check_type(Int, bus_row[1])
+            push!(buses, bus_data)
+        end
+        case["bus"] = buses
+    else
+        error(string("no bus table found in matpower file.  The file seems to be missing \"mpc.bus = [...];\""))
+    end
+
+    if haskey(matlab_data, "mpc.gen")
+        gens = []
+        for (i, gen_row) in enumerate(matlab_data["mpc.gen"])
+            gen_data = row_to_typed_dict(gen_row, mp_gen_columns)
+            gen_data["index"] = i
+            push!(gens, gen_data)
+        end
+        case["gen"] = gens
+    else
+        error(string("no gen table found in matpower file.  The file seems to be missing \"mpc.gen = [...];\""))
+    end
+
+    if haskey(matlab_data, "mpc.branch")
+        branches = []
+        for (i, branch_row) in enumerate(matlab_data["mpc.branch"])
+            branch_data = row_to_typed_dict(branch_row, mp_branch_columns)
+            branch_data["index"] = i
+            push!(branches, branch_data)
+        end
+        case["branch"] = branches
+    else
+        error(string("no branch table found in matpower file.  The file seems to be missing \"mpc.branch = [...];\""))
+    end
+
+    if haskey(matlab_data, "mpc.dcline")
+        dclines = []
+        for (i, dcline_row) in enumerate(matlab_data["mpc.dcline"])
+            dcline_data = row_to_typed_dict(dcline_row, mp_dcline_columns)
+            dcline_data["index"] = i
+            push!(dclines, dcline_data)
+        end
+        case["dcline"] = dclines
+    end
+
+
+    if haskey(matlab_data, "mpc.bus_name")
+        bus_names = []
+        for (i, bus_name_row) in enumerate(matlab_data["mpc.bus_name"])
+            bus_name_data = row_to_typed_dict(bus_name_row, mp_bus_name_columns)
+            bus_name_data["index"] = i
+            push!(bus_names, bus_name_data)
+        end
+        case["bus_name"] = bus_names
+
+        if length(case["bus_name"]) != length(case["bus"])
+            error("incorrect Matpower file, the number of bus names ($(length(case["bus_name"]))) is inconsistent with the number of buses ($(length(case["bus"]))).\n")
+        end
+    end
+
+    if haskey(matlab_data, "mpc.gencost")
+        gencost = []
+        for (i, gencost_row) in enumerate(matlab_data["mpc.gencost"])
+            gencost_data = mp_cost_data(gencost_row)
+            gencost_data["index"] = i
+            push!(gencost, gencost_data)
+        end
+        case["gencost"] = gencost
+
+        if length(case["gencost"]) != length(case["gen"]) && length(case["gencost"]) != 2*length(case["gen"])
+            error("incorrect Matpower file, the number of generator cost functions ($(length(case["gencost"]))) is inconsistent with the number of generators ($(length(case["gen"]))).\n")
+        end
+    end
+
+    if haskey(matlab_data, "mpc.dclinecost")
+        dclinecosts = []
+        for (i, dclinecost_row) in enumerate(matlab_data["mpc.dclinecost"])
+            dclinecost_data = mp_cost_data(dclinecost_row)
+            dclinecost_data["index"] = i
+            push!(dclinecosts, dclinecost_data)
+        end
+        case["dclinecost"] = dclinecosts
+
+        if length(case["dclinecost"]) != length(case["dcline"])
+            error("incorrect Matpower file, the number of dcline cost functions ($(length(case["dclinecost"]))) is inconsistent with the number of dclines ($(length(case["dcline"]))).\n")
+        end
+    end
+
+    for k in keys(matlab_data)
+        if !in(k, mp_data_names) && k[1:4] == "mpc."
+            case_name = k[5:length(k)]
+            value = matlab_data[k]
+            if isa(value, Array)
+                column_names = []
+                if haskey(colnames, k)
+                    column_names = colnames[k]
+                end
+                tbl = []
+                for (i, row) in enumerate(matlab_data[k])
+                    row_data = row_to_dict(row, column_names)
+                    row_data["index"] = i
+                    push!(tbl, row_data)
+                end
+                case[case_name] = tbl
+                info("extending matpower format with data: $(case_name) $(length(tbl))x$(length(tbl[1])-1)")
+            else
+                case[case_name] = value
+                info("extending matpower format with constant data: $(case_name)")
+            end
+        end
+    end
+
+    #println("Case:")
+    #println(case)
+
+    return case
+end
+
+
+function mp_cost_data(cost_row)
+    cost_data = Dict{String,Any}(
+        "model" => check_type(Int, cost_row[1]),
+        "startup" => check_type(Float64, cost_row[2]),
+        "shutdown" => check_type(Float64, cost_row[3]),
+        "ncost" => check_type(Int, cost_row[4]),
+        "cost" => [check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
+    )
+
+    #=
+    # skip this literal interpretation, as its hard to invert
+    cost_values = [check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
+    if cost_data["model"] == 1:
+        if length(cost_values)%2 != 0
+            error("incorrect matpower file, odd number of pwl cost function values")
+        end
+        for i in 0:(length(cost_values)/2-1)
+            p_idx = 1+2*i
+            f_idx = 2+2*i
+            cost_data["p_$(i)"] = cost_values[p_idx]
+            cost_data["f_$(i)"] = cost_values[f_idx]
+        end
+    else:
+        for (i,v) in enumerate(cost_values)
+            cost_data["c_$(length(cost_values)+1-i)"] = v
+        end
+    =#
+    return cost_data
+end
+
+
+
+### Data and functions specific to PowerModels format ###
+
+"""
+Converts a Matpower dict into a PowerModels dict
+"""
+function matpower_to_powermodels(mp_data::Dict{String,Any})
+    pm_data = deepcopy(mp_data)
+
+    pm_data["multinetwork"] = false
+
+    # required default values
+    if !haskey(pm_data, "dcline")
+        pm_data["dcline"] = []
+    end
+    if !haskey(pm_data, "gencost")
+        pm_data["gencost"] = []
+    end
+    if !haskey(pm_data, "dclinecost")
+        pm_data["dclinecost"] = []
+    end
+
+    # translate component models
+    mp2pm_branch(pm_data)
+    mp2pm_dcline(pm_data)
+
+    # translate cost models
+    add_dcline_costs(pm_data)
+    standardize_cost_terms(pm_data)
+
+    # merge data tables
+    merge_bus_name_data(pm_data)
+    merge_generator_cost_data(pm_data)
+    merge_generic_data(pm_data)
+
+    # update lookup structure
+    for (k,v) in pm_data
+        if isa(v, Array)
+            #println("updating $(k)")
+            dict = Dict{String,Any}()
+            for item in v
+                assert("index" in keys(item))
+                dict[string(item["index"])] = item
+            end
+            pm_data[k] = dict
+        end
+    end
+
+    return pm_data
+end
+
+
 
 "ensures all polynomial costs functions have at least three terms"
 function standardize_cost_terms(data::Dict{String,Any})
@@ -89,7 +432,7 @@ function standardize_cost_terms(data::Dict{String,Any})
 end
 
 "sets all branch transformer taps to 1.0, to simplify branch models"
-function update_branch_transformer_settings(data::Dict{String,Any})
+function mp2pm_branch(data::Dict{String,Any})
     branches = [branch for branch in data["branch"]]
     if haskey(data, "ne_branch")
         append!(branches, data["ne_branch"])
@@ -105,7 +448,55 @@ function update_branch_transformer_settings(data::Dict{String,Any})
 end
 
 
-"adds dc line costs, if gencosts exist"
+"adds pmin and pmax values at to and from buses"
+function mp2pm_dcline(data::Dict{String,Any})
+    for dcline in data["dcline"]
+        pmin = dcline["pmin"]
+        pmax = dcline["pmax"]
+        loss0 = dcline["loss0"]
+        loss1 = dcline["loss1"]
+
+        delete!(dcline, "pmin")
+        delete!(dcline, "pmax")
+
+        if pmin >= 0 && pmax >=0
+            pminf = pmin
+            pmaxf = pmax
+            pmint = loss0 - pmaxf * (1 - loss1)
+            pmaxt = loss0 - pminf * (1 - loss1)
+        end
+        if pmin >= 0 && pmax < 0
+            pminf = pmin
+            pmint = pmax
+            pmaxf = (-pmint + loss0) / (1-loss1)
+            pmaxt = loss0 - pminf * (1 - loss1)
+        end
+        if pmin < 0 && pmax >= 0
+            pmaxt = -pmin
+            pmaxf = pmax
+            pminf = (-pmaxt + loss0) / (1-loss1)
+            pmint = loss0 - pmaxf * (1 - loss1)
+        end
+        if pmin < 0 && pmax < 0
+            pmaxt = -pmin
+            pmint = pmax
+            pmaxf = (-pmint + loss0) / (1-loss1)
+            pminf = (-pmaxt + loss0) / (1-loss1)
+        end
+
+        dcline["pmaxt"] = pmaxt
+        dcline["pmint"] = pmint
+        dcline["pmaxf"] = pmaxf
+        dcline["pminf"] = pminf
+
+        dcline["pt"] = -dcline["pt"] # matpower has opposite convention
+        dcline["qf"] = -dcline["qf"] # matpower has opposite convention
+        dcline["qt"] = -dcline["qt"] # matpower has opposite convention
+    end
+end
+
+
+"adds dcline costs, if gen costs exist"
 function add_dcline_costs(data::Dict{String,Any})
     if length(data["gencost"]) > 0 && length(data["dclinecost"]) <= 0
         warn("added zero cost function data for dclines")
@@ -141,7 +532,6 @@ end
 
 "merges generator cost functions into generator data, if costs exist"
 function merge_generator_cost_data(data::Dict{String,Any})
-
     for (i, gencost) in enumerate(data["gencost"])
         gen = data["gen"][i]
         assert(gen["index"] == gencost["index"])
@@ -161,14 +551,14 @@ function merge_generator_cost_data(data::Dict{String,Any})
         merge!(dcline, dclinecost)
     end
     delete!(data, "dclinecost")
-
 end
+
 
 "merges bus name data into buses, if names exist"
 function merge_bus_name_data(data::Dict{String,Any})
     if haskey(data, "bus_name")
         # can assume same length is same as bus
-        # this is validated during parsing
+        # this is validated during matpower parsing
         for (i, bus_name) in enumerate(data["bus_name"])
             bus = data["bus"][i]
             delete!(bus_name, "index")
@@ -180,635 +570,46 @@ function merge_bus_name_data(data::Dict{String,Any})
     end
 end
 
-""
-parse_cell(lines, index) = parse_matlab_data(lines, index, '{', '}')
 
-""
-parse_matrix(lines, index) = parse_matlab_data(lines, index, '[', ']')
+"merges Matpower tables based on the table extension syntax"
+function merge_generic_data(data::Dict{String,Any})
+    mp_matrix_names = [name[5:length(name)] for name in mp_data_names]
 
-""
-function parse_matlab_data(lines, index, start_char, end_char)
-    last_index = length(lines)
-    line_count = 0
-    columns = -1
-
-    assert(contains(lines[index+line_count], "="))
-    matrix_assignment = split(lines[index+line_count], '%')[1]
-    matrix_assignment = strip(matrix_assignment)
-
-    assert(contains(matrix_assignment, "mpc."))
-    matrix_assignment_parts = split(matrix_assignment, '=')
-    matrix_name = strip(replace(matrix_assignment_parts[1], "mpc.", ""))
-
-    matrix_assignment_rhs = ""
-    if length(matrix_assignment_parts) > 1
-        matrix_assignment_rhs = strip(matrix_assignment_parts[2])
-    end
-
-    line_count = line_count + 1
-    matrix_body_lines = [matrix_assignment_rhs]
-    found_close_bracket = contains(matrix_assignment_rhs, string(end_char))
-
-    while index + line_count < last_index && !found_close_bracket
-        line = strip(lines[index+line_count])
-
-        if length(line) == 0 || line[1] == '%'
-            line_count += 1
-            continue
-        end
-
-        line = strip(split(line, '%')[1])
-
-        if contains(line, string(end_char))
-            found_close_bracket = true
-        end
-
-        push!(matrix_body_lines, line)
-
-        line_count = line_count + 1
-    end
-
-    #print(matrix_body_lines)
-    matrix_body_lines = [add_line_delimiter(line, start_char, end_char) for line in matrix_body_lines]
-    #print(matrix_body_lines)
-
-    matrix_body = join(matrix_body_lines, ' ')
-    matrix_body = strip(replace(strip(strip(matrix_body), start_char), "$(end_char);", ""))
-    matrix_body_rows = split(matrix_body, ';')
-    matrix_body_rows = matrix_body_rows[1:(length(matrix_body_rows)-1)]
-
-    matrix = []
-    for row in matrix_body_rows
-        row_items = split_line(strip(row))
-        #println(row_items)
-        push!(matrix, row_items)
-        if columns < 0
-            columns = length(row_items)
-        elseif columns != length(row_items)
-            error("matrix parsing error, inconsistent number of items in each row\n$(row)")
-        end
-    end
-
-    matrix_dict = Dict("name" => matrix_name, "data" => matrix, "line_count" => line_count)
-
-    if index > 1 && contains(lines[index-1], "%column_names%")
-        column_names_string = lines[index-1]
-        column_names_string = replace(column_names_string, "%column_names%", "")
-        column_names = split(column_names_string)
-        if length(matrix[1]) != length(column_names)
-            error("column name parsing error, data rows $(length(matrix[1])), column names $(length(column_names)) \n$(column_names)")
-        end
-        if any([column_name == "index" for column_name in column_names])
-            error("column name parsing error, \"index\" is a reserved column name \n$(column_names)")
-        end
-        matrix_dict["column_names"] = column_names
-    end
-
-    return matrix_dict
-end
-
-const single_quote_expr = r"\'((\\.|[^\'])*?)\'"
-
-""
-function split_line(mp_line::AbstractString)
-    if ismatch(single_quote_expr, mp_line)
-        # splits a string on white space while escaping text quoted with "'"
-        # note that quotes will be stripped later, when data typing occurs
-
-        #println(mp_line)
-        tokens = []
-        while length(mp_line) > 0 && ismatch(single_quote_expr, mp_line)
-            #println(mp_line)
-            m = match(single_quote_expr, mp_line)
-
-            if m.offset > 1
-                push!(tokens, mp_line[1:m.offset-1])
-            end
-            push!(tokens, replace(m.match, "\\'", "'")) # replace escaped quotes
-
-            mp_line = mp_line[m.offset+length(m.match):end]
-        end
-        if length(mp_line) > 0
-            push!(tokens, mp_line)
-        end
-        #println(tokens)
-
-        items = []
-        for token in tokens
-            if contains(token, "'")
-                push!(items, strip(token))
-            else
-                for parts in split(token)
-                    push!(items, strip(parts))
-                end
-            end
-        end
-        #println(items)
-
-        #return [strip(mp_line, '\'')]
-        return items
-    else
-        return split(mp_line)
-    end
-end
-
-""
-function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
-    if strip(mp_line) == string(start_char)
-        return mp_line
-    end
-
-    if !contains(mp_line, ";") && !contains(mp_line, string(end_char))
-        mp_line = "$(mp_line);"
-    end
-
-    if contains(mp_line, string(end_char))
-        prefix = strip(split(mp_line, end_char)[1])
-        if length(prefix) > 0 && ! contains(prefix, ";")
-            mp_line = replace(mp_line, end_char, ";$(end_char)")
-        end
-    end
-
-    return mp_line
-end
-
-function parse_type(typ, str)
-    try
-        value = parse(typ, str)
-        return value
-    catch e
-        error("parsing error, the matlab string \"$(str)\" can not be parsed to $(typ) data")
-        rethrow(e)
-    end
-end
-
-""
-function extract_assignment(string::AbstractString)
-    statement = split(string, ';')[1]
-    value = split(statement, '=')[2]
-    return strip(value)
-end
-
-""
-function extract_mpc_assignment(string::AbstractString)
-    assert(contains(string, "mpc."))
-    statement = split(string, ';')[1]
-    statement = replace(statement, "mpc.", "")
-    name, value = split(statement, '=')
-    name = strip(name)
-    value = type_value(strip(value))
-
-    return (name, value)
-end
-
-"Attempts to determine the type of a string extracted from a matlab file"
-function type_value(value_string::AbstractString)
-    value_string = strip(value_string)
-
-    if contains(value_string, "'") # value is a string
-        value = strip(value_string, '\'')
-    else
-        # if value is a float
-        if contains(value_string, ".") || contains(value_string, "e")
-            value = parse_type(Float64, value_string)
-        else # otherwise assume it is an int
-            value = parse_type(Int, value_string)
-        end
-    end
-
-    return value
-end
-
-"Attempts to determine the type of an array of strings extracted from a matlab file"
-function type_array{T <: AbstractString}(string_array::Vector{T})
-    value_string = [strip(value_string) for value_string in string_array]
-
-    return if any(contains(value_string, "'") for value_string in string_array)
-        [strip(value_string, '\'') for value_string in string_array]
-    elseif any(contains(value_string, ".") || contains(value_string, "e") for value_string in string_array)
-        [parse_type(Float64, value_string) for value_string in string_array]
-    else # otherwise assume it is an int
-        [parse_type(Int, value_string) for value_string in string_array]
-    end
-end
-
-""
-function parse_matpower_data(data_string::String)
-    data_lines = split(data_string, '\n')
-
-    version = -1
-    name = -1
-    baseMVA = -1
-
-    bus = -1
-    gen = -1
-    branch = -1
-    gencost = -1
-    dcline = -1
-    dclinecost = -1
-
-    parsed_matrixes = []
-    parsed_cells = []
-
-    case = Dict{String,Any}(
-        "dcline" => [],
-        "gencost" => [],
-        "dclinecost" => []
-    )
-
-    last_index = length(data_lines)
-    index = 1
-    while index <= last_index
-        line = strip(data_lines[index])
-
-        if length(line) <= 0 || strip(line)[1] == '%'
-            index = index + 1
-            continue
-        end
-
-        if contains(line, "function mpc")
-            name = extract_assignment(line)
-            case["name"] = name
-        elseif contains(line, "mpc.version")
-            version = extract_mpc_assignment(line)[2]
-            case["version"] = version
-        elseif contains(line, "mpc.baseMVA")
-            baseMVA = extract_mpc_assignment(line)[2]
-            case["baseMVA"] = baseMVA
-        elseif contains(line, "[")
-            matrix = parse_matrix(data_lines, index)
-            push!(parsed_matrixes, matrix)
-            index = index + matrix["line_count"]-1
-        elseif contains(line, "{")
-            cell = parse_cell(data_lines, index)
-            push!(parsed_cells, cell)
-            index = index + cell["line_count"]-1
-        elseif contains(line, "mpc.")
-            name, value = extract_mpc_assignment(line)
-            case[name] = value
-            info("extending matpower format with value named: $(name)")
-        end
-        index += 1
-    end
-
-    if !haskey(case, "name")
-        warn(string("no case name found in matpower file.  The file seems to be missing \"function mpc = ...\""))
-        case["name"] = "no_name_found"
-    end
-
-    if !haskey(case, "version")
-        warn(string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
-        case["version"] = "unknown"
-    end
-
-    if !haskey(case, "baseMVA")
-        warn(string("no baseMVA found in matpower file.  The file seems to be missing \"mpc.baseMVA = ...\""))
-        case["baseMVA"] = 1.0
-    end
-
-    for parsed_matrix in parsed_matrixes
-        #println(parsed_matrix)
-
-        if parsed_matrix["name"] == "bus"
-            buses = []
-
-            for bus_row in parsed_matrix["data"]
-                bus_data = Dict{String,Any}(
-                    "index" => parse_type(Int, bus_row[1]),
-                    "bus_i" => parse_type(Int, bus_row[1]),
-                    "bus_type" => parse_type(Int, bus_row[2]),
-                    "pd" => parse_type(Float64, bus_row[3]),
-                    "qd" => parse_type(Float64, bus_row[4]),
-                    "gs" => parse_type(Float64, bus_row[5]),
-                    "bs" => parse_type(Float64, bus_row[6]),
-                    "area" => parse_type(Int, bus_row[7]),
-                    "vm" => parse_type(Float64, bus_row[8]),
-                    "va" => parse_type(Float64, bus_row[9]),
-                    "base_kv" => parse_type(Float64, bus_row[10]),
-                    "zone" => parse_type(Int, bus_row[11]),
-                    "vmax" => parse_type(Float64, bus_row[12]),
-                    "vmin" => parse_type(Float64, bus_row[13]),
-                )
-                if length(bus_row) > 13
-                    bus_data["lam_p"] = parse_type(Float64, bus_row[14])
-                    bus_data["lam_q"] = parse_type(Float64, bus_row[15])
-                    bus_data["mu_vmax"] = parse_type(Float64, bus_row[16])
-                    bus_data["mu_vmin"] = parse_type(Float64, bus_row[17])
-                end
-
-                push!(buses, bus_data)
-            end
-
-            case["bus"] = buses
-
-        elseif parsed_matrix["name"] == "gen"
-            gens = []
-
-            for (i, gen_row) in enumerate(parsed_matrix["data"])
-                gen_data = Dict{String,Any}(
-                    "index" => i,
-                    "gen_bus" => parse_type(Int, gen_row[1]),
-                    "pg" => parse_type(Float64, gen_row[2]),
-                    "qg" => parse_type(Float64, gen_row[3]),
-                    "qmax" => parse_type(Float64, gen_row[4]),
-                    "qmin" => parse_type(Float64, gen_row[5]),
-                    "vg" => parse_type(Float64, gen_row[6]),
-                    "mbase" => parse_type(Float64, gen_row[7]),
-                    "gen_status" => parse_type(Int, gen_row[8]),
-                    "pmax" => parse_type(Float64, gen_row[9]),
-                    "pmin" => parse_type(Float64, gen_row[10]),
-                    "pc1" => parse_type(Float64, gen_row[11]),
-                    "pc2" => parse_type(Float64, gen_row[12]),
-                    "qc1min" => parse_type(Float64, gen_row[13]),
-                    "qc1max" => parse_type(Float64, gen_row[14]),
-                    "qc2min" => parse_type(Float64, gen_row[15]),
-                    "qc2max" => parse_type(Float64, gen_row[16]),
-                    "ramp_agc" => parse_type(Float64, gen_row[17]),
-                    "ramp_10" => parse_type(Float64, gen_row[18]),
-                    "ramp_30" => parse_type(Float64, gen_row[19]),
-                    "ramp_q" => parse_type(Float64, gen_row[20]),
-                    "apf" => parse_type(Float64, gen_row[21]),
-                )
-                if length(gen_row) > 21
-                    gen_data["mu_pmax"] = parse_type(Float64, gen_row[22])
-                    gen_data["mu_pmin"] = parse_type(Float64, gen_row[23])
-                    gen_data["mu_qmax"] = parse_type(Float64, gen_row[24])
-                    gen_data["mu_qmin"] = parse_type(Float64, gen_row[25])
-                end
-
-                push!(gens, gen_data)
-            end
-
-            case["gen"] = gens
-
-        elseif parsed_matrix["name"] == "branch"
-            branches = []
-
-            for (i, branch_row) in enumerate(parsed_matrix["data"])
-                branch_data = Dict{String,Any}(
-                    "index" => i,
-                    "f_bus" => parse_type(Int, branch_row[1]),
-                    "t_bus" => parse_type(Int, branch_row[2]),
-                    "br_r" => parse_type(Float64, branch_row[3]),
-                    "br_x" => parse_type(Float64, branch_row[4]),
-                    "br_b" => parse_type(Float64, branch_row[5]),
-                    "rate_a" => parse_type(Float64, branch_row[6]),
-                    "rate_b" => parse_type(Float64, branch_row[7]),
-                    "rate_c" => parse_type(Float64, branch_row[8]),
-                    "tap" => parse_type(Float64, branch_row[9]),
-                    "shift" => parse_type(Float64, branch_row[10]),
-                    "br_status" => parse_type(Int, branch_row[11]),
-                    "angmin" => parse_type(Float64, branch_row[12]),
-                    "angmax" => parse_type(Float64, branch_row[13]),
-                )
-                if length(branch_row) > 13
-                    branch_data["pf"] = parse_type(Float64, branch_row[14])
-                    branch_data["qf"] = parse_type(Float64, branch_row[15])
-                    branch_data["pt"] = parse_type(Float64, branch_row[16])
-                    branch_data["qt"] = parse_type(Float64, branch_row[17])
-                end
-                if length(branch_row) > 17
-                    branch_data["mu_sf"] = parse_type(Float64, branch_row[18])
-                    branch_data["mu_st"] = parse_type(Float64, branch_row[19])
-                    branch_data["mu_angmin"] = parse_type(Float64, branch_row[20])
-                    branch_data["mu_angmax"] = parse_type(Float64, branch_row[21])
-                end
-
-                push!(branches, branch_data)
-            end
-
-            case["branch"] = branches
-
-        elseif parsed_matrix["name"] == "gencost"
-            gencost = []
-
-            for (i, gencost_row) in enumerate(parsed_matrix["data"])
-                gencost_data = cost_data(i, gencost_row)
-                push!(gencost, gencost_data)
-            end
-
-            case["gencost"] = gencost
-
-            if length(case["gencost"]) != length(case["gen"]) && length(case["gencost"]) != 2*length(case["gen"])
-                error("incorrect Matpower file, the number of generator cost functions ($(length(case["gencost"]))) is inconsistent with the number of generators ($(length(case["gen"]))).\n")
-            end
-
-        elseif parsed_matrix["name"] == "dcline"
-            dclines = []
-            for (i, dcline_row) in enumerate(parsed_matrix["data"])
-                pmin = parse_type(Float64, dcline_row[10])
-                pmax = parse_type(Float64, dcline_row[11])
-                loss0 = parse_type(Float64, dcline_row[16])
-                loss1 = parse_type(Float64, dcline_row[17])
-
-                if pmin >= 0 && pmax >=0
-                    pminf = pmin
-                    pmaxf = pmax
-                    pmint = loss0 - pmaxf * (1 - loss1)
-                    pmaxt = loss0 - pminf * (1 - loss1)
-                end
-                if pmin >= 0 && pmax < 0
-                    pminf = pmin
-                    pmint = pmax
-                    pmaxf = (-pmint + loss0) / (1-loss1)
-                    pmaxt = loss0 - pminf * (1 - loss1)
-                end
-                if pmin < 0 && pmax >= 0
-                    pmaxt = -pmin
-                    pmaxf = pmax
-                    pminf = (-pmaxt + loss0) / (1-loss1)
-                    pmint = loss0 - pmaxf * (1 - loss1)
-                end
-                if pmin < 0 && pmax < 0
-                    pmaxt = -pmin
-                    pmint = pmax
-                    pmaxf = (-pmint + loss0) / (1-loss1)
-                    pminf = (-pmaxt + loss0) / (1-loss1)
-                end
-
-                dcline_data = Dict{String,Any}(
-                    "index" => i,
-                    "f_bus" => parse_type(Int, dcline_row[1]),
-                    "t_bus" => parse_type(Int, dcline_row[2]),
-                    "br_status" => parse_type(Int, dcline_row[3]),
-                    "pf" => parse_type(Float64, dcline_row[4]),
-                    "pt" => -parse_type(Float64, dcline_row[5]), # matpower has opposite convention
-                    "qf" => -parse_type(Float64, dcline_row[6]), # matpower has opposite convention
-                    "qt" => -parse_type(Float64, dcline_row[7]), # matpower has opposite convention
-                    "vf" => parse_type(Float64, dcline_row[8]),
-                    "vt" => parse_type(Float64, dcline_row[9]),
-                    "pmint" => pmint,
-                    "pminf" => pminf,
-                    "pmaxt" => pmaxt,
-                    "pmaxf" => pmaxf,
-                    "qminf" => parse_type(Float64, dcline_row[12]),
-                    "qmaxf" => parse_type(Float64, dcline_row[13]),
-                    "qmint" => parse_type(Float64, dcline_row[14]),
-                    "qmaxt" => parse_type(Float64, dcline_row[15]),
-                    "loss0" => parse_type(Float64, dcline_row[16]),
-                    "loss1" => parse_type(Float64, dcline_row[17]),
-                )
-                if length(dcline_row) > 17
-                    dcline_data["mu_pmin"] = parse_type(Float64, dcline_row[18])
-                    dcline_data["mu_pmax"] = parse_type(Float64, dcline_row[19])
-                    dcline_data["mu_qminf"] = parse_type(Float64, dcline_row[20])
-                    dcline_data["mu_qmaxf"] = parse_type(Float64, dcline_row[21])
-                    dcline_data["mu_qmint"] = parse_type(Float64, dcline_row[22])
-                    dcline_data["mu_qmaxt"] = parse_type(Float64, dcline_row[23])
-                end
-                push!(dclines, dcline_data)
-            end
-            case["dcline"] = dclines
-        elseif parsed_matrix["name"] == "dclinecost"
-            dclinecost = []
-
-            for (i, dclinecost_row) in enumerate(parsed_matrix["data"])
-                dclinecost_data = cost_data(i, dclinecost_row)
-                push!(dclinecost, dclinecost_data)
-            end
-
-            case["dclinecost"] = dclinecost
-
-            if length(case["dclinecost"]) != length(case["dcline"])
-                error("incorrect Matpower file, the number of dcline cost functions ($(length(case["dclinecost"]))) is inconsistent with the number of dclines ($(length(case["dcline"]))).\n")
-            end
-        else
-            name = parsed_matrix["name"]
-            data = parsed_matrix["data"]
-
-            column_names = ["col_$(c)" for c in 1:length(data[1])]
-            if haskey(parsed_matrix, "column_names")
-                column_names = parsed_matrix["column_names"]
-            end
-
-            typed_dict_data = build_typed_dict(data, column_names)
-
-            extend_case_data(case, name, typed_dict_data, haskey(parsed_matrix, "column_names"))
-        end
-    end
-
-    for parsed_cell in parsed_cells
-        #println(parsed_cell)
-        if parsed_cell["name"] == "bus_name"
-            if length(parsed_cell["data"]) != length(case["bus"])
-                error("incorrect Matpower file, the number of bus names ($(length(parsed_cell["data"]))) is inconsistent with the number of buses ($(length(case["bus"]))).\n")
-            end
-
-            typed_dict_data = build_typed_dict(parsed_cell["data"], ["bus_name"])
-            case["bus_name"] = typed_dict_data
-        else
-            name = parsed_cell["name"]
-            data = parsed_cell["data"]
-
-            column_names = ["col_$(c)" for c in 1:length(data[1])]
-            if haskey(parsed_cell, "column_names")
-                column_names = parsed_cell["column_names"]
-            end
-
-            typed_dict_data = build_typed_dict(data, column_names)
-
-            extend_case_data(case, name, typed_dict_data, haskey(parsed_cell, "column_names"))
-        end
-    end
-
-    #println("Case:")
-    #println(case)
-
-    return case
-end
-
-
-function cost_data(index, costrow)
-    cost_data = Dict{String,Any}(
-        "index" => index,
-        "model" => parse_type(Int, costrow[1]),
-        "startup" => parse_type(Float64, costrow[2]),
-        "shutdown" => parse_type(Float64, costrow[3]),
-        "ncost" => parse_type(Int, costrow[4]),
-        "cost" => [parse_type(Float64, x) for x in costrow[5:length(costrow)]]
-    )
-    return cost_data
-end
-
-
-"takes a list of list of strings and turns it into a list of typed dictionaries"
-function build_typed_dict(data, column_names)
-    # TODO see if there is a more julia-y way of doing this
-    rows = length(data)
-    columns = length(data[1])
-
-    typed_columns = [type_array([ data[r][c] for r in 1:rows ]) for c in 1:columns]
-
-    typed_data = Dict{String,Any}[]
-    for r in 1:rows
-        data_dict = Dict{String,Any}()
-        data_dict["index"] = r
-        for c in 1:columns
-            data_dict[column_names[c]] = typed_columns[c][r]
-        end
-        push!(typed_data, data_dict)
-    end
-    #println(typed_data)
-
-    return typed_data
-end
-
-"extends a give case data with typed dictionary data"
-function extend_case_data(case, name, typed_dict_data, has_column_names)
-    matpower_matrix_names = ["bus", "gen", "branch", "dcline"]
-
-    if any([startswith(name, "$(mp_name)_") for mp_name in matpower_matrix_names])
-        mp_name = "none"
-        mp_matrix = "none"
-
-        for mp_name in matpower_matrix_names
-            if startswith(name, "$(mp_name)_")
-                mp_matrix = case[mp_name]
-                break
-            end
-        end
-
-        if !has_column_names
-            error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because it does not have column names.")
-        end
-
-        if length(mp_matrix) != length(typed_dict_data)
-            error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because they do not have the same number of rows, $(length(mp_matrix)) and $(length(typed_dict_data)) respectively.")
-        end
-
-        info("extending matpower format by appending matrix \"$(name)\" onto \"$(mp_name)\"")
-        for (i, row) in enumerate(mp_matrix)
-            merge_row = typed_dict_data[i]
-            #assert(row["index"] == merge_row["index"]) # note this does not hold for the bus table
-            delete!(merge_row, "index")
-            for key in keys(merge_row)
-                if haskey(row, key)
-                    error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because they both share \"$(key)\" as a column name.")
-                end
-                row[key] = merge_row[key]
-            end
-        end
-
-    else
-        # minus 1 for excluding added "index" key
-        info("extending matpower format with data: $(name) $(length(typed_dict_data))x$(length(typed_dict_data[1])-1)")
-        case[name] = typed_dict_data
-    end
-end
-
-"""
-converts arrays of objects into a dicts with lookup by "index"
-"""
-function mp_data_to_pm_data(mp_data)
-    for (k,v) in mp_data
+    key_to_delete = []
+    for (k,v) in data
         if isa(v, Array)
-            #println("updating $(k)")
-            dict = Dict{String,Any}()
-            for item in v
-                assert("index" in keys(item))
-                dict[string(item["index"])] = item
+            for mp_name in mp_matrix_names
+                if startswith(k, "$(mp_name)_")
+                    mp_matrix = data[mp_name]
+                    push!(key_to_delete, k)
+
+                    if length(mp_matrix) != length(v)
+                        error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(k)\" because they do not have the same number of rows, $(length(mp_matrix)) and $(length(v)) respectively.")
+                    end
+
+                    info("extending matpower format by appending matrix \"$(k)\" in to \"$(mp_name)\"")
+
+                    for (i, row) in enumerate(mp_matrix)
+                        merge_row = v[i]
+                        #assert(row["index"] == merge_row["index"]) # note this does not hold for the bus table
+                        delete!(merge_row, "index")
+                        for key in keys(merge_row)
+                            if haskey(row, key)
+                                error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(k)\" because they both share \"$(key)\" as a column name.")
+                            end
+                            row[key] = merge_row[key]
+                        end
+                    end
+
+                    break # out of mp_matrix_names loop
+                end
             end
-            mp_data[k] = dict
+
         end
     end
+
+    for key in key_to_delete
+        delete!(data, key)
+    end
 end
+
