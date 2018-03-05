@@ -271,3 +271,25 @@ function check_type(typ, value)
         end
     end
 end
+
+
+""
+function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
+    if strip(mp_line) == string(start_char)
+        return mp_line
+    end
+
+    if !contains(mp_line, ";") && !contains(mp_line, string(end_char))
+        mp_line = "$(mp_line);"
+    end
+
+    if contains(mp_line, string(end_char))
+        prefix = strip(split(mp_line, end_char)[1])
+        if length(prefix) > 0 && ! contains(prefix, ";")
+            mp_line = replace(mp_line, end_char, ";$(end_char)")
+        end
+    end
+
+    return mp_line
+end
+

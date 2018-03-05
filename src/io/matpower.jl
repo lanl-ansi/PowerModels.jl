@@ -18,68 +18,64 @@ end
 
 "ensures all polynomial costs functions have at least three terms"
 function standardize_cost_terms(data::Dict{String,Any})
-    if haskey(data, "gencost")
-        for gencost in data["gencost"]
-            if gencost["model"] == 2
-                if length(gencost["cost"]) > 3
-                    max_nonzero_index = 1
-                    for i in 1:length(gencost["cost"])
-                        max_nonzero_index = i
-                        if gencost["cost"][i] != 0.0
-                            break
-                        end
-                    end
-
-                    if max_nonzero_index > 1
-                        warn("removing $(max_nonzero_index-1) zeros from generator cost model ($(gencost["index"]))")
-                        #println(gencost["cost"])
-                        gencost["cost"] = gencost["cost"][max_nonzero_index:length(gencost["cost"])]
-                        #println(gencost["cost"])
-                        gencost["ncost"] = length(gencost["cost"])
+    for gencost in data["gencost"]
+        if gencost["model"] == 2
+            if length(gencost["cost"]) > 3
+                max_nonzero_index = 1
+                for i in 1:length(gencost["cost"])
+                    max_nonzero_index = i
+                    if gencost["cost"][i] != 0.0
+                        break
                     end
                 end
 
-                if length(gencost["cost"]) < 3
-                    #println("std gen cost: ",gencost["cost"])
-                    cost_3 = append!(vec(fill(0.0, (1,3 - length(gencost["cost"])))), gencost["cost"])
-                    gencost["cost"] = cost_3
-                    gencost["ncost"] = 3
-                    #println("   ",gencost["cost"])
-                    warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
+                if max_nonzero_index > 1
+                    warn("removing $(max_nonzero_index-1) zeros from generator cost model ($(gencost["index"]))")
+                    #println(gencost["cost"])
+                    gencost["cost"] = gencost["cost"][max_nonzero_index:length(gencost["cost"])]
+                    #println(gencost["cost"])
+                    gencost["ncost"] = length(gencost["cost"])
                 end
+            end
+
+            if length(gencost["cost"]) < 3
+                #println("std gen cost: ",gencost["cost"])
+                cost_3 = append!(vec(fill(0.0, (1,3 - length(gencost["cost"])))), gencost["cost"])
+                gencost["cost"] = cost_3
+                gencost["ncost"] = 3
+                #println("   ",gencost["cost"])
+                warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
             end
         end
     end
 
-    if haskey(data, "dclinecost")
-        for dclinecost in data["dclinecost"]
-            if dclinecost["model"] == 2
-                if length(dclinecost["cost"]) > 3
-                    max_nonzero_index = 1
-                    for i in 1:length(dclinecost["cost"])
-                        max_nonzero_index = i
-                        if dclinecost["cost"][i] != 0.0
-                            break
-                        end
-                    end
-
-                    if max_nonzero_index > 1
-                        warn("removing $(max_nonzero_index-1) zeros from dcline cost model ($(dclinecost["index"]))")
-                        #println(dclinecost["cost"])
-                        dclinecost["cost"] = dclinecost["cost"][max_nonzero_index:length(dclinecost["cost"])]
-                        #println(dclinecost["cost"])
-                        dclinecost["ncost"] = length(dclinecost["cost"])
+    for dclinecost in data["dclinecost"]
+        if dclinecost["model"] == 2
+            if length(dclinecost["cost"]) > 3
+                max_nonzero_index = 1
+                for i in 1:length(dclinecost["cost"])
+                    max_nonzero_index = i
+                    if dclinecost["cost"][i] != 0.0
+                        break
                     end
                 end
 
-                if length(dclinecost["cost"]) < 3
-                    #println("std gen cost: ",dclinecost["cost"])
-                    cost_3 = append!(vec(fill(0.0, (1,3 - length(dclinecost["cost"])))), dclinecost["cost"])
-                    dclinecost["cost"] = cost_3
-                    dclinecost["ncost"] = 3
-                    #println("   ",dclinecost["cost"])
-                    warn("added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
+                if max_nonzero_index > 1
+                    warn("removing $(max_nonzero_index-1) zeros from dcline cost model ($(dclinecost["index"]))")
+                    #println(dclinecost["cost"])
+                    dclinecost["cost"] = dclinecost["cost"][max_nonzero_index:length(dclinecost["cost"])]
+                    #println(dclinecost["cost"])
+                    dclinecost["ncost"] = length(dclinecost["cost"])
                 end
+            end
+
+            if length(dclinecost["cost"]) < 3
+                #println("std gen cost: ",dclinecost["cost"])
+                cost_3 = append!(vec(fill(0.0, (1,3 - length(dclinecost["cost"])))), dclinecost["cost"])
+                dclinecost["cost"] = cost_3
+                dclinecost["ncost"] = 3
+                #println("   ",dclinecost["cost"])
+                warn("added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
             end
         end
     end
@@ -275,70 +271,7 @@ end
 
 
 
-""
-function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
-    if strip(mp_line) == string(start_char)
-        return mp_line
-    end
 
-    if !contains(mp_line, ";") && !contains(mp_line, string(end_char))
-        mp_line = "$(mp_line);"
-    end
-
-    if contains(mp_line, string(end_char))
-        prefix = strip(split(mp_line, end_char)[1])
-        if length(prefix) > 0 && ! contains(prefix, ";")
-            mp_line = replace(mp_line, end_char, ";$(end_char)")
-        end
-    end
-
-    return mp_line
-end
-
-#=
-""
-function extract_mpc_assignment(string::AbstractString)
-    assert(contains(string, "mpc."))
-    statement = split(string, ';')[1]
-    statement = replace(statement, "mpc.", "")
-    name, value = split(statement, '=')
-    name = strip(name)
-    value = type_value(strip(value))
-
-    return (name, value)
-end
-
-"Attempts to determine the type of a string extracted from a matlab file"
-function type_value(value_string::AbstractString)
-    value_string = strip(value_string)
-
-    if contains(value_string, "'") # value is a string
-        value = strip(value_string, '\'')
-    else
-        # if value is a float
-        if contains(value_string, ".") || contains(value_string, "e")
-            value = parse_type(Float64, value_string)
-        else # otherwise assume it is an int
-            value = parse_type(Int, value_string)
-        end
-    end
-
-    return value
-end
-
-"Attempts to determine the type of an array of strings extracted from a matlab file"
-function type_array{T <: AbstractString}(string_array::Vector{T})
-    value_string = [strip(value_string) for value_string in string_array]
-
-    return if any(contains(value_string, "'") for value_string in string_array)
-        [strip(value_string, '\'') for value_string in string_array]
-    elseif any(contains(value_string, ".") || contains(value_string, "e") for value_string in string_array)
-        [parse_type(Float64, value_string) for value_string in string_array]
-    else # otherwise assume it is an int
-        [parse_type(Int, value_string) for value_string in string_array]
-    end
-end
-=#
 
 mp_data_names = ["mpc.version", "mpc.baseMVA", "mpc.bus", "mpc.gen",
     "mpc.branch", "mpc.dcline", "mpc.gencost", "mpc.dclinecost",
@@ -626,70 +559,7 @@ function mp_cost_data(cost_row)
 end
 
 
-"takes a list of list of strings and turns it into a list of typed dictionaries"
-function build_typed_dict(data, column_names)
-    # TODO see if there is a more julia-y way of doing this
-    rows = length(data)
-    columns = length(data[1])
 
-    typed_columns = [type_array([ data[r][c] for r in 1:rows ]) for c in 1:columns]
-
-    typed_data = Dict{String,Any}[]
-    for r in 1:rows
-        data_dict = Dict{String,Any}()
-        data_dict["index"] = r
-        for c in 1:columns
-            data_dict[column_names[c]] = typed_columns[c][r]
-        end
-        push!(typed_data, data_dict)
-    end
-    #println(typed_data)
-
-    return typed_data
-end
-
-"extends a give case data with typed dictionary data"
-function extend_case_data(case, name, typed_dict_data, has_column_names)
-    matpower_matrix_names = ["bus", "gen", "branch", "dcline"]
-
-    if any([startswith(name, "$(mp_name)_") for mp_name in matpower_matrix_names])
-        mp_name = "none"
-        mp_matrix = "none"
-
-        for mp_name in matpower_matrix_names
-            if startswith(name, "$(mp_name)_")
-                mp_matrix = case[mp_name]
-                break
-            end
-        end
-
-        if !has_column_names
-            error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because it does not have column names.")
-        end
-
-        if length(mp_matrix) != length(typed_dict_data)
-            error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because they do not have the same number of rows, $(length(mp_matrix)) and $(length(typed_dict_data)) respectively.")
-        end
-
-        info("extending matpower format by appending matrix \"$(name)\" onto \"$(mp_name)\"")
-        for (i, row) in enumerate(mp_matrix)
-            merge_row = typed_dict_data[i]
-            #assert(row["index"] == merge_row["index"]) # note this does not hold for the bus table
-            delete!(merge_row, "index")
-            for key in keys(merge_row)
-                if haskey(row, key)
-                    error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(name)\" because they both share \"$(key)\" as a column name.")
-                end
-                row[key] = merge_row[key]
-            end
-        end
-
-    else
-        # minus 1 for excluding added "index" key
-        info("extending matpower format with data: $(name) $(length(typed_dict_data))x$(length(typed_dict_data[1])-1)")
-        case[name] = typed_dict_data
-    end
-end
 
 """
 converts a Matpower dict into a PowerModels dict
