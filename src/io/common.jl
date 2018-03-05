@@ -1,9 +1,9 @@
 ""
 function parse_file(file::String)
     if endswith(file, ".m")
-        pm_data = PowerModels.parse_matpower(file)
+        pm_data = parse_matpower(file)
     else
-        pm_data = PowerModels.parse_json(file)
+        pm_data = parse_json(file)
     end
 
     check_network_data(pm_data)

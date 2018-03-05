@@ -8,10 +8,10 @@
 
 function parse_matlab_file(file_string::String; kwargs...)
     data_string = readstring(open(file_string))
-    return parse_matlab(data_string; kwargs...)
+    return parse_matlab_string(data_string; kwargs...)
 end
 
-function parse_matlab(data_string::String; extended=false)
+function parse_matlab_string(data_string::String; extended=false)
     data_lines = split(data_string, '\n')
 
     matlab_dict = Dict{String,Any}()
@@ -249,6 +249,28 @@ function split_line(mp_line::AbstractString)
     end
 end
 
+""
+function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
+    if strip(mp_line) == string(start_char)
+        return mp_line
+    end
+
+    if !contains(mp_line, ";") && !contains(mp_line, string(end_char))
+        mp_line = "$(mp_line);"
+    end
+
+    if contains(mp_line, string(end_char))
+        prefix = strip(split(mp_line, end_char)[1])
+        if length(prefix) > 0 && ! contains(prefix, ";")
+            mp_line = replace(mp_line, end_char, ";$(end_char)")
+        end
+    end
+
+    return mp_line
+end
+
+
+
 "Checks if the given value is of a given type, if not tries to make it that type"
 function check_type(typ, value)
     if isa(value, typ)
@@ -273,23 +295,4 @@ function check_type(typ, value)
 end
 
 
-""
-function add_line_delimiter(mp_line::AbstractString, start_char, end_char)
-    if strip(mp_line) == string(start_char)
-        return mp_line
-    end
-
-    if !contains(mp_line, ";") && !contains(mp_line, string(end_char))
-        mp_line = "$(mp_line);"
-    end
-
-    if contains(mp_line, string(end_char))
-        prefix = strip(split(mp_line, end_char)[1])
-        if length(prefix) > 0 && ! contains(prefix, ";")
-            mp_line = replace(mp_line, end_char, ";$(end_char)")
-        end
-    end
-
-    return mp_line
-end
 

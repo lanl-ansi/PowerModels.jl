@@ -6,9 +6,7 @@
 
 ""
 function parse_matpower(file_string::String)
-    data_string = readstring(open(file_string))
-    mp_data = parse_matpower_data(data_string)
-
+    mp_data = parse_matpower_file(file_string)
     #display(mp_data)
 
     pm_data = matpower_to_powermodels(mp_data)
@@ -16,262 +14,39 @@ function parse_matpower(file_string::String)
     return pm_data
 end
 
-"ensures all polynomial costs functions have at least three terms"
-function standardize_cost_terms(data::Dict{String,Any})
-    for gencost in data["gencost"]
-        if gencost["model"] == 2
-            if length(gencost["cost"]) > 3
-                max_nonzero_index = 1
-                for i in 1:length(gencost["cost"])
-                    max_nonzero_index = i
-                    if gencost["cost"][i] != 0.0
-                        break
-                    end
-                end
 
-                if max_nonzero_index > 1
-                    warn("removing $(max_nonzero_index-1) zeros from generator cost model ($(gencost["index"]))")
-                    #println(gencost["cost"])
-                    gencost["cost"] = gencost["cost"][max_nonzero_index:length(gencost["cost"])]
-                    #println(gencost["cost"])
-                    gencost["ncost"] = length(gencost["cost"])
-                end
-            end
+### very generic helper functions ###
 
-            if length(gencost["cost"]) < 3
-                #println("std gen cost: ",gencost["cost"])
-                cost_3 = append!(vec(fill(0.0, (1,3 - length(gencost["cost"])))), gencost["cost"])
-                gencost["cost"] = cost_3
-                gencost["ncost"] = 3
-                #println("   ",gencost["cost"])
-                warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
-            end
-        end
-    end
-
-    for dclinecost in data["dclinecost"]
-        if dclinecost["model"] == 2
-            if length(dclinecost["cost"]) > 3
-                max_nonzero_index = 1
-                for i in 1:length(dclinecost["cost"])
-                    max_nonzero_index = i
-                    if dclinecost["cost"][i] != 0.0
-                        break
-                    end
-                end
-
-                if max_nonzero_index > 1
-                    warn("removing $(max_nonzero_index-1) zeros from dcline cost model ($(dclinecost["index"]))")
-                    #println(dclinecost["cost"])
-                    dclinecost["cost"] = dclinecost["cost"][max_nonzero_index:length(dclinecost["cost"])]
-                    #println(dclinecost["cost"])
-                    dclinecost["ncost"] = length(dclinecost["cost"])
-                end
-            end
-
-            if length(dclinecost["cost"]) < 3
-                #println("std gen cost: ",dclinecost["cost"])
-                cost_3 = append!(vec(fill(0.0, (1,3 - length(dclinecost["cost"])))), dclinecost["cost"])
-                dclinecost["cost"] = cost_3
-                dclinecost["ncost"] = 3
-                #println("   ",dclinecost["cost"])
-                warn("added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
-            end
-        end
-    end
-end
-
-"sets all branch transformer taps to 1.0, to simplify branch models"
-function mp_branch_to_pm_branch(data::Dict{String,Any})
-    branches = [branch for branch in data["branch"]]
-    if haskey(data, "ne_branch")
-        append!(branches, data["ne_branch"])
-    end
-    for branch in branches
-        if branch["tap"] == 0.0
-            branch["transformer"] = false
-            branch["tap"] = 1.0
+"takes a row from a matrix and assigns the values names and types"
+function row_to_typed_dict(row_data, columns)
+    dict_data = Dict{String,Any}()
+    for (i,v) in enumerate(row_data)
+        if i <= length(columns)
+            name, typ = columns[i]
+            dict_data[name] = check_type(typ, v)
         else
-            branch["transformer"] = true
+            dict_data["col_$(i)"] = v
         end
     end
+    return dict_data
 end
 
-
-""
-function mp_dcline_to_pm_dcline(data::Dict{String,Any})
-    for dcline in data["dcline"]
-        pmin = dcline["pmin"]
-        pmax = dcline["pmax"]
-        loss0 = dcline["loss0"]
-        loss1 = dcline["loss1"]
-
-        delete!(dcline, "pmin")
-        delete!(dcline, "pmax")
-
-        if pmin >= 0 && pmax >=0
-            pminf = pmin
-            pmaxf = pmax
-            pmint = loss0 - pmaxf * (1 - loss1)
-            pmaxt = loss0 - pminf * (1 - loss1)
-        end
-        if pmin >= 0 && pmax < 0
-            pminf = pmin
-            pmint = pmax
-            pmaxf = (-pmint + loss0) / (1-loss1)
-            pmaxt = loss0 - pminf * (1 - loss1)
-        end
-        if pmin < 0 && pmax >= 0
-            pmaxt = -pmin
-            pmaxf = pmax
-            pminf = (-pmaxt + loss0) / (1-loss1)
-            pmint = loss0 - pmaxf * (1 - loss1)
-        end
-        if pmin < 0 && pmax < 0
-            pmaxt = -pmin
-            pmint = pmax
-            pmaxf = (-pmint + loss0) / (1-loss1)
-            pminf = (-pmaxt + loss0) / (1-loss1)
-        end
-
-        dcline["pmaxt"] = pmaxt
-        dcline["pmint"] = pmint
-        dcline["pmaxf"] = pmaxf
-        dcline["pminf"] = pminf
-
-        dcline["pt"] = -dcline["pt"] # matpower has opposite convention
-        dcline["qf"] = -dcline["qf"] # matpower has opposite convention
-        dcline["qt"] = -dcline["qt"] # matpower has opposite convention
-    end
-end
-
-
-"adds dcline costs, if gen costs exist"
-function add_dcline_costs(data::Dict{String,Any})
-    if length(data["gencost"]) > 0 && length(data["dclinecost"]) <= 0
-        warn("added zero cost function data for dclines")
-        model = data["gencost"][1]["model"]
-        if model == 1
-            for (i, dcline) in enumerate(data["dcline"])
-                dclinecost = Dict(
-                    "index" => i,
-                    "model" => 1,
-                    "startup" => 0.0,
-                    "shutdown" => 0.0,
-                    "ncost" => 2,
-                    "cost" => [0.0, 0.0, 0.0, 0.0]
-                )
-                push!(data["dclinecost"], dclinecost)
-            end
+"takes a row from a matrix and assigns the values names"
+function row_to_dict(row_data, columns)
+    dict_data = Dict{String,Any}()
+    for (i,v) in enumerate(row_data)
+        if i <= length(columns)
+            dict_data[columns[i]] = v
         else
-            for (i, dcline) in enumerate(data["dcline"])
-                dclinecost = Dict(
-                    "index" => i,
-                    "model" => 2,
-                    "startup" => 0.0,
-                    "shutdown" => 0.0,
-                    "ncost" => 3,
-                    "cost" => [0.0, 0.0, 0.0]
-                )
-                push!(data["dclinecost"], dclinecost)
-            end
+            dict_data["col_$(i)"] = v
         end
     end
-end
-
-
-"merges generator cost functions into generator data, if costs exist"
-function merge_generator_cost_data(data::Dict{String,Any})
-    for (i, gencost) in enumerate(data["gencost"])
-        gen = data["gen"][i]
-        assert(gen["index"] == gencost["index"])
-        delete!(gencost, "index")
-
-        check_keys(gen, keys(gencost))
-        merge!(gen, gencost)
-    end
-    delete!(data, "gencost")
-
-    for (i, dclinecost) in enumerate(data["dclinecost"])
-        dcline = data["dcline"][i]
-        assert(dcline["index"] == dclinecost["index"])
-        delete!(dclinecost, "index")
-
-        check_keys(dcline, keys(dclinecost))
-        merge!(dcline, dclinecost)
-    end
-    delete!(data, "dclinecost")
-end
-
-
-"merges bus name data into buses, if names exist"
-function merge_bus_name_data(data::Dict{String,Any})
-    if haskey(data, "bus_name")
-        # can assume same length is same as bus
-        # this is validated during matpower parsing
-        for (i, bus_name) in enumerate(data["bus_name"])
-            bus = data["bus"][i]
-            delete!(bus_name, "index")
-
-            check_keys(bus, keys(bus_name))
-            merge!(bus, bus_name)
-        end
-        delete!(data, "bus_name")
-    end
-end
-
-
-""
-function merge_generic_data(data::Dict{String,Any})
-    mp_matrix_names = [name[5:length(name)] for name in mp_data_names]
-
-    key_to_delete = []
-    for (k,v) in data
-        if isa(v, Array)
-            mp_name = nothing
-            mp_matrix = nothing
-
-            for mp_name in mp_matrix_names
-                if startswith(k, "$(mp_name)_")
-                    mp_matrix = data[mp_name]
-                    push!(key_to_delete, k)
-                    break
-                end
-            end
-
-            #println(mp_name)
-            #println(mp_matrix)
-
-            if mp_matrix != nothing
-                if length(mp_matrix) != length(v)
-                    error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(k)\" because they do not have the same number of rows, $(length(mp_matrix)) and $(length(v)) respectively.")
-                end
-
-                info("extending matpower format by appending matrix \"$(k)\" in to \"$(mp_name)\"")
-
-                for (i, row) in enumerate(mp_matrix)
-                    merge_row = v[i]
-                    #assert(row["index"] == merge_row["index"]) # note this does not hold for the bus table
-                    delete!(merge_row, "index")
-                    for key in keys(merge_row)
-                        if haskey(row, key)
-                            error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(k)\" because they both share \"$(key)\" as a column name.")
-                        end
-                        row[key] = merge_row[key]
-                    end
-                end
-            end
-        end
-    end
-
-    for key in key_to_delete
-        delete!(data, key)
-    end
+    return dict_data
 end
 
 
 
-
+### Data and functions specific to Matpower format ###
 
 mp_data_names = ["mpc.version", "mpc.baseMVA", "mpc.bus", "mpc.gen",
     "mpc.branch", "mpc.dcline", "mpc.gencost", "mpc.dclinecost",
@@ -352,39 +127,18 @@ mp_dcline_columns = [
 ]
 
 
-"takes a row from a matrix and assigns the values names and types"
-function row_to_typed_dict(row_data, columns)
-    dict_data = Dict{String,Any}()
-    for (i,v) in enumerate(row_data)
-        if i <= length(columns)
-            name, typ = columns[i]
-            dict_data[name] = check_type(typ, v)
-        else
-            dict_data["col_$(i)"] = v
-        end
-    end
-    return dict_data
+""
+function parse_matpower_file(file_string::String)
+    data_string = readstring(open(file_string))
+    return parse_matpower_string(data_string)
 end
 
-"takes a row from a matrix and assigns the values names"
-function row_to_dict(row_data, columns)
-    dict_data = Dict{String,Any}()
-    for (i,v) in enumerate(row_data)
-        if i <= length(columns)
-            dict_data[columns[i]] = v
-        else
-            dict_data["col_$(i)"] = v
-        end
-    end
-    return dict_data
-end
 
 ""
-function parse_matpower_data(data_string::String)
-    matlab_data, func_name, colnames = parse_matlab(data_string, extended=true)
+function parse_matpower_string(data_string::String)
+    matlab_data, func_name, colnames = parse_matlab_string(data_string, extended=true)
 
     case = Dict{String,Any}()
-
 
     if func_name != nothing
         case["name"] = func_name
@@ -560,15 +314,17 @@ end
 
 
 
+### Data and functions specific to PowerModels format ###
 
 """
-converts a Matpower dict into a PowerModels dict
+Converts a Matpower dict into a PowerModels dict
 """
 function matpower_to_powermodels(mp_data::Dict{String,Any})
     pm_data = deepcopy(mp_data)
 
     pm_data["multinetwork"] = false
 
+    # required default values
     if !haskey(pm_data, "dcline")
         pm_data["dcline"] = []
     end
@@ -579,16 +335,20 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
         pm_data["dclinecost"] = []
     end
 
-    mp_branch_to_pm_branch(pm_data)
-    mp_dcline_to_pm_dcline(pm_data)
+    # translate component models
+    mp2pm_branch(pm_data)
+    mp2pm_dcline(pm_data)
 
+    # translate cost models
     add_dcline_costs(pm_data)
     standardize_cost_terms(pm_data)
+
+    # merge data tables
     merge_bus_name_data(pm_data)
     merge_generator_cost_data(pm_data)
-
     merge_generic_data(pm_data)
 
+    # update lookup structure
     for (k,v) in pm_data
         if isa(v, Array)
             #println("updating $(k)")
@@ -603,3 +363,253 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
 
     return pm_data
 end
+
+
+
+"ensures all polynomial costs functions have at least three terms"
+function standardize_cost_terms(data::Dict{String,Any})
+    for gencost in data["gencost"]
+        if gencost["model"] == 2
+            if length(gencost["cost"]) > 3
+                max_nonzero_index = 1
+                for i in 1:length(gencost["cost"])
+                    max_nonzero_index = i
+                    if gencost["cost"][i] != 0.0
+                        break
+                    end
+                end
+
+                if max_nonzero_index > 1
+                    warn("removing $(max_nonzero_index-1) zeros from generator cost model ($(gencost["index"]))")
+                    #println(gencost["cost"])
+                    gencost["cost"] = gencost["cost"][max_nonzero_index:length(gencost["cost"])]
+                    #println(gencost["cost"])
+                    gencost["ncost"] = length(gencost["cost"])
+                end
+            end
+
+            if length(gencost["cost"]) < 3
+                #println("std gen cost: ",gencost["cost"])
+                cost_3 = append!(vec(fill(0.0, (1,3 - length(gencost["cost"])))), gencost["cost"])
+                gencost["cost"] = cost_3
+                gencost["ncost"] = 3
+                #println("   ",gencost["cost"])
+                warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
+            end
+        end
+    end
+
+    for dclinecost in data["dclinecost"]
+        if dclinecost["model"] == 2
+            if length(dclinecost["cost"]) > 3
+                max_nonzero_index = 1
+                for i in 1:length(dclinecost["cost"])
+                    max_nonzero_index = i
+                    if dclinecost["cost"][i] != 0.0
+                        break
+                    end
+                end
+
+                if max_nonzero_index > 1
+                    warn("removing $(max_nonzero_index-1) zeros from dcline cost model ($(dclinecost["index"]))")
+                    #println(dclinecost["cost"])
+                    dclinecost["cost"] = dclinecost["cost"][max_nonzero_index:length(dclinecost["cost"])]
+                    #println(dclinecost["cost"])
+                    dclinecost["ncost"] = length(dclinecost["cost"])
+                end
+            end
+
+            if length(dclinecost["cost"]) < 3
+                #println("std gen cost: ",dclinecost["cost"])
+                cost_3 = append!(vec(fill(0.0, (1,3 - length(dclinecost["cost"])))), dclinecost["cost"])
+                dclinecost["cost"] = cost_3
+                dclinecost["ncost"] = 3
+                #println("   ",dclinecost["cost"])
+                warn("added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
+            end
+        end
+    end
+end
+
+"sets all branch transformer taps to 1.0, to simplify branch models"
+function mp2pm_branch(data::Dict{String,Any})
+    branches = [branch for branch in data["branch"]]
+    if haskey(data, "ne_branch")
+        append!(branches, data["ne_branch"])
+    end
+    for branch in branches
+        if branch["tap"] == 0.0
+            branch["transformer"] = false
+            branch["tap"] = 1.0
+        else
+            branch["transformer"] = true
+        end
+    end
+end
+
+
+"adds pmin and pmax values at to and from buses"
+function mp2pm_dcline(data::Dict{String,Any})
+    for dcline in data["dcline"]
+        pmin = dcline["pmin"]
+        pmax = dcline["pmax"]
+        loss0 = dcline["loss0"]
+        loss1 = dcline["loss1"]
+
+        delete!(dcline, "pmin")
+        delete!(dcline, "pmax")
+
+        if pmin >= 0 && pmax >=0
+            pminf = pmin
+            pmaxf = pmax
+            pmint = loss0 - pmaxf * (1 - loss1)
+            pmaxt = loss0 - pminf * (1 - loss1)
+        end
+        if pmin >= 0 && pmax < 0
+            pminf = pmin
+            pmint = pmax
+            pmaxf = (-pmint + loss0) / (1-loss1)
+            pmaxt = loss0 - pminf * (1 - loss1)
+        end
+        if pmin < 0 && pmax >= 0
+            pmaxt = -pmin
+            pmaxf = pmax
+            pminf = (-pmaxt + loss0) / (1-loss1)
+            pmint = loss0 - pmaxf * (1 - loss1)
+        end
+        if pmin < 0 && pmax < 0
+            pmaxt = -pmin
+            pmint = pmax
+            pmaxf = (-pmint + loss0) / (1-loss1)
+            pminf = (-pmaxt + loss0) / (1-loss1)
+        end
+
+        dcline["pmaxt"] = pmaxt
+        dcline["pmint"] = pmint
+        dcline["pmaxf"] = pmaxf
+        dcline["pminf"] = pminf
+
+        dcline["pt"] = -dcline["pt"] # matpower has opposite convention
+        dcline["qf"] = -dcline["qf"] # matpower has opposite convention
+        dcline["qt"] = -dcline["qt"] # matpower has opposite convention
+    end
+end
+
+
+"adds dcline costs, if gen costs exist"
+function add_dcline_costs(data::Dict{String,Any})
+    if length(data["gencost"]) > 0 && length(data["dclinecost"]) <= 0
+        warn("added zero cost function data for dclines")
+        model = data["gencost"][1]["model"]
+        if model == 1
+            for (i, dcline) in enumerate(data["dcline"])
+                dclinecost = Dict(
+                    "index" => i,
+                    "model" => 1,
+                    "startup" => 0.0,
+                    "shutdown" => 0.0,
+                    "ncost" => 2,
+                    "cost" => [0.0, 0.0, 0.0, 0.0]
+                )
+                push!(data["dclinecost"], dclinecost)
+            end
+        else
+            for (i, dcline) in enumerate(data["dcline"])
+                dclinecost = Dict(
+                    "index" => i,
+                    "model" => 2,
+                    "startup" => 0.0,
+                    "shutdown" => 0.0,
+                    "ncost" => 3,
+                    "cost" => [0.0, 0.0, 0.0]
+                )
+                push!(data["dclinecost"], dclinecost)
+            end
+        end
+    end
+end
+
+
+"merges generator cost functions into generator data, if costs exist"
+function merge_generator_cost_data(data::Dict{String,Any})
+    for (i, gencost) in enumerate(data["gencost"])
+        gen = data["gen"][i]
+        assert(gen["index"] == gencost["index"])
+        delete!(gencost, "index")
+
+        check_keys(gen, keys(gencost))
+        merge!(gen, gencost)
+    end
+    delete!(data, "gencost")
+
+    for (i, dclinecost) in enumerate(data["dclinecost"])
+        dcline = data["dcline"][i]
+        assert(dcline["index"] == dclinecost["index"])
+        delete!(dclinecost, "index")
+
+        check_keys(dcline, keys(dclinecost))
+        merge!(dcline, dclinecost)
+    end
+    delete!(data, "dclinecost")
+end
+
+
+"merges bus name data into buses, if names exist"
+function merge_bus_name_data(data::Dict{String,Any})
+    if haskey(data, "bus_name")
+        # can assume same length is same as bus
+        # this is validated during matpower parsing
+        for (i, bus_name) in enumerate(data["bus_name"])
+            bus = data["bus"][i]
+            delete!(bus_name, "index")
+
+            check_keys(bus, keys(bus_name))
+            merge!(bus, bus_name)
+        end
+        delete!(data, "bus_name")
+    end
+end
+
+
+"merges Matpower tables based on the table extension syntax"
+function merge_generic_data(data::Dict{String,Any})
+    mp_matrix_names = [name[5:length(name)] for name in mp_data_names]
+
+    key_to_delete = []
+    for (k,v) in data
+        if isa(v, Array)
+            for mp_name in mp_matrix_names
+                if startswith(k, "$(mp_name)_")
+                    mp_matrix = data[mp_name]
+                    push!(key_to_delete, k)
+
+                    if length(mp_matrix) != length(v)
+                        error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(k)\" because they do not have the same number of rows, $(length(mp_matrix)) and $(length(v)) respectively.")
+                    end
+
+                    info("extending matpower format by appending matrix \"$(k)\" in to \"$(mp_name)\"")
+
+                    for (i, row) in enumerate(mp_matrix)
+                        merge_row = v[i]
+                        #assert(row["index"] == merge_row["index"]) # note this does not hold for the bus table
+                        delete!(merge_row, "index")
+                        for key in keys(merge_row)
+                            if haskey(row, key)
+                                error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(k)\" because they both share \"$(key)\" as a column name.")
+                            end
+                            row[key] = merge_row[key]
+                        end
+                    end
+
+                    break # out of mp_matrix_names loop
+                end
+            end
+
+        end
+    end
+
+    for key in key_to_delete
+        delete!(data, key)
+    end
+end
+
