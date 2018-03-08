@@ -64,12 +64,30 @@ function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerM
         end
     end
 
+    pm.var[:nw][n][:w] = Dict{Int,Any}()
+    for (i, bus) in pm.ref[:nw][n][:bus]
+        w_idx = lookup_w_index[i]
+        pm.var[:nw][n][:w][i] = WR[w_idx,w_idx]
+    end
+
+    pm.var[:nw][n][:wr] = Dict{Tuple{Int,Int},Any}()
+    pm.var[:nw][n][:wi] = Dict{Tuple{Int,Int},Any}()
+    for (i,j) in keys(pm.ref[:nw][n][:buspairs])
+        w_fr_index = lookup_w_index[i]
+        w_to_index = lookup_w_index[j]
+
+        pm.var[:nw][n][:wr][(i,j)] = WR[w_fr_index, w_to_index]
+        pm.var[:nw][n][:wi][(i,j)] = WI[w_fr_index, w_to_index]
+    end
+
+
     if !haskey(pm.ext, :nw)
         pm.ext[:nw] = Dict{Int,Any}()
     end
     if !haskey(pm.ext[:nw], n)
         pm.ext[:nw][n] = Dict{Symbol,Any}()
     end
+
     pm.ext[:nw][n][:lookup_w_index] = lookup_w_index
 end
 
@@ -87,9 +105,24 @@ function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::I
     #end
 end
 
+
 "Do nothing, no way to represent this in these variables"
 function constraint_theta_ref{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int, ref_bus::Int)
 end
+
+""
+function constraint_voltage_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, angmin, angmax)
+    w_fr = pm.var[:nw][n][:w][f_bus]
+    w_to = pm.var[:nw][n][:w][t_bus]
+    wr = pm.var[:nw][n][:wr][(f_bus, t_bus)]
+    wi = pm.var[:nw][n][:wi][(f_bus, t_bus)]
+
+    @constraint(pm.model, wi <= tan(angmax)*wr)
+    @constraint(pm.model, wi >= tan(angmin)*wr)
+    cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
+end
+
+#=
 
 ""
 function constraint_kcl_shunt{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
@@ -141,21 +174,7 @@ function constraint_ohms_yt_to{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n
     @constraint(pm.model, q_to ==    -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
 end
 
-""
-function constraint_voltage_angle_difference{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, angmin, angmax)
-    w_fr_index = pm.ext[:nw][n][:lookup_w_index][f_bus]
-    w_to_index = pm.ext[:nw][n][:lookup_w_index][t_bus]
 
-    w_fr = pm.var[:nw][n][:WR][w_fr_index, w_fr_index]
-    w_to = pm.var[:nw][n][:WR][w_to_index, w_to_index]
-    wr   = pm.var[:nw][n][:WR][w_fr_index, w_to_index]
-    wi   = pm.var[:nw][n][:WI][w_fr_index, w_to_index]
-
-    @constraint(pm.model, wi <= tan(angmax)*wr)
-    @constraint(pm.model, wi >= tan(angmin)*wr)
-
-    cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
-end
 
 ""
 function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerModel{T})
@@ -172,4 +191,4 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractWRMForm}(pm::Generic
 
     @constraint(pm.model, w == vm^2)
 end
-
+=#
