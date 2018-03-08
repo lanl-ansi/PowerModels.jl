@@ -18,7 +18,7 @@
 # instead.
 #
 
-AbstractWRForms = Union{AbstractACTForm, AbstractWRForm}
+AbstractWRForms = Union{AbstractACTForm, AbstractWRForm, AbstractWRMForm}
 AbstractPForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm}
 
 "`t[ref_bus] == 0`"
@@ -45,6 +45,10 @@ function constraint_voltage_magnitude_setpoint{T <: AbstractWRForms}(pm::Generic
     w = pm.var[:nw][n][:w][i]
 
     @constraint(pm.model, w == vm^2)
+end
+
+"Do nothing, no way to represent this in these variables"
+function constraint_theta_ref{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n::Int, ref_bus::Int)
 end
 
 
@@ -117,5 +121,26 @@ function constraint_ohms_yt_to{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n
 
     @constraint(pm.model, p_to == g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
     @constraint(pm.model, q_to == -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
+end
+
+
+""
+function constraint_voltage_angle_difference{T <: AbstractWRForms}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, angmin, angmax)
+    w_fr = pm.var[:nw][n][:w][f_bus]
+    w_to = pm.var[:nw][n][:w][t_bus]
+    wr = pm.var[:nw][n][:wr][(f_bus, t_bus)]
+    wi = pm.var[:nw][n][:wi][(f_bus, t_bus)]
+
+    @constraint(pm.model, wi <= tan(angmax)*wr)
+    @constraint(pm.model, wi >= tan(angmin)*wr)
+    cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
+end
+
+
+""
+function add_bus_voltage_setpoint{T <: AbstractWRForms}(sol, pm::GenericPowerModel{T})
+    add_setpoint(sol, pm, "bus", "vm", :w; scale = (x,item) -> sqrt(x))
+    # What should the default value be?
+    #add_setpoint(sol, pm, "bus", "va", :va; default_value = 0)
 end
 
