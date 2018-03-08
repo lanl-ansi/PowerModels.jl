@@ -79,16 +79,6 @@ function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerM
         pm.var[:nw][n][:wr][(i,j)] = WR[w_fr_index, w_to_index]
         pm.var[:nw][n][:wi][(i,j)] = WI[w_fr_index, w_to_index]
     end
-
-
-    if !haskey(pm.ext, :nw)
-        pm.ext[:nw] = Dict{Int,Any}()
-    end
-    if !haskey(pm.ext[:nw], n)
-        pm.ext[:nw][n] = Dict{Symbol,Any}()
-    end
-
-    pm.ext[:nw][n][:lookup_w_index] = lookup_w_index
 end
 
 
@@ -125,8 +115,7 @@ end
 
 ""
 function add_bus_voltage_setpoint{T <: AbstractWRMForm}(sol, pm::GenericPowerModel{T})
-    add_setpoint(sol, pm, "bus", "vm", :WR; scale = (x,item) -> sqrt(x), extract_var = (var,idx,item) -> var[pm.ext[:nw][pm.cnw][:lookup_w_index][idx], pm.ext[:nw][pm.cnw][:lookup_w_index][idx]])
-
+    add_setpoint(sol, pm, "bus", "vm", :w; scale = (x,item) -> sqrt(x))
     # What should the default value be?
     #add_setpoint(sol, pm, "bus", "va", :va; default_value = 0)
 end
