@@ -13,13 +13,9 @@ const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
 ""
 SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPWRMForm; kwargs...)
 
-""
-function variable_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...)
-    variable_voltage_product_matrix(pm, n; kwargs...)
-end
 
 ""
-function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; bounded = true)
+function variable_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; bounded = true)
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:nw][n][:buspairs])
 
     w_index = 1:length(keys(pm.ref[:nw][n][:bus]))
@@ -79,6 +75,7 @@ function variable_voltage_product_matrix{T <: AbstractWRMForm}(pm::GenericPowerM
         pm.var[:nw][n][:wr][(i,j)] = WR[w_fr_index, w_to_index]
         pm.var[:nw][n][:wi][(i,j)] = WI[w_fr_index, w_to_index]
     end
+
 end
 
 
@@ -94,6 +91,4 @@ function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::I
     #    relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     #end
 end
-
-
 
