@@ -1,7 +1,8 @@
 using PowerModels
-using Logging
-# suppress warnings during testing
-Logging.configure(level=ERROR)
+using Memento
+
+# Suppress warnings during testing.
+setlevel!(getlogger(PowerModels), "error")
 
 using Ipopt
 using Pajarito

@@ -127,7 +127,7 @@ function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
             error("update_data requires datasets in the same units, try make_per_unit and make_mixed_units")
         end
     else
-        warn("running update_data with data that does not include per_unit field, units may be incorrect")
+        warn(LOGGER, "running update_data with data that does not include per_unit field, units may be incorrect")
     end
     _update_data(data, new_data)
 end
@@ -259,7 +259,7 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
                         gen["cost"][i] = item*mva_base^(degree-i)
                     end
                 else
-                    warn("Skipping generator cost model of type $(gen["model"]) in per unit transformation")
+                    warn(LOGGER, "Skipping generator cost model of type $(gen["model"]) in per unit transformation")
                 end
             end
         end
@@ -372,7 +372,7 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
                         gen["cost"][i] = item/mva_base^(degree-i)
                     end
                 else
-                    warn("Skipping generator cost model of type $(gen["model"]) in mixed units transformation")
+                    warn(LOGGER, "Skipping generator cost model of type $(gen["model"]) in mixed units transformation")
                 end
             end
         end
@@ -387,15 +387,15 @@ function check_voltage_angle_differences(data, default_pad = 1.0472)
 
     for (i, branch) in data["branch"]
         if branch["angmin"] <= -pi/2
-            warn("this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(rad2deg(branch["angmin"])) to -$(rad2deg(default_pad)) deg.")
+            warn(LOGGER, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(rad2deg(branch["angmin"])) to -$(rad2deg(default_pad)) deg.")
             branch["angmin"] = -default_pad
         end
         if branch["angmax"] >= pi/2
-            warn("this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(rad2deg(branch["angmax"])) to $(rad2deg(default_pad)) deg.")
+            warn(LOGGER, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(rad2deg(branch["angmax"])) to $(rad2deg(default_pad)) deg.")
             branch["angmax"] = default_pad
         end
         if branch["angmin"] == 0.0 && branch["angmax"] == 0.0
-            warn("angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- $(rad2deg(default_pad)) deg.")
+            warn(LOGGER, "angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- $(rad2deg(default_pad)) deg.")
             #branch["angmin"] = -rad2deg(default_pad)
             #branch["angmax"] = rad2deg(default_pad)
             branch["angmin"] = -default_pad
@@ -428,7 +428,7 @@ function check_thermal_limits(data)
 
             new_rate = y_mag*m_vmax*c_max
 
-            warn("this code only supports positive rate_a values, changing the value on branch $(branch["index"]) from $(mva_base*branch["rate_a"]) to $(mva_base*new_rate)")
+            warn(LOGGER, "this code only supports positive rate_a values, changing the value on branch $(branch["index"]) from $(mva_base*branch["rate_a"]) to $(mva_base*new_rate)")
             branch["rate_a"] = new_rate
         end
     end
@@ -443,7 +443,7 @@ function check_branch_directions(data)
         orientation_rev = (branch["t_bus"], branch["f_bus"])
 
         if in(orientation_rev, orientations)
-            warn("reversing the orientation of branch $(i) $(orientation) to be consistent with other parallel branches")
+            warn(LOGGER, "reversing the orientation of branch $(i) $(orientation) to be consistent with other parallel branches")
             branch_orginal = copy(branch)
             branch["f_bus"] = branch_orginal["t_bus"]
             branch["t_bus"] = branch_orginal["f_bus"]
@@ -469,16 +469,16 @@ function check_transformer_parameters(data)
 
     for (i, branch) in data["branch"]
         if !haskey(branch, "tap")
-            warn("branch found without tap value, setting a tap to 1.0")
+            warn(LOGGER, "branch found without tap value, setting a tap to 1.0")
             branch["tap"] = 1.0
         else
             if branch["tap"] <= 0.0
-                warn("branch found with non-posative tap value of $(branch["tap"]), setting a tap to 1.0")
+                warn(LOGGER, "branch found with non-posative tap value of $(branch["tap"]), setting a tap to 1.0")
                 branch["tap"] = 1.0
             end
         end
         if !haskey(branch, "shift")
-            warn("branch found without shift value, setting a shift to 0.0")
+            warn(LOGGER, "branch found without shift value, setting a shift to 0.0")
             branch["shift"] = 0.0
         end
     end
@@ -501,12 +501,12 @@ function check_bus_types(data)
             bus_gens_count = length(bus_gens[i])
 
             if bus_gens_count == 0 && bus["bus_type"] != 1
-                warn("no active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 1")
+                warn(LOGGER, "no active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 1")
                 bus["bus_type"] = 1
             end
 
             if bus_gens_count != 0 && bus["bus_type"] != 2
-                warn("active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 2")
+                warn(LOGGER, "active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 2")
                 bus["bus_type"] = 2
             end
 
@@ -523,31 +523,31 @@ function check_dcline_limits(data)
     for (i, dcline) in data["dcline"]
         if dcline["loss0"] < 0.0
             new_rate = 0.0
-            warn("this code only supports positive loss0 values, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
+            warn(LOGGER, "this code only supports positive loss0 values, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
             dcline["loss0"] = new_rate
           end
 
         if dcline["loss0"] >= dcline["pmaxf"]*(1-dcline["loss1"] )+ dcline["pmaxt"]
             new_rate = 0.0
-            warn("this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
+            warn(LOGGER, "this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
             dcline["loss0"] = new_rate
           end
 
         if dcline["loss1"] < 0.0
             new_rate = 0.0
-            warn("this code only supports positive loss1 values, changing the value on dcline $(dcline["index"]) from $(dcline["loss1"]) to $(new_rate)")
+            warn(LOGGER, "this code only supports positive loss1 values, changing the value on dcline $(dcline["index"]) from $(dcline["loss1"]) to $(new_rate)")
             dcline["loss1"] = new_rate
         end
 
         if dcline["loss1"] >= 1.0
             new_rate = 0.0
-            warn("this code only supports loss1 values < 1, changing the value on dcline $(dcline["index"]) from $(dcline["loss1"]) to $(new_rate)")
+            warn(LOGGER, "this code only supports loss1 values < 1, changing the value on dcline $(dcline["index"]) from $(dcline["loss1"]) to $(new_rate)")
             dcline["loss1"] = new_rate
         end
 
         if dcline["pmint"] <0.0 && dcline["loss1"] > 0.0
             #new_rate = 0.0
-            warn("the dc line model is not meant to be used bi-directionally when loss1 > 0, be careful interpreting the results as the dc line losses can now be negative. change loss1 to 0 to avoid this warning")
+            warn(LOGGER, "the dc line model is not meant to be used bi-directionally when loss1 > 0, be careful interpreting the results as the dc line losses can now be negative. change loss1 to 0 to avoid this warning")
             #dcline["loss0"] = new_rate
         end
     end
@@ -560,7 +560,7 @@ function check_voltage_setpoints(data)
         bus_id = gen["gen_bus"]
         bus = data["bus"]["$(bus_id)"]
         if gen["vg"] != bus["vm"]
-           warn("the voltage setpoint on generator $(i) does not match the value at bus $(bus_id)")
+           warn(LOGGER, "the voltage setpoint on generator $(i) does not match the value at bus $(bus_id)")
         end
     end
 
@@ -572,11 +572,11 @@ function check_voltage_setpoints(data)
         bus_to = data["bus"]["$(bus_to_id)"]
 
         if dcline["vf"] != bus_fr["vm"]
-           warn("the from bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_fr_id)")
+           warn(LOGGER, "the from bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_fr_id)")
         end
 
         if dcline["vt"] != bus_to["vm"]
-           warn("the to bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_to_id)")
+           warn(LOGGER, "the to bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_to_id)")
         end
     end
 end
@@ -611,7 +611,7 @@ function _check_cost_functions(id, comp)
                 pmax = comp["pmax"]
                 for i in 3:2:length(comp["cost"])
                     if comp["cost"][i] < pmin || comp["cost"][i] > pmax
-                        warn("pwl x value $(comp["cost"][i]) is outside the generator bounds $(pmin)-$(pmax)")
+                        warn(LOGGER, "pwl x value $(comp["cost"][i]) is outside the generator bounds $(pmin)-$(pmax)")
                     end
                 end
             end
@@ -620,7 +620,7 @@ function _check_cost_functions(id, comp)
                 error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values")
             end
         else
-            warn("Unknown generator cost model of type $(comp["model"])")
+            warn(LOGGER, "Unknown generator cost model of type $(comp["model"])")
         end
     end
 end
