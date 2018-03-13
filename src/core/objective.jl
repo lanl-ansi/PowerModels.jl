@@ -104,7 +104,7 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel, nws=[pm.cnw])
 end
 
 ""
-function objective_min_polynomial_fuel_cost{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, nws=[pm.cnw])
+function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}, nws=[pm.cnw]) where T <: AbstractConicPowerFormulation
     check_polynomial_cost_models(pm, nws)
 
     pg = Dict(n => pm.var[:nw][n][:pg] for n in nws)
@@ -152,7 +152,7 @@ end
 """
 compute m and b from points pwl points
 """
-function slope_intercepts{T <: Real}(points::Array{T,1})
+function slope_intercepts(points::Array{T,1}) where T <: Real
     line_data = []
 
     for i in 3:2:length(points)

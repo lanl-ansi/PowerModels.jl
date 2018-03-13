@@ -38,7 +38,7 @@ Methods on `GenericPowerModel` for defining variables and adding constraints sho
 * add them to `model::JuMP.Model`, and
 * follow the conventions for variable and constraint names.
 """
-type GenericPowerModel{T<:AbstractPowerFormulation}
+mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     model::Model
 
     data::Dict{String,Any}

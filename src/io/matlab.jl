@@ -97,7 +97,7 @@ function type_value(value_string::AbstractString)
 end
 
 "Attempts to determine the type of an array of strings extracted from a matlab file"
-function type_array{T <: AbstractString}(string_array::Vector{T})
+function type_array(string_array::Vector{T}) where T <: AbstractString
     value_string = [strip(value_string) for value_string in string_array]
 
     return if any(contains(value_string, "'") for value_string in string_array)
