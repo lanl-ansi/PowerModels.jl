@@ -143,21 +143,21 @@ function parse_matpower_string(data_string::String)
     if func_name != nothing
         case["name"] = func_name
     else
-        warn(string("no case name found in matpower file.  The file seems to be missing \"function mpc = ...\""))
+        warn(LOGGER, string("no case name found in matpower file.  The file seems to be missing \"function mpc = ...\""))
         case["name"] = "no_name_found"
     end
 
     if haskey(matlab_data, "mpc.version")
         case["version"] = matlab_data["mpc.version"]
     else
-        warn(string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
+        warn(LOGGER, string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
         case["version"] = "unknown"
     end
 
     if haskey(matlab_data, "mpc.baseMVA")
         case["baseMVA"] = matlab_data["mpc.baseMVA"]
     else
-        warn(string("no baseMVA found in matpower file.  The file seems to be missing \"mpc.baseMVA = ...\""))
+        warn(LOGGER, string("no baseMVA found in matpower file.  The file seems to be missing \"mpc.baseMVA = ...\""))
         case["baseMVA"] = 1.0
     end
 
@@ -267,10 +267,10 @@ function parse_matpower_string(data_string::String)
                     push!(tbl, row_data)
                 end
                 case[case_name] = tbl
-                info("extending matpower format with data: $(case_name) $(length(tbl))x$(length(tbl[1])-1)")
+                info(LOGGER, "extending matpower format with data: $(case_name) $(length(tbl))x$(length(tbl[1])-1)")
             else
                 case[case_name] = value
-                info("extending matpower format with constant data: $(case_name)")
+                info(LOGGER, "extending matpower format with constant data: $(case_name)")
             end
         end
     end
@@ -380,7 +380,7 @@ function standardize_cost_terms(data::Dict{String,Any})
                 end
 
                 if max_nonzero_index > 1
-                    warn("removing $(max_nonzero_index-1) zeros from generator cost model ($(gencost["index"]))")
+                    warn(LOGGER, "removing $(max_nonzero_index-1) zeros from generator cost model ($(gencost["index"]))")
                     #println(gencost["cost"])
                     gencost["cost"] = gencost["cost"][max_nonzero_index:length(gencost["cost"])]
                     #println(gencost["cost"])
@@ -394,7 +394,7 @@ function standardize_cost_terms(data::Dict{String,Any})
                 gencost["cost"] = cost_3
                 gencost["ncost"] = 3
                 #println("   ",gencost["cost"])
-                warn("added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
+                warn(LOGGER, "added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
             end
         end
     end
@@ -411,7 +411,7 @@ function standardize_cost_terms(data::Dict{String,Any})
                 end
 
                 if max_nonzero_index > 1
-                    warn("removing $(max_nonzero_index-1) zeros from dcline cost model ($(dclinecost["index"]))")
+                    warn(LOGGER, "removing $(max_nonzero_index-1) zeros from dcline cost model ($(dclinecost["index"]))")
                     #println(dclinecost["cost"])
                     dclinecost["cost"] = dclinecost["cost"][max_nonzero_index:length(dclinecost["cost"])]
                     #println(dclinecost["cost"])
@@ -425,7 +425,7 @@ function standardize_cost_terms(data::Dict{String,Any})
                 dclinecost["cost"] = cost_3
                 dclinecost["ncost"] = 3
                 #println("   ",dclinecost["cost"])
-                warn("added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
+                warn(LOGGER, "added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
             end
         end
     end
@@ -499,7 +499,7 @@ end
 "adds dcline costs, if gen costs exist"
 function add_dcline_costs(data::Dict{String,Any})
     if length(data["gencost"]) > 0 && length(data["dclinecost"]) <= 0
-        warn("added zero cost function data for dclines")
+        warn(LOGGER, "added zero cost function data for dclines")
         model = data["gencost"][1]["model"]
         if model == 1
             for (i, dcline) in enumerate(data["dcline"])
@@ -587,7 +587,7 @@ function merge_generic_data(data::Dict{String,Any})
                         error("failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(k)\" because they do not have the same number of rows, $(length(mp_matrix)) and $(length(v)) respectively.")
                     end
 
-                    info("extending matpower format by appending matrix \"$(k)\" in to \"$(mp_name)\"")
+                    info(LOGGER, "extending matpower format by appending matrix \"$(k)\" in to \"$(mp_name)\"")
 
                     for (i, row) in enumerate(mp_matrix)
                         merge_row = v[i]

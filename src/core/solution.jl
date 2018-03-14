@@ -231,7 +231,7 @@ function add_dual(
             constraint = extract_con(con(pm, con_symbol), idx, item)
             sol_item[param_name] = scale(getdual(constraint), item)
         catch
-            # info("No constraint: $(con_symbol), $(idx)") # if we want to log this info.
+            info(LOGGER, "No constraint: $(con_symbol), $(idx)")
         end
     end
 end

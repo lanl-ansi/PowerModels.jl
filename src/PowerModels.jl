@@ -5,6 +5,17 @@ module PowerModels
 using JSON
 using MathProgBase
 using JuMP
+using Compat
+using Memento
+
+import Compat: @__MODULE__
+
+# Create our module level logger (this will get precompiled)
+const LOGGER = getlogger(@__MODULE__)
+
+# Register the module level logger at runtime so that folks can access the logger via `getlogger(PowerModels)`
+# NOTE: If this line is not included then the precompiled `PowerModels.LOGGER` won't be registered at runtime.
+__init__() = Memento.register(LOGGER)
 
 include("io/matlab.jl")
 include("io/matpower.jl")

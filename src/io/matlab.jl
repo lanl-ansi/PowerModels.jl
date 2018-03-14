@@ -36,7 +36,7 @@ function parse_matlab_string(data_string::String; extended=false)
             if contains(line, "[")
                 matrix_dict = parse_matlab_matrix(data_lines, index)
                 matlab_dict[matrix_dict["name"]] = matrix_dict["data"]
-                if haskey(matrix_dict, "column_names") 
+                if haskey(matrix_dict, "column_names")
                     column_names[matrix_dict["name"]] = matrix_dict["column_names"]
                 end
                 index = index + matrix_dict["line_count"]-1
@@ -53,7 +53,7 @@ function parse_matlab_string(data_string::String; extended=false)
                 matlab_dict[name] = value
             end
         else
-            warn("Matlab parser skipping the following line:\n  $(line)")
+            warn(LOGGER, "Matlab parser skipping the following line:\n  $(line)")
         end
 
         index += 1
