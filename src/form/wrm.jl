@@ -2,10 +2,10 @@ export
     SDPWRMPowerModel, SDPWRMForm
 
 ""
-@compat abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
+abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
 
 ""
-@compat abstract type SDPWRMForm <: AbstractWRMForm end
+abstract type SDPWRMForm <: AbstractWRMForm end
 
 ""
 const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
@@ -15,7 +15,7 @@ SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SD
 
 
 ""
-function variable_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; bounded = true)
+function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw; bounded = true) where T <: AbstractWRMForm
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:nw][n][:buspairs])
 
     w_index = 1:length(keys(pm.ref[:nw][n][:bus]))
@@ -80,7 +80,7 @@ end
 
 
 ""
-function constraint_voltage{T <: AbstractWRMForm}(pm::GenericPowerModel{T}, n::Int)
+function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: AbstractWRMForm
     WR = pm.var[:nw][n][:WR]
     WI = pm.var[:nw][n][:WI]
 
