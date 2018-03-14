@@ -2,10 +2,10 @@ export
     SDPWRMPowerModel, SDPWRMForm
 
 ""
-@compat abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
+abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
 
 ""
-@compat abstract type SDPWRMForm <: AbstractWRMForm end
+abstract type SDPWRMForm <: AbstractWRMForm end
 
 ""
 const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}

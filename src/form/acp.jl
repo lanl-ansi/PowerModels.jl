@@ -4,10 +4,10 @@ export
     ACPPowerModel, StandardACPForm
 
 ""
-@compat abstract type AbstractACPForm <: AbstractPowerFormulation end
+abstract type AbstractACPForm <: AbstractPowerFormulation end
 
 ""
-@compat abstract type StandardACPForm <: AbstractACPForm end
+abstract type StandardACPForm <: AbstractACPForm end
 
 ""
 const ACPPowerModel = GenericPowerModel{StandardACPForm}

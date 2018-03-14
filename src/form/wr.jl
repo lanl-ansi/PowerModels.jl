@@ -4,10 +4,10 @@ export
     QCWRTriPowerModel, QCWRTriForm
 
 ""
-@compat abstract type AbstractWRForm <: AbstractPowerFormulation end
+abstract type AbstractWRForm <: AbstractPowerFormulation end
 
 ""
-@compat abstract type SOCWRForm <: AbstractWRForm end
+abstract type SOCWRForm <: AbstractWRForm end
 
 ""
 const SOCWRPowerModel = GenericPowerModel{SOCWRForm}
@@ -325,7 +325,7 @@ end
 
 
 ""
-@compat abstract type QCWRForm <: AbstractWRForm end
+abstract type QCWRForm <: AbstractWRForm end
 
 ""
 const QCWRPowerModel = GenericPowerModel{QCWRForm}
@@ -718,7 +718,7 @@ end
 
 
 ""
-@compat abstract type QCWRTriForm <: QCWRForm end
+abstract type QCWRTriForm <: QCWRForm end
 
 ""
 const QCWRTriPowerModel = GenericPowerModel{QCWRTriForm}

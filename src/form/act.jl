@@ -4,10 +4,10 @@ export
     ACTPowerModel, StandardACTForm
 
 ""
-@compat abstract type AbstractACTForm <: AbstractPowerFormulation end
+abstract type AbstractACTForm <: AbstractPowerFormulation end
 
 ""
-@compat abstract type StandardACTForm <: AbstractACTForm end
+abstract type StandardACTForm <: AbstractACTForm end
 
 ""
 const ACTPowerModel = GenericPowerModel{StandardACTForm}

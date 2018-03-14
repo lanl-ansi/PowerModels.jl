@@ -4,10 +4,10 @@ export
     ACRPowerModel, StandardACRForm
 
 ""
-@compat abstract type AbstractACRForm <: AbstractPowerFormulation end
+abstract type AbstractACRForm <: AbstractPowerFormulation end
 
 ""
-@compat abstract type StandardACRForm <: AbstractACRForm end
+abstract type StandardACRForm <: AbstractACRForm end
 
 ""
 const ACRPowerModel = GenericPowerModel{StandardACRForm}

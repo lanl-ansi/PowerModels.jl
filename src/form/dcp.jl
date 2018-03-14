@@ -3,10 +3,10 @@ export
     DCPLLPowerModel, StandardDCPLLForm
 
 ""
-@compat abstract type AbstractDCPForm <: AbstractPowerFormulation end
+abstract type AbstractDCPForm <: AbstractPowerFormulation end
 
 ""
-@compat abstract type StandardDCPForm <: AbstractDCPForm end
+abstract type StandardDCPForm <: AbstractDCPForm end
 
 ""
 const DCPPowerModel = GenericPowerModel{StandardDCPForm}
@@ -247,10 +247,10 @@ end
 
 
 ""
-@compat abstract type AbstractDCPLLForm <: AbstractDCPForm end
+abstract type AbstractDCPLLForm <: AbstractDCPForm end
 
 ""
-@compat abstract type StandardDCPLLForm <: AbstractDCPLLForm end
+abstract type StandardDCPLLForm <: AbstractDCPLLForm end
 
 ""
 const DCPLLPowerModel = GenericPowerModel{StandardDCPLLForm}

@@ -7,10 +7,10 @@ export
     ids, ref, var, ext
 
 ""
-@compat abstract type AbstractPowerFormulation end
+abstract type AbstractPowerFormulation end
 
 ""
-@compat abstract type AbstractConicPowerFormulation <: AbstractPowerFormulation end
+abstract type AbstractConicPowerFormulation <: AbstractPowerFormulation end
 
 """
 ```
