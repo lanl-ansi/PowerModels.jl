@@ -2,7 +2,10 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- none
+- Dropped support for Julia v0.5 (breaking)
+- Refactored Matlab and Matpower parsing functions
+- Refactored implementation of WRM formulation
+- Updated struct and type parameter syntax to Julia v0.6 (breaking)
 
 ### v0.5.1
 - Added support for convex piecewise linear cost functions
