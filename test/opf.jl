@@ -7,6 +7,12 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5907; atol = 1e0)
     end
+    @testset "5-bus tranformer swap case" begin
+        result = run_ac_opf("../test/data/case5.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 18269; atol = 1e0)
+    end
     @testset "5-bus asymmetric case" begin
         result = run_ac_opf("../test/data/case5_asym.m", ipopt_solver)
 
@@ -196,6 +202,12 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5746.7; atol = 1e0)
+    end
+    @testset "5-bus transformer swap case" begin
+        result = run_opf("../test/data/case5.m", SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 15051; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
         result = run_opf("../test/data/case5_asym.m", SOCWRPowerModel, ipopt_solver)

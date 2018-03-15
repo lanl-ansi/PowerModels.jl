@@ -18,6 +18,12 @@
         @test isapprox(result["solution"]["dcline"]["1"]["qf"], -0.403045; atol = 1e-5)
         @test isapprox(result["solution"]["dcline"]["1"]["qt"],  0.0647562; atol = 1e-5)
     end
+    @testset "5-bus transformer swap case" begin
+        result = run_pf("../test/data/case5.m", ACPPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+    end
     @testset "5-bus asymmetric case" begin
         result = run_pf("../test/data/case5_asym.m", ACPPowerModel, ipopt_solver)
 
