@@ -35,5 +35,5 @@ deploydocs(
     make = nothing,
     target = "build",
     repo = "github.com/lanl-ansi/PowerModels.jl.git",
-    julia = "0.5"
+    julia = "0.6"
 )
