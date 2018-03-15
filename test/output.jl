@@ -104,10 +104,10 @@ end
 
     @testset "5 bus - thermal limit duals" begin
         for (i, branch) in result["solution"]["branch"]
-            if i != "6"
+            if i != "7"
                 @test isapprox(branch["mu_sm_fr"], 0.0; atol = 1e-2)
             else
-                @test isapprox(branch["mu_sm_fr"], 62.32; atol = 1e-2)
+                @test isapprox(branch["mu_sm_fr"], 54.70; atol = 1e-2)
             end
             @test isnan(branch["mu_sm_to"])
         end
