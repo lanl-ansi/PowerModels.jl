@@ -13,19 +13,19 @@ abstract type StandardACRForm <: AbstractACRForm end
 const ACRPowerModel = GenericPowerModel{StandardACRForm}
 
 "default rectangular AC constructor"
-ACRPowerModel(data::Dict{String,Any}; kwargs...) = 
+ACRPowerModel(data::Dict{String,Any}; kwargs...) =
     GenericPowerModel(data, StandardACRForm; kwargs...)
 
 
 ""
-function variable_voltage{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...)
+function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...) where T <: AbstractACRForm
     variable_voltage_real(pm, n; kwargs...)
     variable_voltage_imaginary(pm, n; kwargs...)
 end
 
 
 "add constraints for voltage magnitude"
-function constraint_voltage{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int)
+function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: AbstractACRForm
     vr = pm.var[:nw][n][:vr]
     vi = pm.var[:nw][n][:vi]
 
@@ -48,7 +48,7 @@ end
 
 
 "`v[i] == vm`"
-function constraint_voltage_magnitude_setpoint{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, i, vm)
+function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, i, vm) where T <: AbstractACRForm
     vr = pm.var[:nw][n][:vr][i]
     vi = pm.var[:nw][n][:vi][i]
 
@@ -57,12 +57,12 @@ end
 
 
 "reference bus angle constraint"
-function constraint_theta_ref{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, i::Int)
+function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, i::Int) where T <: AbstractACRForm
     @constraint(pm.model, pm.var[:nw][n][:vi][i] == 0)
 end
 
 
-function constraint_kcl_shunt{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs)
+function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs) where T <: AbstractACRForm
     vr = pm.var[:nw][n][:vr][i]
     vi = pm.var[:nw][n][:vi][i]
     p = pm.var[:nw][n][:p]
@@ -80,7 +80,7 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_from{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) where T <: AbstractACRForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
     vr_fr = pm.var[:nw][n][:vr][f_bus]
@@ -95,7 +95,7 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_to{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
+function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) where T <: AbstractACRForm
     p_to = pm.var[:nw][n][:p][t_idx]
     q_to = pm.var[:nw][n][:q][t_idx]
     vr_fr = pm.var[:nw][n][:vr][f_bus]
@@ -111,7 +111,7 @@ end
 """
 branch phase angle difference bounds
 """
-function constraint_voltage_angle_difference{T <: AbstractACRForm}(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, angmin, angmax)
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, angmin, angmax) where T <: AbstractACRForm
     vr_fr = pm.var[:nw][n][:vr][f_bus]
     vr_to = pm.var[:nw][n][:vr][t_bus]
     vi_fr = pm.var[:nw][n][:vi][f_bus]
@@ -123,7 +123,7 @@ end
 
 
 "extracts voltage set points from rectangular voltage form and converts into polar voltage form"
-function add_bus_voltage_setpoint{T <: AbstractACRForm}(sol, pm::GenericPowerModel{T})
+function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractACRForm
     sol_dict = get(sol, "bus", Dict{String,Any}())
 
     if pm.data["multinetwork"]
@@ -144,7 +144,7 @@ function add_bus_voltage_setpoint{T <: AbstractACRForm}(sol, pm::GenericPowerMod
         try
             vr = getvalue(var(pm, :vr)[idx])
             vi = getvalue(var(pm, :vi)[idx])
-            
+
             vm = sqrt(vr^2 + vi^2)
             sol_item["vm"] = vm
 
