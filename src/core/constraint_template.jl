@@ -103,7 +103,7 @@ function constraint_ohms_yt_from(pm::GenericPowerModel, n::Int, i::Int)
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tm = branch["tap"]^2
+    tm = branch["tap"]
 
     constraint_ohms_yt_from(pm, n, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
 end
@@ -121,7 +121,7 @@ function constraint_ohms_yt_to(pm::GenericPowerModel, n::Int, i::Int)
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tm = branch["tap"]^2
+    tm = branch["tap"]
 
     constraint_ohms_yt_to(pm, n, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm)
 end
@@ -138,10 +138,10 @@ function constraint_ohms_y_from(pm::GenericPowerModel, n::Int, i::Int)
 
     g, b = calc_branch_y(branch)
     c = branch["br_b"]
-    tr = branch["tap"]
-    as = branch["shift"]
+    tm = branch["tap"]
+    ta = branch["shift"]
 
-    constraint_ohms_y_from(pm, n, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
+    constraint_ohms_y_from(pm, n, f_bus, t_bus, f_idx, t_idx, g, b, c, tm, ta)
 end
 constraint_ohms_y_from(pm::GenericPowerModel, i::Int) = constraint_ohms_y_from(pm, pm.cnw, i)
 
@@ -155,10 +155,10 @@ function constraint_ohms_y_to(pm::GenericPowerModel, n::Int, i::Int)
 
     g, b = calc_branch_y(branch)
     c = branch["br_b"]
-    tr = branch["tap"]
-    as = branch["shift"]
+    tm = branch["tap"]
+    ta = branch["shift"]
 
-    constraint_ohms_y_to(pm, n, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, as)
+    constraint_ohms_y_to(pm, n, f_bus, t_bus, f_idx, t_idx, g, b, c, tm, ta)
 end
 constraint_ohms_y_to(pm::GenericPowerModel, i::Int) = constraint_ohms_y_to(pm, pm.cnw, i)
 
@@ -208,7 +208,7 @@ function constraint_ohms_yt_from_on_off(pm::GenericPowerModel, n::Int, i::Int)
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tm = branch["tap"]^2
+    tm = branch["tap"]
 
     t_min = ref(pm, n, :off_angmin)
     t_max = ref(pm, n, :off_angmax)
@@ -229,7 +229,7 @@ function constraint_ohms_yt_to_on_off(pm::GenericPowerModel, n::Int, i::Int)
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tm = branch["tap"]^2
+    tm = branch["tap"]
 
     t_min = ref(pm, n, :off_angmin)
     t_max = ref(pm, n, :off_angmax)
@@ -250,7 +250,7 @@ function constraint_ohms_yt_from_ne(pm::GenericPowerModel, n::Int, i::Int)
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tm = branch["tap"]^2
+    tm = branch["tap"]
 
     t_min = ref(pm, n, :off_angmin)
     t_max = ref(pm, n, :off_angmax)
@@ -271,7 +271,7 @@ function constraint_ohms_yt_to_ne(pm::GenericPowerModel, n::Int, i::Int)
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tm = branch["tap"]^2
+    tm = branch["tap"]
 
     t_min = ref(pm, n, :off_angmin)
     t_max = ref(pm, n, :off_angmax)
@@ -291,7 +291,7 @@ function constraint_power_magnitude_sqr(pm::GenericPowerModel, n::Int, i::Int)
     t_bus = branch["t_bus"]
     arc_from = (i, f_bus, t_bus)
 
-    tm = branch["tap"]^2
+    tm = branch["tap"]
 
     constraint_power_magnitude_sqr(pm, n, f_bus, t_bus, arc_from, tm)
 end
@@ -305,7 +305,7 @@ function constraint_power_magnitude_sqr_on_off(pm::GenericPowerModel, n::Int, i:
     t_bus = branch["t_bus"]
     arc_from = (i, f_bus, t_bus)
 
-    tm = branch["tap"]^2
+    tm = branch["tap"]
 
     constraint_power_magnitude_sqr_on_off(pm, n, i, f_bus, arc_from, tm)
 end
@@ -322,7 +322,7 @@ function constraint_power_magnitude_link(pm::GenericPowerModel, n::Int, i::Int)
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tm = branch["tap"]^2
+    tm = branch["tap"]
 
     constraint_power_magnitude_link(pm, n, f_bus, t_bus, arc_from, g, b, c, tr, ti, tm)
 end
@@ -338,7 +338,7 @@ function constraint_power_magnitude_link_on_off(pm::GenericPowerModel, n::Int, i
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
-    tm = branch["tap"]^2
+    tm = branch["tap"]
 
     constraint_power_magnitude_link_on_off(pm, n, i, arc_from, g, b, c, tr, ti, tm)
 end
