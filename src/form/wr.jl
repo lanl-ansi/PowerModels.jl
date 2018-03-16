@@ -41,15 +41,15 @@ p[f_idx] == g/tm*w_fr_ne[i] + (-g*tr+b*ti)/tm*(wr_ne[i]) + (-b*tr-g*ti)/tm*(wi_n
 q[f_idx] == -(b+c/2)/tm*w_fr_ne[i] - (-b*tr-g*ti)/tm*(wr_ne[i]) + (-g*tr+b*ti)/tm*(wi_ne[i])
 ```
 """
-function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max) where T <: AbstractWRForm
+function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractWRForm
     p_fr = pm.var[:nw][n][:p_ne][f_idx]
     q_fr = pm.var[:nw][n][:q_ne][f_idx]
     w_fr = pm.var[:nw][n][:w_fr_ne][i]
     wr = pm.var[:nw][n][:wr_ne][i]
     wi = pm.var[:nw][n][:wi_ne][i]
 
-    @constraint(pm.model, p_fr == g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
-    @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
+    @constraint(pm.model, p_fr ==        g/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi )
+    @constraint(pm.model, q_fr == -(b+c/2)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi )
 end
 
 """
@@ -60,15 +60,15 @@ p[t_idx] == g*w_to_ne[i] + (-g*tr-b*ti)/tm*(wr_ne[i]) + (-b*tr+g*ti)/tm*(-wi_ne[
 q[t_idx] == -(b+c/2)*w_to_ne[i] - (-b*tr+g*ti)/tm*(wr_ne[i]) + (-g*tr-b*ti)/tm*(-wi_ne[i])
 ```
 """
-function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max) where T <: AbstractWRForm
+function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractWRForm
     p_to = pm.var[:nw][n][:p_ne][t_idx]
     q_to = pm.var[:nw][n][:q_ne][t_idx]
     w_to = pm.var[:nw][n][:w_to_ne][i]
     wr = pm.var[:nw][n][:wr_ne][i]
     wi = pm.var[:nw][n][:wi_ne][i]
 
-    @constraint(pm.model, p_to == g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
-    @constraint(pm.model, q_to == -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
+    @constraint(pm.model, p_to ==        g*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi )
+    @constraint(pm.model, q_to == -(b+c/2)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
 end
 
 ""
@@ -219,15 +219,15 @@ p[f_idx] ==        g/tm*w_fr[i] + (-g*tr+b*ti)/tm*(wr[i]) + (-b*tr-g*ti)/tm*(wi[
 q[f_idx] == -(b+c/2)/tm*w_fr[i] - (-b*tr-g*ti)/tm*(wr[i]) + (-g*tr+b*ti)/tm*(wi[i])
 ```
 """
-function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max) where T <: AbstractWRForm
+function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractWRForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
     w_fr = pm.var[:nw][n][:w_fr][i]
     wr = pm.var[:nw][n][:wr][i]
     wi = pm.var[:nw][n][:wi][i]
 
-    @constraint(pm.model, p_fr ==        g/tm*w_fr + (-g*tr+b*ti)/tm*(wr) + (-b*tr-g*ti)/tm*( wi) )
-    @constraint(pm.model, q_fr == -(b+c/2)/tm*w_fr - (-b*tr-g*ti)/tm*(wr) + (-g*tr+b*ti)/tm*( wi) )
+    @constraint(pm.model, p_fr ==        g/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi )
+    @constraint(pm.model, q_fr == -(b+c/2)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi )
 end
 
 """
@@ -238,19 +238,19 @@ p[t_idx] ==        g*w_to[i] + (-g*tr-b*ti)/tm*(wr[i]) + (-b*tr+g*ti)/tm*(-wi[i]
 q[t_idx] == -(b+c/2)*w_to[i] - (-b*tr+g*ti)/tm*(wr[i]) + (-g*tr-b*ti)/tm*(-wi[i])
 ```
 """
-function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max) where T <: AbstractWRForm
+function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractWRForm
     p_to = pm.var[:nw][n][:p][t_idx]
     q_to = pm.var[:nw][n][:q][t_idx]
     w_to = pm.var[:nw][n][:w_to][i]
     wr = pm.var[:nw][n][:wr][i]
     wi = pm.var[:nw][n][:wi][i]
 
-    @constraint(pm.model, p_to ==        g*w_to + (-g*tr-b*ti)/tm*(wr) + (-b*tr+g*ti)/tm*(-wi) )
-    @constraint(pm.model, q_to == -(b+c/2)*w_to - (-b*tr+g*ti)/tm*(wr) + (-g*tr-b*ti)/tm*(-wi) )
+    @constraint(pm.model, p_to ==        g*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi )
+    @constraint(pm.model, q_to == -(b+c/2)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
 end
 
 "`angmin*wr[i] <= wi[i] <= angmax*wr[i]`"
-function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax, t_min, t_max) where T <: AbstractWRForm
+function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax, vad_min, vad_max) where T <: AbstractWRForm
     wr = pm.var[:nw][n][:wr][i]
     wi = pm.var[:nw][n][:wi][i]
 
@@ -259,7 +259,7 @@ function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n:
 end
 
 "`angmin*wr_ne[i] <= wi_ne[i] <= angmax*wr_ne[i]`"
-function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax, t_min, t_max) where T <: AbstractWRForm
+function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax, vad_min, vad_max) where T <: AbstractWRForm
     wr = pm.var[:nw][n][:wr_ne][i]
     wi = pm.var[:nw][n][:wi_ne][i]
 
@@ -473,7 +473,7 @@ function constraint_power_magnitude_sqr(pm::GenericPowerModel{T}, n::Int, f_bus,
     q_fr = pm.var[:nw][n][:q][arc_from]
     cm = pm.var[:nw][n][:cm][(f_bus, t_bus)]
 
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= w_i/tm*cm)
+    @constraint(pm.model, p_fr^2 + q_fr^2 <= w_i/tm^2*cm)
 end
 
 "`cm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
@@ -485,7 +485,7 @@ function constraint_power_magnitude_link(pm::GenericPowerModel{T}, n::Int, f_bus
     wi = pm.var[:nw][n][:wi][(f_bus, t_bus)]
     cm = pm.var[:nw][n][:cm][(f_bus, t_bus)]
 
-    @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm + w_to - 2*(tr*wr + ti*wi)/tm) - c*q_fr - ((c/2)/tm)^2*w_fr)
+    @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - c*q_fr - ((c/2)/tm^2)^2*w_fr)
 end
 
 "`t[ref_bus] == 0`"
@@ -699,9 +699,9 @@ function constraint_power_magnitude_sqr_on_off(pm::GenericPowerModel{T}, n::Int,
     cm_ub = getupperbound(cm)
     z_ub = getupperbound(z)
 
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm*z_ub/tm)
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= w_ub*cm*z/tm)
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm_ub*z/tm)
+    @constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm*z_ub/tm^2)
+    @constraint(pm.model, p_fr^2 + q_fr^2 <= w_ub*cm*z/tm^2)
+    @constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm_ub*z/tm^2)
 end
 
 "`cm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
@@ -713,7 +713,7 @@ function constraint_power_magnitude_link_on_off(pm::GenericPowerModel{T}, n::Int
     wi = pm.var[:nw][n][:wi][i]
     cm = pm.var[:nw][n][:cm][i]
 
-    @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm + w_to - 2*(tr*wr + ti*wi)/tm) - c*q_fr - ((c/2)/tm)^2*w_fr)
+    @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - c*q_fr - ((c/2)/tm^2)^2*w_fr)
 end
 
 
