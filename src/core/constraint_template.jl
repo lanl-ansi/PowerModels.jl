@@ -210,10 +210,10 @@ function constraint_ohms_yt_from_on_off(pm::GenericPowerModel, n::Int, i::Int)
     c = branch["br_b"]
     tm = branch["tap"]
 
-    t_min = ref(pm, n, :off_angmin)
-    t_max = ref(pm, n, :off_angmax)
+    vad_min = ref(pm, n, :off_angmin)
+    vad_max = ref(pm, n, :off_angmax)
 
-    constraint_ohms_yt_from_on_off(pm, n, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+    constraint_ohms_yt_from_on_off(pm, n, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max)
 end
 constraint_ohms_yt_from_on_off(pm::GenericPowerModel, i::Int) = constraint_ohms_yt_from_on_off(pm, pm.cnw, i)
 
@@ -231,10 +231,10 @@ function constraint_ohms_yt_to_on_off(pm::GenericPowerModel, n::Int, i::Int)
     c = branch["br_b"]
     tm = branch["tap"]
 
-    t_min = ref(pm, n, :off_angmin)
-    t_max = ref(pm, n, :off_angmax)
+    vad_min = ref(pm, n, :off_angmin)
+    vad_max = ref(pm, n, :off_angmax)
 
-    constraint_ohms_yt_to_on_off(pm, n, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+    constraint_ohms_yt_to_on_off(pm, n, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max)
 end
 constraint_ohms_yt_to_on_off(pm::GenericPowerModel, i::Int) = constraint_ohms_yt_to_on_off(pm, pm.cnw, i)
 
@@ -252,10 +252,10 @@ function constraint_ohms_yt_from_ne(pm::GenericPowerModel, n::Int, i::Int)
     c = branch["br_b"]
     tm = branch["tap"]
 
-    t_min = ref(pm, n, :off_angmin)
-    t_max = ref(pm, n, :off_angmax)
+    vad_min = ref(pm, n, :off_angmin)
+    vad_max = ref(pm, n, :off_angmax)
 
-    constraint_ohms_yt_from_ne(pm, n, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+    constraint_ohms_yt_from_ne(pm, n, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max)
 end
 constraint_ohms_yt_from_ne(pm::GenericPowerModel, i::Int) = constraint_ohms_yt_from_ne(pm, pm.cnw, i)
 
@@ -273,10 +273,10 @@ function constraint_ohms_yt_to_ne(pm::GenericPowerModel, n::Int, i::Int)
     c = branch["br_b"]
     tm = branch["tap"]
 
-    t_min = ref(pm, n, :off_angmin)
-    t_max = ref(pm, n, :off_angmax)
+    vad_min = ref(pm, n, :off_angmin)
+    vad_max = ref(pm, n, :off_angmax)
 
-    constraint_ohms_yt_to_ne(pm, n, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, t_min, t_max)
+    constraint_ohms_yt_to_ne(pm, n, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max)
 end
 constraint_ohms_yt_to_ne(pm::GenericPowerModel, i::Int) = constraint_ohms_yt_to_ne(pm, pm.cnw, i)
 
@@ -455,10 +455,10 @@ function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel, n::In
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
 
-    t_min = ref(pm, n, :off_angmin)
-    t_max = ref(pm, n, :off_angmax)
+    vad_min = ref(pm, n, :off_angmin)
+    vad_max = ref(pm, n, :off_angmax)
 
-    constraint_voltage_angle_difference_on_off(pm, n, i, f_bus, t_bus, branch["angmin"], branch["angmax"], t_min, t_max)
+    constraint_voltage_angle_difference_on_off(pm, n, i, f_bus, t_bus, branch["angmin"], branch["angmax"], vad_min, vad_max)
 end
 constraint_voltage_angle_difference_on_off(pm::GenericPowerModel, i::Int) = constraint_voltage_angle_difference_on_off(pm, pm.cnw, i)
 
@@ -469,10 +469,10 @@ function constraint_voltage_angle_difference_ne(pm::GenericPowerModel, n::Int, i
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
 
-    t_min = ref(pm, n, :off_angmin)
-    t_max = ref(pm, n, :off_angmax)
+    vad_min = ref(pm, n, :off_angmin)
+    vad_max = ref(pm, n, :off_angmax)
 
-    constraint_voltage_angle_difference_ne(pm, n, i, f_bus, t_bus, branch["angmin"], branch["angmax"], t_min, t_max)
+    constraint_voltage_angle_difference_ne(pm, n, i, f_bus, t_bus, branch["angmin"], branch["angmax"], vad_min, vad_max)
 end
 constraint_voltage_angle_difference_ne(pm::GenericPowerModel, i::Int) = constraint_voltage_angle_difference_ne(pm, pm.cnw, i)
 
