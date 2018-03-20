@@ -4,7 +4,7 @@
 
 Internally PowerModels utilizes a dictionary to store network data. The dictionary uses strings as key values so it can be serialized to JSON for algorithmic data exchange.
 
-The data dictionary organization and key names are designed to be consistent with the [Matpower](http://www.pserc.cornell.edu/matpower/) file format and should be familiar to power system researchers.
+The data dictionary organization and key names are designed to be consistent with the [Matpower](http://www.pserc.cornell.edu/matpower/) file format and should be familiar to power system researchers, with the exception that loads and shunts are now split into separate fields (see example below).
 
 The network data dictionary structure is roughly as follows:
 
@@ -17,8 +17,30 @@ The network data dictionary structure is roughly as follows:
     "1":{
         "index":<int>,
         "bus_type":<int>,
+        "va":<float>,
+        "vm":<float>,
+        ...
+    },
+    "2":{...},
+    ...
+},
+"load":{
+    "1":{
+        "index":<int>,
+        "load_bus":<int>,
         "pd":<float>,
         "qd":<float>,
+        ...
+    },
+    "2":{...},
+    ...
+},
+"shunt":{
+    "1":{
+        "index":<int>,
+        "shunt_bus":<int>,
+        "gs":<float>,
+        "bs":<float>,
         ...
     },
     "2":{...},
@@ -56,7 +78,7 @@ network_data = PowerModels.parse_file("nesta_case3_lmbd.m")
 display(network_data)
 ```
 
-For a detailed list of all possible parameters refer to the specification document provided with [Matpower](http://www.pserc.cornell.edu/matpower/).  
+For a detailed list of all possible parameters refer to the specification document provided with [Matpower](http://www.pserc.cornell.edu/matpower/). The exception to this is that `"load"` and `"shunt"`, containing `"pd"`, `"qd"` and `"gs"`, `"bs"`, respectively, have been added as additional fields. These values are contained in `"bus"` in the original specification.
 
 ### Noteworthy Differences from Matpower Data Files
 
@@ -93,9 +115,9 @@ opf_result = run_ac_opf(data, IpoptSolver())
 
 PowerModels.update_data(data, opf_result["solution"])
 pf_result = run_ac_pf(data, IpoptSolver())
-``` 
+```
 
-For details on all of the network data helper functions see, `src/core/data.jl`. 
+For details on all of the network data helper functions see, `src/core/data.jl`.
 
 
 ## Working with Matpower Data Files

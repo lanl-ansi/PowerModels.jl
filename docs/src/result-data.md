@@ -22,7 +22,7 @@ At the top level the results data dictionary is structured as follows:
 
 ### Machine Data
 
-This object provides basic information about the hardware that was 
+This object provides basic information about the hardware that was
 used when the run command was called.
 
 ```json
@@ -34,7 +34,7 @@ used when the run command was called.
 
 ### Case Data
 
-This object provides basic information about the network cases that was 
+This object provides basic information about the network cases that was
 used when the run command was called.
 
 ```json
@@ -47,9 +47,9 @@ used when the run command was called.
 
 ### Solution Data
 
-The solution object provides detailed information about the solution 
-produced by the run command.  The solution is organized similarly to 
-[The Network Data Dictionary](@ref) with the same nested structure and 
+The solution object provides detailed information about the solution
+produced by the run command.  The solution is organized similarly to
+[The Network Data Dictionary](@ref) with the same nested structure and
 parameter names, when available.  A network solution most often only includes
 a small subset of the data included in the network data.
 
@@ -59,8 +59,6 @@ For example the data for a bus, `data["bus"]["1"]` is structured as follows,
 {
 "bus_i": 1,
 "bus_type": 3,
-"pd":1.0,
-"qd":0.37,
 "vm":1.0,
 "va":0.0,
 ...
@@ -76,8 +74,8 @@ A solution specifying a voltage magnitude and angle would for the same case, i.e
 }
 ```
 
-Because the data dictionary and the solution dictionary have the same structure 
-PowerModels provides an `update_data` helper function which can be used to 
+Because the data dictionary and the solution dictionary have the same structure
+PowerModels provides an `update_data` helper function which can be used to
 update a data diction with the values from a solution as follows,
 
 ```
