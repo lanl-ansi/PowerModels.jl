@@ -40,3 +40,27 @@ build_typed_dict
 extend_case_data
 mp_data_to_pm_data
 ```
+
+## PTI Data Files (PSS/E)
+
+**Note: This feature is currently in development, and only the parsing of PTI
+files into a `Dict` containing all of the raw data directly from the PTI file
+is currently supported. No data conversion to a PowerModels supported format
+is available yet.**
+
+The following method is the main exported method for parsing PTI data files:
+
+```@docs
+parse_pti
+```
+
+The following internal helper methods are also provided:
+
+```@docs
+get_pti_sections
+get_pti_dtypes
+parse_line_element!
+add_section_data!
+get_line_elements
+parse_pti_data
+```
