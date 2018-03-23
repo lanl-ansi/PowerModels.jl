@@ -226,7 +226,7 @@ function get_pti_dtypes(field_name::AbstractString)::OrderedDict
                                       "MULTI-TERMINAL DC NCONV" => multi_term_nconv_dtypes,
                                       "MULTI-TERMINAL DC NDCBS" => multi_term_ndcbs_dtypes,
                                       "MULTI-TERMINAL DC NDCLN" => multi_term_ndcln_dtypes,
-                                      "MULTI-SELECTION" => multi_section_dtypes,
+                                      "MULTI-SECTION LINE" => multi_section_dtypes,
                                       "ZONE" => zone_dtypes,
                                       "INTER-AREA TRANSFER" => interarea_dtypes,
                                       "OWNER" => owner_dtypes,
