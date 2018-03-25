@@ -21,10 +21,10 @@ function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw; bounded = tru
     w_index = 1:length(keys(pm.ref[:nw][n][:bus]))
     lookup_w_index = Dict([(bi,i) for (i,bi) in enumerate(keys(pm.ref[:nw][n][:bus]))])
 
-    WR = pm.var[:nw][n][:WR] = @variable(pm.model, 
+    WR = pm.var[:nw][n][:WR] = @variable(pm.model,
         [1:length(keys(pm.ref[:nw][n][:bus])), 1:length(keys(pm.ref[:nw][n][:bus]))], Symmetric, basename="$(n)_WR"
     )
-    WI = pm.var[:nw][n][:WI] = @variable(pm.model, 
+    WI = pm.var[:nw][n][:WI] = @variable(pm.model,
         [1:length(keys(pm.ref[:nw][n][:bus])), 1:length(keys(pm.ref[:nw][n][:bus]))], basename="$(n)_WI"
     )
 
@@ -91,4 +91,3 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: Abstrac
     #    relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     #end
 end
-
