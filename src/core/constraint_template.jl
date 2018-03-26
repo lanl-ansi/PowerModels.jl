@@ -503,11 +503,17 @@ function constraint_power_losses(pm::GenericPowerModel, n::Int, i)
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
-
-    g, b = calc_branch_y(branch)
+    r = branch["br_r"]
+    x = branch["br_x"]
     c = branch["br_b"]
     tm = branch["tap"]
-    constraint_power_losses(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tm)
+
+    # to support asymmetric shunts + conductance
+    g_sh_fr = 0
+    g_sh_to = 0
+    b_sh_fr = c/2
+    b_sh_to = c/2
+    constraint_power_losses(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
 
 end
 constraint_power_losses(pm::GenericPowerModel, i::Int) = constraint_power_losses(pm, pm.cnw, i)

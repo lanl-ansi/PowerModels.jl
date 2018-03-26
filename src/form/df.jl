@@ -37,25 +37,14 @@ end
 """
 Creates branch flow model equations, including voltage drops
 """
-function constraint_power_losses(pm::GenericPowerModel{T}, n::Int, l, f_bus, t_bus, f_idx, t_idx, g, b, c, tm) where T <: AbstractDFForm
+function constraint_power_losses(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r_s, x_s, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
     q_to = pm.var[:nw][n][:q][t_idx]
     w_fr = pm.var[:nw][n][:w][f_bus]
     w_to = pm.var[:nw][n][:w][t_bus]
-    ccm =    pm.var[:nw][n][:ccm][l]
-
-    # convert series admittance to impedance
-    z_s = 1/(g + im*b)
-    r_s = real(z_s)
-    x_s = imag(z_s)
-
-    # to support asymmetric shunts + conductance
-    g_sh_fr = 0
-    g_sh_to = 0
-    b_sh_fr = c/2
-    b_sh_to = c/2
+    ccm =    pm.var[:nw][n][:ccm][i]
 
     @constraint(pm.model, p_fr + p_to ==  g_sh_fr*(w_fr/tm^2) + r_s*ccm +  g_sh_to*w_to)
     @constraint(pm.model, q_fr + q_to == -b_sh_fr*(w_fr/tm^2) + x_s*ccm + -b_sh_to*w_to)
