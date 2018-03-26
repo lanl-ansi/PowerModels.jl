@@ -352,27 +352,3 @@ function variable_branch_ne(pm::GenericPowerModel, n::Int=pm.cnw)
         start = getstart(branches, l, "branch_tnep_start", 1.0)
     )
 end
-
-
-"variable: `0 <= i[l] <= (Imax)^2` for `l` in `branch`es"
-function variable_series_current_magnitude_sqr(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
-    v_pu = 1  #assuming 1 pu voltage to derive current value from apparent power
-    # should data model be expanded?
-    bigM = 2  #w.r.t total current, shunt currents add or substract
-    # therefore, big M needed for series current magnitude
-    # constraint limiting total current needs to be defined separately
-    # TODO derive exact bound
-    if bounded
-        pm.var[:nw][n][:i] = @variable(pm.model,
-            [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_i",
-            lowerbound = 0,
-            upperbound = (pm.ref[:nw][n][:branch][l]["rate_a"]*bigM/v_pu)^2,
-            start = getstart(pm.ref[:nw][n][:branch], l, "i_start")
-        )
-    else
-        pm.var[:nw][n][:i] = @variable(pm.model,
-            [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_i",  #assuming 1 pu voltage
-            start = getstart(pm.ref[:nw][n][:branch], l, "i_start")
-        )
-    end
-end

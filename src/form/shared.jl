@@ -19,8 +19,7 @@
 #
 
 AbstractWRForms = Union{AbstractACTForm, AbstractWRForm, AbstractWRMForm}
-AbstractWForms = Union{AbstractWRForms, AbstractWIForm}
-
+AbstractWForms = Union{AbstractWRForms, AbstractDFForm}
 AbstractPForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm}
 
 "`t[ref_bus] == 0`"
