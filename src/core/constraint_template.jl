@@ -495,3 +495,18 @@ function constraint_loss_lb(pm::GenericPowerModel, n::Int, i::Int)
     constraint_loss_lb(pm, n, f_bus, t_bus, f_idx, t_idx, c, tr)
 end
 constraint_loss_lb(pm::GenericPowerModel, i::Int) = constraint_loss_lb(pm, pm.cnw, i)
+
+function constraint_power_losses(pm::GenericPowerModel, n::Int, i)
+    branch = ref(pm, n, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    g, b = calc_branch_y(branch)
+    c = branch["br_b"]
+    tm = branch["tap"]
+    constraint_power_losses(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tm)
+
+end
+constraint_power_losses(pm::GenericPowerModel, i::Int) = constraint_power_losses(pm, pm.cnw, i)

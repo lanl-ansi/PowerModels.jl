@@ -34,18 +34,16 @@ end
 function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: AbstractDFForm
 end
 
-
 """
-Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
+Creates branch flow model equations, including voltage drops
 """
-function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) where T <: AbstractDFForm
+function constraint_power_losses(pm::GenericPowerModel{T}, n::Int, l, f_bus, t_bus, f_idx, t_idx, g, b, c, tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
     q_to = pm.var[:nw][n][:q][t_idx]
     w_fr = pm.var[:nw][n][:w][f_bus]
     w_to = pm.var[:nw][n][:w][t_bus]
-    l = f_idx[1]
     ccm =    pm.var[:nw][n][:ccm][l]
 
     # convert series admittance to impedance
@@ -69,19 +67,11 @@ function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus,
     q_to_s = q_to + g_sh_to*w_to
 
     #KVL over the line:
-    @constraint(pm.model, w_to == (w_fr/tm^2) - 2(r_s*p_fr_s + x_s*q_fr_s) + (r_s^2 + x_s^2)*ccm)
+    @constraint(pm.model, w_to == (w_fr/tm^2) - 2*(r_s*p_fr_s + x_s*q_fr_s) + (r_s^2 + x_s^2)*ccm)
 
     #convex constraint linking P, Q, W and I
     @constraint(pm.model, p_fr_s^2 +q_fr_s^2 <= (w_fr/tm^2)*ccm)
 end
-
-
-"""
-Do nothing, as there is no second ohm's constraint in a branch flow model
-"""
-function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) where T <: AbstractDFForm
-end
-
 
 function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax) where T <: AbstractDFForm
     # how to evolve the constraint template? - new method definition only for this formulation?

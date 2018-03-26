@@ -17,6 +17,23 @@
 # first double check if a different type hierarchy can resolve the issue
 # instead.
 #
+AbstractBIMForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm, AbstractWRForm, AbstractWRMForm}
+AbstractBFMForms = Union{AbstractDFForm}
+
+"compatibility of BFM formulations with opf problem type (implicit BIM)"
+function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int) where T <: AbstractBFMForms
+    constraint_power_losses(pm::GenericPowerModel{T}, n::Int)
+end
+
+"compatibility of BFM formulations with opf problem type (implicit BIM)"
+function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int) where T <: AbstractBFMForms
+end
+
+"compatibility of BIM formulations with opf_bf problem type"
+function constraint_power_losses(pm::GenericPowerModel{T}, i::Int) where {T <: AbstractBIMForms}
+    constraint_ohms_yt_from(pm, i)
+    constraint_ohms_yt_to(pm, i)
+end
 
 AbstractWRForms = Union{AbstractACTForm, AbstractWRForm, AbstractWRMForm}
 AbstractWForms = Union{AbstractWRForms, AbstractDFForm}
