@@ -9,6 +9,7 @@ PowerModels.jl Change Log
 - Updated struct and type parameter syntax to Julia v0.6 (breaking)
 - Fixed a mathematical bug when swapping the orientation of a transformer
 - Added support for parsing of PTI raw files into a Dict
+- Updated branch mathematical model and Matpower parser to support asymmetrical line charging
 
 ### v0.5.1
 - Added support for convex piecewise linear cost functions

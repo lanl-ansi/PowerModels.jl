@@ -118,7 +118,7 @@ Creates Ohms constraints (yt post fix indicates that Y and T values are in recta
 p[f_idx] == -b*(t[f_bus] - t[t_bus])
 ```
 """
-function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) where T <: AbstractDCPForm
+function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: AbstractDCPForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
@@ -128,10 +128,10 @@ function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus,
 end
 
 "Do nothing, this model is symmetric"
-function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) where T <: AbstractDCPForm
+function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm) where T <: AbstractDCPForm
 end
 
-function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
+function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
     p_fr = pm.var[:nw][n][:p_ne][f_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
@@ -142,7 +142,7 @@ function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, 
 end
 
 "Do nothing, this model is symmetric"
-function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
+function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
 end
 
 "`-rate_a <= p[f_idx] <= rate_a`"
@@ -172,7 +172,7 @@ function constraint_voltage_on_off(pm::GenericPowerModel{T}, n::Int) where T <: 
 end
 
 "`-b*(t[f_bus] - t[t_bus] + vad_min*(1-branch_z[i])) <= p[f_idx] <= -b*(t[f_bus] - t[t_bus] + vad_max*(1-branch_z[i]))`"
-function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
+function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
@@ -183,7 +183,7 @@ function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, i, f_b
 end
 
 "Do nothing, this model is symmetric"
-function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
+function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
 end
 
 """
@@ -271,7 +271,7 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) where T <: AbstractDCPLLForm
+function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: AbstractDCPLLForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
@@ -283,7 +283,7 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) where T <: AbstractDCPLLForm
+function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm) where T <: AbstractDCPLLForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
@@ -295,7 +295,7 @@ end
 
 """
 """
-function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
+function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
@@ -308,7 +308,7 @@ end
 
 """
 """
-function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
+function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
@@ -324,7 +324,7 @@ end
 
 """
 """
-function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
+function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
     p_fr = pm.var[:nw][n][:p_ne][f_idx]
     p_to = pm.var[:nw][n][:p_ne][t_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
@@ -337,7 +337,7 @@ end
 
 """
 """
-function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
+function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
     p_fr = pm.var[:nw][n][:p_ne][f_idx]
     p_to = pm.var[:nw][n][:p_ne][t_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]

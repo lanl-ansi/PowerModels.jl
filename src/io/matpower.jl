@@ -444,6 +444,14 @@ function mp2pm_branch(data::Dict{String,Any})
         else
             branch["transformer"] = true
         end
+
+        branch["g_fr"] = 0.0
+        branch["g_to"] = 0.0
+
+        branch["b_fr"] = branch["br_b"] / 2.0
+        branch["b_to"] = branch["br_b"] / 2.0
+
+        delete!(branch, "br_b")
     end
 end
 
