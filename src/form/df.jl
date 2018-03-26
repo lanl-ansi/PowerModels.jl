@@ -37,7 +37,7 @@ end
 """
 Defines branch flow model line equations
 """
-function constraint_power_flow_losses(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r_s, x_s, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm) where T <: AbstractDFForm
+function constraint_branch_flow_losses(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r_s, x_s, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
@@ -54,7 +54,7 @@ end
 """
 Defines KVL over a line, linking from and to side voltage magnitude
 """
-function constraint_kvl(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r_s, x_s, g_sh_fr, b_sh_fr, tm) where T <: AbstractDFForm
+function constraint_branch_kvl(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r_s, x_s, g_sh_fr, b_sh_fr, tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
     w_fr = pm.var[:nw][n][:w][f_bus]
@@ -71,9 +71,9 @@ function constraint_kvl(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx
 end
 
 """
-Defines relationship between line power flow, line current and node voltage
+Defines relationship between line series power flow, line series current and node voltage
 """
-function constraint_series_current(pm::GenericPowerModel{T}, n::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr,tm) where T <: AbstractDFForm
+function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr,tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
     w_fr = pm.var[:nw][n][:w][f_bus]

@@ -46,9 +46,9 @@ function post_pf_bf(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :branch)
-        constraint_power_flow_losses(pm, i)
-        constraint_kvl(pm, i)
-        constraint_series_current(pm, i)
+        constraint_branch_flow_losses(pm, i)
+        constraint_branch_kvl(pm, i)
+        constraint_branch_current(pm, i)
     end
 
     for (i,dcline) in ref(pm, :dcline)

@@ -35,9 +35,9 @@ function post_opf_bf(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :branch)
-        constraint_power_flow_losses(pm, i)
-        constraint_kvl(pm, i)
-        constraint_series_current(pm, i)
+        constraint_branch_flow_losses(pm, i)
+        constraint_branch_kvl(pm, i)
+        constraint_branch_current(pm, i)
 
         #constraint_voltage_angle_difference(pm, i)
 
