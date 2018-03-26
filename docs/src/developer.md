@@ -2,24 +2,39 @@
 
 ## Variable naming scheme
 
-### Voltage
-- vm: magnitude of (complex) voltage
-- va: angle of complex voltage
-- vr: real part of (complex) voltage
-- vi: imaginary part of complex voltage
+### Power
+Defining power $s = p + j \cdot q$ and $sm = |s|$
+- s: complex power (VA)
+- sm: apparent power (VA)
+- p: active power (W)
+- q: reactive power (var)
 
-therefore: $vm \angle va = vr + j \cdot vi$
+### Voltage
+Defining voltage $v = vm \angle va = vr + j \cdot vi$:
+- vm: magnitude of (complex) voltage (V)
+- va: angle of complex voltage (rad)
+- vr: real part of (complex) voltage (V)
+- vi: imaginary part of complex voltage (V)
 
 ### Current
-- cm: magnitude of (complex) current
-- ca: angle of complex current
-- cr: real part of (complex) current
-- ci: imaginary part of complex current
-therefore: $cm \angle ca = cr + j \cdot ci$
+Defining current $c = cm \angle ca = cr + j \cdot ci$:
+- cm: magnitude of (complex) current (A)
+- ca: angle of complex current (rad)
+- cr: real part of (complex) current (A)
+- ci: imaginary part of complex current (A)
 
+### Voltage products
+Defining voltage product $w = v_i \cdot v_j$ then
+$w = wm \angle wa = wr + j\cdot wi$:
+- wm (short for vvm): magnitude of (complex) voltage products (V$^2$)
+- wa (short for vva): angle of complex voltage products (rad)
+- wr (short for vvr): real part of (complex) voltage products (V$^2$)
+- wi (short for vvi): imaginary part of complex voltage products (V$^2$)
 
-### Power
-- p: active power, i.e. the real part of (complex) power
-- q: reactive power, i.e. the imaginary part of complex power
-- s: apparent power, i.e. the magnitude of (complex) power
-therefore: $s = |p + j \cdot q|$
+### Current products
+Defining current product $cc = c_i \cdot c_j$ then
+$cc = ccm \angle cca = ccr + j\cdot cci$:
+- ccm: magnitude of (complex) current products (A$^2$)
+- cca: angle of complex current products (rad)
+- ccr: real part of (complex) current products (A$^2$)
+- cci: imaginary part of complex current products (A$^2$)

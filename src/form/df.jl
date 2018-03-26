@@ -1,4 +1,4 @@
-# contains (balanced) DistFlow formulation
+# contains (balanced) convexified DistFlow formulation
 export
     SOCDFPowerModel, SOCDFForm
 ""
@@ -46,7 +46,7 @@ function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus,
     w_fr = pm.var[:nw][n][:w][f_bus]
     w_to = pm.var[:nw][n][:w][t_bus]
     l = f_idx[1]
-    cm =    pm.var[:nw][n][:cm][l]
+    ccm =    pm.var[:nw][n][:ccm][l]
 
     # convert series admittance to impedance
     z_s = 1/(g + im*b)
@@ -59,8 +59,8 @@ function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus,
     b_sh_fr = c/2
     b_sh_to = c/2
 
-    @constraint(pm.model, p_fr + p_to ==  g_sh_fr*(w_fr/tm^2) + r_s*cm +  g_sh_to*w_to)
-    @constraint(pm.model, q_fr + q_to == -b_sh_fr*(w_fr/tm^2) + x_s*cm + -b_sh_to*w_to)
+    @constraint(pm.model, p_fr + p_to ==  g_sh_fr*(w_fr/tm^2) + r_s*ccm +  g_sh_to*w_to)
+    @constraint(pm.model, q_fr + q_to == -b_sh_fr*(w_fr/tm^2) + x_s*ccm + -b_sh_to*w_to)
 
     #define series flow expressions to simplify KVL equation
     p_fr_s = p_fr - g_sh_fr*(w_fr/tm^2)
@@ -69,10 +69,10 @@ function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus,
     q_to_s = q_to + g_sh_to*w_to
 
     #KVL over the line:
-    @constraint(pm.model, w_to == (w_fr/tm^2) - 2(r_s*p_fr_s + x_s*q_fr_s) + (r_s^2 + x_s^2)*cm)
+    @constraint(pm.model, w_to == (w_fr/tm^2) - 2(r_s*p_fr_s + x_s*q_fr_s) + (r_s^2 + x_s^2)*ccm)
 
     #convex constraint linking P, Q, W and I
-    @constraint(pm.model, p_fr_s^2 +q_fr_s^2 <= (w_fr/tm^2)*cm)
+    @constraint(pm.model, p_fr_s^2 +q_fr_s^2 <= (w_fr/tm^2)*ccm)
 end
 
 
@@ -149,15 +149,15 @@ function variable_series_current_magnitude_sqr(pm::GenericPowerModel, n::Int=pm.
     # constraint limiting *total* current magnitude needs to be defined separately
     # TODO derive exact bound
     if bounded
-        pm.var[:nw][n][:cm] = @variable(pm.model,
-            [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_cm",
+        pm.var[:nw][n][:ccm] = @variable(pm.model,
+            [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_ccm",
             lowerbound = 0,
             upperbound = (pm.ref[:nw][n][:branch][l]["rate_a"]*bigM/v_pu)^2,
             start = getstart(pm.ref[:nw][n][:branch], l, "i_start")
         )
     else
-        pm.var[:nw][n][:i] = @variable(pm.model,
-            [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_cm",  #assuming 1 pu voltage
+        pm.var[:nw][n][:ccm] = @variable(pm.model,
+            [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_ccm",
             start = getstart(pm.ref[:nw][n][:branch], l, "i_start")
         )
     end
