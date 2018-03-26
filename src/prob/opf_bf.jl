@@ -1,6 +1,5 @@
 export run_opf_bf, run_ac_opf_bf, run_dc_opf_bf
 
-
 ""
 function run_ac_opf_bf(file, solver; kwargs...)
     return run_opf_bf(file, ACPPowerModel, solver; kwargs...)
@@ -36,7 +35,9 @@ function post_opf_bf(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :branch)
-        constraint_power_losses(pm, i)
+        constraint_power_flow_losses(pm, i)
+        constraint_kvl(pm, i)
+        constraint_series_current(pm, i)
 
         #constraint_voltage_angle_difference(pm, i)
 

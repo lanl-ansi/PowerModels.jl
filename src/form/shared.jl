@@ -21,18 +21,34 @@ AbstractBIMForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm, Abst
 AbstractBFMForms = Union{AbstractDFForm}
 
 "compatibility of BFM formulations with opf problem type (implicit BIM)"
-function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int) where T <: AbstractBFMForms
-    constraint_power_losses(pm::GenericPowerModel{T}, n::Int)
+function constraint_ohms_yt_from(pm::GenericPowerModel{T}, i::Int) where T <: AbstractBFMForms
+    warn(LOGGER, "you're using the BIM problem type to solve a BFM formulation, is this really what you want to accomplish?")
+    constraint_power_flow_losses(pm, i)
+    constraint_kvl(pm, i)
+    constraint_series_current(pm, i)
 end
 
 "compatibility of BFM formulations with opf problem type (implicit BIM)"
-function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int) where T <: AbstractBFMForms
+function constraint_ohms_yt_to(pm::GenericPowerModel{T}, i::Int) where T <: AbstractBFMForms
 end
 
 "compatibility of BIM formulations with opf_bf problem type"
-function constraint_power_losses(pm::GenericPowerModel{T}, i::Int) where {T <: AbstractBIMForms}
+function constraint_power_flow_losses(pm::GenericPowerModel{T}, i::Int) where {T <: AbstractBIMForms}
+    warn(LOGGER, "you're using the BFM problem type to solve a BIM formulation, is this really what you want to accomplish?")
     constraint_ohms_yt_from(pm, i)
     constraint_ohms_yt_to(pm, i)
+end
+
+"compatibility of BIM formulations with opf_bf problem type"
+function constraint_kvl(pm::GenericPowerModel{T}, i::Int) where {T <: AbstractBIMForms}
+end
+
+"compatibility of BIM formulations with opf_bf problem type"
+function constraint_series_current(pm::GenericPowerModel{T}, i::Int) where {T <: AbstractBIMForms}
+end
+
+"compatibility of BIM formulations with opf_bf problem type"
+function constraint_kvl(pm::GenericPowerModel{T}, i::Int) where {T <: AbstractBIMForms}
 end
 
 AbstractWRForms = Union{AbstractACTForm, AbstractWRForm, AbstractWRMForm}

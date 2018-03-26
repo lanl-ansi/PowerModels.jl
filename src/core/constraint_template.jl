@@ -497,7 +497,7 @@ function constraint_loss_lb(pm::GenericPowerModel, n::Int, i::Int)
 end
 constraint_loss_lb(pm::GenericPowerModel, i::Int) = constraint_loss_lb(pm, pm.cnw, i)
 
-function constraint_power_losses(pm::GenericPowerModel, n::Int, i)
+function constraint_power_flow_losses(pm::GenericPowerModel, n::Int, i)
     branch = ref(pm, n, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -513,7 +513,40 @@ function constraint_power_losses(pm::GenericPowerModel, n::Int, i)
     g_sh_to = 0
     b_sh_fr = c/2
     b_sh_to = c/2
-    constraint_power_losses(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
+    constraint_power_flow_losses(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
+end
+constraint_power_flow_losses(pm::GenericPowerModel, i::Int) = constraint_power_flow_losses(pm, pm.cnw, i)
+
+function constraint_kvl(pm::GenericPowerModel, n::Int, i)
+    branch = ref(pm, n, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+    r = branch["br_r"]
+    x = branch["br_x"]
+    c = branch["br_b"]
+    tm = branch["tap"]
+    c = branch["br_b"]
+    g_sh_fr = 0
+    b_sh_fr = c/2
+
+    constraint_kvl(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm)
 
 end
-constraint_power_losses(pm::GenericPowerModel, i::Int) = constraint_power_losses(pm, pm.cnw, i)
+constraint_kvl(pm::GenericPowerModel, i::Int) = constraint_kvl(pm, pm.cnw, i)
+
+
+function constraint_series_current(pm::GenericPowerModel, n::Int, i)
+    branch = ref(pm, n, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    tm = branch["tap"]
+    c = branch["br_b"]
+    g_sh_fr = 0
+    b_sh_fr = c/2
+
+    constraint_series_current(pm::GenericPowerModel, n::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm)
+end
+constraint_series_current(pm::GenericPowerModel, i::Int) = constraint_series_current(pm, pm.cnw, i)

@@ -14,15 +14,15 @@ const SOCDFPowerModel = GenericPowerModel{SOCDFForm}
 SOCDFPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCDFForm; kwargs...)
 
 ""
-function variable_current(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...) where T <: AbstractDFForm
-    variable_series_current_magnitude_sqr(pm, n; kwargs...)
+function variable_branch_current(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...) where T <: AbstractDFForm
+    variable_branch_series_current_magnitude_sqr(pm, n; kwargs...)
 end
 
 ""
 function variable_branch_flow(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...) where T <: AbstractDFForm
     variable_active_branch_flow(pm, n; kwargs...)
     variable_reactive_branch_flow(pm, n; kwargs...)
-    variable_current(pm, n; kwargs...)
+    variable_branch_current(pm, n; kwargs...)
 end
 
 ""
@@ -35,32 +35,58 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: Abstrac
 end
 
 """
-Creates branch flow model equations, including voltage drops
+Defines branch flow model line equations
 """
-function constraint_power_losses(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r_s, x_s, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm) where T <: AbstractDFForm
+function constraint_power_flow_losses(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r_s, x_s, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
     q_to = pm.var[:nw][n][:q][t_idx]
     w_fr = pm.var[:nw][n][:w][f_bus]
     w_to = pm.var[:nw][n][:w][t_bus]
-    ccm =    pm.var[:nw][n][:ccm][i]
+    ccm =  pm.var[:nw][n][:ccm][i]
 
     @constraint(pm.model, p_fr + p_to ==  g_sh_fr*(w_fr/tm^2) + r_s*ccm +  g_sh_to*w_to)
     @constraint(pm.model, q_fr + q_to == -b_sh_fr*(w_fr/tm^2) + x_s*ccm + -b_sh_to*w_to)
+end
 
-    #define series flow expressions to simplify KVL equation
+
+"""
+Defines KVL over a line, linking from and to side voltage magnitude
+"""
+function constraint_kvl(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r_s, x_s, g_sh_fr, b_sh_fr, tm) where T <: AbstractDFForm
+    p_fr = pm.var[:nw][n][:p][f_idx]
+    q_fr = pm.var[:nw][n][:q][f_idx]
+    w_fr = pm.var[:nw][n][:w][f_bus]
+    w_to = pm.var[:nw][n][:w][t_bus]
+    ccm =    pm.var[:nw][n][:ccm][i]
+
+    #define series flow expressions to simplify KVL equality
     p_fr_s = p_fr - g_sh_fr*(w_fr/tm^2)
-    p_to_s = p_to - g_sh_to*w_to
     q_fr_s = q_fr + b_sh_fr*(w_fr/tm^2)
-    q_to_s = q_to + g_sh_to*w_to
 
     #KVL over the line:
     @constraint(pm.model, w_to == (w_fr/tm^2) - 2*(r_s*p_fr_s + x_s*q_fr_s) + (r_s^2 + x_s^2)*ccm)
 
+end
+
+"""
+Defines relationship between line power flow, line current and node voltage
+"""
+function constraint_series_current(pm::GenericPowerModel{T}, n::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr,tm) where T <: AbstractDFForm
+    p_fr = pm.var[:nw][n][:p][f_idx]
+    q_fr = pm.var[:nw][n][:q][f_idx]
+    w_fr = pm.var[:nw][n][:w][f_bus]
+    ccm =  pm.var[:nw][n][:ccm][i]
+
+    #define series flow expressions to simplify constraint
+    p_fr_s = p_fr - g_sh_fr*(w_fr/tm^2)
+    q_fr_s = q_fr + b_sh_fr*(w_fr/tm^2)
+
     #convex constraint linking p, q, w and ccm
     @constraint(pm.model, p_fr_s^2 +q_fr_s^2 <= (w_fr/tm^2)*ccm)
 end
+
 
 function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, arc_from, f_bus, t_bus, angmin, angmax) where T <: AbstractDFForm
     # how to evolve the constraint template? - new method definition only for this formulation?
@@ -73,8 +99,6 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, a
     tm = branch["tap"]
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
-
-
 
     # convert series admittance to impedance
     z_s = 1/(g + im*b)
@@ -123,7 +147,7 @@ end
 
 
 "variable: `0 <= i[l] <= (Imax)^2` for `l` in `branch`es"
-function variable_series_current_magnitude_sqr(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
+function variable_branch_series_current_magnitude_sqr(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
     v_pu = 1  #assuming 1 pu voltage to derive current value from apparent power
     # should data model be expanded?
     bigM = 2  #w.r.t total current, which is supposed to be bound in magnitude by Imax, shunt currents add or substract
