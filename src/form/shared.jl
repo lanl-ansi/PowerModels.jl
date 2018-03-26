@@ -143,7 +143,7 @@ end
 
 
 ""
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax) where T <: AbstractWRForms
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, arc_from, f_bus, t_bus, angmin, angmax) where T <: AbstractWRForms
     w_fr = pm.var[:nw][n][:w][f_bus]
     w_to = pm.var[:nw][n][:w][t_bus]
     wr = pm.var[:nw][n][:wr][(f_bus, t_bus)]
