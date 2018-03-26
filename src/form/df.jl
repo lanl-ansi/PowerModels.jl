@@ -69,22 +69,23 @@ function constraint_power_losses(pm::GenericPowerModel{T}, n::Int, l, f_bus, t_b
     #KVL over the line:
     @constraint(pm.model, w_to == (w_fr/tm^2) - 2*(r_s*p_fr_s + x_s*q_fr_s) + (r_s^2 + x_s^2)*ccm)
 
-    #convex constraint linking P, Q, W and I
+    #convex constraint linking p, q, w and ccm
     @constraint(pm.model, p_fr_s^2 +q_fr_s^2 <= (w_fr/tm^2)*ccm)
 end
 
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax) where T <: AbstractDFForm
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, arc_from, f_bus, t_bus, angmin, angmax) where T <: AbstractDFForm
     # how to evolve the constraint template? - new method definition only for this formulation?
+    i = arc_from[1]
+    f_idx = arc_from
+    t_idx = (i, t_bus, f_bus)
+
     branch = ref(pm, n, :branch, i)
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    g, b = calc_branch_y(branch)
-    tr, ti = calc_branch_t(branch)
     c = branch["br_b"]
     tm = branch["tap"]
+    g, b = calc_branch_y(branch)
+    tr, ti = calc_branch_t(branch)
 
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, f_bus, t_bus)
+
 
     # convert series admittance to impedance
     z_s = 1/(g + im*b)
@@ -100,9 +101,11 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, i
     # getting the variables
     w_fr = pm.var[:nw][n][:w][f_bus]
     w_to = pm.var[:nw][n][:w][t_bus]
+
     p_fr = pm.var[:nw][n][:p][f_idx]
-    q_fr = pm.var[:nw][n][:q][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
+
+    q_fr = pm.var[:nw][n][:q][f_idx]
     q_to = pm.var[:nw][n][:q][t_idx]
 
     #todo: adapt for asymmetric shunts + shunt conductance
