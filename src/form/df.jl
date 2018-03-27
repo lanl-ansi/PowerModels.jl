@@ -34,7 +34,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: Abstrac
 end
 
 """
-Defines branch flow model line equations
+Defines branch flow model power flow equations
 """
 function constraint_flow_losses(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
@@ -51,7 +51,7 @@ end
 
 
 """
-Defines voltage drop over a line, linking from and to side voltage magnitude
+Defines voltage drop over a branch, linking from and to side voltage magnitude
 """
 function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
@@ -70,7 +70,7 @@ function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::In
 end
 
 """
-Defines relationship between line series power flow, line series current and node voltage
+Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
 function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
