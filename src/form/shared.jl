@@ -17,35 +17,6 @@
 # first double check if a different type hierarchy can resolve the issue
 # instead.
 #
-AbstractBIMForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm, AbstractWRForm, AbstractWRMForm}
-AbstractBFMForms = Union{AbstractDFForm}
-
-"compatibility of BFM formulations with opf problem type (implicit BIM)"
-function constraint_ohms_yt_from(pm::GenericPowerModel{T}, i::Int) where T <: AbstractBFMForms
-    warn(LOGGER, "you're using the BIM problem type to solve a BFM formulation, is this really what you want to accomplish?")
-    constraint_branch_flow_losses(pm, i)
-    constraint_branch_kvl(pm, i)
-    constraint_branch_current(pm, i)
-end
-
-"compatibility of BFM formulations with opf problem type (implicit BIM)"
-function constraint_ohms_yt_to(pm::GenericPowerModel{T}, i::Int) where T <: AbstractBFMForms
-end
-
-"compatibility of BIM formulations with opf_bf problem type"
-function constraint_branch_flow_losses(pm::GenericPowerModel{T}, i::Int) where {T <: AbstractBIMForms}
-    warn(LOGGER, "you're using the BFM problem type to solve a BIM formulation, is this really what you want to accomplish?")
-    constraint_ohms_yt_from(pm, i)
-    constraint_ohms_yt_to(pm, i)
-end
-
-"compatibility of BIM formulations with opf_bf problem type"
-function constraint_branch_kvl(pm::GenericPowerModel{T}, i::Int) where {T <: AbstractBIMForms}
-end
-
-"compatibility of BIM formulations with opf_bf problem type"
-function constraint_branch_current(pm::GenericPowerModel{T}, i::Int) where {T <: AbstractBIMForms}
-end
 
 AbstractWRForms = Union{AbstractACTForm, AbstractWRForm, AbstractWRMForm}
 AbstractWForms = Union{AbstractWRForms, AbstractDFForm}

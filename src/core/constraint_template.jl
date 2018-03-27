@@ -497,7 +497,7 @@ function constraint_loss_lb(pm::GenericPowerModel, n::Int, i::Int)
 end
 constraint_loss_lb(pm::GenericPowerModel, i::Int) = constraint_loss_lb(pm, pm.cnw, i)
 
-function constraint_branch_flow_losses(pm::GenericPowerModel, n::Int, i)
+function constraint_flow_losses(pm::GenericPowerModel, n::Int, i)
     branch = ref(pm, n, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -513,11 +513,11 @@ function constraint_branch_flow_losses(pm::GenericPowerModel, n::Int, i)
     g_sh_to = 0
     b_sh_fr = c/2
     b_sh_to = c/2
-    constraint_branch_flow_losses(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
+    constraint_flow_losses(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
 end
-constraint_branch_flow_losses(pm::GenericPowerModel, i::Int) = constraint_branch_flow_losses(pm, pm.cnw, i)
+constraint_flow_losses(pm::GenericPowerModel, i::Int) = constraint_flow_losses(pm, pm.cnw, i)
 
-function constraint_branch_kvl(pm::GenericPowerModel, n::Int, i)
+function constraint_voltage_magnitude_difference(pm::GenericPowerModel, n::Int, i)
     branch = ref(pm, n, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -531,10 +531,10 @@ function constraint_branch_kvl(pm::GenericPowerModel, n::Int, i)
     g_sh_fr = 0
     b_sh_fr = c/2
 
-    constraint_branch_kvl(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm)
+    constraint_voltage_magnitude_difference(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm)
 
 end
-constraint_branch_kvl(pm::GenericPowerModel, i::Int) = constraint_branch_kvl(pm, pm.cnw, i)
+constraint_voltage_magnitude_difference(pm::GenericPowerModel, i::Int) = constraint_voltage_magnitude_difference(pm, pm.cnw, i)
 
 
 function constraint_branch_current(pm::GenericPowerModel, n::Int, i)
