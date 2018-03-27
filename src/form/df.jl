@@ -36,7 +36,7 @@ end
 """
 Defines branch flow model line equations
 """
-function constraint_flow_losses(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r_s, x_s, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm) where T <: AbstractDFForm
+function constraint_flow_losses(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
@@ -45,38 +45,38 @@ function constraint_flow_losses(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bu
     w_to = pm.var[:nw][n][:w][t_bus]
     ccm =  pm.var[:nw][n][:ccm][i]
 
-    @constraint(pm.model, p_fr + p_to ==  g_sh_fr*(w_fr/tm^2) + r_s*ccm +  g_sh_to*w_to)
-    @constraint(pm.model, q_fr + q_to == -b_sh_fr*(w_fr/tm^2) + x_s*ccm + -b_sh_to*w_to)
+    @constraint(pm.model, p_fr + p_to ==  g_sh_fr*(w_fr/tm^2) + r*ccm +  g_sh_to*w_to)
+    @constraint(pm.model, q_fr + q_to == -b_sh_fr*(w_fr/tm^2) + x*ccm + -b_sh_to*w_to)
 end
 
 
 """
-Defines KVL over a line, linking from and to side voltage magnitude
+Defines voltage drop over a line, linking from and to side voltage magnitude
 """
-function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r_s, x_s, g_sh_fr, b_sh_fr, tm) where T <: AbstractDFForm
+function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
     w_fr = pm.var[:nw][n][:w][f_bus]
     w_to = pm.var[:nw][n][:w][t_bus]
-    ccm =    pm.var[:nw][n][:ccm][i]
+    ccm =  pm.var[:nw][n][:ccm][i]
 
-    #define series flow expressions to simplify KVL equality
+    #define series flow expressions to simplify Ohm's law
     p_fr_s = p_fr - g_sh_fr*(w_fr/tm^2)
     q_fr_s = q_fr + b_sh_fr*(w_fr/tm^2)
 
     #KVL over the line:
-    @constraint(pm.model, w_to == (w_fr/tm^2) - 2*(r_s*p_fr_s + x_s*q_fr_s) + (r_s^2 + x_s^2)*ccm)
+    @constraint(pm.model, w_to == (w_fr/tm^2) - 2*(r*p_fr_s + x*q_fr_s) + (r^2 + x^2)*ccm)
 
 end
 
 """
 Defines relationship between line series power flow, line series current and node voltage
 """
-function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr,tm) where T <: AbstractDFForm
+function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
     w_fr = pm.var[:nw][n][:w][f_bus]
-    ccm =  pm.var[:nw][n][:ccm][i]
+    ccm  = pm.var[:nw][n][:ccm][i]
 
     #define series flow expressions to simplify constraint
     p_fr_s = p_fr - g_sh_fr*(w_fr/tm^2)
