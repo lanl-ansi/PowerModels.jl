@@ -120,28 +120,22 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, a
     q_fr = pm.var[:nw][n][:q][f_idx]
     q_to = pm.var[:nw][n][:q][t_idx]
 
-    #todo: adapt for asymmetric shunts + shunt conductance
+    #TODO: adapt for asymmetric shunts + shunt conductance
     tzr = r_s*tr - x_s*ti
     tzi = r_s*ti + x_s*tr
-    a1 = ( tr - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr
-    a2 = (-ti - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr
-    a3 = ( tr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr
-    a4 = (-ti - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr
+    # a1 = (( tr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
+    # a2 = ((-ti - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
+    # a3 = (( tr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
+    # a4 = ((-ti - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
+    @constraint(pm.model,
+        tan(angmin)*(( tr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
+                 <= ((-ti - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
+        )
+    @constraint(pm.model,
+        tan(angmax)*(( tr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
+                 >= ((-ti - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
+        )
 
-    # tr = 1
-    # ti = 0
-    # tm = 1
-    # tzr = r_s*tr - x_s*ti
-    # tzi = r_s*ti + x_s*tr
-    # a5 = ( tr - tzr*b_sh_to)*(w_to/tm^2) - tzr*p_to - tzi*q_to
-    # a6 = (-ti - tzr*b_sh_to)*(w_to/tm^2) - tzr*q_to + tzi*p_to
-    # a7 = ( tr - tzi*b_sh_to)*(w_to/tm^2) - tzr*p_to - tzi*q_to
-    # a8 = (-ti - tzr*b_sh_to)*(w_to/tm^2) - tzr*q_to + tzi*p_to
-
-    @constraint(pm.model, tan(angmin)*a1 <= a2)
-    @constraint(pm.model, tan(angmax)*a3 >= a4)
-    #@constraint(pm.model, tan(angmin)*a5 <= a6)
-    #@constraint(pm.model, tan(angmax)*a7 >= a8)
 end
 
 

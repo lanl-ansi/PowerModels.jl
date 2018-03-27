@@ -1,17 +1,10 @@
 export run_pf_bf, run_ac_pf_bf, run_dc_pf_bf
 
 ""
-function run_ac_pf_bf(file, solver; kwargs...)
-    return run_pf_bf(file, ACPPowerModel, solver; kwargs...)
-end
-
-""
-function run_dc_pf_bf(file, solver; kwargs...)
-    return run_pf_bf(file, DCPPowerModel, solver; kwargs...)
-end
-
-""
 function run_pf_bf(file, model_constructor, solver; kwargs...)
+    if model_constructor != SOCDFPowerModel
+        error(LOGGER, "The problem type pf_bf at the moment only supports the SOCDFForm formulation")
+    end
     return run_generic_model(file, model_constructor, solver, post_pf_bf; kwargs...)
 end
 

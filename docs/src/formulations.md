@@ -20,7 +20,6 @@ SOCWRForm <: AbstractWRForm
 QCWRForm <: AbstractWRForm
 
 SOCDFForm <: AbstractWForm
-
 ```
 
 ## Power Models

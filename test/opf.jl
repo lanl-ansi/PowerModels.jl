@@ -235,47 +235,6 @@ end
     end
 end
 
-
-@testset "test soc distflow opf" begin
-    @testset "3-bus case" begin
-        result = run_opf("../test/data/case3.m", SOCDFPowerModel, ipopt_solver)
-
-        @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 5746.7; atol = 1e0)
-    end
-    @testset "5-bus transformer swap case" begin
-        result = run_opf("../test/data/case5.m", SOCDFPowerModel, ipopt_solver)
-
-        @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 15051; atol = 1e0)
-    end
-    @testset "5-bus asymmetric case" begin
-        result = run_opf("../test/data/case5_asym.m", SOCDFPowerModel, ipopt_solver)
-
-        @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 14999; atol = 1e0)
-    end
-    @testset "5-bus with pwl costs" begin
-        result = run_opf("../test/data/case5_pwlc.m", SOCDFPowerModel, ipopt_solver)
-
-        @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 42895; atol = 1e0)
-    end
-    @testset "6-bus case" begin
-        result = run_opf("../test/data/case6.m", SOCDFPowerModel, ipopt_solver)
-
-        @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 11560; atol = 1e0)
-    end
-    @testset "24-bus rts case" begin
-        result = run_opf("../test/data/case24.m", SOCDFPowerModel, ipopt_solver)
-
-        @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 70598.8; atol = 1e0)
-    end
-end
-
-
 @testset "test soc distflow opf_bf" begin
     @testset "3-bus case" begin
         result = run_opf_bf("../test/data/case3.m", SOCDFPowerModel, ipopt_solver)
@@ -311,7 +270,7 @@ end
         result = run_opf_bf("../test/data/case24.m", SOCDFPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 63344.6; atol = 1e0)
+        @test isapprox(result["objective"], 70690.7; atol = 1e0)
     end
 end
 
