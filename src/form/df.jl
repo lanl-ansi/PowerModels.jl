@@ -19,18 +19,8 @@ function variable_branch_current(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs
 end
 
 ""
-function variable_branch_flow(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...) where T <: AbstractDFForm
-    variable_active_branch_flow(pm, n; kwargs...)
-    variable_reactive_branch_flow(pm, n; kwargs...)
-end
-
-""
 function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...) where T <: AbstractDFForm
     variable_voltage_magnitude_sqr(pm, n; kwargs...)
-end
-
-"do nothing, this model does not have complex voltage constraints"
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: AbstractDFForm
 end
 
 """
@@ -123,10 +113,7 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, a
     #TODO: adapt for asymmetric shunts + shunt conductance
     tzr = r_s*tr - x_s*ti
     tzi = r_s*ti + x_s*tr
-    # a1 = (( tr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
-    # a2 = ((-ti - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
-    # a3 = (( tr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
-    # a4 = ((-ti - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
+
     @constraint(pm.model,
         tan(angmin)*(( tr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
                  <= ((-ti - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
@@ -141,17 +128,14 @@ end
 
 "variable: `0 <= i[l] <= (Imax)^2` for `l` in `branch`es"
 function variable_branch_series_current_magnitude_sqr(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
-    v_pu = 1  #assuming 1 pu voltage to derive current value from apparent power
-    # should data model be expanded?
-    bigM = 2  #w.r.t total current, which is supposed to be bound in magnitude by Imax, shunt currents add or substract
-    # therefore, big M needed for series current magnitude
-    # constraint limiting *total* current magnitude needs to be defined separately
-    # TODO derive exact bound
+    branches = pm.ref[:nw][n][:branch]
+    buses = pm.ref[:nw][n][:bus]
+    cmax =  calc_series_current_magnitude_bound(branches, buses)
     if bounded
         pm.var[:nw][n][:ccm] = @variable(pm.model,
             [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_ccm",
             lowerbound = 0,
-            upperbound = (pm.ref[:nw][n][:branch][l]["rate_a"]*bigM/v_pu)^2,
+            upperbound = (cmax[l])^2,
             start = getstart(pm.ref[:nw][n][:branch], l, "i_start")
         )
     else
