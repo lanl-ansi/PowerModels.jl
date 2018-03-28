@@ -348,7 +348,10 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     merge_generator_cost_data(pm_data)
     merge_generic_data(pm_data)
 
-    # update lookup structure
+    # split loads and shunts from buses
+    split_loads_shunts(pm_data)
+
+    # # update lookup structure
     for (k,v) in pm_data
         if isa(v, Array)
             #println("updating $(k)")
@@ -364,6 +367,36 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     return pm_data
 end
 
+
+"""
+    split_loads_shunts(data)
+
+Seperates Loads and Shunts in `data` under separate "load" and "shunt" keys in the
+PowerModels data format. Includes references to originating bus via "load_bus"
+and "shunt_bus" keys, respectively.
+"""
+function split_loads_shunts(data::Dict{String,Any})
+    data["load"] = []
+    data["shunt"] = []
+
+    load_num = 1
+    shunt_num = 1
+    for (i,bus) in enumerate(data["bus"])
+        if bus["pd"] != 0.0 || bus["qd"] != 0.0
+            append!(data["load"], [Dict{String,Any}("pd" => bus["pd"], "qd" => bus["qd"], "load_bus" => bus["bus_i"], "status" => bus["bus_type"] != 4, "index" => load_num)])
+            load_num += 1
+        end
+
+        if bus["gs"] != 0.0 || bus["bs"] != 0.0
+            append!(data["shunt"], [Dict{String,Any}("gs" => bus["gs"], "bs" => bus["bs"], "shunt_bus" => bus["bus_i"], "status" => bus["bus_type"] != 4, "index" => shunt_num)])
+            shunt_num += 1
+        end
+
+        for key in ["pd", "qd", "gs", "bs"]
+            delete!(bus, key)
+        end
+    end
+end
 
 
 "ensures all polynomial costs functions have at least three terms"

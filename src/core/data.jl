@@ -177,16 +177,24 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
-            apply_func(bus, "pd", rescale)
-            apply_func(bus, "qd", rescale)
-
-            apply_func(bus, "gs", rescale)
-            apply_func(bus, "bs", rescale)
-
             apply_func(bus, "va", deg2rad)
 
             apply_func(bus, "lam_kcl_r", rescale_dual)
             apply_func(bus, "lam_kcl_i", rescale_dual)
+        end
+    end
+
+    if haskey(data, "load")
+        for (i, load) in data["load"]
+            apply_func(load, "pd", rescale)
+            apply_func(load, "qd", rescale)
+        end
+    end
+
+    if haskey(data, "shunt")
+        for (i, shunt) in data["shunt"]
+            apply_func(shunt, "gs", rescale)
+            apply_func(shunt, "bs", rescale)
         end
     end
 
@@ -289,16 +297,24 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
-            apply_func(bus, "pd", rescale)
-            apply_func(bus, "qd", rescale)
-
-            apply_func(bus, "gs", rescale)
-            apply_func(bus, "bs", rescale)
-
             apply_func(bus, "va", rad2deg)
 
             apply_func(bus, "lam_kcl_r", rescale_dual)
             apply_func(bus, "lam_kcl_i", rescale_dual)
+        end
+    end
+
+    if haskey(data, "load")
+        for (i, load) in data["load"]
+            apply_func(load, "pd", rescale)
+            apply_func(load, "qd", rescale)
+        end
+    end
+
+    if haskey(data, "shunt")
+        for (i, shunt) in data["shunt"]
+            apply_func(shunt, "gs", rescale)
+            apply_func(shunt, "bs", rescale)
         end
     end
 

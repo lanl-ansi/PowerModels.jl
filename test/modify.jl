@@ -20,8 +20,8 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 195.896; atol = 1e-1)
 
-        data["bus"]["5"]["pd"] = 0
-        data["bus"]["5"]["qd"] = 0
+        data["load"]["4"]["pd"] = 0
+        data["load"]["4"]["qd"] = 0
 
         result = run_opf(data, ACPPowerModel, ipopt_solver)
         @test result["status"] == :LocalOptimal
@@ -43,8 +43,8 @@
                     \"gen_status\":0
                 }
             },
-            \"bus\":{
-                \"5\":{
+            \"load\":{
+                \"4\":{
                     \"pd\":0,
                     \"qd\":0
                 }

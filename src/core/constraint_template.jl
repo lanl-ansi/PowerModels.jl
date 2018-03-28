@@ -70,8 +70,16 @@ function constraint_kcl_shunt(pm::GenericPowerModel, n::Int, i::Int)
     bus_arcs = ref(pm, n, :bus_arcs, i)
     bus_arcs_dc = ref(pm, n, :bus_arcs_dc, i)
     bus_gens = ref(pm, n, :bus_gens, i)
+    bus_loads = ref(pm, n, :bus_loads, i)
+    bus_shunts = ref(pm, n, :bus_shunts, i)
 
-    constraint_kcl_shunt(pm, n, i, bus_arcs, bus_arcs_dc, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
+    pd = Dict(k => v["pd"] for (k,v) in ref(pm, n, :load))
+    qd = Dict(k => v["qd"] for (k,v) in ref(pm, n, :load))
+
+    gs = Dict(k => v["gs"] for (k,v) in ref(pm, n, :shunt))
+    bs = Dict(k => v["bs"] for (k,v) in ref(pm, n, :shunt))
+
+    constraint_kcl_shunt(pm, n, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs)
 end
 constraint_kcl_shunt(pm::GenericPowerModel, i::Int) = constraint_kcl_shunt(pm, pm.cnw, i::Int)
 
@@ -83,8 +91,16 @@ function constraint_kcl_shunt_ne(pm::GenericPowerModel, n::Int, i::Int)
     bus_arcs_dc = ref(pm, n, :bus_arcs_dc, i)
     bus_arcs_ne = ref(pm, n, :ne_bus_arcs, i)
     bus_gens = ref(pm, n, :bus_gens, i)
+    bus_loads = ref(pm, n, :bus_loads, i)
+    bus_shunts = ref(pm, n, :bus_shunts, i)
 
-    constraint_kcl_shunt_ne(pm, n, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus["pd"], bus["qd"], bus["gs"], bus["bs"])
+    pd = Dict(k => v["pd"] for (k,v) in ref(pm, n, :load))
+    qd = Dict(k => v["qd"] for (k,v) in ref(pm, n, :load))
+
+    gs = Dict(k => v["gs"] for (k,v) in ref(pm, n, :shunt))
+    bs = Dict(k => v["bs"] for (k,v) in ref(pm, n, :shunt))
+
+    constraint_kcl_shunt_ne(pm, n, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs)
 end
 constraint_kcl_shunt_ne(pm::GenericPowerModel, i::Int) = constraint_kcl_shunt_ne(pm, pm.cnw, i::Int)
 
