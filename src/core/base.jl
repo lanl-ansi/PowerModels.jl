@@ -6,6 +6,10 @@ export
     run_generic_model, build_generic_model, solve_generic_model,
     ids, ref, var, ext
 
+import MathOptInterface
+const MOI = MathOptInterface
+const MOIU = MOI.Utilities
+
 ""
 abstract type AbstractPowerFormulation end
 
@@ -116,8 +120,8 @@ ext(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ext[:nw][n][key][idx]
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
-function JuMP.setsolver(pm::GenericPowerModel, solver::MathProgBase.AbstractMathProgSolver)
-    setsolver(pm.model, solver)
+function setsolver(pm::GenericPowerModel, solver::MathProgBase.AbstractMathProgSolver)
+    MOIU.resetoptimizer!(pm.model, solver)
 end
 
 function JuMP.solve(pm::GenericPowerModel)
