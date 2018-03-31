@@ -91,24 +91,30 @@ end
 function constraint_reactive_gen_setpoint(pm::GenericPowerModel{T}, n::Int, i, qg) where T <: AbstractDCPForm
 end
 
+
 ""
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs) where T <: AbstractDCPForm
+function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs) where T <: AbstractDCPForm
     pg = pm.var[:nw][n][:pg]
     p = pm.var[:nw][n][:p]
     p_dc = pm.var[:nw][n][:p_dc]
+    load = pm.ref[:nw][n][:load]
+    shunt = pm.ref[:nw][n][:shunt]
 
-    pm.con[:nw][n][:kcl_p][i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
+    pm.con[:nw][n][:kcl_p][i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*1.0^2)
     # omit reactive constraint
 end
 
+
 ""
-function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, pd, qd, gs, bs) where T <: AbstractDCPForm
+function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs) where T <: AbstractDCPForm
     pg = pm.var[:nw][n][:pg]
     p = pm.var[:nw][n][:p]
     p_ne = pm.var[:nw][n][:p_ne]
     p_dc = pm.var[:nw][n][:p_dc]
+    load = pm.ref[:nw][n][:load]
+    shunt = pm.ref[:nw][n][:shunt]
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2)
+    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*1.0^2)
 end
 
 """
@@ -118,7 +124,7 @@ Creates Ohms constraints (yt post fix indicates that Y and T values are in recta
 p[f_idx] == -b*(t[f_bus] - t[t_bus])
 ```
 """
-function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) where T <: AbstractDCPForm
+function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: AbstractDCPForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
@@ -128,10 +134,10 @@ function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus,
 end
 
 "Do nothing, this model is symmetric"
-function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) where T <: AbstractDCPForm
+function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm) where T <: AbstractDCPForm
 end
 
-function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
+function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
     p_fr = pm.var[:nw][n][:p_ne][f_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
@@ -142,7 +148,7 @@ function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, 
 end
 
 "Do nothing, this model is symmetric"
-function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
+function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
 end
 
 "`-rate_a <= p[f_idx] <= rate_a`"
@@ -172,7 +178,7 @@ function constraint_voltage_on_off(pm::GenericPowerModel{T}, n::Int) where T <: 
 end
 
 "`-b*(t[f_bus] - t[t_bus] + vad_min*(1-branch_z[i])) <= p[f_idx] <= -b*(t[f_bus] - t[t_bus] + vad_max*(1-branch_z[i]))`"
-function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
+function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
@@ -183,7 +189,7 @@ function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, i, f_b
 end
 
 "Do nothing, this model is symmetric"
-function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
+function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
 end
 
 """
@@ -258,20 +264,23 @@ const DCPLLPowerModel = GenericPowerModel{StandardDCPLLForm}
 "default DC constructor"
 DCPLLPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, StandardDCPLLForm; kwargs...)
 
-"`sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)== sum(pg[g] for g in bus_gens) - pd - gs*1.0^2`"
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, pd, qd, gs, bs) where T <: AbstractDCPLLForm
+
+"`sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)== sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*1.0^2`"
+function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs) where T <: AbstractDCPLLForm
     pg = pm.var[:nw][n][:pg]
     p = pm.var[:nw][n][:p]
     p_dc = pm.var[:nw][n][:p_dc]
+    load = pm.ref[:nw][n][:load]
+    shunt = pm.ref[:nw][n][:shunt]
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - pd - gs*1.0^2i)
+    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*1.0^2)
 end
 
 
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) where T <: AbstractDCPLLForm
+function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: AbstractDCPLLForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
@@ -283,7 +292,7 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm) where T <: AbstractDCPLLForm
+function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm) where T <: AbstractDCPLLForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
@@ -295,7 +304,7 @@ end
 
 """
 """
-function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
+function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
@@ -308,7 +317,7 @@ end
 
 """
 """
-function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
+function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     p_to = pm.var[:nw][n][:p][t_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
@@ -324,7 +333,7 @@ end
 
 """
 """
-function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
+function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
     p_fr = pm.var[:nw][n][:p_ne][f_idx]
     p_to = pm.var[:nw][n][:p_ne][t_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
@@ -337,7 +346,7 @@ end
 
 """
 """
-function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, c, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
+function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPLLForm
     p_fr = pm.var[:nw][n][:p_ne][f_idx]
     p_to = pm.var[:nw][n][:p_ne][t_idx]
     va_fr = pm.var[:nw][n][:va][f_bus]
