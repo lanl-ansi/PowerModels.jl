@@ -4,8 +4,8 @@
 
 ### Suffixes
 
-- `_fr`: from-side (i)
-- `_to`: to-side (j)
+- `_fr`: from-side ('i'-node)
+- `_to`: to-side ('j'-node)
 
 ### Power
 
@@ -63,12 +63,20 @@ $t = tm \angle ta = tr + j\cdot ti$:
 Defining impedance
 $z = r + j\cdot x$:
 - `r`: resistance ($\Omega$)
-- `x`: impedance ($\Omega$)
+- `x`: reactance ($\Omega$)
+
+### Admittance
+
+Defining admittance
+$y = g + j\cdot b$:
+- `g`: conductance ($S$)
+- `b`: susceptance ($S$)
+
 
 ## DistFlow derivation
 
 ### For an asymmetric pi section
-Following notation of [^1], but recognizing it derives the SOC BFM without shunts. In a pi-section, part of the total current at the from side flows through the series impedance, part of it flows through the from side shunt admittance. Vice versa for the to-side. Indicated by superscripts 's' (series) and 'sh' (shunt).
+Following notation of [^1], but recognizing it derives the SOC BFM without shunts. In a pi-section, part of the total current $ I_{lij}$ at the from side flows through the series impedance, $I ^{s}_{lij}$, part of it flows through the from side shunt admittance $ I^{sh}_{lij}$. Vice versa for the to-side. Indicated by superscripts 's' (series) and 'sh' (shunt).
 - Ohm's law: $U^{mag}_{j} \angle \theta_{j} = U^{mag}_{i}\angle \theta_{i}  - z^{s}_{lij} \cdot I^{s}_{lij}$ $\forall lij$
 - KCL at shunts: $ I_{lij} = I^{s}_{lij} + I^{sh}_{lij}$, $ I_{lji} = I^{s}_{lji} + I^{sh}_{lji} $
 - Observing: $I^{s}_{lij} = - I^{s}_{lji}$, $ \vert I^{s}_{lij} \vert = \vert I^{s}_{lji} \vert $
@@ -105,9 +113,20 @@ Adding an ideal transformer at the from side implicitly creates an internal bran
 - new voltage: $w^{'}_{l}$
 - ideal voltage magnitude transformer: $w^{'}_{l} = \frac{w_{i}}{(t^{mag})^2}$
 
-W.r.t to the pi-section only formulation, we effectively perform the following substitution:
+W.r.t to the pi-section only formulation, we effectively perform the following substitution in all the equations above:
 - $ w_{i} \rightarrow \frac{w_{i}}{(t^{mag})^2}$
 
 The branch's power balance isn't otherwise impacted by adding the ideal transformer, as such transformer is lossless.
+
+### Adding total current limits
+- Total current from: $ \vert I_{lij} \vert \leq I^{rated}_{l}$
+- Total current to: $ \vert I_{lji} \vert \leq I^{rated}_{l}$
+
+In squared voltage magnitude variables:
+- Total current from: $ (P_{lij})^2$ + $(Q_{lij})^2  \leq (I^{rated}_{l})^2 \cdot  w_{i}$
+- Total current to: $ (P_{lji})^2$ + $(Q_{lji})^2  \leq (I^{rated}_{l})^2 \cdot w_{j}$
+
+
+
 
 [^1] Gan, L., Li, N., Topcu, U., & Low, S. (2012). Branch flow model for radial networks: convex relaxation. 51st IEEE Conference on Decision and Control, 1–8. Retrieved from http://smart.caltech.edu/papers/ExactRelaxation.pdf

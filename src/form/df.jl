@@ -78,7 +78,6 @@ end
 
 
 function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, arc_from, f_bus, t_bus, angmin, angmax) where T <: AbstractDFForm
-    # how to evolve the constraint template? - new method definition only for this formulation?
     i = arc_from[1]
     f_idx = arc_from
     t_idx = (i, t_bus, f_bus)
@@ -94,7 +93,7 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, a
     r_s = real(z_s)
     x_s = imag(z_s)
 
-    # to support asymmetric shunts + conductance
+    # to support asymmetric shunts + conductance in the future
     g_sh_fr = 0
     g_sh_to = 0
     b_sh_fr = c/2
@@ -110,19 +109,17 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, a
     q_fr = pm.var[:nw][n][:q][f_idx]
     q_to = pm.var[:nw][n][:q][t_idx]
 
-    #TODO: adapt for asymmetric shunts + shunt conductance
     tzr = r_s*tr - x_s*ti
     tzi = r_s*ti + x_s*tr
 
     @constraint(pm.model,
-        tan(angmin)*(( tr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
-                 <= ((-ti - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
+        tan(angmin)*(( tr + tzr*g_sh_fr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
+                 <= ((-ti - tzi*g_sh_fr - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
         )
     @constraint(pm.model,
-        tan(angmax)*(( tr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
-                 >= ((-ti - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
+        tan(angmax)*(( tr + tzr*g_sh_fr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
+                 >= ((-ti - tzi*g_sh_fr - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
         )
-
 end
 
 
