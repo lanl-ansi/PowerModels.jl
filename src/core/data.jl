@@ -651,7 +651,7 @@ computation and sets their status to off.
 
 Works on a PowerModels data dict, so that a it can be used without a GenericPowerModel object
 
-Warning: this implmentation has quadratic complexity, in the worst case
+Warning: this implementation has quadratic complexity, in the worst case
 """
 function propagate_topology_status(data::Dict{String,Any})
     buses = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
@@ -807,7 +807,9 @@ function propagate_topology_status(data::Dict{String,Any})
 end
 
 
-"determines the largest connected component of the network and turns everything else off"
+"""
+determines the largest connected component of the network and turns everything else off
+""
 function select_largest_component(data::Dict{String,Any})
     ccs = connected_components(data)
     info(LOGGER, "found $(length(ccs)) components")
@@ -831,7 +833,7 @@ end
 
 
 """
-checks that each connected components has a refrence bus, if not, adds one
+checks that each connected components has a reference bus, if not, adds one
 """
 function check_refrence_buses(data::Dict{String,Any})
     bus_lookup = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
@@ -857,15 +859,15 @@ function check_refrence_buses(data::Dict{String,Any})
     end
 
     for (i, cc) in enumerate(ccs_order)
-        check_refrence_bus(cc, bus_lookup, cc_gens[i], data)
+        check_component_refrence_bus(cc, bus_lookup, cc_gens[i], data)
     end
 end
 
 
 """
-checks that each connected components has a refrence bus, if not, adds one
+checks that a connected component has a reference bus, if not, adds one
 """
-function check_refrence_bus(component_bus_ids, bus_lookup, component_gens, data::Dict{String,Any})
+function check_component_refrence_bus(component_bus_ids, bus_lookup, component_gens, data::Dict{String,Any})
     refrence_buses = Set()
     for bus_id in component_bus_ids
         bus = bus_lookup[bus_id]
@@ -875,7 +877,7 @@ function check_refrence_bus(component_bus_ids, bus_lookup, component_gens, data:
     end
 
     if length(refrence_buses) == 0
-        warn(LOGGER, "no refrence bus found in connected component $(component_bus_ids)")
+        warn(LOGGER, "no reference bus found in connected component $(component_bus_ids)")
 
         if length(component_gens) > 0
             big_gen = biggest_generator(component_gens)
@@ -919,6 +921,7 @@ end
 
 """
 computes the connected components of the network graph
+returns a set of sets of bus ids, each set is a connected component
 """
 function connected_components(data::Dict{String,Any})
     active_bus = filter((i, bus) -> bus["bus_type"] != 4, data["bus"])
@@ -945,7 +948,7 @@ function connected_components(data::Dict{String,Any})
 
     for i in active_bus_ids
         if !(i in touched)
-            dfs(i, neighbors, component_lookup, touched)
+            _dfs(i, neighbors, component_lookup, touched)
         end
     end
 
@@ -958,7 +961,7 @@ end
 """
 performs DFS on a graph
 """
-function dfs(i, neighbors, component_lookup, touched)
+function _dfs(i, neighbors, component_lookup, touched)
     push!(touched, i)
     for j in neighbors[i]
         if !(j in touched)
@@ -966,7 +969,7 @@ function dfs(i, neighbors, component_lookup, touched)
             for k in new_comp
                 component_lookup[k] = new_comp
             end
-            dfs(j, neighbors, component_lookup, touched)
+            _dfs(j, neighbors, component_lookup, touched)
         end
     end
 end
