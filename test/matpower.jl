@@ -3,14 +3,14 @@ using JSON
 
 @testset "test matpower parser" begin
     @testset "30-bus case file" begin
-        result = run_opf("../test/data/case30.m", ACPPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case30.m", ACPPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
     end
 
     @testset "30-bus case matpower data" begin
-        data = PowerModels.parse_file("../test/data/case30.m")
+        data = PowerModels.parse_file("../test/data/matpower/case30.m")
         @test isa(JSON.json(data), String)
 
         result = run_opf(data, ACPPowerModel, ipopt_solver)
@@ -20,25 +20,25 @@ using JSON
     end
 
     @testset "14-bus case file with bus names" begin
-        data = PowerModels.parse_file("../test/data/case14.m")
+        data = PowerModels.parse_file("../test/data/matpower/case14.m")
         @test data["bus"]["1"]["bus_name"] == "Bus 1     HV"
         @test isa(JSON.json(data), String)
     end
 
     @testset "5-bus case file with pwl cost functions" begin
-        data = PowerModels.parse_file("../test/data/case5_pwlc.m")
+        data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
         @test data["gen"]["1"]["model"] == 1
         @test isa(JSON.json(data), String)
     end
 
     @testset "3-bus case file with hvdc lines" begin
-        data = PowerModels.parse_file("../test/data/case3.m")
+        data = PowerModels.parse_file("../test/data/matpower/case3.m")
         @test length(data["dcline"]) > 0
         @test isa(JSON.json(data), String)
     end
 
     @testset "2-bus case file with spaces" begin
-        result = run_pf("../test/data/case2.m", ACPPowerModel, ipopt_solver)
+        result = run_pf("../test/data/matpower/case2.m", ACPPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0.0; atol = 1e-1)
@@ -48,20 +48,20 @@ end
 
 @testset "test matpower data coercion" begin
     @testset "ACP Model" begin
-        result = run_opf("../test/data/case14.m", ACPPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case14.m", ACPPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 8081.5; atol = 1e0)
         #@test result["status"] = bus_name
     end
     @testset "DC Model" begin
-        result = run_opf("../test/data/case14.m", DCPPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case14.m", DCPPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 7642.6; atol = 1e0)
     end
     @testset "QC Model" begin
-        result = run_opf("../test/data/case14.m", QCWRPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case14.m", QCWRPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 8075.1; atol = 1e0)
@@ -71,7 +71,7 @@ end
 
 @testset "test matpower extentions parser" begin
     @testset "3-bus extended constants" begin
-        data = PowerModels.parse_file("../test/data/case3.m")
+        data = PowerModels.parse_file("../test/data/matpower/case3.m")
 
         @test data["const_int"] == 123
         @test data["const_float"] == 4.56
@@ -80,7 +80,7 @@ end
     end
 
     @testset "3-bus extended matrix" begin
-        data = PowerModels.parse_file("../test/data/case3.m")
+        data = PowerModels.parse_file("../test/data/matpower/case3.m")
 
         @test haskey(data, "areas")
         @test data["areas"]["1"]["col_1"] == 1
@@ -91,7 +91,7 @@ end
     end
 
     @testset "3-bus extended named matrix" begin
-        data = PowerModels.parse_file("../test/data/case3.m")
+        data = PowerModels.parse_file("../test/data/matpower/case3.m")
 
         @test haskey(data, "areas_named")
         @test data["areas_named"]["1"]["area"] == 4
@@ -102,7 +102,7 @@ end
     end
 
     @testset "3-bus extended predefined matrix" begin
-        data = PowerModels.parse_file("../test/data/case3.m")
+        data = PowerModels.parse_file("../test/data/matpower/case3.m")
 
         @test haskey(data, "areas_named")
         @test data["branch"]["1"]["rate_i"] == 50.2
@@ -115,7 +115,7 @@ end
     end
 
     @testset "3-bus extended matrix from cell" begin
-        data = PowerModels.parse_file("../test/data/case3.m")
+        data = PowerModels.parse_file("../test/data/matpower/case3.m")
 
         @test haskey(data, "areas_cells")
         @test data["areas_cells"]["1"]["col_1"] == "Area 1"
@@ -130,7 +130,7 @@ end
     end
 
     @testset "3-bus extended named matrix from cell" begin
-        data = PowerModels.parse_file("../test/data/case3.m")
+        data = PowerModels.parse_file("../test/data/matpower/case3.m")
 
         @test haskey(data, "areas_named_cells")
         @test data["areas_named_cells"]["1"]["area_name"] == "Area 1"
@@ -147,7 +147,7 @@ end
     end
 
     @testset "3-bus extended predefined matrix from cell" begin
-        data = PowerModels.parse_file("../test/data/case3.m")
+        data = PowerModels.parse_file("../test/data/matpower/case3.m")
 
         @test haskey(data, "areas_named")
         @test data["branch"]["1"]["name"] == "Branch 1"
@@ -160,7 +160,7 @@ end
     end
 
     @testset "3-bus tnep case" begin
-        data = PowerModels.parse_file("../test/data/case3_tnep.m")
+        data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
 
         @test haskey(data, "ne_branch")
         @test data["ne_branch"]["1"]["f_bus"] == 1
@@ -169,7 +169,7 @@ end
     end
 
     @testset "`build_ref` for 3-bus tnep case" begin
-        data = PowerModels.parse_file("../test/data/case3_tnep.m")
+        data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
         ref = PowerModels.build_ref(data)
 
         @assert !(data["multinetwork"])

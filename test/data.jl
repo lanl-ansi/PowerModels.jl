@@ -2,7 +2,7 @@
 
 @testset "test idempotent units transformations" begin
     @testset "3-bus case" begin
-        data = PowerModels.parse_file("../test/data/case3.m")
+        data = PowerModels.parse_file("../test/data/matpower/case3.m")
         data_base = deepcopy(data)
 
         PowerModels.make_mixed_units(data)
@@ -11,7 +11,7 @@
         @test compare_dict(data, data_base)
     end
     @testset "5-bus case" begin
-        data = PowerModels.parse_file("../test/data/case5_asym.m")
+        data = PowerModels.parse_file("../test/data/matpower/case5_asym.m")
         data_base = deepcopy(data)
 
         PowerModels.make_mixed_units(data)
@@ -20,7 +20,7 @@
         @test compare_dict(data, data_base)
     end
     @testset "5-bus case with pwl costs" begin
-        data = PowerModels.parse_file("../test/data/case5_pwlc.m")
+        data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
         data_base = deepcopy(data)
 
         PowerModels.make_mixed_units(data)
@@ -29,7 +29,7 @@
         @test compare_dict(data, data_base)
     end
     @testset "24-bus case" begin
-        data = PowerModels.parse_file("../test/data/case24.m")
+        data = PowerModels.parse_file("../test/data/matpower/case24.m")
         data_base = deepcopy(data)
 
         PowerModels.make_mixed_units(data)
@@ -40,7 +40,7 @@
 
 
     @testset "3-bus case solution" begin
-        result = run_ac_opf("../test/data/case3.m", ipopt_solver)
+        result = run_ac_opf("../test/data/matpower/case3.m", ipopt_solver)
         result_base = deepcopy(result)
 
         PowerModels.make_mixed_units(result["solution"])
@@ -49,7 +49,7 @@
         @test compare_dict(result, result_base)
     end
     @testset "5-bus case solution" begin
-        result = run_ac_opf("../test/data/case5_asym.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_ac_opf("../test/data/matpower/case5_asym.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
         result_base = deepcopy(result)
 
         PowerModels.make_mixed_units(result["solution"])
@@ -58,7 +58,7 @@
         @test compare_dict(result, result_base)
     end
     @testset "24-bus case solution" begin
-        result = run_ac_opf("../test/data/case24.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_ac_opf("../test/data/matpower/case24.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
         result_base = deepcopy(result)
 
         PowerModels.make_mixed_units(result["solution"])
@@ -69,7 +69,7 @@
 
 
     @testset "5-bus case solution with duals" begin
-        result = run_dc_opf("../test/data/case5.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true, "duals" => true)))
+        result = run_dc_opf("../test/data/matpower/case5.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true, "duals" => true)))
         result_base = deepcopy(result)
 
         PowerModels.make_mixed_units(result["solution"])
@@ -83,9 +83,9 @@ end
 
 @testset "test topology propagation" begin
     @testset "component status updates" begin
-        data_initial = PowerModels.parse_file("../test/data/case7_tplgy.m")
+        data_initial = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
 
-        data = PowerModels.parse_file("../test/data/case7_tplgy.m")
+        data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
         PowerModels.propagate_topology_status(data)
 
         @test length(data_initial["bus"]) == length(data["bus"])
@@ -122,7 +122,7 @@ end
     end
 
     @testset "connecected components" begin
-        data = PowerModels.parse_file("../test/data/case7_tplgy.m")
+        data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
         PowerModels.propagate_topology_status(data)
         cc = PowerModels.connected_components(data)
 
@@ -142,9 +142,9 @@ end
     end
 
     @testset "component filtering updates" begin
-        data_initial = PowerModels.parse_file("../test/data/case7_tplgy.m")
+        data_initial = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
 
-        data = PowerModels.parse_file("../test/data/case7_tplgy.m")
+        data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
         PowerModels.propagate_topology_status(data)
         PowerModels.select_largest_component(data)
 
@@ -182,7 +182,7 @@ end
     end
 
     @testset "output values" begin
-        data = PowerModels.parse_file("../test/data/case7_tplgy.m")
+        data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
         PowerModels.propagate_topology_status(data)
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
@@ -216,7 +216,7 @@ end
 
 @testset "test user ext init" begin
     @testset "3-bus case" begin
-        pm = build_generic_model("../test/data/case3.m", ACPPowerModel, PowerModels.post_opf, ext = Dict(:some_data => "bloop"))
+        pm = build_generic_model("../test/data/matpower/case3.m", ACPPowerModel, PowerModels.post_opf, ext = Dict(:some_data => "bloop"))
 
         #println(pm.ext)
 
