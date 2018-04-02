@@ -398,7 +398,11 @@ end
 
 
 "checks that phase angle differences are within 90 deg., if not tightens"
-function check_voltage_angle_differences(data, default_pad = 1.0472)
+function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1.0472)
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_voltage_angle_differences does not yet support multinetwork data")
+    end
+
     assert("per_unit" in keys(data) && data["per_unit"])
 
     for (i, branch) in data["branch"]
@@ -421,7 +425,11 @@ function check_voltage_angle_differences(data, default_pad = 1.0472)
 end
 
 "checks that each branch has a reasonable thermal rating, if not computes one"
-function check_thermal_limits(data)
+function check_thermal_limits(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_thermal_limits does not yet support multinetwork data")
+    end
+
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
@@ -452,7 +460,11 @@ end
 
 
 "checks that all parallel branches have the same orientation"
-function check_branch_directions(data)
+function check_branch_directions(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_branch_directions does not yet support multinetwork data")
+    end
+
     orientations = Set()
     for (i, branch) in data["branch"]
         orientation = (branch["f_bus"], branch["t_bus"])
@@ -477,12 +489,79 @@ function check_branch_directions(data)
 end
 
 
+"checks that all branches connect two distinct buses"
+function check_branch_loops(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_branch_loops does not yet support multinetwork data")
+    end
+
+    for (i, branch) in data["branch"]
+        if branch["f_bus"] == branch["t_bus"]
+            error(LOGGER, "both sides of branch $(i) connect to bus $(branch["f_bus"])")
+        end
+    end
+end
+
+
+"checks that all buses are unique and other components link to valid buses"
+function check_connectivity(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_connectivity does not yet support multinetwork data")
+    end
+
+    bus_ids = Set([bus["index"] for (i,bus) in data["bus"]])
+    assert(length(bus_ids) == length(data["bus"])) # if this is not true something very bad is going on
+
+    for (i, load) in data["load"]
+        if !(load["load_bus"] in bus_ids)
+            error(LOGGER, "bus $(load["load_bus"]) in load $(i) is not defined")
+        end
+    end
+
+    for (i, shunt) in data["shunt"]
+        if !(shunt["shunt_bus"] in bus_ids)
+            error(LOGGER, "bus $(shunt["shunt_bus"]) in shunt $(i) is not defined")
+        end
+    end
+
+    for (i, gen) in data["gen"]
+        if !(gen["gen_bus"] in bus_ids)
+            error(LOGGER, "bus $(gen["gen_bus"]) in generator $(i) is not defined")
+        end
+    end
+
+    for (i, branch) in data["branch"]
+        if !(branch["f_bus"] in bus_ids)
+            error(LOGGER, "from bus $(branch["f_bus"]) in branch $(i) is not defined")
+        end
+
+        if !(branch["t_bus"] in bus_ids)
+            error(LOGGER, "to bus $(branch["t_bus"]) in branch $(i) is not defined")
+        end
+    end
+
+    for (i, dcline) in data["dcline"]
+        if !(dcline["f_bus"] in bus_ids)
+            error(LOGGER, "from bus $(dcline["f_bus"]) in dcline $(i) is not defined")
+        end
+
+        if !(dcline["t_bus"] in bus_ids)
+            error(LOGGER, "to bus $(dcline["t_bus"]) in dcline $(i) is not defined")
+        end
+    end
+end
+
+
 """
 checks that each branch has a reasonable transformer parameters
 
-this is important becouse setting tap == 0.0 leads to NaN computations, which are hard to debug
+this is important because setting tap == 0.0 leads to NaN computations, which are hard to debug
 """
-function check_transformer_parameters(data)
+function check_transformer_parameters(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_transformer_parameters does not yet support multinetwork data")
+    end
+
     assert("per_unit" in keys(data) && data["per_unit"])
 
     for (i, branch) in data["branch"]
@@ -504,7 +583,11 @@ end
 
 
 "checks bus types are consistent with generator connections, if not, fixes them"
-function check_bus_types(data)
+function check_bus_types(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_bus_types does not yet support multinetwork data")
+    end
+
     bus_gens = Dict([(i, []) for (i,bus) in data["bus"]])
 
     for (i,gen) in data["gen"]
@@ -534,7 +617,11 @@ end
 
 
 "checks that parameters for dc lines are reasonable"
-function check_dcline_limits(data)
+function check_dcline_limits(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_dcline_limits does not yet support multinetwork data")
+    end
+
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
@@ -573,7 +660,11 @@ end
 
 
 "throws warnings if generator and dc line voltage setpoints are not consistent with the bus voltage setpoint"
-function check_voltage_setpoints(data)
+function check_voltage_setpoints(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_voltage_setpoints does not yet support multinetwork data")
+    end
+
     for (i,gen) in data["gen"]
         bus_id = gen["gen_bus"]
         bus = data["bus"]["$(bus_id)"]
@@ -601,7 +692,11 @@ end
 
 
 "throws warnings if cost functions are malformed"
-function check_cost_functions(data)
+function check_cost_functions(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_cost_functions does not yet support multinetwork data")
+    end
+
     for (i,gen) in data["gen"]
         _check_cost_functions(i,gen)
     end

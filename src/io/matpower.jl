@@ -358,7 +358,12 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
             dict = Dict{String,Any}()
             for item in v
                 assert("index" in keys(item))
-                dict[string(item["index"])] = item
+                key = string(item["index"])
+                if !(haskey(dict, key))
+                    dict[key] = item
+                else
+                    warn(LOGGER, "skipping component $(item["index"]) from the $(k) table because a component with the same id already exists")
+                end
             end
             pm_data[k] = dict
         end

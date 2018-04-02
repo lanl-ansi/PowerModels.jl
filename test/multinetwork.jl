@@ -203,6 +203,32 @@ PMs = PowerModels
         end
     end
 
+    @testset "2 period 5-bus dual variable case" begin
+        mn_data = build_mn_data("../test/data/case5.m")
+
+        @testset "test dc polar opf" begin
+            result = run_generic_model(mn_data, DCPPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true, setting = Dict("output" => Dict("duals" => true)))
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 35446; atol = 1e0)
+
+            for (i,nw_data) in result["solution"]["nw"]
+                for (i, bus) in nw_data["bus"]
+                    @test haskey(bus, "lam_kcl_r")
+                    @test bus["lam_kcl_r"] >= -4000 && bus["lam_kcl_r"] <= 0
+                    @test haskey(bus, "lam_kcl_i")
+                    @test isnan(bus["lam_kcl_i"])
+                end
+                for (i, branch) in nw_data["branch"]
+                    @test haskey(branch, "mu_sm_fr")
+                    @test branch["mu_sm_fr"] >= -1 && branch["mu_sm_fr"] <= 6000
+                    @test haskey(branch, "mu_sm_to")
+                    @test isnan(branch["mu_sm_to"])
+                end
+            end
+        end
+    end
+
     @testset "hybrid network case - polar" begin
         mn_data = build_mn_data("../test/data/case14.m", "../test/data/case24.m")
 
