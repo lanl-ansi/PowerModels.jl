@@ -388,12 +388,20 @@ function split_loads_shunts(data::Dict{String,Any})
     shunt_num = 1
     for (i,bus) in enumerate(data["bus"])
         if bus["pd"] != 0.0 || bus["qd"] != 0.0
-            append!(data["load"], [Dict{String,Any}("pd" => bus["pd"], "qd" => bus["qd"], "load_bus" => bus["bus_i"], "status" => bus["bus_type"] != 4, "index" => load_num)])
+            append!(data["load"], [Dict{String,Any}("pd" => bus["pd"],
+                                                    "qd" => bus["qd"],
+                                                    "load_bus" => bus["bus_i"],
+                                                    "status" => convert(Int8, bus["bus_type"] != 4),
+                                                    "index" => load_num)])
             load_num += 1
         end
 
         if bus["gs"] != 0.0 || bus["bs"] != 0.0
-            append!(data["shunt"], [Dict{String,Any}("gs" => bus["gs"], "bs" => bus["bs"], "shunt_bus" => bus["bus_i"], "status" => bus["bus_type"] != 4, "index" => shunt_num)])
+            append!(data["shunt"], [Dict{String,Any}("gs" => bus["gs"],
+                                                     "bs" => bus["bs"],
+                                                     "shunt_bus" => bus["bus_i"],
+                                                     "status" => convert(Int8, bus["bus_type"] != 4),
+                                                     "index" => shunt_num)])
             shunt_num += 1
         end
 

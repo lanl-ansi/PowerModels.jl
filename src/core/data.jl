@@ -765,13 +765,13 @@ function _propagate_topology_status(data::Dict{String,Any})
     incident_load = bus_load_lookup(data["load"], data["bus"])
     incident_active_load = Dict()
     for (i, load_list) in incident_load
-        incident_active_load[i] = filter(load -> load["status"], load_list)
+        incident_active_load[i] = filter(load -> load["status"] != 0, load_list)
     end
 
     incident_shunt = bus_shunt_lookup(data["shunt"], data["bus"])
     incident_active_shunt = Dict()
     for (i, shunt_list) in incident_shunt
-        incident_active_shunt[i] = filter(shunt -> shunt["status"], shunt_list)
+        incident_active_shunt[i] = filter(shunt -> shunt["status"] != 0, shunt_list)
     end
 
     incident_gen = bus_gen_lookup(data["gen"], data["bus"])
@@ -849,17 +849,17 @@ function _propagate_topology_status(data::Dict{String,Any})
 
                 else # bus type == 4
                     for load in incident_active_load[i]
-                        if load["status"]
+                        if load["status"] != 0
                             info(LOGGER, "deactivating load $(load["index"]) due to inactive bus $(i)")
-                            load["status"] = false
+                            load["status"] = 0
                             updated = true
                         end
                     end
 
                     for shunt in incident_active_shunt[i]
-                        if shunt["status"]
+                        if shunt["status"] != 0
                             info(LOGGER, "deactivating shunt $(shunt["index"]) due to inactive bus $(i)")
-                            shunt["status"] = false
+                            shunt["status"] = 0
                             updated = true
                         end
                     end
@@ -884,10 +884,10 @@ function _propagate_topology_status(data::Dict{String,Any})
             cc_active_loads = [0]
             cc_active_shunts = [0]
             cc_active_gens = [0]
-            
+
             for i in cc
                 cc_active_loads = push!(cc_active_loads, length(incident_active_load[i]))
-                cc_active_shunts = push!(cc_active_shunts, length(incident_active_shunt[i])) 
+                cc_active_shunts = push!(cc_active_shunts, length(incident_active_shunt[i]))
                 cc_active_gens = push!(cc_active_gens, length(incident_active_gen[i]))
             end
 
