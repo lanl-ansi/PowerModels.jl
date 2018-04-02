@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Dropped support for Julia v0.5 (breaking)
+- Added support for network topology processing
 - Migrated logging tools from Logging to Memento
 - Refactored Matlab and Matpower parsing functions
 - Refactored implementation of WRM formulation

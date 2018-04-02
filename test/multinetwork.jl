@@ -58,6 +58,94 @@ PMs = PowerModels
         end
     end
 
+
+    @testset "topology processing" begin
+        @testset "7-bus replicate status case" begin
+            mn_data = build_mn_data("../test/data/case7_tplgy.m")
+            PowerModels.propagate_topology_status(mn_data)
+
+            active_buses = Set(["2", "4", "5", "7"])
+            active_branches = Set(["8"])
+            active_dclines = Set(["3"])
+
+            for (i,nw_data) in mn_data["nw"]
+                for (i,bus) in nw_data["bus"]
+                    if i in active_buses
+                        @test bus["bus_type"] != 4
+                    else
+                        @test bus["bus_type"] == 4
+                    end
+                end
+
+                for (i,branch) in nw_data["branch"]
+                    if i in active_branches
+                        @test branch["br_status"] == 1
+                    else
+                        @test branch["br_status"] == 0
+                    end
+                end
+
+                for (i,dcline) in nw_data["dcline"]
+                    if i in active_dclines
+                        @test dcline["br_status"] == 1
+                    else
+                        @test dcline["br_status"] == 0
+                    end
+                end
+            end
+        end
+        @testset "7-bus replicate filer case" begin
+            mn_data = build_mn_data("../test/data/case7_tplgy.m")
+            PowerModels.propagate_topology_status(mn_data)
+            PowerModels.select_largest_component(mn_data)
+
+            active_buses = Set(["4", "5", "7"])
+            active_branches = Set(["8"])
+            active_dclines = Set(["3"])
+
+            for (i,nw_data) in mn_data["nw"]
+                for (i,bus) in nw_data["bus"]
+                    if i in active_buses
+                        @test bus["bus_type"] != 4
+                    else
+                        @test bus["bus_type"] == 4
+                    end
+                end
+
+                for (i,branch) in nw_data["branch"]
+                    if i in active_branches
+                        @test branch["br_status"] == 1
+                    else
+                        @test branch["br_status"] == 0
+                    end
+                end
+
+                for (i,dcline) in nw_data["dcline"]
+                    if i in active_dclines
+                        @test dcline["br_status"] == 1
+                    else
+                        @test dcline["br_status"] == 0
+                    end
+                end
+            end
+        end
+        @testset "7+14 hybrid filer case" begin
+            mn_data = build_mn_data("../test/data/case7_tplgy.m", "../test/data/case14.m")
+            PowerModels.propagate_topology_status(mn_data)
+            PowerModels.select_largest_component(mn_data)
+
+            case7_data = mn_data["nw"]["1"]
+            case14_data = mn_data["nw"]["2"]
+
+            case7_active_buses = filter((i, bus) -> bus["bus_type"] != 4, case7_data["bus"])
+            case14_active_buses = filter((i, bus) -> bus["bus_type"] != 4, case14_data["bus"])
+
+            @test length(case7_active_buses) == 3
+            @test length(case14_active_buses) == 14
+        end
+    end
+
+
     function post_mpopf_test(pm::GenericPowerModel)
         for (n, network) in pm.ref[:nw]
             PMs.variable_voltage(pm, n)

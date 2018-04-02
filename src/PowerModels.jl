@@ -12,6 +12,7 @@ import Compat: @__MODULE__
 
 # Create our module level logger (this will get precompiled)
 const LOGGER = getlogger(@__MODULE__)
+setlevel!(LOGGER, "info")
 
 # Register the module level logger at runtime so that folks can access the logger via `getlogger(PowerModels)`
 # NOTE: If this line is not included then the precompiled `PowerModels.LOGGER` won't be registered at runtime.
@@ -23,8 +24,8 @@ include("io/json.jl")
 include("io/common.jl")
 include("io/pti.jl")
 
-include("core/base.jl")
 include("core/data.jl")
+include("core/base.jl")
 include("core/variable.jl")
 include("core/constraint_template.jl")
 include("core/constraint.jl")
