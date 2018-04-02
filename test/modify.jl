@@ -2,7 +2,7 @@
 
 @testset "data modification tests" begin
     @testset "30-bus case file incremental" begin
-        data = PowerModels.parse_file("../test/data/case30.m")
+        data = PowerModels.parse_file("../test/data/matpower/case30.m")
 
         result = run_opf(data, ACPPowerModel, ipopt_solver)
         @test result["status"] == :LocalOptimal
@@ -29,7 +29,7 @@
     end
 
     @testset "30-bus case file batch" begin
-        data = PowerModels.parse_file("../test/data/case30.m")
+        data = PowerModels.parse_file("../test/data/matpower/case30.m")
 
         data_delta = JSON.parse("
         {

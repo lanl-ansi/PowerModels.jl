@@ -1,7 +1,7 @@
 
 @testset "test output api" begin
     @testset "24-bus rts case" begin
-        result = run_opf("../test/data/case24.m", ACPPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver)
 
         @test haskey(result, "solver") == true
         @test haskey(result, "status") == true
@@ -22,7 +22,7 @@ end
 
 @testset "test branch flow output" begin
     @testset "24-bus rts case ac opf" begin
-        result = run_opf("../test/data/case24.m", ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_opf("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
 
         @test haskey(result, "solver") == true
         @test haskey(result, "status") == true
@@ -48,7 +48,7 @@ end
 
     # A DCPPowerModel test is important because it does have variables for the reverse side of the branchs
     @testset "3-bus case dc opf" begin
-        result = run_opf("../test/data/case3.m", DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_opf("../test/data/matpower/case3.m", DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
 
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "branch") == true
@@ -70,7 +70,7 @@ end
 
 @testset "test dual value output" begin
     settings = Dict("output" => Dict("duals" => true))
-    result = run_dc_opf("../test/data/case14.m", ipopt_solver, setting = settings)
+    result = run_dc_opf("../test/data/matpower/case14.m", ipopt_solver, setting = settings)
 
     PowerModels.make_mixed_units(result["solution"])
     @testset "14 bus - kcl duals" begin
@@ -92,7 +92,7 @@ end
     end
 
 
-    result = run_dc_opf("../test/data/case5.m", ipopt_solver, setting = settings)
+    result = run_dc_opf("../test/data/matpower/case5.m", ipopt_solver, setting = settings)
 
     PowerModels.make_mixed_units(result["solution"])
     @testset "5 bus - kcl duals" begin
@@ -148,15 +148,15 @@ end
     end
 
     @testset "3-bus case" begin
-        solution_feedback("../test/data/case3.m", 5907)
+        solution_feedback("../test/data/matpower/case3.m", 5907)
     end
 
     @testset "5-bus asymmetric case" begin
-        solution_feedback("../test/data/case5_asym.m", 17551)
+        solution_feedback("../test/data/matpower/case5_asym.m", 17551)
     end
 
     @testset "5-bus with dcline costs" begin
-        solution_feedback("../test/data/case5_dc.m", 17760.2)
+        solution_feedback("../test/data/matpower/case5_dc.m", 17760.2)
     end
 
 end
