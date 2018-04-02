@@ -477,10 +477,19 @@ function check_branch_directions(data)
 end
 
 
+"checks that all branches connect two distinct buses"
+function check_branch_loops(data)
+    for (i, branch) in data["branch"]
+        if branch["f_bus"] == branch["t_bus"]
+            error(LOGGER, "both sides of branch $(i) connect to bus $(branch["f_bus"])")
+        end
+    end
+end
+
 """
 checks that each branch has a reasonable transformer parameters
 
-this is important becouse setting tap == 0.0 leads to NaN computations, which are hard to debug
+this is important because setting tap == 0.0 leads to NaN computations, which are hard to debug
 """
 function check_transformer_parameters(data)
     assert("per_unit" in keys(data) && data["per_unit"])
