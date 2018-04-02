@@ -654,6 +654,10 @@ Works on a PowerModels data dict, so that a it can be used without a GenericPowe
 Warning: this implementation has quadratic complexity, in the worst case
 """
 function propagate_topology_status(data::Dict{String,Any})
+    if data["multinetwork"]
+        error("propagate_topology_status does not yet support multinetwork data")
+    end
+
     buses = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
 
     # compute what active components are incident to each bus
@@ -809,8 +813,12 @@ end
 
 """
 determines the largest connected component of the network and turns everything else off
-""
+"""
 function select_largest_component(data::Dict{String,Any})
+    if data["multinetwork"]
+        error("select_largest_component does not yet support multinetwork data")
+    end
+
     ccs = connected_components(data)
     info(LOGGER, "found $(length(ccs)) components")
 
@@ -826,9 +834,7 @@ function select_largest_component(data::Dict{String,Any})
         end
     end
 
-    bus_lookup = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
-    bus_gen = bus_gen_lookup(data)
-    check_refrence_bus(largest_cc, bus_lookup, bus_gen, data)
+    check_refrence_buses(data)
 end
 
 
@@ -836,6 +842,10 @@ end
 checks that each connected components has a reference bus, if not, adds one
 """
 function check_refrence_buses(data::Dict{String,Any})
+    if data["multinetwork"]
+        error("check_refrence_buses does not yet support multinetwork data")
+    end
+
     bus_lookup = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
     bus_gen = bus_gen_lookup(data)
 
@@ -859,7 +869,7 @@ function check_refrence_buses(data::Dict{String,Any})
     end
 
     for (i, cc) in enumerate(ccs_order)
-        check_component_refrence_bus(cc, bus_lookup, cc_gens[i], data)
+        check_component_refrence_bus(cc, bus_lookup, cc_gens[i])
     end
 end
 
@@ -867,7 +877,7 @@ end
 """
 checks that a connected component has a reference bus, if not, adds one
 """
-function check_component_refrence_bus(component_bus_ids, bus_lookup, component_gens, data::Dict{String,Any})
+function check_component_refrence_bus(component_bus_ids, bus_lookup, component_gens)
     refrence_buses = Set()
     for bus_id in component_bus_ids
         bus = bus_lookup[bus_id]
@@ -893,6 +903,10 @@ end
 
 "builds a lookup list of what generators are connected to a given bus"
 function bus_gen_lookup(data::Dict{String,Any})
+    if data["multinetwork"]
+        error("bus_gen_lookup does not yet support multinetwork data")
+    end
+
     bus_gen = Dict(bus["bus_i"] => [] for (i,bus) in data["bus"])
     for (i,gen) in data["gen"]
         push!(bus_gen[gen["gen_bus"]], gen)
@@ -902,6 +916,10 @@ end
 
 "builds a lookup list of what loads are connected to a given bus"
 function bus_load_lookup(data::Dict{String,Any})
+    if data["multinetwork"]
+        error("bus_load_lookup does not yet support multinetwork data")
+    end
+
     bus_load = Dict(bus["bus_i"] => [] for (i,bus) in data["bus"])
     for (i,load) in data["load"]
         push!(bus_load[load["load_bus"]], load)
@@ -911,6 +929,10 @@ end
 
 "builds a lookup list of what shunts are connected to a given bus"
 function bus_shunt_lookup(data::Dict{String,Any})
+    if data["multinetwork"]
+        error("bus_shunt_lookup does not yet support multinetwork data")
+    end
+
     bus_shunt = Dict(bus["bus_i"] => [] for (i,bus) in data["bus"])
     for (i,shunt) in data["shunt"]
         push!(bus_shunt[shunt["shunt_bus"]], shunt)
@@ -924,6 +946,10 @@ computes the connected components of the network graph
 returns a set of sets of bus ids, each set is a connected component
 """
 function connected_components(data::Dict{String,Any})
+    if data["multinetwork"]
+        error("connected_components does not yet support multinetwork data")
+    end
+
     active_bus = filter((i, bus) -> bus["bus_type"] != 4, data["bus"])
     active_bus_ids = Set{Int64}([bus["bus_i"] for (i,bus) in active_bus])
     #println(active_bus_ids)
