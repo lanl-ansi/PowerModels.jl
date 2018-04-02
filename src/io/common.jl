@@ -17,6 +17,7 @@ end
 ""
 function check_network_data(data::Dict{String,Any})
     make_per_unit(data)
+    check_connectivity(data)
     check_transformer_parameters(data)
     check_voltage_angle_differences(data)
     check_thermal_limits(data)
