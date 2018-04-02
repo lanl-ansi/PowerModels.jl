@@ -13,6 +13,7 @@ PowerModels.jl Change Log
 - Updated branch mathematical model and Matpower parser to support asymmetrical line charging
 - Updated KCL constraint models to account for multiple loads and shunts per bus
 - Separated loads and shunts from buses in PowerModels data structure
+- Minor issues closed #51, #131, #220 
 
 ### v0.5.1
 - Added support for convex piecewise linear cost functions
