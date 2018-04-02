@@ -681,7 +681,11 @@ function propagate_topology_status(data::Dict{String,Any})
         push!(incident_branch[branch["t_bus"]], branch)
     end
 
-    #TODO process dc lines
+    incident_dcline = Dict(bus["bus_i"] => [] for (i,bus) in data["bus"])
+    for (i,dcline) in data["dcline"]
+        push!(incident_dcline[dcline["f_bus"]], dcline)
+        push!(incident_dcline[dcline["t_bus"]], dcline)
+    end
 
     updated = true
     iteration = 0
@@ -704,20 +708,35 @@ function propagate_topology_status(data::Dict{String,Any})
                 end
             end
 
+            for (i,dcline) in data["dcline"]
+                if dcline["br_status"] != 0
+                    f_bus = buses[dcline["f_bus"]]
+                    t_bus = buses[dcline["t_bus"]]
+
+                    if f_bus["bus_type"] == 4 || t_bus["bus_type"] == 4
+                        info(LOGGER, "deactivating dcline $(i):($(dcline["f_bus"]),$(dcline["t_bus"])) due to connecting bus status")
+                        dcline["br_status"] = 0
+                        updated = true
+                    end
+                end
+            end
+
             for (i,bus) in buses
                 if bus["bus_type"] != 4
-                    if length(incident_branch[i]) > 0
-                        incident_active_branch = sum([branch["br_status"] for branch in incident_branch[i]])
+                    if length(incident_branch[i]) + length(incident_dcline[i]) > 0
+                        incident_branch_count = sum([0; [branch["br_status"] for branch in incident_branch[i]]])
+                        incident_dcline_count = sum([0; [dcline["br_status"] for dcline in incident_dcline[i]]])
+                        incident_active_edge = incident_branch_count + incident_dcline_count
                     else
-                        incident_active_branch = 0
+                        incident_active_edge = 0
                     end
 
-                    #println("bus $(i) active branch $(incident_active_branch)")
+                    #println("bus $(i) active branch $(incident_active_edge)")
                     #println("bus $(i) active gen $(incident_active_gen)")
                     #println("bus $(i) active load $(incident_active_load)")
                     #println("bus $(i) active shunt $(incident_active_shunt)")
 
-                    if incident_active_branch == 1 && length(incident_active_gen[i]) == 0 && length(incident_active_load[i]) == 0 && length(incident_active_shunt[i]) == 0
+                    if incident_active_edge == 1 && length(incident_active_gen[i]) == 0 && length(incident_active_load[i]) == 0 && length(incident_active_shunt[i]) == 0
                         info(LOGGER, "deactivating bus $(i) due to dangling bus without generation and load")
                         bus["bus_type"] = 4
                         updated = true
@@ -911,6 +930,12 @@ function connected_components(data::Dict{String,Any})
         if branch["br_status"] != 0 && branch["f_bus"] in active_bus_ids && branch["t_bus"] in active_bus_ids
             push!(neighbors[branch["f_bus"]], branch["t_bus"])
             push!(neighbors[branch["t_bus"]], branch["f_bus"])
+        end
+    end
+    for (i,dcline) in data["dcline"]
+        if dcline["br_status"] != 0 && dcline["f_bus"] in active_bus_ids && dcline["t_bus"] in active_bus_ids
+            push!(neighbors[dcline["f_bus"]], dcline["t_bus"])
+            push!(neighbors[dcline["t_bus"]], dcline["f_bus"])
         end
     end
     #println(neighbors)

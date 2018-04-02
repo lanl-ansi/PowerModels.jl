@@ -93,8 +93,9 @@ end
         @test length(data_initial["gen"]) == length(data["gen"])
         @test length(data_initial["branch"]) == length(data["branch"])
 
-        active_buses = Set(["2", "4", "5"])
+        active_buses = Set(["2", "4", "5", "7"])
         active_branches = Set(["8"])
+        active_dclines = Set(["3"])
 
         for (i,bus) in data["bus"]
             if i in active_buses
@@ -112,6 +113,13 @@ end
             end
         end
 
+        for (i,dcline) in data["dcline"]
+            if i in active_dclines
+                @test dcline["br_status"] == 1
+            else
+                @test dcline["br_status"] == 0
+            end
+        end
     end
 
     @testset "component filtering updates" begin
@@ -125,8 +133,9 @@ end
         @test length(data_initial["gen"]) == length(data["gen"])
         @test length(data_initial["branch"]) == length(data["branch"])
 
-        active_buses = Set(["4", "5"])
+        active_buses = Set(["4", "5", "7"])
         active_branches = Set(["8"])
+        active_dclines = Set(["3"])
 
         for (i,bus) in data["bus"]
             if i in active_buses
@@ -144,6 +153,13 @@ end
             end
         end
 
+        for (i,dcline) in data["dcline"]
+            if i in active_dclines
+                @test dcline["br_status"] == 1
+            else
+                @test dcline["br_status"] == 0
+            end
+        end
     end
 
     @testset "output values" begin
@@ -152,11 +168,11 @@ end
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 1141; atol = 1e0)
+        @test isapprox(result["objective"], 1778; atol = 1e0)
 
         solution = result["solution"]
 
-        active_buses = Set(["2", "4", "5"])
+        active_buses = Set(["2", "4", "5", "7"])
         active_gens = Set(["2", "3"])
 
         for (i,bus) in data["bus"]
