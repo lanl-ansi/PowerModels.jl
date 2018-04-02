@@ -2,7 +2,7 @@
 % Test for component status pre-processing
 %
 
-function mpc = case5_tplgy
+function mpc = case7_tplgy
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 

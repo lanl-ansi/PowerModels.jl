@@ -84,9 +84,9 @@ end
 @testset "test topology propagation" begin
     @testset "component status updates" begin
 
-        data_initial = PowerModels.parse_file("../test/data/case5_tplgy.m")
+        data_initial = PowerModels.parse_file("../test/data/case7_tplgy.m")
 
-        data = PowerModels.parse_file("../test/data/case5_tplgy.m")
+        data = PowerModels.parse_file("../test/data/case7_tplgy.m")
         PowerModels.propagate_topology_status(data)
 
         @test length(data_initial["bus"]) == length(data["bus"])
@@ -123,9 +123,9 @@ end
     end
 
     @testset "component filtering updates" begin
-        data_initial = PowerModels.parse_file("../test/data/case5_tplgy.m")
+        data_initial = PowerModels.parse_file("../test/data/case7_tplgy.m")
 
-        data = PowerModels.parse_file("../test/data/case5_tplgy.m")
+        data = PowerModels.parse_file("../test/data/case7_tplgy.m")
         PowerModels.propagate_topology_status(data)
         PowerModels.select_largest_component(data)
 
@@ -163,7 +163,7 @@ end
     end
 
     @testset "output values" begin
-        data = PowerModels.parse_file("../test/data/case5_tplgy.m")
+        data = PowerModels.parse_file("../test/data/case7_tplgy.m")
         PowerModels.propagate_topology_status(data)
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
