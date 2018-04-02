@@ -83,7 +83,6 @@ end
 
 @testset "test topology propagation" begin
     @testset "component status updates" begin
-
         data_initial = PowerModels.parse_file("../test/data/case7_tplgy.m")
 
         data = PowerModels.parse_file("../test/data/case7_tplgy.m")
@@ -118,6 +117,26 @@ end
                 @test dcline["br_status"] == 1
             else
                 @test dcline["br_status"] == 0
+            end
+        end
+    end
+
+    @testset "connecected components" begin
+        data = PowerModels.parse_file("../test/data/case7_tplgy.m")
+        PowerModels.propagate_topology_status(data)
+        cc = PowerModels.connected_components(data)
+
+        cc_ordered = sort(collect(cc); by=length)
+
+        @test length(cc_ordered) == 2
+        @test length(cc_ordered[1]) == 1
+        @test length(cc_ordered[2]) == 3
+
+        active_buses = Set([2, 4, 5, 7])
+
+        for cc in cc_ordered
+            for i in cc
+                @test i in active_buses
             end
         end
     end
