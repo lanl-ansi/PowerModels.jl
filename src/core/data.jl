@@ -120,6 +120,158 @@ function replicate(sn_data::Dict{String,Any}, count::Int)
 end
 
 
+function summary(data::Dict{String,Any}; float_precision = 3)
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("summary does not yet support multinetwork data")
+    end
+
+    component_types_order = Dict(
+        "bus" => 1.0, "load" => 2.0, "shunt" => 3.0, "gen" => 4.0,
+        "branch" => 5.0, "dcline" => 6.0
+    )
+
+    component_parameter_order = Dict(
+        "bus_i" => 1.0, "load_bus" => 2.0, "shunt_bus" => 3.0, "gen_bus" => 4.0,
+        "f_bus" => 5.0, "t_bus" => 6.0,
+
+        "bus_name" => 9.1, "base_kv" => 9.2, "bus_type" => 9.3,
+
+        "vm" => 10.0, "va" => 11.0,
+        "pd" => 20.0, "qd" => 21.0,
+        "gs" => 30.0, "bs" => 31.0,
+        "pg" => 40.0, "qg" => 41.0, "vg" => 42.0, "mbase" => 43.0,
+        "br_r" => 50.0, "br_x" => 51.0, "g_fr" => 52.0, "b_fr" => 53.0,
+        "g_to" => 54.0, "b_to" => 55.0, "tap" => 56.0, "shift" => 57.0,
+
+        "vmin" => 60.0, "vmax" => 61.0,
+        "pmin" => 62.0, "pmax" => 63.0,
+        "qmin" => 64.0, "qmax" => 65.0,
+
+        "status" => 70.0, "gen_status" => 71.0, "br_status" => 72.0,
+
+        "model" => 80.0, "ncost" => 81.0, "cost" => 82.0, "startup" => 83.0, "shutdown" => 84.0
+    )
+    max_parameter_value = 999.0
+
+    component_types = []
+
+    println(_bold("Network Metadata"))
+    for (k,v) in sort(data; by=x->x[1])
+        if !(typeof(v) <: Dict)
+            println("  $(k): $(v)")
+        else
+            push!(component_types, k)
+        end
+    end
+
+    println("")
+    println(_bold("Component Counts"))
+    for k in sort(component_types, by=x->get(component_types_order, x, 999))
+        println("  $(k): $(length(data[k]))")
+    end
+
+    for comp_type in sort(component_types, by=x->get(component_types_order, x, 999))
+        if length(data[comp_type]) <= 0
+            continue
+        end
+        println("")
+        println("")
+        println(_bold("Table: $(comp_type)"))
+
+        components = data[comp_type]
+
+        display_components = Dict()
+        for (i, component) in components
+            disp_comp = copy(component)
+
+            for (k, v) in disp_comp
+                if typeof(v) <: AbstractFloat
+                    disp_comp[k] = _float2string(v, float_precision)
+                elseif typeof(v) <: Array
+                    disp_comp[k] = "[($(length(v)))]"
+                elseif typeof(v) <: Dict
+                    disp_comp[k] = "{($(length(v)))}"
+                else
+                    disp_comp[k] = "$(v)"
+                end
+            end
+
+            display_components[i] = disp_comp
+        end
+
+
+        comp_key_sizes = Dict{String, Int}()
+        default_values = Dict{String, Any}()
+        for (i, component) in display_components
+            for (k, v) in component
+                if haskey(comp_key_sizes, k)
+                    comp_key_sizes[k] = max(comp_key_sizes[k], length(v))
+                else
+                    comp_key_sizes[k] = length(v)
+                end
+
+                if haskey(default_values, k)
+                    if default_values[k] != v
+                        default_values[k] = nothing
+                    end
+                else
+                    default_values[k] = v
+                end
+            end
+        end
+
+        default_values = filter((k, v) -> v != nothing, default_values)
+
+        #display(default_values)
+
+        # account for header width
+        for (k, v) in comp_key_sizes
+            comp_key_sizes[k] = max(length(k), v)
+        end
+
+        comp_id_pad = comp_key_sizes["index"] # not clear why this is offset so much
+        delete!(comp_key_sizes, "index")
+        comp_keys_ordered = sort([k for k in keys(comp_key_sizes) if !(haskey(default_values, k))], by=x->(get(component_parameter_order, x, max_parameter_value), x))
+        
+        header = join([lpad(k, comp_key_sizes[k]) for k in comp_keys_ordered], ", ")
+
+        pad = " "^(comp_id_pad+2)
+        println("  $(pad)$(header)")
+        for k in sort([k for k in keys(display_components)]; by=x->parse(Int, x))
+            comp = display_components[k]
+            items = []
+            for ck in comp_keys_ordered
+                if haskey(comp, ck)
+                    push!(items, lpad("$(comp[ck])", comp_key_sizes[ck]))
+                else
+                    push!(items, lpad("--", comp_key_sizes[ck]))
+                end
+            end
+            println("  $(lpad(k, comp_id_pad)): $(join(items, ", "))")
+        end
+
+        println("")
+        println("  default values:")
+        for k in sort([k for k in keys(default_values)], by=x->(get(component_parameter_order, x, max_parameter_value), x))
+            println("    $(k): $(default_values[k])")
+        end
+    end
+
+end
+
+function _bold(s::String)
+    return "\033[1m$(s)\033[0m"
+end
+
+# a work around because sprintf cannot take runtime format strings
+function _float2string(v::AbstractFloat, float_precision::Int)
+    str = "$(round(v, float_precision))"
+    lhs = length(split(str, '.')[1])
+    return rpad(str, lhs + 1 + float_precision, "0")
+end
+
+
+
 "recursively applies new_data to data, overwriting information"
 function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
     if haskey(data, "per_unit") && haskey(new_data, "per_unit")
