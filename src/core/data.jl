@@ -125,6 +125,7 @@ function summary(data::Dict{String,Any}; float_precision = 3)
         error("summary does not yet support multinetwork data")
     end
 
+
     component_types_order = Dict(
         "bus" => 1.0, "load" => 2.0, "shunt" => 3.0, "gen" => 4.0,
         "branch" => 5.0, "dcline" => 6.0
@@ -142,16 +143,25 @@ function summary(data::Dict{String,Any}; float_precision = 3)
         "pg" => 40.0, "qg" => 41.0, "vg" => 42.0, "mbase" => 43.0,
         "br_r" => 50.0, "br_x" => 51.0, "g_fr" => 52.0, "b_fr" => 53.0,
         "g_to" => 54.0, "b_to" => 55.0, "tap" => 56.0, "shift" => 57.0,
+        "vf" => 58.1, "pf" => 58.2, "qf" => 58.3,
+        "vt" => 58.4, "pt" => 58.5, "qt" => 58.6,
+        "loss0" => 58.7, "loss1" => 59.8,
 
         "vmin" => 60.0, "vmax" => 61.0,
         "pmin" => 62.0, "pmax" => 63.0,
         "qmin" => 64.0, "qmax" => 65.0,
+        "rate_a" => 66.0, "rate_b" => 67.0, "rate_c" => 68.0,
+        "pminf" => 69.0, "pmaxf" => 70.0, "qminf" => 71.0, "qmaxf" => 72.0,
+        "pmint" => 73.0, "pmaxt" => 74.0, "qmint" => 75.0, "qmaxt" => 76.0,
 
-        "status" => 70.0, "gen_status" => 71.0, "br_status" => 72.0,
+        "status" => 80.0, "gen_status" => 81.0, "br_status" => 82.0,
 
-        "model" => 80.0, "ncost" => 81.0, "cost" => 82.0, "startup" => 83.0, "shutdown" => 84.0
+        "model" => 90.0, "ncost" => 91.0, "cost" => 92.0, "startup" => 93.0, "shutdown" => 94.0
     )
     max_parameter_value = 999.0
+
+    component_status_parameters = Set(["status", "gen_status", "br_status", "bus_type"])
+
 
     component_types = []
 
@@ -181,10 +191,17 @@ function summary(data::Dict{String,Any}; float_precision = 3)
         components = data[comp_type]
 
         display_components = Dict()
+        active_components = Set()
         for (i, component) in components
             disp_comp = copy(component)
 
             for (k, v) in disp_comp
+                if k in component_status_parameters
+                    if !(v == 0 || v == 4)
+                        push!(active_components, i)
+                    end
+                end
+
                 if typeof(v) <: AbstractFloat
                     disp_comp[k] = _float2string(v, float_precision)
                 elseif typeof(v) <: Array
@@ -247,7 +264,12 @@ function summary(data::Dict{String,Any}; float_precision = 3)
                     push!(items, lpad("--", comp_key_sizes[ck]))
                 end
             end
-            println("  $(lpad(k, comp_id_pad)): $(join(items, ", "))")
+            line = "  $(lpad(k, comp_id_pad)): $(join(items, ", "))"
+            if k in active_components
+                println(line)
+            else
+                println(_grey(line))
+            end
         end
 
         println("")
@@ -261,6 +283,11 @@ end
 
 function _bold(s::String)
     return "\033[1m$(s)\033[0m"
+end
+
+# more info here https://en.wikipedia.org/wiki/ANSI_escape_code
+function _grey(s::String)
+    return "\033[38;5;239m$(s)\033[0m"
 end
 
 # a work around because sprintf cannot take runtime format strings
