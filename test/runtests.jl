@@ -2,6 +2,7 @@ using PowerModels
 using Memento
 
 # Suppress warnings during testing.
+setlevel!(getlogger(InfrastructureModels), "error")
 setlevel!(getlogger(PowerModels), "error")
 
 using Ipopt

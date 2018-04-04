@@ -14,6 +14,7 @@ PowerModels.jl Change Log
 - Updated branch mathematical model and Matpower parser to support asymmetrical line charging
 - Updated KCL constraint models to account for multiple loads and shunts per bus
 - Separated loads and shunts from buses in PowerModels data structure
+- Leveraging InfrastructureModels package for Matlab data parsing, #233
 - Minor issues closed #51, #131, #220 
 
 ### v0.5.1
