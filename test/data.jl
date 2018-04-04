@@ -31,9 +31,7 @@
 
     @testset "5-bus solution summary from dict" begin
         result = run_ac_opf("../test/data/matpower/case5.m", ipopt_solver)
-        PowerModels.summary(result["solution"], io=buf)
-
-        output = String(take!(buf))
+        output = sprint(PowerModels.summary, result["solution"])
 
         line_count = count(c -> c == '\n', output)
         @test line_count >= 20 && line_count <= 30 
