@@ -128,11 +128,10 @@ function summary(file::String; kwargs...)
 end
 
 "prints a text summary of a PowerModels data dictionary"
-function summary(data::Dict{String,Any}; float_precision = 3)
+function summary(data::Dict{String,Any}; io::IO = STDOUT, float_precision = 3)
     if haskey(data, "multinetwork") && data["multinetwork"]
         error("summary does not yet support multinetwork data")
     end
-
 
     component_types_order = Dict(
         "bus" => 1.0, "load" => 2.0, "shunt" => 3.0, "gen" => 4.0,
@@ -173,28 +172,28 @@ function summary(data::Dict{String,Any}; float_precision = 3)
 
     component_types = []
 
-    println(_bold("Metadata"))
+    println(io, _bold("Metadata"))
     for (k,v) in sort(data; by=x->x[1])
         if !(typeof(v) <: Dict)
-            println("  $(k): $(v)")
+            println(io, "  $(k): $(v)")
         else
             push!(component_types, k)
         end
     end
 
-    println("")
-    println(_bold("Table Counts"))
+    println(io, "")
+    println(io, _bold("Table Counts"))
     for k in sort(component_types, by=x->get(component_types_order, x, 999))
-        println("  $(k): $(length(data[k]))")
+        println(io, "  $(k): $(length(data[k]))")
     end
 
     for comp_type in sort(component_types, by=x->get(component_types_order, x, 999))
         if length(data[comp_type]) <= 0
             continue
         end
-        println("")
-        println("")
-        println(_bold("Table: $(comp_type)"))
+        println(io, "")
+        println(io, "")
+        println(io, _bold("Table: $(comp_type)"))
 
         components = data[comp_type]
 
@@ -278,7 +277,7 @@ function summary(data::Dict{String,Any}; float_precision = 3)
         header = join([lpad(k, comp_key_sizes[k]) for k in comp_keys_ordered], ", ")
 
         pad = " "^(comp_id_pad+2)
-        println("  $(pad)$(header)")
+        println(io, "  $(pad)$(header)")
         for k in sort([k for k in keys(display_components)]; by=x->parse(Int, x))
             comp = display_components[k]
             items = []
@@ -291,17 +290,17 @@ function summary(data::Dict{String,Any}; float_precision = 3)
             end
             line = "  $(lpad(k, comp_id_pad)): $(join(items, ", "))"
             if k in active_components
-                println(line)
+                println(io, line)
             else
-                println(_grey(line))
+                println(io, _grey(line))
             end
         end
 
         if length(default_values) > 0
-            println("")
-            println("  default values:")
+            println(io, "")
+            println(io, "  default values:")
             for k in sort([k for k in keys(default_values)], by=x->(get(component_parameter_order, x, max_parameter_value), x))
-                println("    $(k): $(default_values[k])")
+                println(io, "    $(k): $(default_values[k])")
             end
         end
     end
