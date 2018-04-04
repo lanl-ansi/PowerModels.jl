@@ -3,6 +3,7 @@ isdefined(Base, :__precompile__) && __precompile__()
 module PowerModels
 
 using JSON
+using InfrastructureModels
 using MathProgBase
 using JuMP
 using Compat
@@ -18,7 +19,6 @@ setlevel!(LOGGER, "info")
 # NOTE: If this line is not included then the precompiled `PowerModels.LOGGER` won't be registered at runtime.
 __init__() = Memento.register(LOGGER)
 
-include("io/matlab.jl")
 include("io/matpower.jl")
 include("io/json.jl")
 include("io/common.jl")

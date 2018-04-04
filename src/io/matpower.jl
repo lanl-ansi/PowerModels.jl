@@ -23,7 +23,7 @@ function row_to_typed_dict(row_data, columns)
     for (i,v) in enumerate(row_data)
         if i <= length(columns)
             name, typ = columns[i]
-            dict_data[name] = check_type(typ, v)
+            dict_data[name] = InfrastructureModels.check_type(typ, v)
         else
             dict_data["col_$(i)"] = v
         end
@@ -166,7 +166,7 @@ function parse_matpower_string(data_string::String)
         buses = []
         for bus_row in matlab_data["mpc.bus"]
             bus_data = row_to_typed_dict(bus_row, mp_bus_columns)
-            bus_data["index"] = check_type(Int, bus_row[1])
+            bus_data["index"] = InfrastructureModels.check_type(Int, bus_row[1])
             push!(buses, bus_data)
         end
         case["bus"] = buses
@@ -284,16 +284,16 @@ end
 
 function mp_cost_data(cost_row)
     cost_data = Dict{String,Any}(
-        "model" => check_type(Int, cost_row[1]),
-        "startup" => check_type(Float64, cost_row[2]),
-        "shutdown" => check_type(Float64, cost_row[3]),
-        "ncost" => check_type(Int, cost_row[4]),
-        "cost" => [check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
+        "model" => InfrastructureModels.check_type(Int, cost_row[1]),
+        "startup" => InfrastructureModels.check_type(Float64, cost_row[2]),
+        "shutdown" => InfrastructureModels.check_type(Float64, cost_row[3]),
+        "ncost" => InfrastructureModels.check_type(Int, cost_row[4]),
+        "cost" => [InfrastructureModels.check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
     )
 
     #=
     # skip this literal interpretation, as its hard to invert
-    cost_values = [check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
+    cost_values = [InfrastructureModels.check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
     if cost_data["model"] == 1:
         if length(cost_values)%2 != 0
             error("incorrect matpower file, odd number of pwl cost function values")
