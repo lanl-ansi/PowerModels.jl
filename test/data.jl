@@ -1,5 +1,47 @@
 # Tests of data checking and transformation code
 
+@testset "test data summary" begin
+
+    @testset "5-bus summary from dict" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        output = sprint(PowerModels.summary, data)
+
+        line_count = count(c -> c == '\n', output)
+        @test line_count >= 80 && line_count <= 100 
+        @test contains(output, "name: nesta_case5_pjm")
+        @test contains(output, "Table: bus")
+        @test contains(output, "Table: load")
+        @test contains(output, "Table: gen")
+        @test contains(output, "Table: branch")
+        @test contains(output, "Table: areas")
+    end
+
+    @testset "5-bus summary from file location" begin
+        output = sprint(PowerModels.summary, "../test/data/matpower/case5.m")
+
+        line_count = count(c -> c == '\n', output)
+        @test line_count >= 80 && line_count <= 100 
+        @test contains(output, "name: nesta_case5_pjm")
+        @test contains(output, "Table: bus")
+        @test contains(output, "Table: load")
+        @test contains(output, "Table: gen")
+        @test contains(output, "Table: branch")
+        @test contains(output, "Table: areas")
+    end
+
+    @testset "5-bus solution summary from dict" begin
+        result = run_ac_opf("../test/data/matpower/case5.m", ipopt_solver)
+        output = sprint(PowerModels.summary, result["solution"])
+
+        line_count = count(c -> c == '\n', output)
+        @test line_count >= 20 && line_count <= 30 
+        @test contains(output, "baseMVA: 100.0")
+        @test contains(output, "Table: bus")
+        @test contains(output, "Table: gen")
+    end
+end
+
+
 @testset "test idempotent units transformations" begin
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case3.m")

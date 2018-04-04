@@ -4,7 +4,7 @@
 
 Internally PowerModels utilizes a dictionary to store network data. The dictionary uses strings as key values so it can be serialized to JSON for algorithmic data exchange.
 
-The data dictionary organization and key names are designed to be consistent with the [Matpower](http://www.pserc.cornell.edu/matpower/) file format and should be familiar to power system researchers, with the exception that loads and shunts are now split into separate fields (see example below).
+The data dictionary organization and key names are designed to be consistent with the [Matpower](http://www.pserc.cornell.edu/matpower/) file format and should be familiar to power system researchers, with the exception that loads and shunts are now split into separate components (see example below).
 
 The network data dictionary structure is roughly as follows:
 
@@ -75,8 +75,11 @@ The following commands can be used to explore the network data dictionary genera
 
 ```julia
 network_data = PowerModels.parse_file("nesta_case3_lmbd.m")
-display(network_data)
+display(network_data) # raw dictionary
+PowerModels.print_summary(network_data) # quick table-like summary
 ```
+
+The `print_summary` function generates a table-like text summary of the network data, which is helpful in quickly assessing the values in a data or solution dictionary.
 
 For a detailed list of all possible parameters refer to the specification document provided with [Matpower](http://www.pserc.cornell.edu/matpower/). The exception to this is that `"load"` and `"shunt"`, containing `"pd"`, `"qd"` and `"gs"`, `"bs"`, respectively, have been added as additional fields. These values are contained in `"bus"` in the original specification.
 
@@ -102,18 +105,20 @@ Data exchange via JSON files is ideal for building algorithms, however it is har
 The first of these helper functions are `make_per_unit` and `make_mixed_units`, which convert the units of the data inside a network data dictionary.  The *mixed units* format follows the unit conventions from Matpower and other common power network formats where some of the values are in per unit and others are the true values.  These functions can be used as follows,
 ```
 network_data = PowerModels.parse_file("nesta_case3_lmbd.m")
-display(network_data) # default per-unit form
+PowerModels.print_summary(network_data) # default per-unit form
 PowerModels.make_mixed_units(network_data)
-display(network_data) # mixed units form
+PowerModels.print_summary(network_data) # mixed units form
 ```
 
 Another useful helper function is `update_data`, which takes two network data dictionaries and updates the values in the first dictionary with the values from the second dictionary.  This is particularly helpful when applying sparse updates to network data.  A good example is using the solution of one computation to update the data in preparation for a second computation, like so,
 ```
 data = PowerModels.parse_file("nesta_case3_lmbd.m")
 opf_result = run_ac_opf(data, IpoptSolver())
+PowerModels.print_summary(opf_result["solution"])
 
 PowerModels.update_data(data, opf_result["solution"])
 pf_result = run_ac_pf(data, IpoptSolver())
+PowerModels.print_summary(pf_result["solution"])
 ```
 
 A variety of helper functions are available for processing the topology of the network.  For example, `connected_components` will compute the collections of buses that are connected by branches (i.e. the network's islands).  By default PowerModels will attempt to solve all of the network components simultaneously.  The `select_largest_component` function can be used to only consider the largest component in the network.  Finally the `propagate_topology_status` can be used to explicitly deactivate components that are implicitly inactive due to the status of other components (e.g. deactivating branches based on the status of their connecting buses), like so,
