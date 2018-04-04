@@ -15,6 +15,12 @@ function parse_file(file::String)
 end
 
 ""
+function parse_json(file_string::String)
+    data_string = readstring(open(file_string))
+    return JSON.parse(data_string)
+end
+
+""
 function check_network_data(data::Dict{String,Any})
     make_per_unit(data)
     check_connectivity(data)

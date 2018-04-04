@@ -20,7 +20,6 @@ setlevel!(LOGGER, "info")
 __init__() = Memento.register(LOGGER)
 
 include("io/matpower.jl")
-include("io/json.jl")
 include("io/common.jl")
 include("io/pti.jl")
 
