@@ -1,5 +1,41 @@
 # Tests of data checking and transformation code
 
+@testset "test data summary" begin
+    buf = IOBuffer()
+
+    @testset "5-bus summary from dict" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        PowerModels.summary(data, io=buf)
+
+        output = String(take!(buf))
+
+        line_count = count(c -> c == '\n', output)
+        @test line_count >= 80 && line_count <= 100 
+        @test contains(output, "name: nesta_case5_pjm")
+        @test contains(output, "Table: bus")
+        @test contains(output, "Table: load")
+        @test contains(output, "Table: gen")
+        @test contains(output, "Table: branch")
+        @test contains(output, "Table: areas")
+    end
+
+    @testset "5-bus summary from file location" begin
+        data = PowerModels.summary("../test/data/matpower/case5.m", io=buf)
+
+        output = String(take!(buf))
+
+        line_count = count(c -> c == '\n', output)
+        @test line_count >= 80 && line_count <= 100 
+        @test contains(output, "name: nesta_case5_pjm")
+        @test contains(output, "Table: bus")
+        @test contains(output, "Table: load")
+        @test contains(output, "Table: gen")
+        @test contains(output, "Table: branch")
+        @test contains(output, "Table: areas")
+    end
+end
+
+
 @testset "test idempotent units transformations" begin
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case3.m")
