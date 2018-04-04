@@ -119,16 +119,20 @@ function replicate(sn_data::Dict{String,Any}, count::Int)
     return mn_data
 end
 
+"prints the text summary for a data file or dictionary to STDOUT"
+function print_summary(obj::Union{String, Dict{String,Any}}; kwargs...)
+    summary(STDOUT, obj; kwargs...)
+end
 
-"loads a data file, prints a text summary, and returns the data dictionary"
-function summary(file::String; kwargs...)
+"prints the text summary for a data file to IO"
+function summary(io::IO, file::String; kwargs...)
     data = parse_file(file)
-    summary(data; kwargs...)
+    summary(io, data; kwargs...)
     return data
 end
 
-"prints a text summary of a PowerModels data dictionary"
-function summary(data::Dict{String,Any}; io::IO = STDOUT, float_precision = 3)
+"prints the text summary for a data dictionary to IO"
+function summary(io::IO, data::Dict{String,Any}; float_precision::Int = 3)
     if haskey(data, "multinetwork") && data["multinetwork"]
         error("summary does not yet support multinetwork data")
     end

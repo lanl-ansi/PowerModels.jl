@@ -1,13 +1,10 @@
 # Tests of data checking and transformation code
 
 @testset "test data summary" begin
-    buf = IOBuffer()
 
     @testset "5-bus summary from dict" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
-        PowerModels.summary(data, io=buf)
-
-        output = String(take!(buf))
+        output = sprint(PowerModels.summary, data)
 
         line_count = count(c -> c == '\n', output)
         @test line_count >= 80 && line_count <= 100 
@@ -20,9 +17,7 @@
     end
 
     @testset "5-bus summary from file location" begin
-        data = PowerModels.summary("../test/data/matpower/case5.m", io=buf)
-
-        output = String(take!(buf))
+        output = sprint(PowerModels.summary, "../test/data/matpower/case5.m")
 
         line_count = count(c -> c == '\n', output)
         @test line_count >= 80 && line_count <= 100 
