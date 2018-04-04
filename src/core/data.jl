@@ -120,6 +120,14 @@ function replicate(sn_data::Dict{String,Any}, count::Int)
 end
 
 
+"loads a data file, prints a text summary, and returns the data dictionary"
+function summary(file::String; kwargs...)
+    data = parse_file(file)
+    summary(data; kwargs...)
+    return data
+end
+
+"prints a text summary of a PowerModels data dictionary"
 function summary(data::Dict{String,Any}; float_precision = 3)
     if haskey(data, "multinetwork") && data["multinetwork"]
         error("summary does not yet support multinetwork data")
@@ -165,7 +173,7 @@ function summary(data::Dict{String,Any}; float_precision = 3)
 
     component_types = []
 
-    println(_bold("Network Metadata"))
+    println(_bold("Metadata"))
     for (k,v) in sort(data; by=x->x[1])
         if !(typeof(v) <: Dict)
             println("  $(k): $(v)")
@@ -175,7 +183,7 @@ function summary(data::Dict{String,Any}; float_precision = 3)
     end
 
     println("")
-    println(_bold("Component Counts"))
+    println(_bold("Table Counts"))
     for k in sort(component_types, by=x->get(component_types_order, x, 999))
         println("  $(k): $(length(data[k]))")
     end
@@ -195,8 +203,10 @@ function summary(data::Dict{String,Any}; float_precision = 3)
         for (i, component) in components
             disp_comp = copy(component)
 
+            status_found = false
             for (k, v) in disp_comp
                 if k in component_status_parameters
+                    status_found = true
                     if !(v == 0 || v == 4)
                         push!(active_components, i)
                     end
@@ -212,6 +222,9 @@ function summary(data::Dict{String,Any}; float_precision = 3)
                     disp_comp[k] = "$(v)"
                 end
             end
+            if !status_found
+                push!(active_components, i)
+            end
 
             display_components[i] = disp_comp
         end
@@ -220,6 +233,13 @@ function summary(data::Dict{String,Any}; float_precision = 3)
         comp_key_sizes = Dict{String, Int}()
         default_values = Dict{String, Any}()
         for (i, component) in display_components
+            # a special case for "index", for example when reading solution data
+            if haskey(comp_key_sizes, "index")
+                comp_key_sizes["index"] = max(comp_key_sizes["index"], length(i))
+            else
+                comp_key_sizes["index"] = length(i)
+            end
+
             for (k, v) in component
                 if haskey(comp_key_sizes, k)
                     comp_key_sizes[k] = max(comp_key_sizes[k], length(v))
@@ -237,7 +257,12 @@ function summary(data::Dict{String,Any}; float_precision = 3)
             end
         end
 
-        default_values = filter((k, v) -> v != nothing, default_values)
+        # when there is only one component nothing is default
+        if length(display_components) == 1
+            default_values = Dict{String, Any}()
+        else
+            default_values = filter((k, v) -> v != nothing, default_values)
+        end
 
         #display(default_values)
 
@@ -272,10 +297,12 @@ function summary(data::Dict{String,Any}; float_precision = 3)
             end
         end
 
-        println("")
-        println("  default values:")
-        for k in sort([k for k in keys(default_values)], by=x->(get(component_parameter_order, x, max_parameter_value), x))
-            println("    $(k): $(default_values[k])")
+        if length(default_values) > 0
+            println("")
+            println("  default values:")
+            for k in sort([k for k in keys(default_values)], by=x->(get(component_parameter_order, x, max_parameter_value), x))
+                println("    $(k): $(default_values[k])")
+            end
         end
     end
 
