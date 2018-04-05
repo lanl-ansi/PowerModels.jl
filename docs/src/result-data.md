@@ -74,9 +74,15 @@ A solution specifying a voltage magnitude and angle would for the same case, i.e
 }
 ```
 
+A table-like text summary of the solution data can be generated using the standard data summary function as follows,
+
+```
+PowerModels.print_summary(result["solution"])
+```
+
 Because the data dictionary and the solution dictionary have the same structure
 PowerModels provides an `update_data` helper function which can be used to
-update a data diction with the values from a solution as follows,
+update a data dictionary with the values from a solution as follows,
 
 ```
 PowerModels.update_data(data, result["solution"])
