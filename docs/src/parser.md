@@ -39,6 +39,7 @@ type_array
 build_typed_dict
 extend_case_data
 mp_data_to_pm_data
+split_loads_shunts
 ```
 
 ## PTI Data Files (PSS/E)

@@ -15,12 +15,20 @@ function parse_file(file::String)
 end
 
 ""
+function parse_json(file_string::String)
+    data_string = readstring(open(file_string))
+    return JSON.parse(data_string)
+end
+
+""
 function check_network_data(data::Dict{String,Any})
     make_per_unit(data)
+    check_connectivity(data)
     check_transformer_parameters(data)
     check_voltage_angle_differences(data)
     check_thermal_limits(data)
     check_branch_directions(data)
+    check_branch_loops(data)
     check_bus_types(data)
     check_dcline_limits(data)
     check_voltage_setpoints(data)

@@ -1,4 +1,4 @@
-# tools for working with PowerModels internal data format
+# tools for working with PowerModels internal data dict structure
 
 ""
 function calc_voltage_product_bounds(buspairs)
@@ -154,6 +154,228 @@ function replicate(sn_data::Dict{String,Any}, count::Int)
     return mn_data
 end
 
+"prints the text summary for a data file or dictionary to STDOUT"
+function print_summary(obj::Union{String, Dict{String,Any}}; kwargs...)
+    summary(STDOUT, obj; kwargs...)
+end
+
+"prints the text summary for a data file to IO"
+function summary(io::IO, file::String; kwargs...)
+    data = parse_file(file)
+    summary(io, data; kwargs...)
+    return data
+end
+
+"prints the text summary for a data dictionary to IO"
+function summary(io::IO, data::Dict{String,Any}; float_precision::Int = 3)
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("summary does not yet support multinetwork data")
+    end
+
+    component_types_order = Dict(
+        "bus" => 1.0, "load" => 2.0, "shunt" => 3.0, "gen" => 4.0,
+        "branch" => 5.0, "dcline" => 6.0
+    )
+
+    component_parameter_order = Dict(
+        "bus_i" => 1.0, "load_bus" => 2.0, "shunt_bus" => 3.0, "gen_bus" => 4.0,
+        "f_bus" => 5.0, "t_bus" => 6.0,
+
+        "bus_name" => 9.1, "base_kv" => 9.2, "bus_type" => 9.3,
+
+        "vm" => 10.0, "va" => 11.0,
+        "pd" => 20.0, "qd" => 21.0,
+        "gs" => 30.0, "bs" => 31.0,
+        "pg" => 40.0, "qg" => 41.0, "vg" => 42.0, "mbase" => 43.0,
+        "br_r" => 50.0, "br_x" => 51.0, "g_fr" => 52.0, "b_fr" => 53.0,
+        "g_to" => 54.0, "b_to" => 55.0, "tap" => 56.0, "shift" => 57.0,
+        "vf" => 58.1, "pf" => 58.2, "qf" => 58.3,
+        "vt" => 58.4, "pt" => 58.5, "qt" => 58.6,
+        "loss0" => 58.7, "loss1" => 59.8,
+
+        "vmin" => 60.0, "vmax" => 61.0,
+        "pmin" => 62.0, "pmax" => 63.0,
+        "qmin" => 64.0, "qmax" => 65.0,
+        "rate_a" => 66.0, "rate_b" => 67.0, "rate_c" => 68.0,
+        "pminf" => 69.0, "pmaxf" => 70.0, "qminf" => 71.0, "qmaxf" => 72.0,
+        "pmint" => 73.0, "pmaxt" => 74.0, "qmint" => 75.0, "qmaxt" => 76.0,
+
+        "status" => 80.0, "gen_status" => 81.0, "br_status" => 82.0,
+
+        "model" => 90.0, "ncost" => 91.0, "cost" => 92.0, "startup" => 93.0, "shutdown" => 94.0
+    )
+    max_parameter_value = 999.0
+
+    component_status_parameters = Set(["status", "gen_status", "br_status", "bus_type"])
+
+
+    component_types = []
+    other_types = []
+
+    println(io, _bold("Metadata"))
+    for (k,v) in sort(data; by=x->x[1])
+        if typeof(v) <: Dict
+            if sum([!(typeof(comp) <: Dict) for (i, comp) in v]) == 0
+                push!(component_types, k)
+                continue
+            end
+        end
+
+        println(io, "  $(k): $(_value2string(v, float_precision))")
+    end
+
+
+    if length(component_types) > 0
+        println(io, "")
+        println(io, _bold("Table Counts"))
+    end
+    for k in sort(component_types, by=x->get(component_types_order, x, 999))
+        println(io, "  $(k): $(length(data[k]))")
+    end
+
+    for comp_type in sort(component_types, by=x->get(component_types_order, x, 999))
+        if length(data[comp_type]) <= 0
+            continue
+        end
+        println(io, "")
+        println(io, "")
+        println(io, _bold("Table: $(comp_type)"))
+
+        components = data[comp_type]
+
+        display_components = Dict()
+        active_components = Set()
+        for (i, component) in components
+            disp_comp = copy(component)
+
+            status_found = false
+            for (k, v) in disp_comp
+                if k in component_status_parameters
+                    status_found = true
+                    if !(v == 0 || v == 4)
+                        push!(active_components, i)
+                    end
+                end
+
+                disp_comp[k] = _value2string(v, float_precision)
+            end
+            if !status_found
+                push!(active_components, i)
+            end
+
+            display_components[i] = disp_comp
+        end
+
+
+        comp_key_sizes = Dict{String, Int}()
+        default_values = Dict{String, Any}()
+        for (i, component) in display_components
+            # a special case for "index", for example when reading solution data
+            if haskey(comp_key_sizes, "index")
+                comp_key_sizes["index"] = max(comp_key_sizes["index"], length(i))
+            else
+                comp_key_sizes["index"] = length(i)
+            end
+
+            for (k, v) in component
+                if haskey(comp_key_sizes, k)
+                    comp_key_sizes[k] = max(comp_key_sizes[k], length(v))
+                else
+                    comp_key_sizes[k] = length(v)
+                end
+
+                if haskey(default_values, k)
+                    if default_values[k] != v
+                        default_values[k] = nothing
+                    end
+                else
+                    default_values[k] = v
+                end
+            end
+        end
+
+        # when there is only one component nothing is default
+        if length(display_components) == 1
+            default_values = Dict{String, Any}()
+        else
+            default_values = filter((k, v) -> v != nothing, default_values)
+        end
+
+        #display(default_values)
+
+        # account for header width
+        for (k, v) in comp_key_sizes
+            comp_key_sizes[k] = max(length(k), v)
+        end
+
+        comp_id_pad = comp_key_sizes["index"] # not clear why this is offset so much
+        delete!(comp_key_sizes, "index")
+        comp_keys_ordered = sort([k for k in keys(comp_key_sizes) if !(haskey(default_values, k))], by=x->(get(component_parameter_order, x, max_parameter_value), x))
+        
+        header = join([lpad(k, comp_key_sizes[k]) for k in comp_keys_ordered], ", ")
+
+        pad = " "^(comp_id_pad+2)
+        println(io, "  $(pad)$(header)")
+        for k in sort([k for k in keys(display_components)]; by=x->parse(Int, x))
+            comp = display_components[k]
+            items = []
+            for ck in comp_keys_ordered
+                if haskey(comp, ck)
+                    push!(items, lpad("$(comp[ck])", comp_key_sizes[ck]))
+                else
+                    push!(items, lpad("--", comp_key_sizes[ck]))
+                end
+            end
+            line = "  $(lpad(k, comp_id_pad)): $(join(items, ", "))"
+            if k in active_components
+                println(io, line)
+            else
+                println(io, _grey(line))
+            end
+        end
+
+        if length(default_values) > 0
+            println(io, "")
+            println(io, "  default values:")
+            for k in sort([k for k in keys(default_values)], by=x->(get(component_parameter_order, x, max_parameter_value), x))
+                println(io, "    $(k): $(default_values[k])")
+            end
+        end
+    end
+
+end
+
+function _bold(s::String)
+    return "\033[1m$(s)\033[0m"
+end
+
+# more info here https://en.wikipedia.org/wiki/ANSI_escape_code
+function _grey(s::String)
+    return "\033[38;5;239m$(s)\033[0m"
+end
+
+function _value2string(v, float_precision::Int)
+    if typeof(v) <: AbstractFloat
+        return _float2string(v, float_precision)
+    end
+    if typeof(v) <: Array
+        return "[($(length(v)))]"
+    end
+    if typeof(v) <: Dict
+        return "{($(length(v)))}"
+    end
+
+    return "$(v)"
+end
+
+# a work around because sprintf cannot take runtime format strings
+function _float2string(v::AbstractFloat, float_precision::Int)
+    str = "$(round(v, float_precision))"
+    lhs = length(split(str, '.')[1])
+    return rpad(str, lhs + 1 + float_precision, "0")
+end
+
+
 
 "recursively applies new_data to data, overwriting information"
 function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
@@ -212,16 +434,24 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
-            apply_func(bus, "pd", rescale)
-            apply_func(bus, "qd", rescale)
-
-            apply_func(bus, "gs", rescale)
-            apply_func(bus, "bs", rescale)
-
             apply_func(bus, "va", deg2rad)
 
             apply_func(bus, "lam_kcl_r", rescale_dual)
             apply_func(bus, "lam_kcl_i", rescale_dual)
+        end
+    end
+
+    if haskey(data, "load")
+        for (i, load) in data["load"]
+            apply_func(load, "pd", rescale)
+            apply_func(load, "qd", rescale)
+        end
+    end
+
+    if haskey(data, "shunt")
+        for (i, shunt) in data["shunt"]
+            apply_func(shunt, "gs", rescale)
+            apply_func(shunt, "bs", rescale)
         end
     end
 
@@ -324,16 +554,24 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
-            apply_func(bus, "pd", rescale)
-            apply_func(bus, "qd", rescale)
-
-            apply_func(bus, "gs", rescale)
-            apply_func(bus, "bs", rescale)
-
             apply_func(bus, "va", rad2deg)
 
             apply_func(bus, "lam_kcl_r", rescale_dual)
             apply_func(bus, "lam_kcl_i", rescale_dual)
+        end
+    end
+
+    if haskey(data, "load")
+        for (i, load) in data["load"]
+            apply_func(load, "pd", rescale)
+            apply_func(load, "qd", rescale)
+        end
+    end
+
+    if haskey(data, "shunt")
+        for (i, shunt) in data["shunt"]
+            apply_func(shunt, "gs", rescale)
+            apply_func(shunt, "bs", rescale)
         end
     end
 
@@ -417,7 +655,11 @@ end
 
 
 "checks that phase angle differences are within 90 deg., if not tightens"
-function check_voltage_angle_differences(data, default_pad = 1.0472)
+function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1.0472)
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_voltage_angle_differences does not yet support multinetwork data")
+    end
+
     assert("per_unit" in keys(data) && data["per_unit"])
 
     for (i, branch) in data["branch"]
@@ -440,7 +682,11 @@ function check_voltage_angle_differences(data, default_pad = 1.0472)
 end
 
 "checks that each branch has a reasonable thermal rating, if not computes one"
-function check_thermal_limits(data)
+function check_thermal_limits(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_thermal_limits does not yet support multinetwork data")
+    end
+
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
@@ -471,7 +717,11 @@ end
 
 
 "checks that all parallel branches have the same orientation"
-function check_branch_directions(data)
+function check_branch_directions(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_branch_directions does not yet support multinetwork data")
+    end
+
     orientations = Set()
     for (i, branch) in data["branch"]
         orientation = (branch["f_bus"], branch["t_bus"])
@@ -496,12 +746,79 @@ function check_branch_directions(data)
 end
 
 
+"checks that all branches connect two distinct buses"
+function check_branch_loops(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_branch_loops does not yet support multinetwork data")
+    end
+
+    for (i, branch) in data["branch"]
+        if branch["f_bus"] == branch["t_bus"]
+            error(LOGGER, "both sides of branch $(i) connect to bus $(branch["f_bus"])")
+        end
+    end
+end
+
+
+"checks that all buses are unique and other components link to valid buses"
+function check_connectivity(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_connectivity does not yet support multinetwork data")
+    end
+
+    bus_ids = Set([bus["index"] for (i,bus) in data["bus"]])
+    assert(length(bus_ids) == length(data["bus"])) # if this is not true something very bad is going on
+
+    for (i, load) in data["load"]
+        if !(load["load_bus"] in bus_ids)
+            error(LOGGER, "bus $(load["load_bus"]) in load $(i) is not defined")
+        end
+    end
+
+    for (i, shunt) in data["shunt"]
+        if !(shunt["shunt_bus"] in bus_ids)
+            error(LOGGER, "bus $(shunt["shunt_bus"]) in shunt $(i) is not defined")
+        end
+    end
+
+    for (i, gen) in data["gen"]
+        if !(gen["gen_bus"] in bus_ids)
+            error(LOGGER, "bus $(gen["gen_bus"]) in generator $(i) is not defined")
+        end
+    end
+
+    for (i, branch) in data["branch"]
+        if !(branch["f_bus"] in bus_ids)
+            error(LOGGER, "from bus $(branch["f_bus"]) in branch $(i) is not defined")
+        end
+
+        if !(branch["t_bus"] in bus_ids)
+            error(LOGGER, "to bus $(branch["t_bus"]) in branch $(i) is not defined")
+        end
+    end
+
+    for (i, dcline) in data["dcline"]
+        if !(dcline["f_bus"] in bus_ids)
+            error(LOGGER, "from bus $(dcline["f_bus"]) in dcline $(i) is not defined")
+        end
+
+        if !(dcline["t_bus"] in bus_ids)
+            error(LOGGER, "to bus $(dcline["t_bus"]) in dcline $(i) is not defined")
+        end
+    end
+end
+
+
 """
 checks that each branch has a reasonable transformer parameters
 
-this is important becouse setting tap == 0.0 leads to NaN computations, which are hard to debug
+this is important because setting tap == 0.0 leads to NaN computations, which are hard to debug
 """
-function check_transformer_parameters(data)
+function check_transformer_parameters(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_transformer_parameters does not yet support multinetwork data")
+    end
+
     assert("per_unit" in keys(data) && data["per_unit"])
 
     for (i, branch) in data["branch"]
@@ -523,7 +840,11 @@ end
 
 
 "checks bus types are consistent with generator connections, if not, fixes them"
-function check_bus_types(data)
+function check_bus_types(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_bus_types does not yet support multinetwork data")
+    end
+
     bus_gens = Dict([(i, []) for (i,bus) in data["bus"]])
 
     for (i,gen) in data["gen"]
@@ -553,7 +874,11 @@ end
 
 
 "checks that parameters for dc lines are reasonable"
-function check_dcline_limits(data)
+function check_dcline_limits(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_dcline_limits does not yet support multinetwork data")
+    end
+
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
@@ -592,7 +917,11 @@ end
 
 
 "throws warnings if generator and dc line voltage setpoints are not consistent with the bus voltage setpoint"
-function check_voltage_setpoints(data)
+function check_voltage_setpoints(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_voltage_setpoints does not yet support multinetwork data")
+    end
+
     for (i,gen) in data["gen"]
         bus_id = gen["gen_bus"]
         bus = data["bus"]["$(bus_id)"]
@@ -620,7 +949,11 @@ end
 
 
 "throws warnings if cost functions are malformed"
-function check_cost_functions(data)
+function check_cost_functions(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("check_cost_functions does not yet support multinetwork data")
+    end
+
     for (i,gen) in data["gen"]
         _check_cost_functions(i,gen)
     end
@@ -658,6 +991,370 @@ function _check_cost_functions(id, comp)
             end
         else
             warn(LOGGER, "Unknown generator cost model of type $(comp["model"])")
+        end
+    end
+end
+
+
+
+"""
+finds active network buses and branches that are not necessary for the
+computation and sets their status to off.
+
+Works on a PowerModels data dict, so that a it can be used without a GenericPowerModel object
+
+Warning: this implementation has quadratic complexity, in the worst case
+"""
+function propagate_topology_status(data::Dict{String,Any})
+    if data["multinetwork"]
+        for (i,nw_data) in data["nw"]
+            _propagate_topology_status(nw_data)
+        end
+    else
+         _propagate_topology_status(data)
+    end
+end
+
+function _propagate_topology_status(data::Dict{String,Any})
+    buses = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
+
+    # compute what active components are incident to each bus
+    incident_load = bus_load_lookup(data["load"], data["bus"])
+    incident_active_load = Dict()
+    for (i, load_list) in incident_load
+        incident_active_load[i] = filter(load -> load["status"] != 0, load_list)
+    end
+
+    incident_shunt = bus_shunt_lookup(data["shunt"], data["bus"])
+    incident_active_shunt = Dict()
+    for (i, shunt_list) in incident_shunt
+        incident_active_shunt[i] = filter(shunt -> shunt["status"] != 0, shunt_list)
+    end
+
+    incident_gen = bus_gen_lookup(data["gen"], data["bus"])
+    incident_active_gen = Dict()
+    for (i, gen_list) in incident_gen
+        incident_active_gen[i] = filter(gen -> gen["gen_status"] != 0, gen_list)
+    end
+
+    incident_branch = Dict(bus["bus_i"] => [] for (i,bus) in data["bus"])
+    for (i,branch) in data["branch"]
+        push!(incident_branch[branch["f_bus"]], branch)
+        push!(incident_branch[branch["t_bus"]], branch)
+    end
+
+    incident_dcline = Dict(bus["bus_i"] => [] for (i,bus) in data["bus"])
+    for (i,dcline) in data["dcline"]
+        push!(incident_dcline[dcline["f_bus"]], dcline)
+        push!(incident_dcline[dcline["t_bus"]], dcline)
+    end
+
+    updated = true
+    iteration = 0
+
+    while updated
+        while updated
+            iteration += 1
+            updated = false
+
+            for (i,branch) in data["branch"]
+                if branch["br_status"] != 0
+                    f_bus = buses[branch["f_bus"]]
+                    t_bus = buses[branch["t_bus"]]
+
+                    if f_bus["bus_type"] == 4 || t_bus["bus_type"] == 4
+                        info(LOGGER, "deactivating branch $(i):($(branch["f_bus"]),$(branch["t_bus"])) due to connecting bus status")
+                        branch["br_status"] = 0
+                        updated = true
+                    end
+                end
+            end
+
+            for (i,dcline) in data["dcline"]
+                if dcline["br_status"] != 0
+                    f_bus = buses[dcline["f_bus"]]
+                    t_bus = buses[dcline["t_bus"]]
+
+                    if f_bus["bus_type"] == 4 || t_bus["bus_type"] == 4
+                        info(LOGGER, "deactivating dcline $(i):($(dcline["f_bus"]),$(dcline["t_bus"])) due to connecting bus status")
+                        dcline["br_status"] = 0
+                        updated = true
+                    end
+                end
+            end
+
+            for (i,bus) in buses
+                if bus["bus_type"] != 4
+                    if length(incident_branch[i]) + length(incident_dcline[i]) > 0
+                        incident_branch_count = sum([0; [branch["br_status"] for branch in incident_branch[i]]])
+                        incident_dcline_count = sum([0; [dcline["br_status"] for dcline in incident_dcline[i]]])
+                        incident_active_edge = incident_branch_count + incident_dcline_count
+                    else
+                        incident_active_edge = 0
+                    end
+
+                    #println("bus $(i) active branch $(incident_active_edge)")
+                    #println("bus $(i) active gen $(incident_active_gen)")
+                    #println("bus $(i) active load $(incident_active_load)")
+                    #println("bus $(i) active shunt $(incident_active_shunt)")
+
+                    if incident_active_edge == 1 && length(incident_active_gen[i]) == 0 && length(incident_active_load[i]) == 0 && length(incident_active_shunt[i]) == 0
+                        info(LOGGER, "deactivating bus $(i) due to dangling bus without generation and load")
+                        bus["bus_type"] = 4
+                        updated = true
+                    end
+
+                else # bus type == 4
+                    for load in incident_active_load[i]
+                        if load["status"] != 0
+                            info(LOGGER, "deactivating load $(load["index"]) due to inactive bus $(i)")
+                            load["status"] = 0
+                            updated = true
+                        end
+                    end
+
+                    for shunt in incident_active_shunt[i]
+                        if shunt["status"] != 0
+                            info(LOGGER, "deactivating shunt $(shunt["index"]) due to inactive bus $(i)")
+                            shunt["status"] = 0
+                            updated = true
+                        end
+                    end
+
+                    for gen in incident_active_gen[i]
+                        if gen["gen_status"] != 0
+                            info(LOGGER, "deactivating generator $(gen["index"]) due to inactive bus $(i)")
+                            gen["gen_status"] = 0
+                            updated = true
+                        end
+                    end
+                end
+            end
+        end
+
+        ccs = connected_components(data)
+
+        #println(ccs)
+        #TODO set reference node for each cc
+
+        for cc in ccs
+            cc_active_loads = [0]
+            cc_active_shunts = [0]
+            cc_active_gens = [0]
+
+            for i in cc
+                cc_active_loads = push!(cc_active_loads, length(incident_active_load[i]))
+                cc_active_shunts = push!(cc_active_shunts, length(incident_active_shunt[i]))
+                cc_active_gens = push!(cc_active_gens, length(incident_active_gen[i]))
+            end
+
+            active_load_count = sum(cc_active_loads)
+            active_shunt_count = sum(cc_active_shunts)
+            active_gen_count = sum(cc_active_gens)
+
+            if (active_load_count == 0 && active_shunt_count == 0) || active_gen_count == 0
+                info(LOGGER, "deactivating connected component $(cc) due to isolation without generation and load")
+                for i in cc
+                    buses[i]["bus_type"] = 4
+                end
+                updated = true
+            end
+        end
+
+    end
+
+    info(LOGGER, "topology status propagation fixpoint reached in $(iteration) rounds")
+
+    check_refrence_buses(data)
+end
+
+
+"""
+determines the largest connected component of the network and turns everything else off
+"""
+function select_largest_component(data::Dict{String,Any})
+    if data["multinetwork"]
+        for (i,nw_data) in data["nw"]
+            _select_largest_component(nw_data)
+        end
+    else
+         _select_largest_component(data)
+    end
+end
+
+function _select_largest_component(data::Dict{String,Any})
+    ccs = connected_components(data)
+    info(LOGGER, "found $(length(ccs)) components")
+
+    ccs_order = sort(collect(ccs); by=length)
+    largest_cc = ccs_order[end]
+
+    info(LOGGER, "largest component has $(length(largest_cc)) buses")
+
+    for (i,bus) in data["bus"]
+        if bus["bus_type"] != 4 && !(bus["index"] in largest_cc)
+            bus["bus_type"] = 4
+            info(LOGGER, "deactivating bus $(i) due to small connected component")
+        end
+    end
+
+    check_refrence_buses(data)
+end
+
+
+"""
+checks that each connected components has a reference bus, if not, adds one
+"""
+function check_refrence_buses(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        for (i,nw_data) in data["nw"]
+            _check_refrence_buses(nw_data)
+        end
+    else
+        _check_refrence_buses(data)
+    end
+end
+
+
+function _check_refrence_buses(data::Dict{String,Any})
+    bus_lookup = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
+    bus_gen = bus_gen_lookup(data["gen"], data["bus"])
+
+    ccs = connected_components(data)
+    ccs_order = sort(collect(ccs); by=length)
+
+    bus_to_cc = Dict()
+    for (i, cc) in enumerate(ccs_order)
+        for bus_i in cc
+            bus_to_cc[bus_i] = i
+        end
+    end
+
+    cc_gens = Dict( i => Dict() for (i, cc) in enumerate(ccs_order) )
+    for (i, gen) in data["gen"]
+        bus_id = gen["gen_bus"]
+        if haskey(bus_to_cc, bus_id)
+            cc_id = bus_to_cc[bus_id]
+            cc_gens[cc_id][i] = gen
+        end
+    end
+
+    for (i, cc) in enumerate(ccs_order)
+        check_component_refrence_bus(cc, bus_lookup, cc_gens[i])
+    end
+end
+
+
+"""
+checks that a connected component has a reference bus, if not, adds one
+"""
+function check_component_refrence_bus(component_bus_ids, bus_lookup, component_gens)
+    refrence_buses = Set()
+    for bus_id in component_bus_ids
+        bus = bus_lookup[bus_id]
+        if bus["bus_type"] == 3
+            push!(refrence_buses, bus_id)
+        end
+    end
+
+    if length(refrence_buses) == 0
+        warn(LOGGER, "no reference bus found in connected component $(component_bus_ids)")
+
+        if length(component_gens) > 0
+            big_gen = biggest_generator(component_gens)
+            gen_bus = bus_lookup[big_gen["gen_bus"]]
+            gen_bus["bus_type"] = 3
+            warn(LOGGER, "setting bus $(gen_bus["index"]) as reference bus in connected component $(component_bus_ids), based on generator $(big_gen["index"])")
+        else
+            warn(LOGGER, "no generators found in connected component $(component_bus_ids), try running propagate_topology_status")
+        end
+    end
+end
+
+
+"builds a lookup list of what generators are connected to a given bus"
+function bus_gen_lookup(gen_data::Dict{String,Any}, bus_data::Dict{String,Any})
+    bus_gen = Dict(bus["bus_i"] => [] for (i,bus) in bus_data)
+    for (i,gen) in gen_data
+        push!(bus_gen[gen["gen_bus"]], gen)
+    end
+    return bus_gen
+end
+
+"builds a lookup list of what loads are connected to a given bus"
+function bus_load_lookup(load_data::Dict{String,Any}, bus_data::Dict{String,Any})
+    bus_load = Dict(bus["bus_i"] => [] for (i,bus) in bus_data)
+    for (i,load) in load_data
+        push!(bus_load[load["load_bus"]], load)
+    end
+    return bus_load
+end
+
+"builds a lookup list of what shunts are connected to a given bus"
+function bus_shunt_lookup(shunt_data::Dict{String,Any}, bus_data::Dict{String,Any})
+    bus_shunt = Dict(bus["bus_i"] => [] for (i,bus) in bus_data)
+    for (i,shunt) in shunt_data
+        push!(bus_shunt[shunt["shunt_bus"]], shunt)
+    end
+    return bus_shunt
+end
+
+
+"""
+computes the connected components of the network graph
+returns a set of sets of bus ids, each set is a connected component
+"""
+function connected_components(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("connected_components does not yet support multinetwork data")
+    end
+
+    active_bus = filter((i, bus) -> bus["bus_type"] != 4, data["bus"])
+    active_bus_ids = Set{Int64}([bus["bus_i"] for (i,bus) in active_bus])
+    #println(active_bus_ids)
+
+    neighbors = Dict(i => [] for i in active_bus_ids)
+    for (i,branch) in data["branch"]
+        if branch["br_status"] != 0 && branch["f_bus"] in active_bus_ids && branch["t_bus"] in active_bus_ids
+            push!(neighbors[branch["f_bus"]], branch["t_bus"])
+            push!(neighbors[branch["t_bus"]], branch["f_bus"])
+        end
+    end
+    for (i,dcline) in data["dcline"]
+        if dcline["br_status"] != 0 && dcline["f_bus"] in active_bus_ids && dcline["t_bus"] in active_bus_ids
+            push!(neighbors[dcline["f_bus"]], dcline["t_bus"])
+            push!(neighbors[dcline["t_bus"]], dcline["f_bus"])
+        end
+    end
+    #println(neighbors)
+
+    component_lookup = Dict(i => Set{Int64}([i]) for i in active_bus_ids)
+    touched = Set{Int64}()
+
+    for i in active_bus_ids
+        if !(i in touched)
+            _dfs(i, neighbors, component_lookup, touched)
+        end
+    end
+
+    ccs = (Set(values(component_lookup)))
+
+    return ccs
+end
+
+
+"""
+performs DFS on a graph
+"""
+function _dfs(i, neighbors, component_lookup, touched)
+    push!(touched, i)
+    for j in neighbors[i]
+        if !(j in touched)
+            new_comp = union(component_lookup[i], component_lookup[j])
+            for k in new_comp
+                component_lookup[k] = new_comp
+            end
+            _dfs(j, neighbors, component_lookup, touched)
         end
     end
 end

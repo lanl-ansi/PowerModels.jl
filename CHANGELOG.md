@@ -3,12 +3,19 @@ PowerModels.jl Change Log
 
 ### Staged
 - Dropped support for Julia v0.5 (breaking)
+- Added support for table-like data summary, #146
+- Added support for network topology processing
 - Migrated logging tools from Logging to Memento
 - Refactored Matlab and Matpower parsing functions
 - Refactored implementation of WRM formulation
 - Updated struct and type parameter syntax to Julia v0.6 (breaking)
 - Fixed a mathematical bug when swapping the orientation of a transformer
 - Added support for parsing of PTI raw files into a Dict
+- Updated branch mathematical model and Matpower parser to support asymmetrical line charging
+- Updated KCL constraint models to account for multiple loads and shunts per bus
+- Separated loads and shunts from buses in PowerModels data structure
+- Leveraging InfrastructureModels package for Matlab data parsing, #233
+- Minor issues closed #51, #131, #220 
 
 ### v0.5.1
 - Added support for convex piecewise linear cost functions
