@@ -40,10 +40,10 @@ function calc_series_current_magnitude_bound(branches, buses)
         bus_fr = buses[branch["f_bus"]]
         bus_to = buses[branch["t_bus"]]
 
-        g_sh_fr = 0 #TODO update when adding asymmetric shunt conductance
-        g_sh_to = 0
-        b_sh_fr = branch["br_b"]/2 #TODO update when adding asymmetric shunt conductance
-        b_sh_to = branch["br_b"]/2
+        g_sh_fr = branch["g_fr"]
+        g_sh_to = branch["g_to"]
+        b_sh_fr = branch["b_fr"]
+        b_sh_to = branch["b_to"]
         zmag_fr = abs(g_sh_fr + im*b_sh_fr)
         zmag_to = abs(g_sh_to + im*b_sh_to)
 
@@ -53,7 +53,7 @@ function calc_series_current_magnitude_bound(branches, buses)
         vmin_to = bus_fr["vmin"]
 
         tap_fr = branch["tap"]
-        tap_to = 1 # no transformer on to side, keeps eqs symmetric.
+        tap_to = 1 # no transformer on to side, keeps expressions symmetric.
         smax = branch["rate_a"]
 
         cmax_tot_fr = smax*tap_fr/vmin_fr
@@ -311,7 +311,7 @@ function summary(io::IO, data::Dict{String,Any}; float_precision::Int = 3)
         comp_id_pad = comp_key_sizes["index"] # not clear why this is offset so much
         delete!(comp_key_sizes, "index")
         comp_keys_ordered = sort([k for k in keys(comp_key_sizes) if !(haskey(default_values, k))], by=x->(get(component_parameter_order, x, max_parameter_value), x))
-        
+
         header = join([lpad(k, comp_key_sizes[k]) for k in comp_keys_ordered], ", ")
 
         pad = " "^(comp_id_pad+2)
