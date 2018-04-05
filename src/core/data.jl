@@ -175,18 +175,25 @@ function summary(io::IO, data::Dict{String,Any}; float_precision::Int = 3)
 
 
     component_types = []
+    other_types = []
 
     println(io, _bold("Metadata"))
     for (k,v) in sort(data; by=x->x[1])
-        if !(typeof(v) <: Dict)
-            println(io, "  $(k): $(v)")
-        else
-            push!(component_types, k)
+        if typeof(v) <: Dict
+            if sum([!(typeof(comp) <: Dict) for (i, comp) in v]) == 0
+                push!(component_types, k)
+                continue
+            end
         end
+
+        println(io, "  $(k): $(_value2string(v, float_precision))")
     end
 
-    println(io, "")
-    println(io, _bold("Table Counts"))
+
+    if length(component_types) > 0
+        println(io, "")
+        println(io, _bold("Table Counts"))
+    end
     for k in sort(component_types, by=x->get(component_types_order, x, 999))
         println(io, "  $(k): $(length(data[k]))")
     end
@@ -215,15 +222,7 @@ function summary(io::IO, data::Dict{String,Any}; float_precision::Int = 3)
                     end
                 end
 
-                if typeof(v) <: AbstractFloat
-                    disp_comp[k] = _float2string(v, float_precision)
-                elseif typeof(v) <: Array
-                    disp_comp[k] = "[($(length(v)))]"
-                elseif typeof(v) <: Dict
-                    disp_comp[k] = "{($(length(v)))}"
-                else
-                    disp_comp[k] = "$(v)"
-                end
+                disp_comp[k] = _value2string(v, float_precision)
             end
             if !status_found
                 push!(active_components, i)
@@ -318,6 +317,20 @@ end
 # more info here https://en.wikipedia.org/wiki/ANSI_escape_code
 function _grey(s::String)
     return "\033[38;5;239m$(s)\033[0m"
+end
+
+function _value2string(v, float_precision::Int)
+    if typeof(v) <: AbstractFloat
+        return _float2string(v, float_precision)
+    end
+    if typeof(v) <: Array
+        return "[($(length(v)))]"
+    end
+    if typeof(v) <: Dict
+        return "{($(length(v)))}"
+    end
+
+    return "$(v)"
 end
 
 # a work around because sprintf cannot take runtime format strings
