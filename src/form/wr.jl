@@ -498,7 +498,7 @@ function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, i::Int) where T 
 end
 
 ""
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, angmin, angmax) where T <: QCWRForm
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, arc_from, f_bus, t_bus, angmin, angmax) where T <: QCWRForm
     td = pm.var[:nw][n][:td][(f_bus, t_bus)]
 
     if getlowerbound(td) < angmin
@@ -812,4 +812,3 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: QCWRTri
     end
 
 end
-

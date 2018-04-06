@@ -37,17 +37,17 @@ end
 
 "real part of the voltage variable `i` in `bus`es"
 function variable_voltage_real(pm::GenericPowerModel, n::Int=pm.cnw; bounded::Bool = true)
-    pm.var[:nw][n][:vr] = @variable(pm.model, 
+    pm.var[:nw][n][:vr] = @variable(pm.model,
         [i in keys(pm.ref[:nw][n][:bus])], basename="$(n)_vr",
         lowerbound = -pm.ref[:nw][n][:bus][i]["vmax"],
-        upperbound =  pm.ref[:nw][n][:bus][i]["vmax"], 
+        upperbound =  pm.ref[:nw][n][:bus][i]["vmax"],
         start = getstart(pm.ref[:nw][n][:bus], i, "vr_start", 1.0)
     )
 end
 
 "real part of the voltage variable `i` in `bus`es"
 function variable_voltage_imaginary(pm::GenericPowerModel, n::Int=pm.cnw; bounded::Bool = true)
-    pm.var[:nw][n][:vi] = @variable(pm.model, 
+    pm.var[:nw][n][:vi] = @variable(pm.model,
         [i in keys(pm.ref[:nw][n][:bus])], basename="$(n)_vi",
         lowerbound = -pm.ref[:nw][n][:bus][i]["vmax"],
         upperbound =  pm.ref[:nw][n][:bus][i]["vmax"],
@@ -87,14 +87,14 @@ end
 "variable: `w[i] >= 0` for `i` in `bus`es"
 function variable_voltage_magnitude_sqr(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
     if bounded
-        pm.var[:nw][n][:w] = @variable(pm.model, 
+        pm.var[:nw][n][:w] = @variable(pm.model,
             [i in keys(pm.ref[:nw][n][:bus])], basename="$(n)_w",
             lowerbound = pm.ref[:nw][n][:bus][i]["vmin"]^2,
             upperbound = pm.ref[:nw][n][:bus][i]["vmax"]^2,
             start = getstart(pm.ref[:nw][n][:bus], i, "w_start", 1.001)
         )
     else
-        pm.var[:nw][n][:w] = @variable(pm.model, 
+        pm.var[:nw][n][:w] = @variable(pm.model,
             [i in keys(pm.ref[:nw][n][:bus])], basename="$(n)_w",
             lowerbound = 0,
             start = getstart(pm.ref[:nw][n][:bus], i, "w_start", 1.001)
@@ -120,7 +120,7 @@ function variable_voltage_magnitude_sqr_to_on_off(pm::GenericPowerModel, n::Int=
     buses = pm.ref[:nw][n][:bus]
     branches = pm.ref[:nw][n][:branch]
 
-    pm.var[:nw][n][:w_to] = @variable(pm.model, 
+    pm.var[:nw][n][:w_to] = @variable(pm.model,
         [i in keys(pm.ref[:nw][n][:branch])], basename="$(n)_w_to",
         lowerbound = 0,
         upperbound = buses[branches[i]["t_bus"]]["vmax"]^2,
@@ -134,7 +134,7 @@ function variable_voltage_product(pm::GenericPowerModel, n::Int=pm.cnw; bounded 
     if bounded
         wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:nw][n][:buspairs])
 
-        pm.var[:nw][n][:wr] = @variable(pm.model, 
+        pm.var[:nw][n][:wr] = @variable(pm.model,
             [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_wr",
             lowerbound = wr_min[bp],
             upperbound = wr_max[bp],
@@ -151,7 +151,7 @@ function variable_voltage_product(pm::GenericPowerModel, n::Int=pm.cnw; bounded 
             [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_wr",
             start = getstart(pm.ref[:nw][n][:buspairs], bp, "wr_start", 1.0)
         )
-        pm.var[:nw][n][:wi] = @variable(pm.model, 
+        pm.var[:nw][n][:wi] = @variable(pm.model,
             [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_wi",
             start = getstart(pm.ref[:nw][n][:buspairs], bp, "wi_start")
         )
@@ -219,6 +219,8 @@ function variable_reactive_generation(pm::GenericPowerModel, n::Int=pm.cnw; boun
     end
 end
 
+
+
 ""
 function variable_branch_flow(pm::GenericPowerModel, n::Int=pm.cnw; kwargs...)
     variable_active_branch_flow(pm, n; kwargs...)
@@ -253,7 +255,7 @@ function variable_reactive_branch_flow(pm::GenericPowerModel, n::Int=pm.cnw; bou
             start = getstart(pm.ref[:nw][n][:branch], l, "q_start")
         )
     else
-        pm.var[:nw][n][:q] = @variable(pm.model, 
+        pm.var[:nw][n][:q] = @variable(pm.model,
             [(l,i,j) in pm.ref[:nw][n][:arcs]], basename="$(n)_q",
             start = getstart(pm.ref[:nw][n][:branch], l, "q_start")
         )
@@ -271,7 +273,7 @@ function variable_active_dcline_flow(pm::GenericPowerModel, n::Int=pm.cnw; bound
         pm.var[:nw][n][:p_dc] = @variable(pm.model,
             [a in pm.ref[:nw][n][:arcs_dc]], basename="$(n)_p_dc",
             lowerbound = pm.ref[:nw][n][:arcs_dc_param][a]["pmin"],
-            upperbound = pm.ref[:nw][n][:arcs_dc_param][a]["pmax"], 
+            upperbound = pm.ref[:nw][n][:arcs_dc_param][a]["pmax"],
             start = pm.ref[:nw][n][:arcs_dc_param][a]["pref"]
         )
     else
@@ -285,7 +287,7 @@ end
 "variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
 function variable_reactive_dcline_flow(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
     if bounded
-        pm.var[:nw][n][:q_dc] = @variable(pm.model, 
+        pm.var[:nw][n][:q_dc] = @variable(pm.model,
             q_dc[a in pm.ref[:nw][n][:arcs_dc]], basename="$(n)_q_dc",
             lowerbound = pm.ref[:nw][n][:arcs_dc_param][a]["qmin"],
             upperbound = pm.ref[:nw][n][:arcs_dc_param][a]["qmax"],
@@ -313,7 +315,7 @@ function variable_active_branch_flow_ne(pm::GenericPowerModel, n::Int=pm.cnw)
     pm.var[:nw][n][:p_ne] = @variable(pm.model,
         [(l,i,j) in pm.ref[:nw][n][:ne_arcs]], basename="$(n)_p_ne",
         lowerbound = -pm.ref[:nw][n][:ne_branch][l]["rate_a"],
-        upperbound =  pm.ref[:nw][n][:ne_branch][l]["rate_a"], 
+        upperbound =  pm.ref[:nw][n][:ne_branch][l]["rate_a"],
         start = getstart(pm.ref[:nw][n][:ne_branch], l, "p_start")
     )
 end
@@ -330,7 +332,7 @@ end
 
 "variable: `0 <= branch_z[l] <= 1` for `l` in `branch`es"
 function variable_branch_indicator(pm::GenericPowerModel, n::Int=pm.cnw)
-    pm.var[:nw][n][:branch_z] = @variable(pm.model, 
+    pm.var[:nw][n][:branch_z] = @variable(pm.model,
         [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_branch_z",
         lowerbound = 0,
         upperbound = 1,
@@ -342,9 +344,9 @@ end
 "variable: `0 <= branch_ne[l] <= 1` for `l` in `branch`es"
 function variable_branch_ne(pm::GenericPowerModel, n::Int=pm.cnw)
     branches = pm.ref[:nw][n][:ne_branch]
-    pm.var[:nw][n][:branch_ne] = @variable(pm.model, 
+    pm.var[:nw][n][:branch_ne] = @variable(pm.model,
         [l in keys(branches)], basename="$(n)_branch_ne",
-        lowerbound = 0, 
+        lowerbound = 0,
         upperbound = 1,
         category = :Int,
         start = getstart(branches, l, "branch_tnep_start", 1.0)

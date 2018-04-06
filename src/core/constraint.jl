@@ -101,3 +101,7 @@ function constraint_active_dcline_setpoint(pm::GenericPowerModel, n::Int, f_idx,
     @constraint(pm.model, p_fr == pf)
     @constraint(pm.model, p_to == pt)
 end
+
+"do nothing, this model does not have complex voltage constraints"
+function constraint_voltage(pm::GenericPowerModel, n::Int)
+end

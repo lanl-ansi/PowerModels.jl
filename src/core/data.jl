@@ -34,6 +34,41 @@ function calc_voltage_product_bounds(buspairs)
 end
 
 ""
+function calc_series_current_magnitude_bound(branches, buses)
+    cmax = Dict([(key, 0.0) for key in keys(branches)])
+    for (key, branch) in branches
+        bus_fr = buses[branch["f_bus"]]
+        bus_to = buses[branch["t_bus"]]
+
+        g_sh_fr = branch["g_fr"]
+        g_sh_to = branch["g_to"]
+        b_sh_fr = branch["b_fr"]
+        b_sh_to = branch["b_to"]
+        zmag_fr = abs(g_sh_fr + im*b_sh_fr)
+        zmag_to = abs(g_sh_to + im*b_sh_to)
+
+        vmax_fr = bus_fr["vmax"]
+        vmax_to = bus_fr["vmax"]
+        vmin_fr = bus_fr["vmin"]
+        vmin_to = bus_fr["vmin"]
+
+        tap_fr = branch["tap"]
+        tap_to = 1 # no transformer on to side, keeps expressions symmetric.
+        smax = branch["rate_a"]
+
+        cmax_tot_fr = smax*tap_fr/vmin_fr
+        cmax_tot_to = smax*tap_to/vmin_to
+
+        cmax_sh_fr = zmag_fr * vmax_fr
+        cmax_sh_to = zmag_to * vmax_to
+
+        cmax[key] = max(cmax_tot_fr + cmax_sh_fr, cmax_tot_to + cmax_sh_to)
+    end
+    return cmax
+end
+
+
+""
 function calc_theta_delta_bounds(data::Dict{String,Any})
     bus_count = length(data["bus"])
     branches = [branch for branch in values(data["branch"])]
@@ -276,7 +311,7 @@ function summary(io::IO, data::Dict{String,Any}; float_precision::Int = 3)
         comp_id_pad = comp_key_sizes["index"] # not clear why this is offset so much
         delete!(comp_key_sizes, "index")
         comp_keys_ordered = sort([k for k in keys(comp_key_sizes) if !(haskey(default_values, k))], by=x->(get(component_parameter_order, x, max_parameter_value), x))
-        
+
         header = join([lpad(k, comp_key_sizes[k]) for k in comp_keys_ordered], ", ")
 
         pad = " "^(comp_id_pad+2)

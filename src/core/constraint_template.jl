@@ -471,11 +471,12 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel, n::Int, i::I
     branch = ref(pm, n, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
+    arc_from = (i, f_bus, t_bus)
     pair = (f_bus, t_bus)
     buspair = ref(pm, n, :buspairs, pair)
 
     if buspair["branch"] == i
-        constraint_voltage_angle_difference(pm, n, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
+        constraint_voltage_angle_difference(pm, n, arc_from, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
     end
 end
 constraint_voltage_angle_difference(pm::GenericPowerModel, i::Int) = constraint_voltage_angle_difference(pm, pm.cnw, i)
@@ -530,3 +531,53 @@ function constraint_loss_lb(pm::GenericPowerModel, n::Int, i::Int)
     constraint_loss_lb(pm, n, f_bus, t_bus, f_idx, t_idx, g_fr, b_fr, g_to, b_to, tr)
 end
 constraint_loss_lb(pm::GenericPowerModel, i::Int) = constraint_loss_lb(pm, pm.cnw, i)
+
+function constraint_flow_losses(pm::GenericPowerModel, n::Int, i)
+    branch = ref(pm, n, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+    r = branch["br_r"]
+    x = branch["br_x"]
+    tm = branch["tap"]
+
+    g_sh_fr = branch["g_fr"]
+    g_sh_to = branch["g_to"]
+    b_sh_fr = branch["b_fr"]
+    b_sh_to = branch["b_to"]
+    constraint_flow_losses(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
+end
+constraint_flow_losses(pm::GenericPowerModel, i::Int) = constraint_flow_losses(pm, pm.cnw, i)
+
+function constraint_voltage_magnitude_difference(pm::GenericPowerModel, n::Int, i)
+    branch = ref(pm, n, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    r = branch["br_r"]
+    x = branch["br_x"]
+    g_sh_fr = branch["g_fr"]
+    b_sh_fr = branch["b_fr"]
+    tm = branch["tap"]
+
+    constraint_voltage_magnitude_difference(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm)
+
+end
+constraint_voltage_magnitude_difference(pm::GenericPowerModel, i::Int) = constraint_voltage_magnitude_difference(pm, pm.cnw, i)
+
+
+function constraint_branch_current(pm::GenericPowerModel, n::Int, i)
+    branch = ref(pm, n, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    tm = branch["tap"]
+    g_sh_fr = branch["g_fr"]
+    b_sh_fr = branch["b_fr"]
+
+    constraint_branch_current(pm::GenericPowerModel, n::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm)
+end
+constraint_branch_current(pm::GenericPowerModel, i::Int) = constraint_branch_current(pm, pm.cnw, i)
