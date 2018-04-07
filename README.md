@@ -42,7 +42,7 @@ This code has been developed as part of the Advanced Network Science Initiative 
 The primary developer is Carleton Coffrin(@ccoffrin) with support from the following contributors,
 - Russell Bent (@rb004f) LANL, TNEP problem specification
 - Rory Finnegan (@rofinn) Invenia, Memento Logging
-- Frederik Geth(@frederikgeth) and Hakan Ergun(@hakanergun) KU Leuven, HVDC line implementation
+- Frederik Geth (@frederikgeth) and Hakan Ergun (@hakanergun) KU Leuven, Branch Flow formulation and HVDC lines
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 
