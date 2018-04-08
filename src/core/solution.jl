@@ -19,7 +19,7 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
             pm.cnw = parse(Int, n)
             solution_builder(pm, sol_nw)
             data_nws[n] = Dict(
-                "name" => nw_data["name"],
+                "name" => get(nw_data, "name", "anonymous"),
                 "bus_count" => length(nw_data["bus"]),
                 "branch_count" => length(nw_data["branch"])
             )

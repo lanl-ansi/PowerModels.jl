@@ -10,7 +10,7 @@ PMs = PowerModels
 
     function build_mn_data(base_data)
         mp_data = PowerModels.parse_file(base_data)
-        return PowerModels.replicate(mp_data, 2)
+        return InfrastructureModels.replicate(mp_data, 2)
     end
 
     function build_mn_data(base_data_1, base_data_2)

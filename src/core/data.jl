@@ -127,32 +127,6 @@ function check_keys(data, keys)
     end
 end
 
-"Transforms a single network into a multinetwork with several deepcopies of the original network"
-function replicate(sn_data::Dict{String,Any}, count::Int)
-    @assert count > 1
-    if !haskey(sn_data, "multinetwork") || sn_data["multinetwork"] == true
-        error("replicate can only be used on single networks")
-    end
-
-    mn_data = Dict{String,Any}(
-        "name" => "$(count) replicates of $(sn_data["name"])",
-        "multinetwork" => true,
-        "per_unit" => sn_data["per_unit"],
-        "baseMVA" => sn_data["baseMVA"],
-        "nw" => Dict{String,Any}()
-    )
-
-    sc_data_tmp = deepcopy(sn_data)
-    delete!(sc_data_tmp, "multinetwork")
-    delete!(sc_data_tmp, "per_unit")
-    delete!(sc_data_tmp, "baseMVA")
-
-    for n in 1:count
-        mn_data["nw"]["$n"] = deepcopy(sc_data_tmp)
-    end
-
-    return mn_data
-end
 
 "prints the text summary for a data file or dictionary to STDOUT"
 function print_summary(obj::Union{String, Dict{String,Any}}; kwargs...)
