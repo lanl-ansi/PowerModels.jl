@@ -146,33 +146,9 @@ function summary(io::IO, data::Dict{String,Any}; kwargs...)
 end
 
 
-
 "recursively applies new_data to data, overwriting information"
 function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
-    if haskey(data, "per_unit") && haskey(new_data, "per_unit")
-        if data["per_unit"] != new_data["per_unit"]
-            error("update_data requires datasets in the same units, try make_per_unit and make_mixed_units")
-        end
-    else
-        warn(LOGGER, "running update_data with data that does not include per_unit field, units may be incorrect")
-    end
-    _update_data(data, new_data)
-end
-
-"recursive call of _update_data"
-function _update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
-    for (key, new_v) in new_data
-        if haskey(data, key)
-            v = data[key]
-            if isa(v, Dict) && isa(new_v, Dict)
-                _update_data(v, new_v)
-            else
-                data[key] = new_v
-            end
-        else
-            data[key] = new_v
-        end
-    end
+    InfrastructureModels.update_data!(data, new_data)
 end
 
 
