@@ -2,6 +2,8 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+
+### v0.6.0
 - Dropped support for Julia v0.5 (breaking)
 - Added support for table-like data summary, #146
 - Added support for network topology processing
@@ -16,7 +18,14 @@ PowerModels.jl Change Log
 - Updated KCL constraint models to account for multiple loads and shunts per bus
 - Separated loads and shunts from buses in PowerModels data structure
 - Leveraging InfrastructureModels package for Matlab data parsing, #233
-- Minor issues closed #51, #131, #220 
+- Minor issues closed #51, #131, #220
+- Added convertion of PSS(R)E-v33 raw files into PowerModels data format, supporting
+    - buses
+    - loads
+    - shunts (fixed and appox. switched)
+    - generators
+    - branches
+    - transformers (two-winding)
 
 ### v0.5.1
 - Added support for convex piecewise linear cost functions

@@ -315,7 +315,7 @@ indicated at the end of a line with a `'/'` character, are also extracted
 separately, and `Array{Array{String}, String}` is returned.
 """
 function get_line_elements(line::AbstractString)::Array
-    match_string = r"(-*\d*\.*\d+[eE]*-*\d*)|(\'[^\']*?\')|(\"[^\"]*?\")|(\w+)|\,(\s+)?\,|(\/.*)"
+    match_string = r"(-*\d*\.*\d+[eE]*[+-]*\d*)|(\'[^\']*?\')|(\"[^\"]*?\")|(\w+)|\,(\s+)?\,|(\/.*)"
     matches = matchall(match_string, line)
 
     debug(LOGGER, "$line")
@@ -383,7 +383,10 @@ function parse_pti_data(data_string::String, sections::Array)
                 continue
             else
                 info(LOGGER, "At line $line_number, unexpected section: expected: $section, comment specified: $(guess_section)")
-                section = shift!(sections)
+                if !isempty(sections)
+                    section = shift!(sections)
+                end
+
                 continue
             end
         else
@@ -569,6 +572,7 @@ proper types.
 function parse_pti(filename::String)::Dict
     data_string = readstring(open(filename))
     pti_data = parse_pti_data(data_string, get_pti_sections())
+    pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"[\/\\]*(?:.*[\/\\])*(.*)\.raw", lowercase(filename)).captures[1]
 
     return pti_data
 end
