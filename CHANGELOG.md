@@ -2,30 +2,24 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- none
 
 ### v0.6.0
 - Dropped support for Julia v0.5 (breaking)
+- Added basic support for PSSE v33 raw data (incl. buses, loads, shunts, generators, branches and two-winding transformers)
 - Added support for table-like data summary, #146
 - Added support for network topology processing
 - Added basic support for Branch Flow formulation variants
-- Migrated logging tools from Logging to Memento
-- Refactored Matlab and Matpower parsing functions
+- Added support for parsing PTI files into a Dict
 - Refactored implementation of WRM formulation
-- Updated struct and type parameter syntax to Julia v0.6 (breaking)
-- Fixed a mathematical bug when swapping the orientation of a transformer
-- Added support for parsing of PTI raw files into a Dict
 - Updated branch mathematical model and Matpower parser to support asymmetrical line charging
-- Updated KCL constraint models to account for multiple loads and shunts per bus
-- Separated loads and shunts from buses in PowerModels data structure
+- Added explicit load and shunt components to the PowerModels network data structure
+- Refactored Matlab and Matpower parsing functions
 - Leveraging InfrastructureModels package for Matlab data parsing, #233
+- Migrated logging tools from Logging to Memento
+- Updated struct and type parameter syntax to Julia v0.6
+- Fixed a mathematical bug when swapping the orientation of a transformer
 - Minor issues closed #51, #131, #220
-- Added convertion of PSS(R)E-v33 raw files into PowerModels data format, supporting
-    - buses
-    - loads
-    - shunts (fixed and appox. switched)
-    - generators
-    - branches
-    - transformers (two-winding)
 
 ### v0.5.1
 - Added support for convex piecewise linear cost functions
@@ -50,7 +44,7 @@ PowerModels.jl Change Log
 - Added pm.var and made all JuMP variables anonymous (breaking)
 - Added support for SDP, ACR, and ACT Power Flow formulations
 - Added cost model zero filtering to matpower parser
-- Eliminated usage of pm.model.ext, for details see [#149](https://github.com/lanl-ansi/PowerModels.jl/pull/149)
+- Eliminated usage of pm.model.ext, #149
 - Made solution default units per-unit (breaking)
 - Removed deprecated bus-less constraint_theta_ref function (breaking)
 - Renamed polar voltage variables v,t to vm,va (breaking)
