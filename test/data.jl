@@ -40,24 +40,6 @@
         @test contains(output, "Table: gen")
     end
 
-    @testset "non-standard dict structure" begin
-        data = Dict{String,Any}(
-            "a" => 1,
-            "b" => [1,2,3],
-            "c" => Dict{String,Any}(
-                "e" => 1.2,
-                "d" => 2.3
-            )
-        )
-        output = sprint(PowerModels.summary, data)
-
-        line_count = count(c -> c == '\n', output)
-        @test line_count >= 3 && line_count <= 6 
-        @test contains(output, "Metadata")
-        @test contains(output, "a: 1")
-        @test contains(output, "b: [(3)]")
-        @test contains(output, "c: {(2)}")
-    end
 end
 
 
