@@ -15,7 +15,7 @@ PowerModels.jl Change Log
 - Updated branch mathematical model and Matpower parser to support asymmetrical line charging
 - Added explicit load and shunt components to the PowerModels network data structure
 - Refactored Matlab and Matpower parsing functions
-- Leveraging InfrastructureModels package for Matlab data parsing, #233
+- Leveraging InfrastructureModels package for Matlab data parsing, #233, #247
 - Migrated logging tools from Logging to Memento
 - Updated struct and type parameter syntax to Julia v0.6
 - Fixed a mathematical bug when swapping the orientation of a transformer
