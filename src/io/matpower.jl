@@ -147,11 +147,12 @@ function parse_matpower_string(data_string::String)
         case["name"] = "no_name_found"
     end
 
+    case["source_type"] = "matpower"
     if haskey(matlab_data, "mpc.version")
-        case["version"] = matlab_data["mpc.version"]
+        case["source_version"] = VersionNumber(matlab_data["mpc.version"])
     else
         warn(LOGGER, string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
-        case["version"] = "unknown"
+        case["source_version"] = "0.0.0+"
     end
 
     if haskey(matlab_data, "mpc.baseMVA")

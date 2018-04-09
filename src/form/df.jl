@@ -13,6 +13,51 @@ const SOCDFPowerModel = GenericPowerModel{SOCDFForm}
 "default SOC constructor"
 SOCDFPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCDFForm; kwargs...)
 
+
+""
+function variable_branch_flow(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...) where T <: AbstractDFForm
+    variable_active_branch_flow(pm, n; kwargs...)
+    variable_reactive_branch_flow(pm, n; kwargs...)
+    variable_active_branch_series_flow(pm, n; kwargs...)
+    variable_reactive_branch_series_flow(pm, n; kwargs...)
+
+end
+
+
+function variable_active_branch_series_flow(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
+    if bounded
+        pm.var[:nw][n][:p_s] = @variable(pm.model,
+            [(l,i,j) in pm.ref[:nw][n][:arcs_from]], basename="$(n)_p_s",
+            lowerbound = -pm.ref[:nw][n][:branch][l]["rate_a"],
+            upperbound =  pm.ref[:nw][n][:branch][l]["rate_a"],
+            start = getstart(pm.ref[:nw][n][:branch], l, "p_start")
+        )
+    else
+        pm.var[:nw][n][:p_s] = @variable(pm.model,
+            [(l,i,j) in pm.ref[:nw][n][:arcs_from]], basename="$(n)_p_s",
+            start = getstart(pm.ref[:nw][n][:branch], l, "p_start")
+        )
+    end
+end
+
+
+function variable_reactive_branch_series_flow(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
+    if bounded
+        pm.var[:nw][n][:q_s] = @variable(pm.model,
+            [(l,i,j) in pm.ref[:nw][n][:arcs_from]], basename="$(n)_q_s",
+            lowerbound = -pm.ref[:nw][n][:branch][l]["rate_a"],
+            upperbound =  pm.ref[:nw][n][:branch][l]["rate_a"],
+            start = getstart(pm.ref[:nw][n][:branch], l, "q_start")
+        )
+    else
+        pm.var[:nw][n][:q_s] = @variable(pm.model,
+            [(l,i,j) in pm.ref[:nw][n][:arcs_from]], basename="$(n)_q_s",
+            start = getstart(pm.ref[:nw][n][:branch], l, "q_start")
+        )
+    end
+end
+
+
 ""
 function variable_branch_current(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...) where T <: AbstractDFForm
     variable_branch_series_current_magnitude_sqr(pm, n; kwargs...)
@@ -65,15 +110,21 @@ Defines relationship between branch (series) power flow, branch (series) current
 function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractDFForm
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
+    p_s_fr = pm.var[:nw][n][:p_s][f_idx]
+    q_s_fr = pm.var[:nw][n][:q_s][f_idx]
     w_fr = pm.var[:nw][n][:w][f_bus]
     ccm  = pm.var[:nw][n][:ccm][i]
 
-    #define series flow expressions to simplify constraint
-    p_fr_s = p_fr - g_sh_fr*(w_fr/tm^2)
-    q_fr_s = q_fr + b_sh_fr*(w_fr/tm^2)
+    @constraint(pm.model, p_s_fr == p_fr - g_sh_fr*(w_fr/tm^2))
+    @constraint(pm.model, q_s_fr == q_fr + b_sh_fr*(w_fr/tm^2))
+    @constraint(pm.model, p_s_fr^2 + q_s_fr^2 <= (w_fr/tm^2)*ccm)
 
-    #convex constraint linking p, q, w and ccm
-    @constraint(pm.model, p_fr_s^2 +q_fr_s^2 <= (w_fr/tm^2)*ccm)
+    # define series flow expressions to simplify constraint
+    #p_fr_s = p_fr - g_sh_fr*(w_fr/tm^2)
+    #q_fr_s = q_fr + b_sh_fr*(w_fr/tm^2)
+
+    # convex constraint linking p, q, w and ccm
+    #@constraint(pm.model, p_fr_s^2 + q_fr_s^2 <= (w_fr/tm^2)*ccm)
 end
 
 
@@ -125,7 +176,7 @@ end
 function variable_branch_series_current_magnitude_sqr(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
     branches = pm.ref[:nw][n][:branch]
     buses = pm.ref[:nw][n][:bus]
-    cmax =  calc_series_current_magnitude_bound(branches, buses)
+    cmax = calc_series_current_magnitude_bound(branches, buses)
     if bounded
         pm.var[:nw][n][:ccm] = @variable(pm.model,
             [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_ccm",
@@ -136,6 +187,7 @@ function variable_branch_series_current_magnitude_sqr(pm::GenericPowerModel, n::
     else
         pm.var[:nw][n][:ccm] = @variable(pm.model,
             [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_ccm",
+            lowerbound = 0,
             start = getstart(pm.ref[:nw][n][:branch], l, "i_start")
         )
     end

@@ -1,16 +1,13 @@
 # Test cases for PTI RAW file parser
-using Memento, Memento.Test
 
-@testset "Test PTI '.raw' file parser" begin
+@testset "test .raw file parser" begin
     @testset "Check PTI exception handling" begin
         setlevel!(getlogger(PowerModels), "warn")
 
         @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
-        @test_throws(getlogger(PowerModels),
-                    MethodError,
-                    @test_warn(getlogger(PowerModels),
-                               "This feature is incomplete, and will currently only return RAW data from a PTI file",
-                               PowerModels.parse_file("../test/data/pti/frankenstein_00.raw")))
+        @test_warn(getlogger(PowerModels),
+                   "The PSS(R)E parser is partially implimented, and currently only supports buses, loads, shunts, generators, branches, and transformers (two-winding)",
+                   PowerModels.parse_file("../test/data/pti/frankenstein_00.raw"))
         @test_throws(getlogger(PowerModels),
                      ErrorException,
                      PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
@@ -28,7 +25,7 @@ using Memento, Memento.Test
         @test isa(data_dict, Dict)
 
         @test length(data_dict["CASE IDENTIFICATION"]) == 1
-        @test length(data_dict["CASE IDENTIFICATION"][1]) == 8
+        @test length(data_dict["CASE IDENTIFICATION"][1]) == 9
 
         @test length(data_dict["BUS"]) == 4
         for item in data_dict["BUS"]
