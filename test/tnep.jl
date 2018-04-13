@@ -2,13 +2,13 @@
 
 function check_tnep_status(sol)
     for (idx,val) in sol["ne_branch"]
-        @test isapprox(val["built"], 0.0, rtol=1e-4) || isapprox(val["built"], 1.0, rtol=1e-4)
+        @test isapprox(val["built"], 0.0, rtol=1e-3) || isapprox(val["built"], 1.0, rtol=1e-3)
     end
 end
 
 
 @testset "test ac tnep" begin
-    @testset "5-bus case" begin
+    @testset "3-bus case" begin
         result = run_tnep("../test/data/matpower/case3_tnep.m", ACPPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
