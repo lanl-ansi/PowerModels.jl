@@ -1,7 +1,9 @@
 using PowerModels
+using InfrastructureModels
 using Memento
 
 # Suppress warnings during testing.
+setlevel!(getlogger(InfrastructureModels), "error")
 setlevel!(getlogger(PowerModels), "error")
 
 using Ipopt
@@ -20,9 +22,16 @@ juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=
 pajarito_solver = PajaritoSolver(mip_solver=glpk_solver, cont_solver=ipopt_solver, log_level=0)
 scs_solver = SCSSolver(max_iters=1000000, verbose=0)
 
+
+@testset "PowerModels" begin
+
 include("common.jl")
 
 include("matpower.jl")
+
+include("pti.jl")
+
+include("psse.jl")
 
 include("output.jl")
 
@@ -42,3 +51,4 @@ include("multinetwork.jl")
 
 include("docs.jl")
 
+end

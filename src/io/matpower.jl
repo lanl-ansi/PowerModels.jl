@@ -23,7 +23,7 @@ function row_to_typed_dict(row_data, columns)
     for (i,v) in enumerate(row_data)
         if i <= length(columns)
             name, typ = columns[i]
-            dict_data[name] = check_type(typ, v)
+            dict_data[name] = InfrastructureModels.check_type(typ, v)
         else
             dict_data["col_$(i)"] = v
         end
@@ -147,11 +147,12 @@ function parse_matpower_string(data_string::String)
         case["name"] = "no_name_found"
     end
 
+    case["source_type"] = "matpower"
     if haskey(matlab_data, "mpc.version")
-        case["version"] = matlab_data["mpc.version"]
+        case["source_version"] = VersionNumber(matlab_data["mpc.version"])
     else
         warn(LOGGER, string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
-        case["version"] = "unknown"
+        case["source_version"] = "0.0.0+"
     end
 
     if haskey(matlab_data, "mpc.baseMVA")
@@ -166,7 +167,7 @@ function parse_matpower_string(data_string::String)
         buses = []
         for bus_row in matlab_data["mpc.bus"]
             bus_data = row_to_typed_dict(bus_row, mp_bus_columns)
-            bus_data["index"] = check_type(Int, bus_row[1])
+            bus_data["index"] = InfrastructureModels.check_type(Int, bus_row[1])
             push!(buses, bus_data)
         end
         case["bus"] = buses
@@ -284,16 +285,16 @@ end
 
 function mp_cost_data(cost_row)
     cost_data = Dict{String,Any}(
-        "model" => check_type(Int, cost_row[1]),
-        "startup" => check_type(Float64, cost_row[2]),
-        "shutdown" => check_type(Float64, cost_row[3]),
-        "ncost" => check_type(Int, cost_row[4]),
-        "cost" => [check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
+        "model" => InfrastructureModels.check_type(Int, cost_row[1]),
+        "startup" => InfrastructureModels.check_type(Float64, cost_row[2]),
+        "shutdown" => InfrastructureModels.check_type(Float64, cost_row[3]),
+        "ncost" => InfrastructureModels.check_type(Int, cost_row[4]),
+        "cost" => [InfrastructureModels.check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
     )
 
     #=
     # skip this literal interpretation, as its hard to invert
-    cost_values = [check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
+    cost_values = [InfrastructureModels.check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
     if cost_data["model"] == 1:
         if length(cost_values)%2 != 0
             error("incorrect matpower file, odd number of pwl cost function values")
@@ -348,14 +349,22 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     merge_generator_cost_data(pm_data)
     merge_generic_data(pm_data)
 
-    # update lookup structure
+    # split loads and shunts from buses
+    split_loads_shunts(pm_data)
+
+    # # update lookup structure
     for (k,v) in pm_data
         if isa(v, Array)
             #println("updating $(k)")
             dict = Dict{String,Any}()
             for item in v
                 assert("index" in keys(item))
-                dict[string(item["index"])] = item
+                key = string(item["index"])
+                if !(haskey(dict, key))
+                    dict[key] = item
+                else
+                    warn(LOGGER, "skipping component $(item["index"]) from the $(k) table because a component with the same id already exists")
+                end
             end
             pm_data[k] = dict
         end
@@ -364,6 +373,44 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     return pm_data
 end
 
+
+"""
+    split_loads_shunts(data)
+
+Seperates Loads and Shunts in `data` under separate "load" and "shunt" keys in the
+PowerModels data format. Includes references to originating bus via "load_bus"
+and "shunt_bus" keys, respectively.
+"""
+function split_loads_shunts(data::Dict{String,Any})
+    data["load"] = []
+    data["shunt"] = []
+
+    load_num = 1
+    shunt_num = 1
+    for (i,bus) in enumerate(data["bus"])
+        if bus["pd"] != 0.0 || bus["qd"] != 0.0
+            append!(data["load"], [Dict{String,Any}("pd" => bus["pd"],
+                                                    "qd" => bus["qd"],
+                                                    "load_bus" => bus["bus_i"],
+                                                    "status" => convert(Int8, bus["bus_type"] != 4),
+                                                    "index" => load_num)])
+            load_num += 1
+        end
+
+        if bus["gs"] != 0.0 || bus["bs"] != 0.0
+            append!(data["shunt"], [Dict{String,Any}("gs" => bus["gs"],
+                                                     "bs" => bus["bs"],
+                                                     "shunt_bus" => bus["bus_i"],
+                                                     "status" => convert(Int8, bus["bus_type"] != 4),
+                                                     "index" => shunt_num)])
+            shunt_num += 1
+        end
+
+        for key in ["pd", "qd", "gs", "bs"]
+            delete!(bus, key)
+        end
+    end
+end
 
 
 "ensures all polynomial costs functions have at least three terms"
@@ -444,6 +491,14 @@ function mp2pm_branch(data::Dict{String,Any})
         else
             branch["transformer"] = true
         end
+
+        branch["g_fr"] = 0.0
+        branch["g_to"] = 0.0
+
+        branch["b_fr"] = branch["br_b"] / 2.0
+        branch["b_to"] = branch["br_b"] / 2.0
+
+        delete!(branch, "br_b")
     end
 end
 

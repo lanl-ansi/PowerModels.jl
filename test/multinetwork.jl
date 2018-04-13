@@ -10,7 +10,7 @@ PMs = PowerModels
 
     function build_mn_data(base_data)
         mp_data = PowerModels.parse_file(base_data)
-        return PowerModels.replicate(mp_data, 2)
+        return InfrastructureModels.replicate(mp_data, 2)
     end
 
     function build_mn_data(base_data_1, base_data_2)
@@ -43,20 +43,108 @@ PMs = PowerModels
 
     @testset "idempotent unit transformation" begin
         @testset "5-bus replicate case" begin
-            mn_data = build_mn_data("../test/data/case5_dc.m")
+            mn_data = build_mn_data("../test/data/matpower/case5_dc.m")
             PowerModels.make_mixed_units(mn_data)
             PowerModels.make_per_unit(mn_data)
 
-            @test compare_dict(mn_data, build_mn_data("../test/data/case5_dc.m"))
+            @test compare_dict(mn_data, build_mn_data("../test/data/matpower/case5_dc.m"))
         end
         @testset "14+24 hybrid case" begin
-            mn_data = build_mn_data("../test/data/case14.m", "../test/data/case24.m")
+            mn_data = build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
             PowerModels.make_mixed_units(mn_data)
             PowerModels.make_per_unit(mn_data)
 
-            @test compare_dict(mn_data, build_mn_data("../test/data/case14.m", "../test/data/case24.m"))
+            @test compare_dict(mn_data, build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m"))
         end
     end
+
+
+    @testset "topology processing" begin
+        @testset "7-bus replicate status case" begin
+            mn_data = build_mn_data("../test/data/matpower/case7_tplgy.m")
+            PowerModels.propagate_topology_status(mn_data)
+
+            active_buses = Set(["2", "4", "5", "7"])
+            active_branches = Set(["8"])
+            active_dclines = Set(["3"])
+
+            for (i,nw_data) in mn_data["nw"]
+                for (i,bus) in nw_data["bus"]
+                    if i in active_buses
+                        @test bus["bus_type"] != 4
+                    else
+                        @test bus["bus_type"] == 4
+                    end
+                end
+
+                for (i,branch) in nw_data["branch"]
+                    if i in active_branches
+                        @test branch["br_status"] == 1
+                    else
+                        @test branch["br_status"] == 0
+                    end
+                end
+
+                for (i,dcline) in nw_data["dcline"]
+                    if i in active_dclines
+                        @test dcline["br_status"] == 1
+                    else
+                        @test dcline["br_status"] == 0
+                    end
+                end
+            end
+        end
+        @testset "7-bus replicate filer case" begin
+            mn_data = build_mn_data("../test/data/matpower/case7_tplgy.m")
+            PowerModels.propagate_topology_status(mn_data)
+            PowerModels.select_largest_component(mn_data)
+
+            active_buses = Set(["4", "5", "7"])
+            active_branches = Set(["8"])
+            active_dclines = Set(["3"])
+
+            for (i,nw_data) in mn_data["nw"]
+                for (i,bus) in nw_data["bus"]
+                    if i in active_buses
+                        @test bus["bus_type"] != 4
+                    else
+                        @test bus["bus_type"] == 4
+                    end
+                end
+
+                for (i,branch) in nw_data["branch"]
+                    if i in active_branches
+                        @test branch["br_status"] == 1
+                    else
+                        @test branch["br_status"] == 0
+                    end
+                end
+
+                for (i,dcline) in nw_data["dcline"]
+                    if i in active_dclines
+                        @test dcline["br_status"] == 1
+                    else
+                        @test dcline["br_status"] == 0
+                    end
+                end
+            end
+        end
+        @testset "7+14 hybrid filer case" begin
+            mn_data = build_mn_data("../test/data/matpower/case7_tplgy.m", "../test/data/matpower/case14.m")
+            PowerModels.propagate_topology_status(mn_data)
+            PowerModels.select_largest_component(mn_data)
+
+            case7_data = mn_data["nw"]["1"]
+            case14_data = mn_data["nw"]["2"]
+
+            case7_active_buses = filter((i, bus) -> bus["bus_type"] != 4, case7_data["bus"])
+            case14_active_buses = filter((i, bus) -> bus["bus_type"] != 4, case14_data["bus"])
+
+            @test length(case7_active_buses) == 3
+            @test length(case14_active_buses) == 14
+        end
+    end
+
 
     function post_mpopf_test(pm::GenericPowerModel)
         for (n, network) in pm.ref[:nw]
@@ -100,7 +188,7 @@ PMs = PowerModels
     end
 
     @testset "2 period 5-bus asymmetric case" begin
-        mn_data = build_mn_data("../test/data/case5_asym.m")
+        mn_data = build_mn_data("../test/data/matpower/case5_asym.m")
 
         @testset "test ac polar opf" begin
             result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true)
@@ -115,8 +203,34 @@ PMs = PowerModels
         end
     end
 
+    @testset "2 period 5-bus dual variable case" begin
+        mn_data = build_mn_data("../test/data/matpower/case5.m")
+
+        @testset "test dc polar opf" begin
+            result = run_generic_model(mn_data, DCPPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true, setting = Dict("output" => Dict("duals" => true)))
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 35446; atol = 1e0)
+
+            for (i,nw_data) in result["solution"]["nw"]
+                for (i, bus) in nw_data["bus"]
+                    @test haskey(bus, "lam_kcl_r")
+                    @test bus["lam_kcl_r"] >= -4000 && bus["lam_kcl_r"] <= 0
+                    @test haskey(bus, "lam_kcl_i")
+                    @test isnan(bus["lam_kcl_i"])
+                end
+                for (i, branch) in nw_data["branch"]
+                    @test haskey(branch, "mu_sm_fr")
+                    @test branch["mu_sm_fr"] >= -1 && branch["mu_sm_fr"] <= 6000
+                    @test haskey(branch, "mu_sm_to")
+                    @test isnan(branch["mu_sm_to"])
+                end
+            end
+        end
+    end
+
     @testset "hybrid network case - polar" begin
-        mn_data = build_mn_data("../test/data/case14.m", "../test/data/case24.m")
+        mn_data = build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
 
         @testset "test ac polar opf" begin
             result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true)
@@ -132,7 +246,7 @@ PMs = PowerModels
     end
 
     @testset "hybrid network case - rect" begin
-        mn_data = build_mn_data("../test/data/case14.m", "../test/data/case24.m")
+        mn_data = build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
 
         @testset "test ac polar opf" begin
             result = run_generic_model(mn_data, ACRPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true)
@@ -150,7 +264,7 @@ PMs = PowerModels
 
     @testset "5-bus asymmetric case" begin
         # this works, but should throw a warning
-        mn_data = build_mn_data("../test/data/case5_asym.m")
+        mn_data = build_mn_data("../test/data/matpower/case5_asym.m")
         result = run_ac_opf(mn_data, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
@@ -208,7 +322,7 @@ PMs = PowerModels
 
 
     @testset "test solution feedback" begin
-        mn_data = build_mn_data("../test/data/case5_asym.m")
+        mn_data = build_mn_data("../test/data/matpower/case5_asym.m")
 
         opf_result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true)
         @test opf_result["status"] == :LocalOptimal
