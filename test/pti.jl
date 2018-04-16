@@ -6,7 +6,7 @@
 
         @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
         @test_warn(getlogger(PowerModels),
-                   "The PSS(R)E parser is partially implimented, and currently only supports buses, loads, shunts, generators, branches, and transformers (two-winding)",
+                   "The PSS(R)E parser is partially implimented, and currently only supports buses, loads, shunts, generators, branches, and transformers (two- and three-winding, without magnetizing admittance)",
                    PowerModels.parse_file("../test/data/pti/frankenstein_00.raw"))
         @test_throws(getlogger(PowerModels),
                      ErrorException,

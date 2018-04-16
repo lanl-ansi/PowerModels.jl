@@ -33,6 +33,36 @@ end
             @test result_mp["status"]  == :LocalOptimal
             @test isapprox(result_mp["objective"], result_pti["objective"]; atol = 1e-5)
         end
+
+        @testset "with two-winding transformer unit conversions" begin
+            data_pti = PowerModels.parse_file("../test/data/pti/frankenstein_00_2.raw")
+
+            for (k, v) in data_pti["branch"]
+                if v["transformer"]
+                    @test isapprox(v["br_r"], 0.; atol=1e-2)
+                    @test isapprox(v["br_x"], 0.179; atol=1e-2)
+                    @test isapprox(v["tap"], 1.019; atol=1e-2)
+                    @test isapprox(v["shift"], 0.; atol=1e-2)
+                    @test isapprox(v["rate_a"], 0.84; atol=1e-2)
+                    @test isapprox(v["rate_b"], 0.84; atol=1e-2)
+                    @test isapprox(v["rate_c"], 0.84; atol=1e-2)
+                end
+            end
+
+            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+
+            @test result_opf["status"] == :LocalOptimal
+            @test isapprox(result_opf["objective"], 29.4043; atol=1e-4)
+
+            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+
+            for (bus, vm, va) in zip(["1002", "1005", "1008", "1009"],
+                                     [1.0032721, 1.0199983, 1.0203627, 1.03],
+                                     [2.946182, 0.129922, -0.002062, 0.])
+                @test isapprox(result_pf["solution"]["bus"][bus]["vm"], vm; atol=1e-1)
+                @test isapprox(result_pf["solution"]["bus"][bus]["va"], deg2rad(va); atol=1e-2)
+            end
+        end
     end
 
     @testset "3-bus case file" begin
@@ -151,10 +181,7 @@ end
         @test_warn(getlogger(PowerModels), "Could not find bus 1, returning 0 for field vm",
                    PowerModels.get_bus_value(1, "vm", dummy_data))
 
-        @test_warn(getlogger(PowerModels), "Three-winding transformers are not yet supported, skipping transformer entry #3",
-                   PowerModels.parse_file("../test/data/pti/frankenstein_70.raw"))
-
-        @test_warn(getlogger(PowerModels), "Two-Terminal DC Lines are not yet supported",
+        @test_warn(getlogger(PowerModels), "Two-Terminal DC Lines are not yet fully supported",
                    PowerModels.parse_file("../test/data/pti/frankenstein_70.raw"))
 
         @test_warn(getlogger(PowerModels), "Switched shunt converted to fixed shunt, with default value gs=0.0",
@@ -173,4 +200,76 @@ end
         setlevel!(getlogger(PowerModels), "error")
     end
 
+    @testset "three-winding transformer" begin
+        @testset "without unit conversion" begin
+            data_pti = PowerModels.parse_file("../test/data/pti/three_winding_test.raw")
+
+            for (branch, br_r, br_x, tap, shift, rate_a, rate_b, rate_c) in zip(["1", "2", "3"],
+                                                                                [0.00225, 0.00225, -0.00155],
+                                                                                [0.05, 0.15, 0.15],
+                                                                                [1.1, 1.0, 1.0],
+                                                                                [0.0, 0.0, 0.0],
+                                                                                [2.0, 1.0, 1.0],
+                                                                                [2.0, 1.0, 1.0],
+                                                                                [4.0, 1.0, 1.0])
+                @test isapprox(data_pti["branch"][branch]["br_r"], br_r; atol=1e-4)
+                @test isapprox(data_pti["branch"][branch]["br_x"], br_x; atol=1e-4)
+                @test isapprox(data_pti["branch"][branch]["tap"], tap; atol=1e-4)
+                @test isapprox(data_pti["branch"][branch]["shift"], shift; atol=1e-4)
+                @test isapprox(data_pti["branch"][branch]["rate_a"], rate_a; atol=1e-4)
+                @test isapprox(data_pti["branch"][branch]["rate_b"], rate_b; atol=1e-4)
+                @test isapprox(data_pti["branch"][branch]["rate_c"], rate_c; atol=1e-4)
+            end
+
+            @test length(data_pti["bus"]) == 4
+            @test length(data_pti["branch"]) == 3
+
+            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+
+            @test result_opf["status"] == :LocalOptimal
+            @test isapprox(result_opf["objective"], 9.99647; atol=1e-5)
+
+            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+
+            for (bus, vm, va) in zip(["1001", "1002", "1003", "11001"], [1.09, 1.0, 1.0, 0.997], [2.304, 0., 6.042244, 2.5901])
+                @test isapprox(result_pf["solution"]["bus"][bus]["vm"], vm; atol=1e-1)
+                @test isapprox(result_pf["solution"]["bus"][bus]["va"], deg2rad(va); atol=1e-2)
+            end
+        end
+
+        @testset "with unit conversion" begin
+            data_pti = PowerModels.parse_file("../test/data/pti/three_winding_test_2.raw")
+
+            for (branch, br_r, br_x, tap, shift, rate_a, rate_b, rate_c) in zip(["1", "2", "3"],
+                                                                                [0.0, 0.0, 0.0],
+                                                                                [0.05, 0.15, 0.15],
+                                                                                [1.1, 1.0, 1.0],
+                                                                                [0.0, 0.0, 0.0],
+                                                                                [2.0, 1.0, 1.0],
+                                                                                [2.0, 1.0, 1.0],
+                                                                                [4.0, 1.0, 1.0])
+                @test isapprox(data_pti["branch"][branch]["br_r"], br_r; atol=1e-4)
+                @test isapprox(data_pti["branch"][branch]["br_x"], br_x; atol=1e-4)
+                @test isapprox(data_pti["branch"][branch]["tap"], tap; atol=1e-4)
+                @test isapprox(data_pti["branch"][branch]["shift"], shift; atol=1e-4)
+                @test isapprox(data_pti["branch"][branch]["rate_a"], rate_a; atol=1e-4)
+                @test isapprox(data_pti["branch"][branch]["rate_b"], rate_b; atol=1e-4)
+                @test isapprox(data_pti["branch"][branch]["rate_c"], rate_c; atol=1e-4)
+            end
+
+
+            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+
+            @test result_opf["status"] == :LocalOptimal
+            @test isapprox(result_opf["objective"], 10.0; atol=1e-5)
+
+            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+
+            for (bus, vm, va) in zip(["1001", "1002", "1003", "11001"], [1.09, 1.0, 1.0, 0.997], [2.304, 0., 6.042244, 2.5901])
+                @test isapprox(result_pf["solution"]["bus"][bus]["vm"], vm; atol=1e-1)
+                @test isapprox(result_pf["solution"]["bus"][bus]["va"], deg2rad(va); atol=1e-2)
+            end
+
+        end
+    end
 end
