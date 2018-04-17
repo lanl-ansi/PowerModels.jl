@@ -128,9 +128,8 @@ function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, i, f_bus, f
 end
 
 
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, arc_from, f_bus, t_bus, angmin, angmax) where T <: AbstractDFForm
-    i = arc_from[1]
-    f_idx = arc_from
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, f_idx, angmin, angmax) where T <: AbstractDFForm
+    i, f_bus, t_bus = f_idx
     t_idx = (i, t_bus, f_bus)
 
     branch = ref(pm, n, :branch, i)

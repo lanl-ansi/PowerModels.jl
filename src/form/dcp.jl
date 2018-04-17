@@ -231,7 +231,9 @@ function constraint_thermal_limit_to_ne(pm::GenericPowerModel{T}, n::Int, i, t_i
 end
 
 "`angmin*branch_z[i] + vad_min*(1-branch_z[i]) <= t[f_bus] - t[t_bus] <= angmax*branch_z[i] + vad_max*(1-branch_z[i])`"
-function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax, vad_min, vad_max) where T <: AbstractDCPForm
+function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n::Int, f_idx, angmin, angmax, vad_min, vad_max) where T <: AbstractDCPForm
+    i, f_bus, t_bus = f_idx
+
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
     z = pm.var[:nw][n][:branch_z][i]
@@ -241,7 +243,9 @@ function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n:
 end
 
 "`angmin*branch_ne[i] + vad_min*(1-branch_ne[i]) <= t[f_bus] - t[t_bus] <= angmax*branch_ne[i] + vad_max*(1-branch_ne[i])`"
-function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax, vad_min, vad_max) where T <: AbstractDCPForm
+function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int, f_idx, angmin, angmax, vad_min, vad_max) where T <: AbstractDCPForm
+    i, f_bus, t_bus = f_idx
+
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
     z = pm.var[:nw][n][:branch_ne][i]

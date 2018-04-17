@@ -113,7 +113,9 @@ end
 """
 branch phase angle difference bounds
 """
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, arc_from, f_bus, t_bus, angmin, angmax) where T <: AbstractACRForm
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, f_idx, angmin, angmax) where T <: AbstractACRForm
+    i, f_bus, t_bus = f_idx
+
     vr_fr = pm.var[:nw][n][:vr][f_bus]
     vr_to = pm.var[:nw][n][:vr][t_bus]
     vi_fr = pm.var[:nw][n][:vi][f_bus]

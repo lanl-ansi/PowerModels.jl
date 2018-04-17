@@ -471,12 +471,12 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel, n::Int, i::I
     branch = ref(pm, n, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
-    arc_from = (i, f_bus, t_bus)
+    f_idx = (i, f_bus, t_bus)
     pair = (f_bus, t_bus)
     buspair = ref(pm, n, :buspairs, pair)
 
     if buspair["branch"] == i
-        constraint_voltage_angle_difference(pm, n, arc_from, f_bus, t_bus, buspair["angmin"], buspair["angmax"])
+        constraint_voltage_angle_difference(pm, n, f_idx, buspair["angmin"], buspair["angmax"])
     end
 end
 constraint_voltage_angle_difference(pm::GenericPowerModel, i::Int) = constraint_voltage_angle_difference(pm, pm.cnw, i)
@@ -485,13 +485,12 @@ constraint_voltage_angle_difference(pm::GenericPowerModel, i::Int) = constraint_
 ""
 function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel, n::Int, i::Int)
     branch = ref(pm, n, :branch, i)
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
+    f_idx = (i, branch["f_bus"], branch["t_bus"])
 
     vad_min = ref(pm, n, :off_angmin)
     vad_max = ref(pm, n, :off_angmax)
 
-    constraint_voltage_angle_difference_on_off(pm, n, i, f_bus, t_bus, branch["angmin"], branch["angmax"], vad_min, vad_max)
+    constraint_voltage_angle_difference_on_off(pm, n, f_idx, branch["angmin"], branch["angmax"], vad_min, vad_max)
 end
 constraint_voltage_angle_difference_on_off(pm::GenericPowerModel, i::Int) = constraint_voltage_angle_difference_on_off(pm, pm.cnw, i)
 
@@ -499,13 +498,12 @@ constraint_voltage_angle_difference_on_off(pm::GenericPowerModel, i::Int) = cons
 ""
 function constraint_voltage_angle_difference_ne(pm::GenericPowerModel, n::Int, i::Int)
     branch = ref(pm, n, :ne_branch, i)
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
+    f_idx = (i, branch["f_bus"], branch["t_bus"])
 
     vad_min = ref(pm, n, :off_angmin)
     vad_max = ref(pm, n, :off_angmax)
 
-    constraint_voltage_angle_difference_ne(pm, n, i, f_bus, t_bus, branch["angmin"], branch["angmax"], vad_min, vad_max)
+    constraint_voltage_angle_difference_ne(pm, n, f_idx, branch["angmin"], branch["angmax"], vad_min, vad_max)
 end
 constraint_voltage_angle_difference_ne(pm::GenericPowerModel, i::Int) = constraint_voltage_angle_difference_ne(pm, pm.cnw, i)
 
@@ -563,7 +561,7 @@ function constraint_voltage_magnitude_difference(pm::GenericPowerModel, n::Int, 
     b_sh_fr = branch["b_fr"]
     tm = branch["tap"]
 
-    constraint_voltage_magnitude_difference(pm::GenericPowerModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm)
+    constraint_voltage_magnitude_difference(pm, n, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm)
 
 end
 constraint_voltage_magnitude_difference(pm::GenericPowerModel, i::Int) = constraint_voltage_magnitude_difference(pm, pm.cnw, i)
@@ -578,6 +576,6 @@ function constraint_branch_current(pm::GenericPowerModel, n::Int, i)
     g_sh_fr = branch["g_fr"]
     b_sh_fr = branch["b_fr"]
 
-    constraint_branch_current(pm::GenericPowerModel, n::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm)
+    constraint_branch_current(pm, n, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm)
 end
 constraint_branch_current(pm::GenericPowerModel, i::Int) = constraint_branch_current(pm, pm.cnw, i)

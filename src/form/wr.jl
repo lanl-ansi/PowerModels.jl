@@ -250,7 +250,8 @@ function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus
 end
 
 "`angmin*wr[i] <= wi[i] <= angmax*wr[i]`"
-function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax, vad_min, vad_max) where T <: AbstractWRForm
+function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n::Int, f_idx, angmin, angmax, vad_min, vad_max) where T <: AbstractWRForm
+    i, f_bus, t_bus = f_idx
     wr = pm.var[:nw][n][:wr][i]
     wi = pm.var[:nw][n][:wi][i]
 
@@ -259,7 +260,8 @@ function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n:
 end
 
 "`angmin*wr_ne[i] <= wi_ne[i] <= angmax*wr_ne[i]`"
-function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int, i, f_bus, t_bus, angmin, angmax, vad_min, vad_max) where T <: AbstractWRForm
+function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int, f_idx, angmin, angmax, vad_min, vad_max) where T <: AbstractWRForm
+    i, f_bus, t_bus = f_idx
     wr = pm.var[:nw][n][:wr_ne][i]
     wi = pm.var[:nw][n][:wi_ne][i]
 
@@ -498,7 +500,9 @@ function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, i::Int) where T 
 end
 
 ""
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, arc_from, f_bus, t_bus, angmin, angmax) where T <: QCWRForm
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, f_idx, angmin, angmax) where T <: QCWRForm
+    i, f_bus, t_bus = f_idx
+
     td = pm.var[:nw][n][:td][(f_bus, t_bus)]
 
     if getlowerbound(td) < angmin

@@ -47,7 +47,9 @@ t[f_bus] - t[t_bus] <= angmax
 t[f_bus] - t[t_bus] >= angmin
 ```
 """
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, arc_from, f_bus, t_bus, angmin, angmax) where T <: StandardACTForm
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, f_idx, angmin, angmax) where T <: StandardACTForm
+    i, f_bus, t_bus = f_idx
+
     va_fr = pm.var[:nw][n][:va][f_bus]
     va_to = pm.var[:nw][n][:va][t_bus]
 
