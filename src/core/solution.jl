@@ -238,9 +238,10 @@ end
 
 solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}(
     :Ipopt => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
+    :Juniper => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
     :ConicNonlinearBridge => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
     # note that AmplNLWriter.AmplNLSolver is the solver type of bonmin
-    :AmplNLWriter => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
+    :AmplNLWriter => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
     )
 
 "translates solver status codes to our status codes"
