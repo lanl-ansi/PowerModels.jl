@@ -111,7 +111,18 @@ function import_remaining!(data_out::Dict, data_in::Dict, import_all::Bool; excl
     if import_all
         for (k, v) in data_in
             if !(k in exclude)
+                if isa(v, Array)
+                    for (n, item) in enumerate(v)
+                        import_remaining!(item, item, import_all)
+                        if isa(item, Dict) && !("index" in keys(item))
+                            item["index"] = n
+                        end
+                    end
+                elseif isa(v, Dict)
+                    import_remaining!(v, v, import_all)
+                end
                 data_out[lowercase(k)] = v
+                delete!(data_in, k)
             end
         end
     end
@@ -293,7 +304,7 @@ function psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     end
 
     if haskey(pti_data, "SWITCHED SHUNT")
-        warn(LOGGER, "Switched shunt converted to fixed shunt, with default value gs=0.0")
+        info(LOGGER, "Switched shunt converted to fixed shunt, with default value gs=0.0")
 
         for shunt in pti_data["SWITCHED SHUNT"]
             sub_data = Dict{String,Any}()
@@ -451,19 +462,21 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                         end
                     end
 
-                    delete!(transformer, "NOMV$m")
-
                     sub_data["br_status"] = transformer["STAT"]
 
                     sub_data["angmin"] = 0.0
                     sub_data["angmax"] = 0.0
 
                     sub_data["transformer"] = true
+
                     sub_data["index"] = length(pm_data["branch"]) + 1
 
                     import_remaining!(sub_data, transformer, import_all; exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
                                                                                   "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3",
-                                                                                  "SBASE3-1", "MAG1", "MAG2", "STAT"])
+                                                                                  "SBASE3-1", "MAG1", "MAG2", "STAT","NOMV1", "NOMV2",
+                                                                                  "NOMV3", "WINDV1", "WINDV2", "WINDV3", "RATA1",
+                                                                                  "RATA2", "RATA3", "RATB1", "RATB2", "RATB3", "RATC1",
+                                                                                  "RATC2", "RATC3", "ANG1", "ANG2", "ANG3"])
 
                     push!(pm_data["branch"], sub_data)
                 end
@@ -471,6 +484,8 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
         end
     end
 end
+
+
 
 
 """
@@ -483,18 +498,16 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     pm_data["dcline"] = []
 
     if haskey(pti_data, "TWO-TERMINAL DC")
-        warn(LOGGER, "Two-Terminal DC Lines are not yet fully supported")
         for dcline in pti_data["TWO-TERMINAL DC"]
+            info(LOGGER, "Two-Terminal DC lines are supported via a simple *lossless* dc line model approximated by two generators.")
             sub_data = Dict{String,Any}()
 
-            power_demand = dcline["MDC"] == 1 ? abs(pop!(dcline, "SETVL")) : dcline["MDC"] == 2 ? abs(pop!(dcline, "SETVL") / pop!(dcline, "VSCHD") / 1000) : 0
-
-            sub_data["qminf"], sub_data["qmaxf"] = calc_2term_reactive_power(power_demand, pop!(dcline, "ANMNR"), pop!(dcline, "ANMXR"))
-            sub_data["qmint"], sub_data["qmaxt"] = calc_2term_reactive_power(power_demand, pop!(dcline, "ANMNI"), pop!(dcline, "ANMXI"))
+            # Unit conversions?
+            power_demand = dcline["MDC"] == 1 ? abs(dcline["SETVL"]) : dcline["MDC"] == 2 ? abs(dcline["SETVL"] / pop!(dcline, "VSCHD") / 1000) : 0
 
             sub_data["f_bus"] = dcline["IPR"]
             sub_data["t_bus"] = dcline["IPI"]
-            sub_data["br_status"] = dcline["MDC"] == 0 ? 0 : 1
+            sub_data["br_status"] = pop!(dcline, "MDC") == 0 ? 0 : 1
             sub_data["pf"] = power_demand
             sub_data["pt"] = power_demand
             sub_data["qf"] = 0
@@ -502,13 +515,24 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["vf"] = get_bus_value(pop!(dcline, "IPR"), "vm", pm_data)
             sub_data["vt"] = get_bus_value(pop!(dcline, "IPI"), "vm", pm_data)
 
-            sub_data["pminf"] = dcline["MDC"] > 0.0 ? 0.9 * power_demand : 0.0
-            sub_data["pmaxf"] = dcline["MDC"] > 0.0 ? 1.1 * power_demand : 0.0
-            sub_data["pmint"] = dcline["MDC"] < 0.0 ? 0.9 * power_demand : 0.0
-            sub_data["pmaxt"] = pop!(dcline, "MDC") < 0.0 ? 1.1 * power_demand : 0.0
+            sub_data["pminf"] = 0.0
+            sub_data["pmaxf"] = dcline["SETVL"] > 0 ? power_demand : -power_demand
+            sub_data["pmint"] = pop!(dcline, "SETVL") > 0 ? -power_demand : power_demand
+            sub_data["pmaxt"] = 0.0
 
-            sub_data["loss0"] = 0
-            sub_data["loss1"] = 0
+            # How to properly use firing angles to calculate qmin, qmax?
+            # sub_data["qminf"], sub_data["qmaxf"] = calc_2term_reactive_power(power_demand, pop!(dcline, "ANMNR"), pop!(dcline, "ANMXR"))
+            # sub_data["qmint"], sub_data["qmaxt"] = calc_2term_reactive_power(power_demand, pop!(dcline, "ANMNI"), pop!(dcline, "ANMXI"))
+
+            # Relaxed qmin,qmax
+            sub_data["qminf"] = min(sub_data["pminf"], sub_data["pmaxf"])
+            sub_data["qmaxf"] = max(sub_data["pminf"], sub_data["pmaxf"])
+            sub_data["qmint"] = min(sub_data["pmint"], sub_data["pmaxt"])
+            sub_data["qmaxt"] = max(sub_data["pmint"], sub_data["pmaxt"])
+
+            # Can we use resistance to compute a loss?
+            sub_data["loss0"] = 0.0
+            sub_data["loss1"] = 0.0
 
             # Costs (set to default values)
             sub_data["startup"] = 0.0
@@ -516,6 +540,7 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["ncost"] = 3
             sub_data["cost"] = [0.0, 1.0, 0.0]
             sub_data["model"] = 2
+
             sub_data["index"] = length(pm_data["dcline"]) + 1
 
             import_remaining!(sub_data, dcline, import_all)
@@ -525,13 +550,59 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     end
 
     if haskey(pti_data, "VOLTAGE SOURCE CONVERTER")
-        warn(LOGGER, "Voltage Source Converter DC lines are not yet supported")
+        info(LOGGER, "VSC-HVDC lines are supported via a dc line model approximated by two generators and an associated loss.")
         for dcline in pti_data["VOLTAGE SOURCE CONVERTER"]
-            # TODO: Write converter for VSC dc lines
-            # See thesis by Xiaoya Tan entitled "HVDC-VSC Model for MATPOWER"
+            # Converter buses : is the distinction between ac and dc side meaningful?
+            dcside, acside = dcline["CONVERTER BUSES"]
+
+            # PowerWorld conversion from PTI to matpower seems to create two
+            # artificial generators from a VSC, but it is not clear to me how
+            # the value of "pg" is determined and adds shunt to the DC-side bus.
+            sub_data = Dict{String,Any}()
+
+            # VSC intended to be one or bi-directional?
+            sub_data["f_bus"] = pop!(dcside, "IBUS")
+            sub_data["t_bus"] = pop!(acside, "IBUS")
+            sub_data["br_status"] = pop!(dcline, "MDC") == 0 || pop!(dcside, "TYPE") == 0 || pop!(acside, "TYPE") == 0 ? 0 : 1
+
+            sub_data["pf"] = 0.0
+            sub_data["pt"] = 0.0
+
+            sub_data["qf"] = 0.0
+            sub_data["qt"] = 0.0
+
+            sub_data["vf"] = pop!(dcside, "MODE") == 1 ? pop!(dcside, "ACSET") : 0.0
+            sub_data["vt"] = pop!(acside, "MODE") == 1 ? pop!(acside, "ACSET") : 0.0
+
+            sub_data["pmaxf"] = dcside["SMAX"] == 0.0 && dcside["IMAX"] == 0.0 ? max(abs(dcside["MAXQ"]), abs(dcside["MINQ"])) : min(pop!(dcside, "IMAX"), pop!(dcside, "SMAX") * pop!(dcside, "PWF"))
+            sub_data["pmaxt"] = acside["SMAX"] == 0.0 && acside["IMAX"] == 0.0 ? max(abs(acside["MAXQ"]), abs(acside["MINQ"])) : min(pop!(acside, "IMAX"), pop!(acside, "SMAX") * pop!(acside, "PWF"))
+            sub_data["pminf"] = -sub_data["pmaxf"]
+            sub_data["pmint"] = -sub_data["pmaxt"]
+
+            sub_data["qminf"] = pop!(dcside, "MINQ")
+            sub_data["qmaxf"] = pop!(dcside, "MAXQ")
+            sub_data["qmint"] = pop!(acside, "MINQ")
+            sub_data["qmaxt"] = pop!(acside, "MAXQ")
+
+            sub_data["loss0"] = (pop!(dcside, "ALOSS") + pop!(acside, "ALOSS") + pop!(dcside, "MINLOSS") + pop!(acside, "MINLOSS")) * 1e-3
+            sub_data["loss1"] = (pop!(dcside, "BLOSS") + pop!(acside, "BLOSS")) * 1e-3 # how to include resistance?
+
+            # Costs (set to default values)
+            sub_data["startup"] = 0.0
+            sub_data["shutdown"] = 0.0
+            sub_data["ncost"] = 3
+            sub_data["cost"] = [0.0, 1.0, 0.0]
+            sub_data["model"] = 2
+
+            sub_data["index"] = length(pm_data["dcline"]) + 1
+
+            import_remaining!(sub_data, dcline, import_all)
+
+            push!(pm_data["dcline"], sub_data)
         end
     end
 end
+
 
 
 """
@@ -562,6 +633,11 @@ function parse_psse(pti_data::Dict; import_all=false)::Dict
     psse2pm_branch!(pm_data, pti_data, import_all)
     psse2pm_transformer!(pm_data, pti_data, import_all)
     psse2pm_dcline!(pm_data, pti_data, import_all)
+
+    import_remaining!(pm_data, pti_data, import_all; exclude=["CASE IDENTIFICATION", "BUS", "LOAD",
+                                                              "FIXED SHUNT", "SWITCHED SHUNT", "GENERATOR",
+                                                              "BRANCH", "TRANSFORMER", "TWO-TERMINAL DC",
+                                                              "VOLTAGE SOURCE CONVERTER"])
 
     # update lookup structure
     for (k, v) in pm_data
