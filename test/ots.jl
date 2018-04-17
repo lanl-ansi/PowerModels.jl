@@ -2,42 +2,39 @@
 # used by OTS models
 function check_br_status(sol)
     for (i,branch) in sol["branch"]
-        @test branch["br_status"] == 0.0 || branch["br_status"] == 1.0
+        @test isapprox(branch["br_status"], 0.0, rtol=1e-6) || isapprox(branch["br_status"], 1.0, rtol=1e-6)
     end
 end
 
 
-if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
-    @testset "test ac ots" begin
-        #Omitting this test, until bugs can be resolved, bonmin does not report a integral solution
-        #@testset "3-bus case" begin
-        #    result = run_ots("../test/data/matpower/case3.m", ACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
+@testset "test ac ots" begin
+    @testset "3-bus case" begin
+        result = run_ots("../test/data/matpower/case3.m", ACPPowerModel, juniper_solver)
 
-        #    check_br_status(result["solution"])
+        check_br_status(result["solution"])
 
-        #    @test result["status"] == :LocalOptimal
-        #    @test isapprox(result["objective"], 5812; atol = 1e0)
-        #end
-        @testset "5-bus case" begin
-            result = run_ots("../test/data/matpower/case5.m", ACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
-
-            check_br_status(result["solution"])
-
-            @test result["status"] == :LocalOptimal
-            # NOTE this objective value is out of date, and this test will not pass
-            @test isapprox(result["objective"], 15174; atol = 1e0)
-        end
-        #Omitting this test, returns local infeasible
-        #@testset "6-bus case" begin
-        #    result = run_ots("../test/data/matpower/case6.m", ACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
-
-        #    check_br_status(result["solution"])
-
-        #    @test result["status"] == :LocalOptimal
-        #    println(result["objective"])
-        #    @test isapprox(result["objective"], 15174; atol = 1e0)
-        #end
+        @test result["status"] == :LocalOptimal
+        #@test isapprox(result["objective"], 5812; atol = 1e0) # true opt objective
+        @test isapprox(result["objective"], 5906.8; atol = 1e0)
     end
+    @testset "5-bus case" begin
+        result = run_ots("../test/data/matpower/case5.m", ACPPowerModel, juniper_solver)
+
+        check_br_status(result["solution"])
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 15174; atol = 1e0)
+    end
+    #Omitting this test, returns local infeasible
+    #@testset "6-bus case" begin
+    #    result = run_ots("../test/data/matpower/case6.m", ACPPowerModel, juniper_solver)
+
+    #    check_br_status(result["solution"])
+
+    #    @test result["status"] == :LocalOptimal
+    #    println(result["objective"])
+    #    @test isapprox(result["objective"], 15174; atol = 1e0)
+    #end
 end
 
 

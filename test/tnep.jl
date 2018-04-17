@@ -2,8 +2,29 @@
 
 function check_tnep_status(sol)
     for (idx,val) in sol["ne_branch"]
-        @test val["built"] == 0.0 || val["built"] == 1.0
+        @test isapprox(val["built"], 0.0, rtol=1e-6) || isapprox(val["built"], 1.0, rtol=1e-6)
     end
+end
+
+
+@testset "test ac tnep" begin
+    @testset "3-bus case" begin
+        result = run_tnep("../test/data/matpower/case3_tnep.m", ACPPowerModel, juniper_solver)
+
+        check_tnep_status(result["solution"])
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 2; atol = 1e-2)
+    end
+    # omitting due to numerical stability issues on Linux
+    #@testset "5-bus case" begin
+    #    result = run_tnep("../test/data/matpower/case5_tnep.m", ACPPowerModel, juniper_solver)
+
+    #    check_tnep_status(result["solution"])
+
+    #    @test result["status"] == :LocalOptimal
+    #    @test isapprox(result["objective"], 1; atol = 1e-2)
+    #end
 end
 
 
@@ -67,22 +88,6 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 1; atol = 1e-2)
     end
-end
-
-
-if (Pkg.installed("AmplNLWriter") != nothing && Pkg.installed("CoinOptServices") != nothing)
-
-    @testset "test ac tnep" begin
-        @testset "5-bus case" begin
-            result = run_tnep("../test/data/matpower/case5_tnep.m", ACPPowerModel, BonminNLSolver(["bonmin.bb_log_level=0", "bonmin.nlp_log_level=0"]))
-
-            check_tnep_status(result["solution"])
-
-            @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 1; atol = 1e-2)
-        end
-    end
-
 end
 
 
