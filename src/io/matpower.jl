@@ -352,8 +352,18 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     # split loads and shunts from buses
     split_loads_shunts(pm_data)
 
-    # # update lookup structure
-    for (k,v) in pm_data
+    # use once available
+    #InfrastructureModels.arrays_to_dicts(pm_data)
+    arrays_to_dicts(pm_data)
+
+    return pm_data
+end
+
+
+"turns top level arrays into dicts (replace once available in InfrastructureModels)"
+function arrays_to_dicts(data::Dict{String,Any})
+    # update lookup structure
+    for (k,v) in data
         if isa(v, Array)
             #println("updating $(k)")
             dict = Dict{String,Any}()
@@ -366,12 +376,11 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
                     warn(LOGGER, "skipping component $(item["index"]) from the $(k) table because a component with the same id already exists")
                 end
             end
-            pm_data[k] = dict
+            data[k] = dict
         end
     end
-
-    return pm_data
 end
+
 
 
 """
