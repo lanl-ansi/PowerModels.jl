@@ -101,7 +101,10 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
 end
 
 
-### Helper functions for ignoring multinetwork and multiphase support
+### Helper functions for working with multinetworks and multiphases
+ismultinetwork(pm::GenericPowerModel) = (length(pm.ref[:nw]) > 1)
+nws(pm::GenericPowerModel) = keys(pm.ref[:nw])
+
 ids(pm::GenericPowerModel, key::Symbol) = ids(pm, pm.cnw, pm.cph, key)
 ids(pm::GenericPowerModel, n::Int, key::Symbol) = ids(pm, n, pm.cph, key)
 ids(pm::GenericPowerModel, n::Int, h::Int, key::Symbol) = keys(pm.ref[:nw][n][:ph][h][key])
@@ -174,8 +177,8 @@ function build_generic_model(data::Dict{String,Any}, model_constructor, post_met
     # NOTE, this model constructor will build the ref dict using the latest info from the data
     pm = model_constructor(data; kwargs...)
 
-    if !multinetwork && data["multinetwork"]
-        warn(LOGGER, "building a single network model with multinetwork data, only network ($(pm.cnw)) will be used.")
+    if !multinetwork && ismultinetwork(pm)
+        error(LOGGER, "attempted to build a single-network model with multi-network data")
     end
 
     post_method(pm)
