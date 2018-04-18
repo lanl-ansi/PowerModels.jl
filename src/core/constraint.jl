@@ -6,16 +6,16 @@
 
 # Generic thermal limit constraint
 "`p[f_idx]^2 + q[f_idx]^2 <= rate_a^2`"
-function constraint_thermal_limit_from(pm::GenericPowerModel, n::Int, f_idx, rate_a)
-    p_fr = pm.var[:nw][n][:p][f_idx]
-    q_fr = pm.var[:nw][n][:q][f_idx]
+function constraint_thermal_limit_from(pm::GenericPowerModel, n::Int, h::Int, f_idx, rate_a)
+    p_fr = var(pm, n, h, :p, f_idx)
+    q_fr = var(pm, n, h, :q, f_idx)
     @constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2)
 end
 
 "`p[t_idx]^2 + q[t_idx]^2 <= rate_a^2`"
-function constraint_thermal_limit_to(pm::GenericPowerModel, n::Int, t_idx, rate_a)
-    p_to = pm.var[:nw][n][:p][t_idx]
-    q_to = pm.var[:nw][n][:q][t_idx]
+function constraint_thermal_limit_to(pm::GenericPowerModel, n::Int, h::Int, t_idx, rate_a)
+    p_to = var(pm, n, h, :p, t_idx)
+    q_to = var(pm, n, h, :q, t_idx)
     @constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2)
 end
 
