@@ -1,4 +1,5 @@
 
+# TODO replace with the version from InfrastructureModels
 # used by data.jl and multinetwork.jl
 function compare_dict(d1, d2)
     for (k1,v1) in d1
