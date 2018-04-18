@@ -24,7 +24,7 @@ function variable_branch_flow(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...
 end
 
 
-function variable_active_branch_series_flow(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
+function variable_active_branch_series_flow(pm::GenericPowerModel, n::Int=pm.cnw, h::Int=pm.cph; bounded = true)
     if bounded
         pm.var[:nw][n][:p_s] = @variable(pm.model,
             [(l,i,j) in pm.ref[:nw][n][:arcs_from]], basename="$(n)_p_s",
@@ -41,7 +41,7 @@ function variable_active_branch_series_flow(pm::GenericPowerModel, n::Int=pm.cnw
 end
 
 
-function variable_reactive_branch_series_flow(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
+function variable_reactive_branch_series_flow(pm::GenericPowerModel, n::Int=pm.cnw, h::Int=pm.cph; bounded = true)
     if bounded
         pm.var[:nw][n][:q_s] = @variable(pm.model,
             [(l,i,j) in pm.ref[:nw][n][:arcs_from]], basename="$(n)_q_s",
@@ -172,7 +172,7 @@ end
 
 
 "variable: `0 <= i[l] <= (Imax)^2` for `l` in `branch`es"
-function variable_branch_series_current_magnitude_sqr(pm::GenericPowerModel, n::Int=pm.cnw; bounded = true)
+function variable_branch_series_current_magnitude_sqr(pm::GenericPowerModel, n::Int=pm.cnw, h::Int=pm.cph; bounded = true)
     branches = pm.ref[:nw][n][:branch]
     buses = pm.ref[:nw][n][:bus]
     cmax = calc_series_current_magnitude_bound(branches, buses)

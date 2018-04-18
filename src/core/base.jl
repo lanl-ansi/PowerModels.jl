@@ -49,6 +49,7 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     var::Dict{Symbol,Any} # JuMP variables
     con::Dict{Symbol,Any} # JuMP constraint references
     cnw::Int # current network index value
+    cph::Int # current phase index value
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -67,12 +68,21 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
 
     var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
     con = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
-    for nw_id in keys(ref[:nw])
-        var[:nw][nw_id] = Dict{Symbol,Any}()
-        con[:nw][nw_id] = Dict{Symbol,Any}()
+    for (nw_id, nw) in ref[:nw]
+        nw_var = var[:nw][nw_id] = Dict{Symbol,Any}()
+        nw_con = con[:nw][nw_id] = Dict{Symbol,Any}()
+
+        nw_var[:ph] = Dict{Int,Any}()
+        nw_con[:ph] = Dict{Int,Any}()
+
+        for ph_id in keys(nw[:ph])
+            nw_var[:ph][ph_id] = Dict{Symbol,Any}()
+            nw_con[:ph][ph_id] = Dict{Symbol,Any}()
+        end
     end
 
     cnw = minimum([k for k in keys(ref[:nw])])
+    cph = minimum([k for k in keys(ref[:nw][cnw][:ph])])
 
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
@@ -83,6 +93,7 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
         var, # vars
         con,
         cnw,
+        cph,
         ext # ext
     )
 
@@ -90,29 +101,34 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
 end
 
 
-### Helper functions for ignoring multinetwork support
-ids(pm::GenericPowerModel, key::Symbol) = ids(pm, pm.cnw, key)
-ids(pm::GenericPowerModel, n::Int, key::Symbol) = keys(pm.ref[:nw][n][key])
+### Helper functions for ignoring multinetwork and multiphase support
+ids(pm::GenericPowerModel, key::Symbol) = ids(pm, pm.cnw, pm.cph, key)
+ids(pm::GenericPowerModel, n::Int, key::Symbol) = ids(pm, n, pm.cph, key)
+ids(pm::GenericPowerModel, n::Int, h::Int, key::Symbol) = keys(pm.ref[:nw][n][:ph][h][key])
 
-ref(pm::GenericPowerModel, key::Symbol) = ref(pm, pm.cnw, key)
-ref(pm::GenericPowerModel, key::Symbol, idx) = ref(pm, pm.cnw, key, idx)
-ref(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ref[:nw][n][key]
-ref(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ref[:nw][n][key][idx]
+ref(pm::GenericPowerModel, key::Symbol) = ref(pm, pm.cnw, pm.cph, key)
+ref(pm::GenericPowerModel, key::Symbol, idx) = ref(pm, pm.cnw, pm.cph, key, idx)
+ref(pm::GenericPowerModel, n::Int, h::Int) = pm.ref[:nw][n][:ph][h]
+ref(pm::GenericPowerModel, n::Int, h::Int, key::Symbol) = pm.ref[:nw][n][:ph][h][key]
+ref(pm::GenericPowerModel, n::Int, h::Int, key::Symbol, idx) = pm.ref[:nw][n][:ph][h][key][idx]
 
-Base.var(pm::GenericPowerModel, key::Symbol) = var(pm, pm.cnw, key)
-Base.var(pm::GenericPowerModel, key::Symbol, idx) = var(pm, pm.cnw, key, idx)
-Base.var(pm::GenericPowerModel, n::Int, key::Symbol) = pm.var[:nw][n][key]
-Base.var(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.var[:nw][n][key][idx]
+Base.var(pm::GenericPowerModel, key::Symbol) = var(pm, pm.cnw, pm.cph, key)
+Base.var(pm::GenericPowerModel, key::Symbol, idx) = var(pm, pm.cnw, pm.cph, key, idx)
+Base.var(pm::GenericPowerModel, n::Int, h::Int) = pm.var[:nw][n][:ph][h]
+Base.var(pm::GenericPowerModel, n::Int, h::Int, key::Symbol) = pm.var[:nw][n][:ph][h][key]
+Base.var(pm::GenericPowerModel, n::Int, h::Int, key::Symbol, idx) = pm.var[:nw][n][:ph][h][key][idx]
 
-con(pm::GenericPowerModel, key::Symbol) = con(pm, pm.cnw, key)
-con(pm::GenericPowerModel, key::Symbol, idx) = con(pm, pm.cnw, key, idx)
-con(pm::GenericPowerModel, n::Int, key::Symbol) = pm.con[:nw][n][key]
-con(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.con[:nw][n][key][idx]
+con(pm::GenericPowerModel, key::Symbol) = con(pm, pm.cnw, pm.cph, key)
+con(pm::GenericPowerModel, key::Symbol, idx) = con(pm, pm.cnw, pm.cph, key, idx)
+con(pm::GenericPowerModel, n::Int, h::Int) = pm.con[:nw][n][:ph][h]
+con(pm::GenericPowerModel, n::Int, h::Int, key::Symbol) = pm.con[:nw][n][:ph][h][key]
+con(pm::GenericPowerModel, n::Int, h::Int, key::Symbol, idx) = pm.con[:nw][n][:ph][h][key][idx]
 
-ext(pm::GenericPowerModel, key::Symbol) = ext(pm, pm.cnw, key)
-ext(pm::GenericPowerModel, key::Symbol, idx) = ext(pm, pm.cnw, key, idx)
-ext(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ext[:nw][n][key]
-ext(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ext[:nw][n][key][idx]
+ext(pm::GenericPowerModel, key::Symbol) = ext(pm, pm.cnw, pm.cph, key)
+ext(pm::GenericPowerModel, key::Symbol, idx) = ext(pm, pm.cnw, pm.cph, key, idx)
+ext(pm::GenericPowerModel, n::Int, h::Int) = pm.ext[:nw][n][:ph][h]
+ext(pm::GenericPowerModel, n::Int, h::Int, key::Symbol) = pm.ext[:nw][n][:ph][h][key]
+ext(pm::GenericPowerModel, n::Int, h::Int, key::Symbol, idx) = pm.ext[:nw][n][:ph][h][key][idx]
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
@@ -217,7 +233,9 @@ function build_ref(data::Dict{String,Any})
 
     for (n,nw_data) in nws_data
         nw_id = parse(Int, n)
-        ref = nws[nw_id] = Dict{Symbol,Any}()
+        nw = nws[nw_id] = Dict{Symbol,Any}()
+        ph = nw[:ph] = Dict{Int,Any}()
+        ref = ph[0] = Dict{Symbol,Any}()
 
         for (key, item) in nw_data
             if isa(item, Dict)

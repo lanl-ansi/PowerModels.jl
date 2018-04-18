@@ -388,7 +388,7 @@ function variable_cosine(pm::GenericPowerModel{T}, n::Int=pm.cnw) where T
 end
 
 ""
-function variable_sine(pm::GenericPowerModel, n::Int=pm.cnw)
+function variable_sine(pm::GenericPowerModel, n::Int=pm.cnw, h::Int=pm.cph)
     pm.var[:nw][n][:si] = @variable(pm.model,
         [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_si",
         lowerbound = sin(pm.ref[:nw][n][:buspairs][bp]["angmin"]),
@@ -605,7 +605,7 @@ function variable_cosine_on_off(pm::GenericPowerModel{T}, n::Int=pm.cnw) where T
 end
 
 ""
-function variable_sine_on_off(pm::GenericPowerModel, n::Int=pm.cnw)
+function variable_sine_on_off(pm::GenericPowerModel, n::Int=pm.cnw, h::Int=pm.cph)
     pm.var[:nw][n][:si] = @variable(pm.model,
         [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_si",
         lowerbound = min(0, sin(pm.ref[:nw][n][:branch][l]["angmin"])),
