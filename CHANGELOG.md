@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- none
+- Improved robustness of matpower data parsing and transformation
 
 ### v0.6.0
 - Dropped support for Julia v0.5 (breaking)
