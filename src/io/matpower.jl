@@ -253,7 +253,7 @@ function parse_matpower_string(data_string::String)
     end
 
     for k in keys(matlab_data)
-        if !in(k, mp_data_names) && k[1:4] == "mpc."
+        if !in(k, mp_data_names) && startswith(k, "mpc.")
             case_name = k[5:length(k)]
             value = matlab_data[k]
             if isa(value, Array)
