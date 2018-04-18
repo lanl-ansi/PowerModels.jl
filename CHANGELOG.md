@@ -2,6 +2,8 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Removed multi-network filter option from objective functions (breaking)
+- Removed option to run multi-network data in single-network models (breaking)
 - Improved robustness of matpower data parsing and transformation
 
 ### v0.6.0

@@ -184,7 +184,7 @@ PMs = PowerModels
         t2_pg = var(pm, 2, :pg)
         @constraint(pm.model, t1_pg[2] == t2_pg[4])
 
-        PMs.objective_min_fuel_cost(pm, keys(pm.ref[:nw]))
+        PMs.objective_min_fuel_cost(pm)
     end
 
     @testset "2 period 5-bus asymmetric case" begin
@@ -261,8 +261,9 @@ PMs = PowerModels
         end
     end
 
-
-    @testset "5-bus asymmetric case" begin
+    # currently classed as an error
+    #=
+    @testset "single-network model with multi-network data" begin
         # this works, but should throw a warning
         mn_data = build_mn_data("../test/data/matpower/case5_asym.m")
         result = run_ac_opf(mn_data, ipopt_solver)
@@ -270,6 +271,7 @@ PMs = PowerModels
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17551; atol = 1e0)
     end
+    =#
 
     function post_mppf_test(pm::GenericPowerModel)
         for (n, network) in pm.ref[:nw]
