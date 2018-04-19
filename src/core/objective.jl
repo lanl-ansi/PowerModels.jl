@@ -100,7 +100,7 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
         sum(
             sum(
                 sum(gen["cost"][1]*var(pm, n, h, :pg)[i]^2 + gen["cost"][2]*var(pm, n, h, :pg)[i] + gen["cost"][3] for (i,gen) in ph_ref[:gen]) +
-                sum(dcline["cost"][1]*var(pm, n, h, :dc_p)*[from_idx[n][h][i]]^2 + dcline["cost"][2]*var(pm, n, h, :dc_p)[from_idx[n][h][i]] + dcline["cost"][3] for (i,dcline) in ph_ref[:dcline])
+                sum(dcline["cost"][1]*var(pm, n, h, :p_dc)[from_idx[n][h][i]]^2 + dcline["cost"][2]*var(pm, n, h, :p_dc)[from_idx[n][h][i]] + dcline["cost"][3] for (i,dcline) in ph_ref[:dcline])
             for (h, ph_ref) in nw_ref[:ph])
         for (n, nw_ref) in pm.ref[:nw])
     )
@@ -132,14 +132,14 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
                 @constraint(pm.model, norm([2*var(pm, n, h, :pg)[i], pg_sqr[i]-1]) <= pg_sqr[i]+1)
             end
 
-            dc_p_sqr = var(pm, n, h)[:dc_p_sqr] = @variable(pm.model, 
+            dc_p_sqr = var(pm, n, h)[:p_dc_sqr] = @variable(pm.model, 
                 [i in keys(ph_ref[:dcline])], basename="$(n)_$(h)_dc_p_sqr",
                 lowerbound = ph_ref[:dcline][i]["pminf"]^2,
                 upperbound = ph_ref[:dcline][i]["pmaxf"]^2
             )
 
             for (i, dcline) in ph_ref[:dcline]
-                @constraint(pm.model, norm([2*var(pm, n, h, :dc_p)[from_idx[n][h][i]], dc_p_sqr[i]-1]) <= dc_p_sqr[i]+1)
+                @constraint(pm.model, norm([2*var(pm, n, h, :p_dc)[from_idx[n][h][i]], dc_p_sqr[i]-1]) <= dc_p_sqr[i]+1)
             end
         end
     end
@@ -148,9 +148,9 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
         sum(
             sum(
                 sum(   gen["cost"][1]*var(pm, n, h,   :pg_sqr)[i] +    gen["cost"][2]*var(pm, n, h,   :pg)[i]                 +    gen["cost"][3] for (i,gen) in ph_ref[:gen]) +
-                sum(dcline["cost"][1]*var(pm, n, h, :dc_p_sqr)[i] + dcline["cost"][2]*var(pm, n, h, :dc_p)[from_idx[n][h][i]] + dcline["cost"][3] for (i,dcline) in ph_ref[:dcline])
+                sum(dcline["cost"][1]*var(pm, n, h, :p_dc_sqr)[i] + dcline["cost"][2]*var(pm, n, h, :p_dc)[from_idx[n][h][i]] + dcline["cost"][3] for (i,dcline) in ph_ref[:dcline])
             for (h, ph_ref) in nw_ref[:ph])
-        for (n, ref) in pm.ref[:nw])
+        for (n, nw_ref) in pm.ref[:nw])
     )
 end
 
@@ -219,7 +219,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
                 end
             end
 
-            dc_p_cost = var(pm, n, h)[:dc_p_cost] = @variable(pm.model, 
+            dc_p_cost = var(pm, n, h)[:p_dc_cost] = @variable(pm.model, 
                 [i in ids(pm, n, h, :dcline)], basename="$(n)_$(h)_dc_p_cost",
             )
 
@@ -227,7 +227,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
             dcline_lines = get_lines(ph_ref[:dcline])
             for (i, dcline) in ph_ref[:dcline]
                 for line in dcline_lines[i]
-                    @constraint(pm.model, dc_p_cost[i] >= line["slope"]*var(pm, n, h, :dc_p)[i] + line["intercept"])
+                    @constraint(pm.model, dc_p_cost[i] >= line["slope"]*var(pm, n, h, :p_dc)[i] + line["intercept"])
                 end
             end
 
@@ -242,7 +242,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
         sum(
             sum(
                 sum( var(pm, n, h, :pg_cost)[i] for (i,gen) in ph_ref[:gen]) +
-                sum( var(pm, n, h, :dc_p_cost)[i] for (i,dcline) in ph_ref[:dcline])
+                sum( var(pm, n, h, :p_dc_cost)[i] for (i,dcline) in ph_ref[:dcline])
             for (h, ph_ref) in nw_ref[:ph])
         for (n, nw_ref) in pm.ref[:nw])
     )
