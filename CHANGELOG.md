@@ -6,6 +6,10 @@ PowerModels.jl Change Log
 - Removed option to run multi-network data in single-network models (breaking)
 - Improved robustness of matpower data parsing and transformation
 
+### v0.6.1
+- Moved to Juniper for non-convex MINLP tests
+- Fixed minor bug in non-convex MINLP formulations
+
 ### v0.6.0
 - Dropped support for Julia v0.5 (breaking)
 - Added basic support for PSSE v33 raw data (incl. buses, loads, shunts, generators, branches and two-winding transformers)
