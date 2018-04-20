@@ -7,6 +7,7 @@ PowerModels.jl Change Log
 - Improved robustness of matpower data parsing and transformation
 - Added support for three-winding transformers in PTI files
 - Added support for unit conversion in transformer entries of PTI files
+- Added support for transformer magnetizing admittance from PTI files
 
 ### v0.6.1
 - Moved to Juniper for non-convex MINLP tests

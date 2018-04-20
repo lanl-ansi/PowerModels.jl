@@ -48,7 +48,7 @@ split_loads_shunts
 and conversion of PTI files into a PowerModels format is supported. The
 following power network components are currently supported: buses, loads,
 shunts (fixed and approximation of switched), branches, two-winding and
-three-winding transformers (without magnetizing admittance), and generators.
+three-winding transformers (incl. magnetizing admittance), and generators.
 There is early support for two-terminal dc lines, but this feature should not
 be relied upon.**
 
