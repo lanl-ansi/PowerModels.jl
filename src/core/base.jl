@@ -108,40 +108,44 @@ nws(pm::GenericPowerModel) = keys(pm.ref[:nw])
 ismultiphase(pm::GenericPowerModel) = (maximum([length(nw_ref[:ph]) for (n, nw_ref) in pm.ref[:nw]]) > 1)
 phs(pm::GenericPowerModel, n::Int) = keys(pm.ref[:nw][n][:ph])
 
-ids(pm::GenericPowerModel, key::Symbol) = ids(pm, pm.cnw, pm.cph, key)
-ids(pm::GenericPowerModel, n::Int, key::Symbol) = ids(pm, n, pm.cph, key)
-ids(pm::GenericPowerModel, n::Int, h::Int, key::Symbol) = keys(pm.ref[:nw][n][:ph][h][key])
+ids(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = keys(pm.ref[:nw][nw][:ph][ph][key])
+ids(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = keys(pm.ref[:nw][nw][:ph][ph][key])
 
-ref(pm::GenericPowerModel, key::Symbol) = ref(pm, pm.cnw, pm.cph, key)
-ref(pm::GenericPowerModel, n::Int, key::Symbol) = ref(pm, n, pm.cph, key)
-ref(pm::GenericPowerModel, key::Symbol, idx) = ref(pm, pm.cnw, pm.cph, key, idx)
-ref(pm::GenericPowerModel, n::Int, key::Symbol, idx) = ref(pm, n, pm.cph, key, idx)
-ref(pm::GenericPowerModel, n::Int, h::Int) = pm.ref[:nw][n][:ph][h]
-ref(pm::GenericPowerModel, n::Int, h::Int, key::Symbol) = pm.ref[:nw][n][:ph][h][key]
-ref(pm::GenericPowerModel, n::Int, h::Int, key::Symbol, idx) = pm.ref[:nw][n][:ph][h][key][idx]
 
-Base.var(pm::GenericPowerModel, key::Symbol) = var(pm, pm.cnw, pm.cph, key)
-Base.var(pm::GenericPowerModel, n::Int, key::Symbol) = var(pm, n, pm.cph, key)
-Base.var(pm::GenericPowerModel, key::Symbol, idx) = var(pm, pm.cnw, pm.cph, key, idx)
-Base.var(pm::GenericPowerModel, n::Int, h::Int) = pm.var[:nw][n][:ph][h]
-Base.var(pm::GenericPowerModel, n::Int, h::Int, key::Symbol) = pm.var[:nw][n][:ph][h][key]
-Base.var(pm::GenericPowerModel, n::Int, h::Int, key::Symbol, idx) = pm.var[:nw][n][:ph][h][key][idx]
+ref(pm::GenericPowerModel, nw::Int, ph::Int) = pm.ref[:nw][nw][:ph][ph]
+ref(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.ref[:nw][nw][:ph][ph][key]
+ref(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.ref[:nw][nw][:ph][ph][key][idx]
 
-con(pm::GenericPowerModel, key::Symbol) = con(pm, pm.cnw, pm.cph, key)
-con(pm::GenericPowerModel, n::Int, key::Symbol) = con(pm, n, pm.cph, key)
-con(pm::GenericPowerModel, key::Symbol, idx) = con(pm, pm.cnw, pm.cph, key, idx)
-con(pm::GenericPowerModel, n::Int, key::Symbol, idx) = con(pm, n, pm.cph, key, idx)
-con(pm::GenericPowerModel, n::Int, h::Int) = pm.con[:nw][n][:ph][h]
-con(pm::GenericPowerModel, n::Int, h::Int, key::Symbol) = pm.con[:nw][n][:ph][h][key]
-con(pm::GenericPowerModel, n::Int, h::Int, key::Symbol, idx) = pm.con[:nw][n][:ph][h][key][idx]
+ref(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ref[:nw][n][:ph][h][key]
+ref(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ref[:nw][nw][:ph][ph][key]
+ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ref[:nw][nw][:ph][ph][key][idx]
 
-ext(pm::GenericPowerModel, key::Symbol) = ext(pm, pm.cnw, pm.cph, key)
-ext(pm::GenericPowerModel, n::Int, key::Symbol) = ext(pm, n, pm.cph, key)
-ext(pm::GenericPowerModel, key::Symbol, idx) = ext(pm, pm.cnw, pm.cph, key, idx)
-ext(pm::GenericPowerModel, n::Int, key::Symbol, idx) = ext(pm, n, pm.cph, key, idx)
-ext(pm::GenericPowerModel, n::Int, h::Int) = pm.ext[:nw][n][:ph][h]
-ext(pm::GenericPowerModel, n::Int, h::Int, key::Symbol) = pm.ext[:nw][n][:ph][h][key]
-ext(pm::GenericPowerModel, n::Int, h::Int, key::Symbol, idx) = pm.ext[:nw][n][:ph][h][key][idx]
+
+Base.var(pm::GenericPowerModel, nw::Int, ph::Int) = pm.var[:nw][nw][:ph][ph]
+Base.var(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.var[:nw][nw][:ph][ph][key]
+Base.var(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.var[:nw][nw][:ph][ph][key][idx]
+
+Base.var(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph]
+Base.var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph][key]
+Base.var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph][key][idx]
+
+
+con(pm::GenericPowerModel, nw::Int, ph::Int) = pm.con[:nw][nw][:ph][ph]
+con(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.con[:nw][nw][:ph][ph][key]
+con(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.con[:nw][nw][:ph][ph][key][idx]
+
+con(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph]
+con(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph][key]
+con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph][key][idx]
+
+
+ext(pm::GenericPowerModel, nw::Int, ph::Int) = pm.ext[:nw][nw][:ph][ph]
+ext(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.ext[:nw][nw][:ph][ph][key]
+ext(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.ext[:nw][nw][:ph][ph][key][idx]
+
+ext(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ext[:nw][nw][:ph][ph]
+ext(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ext[:nw][nw][:ph][ph][key]
+ext(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ext[:nw][nw][:ph][ph][key][idx]
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in

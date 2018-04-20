@@ -155,15 +155,15 @@ PMs = PowerModels
 
             PMs.constraint_voltage(pm, nw=n)
 
-            for i in ids(pm, n, :ref_buses)
+            for i in ids(pm, :ref_buses, nw=n)
                 PMs.constraint_theta_ref(pm, i, nw=n)
             end
 
-            for i in ids(pm, n, :bus)
+            for i in ids(pm, :bus, nw=n)
                 PMs.constraint_kcl_shunt(pm, i, nw=n)
             end
 
-            for i in ids(pm, n, :branch)
+            for i in ids(pm, :branch, nw=n)
                 PMs.constraint_ohms_yt_from(pm, i, nw=n)
                 PMs.constraint_ohms_yt_to(pm, i, nw=n)
 
@@ -173,15 +173,15 @@ PMs = PowerModels
                 PMs.constraint_thermal_limit_to(pm, i, nw=n)
             end
 
-            for i in ids(pm, n, :dcline)
+            for i in ids(pm, :dcline, nw=n)
                 PMs.constraint_dcline(pm, i, nw=n)
             end
         end
 
         # cross network constraint, just for illustration purposes
         # designed to be feasible with two copies of case5_asym.m 
-        t1_pg = var(pm, 1, :pg)
-        t2_pg = var(pm, 2, :pg)
+        t1_pg = var(pm, :pg, nw=1)
+        t2_pg = var(pm, :pg, nw=2)
         @constraint(pm.model, t1_pg[2] == t2_pg[4])
 
         PMs.objective_min_fuel_cost(pm)
@@ -282,39 +282,39 @@ PMs = PowerModels
 
             PMs.constraint_voltage(pm, nw=n)
 
-            for i in ids(pm, n, :ref_buses)
+            for i in ids(pm, :ref_buses, nw=n)
                 PMs.constraint_theta_ref(pm, i, nw=n)
                 PMs.constraint_voltage_magnitude_setpoint(pm, i, nw=n)
             end
 
-            for (i,bus) in ref(pm, n, :bus)
+            for (i,bus) in ref(pm, :bus, nw=n)
                 PMs.constraint_kcl_shunt(pm, i, nw=n)
 
                 # PV Bus Constraints
-                if length(ref(pm, n, :bus_gens, i)) > 0 && !(i in ids(pm, n, :ref_buses))
+                if length(ref(pm, :bus_gens, i, nw=n)) > 0 && !(i in ids(pm, :ref_buses, nw=n))
                     @assert bus["bus_type"] == 2
 
                     PMs.constraint_voltage_magnitude_setpoint(pm, i, nw=n)
-                    for j in ref(pm, n, :bus_gens, i)
+                    for j in ref(pm, :bus_gens, i, nw=n)
                         PMs.constraint_active_gen_setpoint(pm, j, nw=n)
                     end
                 end
             end
 
-            for i in ids(pm, n, :branch)
+            for i in ids(pm, :branch, nw=n)
                 PMs.constraint_ohms_yt_from(pm, i, nw=n)
                 PMs.constraint_ohms_yt_to(pm, i, nw=n)
             end
 
-            for (i,dcline) in ref(pm, n, :dcline)
+            for (i,dcline) in ref(pm, :dcline, nw=n)
                 PMs.constraint_active_dcline_setpoint(pm, i, nw=n)
 
-                f_bus = ref(pm, :bus)[dcline["f_bus"]]
+                f_bus = ref(pm, :bus, nw=n)[dcline["f_bus"]]
                 if f_bus["bus_type"] == 1
                     PMs.constraint_voltage_magnitude_setpoint(pm, n, f_bus["index"])
                 end
 
-                t_bus = ref(pm, :bus)[dcline["t_bus"]]
+                t_bus = ref(pm, :bus, nw=n)[dcline["t_bus"]]
                 if t_bus["bus_type"] == 1
                     PMs.constraint_voltage_magnitude_setpoint(pm, n, t_bus["index"])
                 end
