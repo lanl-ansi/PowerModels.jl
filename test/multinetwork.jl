@@ -153,28 +153,28 @@ PMs = PowerModels
             PMs.variable_branch_flow(pm, n)
             PMs.variable_dcline_flow(pm, n)
 
-            PMs.constraint_voltage(pm, n)
+            PMs.constraint_voltage(pm, nw=n)
 
             for i in ids(pm, n, :ref_buses)
-                PMs.constraint_theta_ref(pm, n, i)
+                PMs.constraint_theta_ref(pm, i, nw=n)
             end
 
             for i in ids(pm, n, :bus)
-                PMs.constraint_kcl_shunt(pm, n, i)
+                PMs.constraint_kcl_shunt(pm, i, nw=n)
             end
 
             for i in ids(pm, n, :branch)
-                PMs.constraint_ohms_yt_from(pm, n, i)
-                PMs.constraint_ohms_yt_to(pm, n, i)
+                PMs.constraint_ohms_yt_from(pm, i, nw=n)
+                PMs.constraint_ohms_yt_to(pm, i, nw=n)
 
-                PMs.constraint_voltage_angle_difference(pm, n, i)
+                PMs.constraint_voltage_angle_difference(pm, i, nw=n)
 
-                PMs.constraint_thermal_limit_from(pm, n, i)
-                PMs.constraint_thermal_limit_to(pm, n, i)
+                PMs.constraint_thermal_limit_from(pm, i, nw=n)
+                PMs.constraint_thermal_limit_to(pm, i, nw=n)
             end
 
             for i in ids(pm, n, :dcline)
-                PMs.constraint_dcline(pm, n, i)
+                PMs.constraint_dcline(pm, i, nw=n)
             end
         end
 
@@ -280,34 +280,34 @@ PMs = PowerModels
             PMs.variable_branch_flow(pm, n, bounded = false)
             PMs.variable_dcline_flow(pm, n, bounded = false)
 
-            PMs.constraint_voltage(pm, n)
+            PMs.constraint_voltage(pm, nw=n)
 
             for i in ids(pm, n, :ref_buses)
-                PMs.constraint_theta_ref(pm, n, i)
-                PMs.constraint_voltage_magnitude_setpoint(pm, n, i)
+                PMs.constraint_theta_ref(pm, i, nw=n)
+                PMs.constraint_voltage_magnitude_setpoint(pm, i, nw=n)
             end
 
             for (i,bus) in ref(pm, n, :bus)
-                PMs.constraint_kcl_shunt(pm, n, i)
+                PMs.constraint_kcl_shunt(pm, i, nw=n)
 
                 # PV Bus Constraints
                 if length(ref(pm, n, :bus_gens, i)) > 0 && !(i in ids(pm, n, :ref_buses))
                     @assert bus["bus_type"] == 2
 
-                    PMs.constraint_voltage_magnitude_setpoint(pm, n, i)
+                    PMs.constraint_voltage_magnitude_setpoint(pm, i, nw=n)
                     for j in ref(pm, n, :bus_gens, i)
-                        PMs.constraint_active_gen_setpoint(pm, n, j)
+                        PMs.constraint_active_gen_setpoint(pm, j, nw=n)
                     end
                 end
             end
 
             for i in ids(pm, n, :branch)
-                PMs.constraint_ohms_yt_from(pm, n, i)
-                PMs.constraint_ohms_yt_to(pm, n, i)
+                PMs.constraint_ohms_yt_from(pm, i, nw=n)
+                PMs.constraint_ohms_yt_to(pm, i, nw=n)
             end
 
             for (i,dcline) in ref(pm, n, :dcline)
-                PMs.constraint_active_dcline_setpoint(pm, n, i)
+                PMs.constraint_active_dcline_setpoint(pm, i, nw=n)
 
                 f_bus = ref(pm, :bus)[dcline["f_bus"]]
                 if f_bus["bus_type"] == 1

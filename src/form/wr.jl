@@ -461,8 +461,8 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, h::Int) where T <:
 
         # to prevent this constraint from being posted on multiple parallel branches
         if buspair["branch"] == i
-            constraint_power_magnitude_sqr(pm, n, h, i)
-            constraint_power_magnitude_link(pm, n, h, i)
+            constraint_power_magnitude_sqr(pm, i, nw=n, ph=h)
+            constraint_power_magnitude_link(pm, i, nw=n, ph=h)
         end
     end
 
@@ -691,8 +691,8 @@ function constraint_voltage_on_off(pm::GenericPowerModel{T}, n::Int, h::Int) whe
 
         # to prevent this constraint from being posted on multiple parallel branchs
         # TODO needs on/off variant
-        constraint_power_magnitude_sqr_on_off(pm, n, h, l)
-        constraint_power_magnitude_link_on_off(pm, n, h, l) # different index set
+        constraint_power_magnitude_sqr_on_off(pm, l, nw=n, ph=h)
+        constraint_power_magnitude_link_on_off(pm, l, nw=n, ph=h) # different index set
     end
 end
 
@@ -813,8 +813,8 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, h::Int) where T <:
 
         # to prevent this constraint from being posted on multiple parallel branchs
         if buspair["branch"] == i
-            constraint_power_magnitude_sqr(pm, n, h, i)
-            constraint_power_magnitude_link(pm, n, h, i)
+            constraint_power_magnitude_sqr(pm, i, nw=n, ph=h)
+            constraint_power_magnitude_link(pm, i, nw=n, ph=h)
         end
     end
 
