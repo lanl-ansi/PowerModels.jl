@@ -8,7 +8,6 @@ using MathProgBase
 using JuMP
 using Compat
 using Memento
-using DataStructures.OrderedDict
 
 import Compat: @__MODULE__
 
