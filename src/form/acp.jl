@@ -17,21 +17,21 @@ ACPPowerModel(data::Dict{String,Any}; kwargs...) =
     GenericPowerModel(data, StandardACPForm; kwargs...)
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractACPForm
-    variable_voltage_angle(pm, n, h; kwargs...)
-    variable_voltage_magnitude(pm, n, h; kwargs...)
+function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
+    variable_voltage_angle(pm; kwargs...)
+    variable_voltage_magnitude(pm; kwargs...)
 end
 
 ""
-function variable_voltage_ne(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractACPForm
+function variable_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
 end
 
 "do nothing, this model does not have complex voltage constraints"
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractACPForm
+function constraint_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
 end
 
 "do nothing, this model does not have complex voltage constraints"
-function constraint_voltage_ne(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractACPForm
+function constraint_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
 end
 
 
@@ -165,9 +165,9 @@ end
 
 
 ""
-function variable_voltage_on_off(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractACPForm
-    variable_voltage_angle(pm, n, h; kwargs...)
-    variable_voltage_magnitude(pm, n, h; kwargs...)
+function variable_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
+    variable_voltage_angle(pm; kwargs...)
+    variable_voltage_magnitude(pm; kwargs...)
 end
 
 "do nothing, this model does not have complex voltage constraints"

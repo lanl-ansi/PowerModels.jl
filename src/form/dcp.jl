@@ -16,63 +16,63 @@ DCPPowerModel(data::Dict{String,Any}; kwargs...) =
     GenericPowerModel(data, StandardDCPForm; kwargs...)
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractDCPForm
-    variable_voltage_angle(pm, n, h; kwargs...)
+function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
+    variable_voltage_angle(pm; kwargs...)
 end
 
 
 "nothing to add, there are no voltage variables on branches"
-function variable_voltage_ne(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractDCPForm
+function variable_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
 end
 
 "dc models ignore reactive power flows"
-function variable_reactive_generation(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractDCPForm
+function variable_reactive_generation(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
 end
 
 "dc models ignore reactive power flows"
-function variable_reactive_branch_flow(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractDCPForm
+function variable_reactive_branch_flow(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
 end
 
 "dc models ignore reactive power flows"
-function variable_reactive_branch_flow_ne(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractDCPForm
+function variable_reactive_branch_flow_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
 end
 
 
 ""
-function variable_active_branch_flow(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; bounded = true) where T <: StandardDCPForm
+function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true) where T <: StandardDCPForm
     if bounded
-        var(pm, n, h)[:p] = @variable(pm.model,
-            [(l,i,j) in ref(pm, n, h, :arcs_from)], basename="$(n)_$(h)_p",
-            lowerbound = -ref(pm, n, h, :branch, l)["rate_a"],
-            upperbound =  ref(pm, n, h, :branch, l)["rate_a"],
-            start = getstart(ref(pm, n, h, :branch), l, "p_start")
+        var(pm, nw, ph)[:p] = @variable(pm.model,
+            [(l,i,j) in ref(pm, nw, ph, :arcs_from)], basename="$(nw)_$(ph)_p",
+            lowerbound = -ref(pm, nw, ph, :branch, l)["rate_a"],
+            upperbound =  ref(pm, nw, ph, :branch, l)["rate_a"],
+            start = getstart(ref(pm, nw, ph, :branch), l, "p_start")
         )
     else
-        var(pm, n, h)[:p] = @variable(pm.model,
-            [(l,i,j) in ref(pm, n, h, :arcs_from)], basename="$(n)_$(h)_p",
-            start = getstart(ref(pm, n, h, :branch), l, "p_start")
+        var(pm, nw, ph)[:p] = @variable(pm.model,
+            [(l,i,j) in ref(pm, nw, ph, :arcs_from)], basename="$(nw)_$(ph)_p",
+            start = getstart(ref(pm, nw, ph, :branch), l, "p_start")
         )
     end
 
     # this explicit type erasure is necessary
-    p_expr = Dict{Any,Any}([((l,i,j), var(pm, n, h, :p)[(l,i,j)]) for (l,i,j) in ref(pm, n, h, :arcs_from)])
-    p_expr = merge(p_expr, Dict([((l,j,i), -1.0*var(pm, n, h, :p)[(l,i,j)]) for (l,i,j) in ref(pm, n, h, :arcs_from)]))
-    var(pm, n, h)[:p] = p_expr
+    p_expr = Dict{Any,Any}([((l,i,j), var(pm, nw, ph, :p)[(l,i,j)]) for (l,i,j) in ref(pm, nw, ph, :arcs_from)])
+    p_expr = merge(p_expr, Dict([((l,j,i), -1.0*var(pm, nw, ph, :p)[(l,i,j)]) for (l,i,j) in ref(pm, nw, ph, :arcs_from)]))
+    var(pm, nw, ph)[:p] = p_expr
 end
 
 ""
-function variable_active_branch_flow_ne(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph) where T <: StandardDCPForm
-    var(pm, n, h)[:p_ne] = @variable(pm.model,
-        [(l,i,j) in ref(pm, n, h, :ne_arcs_from)], basename="$(n)_$(h)_p_ne",
-        lowerbound = -ref(pm, n, h, :ne_branch, l)["rate_a"],
-        upperbound =  ref(pm, n, h, :ne_branch, l)["rate_a"],
-        start = getstart(ref(pm, n, h, :ne_branch), l, "p_start")
+function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.cph) where T <: StandardDCPForm
+    var(pm, nw, ph)[:p_ne] = @variable(pm.model,
+        [(l,i,j) in ref(pm, nw, ph, :ne_arcs_from)], basename="$(nw)_$(ph)_p_ne",
+        lowerbound = -ref(pm, nw, ph, :ne_branch, l)["rate_a"],
+        upperbound =  ref(pm, nw, ph, :ne_branch, l)["rate_a"],
+        start = getstart(ref(pm, nw, ph, :ne_branch), l, "p_start")
     )
 
     # this explicit type erasure is necessary
-    p_ne_expr = Dict{Any,Any}([((l,i,j), 1.0*var(pm, n, h, :p_ne)[(l,i,j)]) for (l,i,j) in ref(pm, n, h, :ne_arcs_from)])
-    p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*var(pm, n, h, :p_ne)[(l,i,j)]) for (l,i,j) in ref(pm, n, h, :ne_arcs_from)]))
-    var(pm, n, h)[:p_ne] = p_ne_expr
+    p_ne_expr = Dict{Any,Any}([((l,i,j), 1.0*var(pm, nw, ph, :p_ne)[(l,i,j)]) for (l,i,j) in ref(pm, nw, ph, :ne_arcs_from)])
+    p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*var(pm, nw, ph, :p_ne)[(l,i,j)]) for (l,i,j) in ref(pm, nw, ph, :ne_arcs_from)]))
+    var(pm, nw, ph)[:p_ne] = p_ne_expr
 end
 
 "do nothing, this model does not have complex voltage variables"
@@ -164,8 +164,8 @@ function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: Abst
 end
 
 ""
-function variable_voltage_on_off(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractDCPForm
-    variable_voltage_angle(pm, n, h; kwargs...)
+function variable_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
+    variable_voltage_angle(pm; kwargs...)
 end
 
 "do nothing, this model does not have complex voltage variables"

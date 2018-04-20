@@ -22,10 +22,10 @@ function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, h::Int, i::Int) 
 end
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractACTForm
-    variable_voltage_angle(pm, n, h; kwargs...)
-    variable_voltage_magnitude_sqr(pm, n, h; kwargs...)
-    variable_voltage_product(pm, n, h; kwargs...)
+function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACTForm
+    variable_voltage_angle(pm; kwargs...)
+    variable_voltage_magnitude_sqr(pm; kwargs...)
+    variable_voltage_product(pm; kwargs...)
 end
 
 function constraint_voltage(pm::GenericPowerModel{T}, n::Int, h::Int) where T <: StandardACTForm

@@ -18,9 +18,9 @@ ACRPowerModel(data::Dict{String,Any}; kwargs...) =
 
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractACRForm
-    variable_voltage_real(pm, n, h; kwargs...)
-    variable_voltage_imaginary(pm, n, h; kwargs...)
+function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACRForm
+    variable_voltage_real(pm; kwargs...)
+    variable_voltage_imaginary(pm; kwargs...)
 end
 
 
@@ -36,7 +36,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, h::Int) where T <:
 
     # does not seem to improve convergence
     #wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
-    #for bp in ids(pm, n, h, :buspairs)
+    #for bp in ids(pm, nw, ph, :buspairs)
     #    i,j = bp
     #    @constraint(pm.model, wr_min[bp] <= vr[i]*vr[j] + vi[i]*vi[j])
     #    @constraint(pm.model, wr_max[bp] >= vr[i]*vr[j] + vi[i]*vi[j])

@@ -15,22 +15,22 @@ SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SD
 
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; bounded = true) where T <: AbstractWRMForm
-    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, n, h, :buspairs))
-    bus_ids = ids(pm, n, h, :bus)
+function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true) where T <: AbstractWRMForm
+    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, ph, :buspairs))
+    bus_ids = ids(pm, nw, ph, :bus)
 
     w_index = 1:length(bus_ids)
     lookup_w_index = Dict([(bi,i) for (i,bi) in enumerate(bus_ids)])
 
-    WR = var(pm, n, h)[:WR] = @variable(pm.model,
-        [1:length(bus_ids), 1:length(bus_ids)], Symmetric, basename="$(n)_$(h)_WR"
+    WR = var(pm, nw, ph)[:WR] = @variable(pm.model,
+        [1:length(bus_ids), 1:length(bus_ids)], Symmetric, basename="$(nw)_$(ph)_WR"
     )
-    WI = var(pm, n, h)[:WI] = @variable(pm.model,
-        [1:length(bus_ids), 1:length(bus_ids)], basename="$(n)_$(h)_WI"
+    WI = var(pm, nw, ph)[:WI] = @variable(pm.model,
+        [1:length(bus_ids), 1:length(bus_ids)], basename="$(nw)_$(ph)_WI"
     )
 
     # bounds on diagonal
-    for (i, bus) in ref(pm, n, h, :bus)
+    for (i, bus) in ref(pm, nw, ph, :bus)
         w_idx = lookup_w_index[i]
         wr_ii = WR[w_idx,w_idx]
         wi_ii = WR[w_idx,w_idx]
@@ -48,7 +48,7 @@ function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph
     end
 
     # bounds on off-diagonal
-    for (i,j) in ids(pm, n, h, :buspairs)
+    for (i,j) in ids(pm, nw, ph, :buspairs)
         wi_idx = lookup_w_index[i]
         wj_idx = lookup_w_index[j]
 
@@ -61,20 +61,20 @@ function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph
         end
     end
 
-    var(pm, n, h)[:w] = Dict{Int,Any}()
-    for (i, bus) in ref(pm, n, h, :bus)
+    var(pm, nw, ph)[:w] = Dict{Int,Any}()
+    for (i, bus) in ref(pm, nw, ph, :bus)
         w_idx = lookup_w_index[i]
-        var(pm, n, h, :w)[i] = WR[w_idx,w_idx]
+        var(pm, nw, ph, :w)[i] = WR[w_idx,w_idx]
     end
 
-    var(pm, n, h)[:wr] = Dict{Tuple{Int,Int},Any}()
-    var(pm, n, h)[:wi] = Dict{Tuple{Int,Int},Any}()
-    for (i,j) in ids(pm, n, h, :buspairs)
+    var(pm, nw, ph)[:wr] = Dict{Tuple{Int,Int},Any}()
+    var(pm, nw, ph)[:wi] = Dict{Tuple{Int,Int},Any}()
+    for (i,j) in ids(pm, nw, ph, :buspairs)
         w_fr_index = lookup_w_index[i]
         w_to_index = lookup_w_index[j]
 
-        var(pm, n, h, :wr)[(i,j)] = WR[w_fr_index, w_to_index]
-        var(pm, n, h, :wi)[(i,j)] = WI[w_fr_index, w_to_index]
+        var(pm, nw, ph, :wr)[(i,j)] = WR[w_fr_index, w_to_index]
+        var(pm, nw, ph, :wi)[(i,j)] = WI[w_fr_index, w_to_index]
     end
 
 end

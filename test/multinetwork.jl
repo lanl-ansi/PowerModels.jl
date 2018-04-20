@@ -148,10 +148,10 @@ PMs = PowerModels
 
     function post_mpopf_test(pm::GenericPowerModel)
         for (n, network) in pm.ref[:nw]
-            PMs.variable_voltage(pm, n)
-            PMs.variable_generation(pm, n)
-            PMs.variable_branch_flow(pm, n)
-            PMs.variable_dcline_flow(pm, n)
+            PMs.variable_voltage(pm, nw=n)
+            PMs.variable_generation(pm, nw=n)
+            PMs.variable_branch_flow(pm, nw=n)
+            PMs.variable_dcline_flow(pm, nw=n)
 
             PMs.constraint_voltage(pm, nw=n)
 
@@ -275,10 +275,10 @@ PMs = PowerModels
 
     function post_mppf_test(pm::GenericPowerModel)
         for (n, network) in pm.ref[:nw]
-            PMs.variable_voltage(pm, n, bounded = false)
-            PMs.variable_generation(pm, n, bounded = false)
-            PMs.variable_branch_flow(pm, n, bounded = false)
-            PMs.variable_dcline_flow(pm, n, bounded = false)
+            PMs.variable_voltage(pm, nw=n, bounded = false)
+            PMs.variable_generation(pm, nw=n, bounded = false)
+            PMs.variable_branch_flow(pm, nw=n, bounded = false)
+            PMs.variable_dcline_flow(pm, nw=n, bounded = false)
 
             PMs.constraint_voltage(pm, nw=n)
 

@@ -15,57 +15,57 @@ SOCDFPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOC
 
 
 ""
-function variable_branch_flow(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractDFForm
-    variable_active_branch_flow(pm, n, h; kwargs...)
-    variable_reactive_branch_flow(pm, n, h; kwargs...)
-    variable_active_branch_series_flow(pm, n, h; kwargs...)
-    variable_reactive_branch_series_flow(pm, n, h; kwargs...)
+function variable_branch_flow(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDFForm
+    variable_active_branch_flow(pm; kwargs...)
+    variable_reactive_branch_flow(pm; kwargs...)
+    variable_active_branch_series_flow(pm; kwargs...)
+    variable_reactive_branch_series_flow(pm; kwargs...)
 
 end
 
 
-function variable_active_branch_series_flow(pm::GenericPowerModel, n::Int=pm.cnw, h::Int=pm.cph; bounded = true)
+function variable_active_branch_series_flow(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
-        var(pm, n, h)[:p_s] = @variable(pm.model,
-            [(l,i,j) in ref(pm, n, h, :arcs_from)], basename="$(n)_$(h)_p_s",
-            lowerbound = -ref(pm, n, h, :branch, l)["rate_a"],
-            upperbound =  ref(pm, n, h, :branch, l)["rate_a"],
-            start = getstart(ref(pm, n, h, :branch), l, "p_start")
+        var(pm, nw, ph)[:p_s] = @variable(pm.model,
+            [(l,i,j) in ref(pm, nw, ph, :arcs_from)], basename="$(nw)_$(ph)_p_s",
+            lowerbound = -ref(pm, nw, ph, :branch, l)["rate_a"],
+            upperbound =  ref(pm, nw, ph, :branch, l)["rate_a"],
+            start = getstart(ref(pm, nw, ph, :branch), l, "p_start")
         )
     else
-        var(pm, n, h)[:p_s] = @variable(pm.model,
-            [(l,i,j) in ref(pm, n, h, :arcs_from)], basename="$(n)_$(h)_p_s",
-            start = getstart(ref(pm, n, h, :branch), l, "p_start")
+        var(pm, nw, ph)[:p_s] = @variable(pm.model,
+            [(l,i,j) in ref(pm, nw, ph, :arcs_from)], basename="$(nw)_$(ph)_p_s",
+            start = getstart(ref(pm, nw, ph, :branch), l, "p_start")
         )
     end
 end
 
 
-function variable_reactive_branch_series_flow(pm::GenericPowerModel, n::Int=pm.cnw, h::Int=pm.cph; bounded = true)
+function variable_reactive_branch_series_flow(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
-        var(pm, n, h)[:q_s] = @variable(pm.model,
-            [(l,i,j) in ref(pm, n, h, :arcs_from)], basename="$(n)_q_s",
-            lowerbound = -ref(pm, n, h, :branch, l)["rate_a"],
-            upperbound =  ref(pm, n, h, :branch, l)["rate_a"],
-            start = getstart(ref(pm, n, h, :branch), l, "q_start")
+        var(pm, nw, ph)[:q_s] = @variable(pm.model,
+            [(l,i,j) in ref(pm, nw, ph, :arcs_from)], basename="$(nw)_$(ph)_q_s",
+            lowerbound = -ref(pm, nw, ph, :branch, l)["rate_a"],
+            upperbound =  ref(pm, nw, ph, :branch, l)["rate_a"],
+            start = getstart(ref(pm, nw, ph, :branch), l, "q_start")
         )
     else
-        var(pm, n, h)[:q_s] = @variable(pm.model,
-            [(l,i,j) in ref(pm, n, h, :arcs_from)], basename="$(n)_q_s",
-            start = getstart(ref(pm, n, h, :branch), l, "q_start")
+        var(pm, nw, ph)[:q_s] = @variable(pm.model,
+            [(l,i,j) in ref(pm, nw, ph, :arcs_from)], basename="$(nw)_$(ph)_q_s",
+            start = getstart(ref(pm, nw, ph, :branch), l, "q_start")
         )
     end
 end
 
 
 ""
-function variable_branch_current(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractDFForm
-    variable_branch_series_current_magnitude_sqr(pm, n, h; kwargs...)
+function variable_branch_current(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDFForm
+    variable_branch_series_current_magnitude_sqr(pm; kwargs...)
 end
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw, h::Int=pm.cph; kwargs...) where T <: AbstractDFForm
-    variable_voltage_magnitude_sqr(pm, n, h; kwargs...)
+function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDFForm
+    variable_voltage_magnitude_sqr(pm; kwargs...)
 end
 
 """
@@ -172,22 +172,22 @@ end
 
 
 "variable: `0 <= i[l] <= (Imax)^2` for `l` in `branch`es"
-function variable_branch_series_current_magnitude_sqr(pm::GenericPowerModel, n::Int=pm.cnw, h::Int=pm.cph; bounded = true)
-    branches = ref(pm, n, h, :branch)
-    buses = ref(pm, n, h, :bus)
+function variable_branch_series_current_magnitude_sqr(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
+    branches = ref(pm, nw, ph, :branch)
+    buses = ref(pm, nw, ph, :bus)
     cmax = calc_series_current_magnitude_bound(branches, buses)
     if bounded
-        var(pm, n, h)[:ccm] = @variable(pm.model,
-            [l in ids(pm, n, h, :branch)], basename="$(n)_ccm",
+        var(pm, nw, ph)[:ccm] = @variable(pm.model,
+            [l in ids(pm, nw, ph, :branch)], basename="$(nw)_$(ph)_ccm",
             lowerbound = 0,
             upperbound = (cmax[l])^2,
-            start = getstart(ref(pm, n, h, :branch), l, "i_start")
+            start = getstart(ref(pm, nw, ph, :branch), l, "i_start")
         )
     else
-        var(pm, n, h)[:ccm] = @variable(pm.model,
-            [l in ids(pm, n, h, :branch)], basename="$(n)_ccm",
+        var(pm, nw, ph)[:ccm] = @variable(pm.model,
+            [l in ids(pm, nw, ph, :branch)], basename="$(nw)_$(ph)_ccm",
             lowerbound = 0,
-            start = getstart(ref(pm, n, h, :branch), l, "i_start")
+            start = getstart(ref(pm, nw, ph, :branch), l, "i_start")
         )
     end
 end
