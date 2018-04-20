@@ -47,10 +47,10 @@ split_loads_shunts
 **Note: This feature is currently in development, and only partial parsing of
 and conversion of PTI files into a PowerModels format is supported. The
 following power network components are currently supported: buses, loads,
-shunts (fixed and approximation of switched), branches, two-winding
-transformers (without magnetizing admittance), and generators. There is
-early support for two-terminal dc lines, but this feature should not be
-relied upon.**
+shunts (fixed and approximation of switched), branches, two-winding and
+three-winding transformers (without magnetizing admittance), and generators.
+There is early support for two-terminal dc lines, but this feature should not
+be relied upon.**
 
 The following method is the main exported method for parsing PTI data files:
 
@@ -79,5 +79,6 @@ psse2pm_transformer!
 psse2pm_dclines
 calc_2term_reactive_power
 get_bus_values
-
+find_max_bus_id
+create_starbus_from_transformer
 ```
