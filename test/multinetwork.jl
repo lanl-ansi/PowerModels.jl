@@ -147,7 +147,7 @@ PMs = PowerModels
 
 
     function post_mpopf_test(pm::GenericPowerModel)
-        for (n, network) in pm.ref[:nw]
+        for (n, network) in nws(pm)
             PMs.variable_voltage(pm, nw=n)
             PMs.variable_generation(pm, nw=n)
             PMs.variable_branch_flow(pm, nw=n)
@@ -274,7 +274,7 @@ PMs = PowerModels
     =#
 
     function post_mppf_test(pm::GenericPowerModel)
-        for (n, network) in pm.ref[:nw]
+        for (n, network) in nws(pm)
             PMs.variable_voltage(pm, nw=n, bounded = false)
             PMs.variable_generation(pm, nw=n, bounded = false)
             PMs.variable_branch_flow(pm, nw=n, bounded = false)

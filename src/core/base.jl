@@ -103,10 +103,12 @@ end
 
 ### Helper functions for working with multinetworks and multiphases
 ismultinetwork(pm::GenericPowerModel) = (length(pm.ref[:nw]) > 1)
-nws(pm::GenericPowerModel) = keys(pm.ref[:nw])
+nw_ids(pm::GenericPowerModel) = keys(pm.ref[:nw])
+nws(pm::GenericPowerModel) = pm.ref[:nw]
 
-ismultiphase(pm::GenericPowerModel) = (maximum([length(nw_ref[:ph]) for (n, nw_ref) in pm.ref[:nw]]) > 1)
-phs(pm::GenericPowerModel, n::Int) = keys(pm.ref[:nw][n][:ph])
+ismultiphase(pm::GenericPowerModel) = (maximum([length(nw_ref[:ph]) for (n, nw_ref) in nws(pm)]) > 1)
+ph_ids(pm::GenericPowerModel, n::Int=pm.cnw) = keys(pm.ref[:nw][n][:ph])
+phs(pm::GenericPowerModel, n::Int=pm.cnw) = pm.ref[:nw][n][:ph]
 
 ids(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = keys(pm.ref[:nw][nw][:ph][ph][key])
 ids(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = keys(pm.ref[:nw][nw][:ph][ph][key])

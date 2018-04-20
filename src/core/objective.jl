@@ -9,7 +9,7 @@ Checks that all cost models are present and of the same type
 function check_cost_models(pm::GenericPowerModel)
     model = nothing
 
-    for (n, nw_ref) in pm.ref[:nw]
+    for (n, nw_ref) in nws(pm)
         for (h, ph_ref) in nw_ref[:ph]
             for (i,gen) in ph_ref[:gen]
                 if haskey(gen, "cost")
@@ -65,7 +65,7 @@ end
 Checks that all cost models are polynomials, quadratic or less
 """
 function check_polynomial_cost_models(pm::GenericPowerModel)
-    for (n, nw_ref) in pm.ref[:nw]
+    for (n, nw_ref) in nws(pm)
         for (h, ph_ref) in nw_ref[:ph]
             for (i,gen) in ph_ref[:gen]
                 @assert gen["model"] == 2
@@ -89,7 +89,7 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
     check_polynomial_cost_models(pm)
 
     from_idx = Dict()
-    for (n, nw_ref) in pm.ref[:nw]
+    for (n, nw_ref) in nws(pm)
         from_idx[n] = Dict()
         for (h, ph_ref) in nw_ref[:ph]
             from_idx[n][h] = Dict(arc[1] => arc for arc in ph_ref[:arcs_from_dc])
@@ -102,7 +102,7 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
                 sum(gen["cost"][1]*var(pm, n, h, :pg)[i]^2 + gen["cost"][2]*var(pm, n, h, :pg)[i] + gen["cost"][3] for (i,gen) in ph_ref[:gen]) +
                 sum(dcline["cost"][1]*var(pm, n, h, :p_dc)[from_idx[n][h][i]]^2 + dcline["cost"][2]*var(pm, n, h, :p_dc)[from_idx[n][h][i]] + dcline["cost"][3] for (i,dcline) in ph_ref[:dcline])
             for (h, ph_ref) in nw_ref[:ph])
-        for (n, nw_ref) in pm.ref[:nw])
+        for (n, nw_ref) in nws(pm))
     )
 end
 
@@ -112,7 +112,7 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
     check_polynomial_cost_models(pm)
 
     from_idx = Dict()
-    for (n, nw_ref) in pm.ref[:nw]
+    for (n, nw_ref) in nws(pm)
         from_idx[n] = Dict()
         for (h, ph_ref) in nw_ref[:ph]
             from_idx[n][h] = Dict(arc[1] => arc for arc in ph_ref[:arcs_from_dc])
@@ -121,7 +121,7 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
 
     pg_sqr = Dict()
     dc_p_sqr = Dict()
-    for (n, nw_ref) in pm.ref[:nw]
+    for (n, nw_ref) in nws(pm)
         for (h, ph_ref) in nw_ref[:ph]
             pg_sqr = var(pm, n, h)[:pg_sqr] = @variable(pm.model, 
                 [i in keys(ph_ref[:gen])], basename="$(n)_$(h)_pg_sqr",
@@ -150,7 +150,7 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
                 sum(   gen["cost"][1]*var(pm, n, h,   :pg_sqr)[i] +    gen["cost"][2]*var(pm, n, h,   :pg)[i]                 +    gen["cost"][3] for (i,gen) in ph_ref[:gen]) +
                 sum(dcline["cost"][1]*var(pm, n, h, :p_dc_sqr)[i] + dcline["cost"][2]*var(pm, n, h, :p_dc)[from_idx[n][h][i]] + dcline["cost"][3] for (i,dcline) in ph_ref[:dcline])
             for (h, ph_ref) in nw_ref[:ph])
-        for (n, nw_ref) in pm.ref[:nw])
+        for (n, nw_ref) in nws(pm))
     )
 end
 
@@ -205,7 +205,7 @@ end
 function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
     #check_polynomial_cost_models(pm)
 
-    for (n, nw_ref) in pm.ref[:nw]
+    for (n, nw_ref) in nws(pm)
         for (h, ph_ref) in nw_ref[:ph]
             pg_cost = var(pm, n, h)[:pg_cost] = @variable(pm.model, 
                 [i in ids(pm, n, h, :gen)], basename="$(n)_$(h)_pg_cost"
@@ -244,7 +244,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
                 sum( var(pm, n, h, :pg_cost)[i] for (i,gen) in ph_ref[:gen]) +
                 sum( var(pm, n, h, :p_dc_cost)[i] for (i,dcline) in ph_ref[:dcline])
             for (h, ph_ref) in nw_ref[:ph])
-        for (n, nw_ref) in pm.ref[:nw])
+        for (n, nw_ref) in nws(pm))
     )
 end
 
@@ -256,7 +256,7 @@ function objective_tnep_cost(pm::GenericPowerModel)
             sum(
                 sum( branch["construction_cost"]*var(pm, n, h, :branch_ne)[i] for (i,branch) in ph_ref[:ne_branch] )
             for (h, ph_ref) in nw_ref[:ph])
-        for (n, nw_ref) in pm.ref[:nw])
+        for (n, nw_ref) in nws(pm))
     )
 end
 
