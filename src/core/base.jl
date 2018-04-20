@@ -4,7 +4,10 @@ export
     GenericPowerModel,
     setdata, setsolver, solve,
     run_generic_model, build_generic_model, solve_generic_model,
+    ismultinetwork, nw_ids, nws,
+    ismultiphase, ph_ids, phs,
     ids, ref, var, ext
+
 
 ""
 abstract type AbstractPowerFormulation end
