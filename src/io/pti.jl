@@ -3,8 +3,7 @@
 # This file provides functions for interfacing with pti .raw files  #
 #                                                                   #
 #####################################################################
-using DataStructures
-using Base.shift!
+
 
 """
     get_pti_sections()
