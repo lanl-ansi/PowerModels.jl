@@ -11,13 +11,9 @@ matrix:
 cache:
  directories:
    - /home/travis/.julia
-sudo: false
 addons:
   apt_packages:
     - gfortran
-    - liblapack-dev
-    - libgmp-dev
-    - libglpk-dev
 
 before_install:
     # don't keep an old version of the code in the cache
