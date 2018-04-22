@@ -1,7 +1,7 @@
 julia 0.6
 
-Ipopt
 Cbc
-GLPKMathProgInterface
+Ipopt
+SCS
 Juniper 0.2.0
 Pajarito 0.4.0

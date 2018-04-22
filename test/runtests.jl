@@ -6,8 +6,8 @@ using Memento
 setlevel!(getlogger(InfrastructureModels), "error")
 setlevel!(getlogger(PowerModels), "error")
 
-using Ipopt
 using Cbc
+using Ipopt
 using SCS
 using Pajarito
 using Juniper
