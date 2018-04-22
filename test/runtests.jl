@@ -6,20 +6,20 @@ using Memento
 setlevel!(getlogger(InfrastructureModels), "error")
 setlevel!(getlogger(PowerModels), "error")
 
+using Cbc
 using Ipopt
+using SCS
 using Pajarito
 using Juniper
-using GLPKMathProgInterface
-using SCS
 
 using Base.Test
 
 # default setup for solvers
 ipopt_solver = IpoptSolver(tol=1e-6, print_level=0)
-glpk_solver = GLPKSolverMIP()
-juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=glpk_solver, log_levels=[])
-#juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=glpk_solver)
-pajarito_solver = PajaritoSolver(mip_solver=glpk_solver, cont_solver=ipopt_solver, log_level=0)
+cbc_solver = CbcSolver()
+juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
+#juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
+pajarito_solver = PajaritoSolver(mip_solver=cbc_solver, cont_solver=ipopt_solver, log_level=0)
 scs_solver = SCSSolver(max_iters=1000000, verbose=0)
 
 

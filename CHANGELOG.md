@@ -2,12 +2,13 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- Removed multi-network filter option from objective functions (breaking)
-- Removed option to run multi-network data in single-network models (breaking)
-- Improved robustness of matpower data parsing and transformation
 - Added support for three-winding transformers in PTI files
 - Added support for unit conversion in transformer entries of PTI files
 - Added support for transformer magnetizing admittance from PTI files
+- Removed multi-network filter option from objective functions (breaking)
+- Removed option to run multi-network data in single-network models (breaking)
+- Changed test MIP solver from GLPK to CBC
+- Improved robustness of matpower data parsing and transformation
 
 ### v0.6.1
 - Moved to Juniper for non-convex MINLP tests
