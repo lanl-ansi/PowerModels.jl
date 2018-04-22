@@ -302,11 +302,6 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict)
         for transformer in pti_data["TRANSFORMER"]
             sub_data = Dict{String,Any}()
 
-            # TODO: Correct implimentation of magnetizing admittance
-            if transformer["MAG1"] != 0.0 || transformer["MAG2"] != 0.0
-                warn(LOGGER, "Magnetizing admittance is not yet supported")
-            end
-
             if transformer["K"] == 0  # Two-winding Transformers
                 sub_data["f_bus"] = transformer["I"]
                 sub_data["t_bus"] = transformer["J"]
@@ -328,8 +323,8 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict)
                 sub_data["br_r"] = br_r
                 sub_data["br_x"] = br_x
 
-                sub_data["g_fr"] = 0.0
-                sub_data["b_fr"] = transformer["MAG1"]
+                sub_data["g_fr"] = transformer["MAG1"]
+                sub_data["b_fr"] = transformer["MAG2"]
                 sub_data["g_to"] = 0.0
                 sub_data["b_to"] = 0.0
 
@@ -407,8 +402,8 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict)
                     sub_data["br_r"] = br_r
                     sub_data["br_x"] = br_x
 
-                    sub_data["g_fr"] = 0.0
-                    sub_data["b_fr"] = transformer["MAG1"]
+                    sub_data["g_fr"] = m == 1 ? transformer["MAG1"] : 0.0
+                    sub_data["b_fr"] = m == 1 ? transformer["MAG2"] : 0.0
                     sub_data["g_to"] = 0.0
                     sub_data["b_to"] = 0.0
 
