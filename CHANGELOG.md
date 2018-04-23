@@ -10,6 +10,7 @@ PowerModels.jl Change Log
 - Changed test MIP solver from GLPK to CBC
 - Improved robustness of matpower data parsing and transformation
 - Minor issues closed #251
+- Added PowerModels data extensions from PTI files via the `import_all` kwarg in `parse_file`
 
 ### v0.6.1
 - Moved to Juniper for non-convex MINLP tests

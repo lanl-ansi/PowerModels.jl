@@ -319,4 +319,18 @@ end
             end
         end
     end
+
+    @testset "import all" begin
+        data = PowerModels.parse_file("../test/data/pti/case30.raw"; import_all=true)
+
+        @test length(data) == 19
+        for (key, n) in zip(["bus", "load", "shunt", "gen", "branch", "dcline"], [30, 21, 2, 6, 41, 0])
+            @test length(data[key]) == n
+        end
+
+        result = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 297.878089; atol=1e-4)
+    end
 end
