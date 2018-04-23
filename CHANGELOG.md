@@ -9,6 +9,7 @@ PowerModels.jl Change Log
 - Removed option to run multi-network data in single-network models (breaking)
 - Changed test MIP solver from GLPK to CBC
 - Improved robustness of matpower data parsing and transformation
+- Minor issues closed #251
 
 ### v0.6.1
 - Moved to Juniper for non-convex MINLP tests
