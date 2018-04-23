@@ -107,10 +107,12 @@ end
 
 
 "Imports remaining keys from `data_in` into `data_out`, excluding keys in `exclude`"
-function import_remaining!(data_out::Dict, data_in::Dict; exclude=[])
-    for (k, v) in data_in
-        if k ∉ exclude
-            data_out[lowercase(k)] = v
+function import_remaining!(data_out::Dict, data_in::Dict, import_all::Bool; exclude=[])
+    if import_all
+        for (k, v) in data_in
+            if !(k in exclude)
+                data_out[lowercase(k)] = v
+            end
         end
     end
 end
@@ -134,7 +136,7 @@ function psse2pm_branch!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["g_fr"] = pop!(branch, "GI")
             sub_data["b_fr"] = branch["BI"] == 0. && branch["B"] != 0. ? branch["B"] / 2 : pop!(branch, "BI")
             sub_data["g_to"] = pop!(branch, "GJ")
-            sub_data["b_to"] = branch["BJ"] == 0. && branch["B"] != 0. ? pop!(branch, "B") / 2 : pop!(branch, "BJ")
+            sub_data["b_to"] = branch["BJ"] == 0. && branch["B"] != 0. ? branch["B"] / 2 : pop!(branch, "BJ")
             sub_data["rate_a"] = pop!(branch, "RATEA")
             sub_data["rate_b"] = pop!(branch, "RATEB")
             sub_data["rate_c"] = pop!(branch, "RATEC")
@@ -146,11 +148,9 @@ function psse2pm_branch!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["transformer"] = false
             sub_data["index"] = i
 
-            if import_all
-                import_remaining!(sub_data, branch)
-            end
+            import_remaining!(sub_data, branch, import_all; exclude=["B", "BI", "BJ"])
 
-            append!(pm_data["branch"], [deepcopy(sub_data)])
+            push!(pm_data["branch"], sub_data)
         end
     end
 end
@@ -195,11 +195,9 @@ function psse2pm_generator!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["qc2max"] = 0.0
             sub_data["index"] = length(pm_data["gen"]) + 1
 
-            if import_all
-                import_remaining!(sub_data, gen)
-            end
+            import_remaining!(sub_data, gen, import_all)
 
-            append!(pm_data["gen"], [deepcopy(sub_data)])
+            push!(pm_data["gen"], sub_data)
         end
     end
 end
@@ -229,18 +227,16 @@ function psse2pm_bus!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 sub_data["vmax"] = pop!(bus, "NVHI")
                 sub_data["vmin"] = pop!(bus, "NVLO")
             else
-                warn(LOGGER, "PTI v$(pti_data["CASE IDENTIFICATION"][1]["REV"]) does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.")
+                warn(LOGGER, "PTI v$(pm_data["source_version"]) does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.")
                 sub_data["vmax"] = 1.1
                 sub_data["vmin"] = 0.9
             end
 
             sub_data["index"] = pop!(bus, "I")
 
-            if import_all
-                import_remaining!(sub_data, bus)
-            end
+            import_remaining!(sub_data, bus, import_all)
 
-            append!(pm_data["bus"], [deepcopy(sub_data)])
+            push!(pm_data["bus"], sub_data)
         end
     end
 end
@@ -263,11 +259,9 @@ function psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["status"] = pop!(load, "STATUS")
             sub_data["index"] = length(pm_data["load"]) + 1
 
-            if import_all
-                import_remaining!(sub_data, load)
-            end
+            import_remaining!(sub_data, load, import_all)
 
-            append!(pm_data["load"], [deepcopy(sub_data)])
+            push!(pm_data["load"], sub_data)
         end
     end
 end
@@ -292,11 +286,9 @@ function psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["status"] = pop!(shunt, "STATUS")
             sub_data["index"] = length(pm_data["shunt"]) + 1
 
-            if import_all
-                import_remaining!(sub_data, shunt)
-            end
+            import_remaining!(sub_data, shunt, import_all)
 
-            append!(pm_data["shunt"], [deepcopy(sub_data)])
+            push!(pm_data["shunt"], sub_data)
         end
     end
 
@@ -312,11 +304,9 @@ function psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["status"] = pop!(shunt, "STAT")
             sub_data["index"] = length(pm_data["shunt"]) + 1
 
-            if import_all
-                import_remaining!(sub_data, shunt)
-            end
+            import_remaining!(sub_data, shunt, import_all)
 
-            append!(pm_data["shunt"], [deepcopy(sub_data)])
+            push!(pm_data["shunt"], sub_data)
         end
     end
 end
@@ -334,9 +324,9 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
     if haskey(pti_data, "TRANSFORMER")
         for transformer in pti_data["TRANSFORMER"]
-            sub_data = Dict{String,Any}()
-
             if transformer["K"] == 0  # Two-winding Transformers
+                sub_data = Dict{String,Any}()
+
                 sub_data["f_bus"] = transformer["I"]
                 sub_data["t_bus"] = transformer["J"]
 
@@ -385,19 +375,17 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 sub_data["transformer"] = true
                 sub_data["index"] = length(pm_data["branch"]) + 1
 
-                if import_all
-                    import_remaining!(sub_data, transformer; exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
-                                                                      "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3",
-                                                                      "SBASE3-1", "MAG1", "MAG2", "STAT", "NOMV1", "NOMV2"])
-                end
+                import_remaining!(sub_data, transformer, import_all; exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
+                                                                              "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3",
+                                                                              "SBASE3-1", "MAG1", "MAG2", "STAT", "NOMV1", "NOMV2"])
 
-                append!(pm_data["branch"], [deepcopy(sub_data)])
+                push!(pm_data["branch"], sub_data)
             else  # Three-winding Transformers
                 bus_id1, bus_id2, bus_id3 = transformer["I"], transformer["J"], transformer["K"]
 
                 # Creates a starbus (or "dummy" bus) to which each winding of the transformer will connect
                 starbus = create_starbus_from_transformer(pm_data, transformer)
-                append!(pm_data["bus"], [deepcopy(starbus)])
+                push!(pm_data["bus"], starbus)
 
                 # Create 3 branches from a three winding transformer (one for each winding, which will each connect to the starbus)
                 br_r12, br_r23, br_r31 = transformer["R1-2"], transformer["R2-3"], transformer["R3-1"]
@@ -435,6 +423,8 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
                 # Build each of the three transformer branches
                 for (m, (bus_id, br_r, br_x)) in enumerate(zip([bus_id1, bus_id2, bus_id3], [Zr_p, Zr_s, Zr_t], [Zx_p, Zx_s, Zx_t]))
+                    sub_data = Dict{String,Any}()
+
                     sub_data["f_bus"] = bus_id
                     sub_data["t_bus"] = starbus["bus_i"]
 
@@ -471,13 +461,11 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     sub_data["transformer"] = true
                     sub_data["index"] = length(pm_data["branch"]) + 1
 
-                    if import_all
-                        import_remaining!(sub_data, transformer; exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
-                                                                          "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3",
-                                                                          "SBASE3-1", "MAG1", "MAG2", "STAT"])
-                    end
+                    import_remaining!(sub_data, transformer, import_all; exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
+                                                                                  "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3",
+                                                                                  "SBASE3-1", "MAG1", "MAG2", "STAT"])
 
-                    append!(pm_data["branch"], [deepcopy(sub_data)])
+                    push!(pm_data["branch"], sub_data)
                 end
             end
         end
@@ -530,11 +518,9 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["model"] = 2
             sub_data["index"] = length(pm_data["dcline"]) + 1
 
-            if import_all
-                import_remaining!(sub_data, dcline)
-            end
+            import_remaining!(sub_data, dcline, import_all)
 
-            append!(pm_data["dcline"], [deepcopy(sub_data)])
+            push!(pm_data["dcline"], sub_data)
         end
     end
 
@@ -558,16 +544,16 @@ data from the PTI file if `import_all` is true (Default: false).
 function parse_psse(pti_data::Dict; import_all=false)::Dict
     pm_data = Dict{String,Any}()
 
+    rev = pop!(pti_data["CASE IDENTIFICATION"][1], "REV")
+
     pm_data["multinetwork"] = false
     pm_data["per_unit"] = false
     pm_data["source_type"] = "pti"
-    pm_data["source_version"] = VersionNumber("$(pti_data["CASE IDENTIFICATION"][1]["REV"])")
+    pm_data["source_version"] = VersionNumber("$rev")
     pm_data["baseMVA"] = pop!(pti_data["CASE IDENTIFICATION"][1], "SBASE")
     pm_data["name"] = pop!(pti_data["CASE IDENTIFICATION"][1], "NAME")
 
-    if import_all
-        import_remaining!(pm_data, pti_data["CASE IDENTIFICATION"][1]; exclude=["REV"])
-    end
+    import_remaining!(pm_data, pti_data["CASE IDENTIFICATION"][1], import_all)
 
     psse2pm_bus!(pm_data, pti_data, import_all)
     psse2pm_load!(pm_data, pti_data, import_all)

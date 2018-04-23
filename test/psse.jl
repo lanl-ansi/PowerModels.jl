@@ -190,7 +190,7 @@ end
        @test_warn(getlogger(PowerModels), "Voltage Source Converter DC lines are not yet supported",
                    PowerModels.parse_file("../test/data/pti/frankenstein_70.raw"))
 
-        @test_warn(getlogger(PowerModels), "PTI v33 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.",
+        @test_warn(getlogger(PowerModels), "PTI v33.0.0 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.",
                    PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
 
 
@@ -324,8 +324,15 @@ end
         data = PowerModels.parse_file("../test/data/pti/case30.raw"; import_all=true)
 
         @test length(data) == 19
-        for (key, n) in zip(["bus", "load", "shunt", "gen", "branch", "dcline"], [30, 21, 2, 6, 41, 0])
-            @test length(data[key]) == n
+
+        for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [14, 14, 14, 45, 29])
+            for item in values(data[key])
+                if key == "branch" && item["transformer"]
+                    @test length(item) == 42
+                else
+                    @test length(item) == n
+                end
+            end
         end
 
         result = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)

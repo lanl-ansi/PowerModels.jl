@@ -399,7 +399,7 @@ function parse_pti_data(data_string::String, sections::Array)
             end
 
             debug(LOGGER, join(["Section:", section], " "))
-            if section ∉ ["CASE IDENTIFICATION","TRANSFORMER","VOLTAGE SOURCE CONVERTER","MULTI-TERMINAL DC","TWO-TERMINAL DC","GNE DEVICE"]
+            if !(section in ["CASE IDENTIFICATION","TRANSFORMER","VOLTAGE SOURCE CONVERTER","MULTI-TERMINAL DC","TWO-TERMINAL DC","GNE DEVICE"])
                 section_data = Dict{String,Any}()
                 parse_line_element!(section_data, elements, section)
 
