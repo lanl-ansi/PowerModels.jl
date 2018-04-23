@@ -51,7 +51,7 @@ end
         PowerModels.make_mixed_units(data)
         PowerModels.make_per_unit(data)
 
-        @test compare_dict(data, data_base)
+        @test InfrastructureModels.compare_dict(data, data_base)
     end
     @testset "5-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_asym.m")
@@ -60,7 +60,7 @@ end
         PowerModels.make_mixed_units(data)
         PowerModels.make_per_unit(data)
 
-        @test compare_dict(data, data_base)
+        @test InfrastructureModels.compare_dict(data, data_base)
     end
     @testset "5-bus case with pwl costs" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
@@ -69,7 +69,7 @@ end
         PowerModels.make_mixed_units(data)
         PowerModels.make_per_unit(data)
 
-        @test compare_dict(data, data_base)
+        @test InfrastructureModels.compare_dict(data, data_base)
     end
     @testset "24-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case24.m")
@@ -78,7 +78,7 @@ end
         PowerModels.make_mixed_units(data)
         PowerModels.make_per_unit(data)
 
-        @test compare_dict(data, data_base)
+        @test InfrastructureModels.compare_dict(data, data_base)
     end
 
 
@@ -89,7 +89,7 @@ end
         PowerModels.make_mixed_units(result["solution"])
         PowerModels.make_per_unit(result["solution"])
 
-        @test compare_dict(result, result_base)
+        @test InfrastructureModels.compare_dict(result, result_base)
     end
     @testset "5-bus case solution" begin
         result = run_ac_opf("../test/data/matpower/case5_asym.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
@@ -98,7 +98,7 @@ end
         PowerModels.make_mixed_units(result["solution"])
         PowerModels.make_per_unit(result["solution"])
 
-        @test compare_dict(result, result_base)
+        @test InfrastructureModels.compare_dict(result, result_base)
     end
     @testset "24-bus case solution" begin
         result = run_ac_opf("../test/data/matpower/case24.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
@@ -107,7 +107,7 @@ end
         PowerModels.make_mixed_units(result["solution"])
         PowerModels.make_per_unit(result["solution"])
 
-        @test compare_dict(result, result_base)
+        @test InfrastructureModels.compare_dict(result, result_base)
     end
 
 
@@ -118,7 +118,7 @@ end
         PowerModels.make_mixed_units(result["solution"])
         PowerModels.make_per_unit(result["solution"])
 
-        @test compare_dict(result, result_base)
+        @test InfrastructureModels.compare_dict(result, result_base)
     end
 
 end

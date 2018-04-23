@@ -47,14 +47,14 @@ PMs = PowerModels
             PowerModels.make_mixed_units(mn_data)
             PowerModels.make_per_unit(mn_data)
 
-            @test compare_dict(mn_data, build_mn_data("../test/data/matpower/case5_dc.m"))
+            @test InfrastructureModels.compare_dict(mn_data, build_mn_data("../test/data/matpower/case5_dc.m"))
         end
         @testset "14+24 hybrid case" begin
             mn_data = build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
             PowerModels.make_mixed_units(mn_data)
             PowerModels.make_per_unit(mn_data)
 
-            @test compare_dict(mn_data, build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m"))
+            @test InfrastructureModels.compare_dict(mn_data, build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m"))
         end
     end
 
