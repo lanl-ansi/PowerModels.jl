@@ -353,34 +353,16 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     split_loads_shunts(pm_data)
 
     # use once available
-    #InfrastructureModels.arrays_to_dicts(pm_data)
-    arrays_to_dicts(pm_data)
+    InfrastructureModels.arrays_to_dicts!(pm_data)
+
+    for optional in ["dcline", "load", "shunt"]
+        if length(pm_data[optional]) == 0
+            pm_data[optional] = Dict{String,Any}()
+        end
+    end
 
     return pm_data
 end
-
-
-"turns top level arrays into dicts (replace once available in InfrastructureModels)"
-function arrays_to_dicts(data::Dict{String,Any})
-    # update lookup structure
-    for (k,v) in data
-        if isa(v, Array)
-            #println("updating $(k)")
-            dict = Dict{String,Any}()
-            for item in v
-                assert("index" in keys(item))
-                key = string(item["index"])
-                if !(haskey(dict, key))
-                    dict[key] = item
-                else
-                    warn(LOGGER, "skipping component $(item["index"]) from the $(k) table because a component with the same id already exists")
-                end
-            end
-            data[k] = dict
-        end
-    end
-end
-
 
 
 """

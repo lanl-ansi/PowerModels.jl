@@ -22,10 +22,10 @@ juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=
 pajarito_solver = PajaritoSolver(mip_solver=cbc_solver, cont_solver=ipopt_solver, log_level=0)
 scs_solver = SCSSolver(max_iters=1000000, verbose=0)
 
+include("common.jl")
+
 
 @testset "PowerModels" begin
-
-include("common.jl")
 
 include("matpower.jl")
 
