@@ -100,7 +100,7 @@ function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus
     load = pm.ref[:nw][n][:load]
     shunt = pm.ref[:nw][n][:shunt]
 
-    pm.con[:nw][n][:kcl_p][i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for (d, pd) in bus_pd) - sum(gs for (s, gs) in bus_gs)*1.0^2)
+    pm.con[:nw][n][:kcl_p][i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
     # omit reactive constraint
 end
 
@@ -114,7 +114,7 @@ function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, 
     load = pm.ref[:nw][n][:load]
     shunt = pm.ref[:nw][n][:shunt]
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for (d, pd) in bus_pd) - sum(gs for (s, gs) in bus_gs)*1.0^2)
+    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
 end
 
 """
