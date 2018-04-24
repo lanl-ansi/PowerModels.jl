@@ -1,15 +1,16 @@
 """
-    parse_file(file)
+    parse_file(file; import_all)
 
 Parses a Matpower .m `file` or PTI (PSS(R)E-v33) .raw `file` into a
-PowerModels data structure.
+PowerModels data structure. All fields from PTI files will be imported if
+`import_all` is true (Default: false).
 """
-function parse_file(file::String)
+function parse_file(file::String; import_all=false)
     if endswith(file, ".m")
         pm_data = PowerModels.parse_matpower(file)
     elseif endswith(lowercase(file), ".raw")
         warn(LOGGER, "The PSS(R)E parser is partially implimented, and currently only supports buses, loads, shunts, generators, branches, and transformers")
-        pm_data = PowerModels.parse_psse(file)
+        pm_data = PowerModels.parse_psse(file; import_all=import_all)
     else
         pm_data = parse_json(file)
     end
