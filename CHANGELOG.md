@@ -8,6 +8,7 @@ PowerModels.jl Change Log
 - Added support for extending PowerModels data with all PTI data fields
 - Removed multi-network filter option from objective functions (breaking)
 - Removed option to run multi-network data in single-network models (breaking)
+- Removed add_bus_demand_setpoint function (breaking)
 - Changed parameters and improved performance of KCL constraints (breaking)
 - Improved robustness of matpower data parsing and transformation
 - Changed test MIP solver from GLPK to CBC
