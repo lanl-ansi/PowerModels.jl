@@ -73,11 +73,11 @@ function constraint_kcl_shunt(pm::GenericPowerModel, n::Int, i::Int)
     bus_loads = ref(pm, n, :bus_loads, i)
     bus_shunts = ref(pm, n, :bus_shunts, i)
 
-    pd = Dict(k => v["pd"] for (k,v) in ref(pm, n, :load))
-    qd = Dict(k => v["qd"] for (k,v) in ref(pm, n, :load))
+    pd = Dict(k => ref(pm, n, :load, k)["pd"] for k in bus_loads)
+    qd = Dict(k => ref(pm, n, :load, k)["qd"] for k in bus_loads)
 
-    gs = Dict(k => v["gs"] for (k,v) in ref(pm, n, :shunt))
-    bs = Dict(k => v["bs"] for (k,v) in ref(pm, n, :shunt))
+    gs = Dict(k => ref(pm, n, :shunt, k)["gs"] for k in bus_shunts)
+    bs = Dict(k => ref(pm, n, :shunt, k)["bs"] for k in bus_shunts)
 
     constraint_kcl_shunt(pm, n, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs)
 end
@@ -94,11 +94,11 @@ function constraint_kcl_shunt_ne(pm::GenericPowerModel, n::Int, i::Int)
     bus_loads = ref(pm, n, :bus_loads, i)
     bus_shunts = ref(pm, n, :bus_shunts, i)
 
-    pd = Dict(k => v["pd"] for (k,v) in ref(pm, n, :load))
-    qd = Dict(k => v["qd"] for (k,v) in ref(pm, n, :load))
+    pd = Dict(k => ref(pm, n, :load, k)["pd"] for k in bus_loads)
+    qd = Dict(k => ref(pm, n, :load, k)["qd"] for k in bus_loads)
 
-    gs = Dict(k => v["gs"] for (k,v) in ref(pm, n, :shunt))
-    bs = Dict(k => v["bs"] for (k,v) in ref(pm, n, :shunt))
+    gs = Dict(k => ref(pm, n, :shunt, k)["gs"] for k in bus_shunts)
+    bs = Dict(k => ref(pm, n, :shunt, k)["bs"] for k in bus_shunts)
 
     constraint_kcl_shunt_ne(pm, n, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs)
 end
