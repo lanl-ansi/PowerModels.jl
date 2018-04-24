@@ -96,13 +96,6 @@ function add_generator_power_setpoint(sol, pm::GenericPowerModel)
 end
 
 ""
-function add_bus_demand_setpoint(sol, pm::GenericPowerModel)
-    mva_base = pm.data["baseMVA"]
-    add_setpoint(sol, pm, "bus", "pd", :pd; default_value = (item) -> item["pd"]*mva_base)
-    add_setpoint(sol, pm, "bus", "qd", :qd; default_value = (item) -> item["qd"]*mva_base)
-end
-
-""
 function add_branch_flow_setpoint(sol, pm::GenericPowerModel)
     # check the branch flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
