@@ -73,13 +73,13 @@ function constraint_kcl_shunt(pm::GenericPowerModel, n::Int, i::Int)
     bus_loads = ref(pm, n, :bus_loads, i)
     bus_shunts = ref(pm, n, :bus_shunts, i)
 
-    pd = Dict(k => ref(pm, n, :load, k)["pd"] for k in bus_loads)
-    qd = Dict(k => ref(pm, n, :load, k)["qd"] for k in bus_loads)
+    bus_pd = Dict(k => ref(pm, n, :load, k)["pd"] for k in bus_loads)
+    bus_qd = Dict(k => ref(pm, n, :load, k)["qd"] for k in bus_loads)
 
-    gs = Dict(k => ref(pm, n, :shunt, k)["gs"] for k in bus_shunts)
-    bs = Dict(k => ref(pm, n, :shunt, k)["bs"] for k in bus_shunts)
+    bus_gs = Dict(k => ref(pm, n, :shunt, k)["gs"] for k in bus_shunts)
+    bus_bs = Dict(k => ref(pm, n, :shunt, k)["bs"] for k in bus_shunts)
 
-    constraint_kcl_shunt(pm, n, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs)
+    constraint_kcl_shunt(pm, n, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 constraint_kcl_shunt(pm::GenericPowerModel, i::Int) = constraint_kcl_shunt(pm, pm.cnw, i::Int)
 
@@ -94,13 +94,13 @@ function constraint_kcl_shunt_ne(pm::GenericPowerModel, n::Int, i::Int)
     bus_loads = ref(pm, n, :bus_loads, i)
     bus_shunts = ref(pm, n, :bus_shunts, i)
 
-    pd = Dict(k => ref(pm, n, :load, k)["pd"] for k in bus_loads)
-    qd = Dict(k => ref(pm, n, :load, k)["qd"] for k in bus_loads)
+    bus_pd = Dict(k => ref(pm, n, :load, k)["pd"] for k in bus_loads)
+    bus_qd = Dict(k => ref(pm, n, :load, k)["qd"] for k in bus_loads)
 
-    gs = Dict(k => ref(pm, n, :shunt, k)["gs"] for k in bus_shunts)
-    bs = Dict(k => ref(pm, n, :shunt, k)["bs"] for k in bus_shunts)
+    bus_gs = Dict(k => ref(pm, n, :shunt, k)["gs"] for k in bus_shunts)
+    bus_bs = Dict(k => ref(pm, n, :shunt, k)["bs"] for k in bus_shunts)
 
-    constraint_kcl_shunt_ne(pm, n, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs)
+    constraint_kcl_shunt_ne(pm, n, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 constraint_kcl_shunt_ne(pm::GenericPowerModel, i::Int) = constraint_kcl_shunt_ne(pm, pm.cnw, i::Int)
 
