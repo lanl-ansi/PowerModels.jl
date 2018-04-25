@@ -83,7 +83,10 @@ end
 """
     create_starbus(pm_data, transformer)
 
-Creates a starbus from a given three-winding `transformer`
+Creates a starbus from a given three-winding `transformer`. "pti_id" is given
+by `["bus_i", "name", "I", "J", "K", "CKT"]` where "bus_i" and "name" are the
+modified names for the starbus, and "I", "J", "K" and "CKT" come from the
+originating transformer, in the PSS(R)E transformer specification.
 """
 function create_starbus_from_transformer(pm_data::Dict, transformer::Dict)::Dict
     starbus = Dict{String,Any}()
@@ -101,6 +104,7 @@ function create_starbus_from_transformer(pm_data::Dict, transformer::Dict)::Dict
     starbus["bus_type"] = transformer["STAT"]
     starbus["area"] = get_bus_value(transformer["I"], "area", pm_data)
     starbus["zone"] = get_bus_value(transformer["I"], "zone", pm_data)
+    starbus["pti_id"] = push!([starbus["bus_i"], starbus["name"]], transformer["I"], transformer["J"], transformer["K"], transformer["CKT"])
 
     return starbus
 end
@@ -132,7 +136,8 @@ end
 """
     psse2pm_branch!(pm_data, pti_data)
 
-Parses PSS(R)E-style Branch data into a PowerModels-style Dict.
+Parses PSS(R)E-style Branch data into a PowerModels-style Dict. "pti_id" is
+given by `["I", "J", "CKT"]` in PSS(R)E Branch specification.
 """
 function psse2pm_branch!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     pm_data["branch"] = []
@@ -157,6 +162,8 @@ function psse2pm_branch!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["angmin"] = 0.0
             sub_data["angmax"] = 0.0
             sub_data["transformer"] = false
+
+            sub_data["pti_id"] = [sub_data["f_bus"], sub_data["t_bus"], pop!(branch, "CKT")]
             sub_data["index"] = i
 
             import_remaining!(sub_data, branch, import_all; exclude=["B", "BI", "BJ"])
@@ -170,7 +177,8 @@ end
 """
     psse2pm_generator!(pm_data, pti_data)
 
-Parses PSS(R)E-style Generator data in a PowerModels-style Dict.
+Parses PSS(R)E-style Generator data in a PowerModels-style Dict. "pti_id" is
+given by `["I", "ID"]` in PSS(R)E Generator specification.
 """
 function psse2pm_generator!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     pm_data["gen"] = []
@@ -178,11 +186,6 @@ function psse2pm_generator!(pm_data::Dict, pti_data::Dict, import_all::Bool)
         for gen in pti_data["GENERATOR"]
             sub_data = Dict{String,Any}()
 
-            sub_data["model"] = 2
-            sub_data["startup"] = 0.0
-            sub_data["shutdown"] = 0.0
-            sub_data["ncost"] = 3
-            sub_data["cost"] = [0.0, 1.0, 0.0]
             sub_data["gen_bus"] = pop!(gen, "I")
             sub_data["gen_status"] = pop!(gen, "STAT")
             sub_data["pg"] = pop!(gen, "PG")
@@ -204,6 +207,15 @@ function psse2pm_generator!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["qc1max"] = 0.0
             sub_data["qc2min"] = 0.0
             sub_data["qc2max"] = 0.0
+
+            # Default Cost functions
+            sub_data["model"] = 2
+            sub_data["startup"] = 0.0
+            sub_data["shutdown"] = 0.0
+            sub_data["ncost"] = 3
+            sub_data["cost"] = [0.0, 1.0, 0.0]
+
+            sub_data["pti_id"] = [sub_data["gen_bus"], pop!(gen, "ID")]
             sub_data["index"] = length(pm_data["gen"]) + 1
 
             import_remaining!(sub_data, gen, import_all)
@@ -217,7 +229,8 @@ end
 """
     psse2pm_bus!(pm_data, pti_data)
 
-Parses PSS(R)E-style Bus data into a PowerModels-style Dict.
+Parses PSS(R)E-style Bus data into a PowerModels-style Dict. "pti_id" is given
+by ["I", "NAME"] in PSS(R)E Bus specification.
 """
 function psse2pm_bus!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     pm_data["bus"] = []
@@ -243,6 +256,7 @@ function psse2pm_bus!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 sub_data["vmin"] = 0.9
             end
 
+            sub_data["pti_id"] = [sub_data["bus_i"], sub_data["name"]]
             sub_data["index"] = pop!(bus, "I")
 
             import_remaining!(sub_data, bus, import_all)
@@ -256,7 +270,8 @@ end
 """
     psse2pm_load!(pm_data, pti_data)
 
-Parses PSS(R)E-style Load data into a PowerModels-style Dict.
+Parses PSS(R)E-style Load data into a PowerModels-style Dict. "pti_id" is given
+by `["I", "ID"]` in the PSS(R)E Load specification.
 """
 function psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     pm_data["load"] = []
@@ -268,6 +283,8 @@ function psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["pd"] = pop!(load, "PL")
             sub_data["qd"] = pop!(load, "QL")
             sub_data["status"] = pop!(load, "STATUS")
+
+            sub_data["pti_id"] = [sub_data["load_bus"], pop!(load, "ID")]
             sub_data["index"] = length(pm_data["load"]) + 1
 
             import_remaining!(sub_data, load, import_all)
@@ -282,7 +299,9 @@ end
     psse2pm_shunt!(pm_data, pti_data)
 
 Parses PSS(R)E-style Fixed and Switched Shunt data into a PowerModels-style
-Dict.
+Dict. "pti_id" is given by `["I", "ID"]` for Fixed Shunts, and `["I", "SWREM"]`
+for Switched Shunts, as given by the PSS(R)E Fixed and Switched Shunts
+specifications.
 """
 function psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     pm_data["shunt"] = []
@@ -295,6 +314,8 @@ function psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["gs"] = pop!(shunt, "GL")
             sub_data["bs"] = pop!(shunt, "BL")
             sub_data["status"] = pop!(shunt, "STATUS")
+
+            sub_data["pti_id"] = [sub_data["shunt_bus"], pop!(shunt, "ID")]
             sub_data["index"] = length(pm_data["shunt"]) + 1
 
             import_remaining!(sub_data, shunt, import_all)
@@ -313,6 +334,8 @@ function psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["gs"] = 0.0
             sub_data["bs"] = pop!(shunt, "BINIT")
             sub_data["status"] = pop!(shunt, "STAT")
+
+            sub_data["pti_id"] = [sub_data["shunt_bus"], pop!(shunt, "SWREM")]
             sub_data["index"] = length(pm_data["shunt"]) + 1
 
             import_remaining!(sub_data, shunt, import_all)
@@ -326,7 +349,10 @@ end
 """
     psse2pm_transformer!(pm_data, pti_data)
 
-Parses PSS(R)E-style Transformer data into a PowerModels-style Dict.
+Parses PSS(R)E-style Transformer data into a PowerModels-style Dict. "pti_id"
+is given by `["I", "J", "K", "CKT", "winding"]`, where "winding" is 0 if
+transformer is two-winding, and 1, 2, or 3 for three-winding, and the remaining
+keys are defined in the PSS(R)E Transformer specification.
 """
 function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     if !haskey(pm_data, "branch")
@@ -383,6 +409,7 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 sub_data["angmin"] = 0.0
                 sub_data["angmax"] = 0.0
 
+                sub_data["pti_id"] = [pop!(transformer, "I"), pop!(transformer, "J"), pop!(transformer, "K"), pop!(transformer, "CKT"), 0]
                 sub_data["transformer"] = true
                 sub_data["index"] = length(pm_data["branch"]) + 1
 
@@ -467,12 +494,12 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     sub_data["angmin"] = 0.0
                     sub_data["angmax"] = 0.0
 
+                    sub_data["pti_id"] = [transformer["I"], transformer["J"], transformer["K"], transformer["CKT"], m]
                     sub_data["transformer"] = true
-
                     sub_data["index"] = length(pm_data["branch"]) + 1
 
                     import_remaining!(sub_data, transformer, import_all; exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
-                                                                                  "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3",
+                                                                                  "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3", "CKT",
                                                                                   "SBASE3-1", "MAG1", "MAG2", "STAT","NOMV1", "NOMV2",
                                                                                   "NOMV3", "WINDV1", "WINDV2", "WINDV3", "RATA1",
                                                                                   "RATA2", "RATA3", "RATB1", "RATB2", "RATB3", "RATC1",
@@ -493,6 +520,11 @@ end
 
 Parses PSS(R)E-style Two-Terminal and VSC DC Lines data into a PowerModels
 compatible Dict structure by first converting them to a simple DC Line Model.
+For Two-Terminal DC lines, "pti_id" is given by `["IPR", "IPI", "NAME"]` in the
+PSS(R)E Two-Terminal DC specification. For Voltage Source Converters, "pti_id"
+is given by `["IBUS1", "IBUS2", "NAME"]`, where "IBUS1" is "IBUS" of the first
+converter bus, and "IBUS2" is the "IBUS" of the second converter bus, in the
+PSS(R)E Voltage Source Converter specification.
 """
 function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     pm_data["dcline"] = []
@@ -541,6 +573,7 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["cost"] = [0.0, 1.0, 0.0]
             sub_data["model"] = 2
 
+            sub_data["pti_id"] = [sub_data["f_bus"], sub_data["t_bus"], pop!(dcline, "NAME")]
             sub_data["index"] = length(pm_data["dcline"]) + 1
 
             import_remaining!(sub_data, dcline, import_all)
@@ -594,6 +627,7 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["cost"] = [0.0, 1.0, 0.0]
             sub_data["model"] = 2
 
+            sub_data["pti_id"] = [sub_data["f_bus"], sub_data["t_bus"], pop!(dcline, "NAME")]
             sub_data["index"] = length(pm_data["dcline"]) + 1
 
             import_remaining!(sub_data, dcline, import_all)

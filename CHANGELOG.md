@@ -7,6 +7,7 @@ PowerModels.jl Change Log
 - Added support for transformer magnetizing admittance from PTI files
 - Added support for extending PowerModels data with all PTI data fields
 - Added support for Voltage Source Converters and Two-Terminal DC lines in PTI files
+- Added "pti_id" to uniquely identify each component imported from a PTI file
 - Removed multi-network filter option from objective functions (breaking)
 - Removed option to run multi-network data in single-network models (breaking)
 - Removed add_bus_demand_setpoint function (breaking)

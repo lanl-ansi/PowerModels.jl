@@ -315,8 +315,7 @@ end
             data = PowerModels.parse_file("../test/data/pti/case30.raw"; import_all=true)
 
             @test length(data) == 22
-
-            for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [14, 14, 14, 45, 29])
+            for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [15, 14, 14, 45, 29])
                 for item in values(data[key])
                     if key == "branch" && item["transformer"]
                         @test length(item) == 42
@@ -359,7 +358,7 @@ end
             data = PowerModels.parse_file("../test/data/pti/two-terminal-hvdc_test.raw")
 
             @test length(data["dcline"]) == 1
-            @test length(data["dcline"]["1"]) == 25
+            @test length(data["dcline"]["1"]) == 26
 
             opf = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
             @test opf["status"] == :LocalOptimal
@@ -373,7 +372,7 @@ end
             data = PowerModels.parse_file("../test/data/pti/vsc-hvdc_test.raw")
 
             @test length(data["dcline"]) == 1
-            @test length(data["dcline"]["1"]) == 25
+            @test length(data["dcline"]["1"]) == 26
 
             opf = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
             @test opf["status"] == :LocalOptimal
@@ -381,6 +380,17 @@ end
 
             pf = PowerModels.run_pf(data, PowerModels.ACPPowerModel, ipopt_solver)
             @test pf["status"] == :LocalOptimal
+        end
+    end
+
+    @testset "pti_id" begin
+        data = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw")
+
+        for key in ["bus", "load", "shunt", "gen", "branch"]
+            for v in values(data[key])
+                @test "pti_id" in keys(v)
+                @test isa(v["pti_id"], Array)
+            end
         end
     end
 end
