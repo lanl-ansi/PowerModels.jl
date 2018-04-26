@@ -376,20 +376,20 @@ end
 
             opf = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
             @test opf["status"] == :LocalOptimal
-            @test isapprox(opf["objective"], 20.6578; atol=1e-3)
+            @test isapprox(opf["objective"], 19.6761; atol=1e-3)
 
             pf = PowerModels.run_pf(data, PowerModels.ACPPowerModel, ipopt_solver)
             @test pf["status"] == :LocalOptimal
         end
     end
 
-    @testset "pti_id" begin
+    @testset "source_id" begin
         data = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw")
 
         for key in ["bus", "load", "shunt", "gen", "branch"]
             for v in values(data[key])
-                @test "pti_id" in keys(v)
-                @test isa(v["pti_id"], Array)
+                @test "source_id" in keys(v)
+                @test isa(v["source_id"], Array)
             end
         end
     end
