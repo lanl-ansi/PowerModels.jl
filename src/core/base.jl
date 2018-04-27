@@ -313,7 +313,8 @@ function build_ref(data::Dict{String,Any})
         if length(ref_buses) == 0
             big_gen = biggest_generator(ref[:gen])
             gen_bus = big_gen["gen_bus"]
-            ref_buses[gen_bus] = ref[:bus][gen_bus]
+            ref_bus = ref_buses[gen_bus] = ref[:bus][gen_bus]
+            ref_bus["bus_type"] = 3
             warn(LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
         end
 
