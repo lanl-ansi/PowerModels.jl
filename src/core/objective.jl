@@ -10,38 +10,42 @@ function check_cost_models(pm::GenericPowerModel)
     model = nothing
 
     for (n, nw_ref) in nws(pm)
-        for (h, ph_ref) in nw_ref[:ph]
-            for (i,gen) in ph_ref[:gen]
-                if haskey(gen, "cost")
+        for (i,gen) in nw_ref[:gen]
+            if haskey(gen, "cost")
+                for h in phase_ids(pm, n)
                     if model == nothing
-                        model = gen["model"]
+                        model = gen["model"][h]
                     else
-                        if gen["model"] != model
+                        if gen["model"][h] != model
                             error("cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
                         end
                     end
-                else
-                    error("no cost given for generator $(i)")
                 end
+            else
+                error("no cost given for generator $(i)")
             end
-            for (i,dcline) in ph_ref[:dcline]
-                if haskey(dcline, "model")
+        end
+
+        for (i,dcline) in nw_ref[:dcline]
+            if haskey(dcline, "model")
+                for h in phase_ids(pm, n)
                     if model == nothing
-                        model = dcline["model"]
+                        model = dcline["model"][h]
                     else
-                        if dcline["model"] != model
+                        if dcline["model"][h] != model
                             error("cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
                         end
                     end
-                else
-                    error("no cost given for dcline $(i)")
                 end
+            else
+                error("no cost given for dcline $(i)")
             end
         end
     end
 
     return model
 end
+
 
 
 
@@ -66,22 +70,25 @@ Checks that all cost models are polynomials, quadratic or less
 """
 function check_polynomial_cost_models(pm::GenericPowerModel)
     for (n, nw_ref) in nws(pm)
-        for (h, ph_ref) in nw_ref[:ph]
-            for (i,gen) in ph_ref[:gen]
-                @assert gen["model"] == 2
-                if length(gen["cost"]) > 3
-                    error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(gen["cost"])) on generator $(i)")
+        for (i,gen) in nw_ref[:gen]
+            for h in phase_ids(pm, n)
+                @assert gen["model"][h] == 2
+                if length(gen["cost"][h]) > 3
+                    error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(gen["cost"][h])) on generator $(i)")
                 end
             end
-            for (i,dcline) in ph_ref[:dcline]
-                @assert dcline["model"] == 2
-                if length(dcline["cost"]) > 3
-                    error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(dcline["cost"])) on dcline $(i)")
+        end
+        for (i,dcline) in nw_ref[:dcline]
+            for h in phase_ids(pm, n)
+                @assert dcline["model"][h] == 2
+                if length(dcline["cost"][h]) > 3
+                    error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(dcline["cost"][h])) on dcline $(i)")
                 end
             end
         end
     end
 end
+
 
 
 ""
@@ -90,18 +97,15 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
 
     from_idx = Dict()
     for (n, nw_ref) in nws(pm)
-        from_idx[n] = Dict()
-        for (h, ph_ref) in nw_ref[:ph]
-            from_idx[n][h] = Dict(arc[1] => arc for arc in ph_ref[:arcs_from_dc])
-        end
+        from_idx[n] = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
     end
 
     return @objective(pm.model, Min,
         sum(
             sum(
-                sum(gen["cost"][1]*var(pm, n, h, :pg)[i]^2 + gen["cost"][2]*var(pm, n, h, :pg)[i] + gen["cost"][3] for (i,gen) in ph_ref[:gen]) +
-                sum(dcline["cost"][1]*var(pm, n, h, :p_dc)[from_idx[n][h][i]]^2 + dcline["cost"][2]*var(pm, n, h, :p_dc)[from_idx[n][h][i]] + dcline["cost"][3] for (i,dcline) in ph_ref[:dcline])
-            for (h, ph_ref) in nw_ref[:ph])
+                sum(gen["cost"][h][1]*var(pm, n, h, :pg, i)^2 + gen["cost"][h][2]*var(pm, n, h, :pg, i) + gen["cost"][h][3] for (i,gen) in nw_ref[:gen]) +
+                sum(dcline["cost"][h][1]*var(pm, n, h, :p_dc, from_idx[n][h][i])^2 + dcline["cost"][2]*var(pm, n, h, :p_dc, from_idx[n][i]) + dcline["cost"][h][3] for (i,dcline) in nw_ref[:dcline])
+            for h in phase_ids(pm, n))
         for (n, nw_ref) in nws(pm))
     )
 end

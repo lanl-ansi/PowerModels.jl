@@ -200,15 +200,15 @@ end
 function variable_active_generation(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
         var(pm, nw, ph)[:pg] = @variable(pm.model,
-            [i in ids(pm, nw, ph, :gen)], basename="$(nw)_$(ph)_pg",
-            lowerbound = ref(pm, nw, ph, :gen, i)["pmin"],
-            upperbound = ref(pm, nw, ph, :gen, i)["pmax"],
-            start = getstart(ref(pm, nw, ph, :gen), i, "pg_start")
+            [i in ids(pm, nw, :gen)], basename="$(nw)_$(ph)_pg",
+            lowerbound = ref(pm, nw, :gen, i, "pmin", ph),
+            upperbound = ref(pm, nw, :gen, i, "pmax", ph),
+            start = get(ref(pm, nw, :gen, i), "pg_start", ph)
         )
     else
         var(pm, nw, ph)[:pg] = @variable(pm.model,
-            [i in ids(pm, nw, ph, :gen)], basename="$(nw)_$(ph)_pg",
-            start = getstart(ref(pm, nw, ph, :gen), i, "pg_start")
+            [i in ids(pm, nw, :gen)], basename="$(nw)_$(ph)_pg",
+            start = get(ref(pm, nw, :gen, i), "pg_start", ph)
         )
     end
 end
@@ -217,15 +217,15 @@ end
 function variable_reactive_generation(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
         var(pm, nw, ph)[:qg] = @variable(pm.model,
-            [i in ids(pm, nw, ph, :gen)], basename="$(nw)_$(ph)_qg",
-            lowerbound = ref(pm, nw, ph, :gen, i)["qmin"],
-            upperbound = ref(pm, nw, ph, :gen, i)["qmax"],
-            start = getstart(ref(pm, nw, ph, :gen), i, "qg_start")
+            [i in ids(pm, nw, :gen)], basename="$(nw)_$(ph)_qg",
+            lowerbound = ref(pm, nw, :gen, i, "qmin", ph),
+            upperbound = ref(pm, nw, :gen, i, "qmax", ph),
+            start = get(ref(pm, nw, :gen, i), "qg_start", ph)
         )
     else
         var(pm, nw, ph)[:qg] = @variable(pm.model,
-            [i in ids(pm, nw, ph, :gen)], basename="$(nw)_$(ph)_qg",
-            start = getstart(ref(pm, nw, ph, :gen), i, "qg_start")
+            [i in ids(pm, nw, :gen)], basename="$(nw)_$(ph)_qg",
+            start = get(ref(pm, nw, :gen, i), "qg_start", ph)
         )
     end
 end
@@ -243,15 +243,15 @@ end
 function variable_active_branch_flow(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
         var(pm, nw, ph)[:p] = @variable(pm.model,
-            [(l,i,j) in ref(pm, nw, ph, :arcs)], basename="$(nw)_$(ph)_p",
-            lowerbound = -ref(pm, nw, ph, :branch, l)["rate_a"],
-            upperbound =  ref(pm, nw, ph, :branch, l)["rate_a"],
-            start = getstart(ref(pm, nw, ph, :branch), l, "p_start")
+            [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(ph)_p",
+            lowerbound = -ref(pm, nw, :branch, l, "rate_a", ph),
+            upperbound =  ref(pm, nw, :branch, l, "rate_a", ph),
+            start = get(ref(pm, nw, :branch, l), "p_start", ph)
         )
     else
         var(pm, nw, ph)[:p] = @variable(pm.model,
-            [(l,i,j) in ref(pm, nw, ph, :arcs)], basename="$(nw)_$(ph)_p",
-            start = getstart(ref(pm, nw, ph, :branch), l, "p_start")
+            [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(ph)_p",
+            start = get(ref(pm, nw, :branch, l), "p_start", ph)
         )
     end
 end
@@ -260,15 +260,15 @@ end
 function variable_reactive_branch_flow(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
         var(pm, nw, ph)[:q] = @variable(pm.model,
-            [(l,i,j) in ref(pm, nw, ph, :arcs)], basename="$(nw)_$(ph)_q",
-            lowerbound = -ref(pm, nw, ph, :branch, l)["rate_a"],
-            upperbound =  ref(pm, nw, ph, :branch, l)["rate_a"],
-            start = getstart(ref(pm, nw, ph, :branch), l, "q_start")
+            [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(ph)_q",
+            lowerbound = -ref(pm, nw, :branch, l, "rate_a", ph),
+            upperbound =  ref(pm, nw, :branch, l, "rate_a", ph),
+            start = get(ref(pm, nw, :branch, l), "q_start", ph)
         )
     else
         var(pm, nw, ph)[:q] = @variable(pm.model,
-            [(l,i,j) in ref(pm, nw, ph, :arcs)], basename="$(nw)_$(ph)_q",
-            start = getstart(ref(pm, nw, ph, :branch), l, "q_start")
+            [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(ph)_q",
+            start = get(ref(pm, nw, :branch, l), "q_start", ph)
         )
     end
 end
@@ -282,15 +282,15 @@ end
 function variable_active_dcline_flow(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
         var(pm, nw, ph)[:p_dc] = @variable(pm.model,
-            [a in ref(pm, nw, ph, :arcs_dc)], basename="$(nw)_$(ph)_p_dc",
-            lowerbound = ref(pm, nw, ph, :arcs_dc_param, a)["pmin"],
-            upperbound = ref(pm, nw, ph, :arcs_dc_param, a)["pmax"],
-            start = ref(pm, nw, ph, :arcs_dc_param, a)["pref"]
+            [(l,i,j) in ref(pm, nw, :arcs_dc)], basename="$(nw)_$(ph)_p_dc",
+            lowerbound = ref(pm, nw, :arcs_dc_param, l, "pmin", ph),
+            upperbound = ref(pm, nw, :arcs_dc_param, l, "pmax", ph),
+            start = ref(pm, nw, :arcs_dc_param, l, "pref", ph)
         )
     else
         var(pm, nw, ph)[:p_dc] = @variable(pm.model,
-            [a in ref(pm, nw, ph, :arcs_dc)], basename="$(nw)_$(ph)_p_dc",
-            start = ref(pm, nw, ph, :arcs_dc_param, a)["pref"]
+            [(l,i,j) in ref(pm, nw, :arcs_dc)], basename="$(nw)_$(ph)_p_dc",
+            start = ref(pm, nw, :arcs_dc_param, l, "pref", ph)
         )
     end
 end
@@ -299,15 +299,15 @@ end
 function variable_reactive_dcline_flow(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
         var(pm, nw, ph)[:q_dc] = @variable(pm.model,
-            [a in ref(pm, nw, ph, :arcs_dc)], basename="$(nw)_$(ph)_q_dc",
-            lowerbound = ref(pm, nw, ph, :arcs_dc_param, a)["qmin"],
-            upperbound = ref(pm, nw, ph, :arcs_dc_param, a)["qmax"],
-            start = ref(pm, nw, ph, :arcs_dc_param, a)["qref"]
+            [(l,i,j) in ref(pm, nw, :arcs_dc)], basename="$(nw)_$(ph)_q_dc",
+            lowerbound = ref(pm, nw, :arcs_dc_param, l, "qmin", ph),
+            upperbound = ref(pm, nw, :arcs_dc_param, l, "qmax", ph),
+            start = ref(pm, nw, :arcs_dc_param, l, "qref", ph)
         )
     else
         var(pm, nw, ph)[:q_dc] = @variable(pm.model,
-            [a in ref(pm, nw, ph, :arcs_dc)], basename="$(nw)_$(ph)_q_dc",
-            start = ref(pm, nw, ph, :arcs_dc_param, a)["qref"]
+            [(l,i,j) in ref(pm, nw, :arcs_dc)], basename="$(nw)_$(ph)_q_dc",
+            start = ref(pm, nw, :arcs_dc_param, l, "qref", ph)
         )
     end
 end
