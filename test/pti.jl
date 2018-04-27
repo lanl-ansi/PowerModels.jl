@@ -5,14 +5,8 @@
         setlevel!(getlogger(PowerModels), "warn")
 
         @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
-        @test_warn(getlogger(PowerModels),
-                   "The PSS(R)E parser is partially implimented, and currently only supports buses, loads, shunts, generators, branches, and transformers",
-                   PowerModels.parse_file("../test/data/pti/frankenstein_00.raw"))
-        @test_throws(getlogger(PowerModels),
-                     ErrorException,
-                     PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
-        @test_warn(getlogger(PowerModels),
-                   "Version 32 of PTI format is unsupported, parser may not function correctly.",
+        @test_throws(getlogger(PowerModels), ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
+        @test_warn(getlogger(PowerModels), "Version 32 of PTI format is unsupported, parser may not function correctly.", 
                    PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
         @test_throws(getlogger(PowerModels), ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
         @test_warn(getlogger(PowerModels), "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))

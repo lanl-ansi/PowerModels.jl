@@ -44,13 +44,11 @@ split_loads_shunts
 
 ## PTI Data Files (PSS/E)
 
-**Note: This feature is currently in development, and only partial parsing of
-and conversion of PTI files into a PowerModels format is supported. The
-following power network components are currently supported: buses, loads,
+**Note: This feature supports the parsing and conversion of PTI files into a
+PowerModels format for the following power network components: buses, loads,
 shunts (fixed and approximation of switched), branches, two-winding and
-three-winding transformers (incl. magnetizing admittance), and generators.
-There is early support for two-terminal dc lines, but this feature should not
-be relied upon.**
+three-winding transformers (incl. magnetizing admittance), generators,
+two-terminal dc lines, and voltage source converter HVDC lines.**
 
 The following method is the main exported method for parsing PTI data files:
 

@@ -181,18 +181,8 @@ end
         @test_warn(getlogger(PowerModels), "Could not find bus 1, returning 0 for field vm",
                    PowerModels.get_bus_value(1, "vm", dummy_data))
 
-        @test_warn(getlogger(PowerModels), "Two-Terminal DC Lines are not yet fully supported",
-                   PowerModels.parse_file("../test/data/pti/frankenstein_70.raw"))
-
-        @test_warn(getlogger(PowerModels), "Switched shunt converted to fixed shunt, with default value gs=0.0",
-                   PowerModels.parse_file("../test/data/pti/frankenstein_70.raw"))
-
-       @test_warn(getlogger(PowerModels), "Voltage Source Converter DC lines are not yet supported",
-                   PowerModels.parse_file("../test/data/pti/frankenstein_70.raw"))
-
         @test_warn(getlogger(PowerModels), "PTI v33.0.0 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.",
                    PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
-
 
         setlevel!(getlogger(PowerModels), "error")
     end
@@ -321,23 +311,86 @@ end
     end
 
     @testset "import all" begin
-        data = PowerModels.parse_file("../test/data/pti/case30.raw"; import_all=true)
+        @testset "30-bus case" begin
+            data = PowerModels.parse_file("../test/data/pti/case30.raw"; import_all=true)
 
-        @test length(data) == 19
-
-        for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [14, 14, 14, 45, 29])
-            for item in values(data[key])
-                if key == "branch" && item["transformer"]
-                    @test length(item) == 42
-                else
-                    @test length(item) == n
+            @test length(data) == 22
+            for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [15, 14, 14, 45, 29])
+                for item in values(data[key])
+                    if key == "branch" && item["transformer"]
+                        @test length(item) == 42
+                    else
+                        @test length(item) == n
+                    end
                 end
+            end
+
+            result = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 297.878089; atol=1e-4)
+        end
+
+        @testset "frankenstein 70" begin
+            data = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw"; import_all=true)
+
+            @test length(data) == 25
+            extras = ["zone", "facts control device", "owner", "area interchange", "impedance correction", "multi-terminal dc"]
+            for k in extras
+                @test k in keys(data)
             end
         end
 
-        result = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
+        @testset "arrays in VSC-HVDC" begin
+            data = PowerModels.parse_file("../test/data/pti/vsc-hvdc_test.raw"; import_all=true)
 
-        @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 297.878089; atol=1e-4)
+            @test length(data["dcline"]["1"]) == 36
+            for item in data["dcline"]["1"]["converter buses"]
+                for k in keys(item)
+                    @test k == lowercase(k)
+                end
+            end
+        end
+    end
+
+    @testset "dclines" begin
+        @testset "two-terminal" begin
+            data = PowerModels.parse_file("../test/data/pti/two-terminal-hvdc_test.raw")
+
+            @test length(data["dcline"]) == 1
+            @test length(data["dcline"]["1"]) == 26
+
+            opf = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
+            @test opf["status"] == :LocalOptimal
+            @test isapprox(opf["objective"], 10.5; atol=1e-3)
+
+            pf = PowerModels.run_pf(data, PowerModels.ACPPowerModel, ipopt_solver)
+            @test pf["status"] == :LocalOptimal
+        end
+
+        @testset "voltage source converter" begin
+            data = PowerModels.parse_file("../test/data/pti/vsc-hvdc_test.raw")
+
+            @test length(data["dcline"]) == 1
+            @test length(data["dcline"]["1"]) == 26
+
+            opf = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
+            @test opf["status"] == :LocalOptimal
+            @test isapprox(opf["objective"], 19.6761; atol=1e-3)
+
+            pf = PowerModels.run_pf(data, PowerModels.ACPPowerModel, ipopt_solver)
+            @test pf["status"] == :LocalOptimal
+        end
+    end
+
+    @testset "source_id" begin
+        data = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw")
+
+        for key in ["bus", "load", "shunt", "gen", "branch"]
+            for v in values(data[key])
+                @test "source_id" in keys(v)
+                @test isa(v["source_id"], Array)
+            end
+        end
     end
 end
