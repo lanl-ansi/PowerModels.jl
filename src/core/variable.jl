@@ -8,7 +8,7 @@ function getstart(set, item_key, value_key, default = 0.0)
     return get(get(set, item_key, Dict()), value_key, default)
 end
 
-function get(comp::Dict{String,Any}, key::String, phase::Int, default=0.0)
+function getval(comp::Dict{String,Any}, key::String, phase::Int, default=0.0)
     if haskey(comp, key)
         vals = comp[key]
         if length(vals) <= phase
@@ -23,7 +23,7 @@ end
 function variable_voltage_angle(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded::Bool = true)
     var(pm, nw, ph)[:va] = @variable(pm.model,
         [i in ids(pm, nw, :bus)], basename="$(nw)_$(ph)_va",
-        start = get(ref(pm, nw, :bus, i), "va_start", ph, 1.0)
+        start = getval(ref(pm, nw, :bus, i), "va_start", ph, 1.0)
     )
 end
 
@@ -34,13 +34,13 @@ function variable_voltage_magnitude(pm::GenericPowerModel; nw::Int=pm.cnw, ph::I
             [i in ids(pm, nw, :bus)], basename="$(nw)_$(ph)_vm",
             lowerbound = ref(pm, nw, :bus, i, "vmin", ph),
             upperbound = ref(pm, nw, :bus, i, "vmax", ph),
-            start = get(ref(pm, nw, :bus, i), "vm_start", ph, 1.0)
+            start = getval(ref(pm, nw, :bus, i), "vm_start", ph, 1.0)
         )
     else
         var(pm, nw, ph)[:vm] = @variable(pm.model,
             [i in ids(pm, nw, :bus)], basename="$(nw)_$(ph)_vm",
             lowerbound = 0,
-            start = get(ref(pm, nw, :bus, i), "vm_start", ph, 1.0)
+            start = getval(ref(pm, nw, :bus, i), "vm_start", ph, 1.0)
         )
     end
 end
@@ -203,12 +203,12 @@ function variable_active_generation(pm::GenericPowerModel; nw::Int=pm.cnw, ph::I
             [i in ids(pm, nw, :gen)], basename="$(nw)_$(ph)_pg",
             lowerbound = ref(pm, nw, :gen, i, "pmin", ph),
             upperbound = ref(pm, nw, :gen, i, "pmax", ph),
-            start = get(ref(pm, nw, :gen, i), "pg_start", ph)
+            start = getval(ref(pm, nw, :gen, i), "pg_start", ph)
         )
     else
         var(pm, nw, ph)[:pg] = @variable(pm.model,
             [i in ids(pm, nw, :gen)], basename="$(nw)_$(ph)_pg",
-            start = get(ref(pm, nw, :gen, i), "pg_start", ph)
+            start = getval(ref(pm, nw, :gen, i), "pg_start", ph)
         )
     end
 end
@@ -220,12 +220,12 @@ function variable_reactive_generation(pm::GenericPowerModel; nw::Int=pm.cnw, ph:
             [i in ids(pm, nw, :gen)], basename="$(nw)_$(ph)_qg",
             lowerbound = ref(pm, nw, :gen, i, "qmin", ph),
             upperbound = ref(pm, nw, :gen, i, "qmax", ph),
-            start = get(ref(pm, nw, :gen, i), "qg_start", ph)
+            start = getval(ref(pm, nw, :gen, i), "qg_start", ph)
         )
     else
         var(pm, nw, ph)[:qg] = @variable(pm.model,
             [i in ids(pm, nw, :gen)], basename="$(nw)_$(ph)_qg",
-            start = get(ref(pm, nw, :gen, i), "qg_start", ph)
+            start = getval(ref(pm, nw, :gen, i), "qg_start", ph)
         )
     end
 end
@@ -246,12 +246,12 @@ function variable_active_branch_flow(pm::GenericPowerModel; nw::Int=pm.cnw, ph::
             [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(ph)_p",
             lowerbound = -ref(pm, nw, :branch, l, "rate_a", ph),
             upperbound =  ref(pm, nw, :branch, l, "rate_a", ph),
-            start = get(ref(pm, nw, :branch, l), "p_start", ph)
+            start = getval(ref(pm, nw, :branch, l), "p_start", ph)
         )
     else
         var(pm, nw, ph)[:p] = @variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(ph)_p",
-            start = get(ref(pm, nw, :branch, l), "p_start", ph)
+            start = getval(ref(pm, nw, :branch, l), "p_start", ph)
         )
     end
 end
@@ -263,12 +263,12 @@ function variable_reactive_branch_flow(pm::GenericPowerModel; nw::Int=pm.cnw, ph
             [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(ph)_q",
             lowerbound = -ref(pm, nw, :branch, l, "rate_a", ph),
             upperbound =  ref(pm, nw, :branch, l, "rate_a", ph),
-            start = get(ref(pm, nw, :branch, l), "q_start", ph)
+            start = getval(ref(pm, nw, :branch, l), "q_start", ph)
         )
     else
         var(pm, nw, ph)[:q] = @variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(ph)_q",
-            start = get(ref(pm, nw, :branch, l), "q_start", ph)
+            start = getval(ref(pm, nw, :branch, l), "q_start", ph)
         )
     end
 end

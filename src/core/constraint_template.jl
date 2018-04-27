@@ -70,20 +70,20 @@ function constraint_kcl_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, ph:
         con(pm, nw, ph)[:kcl_q] = Dict{Int,ConstraintRef}()
     end
 
-    bus = ref(pm, nw, ph, :bus, i)
-    bus_arcs = ref(pm, nw, ph, :bus_arcs, i)
-    bus_arcs_dc = ref(pm, nw, ph, :bus_arcs_dc, i)
-    bus_gens = ref(pm, nw, ph, :bus_gens, i)
-    bus_loads = ref(pm, nw, ph, :bus_loads, i)
-    bus_shunts = ref(pm, nw, ph, :bus_shunts, i)
+    bus = ref(pm, nw, :bus, i)
+    bus_arcs = ref(pm, nw, :bus_arcs, i)
+    bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
+    bus_gens = ref(pm, nw, :bus_gens, i)
+    bus_loads = ref(pm, nw, :bus_loads, i)
+    bus_shunts = ref(pm, nw, :bus_shunts, i)
 
-    pd = Dict(k => v["pd"] for (k,v) in ref(pm, nw, ph, :load))
-    qd = Dict(k => v["qd"] for (k,v) in ref(pm, nw, ph, :load))
+    bus_pd = Dict(k => ref(pm, nw, :load, k, "pd", ph) for k in bus_loads)
+    bus_qd = Dict(k => ref(pm, nw, :load, k, "qd", ph) for k in bus_loads)
 
-    gs = Dict(k => v["gs"] for (k,v) in ref(pm, nw, ph, :shunt))
-    bs = Dict(k => v["bs"] for (k,v) in ref(pm, nw, ph, :shunt))
+    bus_gs = Dict(k => ref(pm, n, :shunt, k, "gs", ph) for k in bus_shunts)
+    bus_bs = Dict(k => ref(pm, n, :shunt, k, "bs", ph) for k in bus_shunts)
 
-    constraint_kcl_shunt(pm, nw, ph, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs)
+    constraint_kcl_shunt(pm, nw, ph, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
 
@@ -111,7 +111,7 @@ end
 
 ""
 function constraint_ohms_yt_from(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, ph::Int=pm.cph)
-    branch = ref(pm, nw, ph, :branch, i)
+    branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
@@ -119,17 +119,17 @@ function constraint_ohms_yt_from(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, 
 
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
-    g_fr = branch["g_fr"]
-    b_fr = branch["b_fr"]
-    tm = branch["tap"]
+    g_fr = branch["g_fr"][ph]
+    b_fr = branch["b_fr"][ph]
+    tm = branch["tap"][ph]
 
-    constraint_ohms_yt_from(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    constraint_ohms_yt_from(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g[ph], b[ph], g_fr, b_fr, tr[ph], ti[ph], tm)
 end
 
 
 ""
 function constraint_ohms_yt_to(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, ph::Int=pm.cph)
-    branch = ref(pm, nw, ph, :branch, i)
+    branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
@@ -137,11 +137,11 @@ function constraint_ohms_yt_to(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, ph
 
     g, b = calc_branch_y(branch)
     tr, ti = calc_branch_t(branch)
-    g_to = branch["g_to"]
-    b_to = branch["b_to"]
-    tm = branch["tap"]
+    g_to = branch["g_to"][ph]
+    b_to = branch["b_to"][ph]
+    tm = branch["tap"][ph]
 
-    constraint_ohms_yt_to(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
+    constraint_ohms_yt_to(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g[ph], b[ph], g_to, b_to, tr[ph], ti[ph], tm)
 end
 
 
@@ -185,13 +185,13 @@ end
 
 ""
 function constraint_dcline(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, ph::Int=pm.cph)
-    dcline = ref(pm, nw, ph, :dcline, i)
+    dcline = ref(pm, nw, :dcline, i)
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
-    loss0 = dcline["loss0"]
-    loss1 = dcline["loss1"]
+    loss0 = dcline["loss0"][ph]
+    loss1 = dcline["loss1"][ph]
 
     constraint_dcline(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
 end
@@ -380,12 +380,12 @@ function constraint_thermal_limit_from(pm::GenericPowerModel, i::Int; nw::Int=pm
         con(pm, nw, ph)[:sm_fr] = Dict{Int,Any}() # note this can be a constraint or variable
     end
 
-    branch = ref(pm, nw, ph, :branch, i)
+    branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
 
-    constraint_thermal_limit_from(pm, nw, ph, f_idx, branch["rate_a"])
+    constraint_thermal_limit_from(pm, nw, ph, f_idx, branch["rate_a"][ph])
 end
 
 
@@ -395,12 +395,12 @@ function constraint_thermal_limit_to(pm::GenericPowerModel, i::Int; nw::Int=pm.c
         con(pm, nw, ph)[:sm_to] = Dict{Int,Any}() # note this can be a constraint or variable
     end
 
-    branch = ref(pm, nw, ph, :branch, i)
+    branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     t_idx = (i, t_bus, f_bus)
 
-    constraint_thermal_limit_to(pm, nw, ph, t_idx, branch["rate_a"])
+    constraint_thermal_limit_to(pm, nw, ph, t_idx, branch["rate_a"][ph])
 end
 
 
@@ -453,15 +453,15 @@ end
 
 ""
 function constraint_voltage_angle_difference(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, ph::Int=pm.cph)
-    branch = ref(pm, nw, ph, :branch, i)
+    branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
     pair = (f_bus, t_bus)
-    buspair = ref(pm, nw, ph, :buspairs, pair)
+    buspair = ref(pm, nw, :buspairs, pair)
 
     if buspair["branch"] == i
-        constraint_voltage_angle_difference(pm, nw, ph, f_idx, buspair["angmin"], buspair["angmax"])
+        constraint_voltage_angle_difference(pm, nw, ph, f_idx, buspair["angmin"][ph], buspair["angmax"][ph])
     end
 end
 

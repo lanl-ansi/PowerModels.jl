@@ -101,8 +101,8 @@ function calc_branch_t(branch::Dict{String,Any})
     tap_ratio = branch["tap"]
     angle_shift = branch["shift"]
 
-    tr = tap_ratio*cos(angle_shift)
-    ti = tap_ratio*sin(angle_shift)
+    tr = tap_ratio.*cos.(angle_shift)
+    ti = tap_ratio.*sin.(angle_shift)
 
     return tr, ti
 end
@@ -112,8 +112,8 @@ function calc_branch_y(branch::Dict{String,Any})
     r = branch["br_r"]
     x = branch["br_x"]
 
-    g =  r/(x^2 + r^2)
-    b = -x/(x^2 + r^2)
+    g =  r./(x.^2 + r.^2)
+    b = -x./(x.^2 + r.^2)
 
     return g, b
 end
