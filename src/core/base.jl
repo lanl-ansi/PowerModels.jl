@@ -78,26 +78,26 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
         nw_var[:ph] = Dict{Int,Any}()
         nw_con[:ph] = Dict{Int,Any}()
 
-        for ph_id in keys(nw[:ph])
+        for ph_id in 1:nw[:phases]
             nw_var[:ph][ph_id] = Dict{Symbol,Any}()
             nw_con[:ph][ph_id] = Dict{Symbol,Any}()
         end
     end
 
-    cnw = minimum([k for k in keys(ref[:nw])])
-    cph = minimum([k for k in keys(ref[:nw][cnw][:ph])])
+    cnw = minimum([k for k in keys(var[:nw])])
+    cph = minimum([k for k in keys(var[:nw][cnw][:ph])])
 
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
-        data, # data
-        setting, # setting
+        data,
+        setting,
         Dict{String,Any}(), # solution
         ref,
-        var, # vars
+        var,
         con,
         cnw,
         cph,
-        ext # ext
+        ext
     )
 
     return pm
@@ -109,21 +109,26 @@ ismultinetwork(pm::GenericPowerModel) = (length(pm.ref[:nw]) > 1)
 nw_ids(pm::GenericPowerModel) = keys(pm.ref[:nw])
 nws(pm::GenericPowerModel) = pm.ref[:nw]
 
-ismultiphase(pm::GenericPowerModel) = (maximum([length(nw_ref[:ph]) for (n, nw_ref) in nws(pm)]) > 1)
-ph_ids(pm::GenericPowerModel, n::Int=pm.cnw) = keys(pm.ref[:nw][n][:ph])
-phs(pm::GenericPowerModel, n::Int=pm.cnw) = pm.ref[:nw][n][:ph]
-
-ids(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = keys(pm.ref[:nw][nw][:ph][ph][key])
-ids(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = keys(pm.ref[:nw][nw][:ph][ph][key])
+ismultiphase(pm::GenericPowerModel, nw::Int) = (pm.ref[:nw][nw][:phases] > 1)
+ismultiphase(pm::GenericPowerModel; nw::Int=pm.cnw) = (pm.ref[:nw][nw][:phases] > 1)
+phase_ids(pm::GenericPowerModel, nw::Int) = 1:pm.ref[:nw][nw][:phases]
+phase_ids(pm::GenericPowerModel; nw::Int=pm.cnw) = 1:pm.ref[:nw][nw][:phases]
 
 
-ref(pm::GenericPowerModel, nw::Int, ph::Int) = pm.ref[:nw][nw][:ph][ph]
-ref(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.ref[:nw][nw][:ph][ph][key]
-ref(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.ref[:nw][nw][:ph][ph][key][idx]
+ids(pm::GenericPowerModel, nw::Int, key::Symbol) = keys(pm.ref[:nw][nw][key])
+ids(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = keys(pm.ref[:nw][nw][key])
 
-ref(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ref[:nw][n][:ph][h][key]
-ref(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ref[:nw][nw][:ph][ph][key]
-ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ref[:nw][nw][:ph][ph][key][idx]
+
+ref(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, ph::Int) = pm.ref[:nw][nw][key][idx][param][ph]
+
+ref(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
+ref(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
+ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
+ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ref[:nw][nw][key][idx][param][ph]
 
 
 Base.var(pm::GenericPowerModel, nw::Int, ph::Int) = pm.var[:nw][nw][:ph][ph]
@@ -144,6 +149,7 @@ con(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con
 con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph][key][idx]
 
 
+#=
 ext(pm::GenericPowerModel, nw::Int, ph::Int) = pm.ext[:nw][nw][:ph][ph]
 ext(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.ext[:nw][nw][:ph][ph][key]
 ext(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.ext[:nw][nw][:ph][ph][key][idx]
@@ -151,6 +157,7 @@ ext(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.ext[:nw][nw]
 ext(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ext[:nw][nw][:ph][ph]
 ext(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ext[:nw][nw][:ph][ph][key]
 ext(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ext[:nw][nw][:ph][ph][key][idx]
+=#
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
@@ -249,6 +256,10 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 """
 function build_ref(data::Dict{String,Any})
     refs = Dict{Symbol,Any}()
+
+    phaseless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
+        "br_status", "gen_bus", "load_bus", "shunt_bus", "f_bus", "t_bus"])
+
     nws = refs[:nw] = Dict{Int,Any}()
 
     if data["multinetwork"]
@@ -257,18 +268,40 @@ function build_ref(data::Dict{String,Any})
         nws_data = Dict{String,Any}("0" => data)
     end
 
-    for (n,nw_data) in nws_data
+    for (n, nw_data) in nws_data
         nw_id = parse(Int, n)
-        nw = nws[nw_id] = Dict{Symbol,Any}()
-        ph = nw[:ph] = Dict{Int,Any}()
-        ref = ph[0] = Dict{Symbol,Any}()
+        ref = nws[nw_id] = Dict{Symbol,Any}()
 
         for (key, item) in nw_data
-            if isa(item, Dict)
-                item_lookup = Dict([(parse(Int, k), v) for (k,v) in item])
+            if isa(item, Dict{String,Any})
+                item_lookup = Dict{Int,Any}([(parse(Int, k), v) for (k,v) in item])
                 ref[Symbol(key)] = item_lookup
             else
                 ref[Symbol(key)] = item
+            end
+        end
+
+        phase_ids = 1:ref[:phases]
+
+        for (key, item) in ref
+            if isa(item, Dict{Int,Any})
+                for (item_id, item_data) in item
+                    if isa(item_data, Dict{String,Any})
+                        item_ref_data = Dict{String,Any}()
+                        for (param, value) in item_data
+                            if param in phaseless
+                                item_ref_data[param] = value
+                            else
+                                item_ref_data[param] = [value for h in phase_ids]
+                            end
+                        end
+                        item[item_id] = item_ref_data
+                    else
+                        #item[item_id] = [item_data for h in phase_ids]
+                    end
+                end
+            else
+                #ref[Symbol(key)] = [item for h in phase_ids]
             end
         end
 
@@ -277,12 +310,12 @@ function build_ref(data::Dict{String,Any})
         ref[:off_angmax] = off_angmax
 
         # filter turned off stuff
-        ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
-        ref[:load] = filter((i, load) -> load["status"] == 1 && load["load_bus"] in keys(ref[:bus]), ref[:load])
-        ref[:shunt] = filter((i, shunt) -> shunt["status"] == 1 && shunt["shunt_bus"] in keys(ref[:bus]), ref[:shunt])
-        ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
-        ref[:branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
-        ref[:dcline] = filter((i, dcline) -> dcline["br_status"] == 1 && dcline["f_bus"] in keys(ref[:bus]) && dcline["t_bus"] in keys(ref[:bus]), ref[:dcline])
+        ref[:bus] = filter((i, bus) -> all(bus["bus_type"][h] != 4 for h in phase_ids), ref[:bus])
+        ref[:load] = filter((i, load) -> all(load["status"] == 1 for h in phase_ids) && load["load_bus"] in keys(ref[:bus]), ref[:load])
+        ref[:shunt] = filter((i, shunt) -> all(shunt["status"] == 1 for h in phase_ids) && shunt["shunt_bus"] in keys(ref[:bus]), ref[:shunt])
+        ref[:gen] = filter((i, gen) -> all(gen["gen_status"] == 1 for h in phase_ids) && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
+        ref[:branch] = filter((i, branch) -> all(branch["br_status"] == 1 for h in phase_ids) && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
+        ref[:dcline] = filter((i, dcline) -> all(dcline["br_status"] == 1 for h in phase_ids) && dcline["f_bus"] in keys(ref[:bus]) && dcline["t_bus"] in keys(ref[:bus]), ref[:dcline])
 
         ref[:arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:branch]]
         ref[:arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:branch]]
@@ -294,22 +327,22 @@ function build_ref(data::Dict{String,Any})
 
         # maps dc line from and to parameters to arcs
         arcs_dc_param = ref[:arcs_dc_param] = Dict()
-        for (l,i,j) in ref[:arcs_from_dc]
-            arcs_dc_param[(l,i,j)] = Dict{String,Any}(
-                "pmin" => ref[:dcline][l]["pminf"],
-                "pmax" => ref[:dcline][l]["pmaxf"],
-                "pref" => ref[:dcline][l]["pf"],
-                "qmin" => ref[:dcline][l]["qminf"],
-                "qmax" => ref[:dcline][l]["qmaxf"],
-                "qref" => ref[:dcline][l]["qf"]
+        for (i,dcline) in ref[:dcline]
+            arcs_dc_param[i] = Dict{String,Any}(
+                "pmin" => ref[:dcline][i]["pminf"],
+                "pmax" => ref[:dcline][i]["pmaxf"],
+                "pref" => ref[:dcline][i]["pf"],
+                "qmin" => ref[:dcline][i]["qminf"],
+                "qmax" => ref[:dcline][i]["qmaxf"],
+                "qref" => ref[:dcline][i]["qf"]
             )
-            arcs_dc_param[(l,j,i)] = Dict{String,Any}(
-                "pmin" => ref[:dcline][l]["pmint"],
-                "pmax" => ref[:dcline][l]["pmaxt"],
-                "pref" => ref[:dcline][l]["pt"],
-                "qmin" => ref[:dcline][l]["qmint"],
-                "qmax" => ref[:dcline][l]["qmaxt"],
-                "qref" => ref[:dcline][l]["qt"]
+            arcs_dc_param[i] = Dict{String,Any}(
+                "pmin" => ref[:dcline][i]["pmint"],
+                "pmax" => ref[:dcline][i]["pmaxt"],
+                "pref" => ref[:dcline][i]["pt"],
+                "qmin" => ref[:dcline][i]["qmint"],
+                "qmax" => ref[:dcline][i]["qmaxt"],
+                "qref" => ref[:dcline][i]["qt"]
             )
         end
 
@@ -365,7 +398,7 @@ function build_ref(data::Dict{String,Any})
         ref[:ref_buses] = ref_buses
 
 
-        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])
+        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], phase_ids)
 
 
         if haskey(ref, :ne_branch)
@@ -381,7 +414,7 @@ function build_ref(data::Dict{String,Any})
             end
             ref[:ne_bus_arcs] = ne_bus_arcs
 
-            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus])
+            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus], phase_ids)
         end
 
     end
@@ -395,9 +428,10 @@ function biggest_generator(gens)
     biggest_gen = nothing
     biggest_value = -Inf
     for (k,gen) in gens
-        if gen["pmax"] > biggest_value
+        pmax = maximum(gen["pmax"])
+        if pmax > biggest_value
             biggest_gen = gen
-            biggest_value = gen["pmax"]
+            biggest_value = pmax
         end
     end
     assert(biggest_gen != nothing)
@@ -406,19 +440,19 @@ end
 
 
 "compute bus pair level structures"
-function buspair_parameters(arcs_from, branches, buses)
+function buspair_parameters(arcs_from, branches, buses, phase_ids)
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
 
-    bp_angmin = Dict([(bp, -Inf) for bp in buspair_indexes])
-    bp_angmax = Dict([(bp, Inf) for bp in buspair_indexes])
+    bp_angmin = Dict([(bp, [-Inf for h in phase_ids]) for bp in buspair_indexes])
+    bp_angmax = Dict([(bp, [ Inf for h in phase_ids]) for bp in buspair_indexes])
     bp_branch = Dict([(bp, Inf) for bp in buspair_indexes])
 
     for (l,branch) in branches
         i = branch["f_bus"]
         j = branch["t_bus"]
 
-        bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
-        bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
+        bp_angmin[(i,j)] = max.(bp_angmin[(i,j)], branch["angmin"])
+        bp_angmax[(i,j)] = min.(bp_angmax[(i,j)], branch["angmax"])
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end
 

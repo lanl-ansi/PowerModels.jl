@@ -8,12 +8,22 @@ function getstart(set, item_key, value_key, default = 0.0)
     return get(get(set, item_key, Dict()), value_key, default)
 end
 
+function get(comp::Dict{String,Any}, key::String, phase::Int, default=0.0)
+    if haskey(comp, key)
+        vals = comp[key]
+        if length(vals) <= phase
+            return vals[phase]
+        end
+    end
+    return default
+end
+
 
 "variable: `t[i]` for `i` in `bus`es"
 function variable_voltage_angle(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded::Bool = true)
     var(pm, nw, ph)[:va] = @variable(pm.model,
-        [i in ids(pm, nw, ph, :bus)], basename="$(nw)_$(ph)_va",
-        start = getstart(ref(pm, nw, ph, :bus), i, "va_start")
+        [i in ids(pm, nw, :bus)], basename="$(nw)_$(ph)_va",
+        start = get(ref(pm, nw, :bus, i), "va_start", ph, 1.0)
     )
 end
 
@@ -21,16 +31,17 @@ end
 function variable_voltage_magnitude(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
         var(pm, nw, ph)[:vm] = @variable(pm.model,
-            [i in ids(pm, nw, ph, :bus)], basename="$(nw)_$(ph)_vm",
-            lowerbound = ref(pm, nw, ph, :bus, i)["vmin"],
-            upperbound = ref(pm, nw, ph, :bus, i)["vmax"],
-            start = getstart(ref(pm, nw, ph, :bus), i, "vm_start", 1.0)
+            [i in ids(pm, nw, :bus)], basename="$(nw)_$(ph)_vm",
+            lowerbound = ref(pm, nw, :bus, i, "vmin", ph),
+            upperbound = ref(pm, nw, :bus, i, "vmax", ph),
+            start = get(ref(pm, nw, :bus, i), "vm_start", ph, 1.0)
         )
     else
         var(pm, nw, ph)[:vm] = @variable(pm.model,
-            [i in ids(pm, nw, ph, :bus)], basename="$(nw)_$(ph)_vm",
+            [i in ids(pm, nw, :bus)], basename="$(nw)_$(ph)_vm",
             lowerbound = 0,
-            start = getstart(ref(pm, nw, ph, :bus), i, "vm_start", 1.0))
+            start = get(ref(pm, nw, :bus, i), "vm_start", ph, 1.0)
+        )
     end
 end
 
@@ -38,7 +49,7 @@ end
 "real part of the voltage variable `i` in `bus`es"
 function variable_voltage_real(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded::Bool = true)
     var(pm, nw, ph)[:vr] = @variable(pm.model,
-        [i in ids(pm, nw, ph, :bus)], basename="$(nw)_$(ph)_vr",
+        [i in ids(pm, nw, :bus)], basename="$(nw)_$(ph)_vr",
         lowerbound = -ref(pm, nw, ph, :bus, i)["vmax"],
         upperbound =  ref(pm, nw, ph, :bus, i)["vmax"],
         start = getstart(ref(pm, nw, ph, :bus), i, "vr_start", 1.0)
@@ -48,10 +59,10 @@ end
 "real part of the voltage variable `i` in `bus`es"
 function variable_voltage_imaginary(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded::Bool = true)
     var(pm, nw, ph)[:vi] = @variable(pm.model,
-        [i in ids(pm, nw, ph, :bus)], basename="$(nw)_$(ph)_vi",
-        lowerbound = -ref(pm, nw, ph, :bus, i)["vmax"],
-        upperbound =  ref(pm, nw, ph, :bus, i)["vmax"],
-        start = getstart(ref(pm, nw, ph, :bus), i, "vi_start")
+        [i in ids(pm, nw, :bus)], basename="$(nw)_$(ph)_vi",
+        lowerbound = -ref(pm, nw, :bus, i, ph)["vmax"],
+        upperbound =  ref(pm, nw, :bus, i, ph)["vmax"],
+        start = getstart(ref(pm, nw, :bus, i, ph), "vi_start")
     )
 end
 
