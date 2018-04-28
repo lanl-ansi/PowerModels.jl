@@ -1,7 +1,7 @@
 # stuff that is universal to all power models
 
 export
-    MultiPhaseValue, phases, 
+    MultiPhaseValue, phases, getmpv,
     GenericPowerModel,
     setdata, setsolver, solve,
     run_generic_model, build_generic_model, solve_generic_model,
@@ -18,8 +18,6 @@ MultiPhaseValue{T}(value::T, phases::Int) = MultiPhaseValue([value for i in 1:ph
 
 phases(mpv::MultiPhaseValue) = length(mpv.values)
 
-Base.show(io::IO, mpv::MultiPhaseValue) = Base.show(io, mpv.values)
-
 Base.start(mpv::MultiPhaseValue) = start(mpv.values)
 Base.next(mpv::MultiPhaseValue, state) = next(mpv.values, state)
 Base.done(mpv::MultiPhaseValue, state) = done(mpv.values, state)
@@ -30,7 +28,16 @@ function Base.setindex!{T}(mpv::MultiPhaseValue{T}, v::T, i::Int)
     mpv.values[i] = v
 end
 
-function getvalue(value, phase::Int)
+Base.show(io::IO, mpv::MultiPhaseValue) = Base.show(io, mpv.values)
+
+"converts a MultiPhaseValue value to a string in summary"
+function InfrastructureModels._value2string(mpv::MultiPhaseValue, float_precision::Int)
+    a = join([InfrastructureModels._value2string(v, float_precision) for v in mpv.values], ", ")
+    return "[$(a)]"
+end
+
+
+function getmpv(value, phase::Int)
     if isa(value, MultiPhaseValue)
         return value[phase]
     else
@@ -140,6 +147,8 @@ nws(pm::GenericPowerModel) = pm.ref[:nw]
 
 ismultiphase(pm::GenericPowerModel, nw::Int) = (pm.ref[:nw][nw][:phases] > 1)
 ismultiphase(pm::GenericPowerModel; nw::Int=pm.cnw) = (pm.ref[:nw][nw][:phases] > 1)
+phases(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw][:phases]
+phases(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:phases]
 phase_ids(pm::GenericPowerModel, nw::Int) = 1:pm.ref[:nw][nw][:phases]
 phase_ids(pm::GenericPowerModel; nw::Int=pm.cnw) = 1:pm.ref[:nw][nw][:phases]
 
@@ -152,12 +161,12 @@ ref(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
-ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, ph::Int) = getvalue(pm.ref[:nw][nw][key][idx][param], ph)
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, ph::Int) = getmpv(pm.ref[:nw][nw][key][idx][param], ph)
 
 ref(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
 ref(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
 ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
-ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, ph::Int=pm.cph) = getvalue(pm.ref[:nw][nw][key][idx][param], ph)
+ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, ph::Int=pm.cph) = getmpv(pm.ref[:nw][nw][key][idx][param], ph)
 
 
 Base.var(pm::GenericPowerModel, nw::Int, ph::Int) = pm.var[:nw][nw][:ph][ph]
@@ -451,8 +460,8 @@ function buspair_parameters(arcs_from, branches, buses, phase_ids)
         j = branch["t_bus"]
 
         for h in phase_ids
-            bp_angmin[(i,j)][h] = min(getvalue(bp_angmin[(i,j)], h), getvalue(branch["angmin"], h))
-            bp_angmax[(i,j)][h] = max(getvalue(bp_angmax[(i,j)], h), getvalue(branch["angmax"], h))
+            bp_angmin[(i,j)][h] = max(getmpv(bp_angmin[(i,j)], h), getmpv(branch["angmin"], h))
+            bp_angmax[(i,j)][h] = min(getmpv(bp_angmax[(i,j)], h), getmpv(branch["angmax"], h))
         end
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end

@@ -1,13 +1,18 @@
 # tools for working with PowerModels internal data dict structure
 
 ""
-function calc_voltage_product_bounds(buspairs)
+function calc_voltage_product_bounds(buspairs, phase::Int=1)
     wr_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
     wr_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
     wi_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
     wi_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
 
+    buspairs_phase = Dict()
     for (bp, buspair) in buspairs
+        buspairs_phase[bp] = Dict([(k, getmpv(v, phase)) for (k,v) in buspair])
+    end
+
+    for (bp, buspair) in buspairs_phase
         i,j = bp
 
         if buspair["angmin"] >= 0
@@ -76,8 +81,8 @@ function calc_theta_delta_bounds(data::Dict{String,Any}, phase::Int=1)
         append!(branches, values(data["ne_branch"]))
     end
 
-    angle_mins = [getvalue(branch["angmin"], phase) for branch in branches]
-    angle_maxs = [getvalue(branch["angmax"], phase) for branch in branches]
+    angle_mins = [getmpv(branch["angmin"], phase) for branch in branches]
+    angle_maxs = [getmpv(branch["angmax"], phase) for branch in branches]
 
     sort!(angle_mins)
     sort!(angle_maxs, rev=true)
@@ -98,8 +103,8 @@ end
 
 ""
 function calc_branch_t(branch::Dict{String,Any}, phase::Int=1)
-    tap_ratio = getvalue(branch["tap"], phase)
-    angle_shift = getvalue(branch["shift"], phase)
+    tap_ratio = getmpv(branch["tap"], phase)
+    angle_shift = getmpv(branch["shift"], phase)
 
     tr = tap_ratio*cos(angle_shift)
     ti = tap_ratio*sin(angle_shift)
@@ -109,8 +114,8 @@ end
 
 ""
 function calc_branch_y(branch::Dict{String,Any}, phase::Int=1)
-    r = getvalue(branch["br_r"], phase)
-    x = getvalue(branch["br_x"], phase)
+    r = getmpv(branch["br_r"], phase)
+    x = getmpv(branch["br_x"], phase)
 
     g =  r/(x^2 + r^2)
     b = -x/(x^2 + r^2)

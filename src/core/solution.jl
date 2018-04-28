@@ -51,7 +51,7 @@ end
 
 ""
 function init_solution(pm::GenericPowerModel)
-    data_keys = ["per_unit", "baseMVA", "multinetwork"]
+    data_keys = ["per_unit", "baseMVA", "multinetwork", "phases"]
     return Dict{String,Any}(key => pm.data[key] for key in data_keys)
 end
 
@@ -162,11 +162,20 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
     for (i,item) in data_dict
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
-        sol_item[param_name] = default_value(item)
-        try
-            variable = extract_var(var(pm, variable_symbol), idx, item)
-            sol_item[param_name] = scale(getvalue(variable), item)
-        catch
+
+        num_phases = phases(pm)
+        sol_item[param_name] = MultiPhaseValue(default_value(item), num_phases)
+        for phase in 1:num_phases
+            try
+                variable = extract_var(var(pm, variable_symbol, ph=phase), idx, item)
+                sol_item[param_name][phase] = scale(getvalue(variable), item)
+            catch
+            end
+        end
+
+        # remove MultiPhaseValue, intput was only a single phase network
+        if !ismultiphase(pm)
+            sol_item[param_name] = sol_item[param_name][1]
         end
     end
 end

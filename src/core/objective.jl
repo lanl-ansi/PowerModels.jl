@@ -103,8 +103,8 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
     return @objective(pm.model, Min,
         sum(
             sum(
-                sum( getvalue(gen["cost"],h)[1]*var(pm, n, h, :pg, i)^2 + getvalue(gen["cost"],h)[2]*var(pm, n, h, :pg, i) + getvalue(gen["cost"],h)[3] for (i,gen) in nw_ref[:gen]) +
-                sum(getvalue(dcline["cost"],h)[1]*var(pm, n, h, :p_dc, from_idx[n][i])^2 + getvalue(dcline["cost"],h)[2]*var(pm, n, h, :p_dc, from_idx[n][i]) + getvalue(dcline["cost"],h)[3] for (i,dcline) in nw_ref[:dcline])
+                sum( getmpv(gen["cost"],h)[1]*var(pm, n, h, :pg, i)^2 + getmpv(gen["cost"],h)[2]*var(pm, n, h, :pg, i) + getmpv(gen["cost"],h)[3] for (i,gen) in nw_ref[:gen]) +
+                sum(getmpv(dcline["cost"],h)[1]*var(pm, n, h, :p_dc, from_idx[n][i])^2 + getmpv(dcline["cost"],h)[2]*var(pm, n, h, :p_dc, from_idx[n][i]) + getmpv(dcline["cost"],h)[3] for (i,dcline) in nw_ref[:dcline])
             for h in phase_ids(pm, n))
         for (n, nw_ref) in nws(pm))
     )
