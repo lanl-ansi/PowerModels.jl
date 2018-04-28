@@ -153,6 +153,13 @@ end
 
 "recursively applies new_data to data, overwriting information"
 function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
+    if haskey(data, "phases") && haskey(new_data, "phases")
+        if data["phases"] != new_data["phases"]
+            error("update_data requires datasets with the same number of phases")
+        end
+    else
+        warn(LOGGER, "running update_data with data that does not include phases field, phases may be incorrect")
+    end
     InfrastructureModels.update_data!(data, new_data)
 end
 

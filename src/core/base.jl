@@ -29,6 +29,7 @@ function Base.setindex!{T}(mpv::MultiPhaseValue{T}, v::T, i::Int)
 end
 
 Base.show(io::IO, mpv::MultiPhaseValue) = Base.show(io, mpv.values)
+JSON.lower(mpv::MultiPhaseValue) = mpv.values
 
 "converts a MultiPhaseValue value to a string in summary"
 function InfrastructureModels._value2string(mpv::MultiPhaseValue, float_precision::Int)
