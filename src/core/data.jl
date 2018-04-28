@@ -69,15 +69,15 @@ end
 
 
 ""
-function calc_theta_delta_bounds(data::Dict{String,Any})
+function calc_theta_delta_bounds(data::Dict{String,Any}, phase::Int=1)
     bus_count = length(data["bus"])
     branches = [branch for branch in values(data["branch"])]
     if haskey(data, "ne_branch")
         append!(branches, values(data["ne_branch"]))
     end
 
-    angle_mins = [branch["angmin"] for branch in branches]
-    angle_maxs = [branch["angmax"] for branch in branches]
+    angle_mins = [getvalue(branch["angmin"], phase) for branch in branches]
+    angle_maxs = [getvalue(branch["angmax"], phase) for branch in branches]
 
     sort!(angle_mins)
     sort!(angle_maxs, rev=true)
@@ -97,23 +97,23 @@ function calc_theta_delta_bounds(data::Dict{String,Any})
 end
 
 ""
-function calc_branch_t(branch::Dict{String,Any})
-    tap_ratio = branch["tap"]
-    angle_shift = branch["shift"]
+function calc_branch_t(branch::Dict{String,Any}, phase::Int=1)
+    tap_ratio = getvalue(branch["tap"], phase)
+    angle_shift = getvalue(branch["shift"], phase)
 
-    tr = tap_ratio.*cos.(angle_shift)
-    ti = tap_ratio.*sin.(angle_shift)
+    tr = tap_ratio*cos(angle_shift)
+    ti = tap_ratio*sin(angle_shift)
 
     return tr, ti
 end
 
 ""
-function calc_branch_y(branch::Dict{String,Any})
-    r = branch["br_r"]
-    x = branch["br_x"]
+function calc_branch_y(branch::Dict{String,Any}, phase::Int=1)
+    r = getvalue(branch["br_r"], phase)
+    x = getvalue(branch["br_x"], phase)
 
-    g =  r./(x.^2 + r.^2)
-    b = -x./(x.^2 + r.^2)
+    g =  r/(x^2 + r^2)
+    b = -x/(x^2 + r^2)
 
     return g, b
 end
@@ -1104,3 +1104,53 @@ function _dfs(i, neighbors, component_lookup, touched)
         end
     end
 end
+
+
+
+
+
+"Transforms single-phase network data into multi-phase data"
+function make_multiphase(data::Dict{String,Any}, phases::Int)
+    if data["multinetwork"] == true
+        for (i,nw_data) in data["nw"]
+            _make_multiphase(nw_data, phases)
+        end
+    else
+         _make_multiphase(data, phases)
+    end
+end
+
+"feild names that should not be multi-phase values"
+phaseless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
+    "br_status", "gen_bus", "load_bus", "shunt_bus", "f_bus", "t_bus", "transformer"])
+
+function _make_multiphase(data::Dict{String,Any}, phases::Real)
+    if data["phases"] != 1
+        warn(LOGGER, "skipping network that is already multiphase")
+        return
+    end
+
+    data["phases"] = phases
+
+    for (key, item) in data
+        if isa(item, Dict{String,Any})
+            for (item_id, item_data) in item
+                if isa(item_data, Dict{String,Any})
+                    item_ref_data = Dict{String,Any}()
+                    for (param, value) in item_data
+                        if param in phaseless
+                            item_ref_data[param] = value
+                        else
+                            item_ref_data[param] = MultiPhaseValue(value, phases)
+                        end
+                    end
+                    item[item_id] = item_ref_data
+                end
+            end
+        else
+            #root non-dict items
+        end
+    end
+
+end
+

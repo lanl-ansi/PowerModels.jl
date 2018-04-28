@@ -1,12 +1,42 @@
 # stuff that is universal to all power models
 
 export
+    MultiPhaseValue, phases, 
     GenericPowerModel,
     setdata, setsolver, solve,
     run_generic_model, build_generic_model, solve_generic_model,
     ismultinetwork, nw_ids, nws,
-    ismultiphase, ph_ids, phs,
+    ismultiphase, phase_ids,
     ids, ref, var, ext
+
+
+
+mutable struct MultiPhaseValue{T}
+    values::Vector{T}
+end
+MultiPhaseValue{T}(value::T, phases::Int) = MultiPhaseValue([value for i in 1:phases])
+
+phases(mpv::MultiPhaseValue) = length(mpv.values)
+
+Base.show(io::IO, mpv::MultiPhaseValue) = Base.show(io, mpv.values)
+
+Base.start(mpv::MultiPhaseValue) = start(mpv.values)
+Base.next(mpv::MultiPhaseValue, state) = next(mpv.values, state)
+Base.done(mpv::MultiPhaseValue, state) = done(mpv.values, state)
+
+Base.length(mpv::MultiPhaseValue) = length(mpv.values)
+Base.getindex(mpv::MultiPhaseValue, i::Int) = mpv.values[i]
+function Base.setindex!{T}(mpv::MultiPhaseValue{T}, v::T, i::Int)
+    mpv.values[i] = v
+end
+
+function getvalue(value, phase::Int)
+    if isa(value, MultiPhaseValue)
+        return value[phase]
+    else
+        return value
+    end
+end
 
 
 ""
@@ -103,7 +133,6 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
     return pm
 end
 
-
 ### Helper functions for working with multinetworks and multiphases
 ismultinetwork(pm::GenericPowerModel) = (length(pm.ref[:nw]) > 1)
 nw_ids(pm::GenericPowerModel) = keys(pm.ref[:nw])
@@ -123,12 +152,12 @@ ref(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
-ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, ph::Int) = pm.ref[:nw][nw][key][idx][param][ph]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, ph::Int) = getvalue(pm.ref[:nw][nw][key][idx][param], ph)
 
 ref(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
 ref(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
 ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
-ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ref[:nw][nw][key][idx][param][ph]
+ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, ph::Int=pm.cph) = getvalue(pm.ref[:nw][nw][key][idx][param], ph)
 
 
 Base.var(pm::GenericPowerModel, nw::Int, ph::Int) = pm.var[:nw][nw][:ph][ph]
@@ -148,16 +177,6 @@ con(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph
 con(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph][key]
 con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph][key][idx]
 
-
-#=
-ext(pm::GenericPowerModel, nw::Int, ph::Int) = pm.ext[:nw][nw][:ph][ph]
-ext(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.ext[:nw][nw][:ph][ph][key]
-ext(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.ext[:nw][nw][:ph][ph][key][idx]
-
-ext(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ext[:nw][nw][:ph][ph]
-ext(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ext[:nw][nw][:ph][ph][key]
-ext(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ext[:nw][nw][:ph][ph][key][idx]
-=#
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
@@ -257,9 +276,6 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 function build_ref(data::Dict{String,Any})
     refs = Dict{Symbol,Any}()
 
-    phaseless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
-        "br_status", "gen_bus", "load_bus", "shunt_bus", "f_bus", "t_bus"])
-
     nws = refs[:nw] = Dict{Int,Any}()
 
     if data["multinetwork"]
@@ -281,41 +297,13 @@ function build_ref(data::Dict{String,Any})
             end
         end
 
-        phase_ids = 1:ref[:phases]
-
-        for (key, item) in ref
-            if isa(item, Dict{Int,Any})
-                for (item_id, item_data) in item
-                    if isa(item_data, Dict{String,Any})
-                        item_ref_data = Dict{String,Any}()
-                        for (param, value) in item_data
-                            if param in phaseless
-                                item_ref_data[param] = value
-                            else
-                                item_ref_data[param] = [value for h in phase_ids]
-                            end
-                        end
-                        item[item_id] = item_ref_data
-                    else
-                        #item[item_id] = [item_data for h in phase_ids]
-                    end
-                end
-            else
-                #ref[Symbol(key)] = [item for h in phase_ids]
-            end
-        end
-
-        off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
-        ref[:off_angmin] = off_angmin
-        ref[:off_angmax] = off_angmax
-
         # filter turned off stuff
-        ref[:bus] = filter((i, bus) -> all(bus["bus_type"][h] != 4 for h in phase_ids), ref[:bus])
-        ref[:load] = filter((i, load) -> all(load["status"] == 1 for h in phase_ids) && load["load_bus"] in keys(ref[:bus]), ref[:load])
-        ref[:shunt] = filter((i, shunt) -> all(shunt["status"] == 1 for h in phase_ids) && shunt["shunt_bus"] in keys(ref[:bus]), ref[:shunt])
-        ref[:gen] = filter((i, gen) -> all(gen["gen_status"] == 1 for h in phase_ids) && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
-        ref[:branch] = filter((i, branch) -> all(branch["br_status"] == 1 for h in phase_ids) && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
-        ref[:dcline] = filter((i, dcline) -> all(dcline["br_status"] == 1 for h in phase_ids) && dcline["f_bus"] in keys(ref[:bus]) && dcline["t_bus"] in keys(ref[:bus]), ref[:dcline])
+        ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
+        ref[:load] = filter((i, load) -> load["status"] == 1 && load["load_bus"] in keys(ref[:bus]), ref[:load])
+        ref[:shunt] = filter((i, shunt) -> shunt["status"] == 1 && shunt["shunt_bus"] in keys(ref[:bus]), ref[:shunt])
+        ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
+        ref[:branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
+        ref[:dcline] = filter((i, dcline) -> dcline["br_status"] == 1 && dcline["f_bus"] in keys(ref[:bus]) && dcline["t_bus"] in keys(ref[:bus]), ref[:dcline])
 
         ref[:arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:branch]]
         ref[:arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:branch]]
@@ -397,8 +385,19 @@ function build_ref(data::Dict{String,Any})
 
         ref[:ref_buses] = ref_buses
 
+        phase_ids = 1:ref[:phases]
 
         ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], phase_ids)
+
+        off_angmin = []
+        off_angmax = []
+        for phase in phase_ids
+            off_angmin_phase, off_angmax_phase = calc_theta_delta_bounds(nw_data, phase)
+            push!(off_angmin, off_angmin_phase)
+            push!(off_angmax, off_angmax_phase)
+        end
+        ref[:off_angmin] = MultiPhaseValue(off_angmin)
+        ref[:off_angmin] = MultiPhaseValue(off_angmax)
 
 
         if haskey(ref, :ne_branch)
@@ -443,16 +442,18 @@ end
 function buspair_parameters(arcs_from, branches, buses, phase_ids)
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
 
-    bp_angmin = Dict([(bp, [-Inf for h in phase_ids]) for bp in buspair_indexes])
-    bp_angmax = Dict([(bp, [ Inf for h in phase_ids]) for bp in buspair_indexes])
+    bp_angmin = Dict([(bp, MultiPhaseValue([-Inf for h in phase_ids])) for bp in buspair_indexes])
+    bp_angmax = Dict([(bp, MultiPhaseValue([ Inf for h in phase_ids])) for bp in buspair_indexes])
     bp_branch = Dict([(bp, Inf) for bp in buspair_indexes])
 
     for (l,branch) in branches
         i = branch["f_bus"]
         j = branch["t_bus"]
 
-        bp_angmin[(i,j)] = max.(bp_angmin[(i,j)], branch["angmin"])
-        bp_angmax[(i,j)] = min.(bp_angmax[(i,j)], branch["angmax"])
+        for h in phase_ids
+            bp_angmin[(i,j)][h] = min(getvalue(bp_angmin[(i,j)], h), getvalue(branch["angmin"], h))
+            bp_angmax[(i,j)][h] = max(getvalue(bp_angmax[(i,j)], h), getvalue(branch["angmax"], h))
+        end
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end
 
@@ -466,7 +467,8 @@ function buspair_parameters(arcs_from, branches, buses, phase_ids)
         "vm_fr_max"=>buses[i]["vmax"],
         "vm_to_min"=>buses[j]["vmin"],
         "vm_to_max"=>buses[j]["vmax"]
-        )) for (i,j) in buspair_indexes])
+        )) for (i,j) in buspair_indexes]
+    )
 
     return buspairs
 end

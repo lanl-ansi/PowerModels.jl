@@ -117,13 +117,13 @@ function constraint_ohms_yt_from(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, 
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
 
-    g, b = calc_branch_y(branch)
-    tr, ti = calc_branch_t(branch)
+    g, b = calc_branch_y(branch, ph)
+    tr, ti = calc_branch_t(branch, ph)
     g_fr = branch["g_fr"][ph]
     b_fr = branch["b_fr"][ph]
     tm = branch["tap"][ph]
 
-    constraint_ohms_yt_from(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g[ph], b[ph], g_fr, b_fr, tr[ph], ti[ph], tm)
+    constraint_ohms_yt_from(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
 end
 
 
@@ -135,13 +135,13 @@ function constraint_ohms_yt_to(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, ph
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
 
-    g, b = calc_branch_y(branch)
-    tr, ti = calc_branch_t(branch)
+    g, b = calc_branch_y(branch, ph)
+    tr, ti = calc_branch_t(branch, ph)
     g_to = branch["g_to"][ph]
     b_to = branch["b_to"][ph]
     tm = branch["tap"][ph]
 
-    constraint_ohms_yt_to(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g[ph], b[ph], g_to, b_to, tr[ph], ti[ph], tm)
+    constraint_ohms_yt_to(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
 end
 
 
