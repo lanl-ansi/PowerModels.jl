@@ -27,15 +27,15 @@ end
 function variable_active_branch_series_flow(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
         var(pm, nw, ph)[:p_s] = @variable(pm.model,
-            [(l,i,j) in ref(pm, nw, ph, :arcs_from)], basename="$(nw)_$(ph)_p_s",
-            lowerbound = -ref(pm, nw, ph, :branch, l)["rate_a"],
-            upperbound =  ref(pm, nw, ph, :branch, l)["rate_a"],
-            start = getstart(ref(pm, nw, ph, :branch), l, "p_start")
+            [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(ph)_p_s",
+            lowerbound = -ref(pm, nw, :branch, l, "rate_a", ph),
+            upperbound =  ref(pm, nw, :branch, l, "rate_a", ph),
+            start = getval(ref(pm, nw, :branch, l), "p_start", ph)
         )
     else
         var(pm, nw, ph)[:p_s] = @variable(pm.model,
-            [(l,i,j) in ref(pm, nw, ph, :arcs_from)], basename="$(nw)_$(ph)_p_s",
-            start = getstart(ref(pm, nw, ph, :branch), l, "p_start")
+            [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(ph)_p_s",
+            start = getval(ref(pm, nw, :branch, l), "p_start", ph)
         )
     end
 end
@@ -44,15 +44,15 @@ end
 function variable_reactive_branch_series_flow(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
         var(pm, nw, ph)[:q_s] = @variable(pm.model,
-            [(l,i,j) in ref(pm, nw, ph, :arcs_from)], basename="$(nw)_$(ph)_q_s",
-            lowerbound = -ref(pm, nw, ph, :branch, l)["rate_a"],
-            upperbound =  ref(pm, nw, ph, :branch, l)["rate_a"],
-            start = getstart(ref(pm, nw, ph, :branch), l, "q_start")
+            [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(ph)_q_s",
+            lowerbound = -ref(pm, nw, :branch, l, "rate_a", ph),
+            upperbound =  ref(pm, nw, :branch, l, "rate_a", ph),
+            start = getval(ref(pm, nw, :branch, l), "q_start", ph)
         )
     else
         var(pm, nw, ph)[:q_s] = @variable(pm.model,
-            [(l,i,j) in ref(pm, nw, ph, :arcs_from)], basename="$(nw)_$(ph)_q_s",
-            start = getstart(ref(pm, nw, ph, :branch), l, "q_start")
+            [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(ph)_q_s",
+            start = getval(ref(pm, nw, :branch, l), "q_start", ph)
         )
     end
 end
@@ -132,7 +132,7 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, h
     i, f_bus, t_bus = f_idx
     t_idx = (i, t_bus, f_bus)
 
-    branch = ref(pm, n, h, :branch, i)
+    branch = ref(pm, n, :branch, i)
     tm = branch["tap"]
     g, b = calc_branch_y(branch)
     g_sh_fr = branch["g_fr"]
@@ -173,21 +173,22 @@ end
 
 "variable: `0 <= i[l] <= (Imax)^2` for `l` in `branch`es"
 function variable_branch_series_current_magnitude_sqr(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
-    branches = ref(pm, nw, ph, :branch)
-    buses = ref(pm, nw, ph, :bus)
+    branches = ref(pm, nw, :branch)
+    buses = ref(pm, nw, :bus)
     cmax = calc_series_current_magnitude_bound(branches, buses, ph)
+
     if bounded
         var(pm, nw, ph)[:ccm] = @variable(pm.model,
-            [l in ids(pm, nw, ph, :branch)], basename="$(nw)_$(ph)_ccm",
+            [l in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_ccm",
             lowerbound = 0,
             upperbound = (cmax[l])^2,
-            start = getstart(ref(pm, nw, ph, :branch), l, "i_start")
+            start = getval(ref(pm, nw, :branch, l), "i_start", ph)
         )
     else
         var(pm, nw, ph)[:ccm] = @variable(pm.model,
-            [l in ids(pm, nw, ph, :branch)], basename="$(nw)_$(ph)_ccm",
+            [l in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_ccm",
             lowerbound = 0,
-            start = getstart(ref(pm, nw, ph, :branch), l, "i_start")
+            start = getval(ref(pm, nw, :branch, l), "i_start", ph)
         )
     end
 end

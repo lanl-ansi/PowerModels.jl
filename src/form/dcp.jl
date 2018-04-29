@@ -42,36 +42,36 @@ end
 function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true) where T <: StandardDCPForm
     if bounded
         var(pm, nw, ph)[:p] = @variable(pm.model,
-            [(l,i,j) in ref(pm, nw, ph, :arcs_from)], basename="$(nw)_$(ph)_p",
-            lowerbound = -ref(pm, nw, ph, :branch, l)["rate_a"],
-            upperbound =  ref(pm, nw, ph, :branch, l)["rate_a"],
-            start = getstart(ref(pm, nw, ph, :branch), l, "p_start")
+            [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(ph)_p",
+            lowerbound = -ref(pm, nw, :branch, l, "rate_a", ph),
+            upperbound =  ref(pm, nw, :branch, l, "rate_a", ph),
+            start = getval(ref(pm, nw, :branch, l), "p_start", ph)
         )
     else
         var(pm, nw, ph)[:p] = @variable(pm.model,
-            [(l,i,j) in ref(pm, nw, ph, :arcs_from)], basename="$(nw)_$(ph)_p",
-            start = getstart(ref(pm, nw, ph, :branch), l, "p_start")
+            [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(ph)_p",
+            start = getval(ref(pm, nw, :branch, l), "p_start", ph)
         )
     end
 
     # this explicit type erasure is necessary
-    p_expr = Dict{Any,Any}([((l,i,j), var(pm, nw, ph, :p)[(l,i,j)]) for (l,i,j) in ref(pm, nw, ph, :arcs_from)])
-    p_expr = merge(p_expr, Dict([((l,j,i), -1.0*var(pm, nw, ph, :p)[(l,i,j)]) for (l,i,j) in ref(pm, nw, ph, :arcs_from)]))
+    p_expr = Dict{Any,Any}([((l,i,j), var(pm, nw, ph, :p, (l,i,j))) for (l,i,j) in ref(pm, nw, :arcs_from)])
+    p_expr = merge(p_expr, Dict([((l,j,i), -1.0*var(pm, nw, ph, :p, (l,i,j))) for (l,i,j) in ref(pm, nw, :arcs_from)]))
     var(pm, nw, ph)[:p] = p_expr
 end
 
 ""
 function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.cph) where T <: StandardDCPForm
     var(pm, nw, ph)[:p_ne] = @variable(pm.model,
-        [(l,i,j) in ref(pm, nw, ph, :ne_arcs_from)], basename="$(nw)_$(ph)_p_ne",
-        lowerbound = -ref(pm, nw, ph, :ne_branch, l)["rate_a"],
-        upperbound =  ref(pm, nw, ph, :ne_branch, l)["rate_a"],
-        start = getstart(ref(pm, nw, ph, :ne_branch), l, "p_start")
+        [(l,i,j) in ref(pm, nw, :ne_arcs_from)], basename="$(nw)_$(ph)_p_ne",
+        lowerbound = -ref(pm, nw, :ne_branch, l, "rate_a", ph),
+        upperbound =  ref(pm, nw, :ne_branch, l, "rate_a", ph),
+        start = getval(ref(pm, nw, :ne_branch, l), "p_start", ph)
     )
 
     # this explicit type erasure is necessary
-    p_ne_expr = Dict{Any,Any}([((l,i,j), 1.0*var(pm, nw, ph, :p_ne)[(l,i,j)]) for (l,i,j) in ref(pm, nw, ph, :ne_arcs_from)])
-    p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*var(pm, nw, ph, :p_ne)[(l,i,j)]) for (l,i,j) in ref(pm, nw, ph, :ne_arcs_from)]))
+    p_ne_expr = Dict{Any,Any}([((l,i,j), 1.0*var(pm, nw, ph, :p_ne, (l,i,j))) for (l,i,j) in ref(pm, nw, :ne_arcs_from)])
+    p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*var(pm, nw, ph, :p_ne, (l,i,j))) for (l,i,j) in ref(pm, nw, :ne_arcs_from)]))
     var(pm, nw, ph)[:p_ne] = p_ne_expr
 end
 
@@ -92,24 +92,24 @@ function constraint_reactive_gen_setpoint(pm::GenericPowerModel{T}, n::Int, h::I
 end
 
 ""
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs) where T <: AbstractDCPForm
+function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
     pg   = var(pm, n, h, :pg)
     p    = var(pm, n, h, :p)
     p_dc = var(pm, n, h, :p_dc)
 
-    con(pm, n, h, :kcl_p)[i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*1.0^2)
+    con(pm, n, h, :kcl_p)[i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
     # omit reactive constraint
 end
 
 
 ""
-function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs) where T <: AbstractDCPForm
+function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
     pg   = var(pm, n, h, :pg)
     p    = var(pm, n, h, :p)
     p_ne = var(pm, n, h, :p_ne)
     p_dc = var(pm, n, h, :p_dc)
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*1.0^2)
+    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
 end
 
 """
@@ -265,12 +265,12 @@ DCPLLPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, Sta
 
 
 "`sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)== sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*1.0^2`"
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs) where T <: AbstractDCPLLForm
+function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPLLForm
     pg   = var(pm, n, h, :pg)
     p    = var(pm, n, h, :p)
     p_dc = var(pm, n, h, :p_dc)
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*1.0^2)
+    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
 end
 
 

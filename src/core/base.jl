@@ -292,22 +292,22 @@ function build_ref(data::Dict{String,Any})
 
         # maps dc line from and to parameters to arcs
         arcs_dc_param = ref[:arcs_dc_param] = Dict()
-        for (i,dcline) in ref[:dcline]
-            arcs_dc_param[i] = Dict{String,Any}(
-                "pmin" => ref[:dcline][i]["pminf"],
-                "pmax" => ref[:dcline][i]["pmaxf"],
-                "pref" => ref[:dcline][i]["pf"],
-                "qmin" => ref[:dcline][i]["qminf"],
-                "qmax" => ref[:dcline][i]["qmaxf"],
-                "qref" => ref[:dcline][i]["qf"]
+        for (l,i,j) in ref[:arcs_from_dc]
+            arcs_dc_param[(l,i,j)] = Dict{String,Any}(
+                "pmin" => ref[:dcline][l]["pminf"],
+                "pmax" => ref[:dcline][l]["pmaxf"],
+                "pref" => ref[:dcline][l]["pf"],
+                "qmin" => ref[:dcline][l]["qminf"],
+                "qmax" => ref[:dcline][l]["qmaxf"],
+                "qref" => ref[:dcline][l]["qf"]
             )
-            arcs_dc_param[i] = Dict{String,Any}(
-                "pmin" => ref[:dcline][i]["pmint"],
-                "pmax" => ref[:dcline][i]["pmaxt"],
-                "pref" => ref[:dcline][i]["pt"],
-                "qmin" => ref[:dcline][i]["qmint"],
-                "qmax" => ref[:dcline][i]["qmaxt"],
-                "qref" => ref[:dcline][i]["qt"]
+            arcs_dc_param[(l,j,i)] = Dict{String,Any}(
+                "pmin" => ref[:dcline][l]["pmint"],
+                "pmax" => ref[:dcline][l]["pmaxt"],
+                "pref" => ref[:dcline][l]["pt"],
+                "qmin" => ref[:dcline][l]["qmint"],
+                "qmax" => ref[:dcline][l]["qmaxt"],
+                "qref" => ref[:dcline][l]["qt"]
             )
         end
 

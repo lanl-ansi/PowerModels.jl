@@ -29,14 +29,14 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, h::Int) where T <:
     vr = var(pm, n, h, :vr)
     vi = var(pm, n, h, :vi)
 
-    for (i,bus) in ref(pm, n, h, :bus)
+    for (i,bus) in ref(pm, n, :bus)
         @constraint(pm.model, bus["vmin"]^2 <= (vr[i]^2 + vi[i]^2))
         @constraint(pm.model, bus["vmax"]^2 >= (vr[i]^2 + vi[i]^2))
     end
 
     # does not seem to improve convergence
     #wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
-    #for bp in ids(pm, nw, ph, :buspairs)
+    #for bp in ids(pm, nw, :buspairs)
     #    i,j = bp
     #    @constraint(pm.model, wr_min[bp] <= vr[i]*vr[j] + vi[i]*vi[j])
     #    @constraint(pm.model, wr_max[bp] >= vr[i]*vr[j] + vi[i]*vi[j])
@@ -62,7 +62,7 @@ function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, h::Int, i::Int) 
 end
 
 
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_shunts, pd, qd, gs, bs) where T <: AbstractACRForm
+function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACRForm
     vr = var(pm, n, h, :vr, i)
     vi = var(pm, n, h, :vi, i)
     p  = var(pm, n, h, :p)
@@ -72,8 +72,8 @@ function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_a
     p_dc = var(pm, n, h, :p_dc)
     q_dc = var(pm, n, h, :q_dc)
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*(vr^2 + vi^2))
-    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts)*(vr^2 + vi^2))
+    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*(vr^2 + vi^2))
+    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*(vr^2 + vi^2))
 end
 
 

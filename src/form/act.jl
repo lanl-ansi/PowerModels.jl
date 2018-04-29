@@ -34,7 +34,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, h::Int) where T <:
     wr = var(pm, n, h, :wr)
     wi = var(pm, n, h, :wi)
 
-    for (i,j) in ids(pm, n, h, :buspairs)
+    for (i,j) in ids(pm, n, :buspairs)
         @constraint(pm.model, wr[(i,j)]^2 + wi[(i,j)]^2 == w[i]*w[j])
         @NLconstraint(pm.model, wi[(i,j)] == tan(t[i] - t[j])*wr[(i,j)])
     end

@@ -323,7 +323,7 @@ end
     @testset "import all" begin
         data = PowerModels.parse_file("../test/data/pti/case30.raw"; import_all=true)
 
-        @test length(data) == 20
+        @test length(data) == 19
 
         for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [14, 14, 14, 45, 29])
             for item in values(data[key])
