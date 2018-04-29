@@ -10,50 +10,6 @@ export
     ids, ref, var, ext
 
 
-
-mutable struct MultiPhaseValue{T}
-    values::Vector{T}
-end
-MultiPhaseValue{T}(value::T, phases::Int) = MultiPhaseValue([value for i in 1:phases])
-
-phases(mpv::MultiPhaseValue) = length(mpv.values)
-
-Base.start(mpv::MultiPhaseValue) = start(mpv.values)
-Base.next(mpv::MultiPhaseValue, state) = next(mpv.values, state)
-Base.done(mpv::MultiPhaseValue, state) = done(mpv.values, state)
-
-Base.length(mpv::MultiPhaseValue) = length(mpv.values)
-Base.getindex(mpv::MultiPhaseValue, i::Int) = mpv.values[i]
-function Base.setindex!{T}(mpv::MultiPhaseValue{T}, v::T, i::Int)
-    mpv.values[i] = v
-end
-
-Base.show(io::IO, mpv::MultiPhaseValue) = Base.show(io, mpv.values)
-JSON.lower(mpv::MultiPhaseValue) = mpv.values
-
-"converts a MultiPhaseValue value to a string in summary"
-function InfrastructureModels._value2string(mpv::MultiPhaseValue, float_precision::Int)
-    a = join([InfrastructureModels._value2string(v, float_precision) for v in mpv.values], ", ")
-    return "[$(a)]"
-end
-
-function Base.isapprox(a::MultiPhaseValue, b::MultiPhaseValue; kwargs...)
-    if length(a) == length(b)
-        return all( isapprox(a[i], b[i]) for i in 1:length(a); kwargs...)
-    end
-    return false
-end
-
-
-function getmpv(value, phase::Int)
-    if isa(value, MultiPhaseValue)
-        return value[phase]
-    else
-        return value
-    end
-end
-
-
 ""
 abstract type AbstractPowerFormulation end
 
@@ -408,16 +364,9 @@ function build_ref(data::Dict{String,Any})
 
         ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:phase_ids])
 
-        off_angmin = []
-        off_angmax = []
-        for phase in ref[:phase_ids]
-            off_angmin_phase, off_angmax_phase = calc_theta_delta_bounds(nw_data, phase)
-            push!(off_angmin, off_angmin_phase)
-            push!(off_angmax, off_angmax_phase)
-        end
-        ref[:off_angmin] = MultiPhaseValue(off_angmin)
-        ref[:off_angmin] = MultiPhaseValue(off_angmax)
-
+        off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
+        ref[:off_angmin] = off_angmin
+        ref[:off_angmax] = off_angmax
 
         if haskey(ref, :ne_branch)
             ref[:ne_branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:ne_branch])
@@ -491,3 +440,4 @@ function buspair_parameters(arcs_from, branches, buses, phase_ids)
 
     return buspairs
 end
+

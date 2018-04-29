@@ -1,125 +1,129 @@
-# tools for working with PowerModels internal data dict structure
+# tools for working with a PowerModels data dict structure
 
-""
-function calc_voltage_product_bounds(buspairs, phase::Int=1)
-    wr_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
-    wr_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
-    wi_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
-    wi_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
 
-    buspairs_phase = Dict()
-    for (bp, buspair) in buspairs
-        buspairs_phase[bp] = Dict([(k, getmpv(v, phase)) for (k,v) in buspair])
-    end
+"a data structure for working with multiphase datasets"
+mutable struct MultiPhaseValue{T}
+    values::Vector{T}
+end
+MultiPhaseValue{T}(value::T, phases::Int) = MultiPhaseValue([value for i in 1:phases])
+#Base.convert(::Vector{T}, mpv::Type{MultiPhaseValue{T}}) where T = mpv.values
+#Base.promote_rule(::Type{MultiPhaseValue{T}}, ::Type{Vector{T}}) where T = Vector{T}
 
-    for (bp, buspair) in buspairs_phase
-        i,j = bp
+Base.map(f, a::MultiPhaseValue{T}) where T = MultiPhaseValue(map(f, a.values))
+Base.map(f, a::MultiPhaseValue{T}, b::MultiPhaseValue{T}) where T = MultiPhaseValue(map(f, a.values, b.values))
 
-        if buspair["angmin"] >= 0
-            wr_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*cos(buspair["angmin"])
-            wr_min[bp] = buspair["vm_fr_min"]*buspair["vm_to_min"]*cos(buspair["angmax"])
-            wi_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmax"])
-            wi_min[bp] = buspair["vm_fr_min"]*buspair["vm_to_min"]*sin(buspair["angmin"])
-        end
-        if buspair["angmax"] <= 0
-            wr_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*cos(buspair["angmax"])
-            wr_min[bp] = buspair["vm_fr_min"]*buspair["vm_to_min"]*cos(buspair["angmin"])
-            wi_max[bp] = buspair["vm_fr_min"]*buspair["vm_to_min"]*sin(buspair["angmax"])
-            wi_min[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmin"])
-        end
-        if buspair["angmin"] < 0 && buspair["angmax"] > 0
-            wr_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*1.0
-            wr_min[bp] = buspair["vm_fr_min"]*buspair["vm_to_min"]*min(cos(buspair["angmin"]), cos(buspair["angmax"]))
-            wi_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmax"])
-            wi_min[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmin"])
-        end
+phases(mpv::MultiPhaseValue) = length(mpv.values)
 
-    end
+Base.start(mpv::MultiPhaseValue) = start(mpv.values)
+Base.next(mpv::MultiPhaseValue, state) = next(mpv.values, state)
+Base.done(mpv::MultiPhaseValue, state) = done(mpv.values, state)
 
-    return wr_min, wr_max, wi_min, wi_max
+Base.length(mpv::MultiPhaseValue) = length(mpv.values)
+Base.getindex(mpv::MultiPhaseValue, i::Int) = mpv.values[i]
+function Base.setindex!{T}(mpv::MultiPhaseValue{T}, v::T, i::Int)
+    mpv.values[i] = v
 end
 
-""
-function calc_series_current_magnitude_bound(branches, buses)
-    cmax = Dict([(key, 0.0) for key in keys(branches)])
-    for (key, branch) in branches
-        bus_fr = buses[branch["f_bus"]]
-        bus_to = buses[branch["t_bus"]]
+Base.show(io::IO, mpv::MultiPhaseValue) = Base.show(io, mpv.values)
+JSON.lower(mpv::MultiPhaseValue) = mpv.values
 
-        g_sh_fr = branch["g_fr"]
-        g_sh_to = branch["g_to"]
-        b_sh_fr = branch["b_fr"]
-        b_sh_to = branch["b_to"]
-        zmag_fr = abs(g_sh_fr + im*b_sh_fr)
-        zmag_to = abs(g_sh_to + im*b_sh_to)
+"converts a MultiPhaseValue value to a string in summary"
+function InfrastructureModels._value2string(mpv::MultiPhaseValue, float_precision::Int)
+    a = join([InfrastructureModels._value2string(v, float_precision) for v in mpv.values], ", ")
+    return "[$(a)]"
+end
 
-        vmax_fr = bus_fr["vmax"]
-        vmax_to = bus_fr["vmax"]
-        vmin_fr = bus_fr["vmin"]
-        vmin_to = bus_fr["vmin"]
-
-        tap_fr = branch["tap"]
-        tap_to = 1 # no transformer on to side, keeps expressions symmetric.
-        smax = branch["rate_a"]
-
-        cmax_tot_fr = smax*tap_fr/vmin_fr
-        cmax_tot_to = smax*tap_to/vmin_to
-
-        cmax_sh_fr = zmag_fr * vmax_fr
-        cmax_sh_to = zmag_to * vmax_to
-
-        cmax[key] = max(cmax_tot_fr + cmax_sh_fr, cmax_tot_to + cmax_sh_to)
+function Base.isapprox(a::MultiPhaseValue, b::MultiPhaseValue; kwargs...)
+    if length(a) == length(b)
+        return all( isapprox(a[i], b[i]) for i in 1:length(a); kwargs...)
     end
-    return cmax
+    return false
 end
 
 
+function getmpv(value, phase::Int)
+    if isa(value, MultiPhaseValue)
+        return value[phase]
+    else
+        return value
+    end
+end
+
+
+
 ""
-function calc_theta_delta_bounds(data::Dict{String,Any}, phase::Int=1)
+function calc_theta_delta_bounds(data::Dict{String,Any})
+    if haskey(data, "multinetwork") && data["multinetwork"]
+        error("calc_theta_delta_bounds does not yet support multinetwork data")
+    end
+
+    phases = 1
+    if haskey(data, "phases")
+        phases = data["phases"]
+    end
+    phase_ids = 1:phases
+
     bus_count = length(data["bus"])
     branches = [branch for branch in values(data["branch"])]
     if haskey(data, "ne_branch")
         append!(branches, values(data["ne_branch"]))
     end
 
-    angle_mins = [getmpv(branch["angmin"], phase) for branch in branches]
-    angle_maxs = [getmpv(branch["angmax"], phase) for branch in branches]
+    angle_min = Real[]
+    angle_max = Real[]
 
-    sort!(angle_mins)
-    sort!(angle_maxs, rev=true)
+    for ph in phase_ids
+        angle_mins = [getmpv(branch["angmin"], ph) for branch in branches]
+        angle_maxs = [getmpv(branch["angmax"], ph) for branch in branches]
 
-    if length(angle_mins) > 1
-        # note that, this can occur when dclines are present
-        angle_count = min(bus_count-1, length(branches))
+        sort!(angle_mins)
+        sort!(angle_maxs, rev=true)
 
-        angle_min = sum(angle_mins[1:angle_count])
-        angle_max = sum(angle_maxs[1:angle_count])
-    else
-        angle_min = angle_mins[1]
-        angle_max = angle_maxs[1]
+        if length(angle_mins) > 1
+            # note that, this can occur when dclines are present
+            angle_count = min(bus_count-1, length(branches))
+
+            angle_min_val = sum(angle_mins[1:angle_count])
+            angle_max_val = sum(angle_maxs[1:angle_count])
+        else
+            angle_min_val = angle_mins[1]
+            angle_max_val = angle_maxs[1]
+        end
+
+        push!(angle_min, angle_min_val)
+        push!(angle_max, angle_max_val)
     end
 
-    return angle_min, angle_max
+    if haskey(data, "phases")
+        amin = MultiPhaseValue(angle_min)
+        amax = MultiPhaseValue(angle_max)
+        return amin, amax
+    else
+        return angle_min[1], angle_max[1]
+    end
 end
 
-""
-function calc_branch_t(branch::Dict{String,Any}, phase::Int=1)
-    tap_ratio = getmpv(branch["tap"], phase)
-    angle_shift = getmpv(branch["shift"], phase)
 
-    tr = tap_ratio*cos(angle_shift)
-    ti = tap_ratio*sin(angle_shift)
+""
+function calc_branch_t(branch::Dict{String,Any})
+    tap_ratio = branch["tap"]
+    angle_shift = branch["shift"]
+
+    tr = map(*, tap_ratio, map(cos, angle_shift))
+    ti = map(*, tap_ratio, map(sin, angle_shift))
 
     return tr, ti
 end
 
 ""
-function calc_branch_y(branch::Dict{String,Any}, phase::Int=1)
-    r = getmpv(branch["br_r"], phase)
-    x = getmpv(branch["br_x"], phase)
+function calc_branch_y(branch::Dict{String,Any})
+    r = branch["br_r"]
+    x = branch["br_x"]
 
-    g =  r/(x^2 + r^2)
-    b = -x/(x^2 + r^2)
+    ym = map(+, map(*, r, r), map(*, x, x))
+
+    g = map(/, r, ym)
+    b = map(-, map(/, x, ym))
 
     return g, b
 end
@@ -276,7 +280,7 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmax", rescale)
             apply_func(gen, "qmin", rescale)
 
-            _rescale_cost_model(data, mva_base, haskey(data, "phases"))
+            _rescale_cost_model(gen, mva_base, haskey(data, "phases"))
         end
     end
 
@@ -384,7 +388,7 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmax", rescale)
             apply_func(gen, "qmin", rescale)
 
-            _rescale_cost_model(data, 1/mva_base, haskey(data, "phases"))
+            _rescale_cost_model(gen, 1/mva_base, haskey(data, "phases"))
         end
     end
 
@@ -401,7 +405,7 @@ function _rescale_cost_model(comp::Dict{String,Any}, scale::Real, multiphase::Bo
             elseif comp["model"] == 2
                 degree = length(comp["cost"])
                 for (i, item) in enumerate(comp["cost"])
-                    comp["cost"][i] = item*scale^(degree-i)
+                    comp["cost"][i] = item*(scale^(degree-i))
                 end
             else
                 warn(LOGGER, "Skipping generator cost model of type $(comp["model"]) in per unit transformation")
@@ -416,7 +420,7 @@ function _rescale_cost_model(comp::Dict{String,Any}, scale::Real, multiphase::Bo
                 elseif comp["model"][ph] == 2
                     degree = length(comp["cost"][ph])
                     for (i, item) in enumerate(comp["cost"][ph])
-                        comp["cost"][ph][i] = item*scale^(degree-i)
+                        comp["cost"][ph][i] = item*(scale^(degree-i))
                     end
                 else
                     warn(LOGGER, "Skipping generator cost model of type $(comp["model"]) on phase $(ph) in per unit transformation")
@@ -450,6 +454,10 @@ function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1
         error("check_voltage_angle_differences does not yet support multinetwork data")
     end
 
+    if haskey(data, "phases")
+        error("check_voltage_angle_differences does not yet support multiphase data")
+    end
+
     assert("per_unit" in keys(data) && data["per_unit"])
 
     for (i, branch) in data["branch"]
@@ -475,6 +483,10 @@ end
 function check_thermal_limits(data::Dict{String,Any})
     if haskey(data, "multinetwork") && data["multinetwork"]
         error("check_thermal_limits does not yet support multinetwork data")
+    end
+
+    if haskey(data, "phases")
+        error("check_thermal_limits does not yet support multiphase data")
     end
 
     assert("per_unit" in keys(data) && data["per_unit"])
@@ -510,6 +522,10 @@ end
 function check_branch_directions(data::Dict{String,Any})
     if haskey(data, "multinetwork") && data["multinetwork"]
         error("check_branch_directions does not yet support multinetwork data")
+    end
+
+    if haskey(data, "phases")
+        error("check_thermal_limits does not yet support multiphase data")
     end
 
     orientations = Set()
@@ -609,6 +625,10 @@ function check_transformer_parameters(data::Dict{String,Any})
         error("check_transformer_parameters does not yet support multinetwork data")
     end
 
+    if haskey(data, "phases")
+        error("check_thermal_limits does not yet support multiphase data")
+    end
+
     assert("per_unit" in keys(data) && data["per_unit"])
 
     for (i, branch) in data["branch"]
@@ -669,6 +689,10 @@ function check_dcline_limits(data::Dict{String,Any})
         error("check_dcline_limits does not yet support multinetwork data")
     end
 
+    if haskey(data, "phases")
+        error("check_dcline_limits does not yet support multiphase data")
+    end
+
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
@@ -712,6 +736,10 @@ function check_voltage_setpoints(data::Dict{String,Any})
         error("check_voltage_setpoints does not yet support multinetwork data")
     end
 
+    if haskey(data, "phases")
+        error("check_voltage_setpoints does not yet support multiphase data")
+    end
+
     for (i,gen) in data["gen"]
         bus_id = gen["gen_bus"]
         bus = data["bus"]["$(bus_id)"]
@@ -742,6 +770,9 @@ end
 function check_cost_functions(data::Dict{String,Any})
     if haskey(data, "multinetwork") && data["multinetwork"]
         error("check_cost_functions does not yet support multinetwork data")
+    end
+    if haskey(data, "phases")
+        error("check_cost_functions does not yet support multiphase data")
     end
 
     for (i,gen) in data["gen"]

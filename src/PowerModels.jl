@@ -25,6 +25,7 @@ include("io/pti.jl")
 include("io/psse.jl")
 
 include("core/data.jl")
+include("core/ref.jl")
 include("core/base.jl")
 include("core/variable.jl")
 include("core/constraint_template.jl")

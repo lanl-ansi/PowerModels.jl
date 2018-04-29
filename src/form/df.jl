@@ -175,7 +175,7 @@ end
 function variable_branch_series_current_magnitude_sqr(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     branches = ref(pm, nw, ph, :branch)
     buses = ref(pm, nw, ph, :bus)
-    cmax = calc_series_current_magnitude_bound(branches, buses)
+    cmax = calc_series_current_magnitude_bound(branches, buses, ph)
     if bounded
         var(pm, nw, ph)[:ccm] = @variable(pm.model,
             [l in ids(pm, nw, ph, :branch)], basename="$(nw)_$(ph)_ccm",
