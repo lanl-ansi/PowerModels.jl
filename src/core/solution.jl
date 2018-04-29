@@ -241,15 +241,27 @@ function add_dual(
     for (i,item) in data_dict
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
-        sol_item[param_name] = default_value(item)
-        try
-            constraint = extract_con(con(pm, con_symbol), idx, item)
-            sol_item[param_name] = scale(getdual(constraint), item)
-        catch
-            info(LOGGER, "No constraint: $(con_symbol), $(idx)")
+
+        num_phases = length(phase_ids(pm))
+        ph_idx = 1
+        sol_item[param_name] = MultiPhaseVector(default_value(item), num_phases)
+        for phase in phase_ids(pm)
+            try
+                constraint = extract_con(con(pm, con_symbol, ph=phase), idx, item)
+                sol_item[param_name][ph_idx] = scale(getdual(constraint), item)
+            catch
+                info(LOGGER, "No constraint: $(con_symbol), $(idx)")
+            end
+            ph_idx += 1
+        end
+
+        # remove MultiPhaseValue, if it was not a ismultiphase phase network
+        if !ismultiphase(pm)
+            sol_item[param_name] = sol_item[param_name][1]
         end
     end
 end
+
 
 solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}(
     :Ipopt => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
