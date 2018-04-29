@@ -169,7 +169,7 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
 
         num_phases = length(phase_ids(pm))
         ph_idx = 1
-        sol_item[param_name] = MultiPhaseValue(default_value(item), num_phases)
+        sol_item[param_name] = MultiPhaseVector(default_value(item), num_phases)
         for phase in phase_ids(pm)
             try
                 variable = extract_var(var(pm, variable_symbol, ph=phase), idx, item)

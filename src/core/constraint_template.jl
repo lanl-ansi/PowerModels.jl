@@ -123,7 +123,7 @@ function constraint_ohms_yt_from(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, 
     b_fr = branch["b_fr"][ph]
     tm = branch["tap"][ph]
 
-    constraint_ohms_yt_from(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g[ph], b[ph], g_fr, b_fr, tr[ph], ti[ph], tm)
+    constraint_ohms_yt_from(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g[ph,ph], b[ph,ph], g_fr, b_fr, tr[ph], ti[ph], tm)
 end
 
 
@@ -141,7 +141,7 @@ function constraint_ohms_yt_to(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, ph
     b_to = branch["b_to"][ph]
     tm = branch["tap"][ph]
 
-    constraint_ohms_yt_to(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g[ph], b[ph], g_to, b_to, tr[ph], ti[ph], tm)
+    constraint_ohms_yt_to(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g[ph,ph], b[ph,ph], g_to, b_to, tr[ph], ti[ph], tm)
 end
 
 
@@ -159,7 +159,7 @@ function constraint_ohms_y_from(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, p
     tm = branch["tap"][ph]
     ta = branch["shift"][ph]
 
-    constraint_ohms_y_from(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g[ph], b[ph], g_fr, b_fr, tm, ta)
+    constraint_ohms_y_from(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g[ph,ph], b[ph,ph], g_fr, b_fr, tm, ta)
 end
 
 
@@ -177,7 +177,7 @@ function constraint_ohms_y_to(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, ph:
     tm = branch["tap"][ph]
     ta = branch["shift"][ph]
 
-    constraint_ohms_y_to(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g[ph], b[ph], g_to, b_to, tm, ta)
+    constraint_ohms_y_to(pm, nw, ph, f_bus, t_bus, f_idx, t_idx, g[ph,ph], b[ph,ph], g_to, b_to, tm, ta)
 end
 
 
@@ -230,7 +230,7 @@ function constraint_ohms_yt_from_on_off(pm::GenericPowerModel, i::Int; nw::Int=p
     vad_min = ref(pm, nw, :off_angmin, ph)
     vad_max = ref(pm, nw, :off_angmax, ph)
 
-    constraint_ohms_yt_from_on_off(pm, nw, ph, i, f_bus, t_bus, f_idx, t_idx, g[ph], b[ph], g_fr, b_fr, tr[ph], ti[ph], tm, vad_min, vad_max)
+    constraint_ohms_yt_from_on_off(pm, nw, ph, i, f_bus, t_bus, f_idx, t_idx, g[ph,ph], b[ph,ph], g_fr, b_fr, tr[ph], ti[ph], tm, vad_min, vad_max)
 end
 
 
@@ -251,7 +251,7 @@ function constraint_ohms_yt_to_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.
     vad_min = ref(pm, nw, :off_angmin, ph)
     vad_max = ref(pm, nw, :off_angmax, ph)
 
-    constraint_ohms_yt_to_on_off(pm, nw, ph, i, f_bus, t_bus, f_idx, t_idx, g[ph], b[ph], g_to, b_to, tr[ph], ti[ph], tm, vad_min, vad_max)
+    constraint_ohms_yt_to_on_off(pm, nw, ph, i, f_bus, t_bus, f_idx, t_idx, g[ph,ph], b[ph,ph], g_to, b_to, tr[ph], ti[ph], tm, vad_min, vad_max)
 end
 
 
@@ -272,7 +272,7 @@ function constraint_ohms_yt_from_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cn
     vad_min = ref(pm, nw, :off_angmin, ph)
     vad_max = ref(pm, nw, :off_angmax, ph)
 
-    constraint_ohms_yt_from_ne(pm, nw, ph, i, f_bus, t_bus, f_idx, t_idx, g[ph], b[ph], g_fr, b_fr, tr[ph], ti[ph], tm, vad_min, vad_max)
+    constraint_ohms_yt_from_ne(pm, nw, ph, i, f_bus, t_bus, f_idx, t_idx, g[ph,ph], b[ph,ph], g_fr, b_fr, tr[ph], ti[ph], tm, vad_min, vad_max)
 end
 
 
@@ -293,7 +293,7 @@ function constraint_ohms_yt_to_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw,
     vad_min = ref(pm, nw, :off_angmin, ph)
     vad_max = ref(pm, nw, :off_angmax, ph)
 
-    constraint_ohms_yt_to_ne(pm, nw, ph, i, f_bus, t_bus, f_idx, t_idx, g[ph], b[ph], g_to, b_to, tr[ph], ti[ph], tm, vad_min, vad_max)
+    constraint_ohms_yt_to_ne(pm, nw, ph, i, f_bus, t_bus, f_idx, t_idx, g[ph,ph], b[ph,ph], g_to, b_to, tr[ph], ti[ph], tm, vad_min, vad_max)
 end
 
 

@@ -1,28 +1,43 @@
 # tools for working with a PowerModels data dict structure
 
+export MultiPhaseValue, MultiPhaseVector, MultiPhaseMatrix, phases, getmpv
 
 "a data structure for working with multiphase datasets"
-mutable struct MultiPhaseValue{T}
+abstract type MultiPhaseValue{T} end
+
+"a data structure for working with multiphase datasets"
+mutable struct MultiPhaseVector{T} <: MultiPhaseValue{T}
     values::Vector{T}
 end
-MultiPhaseValue{T}(value::T, phases::Int) = MultiPhaseValue([value for i in 1:phases])
+MultiPhaseVector{T}(value::T, phases::Int) = MultiPhaseVector([value for i in 1:phases])
 #Base.convert(::Vector{T}, mpv::Type{MultiPhaseValue{T}}) where T = mpv.values
 #Base.promote_rule(::Type{MultiPhaseValue{T}}, ::Type{Vector{T}}) where T = Vector{T}
+Base.map(f, a::MultiPhaseVector{T}) where T = MultiPhaseVector{T}(map(f, a.values))
+Base.map(f, a::MultiPhaseVector{T}, b::MultiPhaseVector{T}) where T = MultiPhaseVector{T}(map(f, a.values, b.values))
+phases(mpv::MultiPhaseVector) = length(mpv.values)
+function Base.setindex!{T}(mpv::MultiPhaseVector{T}, v::T, i::Int)
+    mpv.values[i] = v
+end
 
-Base.map(f, a::MultiPhaseValue{T}) where T = MultiPhaseValue(map(f, a.values))
-Base.map(f, a::MultiPhaseValue{T}, b::MultiPhaseValue{T}) where T = MultiPhaseValue(map(f, a.values, b.values))
-
-phases(mpv::MultiPhaseValue) = length(mpv.values)
+mutable struct MultiPhaseMatrix{T} <: MultiPhaseValue{T}
+    values::Matrix{T}
+end
+MultiPhaseMatrix{T}(value::T, phases::Int) = MultiPhaseMatrix(value*eye(phases))
+#Base.convert(::Matrix{T}, mpv::Type{MultiPhaseMatrix{T}}) where T = mpv.values
+Base.map(f, a::MultiPhaseMatrix{T}) where T = MultiPhaseMatrix{T}(map(f, a.values))
+Base.map(f, a::MultiPhaseMatrix{T}, b::MultiPhaseMatrix{T}) where T = MultiPhaseMatrix{T}(map(f, a.values, b.values))
+phases(mpv::MultiPhaseMatrix) = size(mpv.values, 1)
+function Base.setindex!{T}(mpv::MultiPhaseMatrix{T}, v::T, i::Int, j::Int)
+    mpv.values[i,j] = v
+end
 
 Base.start(mpv::MultiPhaseValue) = start(mpv.values)
 Base.next(mpv::MultiPhaseValue, state) = next(mpv.values, state)
 Base.done(mpv::MultiPhaseValue, state) = done(mpv.values, state)
 
 Base.length(mpv::MultiPhaseValue) = length(mpv.values)
-Base.getindex(mpv::MultiPhaseValue, i::Int) = mpv.values[i]
-function Base.setindex!{T}(mpv::MultiPhaseValue{T}, v::T, i::Int)
-    mpv.values[i] = v
-end
+Base.size(mpv::MultiPhaseValue, a...) = size(mpv.values, a...)
+Base.getindex(mpv::MultiPhaseValue, args...) = mpv.values[args...]
 
 Base.show(io::IO, mpv::MultiPhaseValue) = Base.show(io, mpv.values)
 JSON.lower(mpv::MultiPhaseValue) = mpv.values
@@ -41,14 +56,9 @@ function Base.isapprox(a::MultiPhaseValue, b::MultiPhaseValue; kwargs...)
 end
 
 
-function getmpv(value, phase::Int)
-    if isa(value, MultiPhaseValue)
-        return value[phase]
-    else
-        return value
-    end
-end
-
+getmpv(value::Any, phase::Int) = value
+getmpv(value::MultiPhaseVector, phase::Int) = value[phase]
+getmpv(value::MultiPhaseMatrix, phase_i::Int, phase_j::Int) = value[phase_i, phase_j]
 
 
 ""
@@ -95,8 +105,8 @@ function calc_theta_delta_bounds(data::Dict{String,Any})
     end
 
     if haskey(data, "phases")
-        amin = MultiPhaseValue(angle_min)
-        amax = MultiPhaseValue(angle_max)
+        amin = MultiPhaseVector(angle_min)
+        amax = MultiPhaseVector(angle_max)
         return amin, amax
     else
         return angle_min[1], angle_max[1]
@@ -122,11 +132,20 @@ function calc_branch_y(branch::Dict{String,Any})
 
     ym = map(+, map(*, r, r), map(*, x, x))
 
-    g = map(/, r, ym)
-    b = map(-, map(/, x, ym))
+    g = map(_div_zero, r, ym)
+    b = map(-, map(_div_zero, x, ym))
 
     return g, b
 end
+
+# helpful for cases when r and x are zero
+function _div_zero(a::Real, b::Real)
+    if a == 0.0
+        return 0.0
+    end
+    return a/b
+end
+
 
 ""
 function check_keys(data, keys)
@@ -1199,6 +1218,8 @@ end
 phaseless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
     "br_status", "gen_bus", "load_bus", "shunt_bus", "f_bus", "t_bus", "transformer"])
 
+phase_matrix = Set(["br_r", "br_x"])
+
 function _make_multiphase(data::Dict{String,Any}, phases::Real)
     if haskey(data, "phases")
         warn(LOGGER, "skipping network that is already multiphase")
@@ -1216,7 +1237,11 @@ function _make_multiphase(data::Dict{String,Any}, phases::Real)
                         if param in phaseless
                             item_ref_data[param] = value
                         else
-                            item_ref_data[param] = MultiPhaseValue(value, phases)
+                            if param in phase_matrix
+                                item_ref_data[param] = MultiPhaseMatrix(value, phases)
+                            else
+                                item_ref_data[param] = MultiPhaseVector(value, phases)
+                            end
                         end
                     end
                     item[item_id] = item_ref_data

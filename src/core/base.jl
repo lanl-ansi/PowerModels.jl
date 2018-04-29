@@ -1,7 +1,6 @@
 # stuff that is universal to all power models
 
 export
-    MultiPhaseValue, phases, getmpv,
     GenericPowerModel,
     setdata, setsolver, solve,
     run_generic_model, build_generic_model, solve_generic_model,
@@ -410,8 +409,8 @@ end
 function buspair_parameters(arcs_from, branches, buses, phase_ids)
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
 
-    bp_angmin = Dict([(bp, MultiPhaseValue([-Inf for h in phase_ids])) for bp in buspair_indexes])
-    bp_angmax = Dict([(bp, MultiPhaseValue([ Inf for h in phase_ids])) for bp in buspair_indexes])
+    bp_angmin = Dict([(bp, MultiPhaseVector([-Inf for h in phase_ids])) for bp in buspair_indexes])
+    bp_angmax = Dict([(bp, MultiPhaseVector([ Inf for h in phase_ids])) for bp in buspair_indexes])
     bp_branch = Dict([(bp, Inf) for bp in buspair_indexes])
 
     for (l,branch) in branches
