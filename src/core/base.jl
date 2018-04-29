@@ -37,6 +37,13 @@ function InfrastructureModels._value2string(mpv::MultiPhaseValue, float_precisio
     return "[$(a)]"
 end
 
+function Base.isapprox(a::MultiPhaseValue, b::MultiPhaseValue; kwargs...)
+    if length(a) == length(b)
+        return all( isapprox(a[i], b[i]) for i in 1:length(a); kwargs...)
+    end
+    return false
+end
+
 
 function getmpv(value, phase::Int)
     if isa(value, MultiPhaseValue)

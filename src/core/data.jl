@@ -33,6 +33,7 @@ function calc_voltage_product_bounds(buspairs, phase::Int=1)
             wi_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmax"])
             wi_min[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmin"])
         end
+
     end
 
     return wr_min, wr_max, wi_min, wi_max
@@ -167,7 +168,11 @@ end
 ""
 function apply_func(data::Dict{String,Any}, key::String, func)
     if haskey(data, key)
-        data[key] = func(data[key])
+        if isa(data[key], MultiPhaseValue)
+            data[key] = MultiPhaseValue([func(v) for v in data[key]])
+        else
+            data[key] = func(data[key])
+        end
     end
 end
 
@@ -271,20 +276,7 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmax", rescale)
             apply_func(gen, "qmin", rescale)
 
-            if "model" in keys(gen) && "cost" in keys(gen)
-                if gen["model"] == 1
-                    for i in 1:2:length(gen["cost"])
-                        gen["cost"][i] = gen["cost"][i]/mva_base
-                    end
-                elseif gen["model"] == 2
-                    degree = length(gen["cost"])
-                    for (i, item) in enumerate(gen["cost"])
-                        gen["cost"][i] = item*mva_base^(degree-i)
-                    end
-                else
-                    warn(LOGGER, "Skipping generator cost model of type $(gen["model"]) in per unit transformation")
-                end
-            end
+            _rescale_cost_model(data, mva_base, haskey(data, "phases"))
         end
     end
 
@@ -392,24 +384,48 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmax", rescale)
             apply_func(gen, "qmin", rescale)
 
-            if "model" in keys(gen) && "cost" in keys(gen)
-                if gen["model"] == 1
-                    for i in 1:2:length(gen["cost"])
-                        gen["cost"][i] = gen["cost"][i]*mva_base
-                    end
-                elseif gen["model"] == 2
-                    degree = length(gen["cost"])
-                    for (i, item) in enumerate(gen["cost"])
-                        gen["cost"][i] = item/mva_base^(degree-i)
-                    end
-                else
-                    warn(LOGGER, "Skipping generator cost model of type $(gen["model"]) in mixed units transformation")
-                end
-            end
+            _rescale_cost_model(data, 1/mva_base, haskey(data, "phases"))
         end
     end
 
 end
+
+
+function _rescale_cost_model(comp::Dict{String,Any}, scale::Real, multiphase::Bool)
+    if "model" in keys(comp) && "cost" in keys(comp)
+        if !multiphase
+            if comp["model"] == 1
+                for i in 1:2:length(comp["cost"])
+                    comp["cost"][i] = comp["cost"][i]/scale
+                end
+            elseif comp["model"] == 2
+                degree = length(comp["cost"])
+                for (i, item) in enumerate(comp["cost"])
+                    comp["cost"][i] = item*scale^(degree-i)
+                end
+            else
+                warn(LOGGER, "Skipping generator cost model of type $(comp["model"]) in per unit transformation")
+            end
+        else
+            phases = length(comp["model"])
+            for ph in 1:phases
+                if comp["model"][ph] == 1
+                    for i in 1:2:length(comp["cost"][ph])
+                        comp["cost"][ph][i] = comp["cost"][ph][i]/scale
+                    end
+                elseif comp["model"][ph] == 2
+                    degree = length(comp["cost"][ph])
+                    for (i, item) in enumerate(comp["cost"][ph])
+                        comp["cost"][ph][i] = item*scale^(degree-i)
+                    end
+                else
+                    warn(LOGGER, "Skipping generator cost model of type $(comp["model"]) on phase $(ph) in per unit transformation")
+                end
+            end
+        end
+    end
+end
+
 
 
 function check_phases(data::Dict{String,Any})
