@@ -412,6 +412,22 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
 end
 
 
+function check_phases(data::Dict{String,Any})
+    if data["multinetwork"]
+        for (i,nw_data) in data["nw"]
+            _check_phases(nw_data)
+        end
+    else
+         _check_phases(data)
+    end
+end
+
+function _check_phases(data::Dict{String,Any})
+    if haskey(data, "phases") && data["phases"] < 1
+        error("phase values must be positive integers, given $(data["phases"])")
+    end
+end
+
 "checks that phase angle differences are within 90 deg., if not tightens"
 function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1.0472)
     if haskey(data, "multinetwork") && data["multinetwork"]
@@ -1137,7 +1153,7 @@ phaseless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
     "br_status", "gen_bus", "load_bus", "shunt_bus", "f_bus", "t_bus", "transformer"])
 
 function _make_multiphase(data::Dict{String,Any}, phases::Real)
-    if data["phases"] != 1
+    if haskey(data, "phases")
         warn(LOGGER, "skipping network that is already multiphase")
         return
     end

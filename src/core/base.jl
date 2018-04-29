@@ -116,7 +116,7 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
         nw_var[:ph] = Dict{Int,Any}()
         nw_con[:ph] = Dict{Int,Any}()
 
-        for ph_id in 1:nw[:phases]
+        for ph_id in nw[:phase_ids]
             nw_var[:ph][ph_id] = Dict{Symbol,Any}()
             nw_con[:ph][ph_id] = Dict{Symbol,Any}()
         end
@@ -146,12 +146,10 @@ ismultinetwork(pm::GenericPowerModel) = (length(pm.ref[:nw]) > 1)
 nw_ids(pm::GenericPowerModel) = keys(pm.ref[:nw])
 nws(pm::GenericPowerModel) = pm.ref[:nw]
 
-ismultiphase(pm::GenericPowerModel, nw::Int) = (pm.ref[:nw][nw][:phases] > 1)
-ismultiphase(pm::GenericPowerModel; nw::Int=pm.cnw) = (pm.ref[:nw][nw][:phases] > 1)
-phases(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw][:phases]
-phases(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:phases]
-phase_ids(pm::GenericPowerModel, nw::Int) = 1:pm.ref[:nw][nw][:phases]
-phase_ids(pm::GenericPowerModel; nw::Int=pm.cnw) = 1:pm.ref[:nw][nw][:phases]
+ismultiphase(pm::GenericPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :phases)
+ismultiphase(pm::GenericPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :phases)
+phase_ids(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw][:phase_ids]
+phase_ids(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:phase_ids]
 
 
 ids(pm::GenericPowerModel, nw::Int, key::Symbol) = keys(pm.ref[:nw][nw][key])
@@ -307,6 +305,12 @@ function build_ref(data::Dict{String,Any})
             end
         end
 
+        if !haskey(ref, :phases)
+            ref[:phase_ids] = 1:1
+        else
+            ref[:phase_ids] = 1:ref[:phases]
+        end
+
         # filter turned off stuff
         ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
         ref[:load] = filter((i, load) -> load["status"] == 1 && load["load_bus"] in keys(ref[:bus]), ref[:load])
@@ -395,13 +399,11 @@ function build_ref(data::Dict{String,Any})
 
         ref[:ref_buses] = ref_buses
 
-        phase_ids = 1:ref[:phases]
-
-        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], phase_ids)
+        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:phase_ids])
 
         off_angmin = []
         off_angmax = []
-        for phase in phase_ids
+        for phase in ref[:phase_ids]
             off_angmin_phase, off_angmax_phase = calc_theta_delta_bounds(nw_data, phase)
             push!(off_angmin, off_angmin_phase)
             push!(off_angmax, off_angmax_phase)
@@ -423,7 +425,7 @@ function build_ref(data::Dict{String,Any})
             end
             ref[:ne_bus_arcs] = ne_bus_arcs
 
-            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus], phase_ids)
+            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus], ref[:phase_ids])
         end
 
     end
