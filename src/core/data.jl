@@ -191,8 +191,8 @@ end
 ""
 function apply_func(data::Dict{String,Any}, key::String, func)
     if haskey(data, key)
-        if isa(data[key], MultiPhaseValue)
-            data[key] = MultiPhaseValue([func(v) for v in data[key]])
+        if isa(data[key], MultiPhaseVector)
+            data[key] = MultiPhaseVector([func(v) for v in data[key]])
         else
             data[key] = func(data[key])
         end
@@ -407,7 +407,7 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmax", rescale)
             apply_func(gen, "qmin", rescale)
 
-            _rescale_cost_model(gen, 1/mva_base, haskey(data, "phases"))
+            _rescale_cost_model(gen, 1.0/mva_base, haskey(data, "phases"))
         end
     end
 
