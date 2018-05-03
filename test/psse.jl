@@ -1,5 +1,7 @@
 # Tests for data conversion from PSS(R)E to PowerModels data structure
 
+TESTLOG = getlogger(PowerModels)
+
 function set_costs!(data::Dict)
     for (n, gen) in data["gen"]
         gen["cost"] = [0., 100., 0.]
@@ -176,15 +178,17 @@ end
     @testset "exception handling" begin
         dummy_data = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw")
 
-        setlevel!(getlogger(PowerModels), "warn")
+        setlevel!(TESTLOG, "warn")
+        TESTLOG.propagate = false
 
-        @test_warn(getlogger(PowerModels), "Could not find bus 1, returning 0 for field vm",
+        @test_warn(TESTLOG, "Could not find bus 1, returning 0 for field vm",
                    PowerModels.get_bus_value(1, "vm", dummy_data))
 
         @test_warn(getlogger(PowerModels), "PTI v33.0.0 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.",
                    PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
 
-        setlevel!(getlogger(PowerModels), "error")
+        setlevel!(TESTLOG, "error")
+        TESTLOG.propagate = true
     end
 
     @testset "three-winding transformer" begin

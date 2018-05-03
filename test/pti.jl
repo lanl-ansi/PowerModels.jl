@@ -1,17 +1,21 @@
 # Test cases for PTI RAW file parser
 
+TESTLOG = getlogger(PowerModels)
+
 @testset "test .raw file parser" begin
     @testset "Check PTI exception handling" begin
-        setlevel!(getlogger(PowerModels), "warn")
+        setlevel!(TESTLOG, "warn")
+        TESTLOG.propagate = false
 
         @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
-        @test_throws(getlogger(PowerModels), ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
-        @test_warn(getlogger(PowerModels), "Version 32 of PTI format is unsupported, parser may not function correctly.", 
+        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
+        @test_warn(TESTLOG, "Version 32 of PTI format is unsupported, parser may not function correctly.", 
                    PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
-        @test_throws(getlogger(PowerModels), ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
-        @test_warn(getlogger(PowerModels), "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))
+        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
+        @test_warn(TESTLOG, "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))
 
-        setlevel!(getlogger(PowerModels), "error")
+        setlevel!(TESTLOG, "error")
+        TESTLOG.propagate = true
     end
 
     @testset "4-bus frankenstein file" begin
@@ -121,7 +125,7 @@
     end
 
     @testset "0-bus case file" begin
-        @test_throws(getlogger(PowerModels), ArgumentError, PowerModels.parse_pti("../test/data/pti/case0.raw"))
+        @test_throws(TESTLOG, ArgumentError, PowerModels.parse_pti("../test/data/pti/case0.raw"))
     end
 
     @testset "73-bus case file" begin
