@@ -169,7 +169,7 @@ function make_per_unit(data::Dict{String,Any})
                 _make_per_unit(nw_data, mva_base)
             end
         else
-             _make_per_unit(data, mva_base)
+            _make_per_unit(data, mva_base)
         end
     end
 end
@@ -763,6 +763,20 @@ end
 
 function _propagate_topology_status(data::Dict{String,Any})
     buses = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
+
+    for (i,load) in data["load"]
+        if load["status"] != 0 && load["pd"] == 0.0 && load["qd"] == 0.0
+            info(LOGGER, "deactivating load $(load["index"]) due to zero pd and qd")
+            load["status"] = 0
+        end
+    end
+
+    for (i,shunt) in data["shunt"]
+        if shunt["status"] != 0 && shunt["gs"] == 0.0 && shunt["bs"] == 0.0
+            info(LOGGER, "deactivating shunt $(shunt["index"]) due to zero gs and bs")
+            shunt["status"] = 0
+        end
+    end
 
     # compute what active components are incident to each bus
     incident_load = bus_load_lookup(data["load"], data["bus"])
