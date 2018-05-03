@@ -27,6 +27,7 @@ This enables the definition of a wide variety of power network formulations and 
 
 **Network Data Formats**
 * Matpower ".m" files
+* PTI ".raw" files (PSS(R)E v33 specfication)
 
 For further information, consult the package [documentation](https://lanl-ansi.github.io/PowerModels.jl/stable/).
 
