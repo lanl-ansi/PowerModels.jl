@@ -109,7 +109,6 @@ The PowerModels network data dictionary differs from the Matpower format in the 
 - All network parameters are in per-unit and angles are in radians.
 - All non-transformer branches are given nominal transformer values (i.e. a tap of 1.0 and a shift of 0).
 - All branches have a `transformer` field indicating if they are a transformer or not.
-- Only quadratic active power generation cost functions are supported, at this time.
 - When present, the `gencost` data is incorporated into the `gen` data, the column names remain the same.
 - When present, the `dclinecost` data is incorporated into the `dcline` data, the column names remain the same.
 - When present, the `bus_names` data is incorporated into the `bus` data under the property `"bus_name"`.
@@ -279,9 +278,19 @@ becomes
 
 ## Working with PTI Data files
 
-PowerModels also has support for parsing PTI network files in the `.raw` format that follow the PSS(R)E v33 specification.
+PowerModels also has support for parsing PTI network files in the `.raw` format that follow the PSS(R)E v33 specification.  Currently PowerModels supports the following PTI components,
 
-In addition to parsing the standard parameters required by PowerModels for calculations, PowerModels also supports parsing additional data fields that are defined by the PSS(R)E specification, but not used by PowerModels directly. This can be achieved via the `import_all` optional keyword arguement in `parse_file` when loading a `.raw` file, e.g.
+- Buses
+- Loads (constant power)
+- Fixed Shunts
+- Switch Shunts (default configuration)
+- Generators
+- Branches
+- Transformers (two and three winding)
+- Two-Terminal HVDC Lines (approximate)
+- Voltage Source Converter HVDC Lines (approximate)
+
+In addition to parsing the standard parameters required by PowerModels for calculations, PowerModels also supports parsing additional data fields that are defined by the PSS(R)E specification, but not used by PowerModels directly. This can be achieved via the `import_all` optional keyword argument in `parse_file` when loading a `.raw` file, e.g.
 
 ```julia
 PowerModels.parse_file("nesta_case3_lmbd.raw"; import_all=true)

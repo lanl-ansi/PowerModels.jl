@@ -1,4 +1,4 @@
-# Tests for data conversion from PSSE to PowerModels data structure
+# Tests for data conversion from PSS(R)E to PowerModels data structure
 
 function set_costs!(data::Dict)
     for (n, gen) in data["gen"]
@@ -151,7 +151,7 @@ end
             @test result_pti["status"] == :LocalOptimal
             @test result_mp["status"]  == :LocalOptimal
 
-            # NOTE: ANGMIN and ANGMAX do not exist in PSSE Spec, accounting for the objective differences
+            # NOTE: ANGMIN and ANGMAX do not exist in PSS(R)E Spec, accounting for the objective differences
             @test isapprox(result_pti["objective"], result_mp["objective"]; atol=0.6914)
         end
     end
