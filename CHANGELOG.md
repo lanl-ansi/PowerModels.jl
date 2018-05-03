@@ -4,7 +4,7 @@ PowerModels.jl Change Log
 ### Staged
 - Added "source_id" to uniquely identify each component imported from a PTI file
 - Added support for extending PowerModels data with all PTI data fields
-- Extended support for PSS(R)E v33 data (three-winding transformers, Two-Terminal/VSC HVDC lines)
+- Extended support for PSS(R)E v33 data (three-winding transformers, two-terminal/vsc hvdc lines)
 - Removed multi-network filter option from objective functions (breaking)
 - Removed option to run multi-network data in single-network models (breaking)
 - Removed add_bus_demand_setpoint function (breaking)
