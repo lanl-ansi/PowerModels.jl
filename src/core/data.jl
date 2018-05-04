@@ -286,6 +286,8 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         apply_func(dcline, "qmint", rescale)
         apply_func(dcline, "qmaxf", rescale)
         apply_func(dcline, "qminf", rescale)
+
+        _rescale_cost_model(dcline, mva_base, haskey(data, "phases"))
     end
 
     if haskey(data, "gen")
@@ -394,6 +396,8 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
         apply_func(dcline, "qmint", rescale)
         apply_func(dcline, "qmaxf", rescale)
         apply_func(dcline, "qminf", rescale)
+
+        _rescale_cost_model(dcline, 1.0/mva_base, haskey(data, "phases"))
     end
 
     if haskey(data, "gen")

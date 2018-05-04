@@ -1,6 +1,11 @@
 PowerModels.jl Change Log
 =================
 
+### Multiphase
+- Added support for network data with multiple phases
+- Improved helper functions ref, var, con to work with multiple networks and phases
+- Fixed bug in dcline cost function unit conversion
+
 ### Staged
 - Added "source_id" to uniquely identify each component imported from a PTI file
 - Added support for extending PowerModels data with all PTI data fields
@@ -11,7 +16,7 @@ PowerModels.jl Change Log
 - Changed parameters and improved performance of KCL constraints (breaking)
 - Improved robustness of matpower data parsing and transformation
 - Changed test MIP solver from GLPK to CBC
-- Fixed minor bug in Power Flow models when the data does not specify a refrence bus
+- Fixed minor bug in Power Flow models when the data does not specify a reference bus
 - Minor issues closed #251
 
 ### v0.6.1

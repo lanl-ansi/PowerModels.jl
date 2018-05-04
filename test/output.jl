@@ -156,7 +156,7 @@ end
     end
 
     @testset "5-bus with dcline costs" begin
-        solution_feedback("../test/data/matpower/case5_dc.m", 17760.2)
+        solution_feedback("../test/data/matpower/case5_dc.m", 18156.2)
     end
 
 end

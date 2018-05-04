@@ -201,21 +201,21 @@
             result = PowerModels.run_mn_mp_opf(mn_mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 79122.2; atol = 1e-1)
+            @test isapprox(result["objective"], 80706.2; atol = 1e-1)
         end
 
         @testset "dc 5/14-bus case" begin
             result = PowerModels.run_mn_mp_opf(mn_mp_data, DCPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 78422.2; atol = 1e-1)
+            @test isapprox(result["objective"], 80006.2; atol = 1e-1)
         end
 
         @testset "soc 5/14-bus case" begin
             result = PowerModels.run_mn_mp_opf(mn_mp_data, SOCWRPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 68243.3; atol = 1e-1)
+            @test isapprox(result["objective"], 69827.3; atol = 1e-1)
         end
 
     end
@@ -227,7 +227,7 @@
         result = PowerModels.run_mn_mp_opf(mn_mp_data, ACPPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 88592.6; atol = 1e0)
+        @test isapprox(result["objective"], 90176.6; atol = 1e0)
 
         PowerModels.update_data(mn_mp_data, result["solution"])
 

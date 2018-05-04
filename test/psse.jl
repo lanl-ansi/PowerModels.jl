@@ -380,7 +380,7 @@ end
 
             opf = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
             @test opf["status"] == :LocalOptimal
-            @test isapprox(opf["objective"], 19.6761; atol=1e-3)
+            @test isapprox(opf["objective"], 21.8842; atol=1e-3)
 
             pf = PowerModels.run_pf(data, PowerModels.ACPPowerModel, ipopt_solver)
             @test pf["status"] == :LocalOptimal

@@ -570,7 +570,7 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["startup"] = 0.0
             sub_data["shutdown"] = 0.0
             sub_data["ncost"] = 3
-            sub_data["cost"] = [0.0, 1.0, 0.0]
+            sub_data["cost"] = [0.0, 0.0, 0.0]
             sub_data["model"] = 2
 
             sub_data["source_id"] = [sub_data["f_bus"], sub_data["t_bus"], pop!(dcline, "NAME")]
@@ -624,7 +624,7 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["startup"] = 0.0
             sub_data["shutdown"] = 0.0
             sub_data["ncost"] = 3
-            sub_data["cost"] = [0.0, 1.0, 0.0]
+            sub_data["cost"] = [0.0, 0.0, 0.0]
             sub_data["model"] = 2
 
             sub_data["source_id"] = [sub_data["f_bus"], sub_data["t_bus"], pop!(dcline, "NAME")]

@@ -54,6 +54,4 @@ include("common.jl")
 
     include("docs.jl")
 
-    include("docs.jl")
-
 end

@@ -108,7 +108,7 @@
             result = PowerModels.run_mp_opf(mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 53280.5; atol = 1e-1)
+            @test isapprox(result["objective"], 54468.5; atol = 1e-1)
             for ph in 1:mp_data["phases"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
                 @test isapprox(result["solution"]["bus"]["2"]["va"][ph], -0.0139117; atol = 1e-4)
@@ -119,7 +119,7 @@
             result = PowerModels.run_mp_opf(mp_data, DCPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 53084.7; atol = 1e-1)
+            @test isapprox(result["objective"], 54272.7; atol = 1e-1)
             for ph in 1:mp_data["phases"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
                 @test isapprox(result["solution"]["bus"]["2"]["va"][ph], -0.0135206; atol = 1e-4)
@@ -130,7 +130,7 @@
             result = PowerModels.run_mp_opf(mp_data, SOCWRPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 45126.1; atol = 1e-1)
+            @test isapprox(result["objective"], 46314.1; atol = 1e-1)
             for ph in 1:mp_data["phases"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
                 @test isapprox(result["solution"]["bus"]["2"]["vm"][ph],  1.08578; atol = 1e-3)
