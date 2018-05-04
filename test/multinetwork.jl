@@ -107,58 +107,55 @@ PMs = PowerModels
         end
     end
 
-
-    function post_mpopf_test(pm::GenericPowerModel)
-        for (n, network) in nws(pm)
-            PMs.variable_voltage(pm, nw=n)
-            PMs.variable_generation(pm, nw=n)
-            PMs.variable_branch_flow(pm, nw=n)
-            PMs.variable_dcline_flow(pm, nw=n)
-
-            PMs.constraint_voltage(pm, nw=n)
-
-            for i in ids(pm, :ref_buses, nw=n)
-                PMs.constraint_theta_ref(pm, i, nw=n)
-            end
-
-            for i in ids(pm, :bus, nw=n)
-                PMs.constraint_kcl_shunt(pm, i, nw=n)
-            end
-
-            for i in ids(pm, :branch, nw=n)
-                PMs.constraint_ohms_yt_from(pm, i, nw=n)
-                PMs.constraint_ohms_yt_to(pm, i, nw=n)
-
-                PMs.constraint_voltage_angle_difference(pm, i, nw=n)
-
-                PMs.constraint_thermal_limit_from(pm, i, nw=n)
-                PMs.constraint_thermal_limit_to(pm, i, nw=n)
-            end
-
-            for i in ids(pm, :dcline, nw=n)
-                PMs.constraint_dcline(pm, i, nw=n)
-            end
-        end
-
-        # cross network constraint, just for illustration purposes
-        # designed to be feasible with two copies of case5_asym.m 
-        t1_pg = var(pm, :pg, nw=1)
-        t2_pg = var(pm, :pg, nw=2)
-        @constraint(pm.model, t1_pg[2] == t2_pg[4])
-
-        PMs.objective_min_fuel_cost(pm)
-    end
-
     @testset "2 period 5-bus asymmetric case" begin
         mn_data = build_mn_data("../test/data/matpower/case5_asym.m")
 
         @testset "test ac polar opf" begin
-            result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true)
+            result = PowerModels.run_mn_opf(mn_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 35184.2; atol = 1e0)
+            @test isapprox(result["objective"], 35103.8; atol = 1e0)
             @test isapprox(
                 result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["2"]["pg"]; 
+                atol = 1e-3
+            )
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["4"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["4"]["pg"]; 
+                atol = 1e-3
+            )
+        end
+
+        @testset "test dc polar opf" begin
+            result = PowerModels.run_mn_opf(mn_data, DCPPowerModel, ipopt_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 34959.8; atol = 1e0)
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["2"]["pg"]; 
+                atol = 1e-3
+            )
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["4"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["4"]["pg"]; 
+                atol = 1e-3
+            )
+        end
+
+        @testset "test soc opf" begin
+            result = PowerModels.run_mn_opf(mn_data, SOCWRPowerModel, ipopt_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 29999.4; atol = 1e0)
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["2"]["pg"]; 
+                atol = 1e-3
+            )
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["4"]["pg"],
                 result["solution"]["nw"]["2"]["gen"]["4"]["pg"]; 
                 atol = 1e-3
             )
@@ -169,10 +166,10 @@ PMs = PowerModels
         mn_data = build_mn_data("../test/data/matpower/case5.m")
 
         @testset "test dc polar opf" begin
-            result = run_generic_model(mn_data, DCPPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true, setting = Dict("output" => Dict("duals" => true)))
+            result = PowerModels.run_mn_opf(mn_data, DCPPowerModel, ipopt_solver, setting = Dict("output" => Dict("duals" => true)))
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 35446; atol = 1e0)
+            @test isapprox(result["objective"], 35226.4; atol = 1e0)
 
             for (i,nw_data) in result["solution"]["nw"]
                 for (i, bus) in nw_data["bus"]
@@ -191,85 +188,29 @@ PMs = PowerModels
         end
     end
 
+
     @testset "hybrid network case - polar" begin
         mn_data = build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
 
         @testset "test ac polar opf" begin
-            result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true)
+            result = PowerModels.run_mn_opf(mn_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 88289.0; atol = 1e0)
-            @test isapprox(
-                result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
-                result["solution"]["nw"]["2"]["gen"]["4"]["pg"]; 
-                atol = 1e-3
-            )
+            @test isapprox(result["objective"], 87886.5; atol = 1e0)
         end
-    end
-
-    @testset "hybrid network case - rect" begin
-        mn_data = build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
 
         @testset "test ac polar opf" begin
-            result = run_generic_model(mn_data, ACRPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true)
+            result = PowerModels.run_mn_opf(mn_data, ACRPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 88289.0; atol = 1e0)
-            @test isapprox(
-                result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
-                result["solution"]["nw"]["2"]["gen"]["4"]["pg"]; 
-                atol = 1e-3
-            )
+            @test isapprox(result["objective"], 87886.5; atol = 1e0)
         end
-    end
 
+        @testset "test soc opf" begin
+            result = PowerModels.run_mn_opf(mn_data, SOCWRPowerModel, ipopt_solver)
 
-    function post_mppf_test(pm::GenericPowerModel)
-        for (n, network) in nws(pm)
-            PMs.variable_voltage(pm, nw=n, bounded = false)
-            PMs.variable_generation(pm, nw=n, bounded = false)
-            PMs.variable_branch_flow(pm, nw=n, bounded = false)
-            PMs.variable_dcline_flow(pm, nw=n, bounded = false)
-
-            PMs.constraint_voltage(pm, nw=n)
-
-            for i in ids(pm, :ref_buses, nw=n)
-                PMs.constraint_theta_ref(pm, i, nw=n)
-                PMs.constraint_voltage_magnitude_setpoint(pm, i, nw=n)
-            end
-
-            for (i,bus) in ref(pm, :bus, nw=n)
-                PMs.constraint_kcl_shunt(pm, i, nw=n)
-
-                # PV Bus Constraints
-                if length(ref(pm, :bus_gens, i, nw=n)) > 0 && !(i in ids(pm, :ref_buses, nw=n))
-                    @assert bus["bus_type"] == 2
-
-                    PMs.constraint_voltage_magnitude_setpoint(pm, i, nw=n)
-                    for j in ref(pm, :bus_gens, i, nw=n)
-                        PMs.constraint_active_gen_setpoint(pm, j, nw=n)
-                    end
-                end
-            end
-
-            for i in ids(pm, :branch, nw=n)
-                PMs.constraint_ohms_yt_from(pm, i, nw=n)
-                PMs.constraint_ohms_yt_to(pm, i, nw=n)
-            end
-
-            for (i,dcline) in ref(pm, :dcline, nw=n)
-                PMs.constraint_active_dcline_setpoint(pm, i, nw=n)
-
-                f_bus = ref(pm, :bus, nw=n)[dcline["f_bus"]]
-                if f_bus["bus_type"] == 1
-                    PMs.constraint_voltage_magnitude_setpoint(pm, n, f_bus["index"])
-                end
-
-                t_bus = ref(pm, :bus, nw=n)[dcline["t_bus"]]
-                if t_bus["bus_type"] == 1
-                    PMs.constraint_voltage_magnitude_setpoint(pm, n, t_bus["index"])
-                end
-            end
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 78765.8; atol = 1e0)
         end
     end
 
@@ -277,14 +218,13 @@ PMs = PowerModels
     @testset "test solution feedback" begin
         mn_data = build_mn_data("../test/data/matpower/case5_asym.m")
 
-        opf_result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mpopf_test, multinetwork=true)
+        opf_result = PowerModels.run_mn_opf(mn_data, ACPPowerModel, ipopt_solver)
         @test opf_result["status"] == :LocalOptimal
-        @test isapprox(opf_result["objective"], 35184.2; atol = 1e0)
-        #@test isapprox(opf_result["objective"], 35533.8; atol = 1e0) # case5_dc (out of date)
+        @test isapprox(opf_result["objective"], 35103.8; atol = 1e0)
 
         PowerModels.update_data(mn_data, opf_result["solution"])
 
-        pf_result = run_generic_model(mn_data, ACPPowerModel, ipopt_solver, post_mppf_test, multinetwork=true)
+        pf_result = PowerModels.run_mn_pf(mn_data, ACPPowerModel, ipopt_solver)
         @test pf_result["status"] == :LocalOptimal
         @test isapprox(pf_result["objective"], 0.0; atol = 1e-3)
 
