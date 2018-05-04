@@ -1,8 +1,3 @@
-#
-# NOTE: This is not a formulation of any particular problem
-# It is only for testing and illustration purposes
-#
-
 using JuMP
 PMs = PowerModels
 

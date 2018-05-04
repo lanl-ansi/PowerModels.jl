@@ -49,6 +49,8 @@ include("tnep.jl")
 
 include("multinetwork.jl")
 
+include("multiphase.jl")
+
 include("docs.jl")
 
 end

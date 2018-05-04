@@ -49,5 +49,6 @@ include("prob/opf.jl")
 include("prob/opf_bf.jl")
 include("prob/ots.jl")
 include("prob/tnep.jl")
+include("prob/test.jl")
 
 end
