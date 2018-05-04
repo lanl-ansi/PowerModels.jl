@@ -94,7 +94,10 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
 end
 
 
-### Helper functions for ignoring multinetwork support
+### Helper functions for working with multinetworks
+ismultinetwork(pm::GenericPowerModel) = (length(pm.ref[:nw]) > 1)
+nws(pm::GenericPowerModel) = keys(pm.ref[:nw])
+
 ids(pm::GenericPowerModel, key::Symbol) = ids(pm, pm.cnw, key)
 ids(pm::GenericPowerModel, n::Int, key::Symbol) = keys(pm.ref[:nw][n][key])
 
@@ -162,8 +165,8 @@ function build_generic_model(data::Dict{String,Any}, model_constructor, post_met
     # NOTE, this model constructor will build the ref dict using the latest info from the data
     pm = model_constructor(data; kwargs...)
 
-    if !multinetwork && data["multinetwork"]
-        warn(LOGGER, "building a single network model with multinetwork data, only network ($(pm.cnw)) will be used.")
+    if !multinetwork && ismultinetwork(pm)
+        error(LOGGER, "attempted to build a single-network model with multi-network data")
     end
 
     post_method(pm)
@@ -197,6 +200,8 @@ Some of the common keys include:
 * `:bus_arcs` -- the mapping `Dict(i => [(l,i,j) for (l,i,j) in ref[:arcs]])`,
 * `:buspairs` -- (see `buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])`),
 * `:bus_gens` -- the mapping `Dict(i => [gen["gen_bus"] for (i,gen) in ref[:gen]])`.
+* `:bus_loads` -- the mapping `Dict(i => [load["load_bus"] for (i,load) in ref[:load]])`.
+* `:bus_shunts` -- the mapping `Dict(i => [shunt["shunt_bus"] for (i,shunt) in ref[:shunt]])`.
 * `:arcs_from_dc` -- the set `[(i,b["f_bus"],b["t_bus"]) for (i,b) in ref[:dcline]]`,
 * `:arcs_to_dc` -- the set `[(i,b["t_bus"],b["f_bus"]) for (i,b) in ref[:dcline]]`,
 * `:arcs_dc` -- the set of arcs from both `arcs_from_dc` and `arcs_to_dc`,
@@ -236,6 +241,8 @@ function build_ref(data::Dict{String,Any})
 
         # filter turned off stuff
         ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
+        ref[:load] = filter((i, load) -> load["status"] == 1 && load["load_bus"] in keys(ref[:bus]), ref[:load])
+        ref[:shunt] = filter((i, shunt) -> shunt["status"] == 1 && shunt["shunt_bus"] in keys(ref[:bus]), ref[:shunt])
         ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
         ref[:branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
         ref[:dcline] = filter((i, dcline) -> dcline["br_status"] == 1 && dcline["f_bus"] in keys(ref[:bus]) && dcline["t_bus"] in keys(ref[:bus]), ref[:dcline])
@@ -275,6 +282,18 @@ function build_ref(data::Dict{String,Any})
         end
         ref[:bus_gens] = bus_gens
 
+        bus_loads = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (i, load) in ref[:load]
+            push!(bus_loads[load["load_bus"]], i)
+        end
+        ref[:bus_loads] = bus_loads
+
+        bus_shunts = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (i,shunt) in ref[:shunt]
+            push!(bus_shunts[shunt["shunt_bus"]], i)
+        end
+        ref[:bus_shunts] = bus_shunts
+
         bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
         for (l,i,j) in ref[:arcs]
             push!(bus_arcs[i], (l,i,j))
@@ -298,7 +317,8 @@ function build_ref(data::Dict{String,Any})
         if length(ref_buses) == 0
             big_gen = biggest_generator(ref[:gen])
             gen_bus = big_gen["gen_bus"]
-            ref_buses[gen_bus] = ref[:bus][gen_bus]
+            ref_bus = ref_buses[gen_bus] = ref[:bus][gen_bus]
+            ref_bus["bus_type"] = 3
             warn(LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
         end
 

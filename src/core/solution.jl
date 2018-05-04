@@ -19,7 +19,7 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
             pm.cnw = parse(Int, n)
             solution_builder(pm, sol_nw)
             data_nws[n] = Dict(
-                "name" => nw_data["name"],
+                "name" => get(nw_data, "name", "anonymous"),
                 "bus_count" => length(nw_data["bus"]),
                 "branch_count" => length(nw_data["branch"])
             )
@@ -93,13 +93,6 @@ function add_generator_power_setpoint(sol, pm::GenericPowerModel)
     mva_base = pm.data["baseMVA"]
     add_setpoint(sol, pm, "gen", "pg", :pg)
     add_setpoint(sol, pm, "gen", "qg", :qg)
-end
-
-""
-function add_bus_demand_setpoint(sol, pm::GenericPowerModel)
-    mva_base = pm.data["baseMVA"]
-    add_setpoint(sol, pm, "bus", "pd", :pd; default_value = (item) -> item["pd"]*mva_base)
-    add_setpoint(sol, pm, "bus", "qd", :qd; default_value = (item) -> item["qd"]*mva_base)
 end
 
 ""
@@ -238,9 +231,10 @@ end
 
 solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}(
     :Ipopt => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
+    :Juniper => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
     :ConicNonlinearBridge => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
     # note that AmplNLWriter.AmplNLSolver is the solver type of bonmin
-    :AmplNLWriter => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
+    :AmplNLWriter => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
     )
 
 "translates solver status codes to our status codes"

@@ -2,14 +2,38 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added "source_id" to uniquely identify each component imported from a PTI file
+- Added support for extending PowerModels data with all PTI data fields
+- Extended support for PSS(R)E v33 data (three-winding transformers, two-terminal/vsc hvdc lines)
+- Removed multi-network filter option from objective functions (breaking)
+- Removed option to run multi-network data in single-network models (breaking)
+- Removed add_bus_demand_setpoint function (breaking)
+- Changed parameters and improved performance of KCL constraints (breaking)
+- Improved robustness of matpower data parsing and transformation
+- Changed test MIP solver from GLPK to CBC
+- Fixed minor bug in Power Flow models when the data does not specify a refrence bus
+- Minor issues closed #251
+
+### v0.6.1
+- Moved to Juniper for non-convex MINLP tests
+- Fixed minor bug in non-convex MINLP formulations
+
+### v0.6.0
 - Dropped support for Julia v0.5 (breaking)
-- Migrated logging tools from Logging to Memento
-- Refactored Matlab and Matpower parsing functions
+- Added basic support for PSS(R)E v33 data (buses, loads, shunts, generators, branches and two-winding transformers)
+- Added support for table-like data summary, #146
+- Added support for network topology processing
+- Added basic support for Branch Flow formulation variants
+- Added support for parsing PTI files into a Dict
 - Refactored implementation of WRM formulation
-- Updated struct and type parameter syntax to Julia v0.6 (breaking)
-- Fixed a mathematical bug when swapping the orientation of a transformer
-- Added support for parsing of PTI raw files into a Dict
 - Updated branch mathematical model and Matpower parser to support asymmetrical line charging
+- Added explicit load and shunt components to the PowerModels network data structure
+- Refactored Matlab and Matpower parsing functions
+- Leveraging InfrastructureModels package for Matlab data parsing, #233, #247
+- Migrated logging tools from Logging to Memento
+- Updated struct and type parameter syntax to Julia v0.6
+- Fixed a mathematical bug when swapping the orientation of a transformer
+- Minor issues closed #51, #131, #220
 
 ### v0.5.1
 - Added support for convex piecewise linear cost functions
@@ -34,7 +58,7 @@ PowerModels.jl Change Log
 - Added pm.var and made all JuMP variables anonymous (breaking)
 - Added support for SDP, ACR, and ACT Power Flow formulations
 - Added cost model zero filtering to matpower parser
-- Eliminated usage of pm.model.ext, for details see [#149](https://github.com/lanl-ansi/PowerModels.jl/pull/149)
+- Eliminated usage of pm.model.ext, #149
 - Made solution default units per-unit (breaking)
 - Removed deprecated bus-less constraint_theta_ref function (breaking)
 - Renamed polar voltage variables v,t to vm,va (breaking)

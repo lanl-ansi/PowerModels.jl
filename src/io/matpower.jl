@@ -23,7 +23,7 @@ function row_to_typed_dict(row_data, columns)
     for (i,v) in enumerate(row_data)
         if i <= length(columns)
             name, typ = columns[i]
-            dict_data[name] = check_type(typ, v)
+            dict_data[name] = InfrastructureModels.check_type(typ, v)
         else
             dict_data["col_$(i)"] = v
         end
@@ -147,11 +147,12 @@ function parse_matpower_string(data_string::String)
         case["name"] = "no_name_found"
     end
 
+    case["source_type"] = "matpower"
     if haskey(matlab_data, "mpc.version")
-        case["version"] = matlab_data["mpc.version"]
+        case["source_version"] = VersionNumber(matlab_data["mpc.version"])
     else
         warn(LOGGER, string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
-        case["version"] = "unknown"
+        case["source_version"] = "0.0.0+"
     end
 
     if haskey(matlab_data, "mpc.baseMVA")
@@ -166,7 +167,7 @@ function parse_matpower_string(data_string::String)
         buses = []
         for bus_row in matlab_data["mpc.bus"]
             bus_data = row_to_typed_dict(bus_row, mp_bus_columns)
-            bus_data["index"] = check_type(Int, bus_row[1])
+            bus_data["index"] = InfrastructureModels.check_type(Int, bus_row[1])
             push!(buses, bus_data)
         end
         case["bus"] = buses
@@ -252,7 +253,7 @@ function parse_matpower_string(data_string::String)
     end
 
     for k in keys(matlab_data)
-        if !in(k, mp_data_names) && k[1:4] == "mpc."
+        if !in(k, mp_data_names) && startswith(k, "mpc.")
             case_name = k[5:length(k)]
             value = matlab_data[k]
             if isa(value, Array)
@@ -284,16 +285,16 @@ end
 
 function mp_cost_data(cost_row)
     cost_data = Dict{String,Any}(
-        "model" => check_type(Int, cost_row[1]),
-        "startup" => check_type(Float64, cost_row[2]),
-        "shutdown" => check_type(Float64, cost_row[3]),
-        "ncost" => check_type(Int, cost_row[4]),
-        "cost" => [check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
+        "model" => InfrastructureModels.check_type(Int, cost_row[1]),
+        "startup" => InfrastructureModels.check_type(Float64, cost_row[2]),
+        "shutdown" => InfrastructureModels.check_type(Float64, cost_row[3]),
+        "ncost" => InfrastructureModels.check_type(Int, cost_row[4]),
+        "cost" => [InfrastructureModels.check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
     )
 
     #=
     # skip this literal interpretation, as its hard to invert
-    cost_values = [check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
+    cost_values = [InfrastructureModels.check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
     if cost_data["model"] == 1:
         if length(cost_values)%2 != 0
             error("incorrect matpower file, odd number of pwl cost function values")
@@ -348,16 +349,15 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     merge_generator_cost_data(pm_data)
     merge_generic_data(pm_data)
 
-    # update lookup structure
-    for (k,v) in pm_data
-        if isa(v, Array)
-            #println("updating $(k)")
-            dict = Dict{String,Any}()
-            for item in v
-                assert("index" in keys(item))
-                dict[string(item["index"])] = item
-            end
-            pm_data[k] = dict
+    # split loads and shunts from buses
+    split_loads_shunts(pm_data)
+
+    # use once available
+    InfrastructureModels.arrays_to_dicts!(pm_data)
+
+    for optional in ["dcline", "load", "shunt"]
+        if length(pm_data[optional]) == 0
+            pm_data[optional] = Dict{String,Any}()
         end
     end
 
@@ -365,67 +365,109 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
 end
 
 
+"""
+    split_loads_shunts(data)
+
+Seperates Loads and Shunts in `data` under separate "load" and "shunt" keys in the
+PowerModels data format. Includes references to originating bus via "load_bus"
+and "shunt_bus" keys, respectively.
+"""
+function split_loads_shunts(data::Dict{String,Any})
+    data["load"] = []
+    data["shunt"] = []
+
+    load_num = 1
+    shunt_num = 1
+    for (i,bus) in enumerate(data["bus"])
+        if bus["pd"] != 0.0 || bus["qd"] != 0.0
+            append!(data["load"], [Dict{String,Any}("pd" => bus["pd"],
+                                                    "qd" => bus["qd"],
+                                                    "load_bus" => bus["bus_i"],
+                                                    "status" => convert(Int8, bus["bus_type"] != 4),
+                                                    "index" => load_num)])
+            load_num += 1
+        end
+
+        if bus["gs"] != 0.0 || bus["bs"] != 0.0
+            append!(data["shunt"], [Dict{String,Any}("gs" => bus["gs"],
+                                                     "bs" => bus["bs"],
+                                                     "shunt_bus" => bus["bus_i"],
+                                                     "status" => convert(Int8, bus["bus_type"] != 4),
+                                                     "index" => shunt_num)])
+            shunt_num += 1
+        end
+
+        for key in ["pd", "qd", "gs", "bs"]
+            delete!(bus, key)
+        end
+    end
+end
+
 
 "ensures all polynomial costs functions have at least three terms"
 function standardize_cost_terms(data::Dict{String,Any})
-    for gencost in data["gencost"]
-        if gencost["model"] == 2
-            if length(gencost["cost"]) > 3
-                max_nonzero_index = 1
-                for i in 1:length(gencost["cost"])
-                    max_nonzero_index = i
-                    if gencost["cost"][i] != 0.0
-                        break
+    if haskey(data, "gencost")
+        for gencost in data["gencost"]
+            if gencost["model"] == 2
+                if length(gencost["cost"]) > 3
+                    max_nonzero_index = 1
+                    for i in 1:length(gencost["cost"])
+                        max_nonzero_index = i
+                        if gencost["cost"][i] != 0.0
+                            break
+                        end
+                    end
+
+                    if max_nonzero_index > 1
+                        warn(LOGGER, "removing $(max_nonzero_index-1) zeros from generator cost model ($(gencost["index"]))")
+                        #println(gencost["cost"])
+                        gencost["cost"] = gencost["cost"][max_nonzero_index:length(gencost["cost"])]
+                        #println(gencost["cost"])
+                        gencost["ncost"] = length(gencost["cost"])
                     end
                 end
 
-                if max_nonzero_index > 1
-                    warn(LOGGER, "removing $(max_nonzero_index-1) zeros from generator cost model ($(gencost["index"]))")
-                    #println(gencost["cost"])
-                    gencost["cost"] = gencost["cost"][max_nonzero_index:length(gencost["cost"])]
-                    #println(gencost["cost"])
-                    gencost["ncost"] = length(gencost["cost"])
+                if length(gencost["cost"]) < 3
+                    #println("std gen cost: ",gencost["cost"])
+                    cost_3 = append!(vec(fill(0.0, (1,3 - length(gencost["cost"])))), gencost["cost"])
+                    gencost["cost"] = cost_3
+                    gencost["ncost"] = 3
+                    #println("   ",gencost["cost"])
+                    warn(LOGGER, "added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
                 end
-            end
-
-            if length(gencost["cost"]) < 3
-                #println("std gen cost: ",gencost["cost"])
-                cost_3 = append!(vec(fill(0.0, (1,3 - length(gencost["cost"])))), gencost["cost"])
-                gencost["cost"] = cost_3
-                gencost["ncost"] = 3
-                #println("   ",gencost["cost"])
-                warn(LOGGER, "added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
             end
         end
     end
 
-    for dclinecost in data["dclinecost"]
-        if dclinecost["model"] == 2
-            if length(dclinecost["cost"]) > 3
-                max_nonzero_index = 1
-                for i in 1:length(dclinecost["cost"])
-                    max_nonzero_index = i
-                    if dclinecost["cost"][i] != 0.0
-                        break
+    if haskey(data, "dclinecost")
+        for dclinecost in data["dclinecost"]
+            if dclinecost["model"] == 2
+                if length(dclinecost["cost"]) > 3
+                    max_nonzero_index = 1
+                    for i in 1:length(dclinecost["cost"])
+                        max_nonzero_index = i
+                        if dclinecost["cost"][i] != 0.0
+                            break
+                        end
+                    end
+
+                    if max_nonzero_index > 1
+                        warn(LOGGER, "removing $(max_nonzero_index-1) zeros from dcline cost model ($(dclinecost["index"]))")
+                        #println(dclinecost["cost"])
+                        dclinecost["cost"] = dclinecost["cost"][max_nonzero_index:length(dclinecost["cost"])]
+                        #println(dclinecost["cost"])
+                        dclinecost["ncost"] = length(dclinecost["cost"])
                     end
                 end
 
-                if max_nonzero_index > 1
-                    warn(LOGGER, "removing $(max_nonzero_index-1) zeros from dcline cost model ($(dclinecost["index"]))")
-                    #println(dclinecost["cost"])
-                    dclinecost["cost"] = dclinecost["cost"][max_nonzero_index:length(dclinecost["cost"])]
-                    #println(dclinecost["cost"])
-                    dclinecost["ncost"] = length(dclinecost["cost"])
+                if length(dclinecost["cost"]) < 3
+                    #println("std gen cost: ",dclinecost["cost"])
+                    cost_3 = append!(vec(fill(0.0, (1,3 - length(dclinecost["cost"])))), dclinecost["cost"])
+                    dclinecost["cost"] = cost_3
+                    dclinecost["ncost"] = 3
+                    #println("   ",dclinecost["cost"])
+                    warn(LOGGER, "added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
                 end
-            end
-
-            if length(dclinecost["cost"]) < 3
-                #println("std gen cost: ",dclinecost["cost"])
-                cost_3 = append!(vec(fill(0.0, (1,3 - length(dclinecost["cost"])))), dclinecost["cost"])
-                dclinecost["cost"] = cost_3
-                dclinecost["ncost"] = 3
-                #println("   ",dclinecost["cost"])
-                warn(LOGGER, "added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
             end
         end
     end
@@ -540,25 +582,29 @@ end
 
 "merges generator cost functions into generator data, if costs exist"
 function merge_generator_cost_data(data::Dict{String,Any})
-    for (i, gencost) in enumerate(data["gencost"])
-        gen = data["gen"][i]
-        assert(gen["index"] == gencost["index"])
-        delete!(gencost, "index")
+    if haskey(data, "gencost")
+        for (i, gencost) in enumerate(data["gencost"])
+            gen = data["gen"][i]
+            assert(gen["index"] == gencost["index"])
+            delete!(gencost, "index")
 
-        check_keys(gen, keys(gencost))
-        merge!(gen, gencost)
+            check_keys(gen, keys(gencost))
+            merge!(gen, gencost)
+        end
+        delete!(data, "gencost")
     end
-    delete!(data, "gencost")
 
-    for (i, dclinecost) in enumerate(data["dclinecost"])
-        dcline = data["dcline"][i]
-        assert(dcline["index"] == dclinecost["index"])
-        delete!(dclinecost, "index")
+    if haskey(data, "dclinecost")
+        for (i, dclinecost) in enumerate(data["dclinecost"])
+            dcline = data["dcline"][i]
+            assert(dcline["index"] == dclinecost["index"])
+            delete!(dclinecost, "index")
 
-        check_keys(dcline, keys(dclinecost))
-        merge!(dcline, dclinecost)
+            check_keys(dcline, keys(dclinecost))
+            merge!(dcline, dclinecost)
+        end
+        delete!(data, "dclinecost")
     end
-    delete!(data, "dclinecost")
 end
 
 

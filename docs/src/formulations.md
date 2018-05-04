@@ -6,6 +6,7 @@ We begin with the top of the hierarchy, where we can distinguish between AC and 
 AbstractACPForm <: AbstractPowerFormulation
 AbstractDCPForm <: AbstractPowerFormulation
 AbstractWRForm <: AbstractPowerFormulation
+AbstractWForm <: AbstractPowerFormulation
 ```
 
 From there, different forms for ACP and DCP are possible:
@@ -17,6 +18,8 @@ StandardDCPForm <: AbstractDCPForm
 
 SOCWRForm <: AbstractWRForm
 QCWRForm <: AbstractWRForm
+
+SOCDFForm <: AbstractWForm
 ```
 
 ## Power Models
@@ -29,6 +32,8 @@ DCPPowerModel = GenericPowerModel{StandardDCPForm}
 
 SOCWRPowerModel = GenericPowerModel{SOCWRForm}
 QCWRPowerModel = GenericPowerModel{QCWRForm}
+
+SOCDFPowerModel = GenericPowerModel{SOCDFForm}
 ```
 
 For details on `GenericPowerModel`, see the section on [Power Model](@ref).

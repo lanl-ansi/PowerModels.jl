@@ -1,34 +1,29 @@
 # Test cases for PTI RAW file parser
-using Memento, Memento.Test
 
-@testset "Test PTI '.raw' file parser" begin
+TESTLOG = getlogger(PowerModels)
+
+@testset "test .raw file parser" begin
     @testset "Check PTI exception handling" begin
-        setlevel!(getlogger(PowerModels), "warn")
+        setlevel!(TESTLOG, "warn")
+        TESTLOG.propagate = false
 
-        @test_nowarn PowerModels.parse_pti("../test/data/parser_test_a.raw")
-        @test_throws(getlogger(PowerModels),
-                    MethodError,
-                    @test_warn(getlogger(PowerModels),
-                               "This feature is incomplete, and will currently only return RAW data from a PTI file",
-                               PowerModels.parse_file("../test/data/frankenstein_00.raw")))
-        @test_throws(getlogger(PowerModels),
-                     ErrorException,
-                     PowerModels.parse_pti("../test/data/parser_test_b.raw"))
-        @test_warn(getlogger(PowerModels),
-                   "Version 32 of PTI format is unsupported, parser may not function correctly.",
-                   PowerModels.parse_pti("../test/data/parser_test_c.raw"))
-        @test_throws(getlogger(PowerModels), ErrorException, PowerModels.parse_pti("../test/data/parser_test_d.raw"))
-        @test_warn(getlogger(PowerModels), "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/parser_test_h.raw"))
+        @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
+        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
+        @test_warn(TESTLOG, "Version 32 of PTI format is unsupported, parser may not function correctly.", 
+                   PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
+        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
+        @test_warn(TESTLOG, "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))
 
-        setlevel!(getlogger(PowerModels), "error")
+        setlevel!(TESTLOG, "error")
+        TESTLOG.propagate = true
     end
 
     @testset "4-bus frankenstein file" begin
-        data_dict = PowerModels.parse_pti("../test/data/frankenstein_00.raw")
+        data_dict = PowerModels.parse_pti("../test/data/pti/frankenstein_00.raw")
         @test isa(data_dict, Dict)
 
         @test length(data_dict["CASE IDENTIFICATION"]) == 1
-        @test length(data_dict["CASE IDENTIFICATION"][1]) == 8
+        @test length(data_dict["CASE IDENTIFICATION"][1]) == 9
 
         @test length(data_dict["BUS"]) == 4
         for item in data_dict["BUS"]
@@ -62,7 +57,7 @@ using Memento, Memento.Test
     end
 
     @testset "20-bus frankenstein file" begin
-        data_dict = PowerModels.parse_pti("../test/data/frankenstein_20.raw")
+        data_dict = PowerModels.parse_pti("../test/data/pti/frankenstein_20.raw")
         @test isa(data_dict, Dict)
 
         @test length(data_dict["BRANCH"]) == 2
@@ -78,7 +73,7 @@ using Memento, Memento.Test
     end
 
     @testset "70-bus frankenstein file" begin
-        data_dict = PowerModels.parse_pti("../test/data/frankenstein_70.raw")
+        data_dict = PowerModels.parse_pti("../test/data/pti/frankenstein_70.raw")
         @test isa(data_dict, Dict)
 
         @test length(data_dict["TWO-TERMINAL DC"]) == 1
@@ -118,23 +113,23 @@ using Memento, Memento.Test
             @test length(item) == 19
         end
 
-        data_dict = PowerModels.parse_pti("../test/data/parser_test_e.raw")
+        data_dict = PowerModels.parse_pti("../test/data/pti/parser_test_e.raw")
         @test length(data_dict["MULTI-TERMINAL DC"][1]) == 10
 
-        data_dict = PowerModels.parse_pti("../test/data/parser_test_f.raw")
+        data_dict = PowerModels.parse_pti("../test/data/pti/parser_test_f.raw")
         @test length(data_dict["MULTI-TERMINAL DC"][1]) == 9
 
-        data_dict = PowerModels.parse_pti("../test/data/parser_test_g.raw")
+        data_dict = PowerModels.parse_pti("../test/data/pti/parser_test_g.raw")
         @test length(data_dict["MULTI-TERMINAL DC"][1]) == 8
 
     end
 
     @testset "0-bus case file" begin
-        @test_throws(getlogger(PowerModels), ArgumentError, PowerModels.parse_pti("../test/data/case0.raw"))
+        @test_throws(TESTLOG, ArgumentError, PowerModels.parse_pti("../test/data/pti/case0.raw"))
     end
 
     @testset "73-bus case file" begin
-        data_dict = PowerModels.parse_pti("../test/data/case73.raw")
+        data_dict = PowerModels.parse_pti("../test/data/pti/case73.raw")
         @test isa(data_dict, Dict)
 
         @test length(data_dict["BUS"]) == 73
