@@ -3,10 +3,6 @@
 # This will hopefully make everything more compositional
 ################################################################################
 
-"extracts the start value"
-function getstart(set, item_key, value_key, default = 0.0)
-    return get(get(set, item_key, Dict()), value_key, default)
-end
 
 function getval(comp::Dict{String,Any}, key::String, phase::Int, default=0.0)
     if haskey(comp, key)
@@ -50,7 +46,7 @@ function variable_voltage_real(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm
         [i in ids(pm, nw, :bus)], basename="$(nw)_$(ph)_vr",
         lowerbound = -ref(pm, nw, :bus, i, "vmax", ph),
         upperbound =  ref(pm, nw, :bus, i, "vmax", ph),
-        start = getstart(ref(pm, nw, :bus, i), "vr_start", ph, 1.0)
+        start = getval(ref(pm, nw, :bus, i), "vr_start", ph, 1.0)
     )
 end
 
@@ -60,7 +56,7 @@ function variable_voltage_imaginary(pm::GenericPowerModel; nw::Int=pm.cnw, ph::I
         [i in ids(pm, nw, :bus)], basename="$(nw)_$(ph)_vi",
         lowerbound = -ref(pm, nw, :bus, i, "vmax", ph),
         upperbound =  ref(pm, nw, :bus, i, "vmax", ph),
-        start = getstart(ref(pm, nw, :bus, i), "vi_start", ph)
+        start = getval(ref(pm, nw, :bus, i), "vi_start", ph)
     )
 end
 
@@ -75,7 +71,7 @@ function variable_voltage_magnitude_from_on_off(pm::GenericPowerModel; nw::Int=p
         [i in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_vm_fr",
         lowerbound = 0,
         upperbound = getmpv(buses[branches[i]["f_bus"]]["vmax"], ph),
-        start = getstart(ref(pm, nw, :branch, i), "vm_fr_start", ph, 1.0)
+        start = getval(ref(pm, nw, :branch, i), "vm_fr_start", ph, 1.0)
     )
 end
 
@@ -88,7 +84,7 @@ function variable_voltage_magnitude_to_on_off(pm::GenericPowerModel; nw::Int=pm.
         [i in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_vm_to",
         lowerbound = 0,
         upperbound = getmpv(buses[branches[i]["t_bus"]]["vmax"], ph),
-        start = getstart(ref(pm, nw, :branch, i), "vm_to_start", ph, 1.0)
+        start = getval(ref(pm, nw, :branch, i), "vm_to_start", ph, 1.0)
     )
 end
 
@@ -100,13 +96,13 @@ function variable_voltage_magnitude_sqr(pm::GenericPowerModel; nw::Int=pm.cnw, p
             [i in ids(pm, nw, :bus)], basename="$(nw)_$(ph)_w",
             lowerbound = ref(pm, nw, :bus, i, "vmin", ph)^2,
             upperbound = ref(pm, nw, :bus, i, "vmax", ph)^2,
-            start = getstart(ref(pm, nw, :bus, i), "w_start", ph, 1.001)
+            start = getval(ref(pm, nw, :bus, i), "w_start", ph, 1.001)
         )
     else
         var(pm, nw, ph)[:w] = @variable(pm.model,
             [i in ids(pm, nw, :bus)], basename="$(nw)_$(ph)_w",
             lowerbound = 0,
-            start = getstart(ref(pm, nw, :bus, i), "w_start", ph, 1.001)
+            start = getval(ref(pm, nw, :bus, i), "w_start", ph, 1.001)
         )
     end
 end
@@ -120,7 +116,7 @@ function variable_voltage_magnitude_sqr_from_on_off(pm::GenericPowerModel; nw::I
         [i in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_w_fr",
         lowerbound = 0,
         upperbound = getmpv(buses[branches[i]["f_bus"]]["vmax"], ph)^2,
-        start = getstart(ref(pm, nw, :branch, i), "w_fr_start", ph, 1.001)
+        start = getval(ref(pm, nw, :branch, i), "w_fr_start", ph, 1.001)
     )
 end
 
@@ -133,7 +129,7 @@ function variable_voltage_magnitude_sqr_to_on_off(pm::GenericPowerModel; nw::Int
         [i in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_w_to",
         lowerbound = 0,
         upperbound = getmpv(buses[branches[i]["t_bus"]]["vmax"], ph)^2,
-        start = getstart(ref(pm, nw, :branch, i), "w_to_start", ph, 1.001)
+        start = getval(ref(pm, nw, :branch, i), "w_to_start", ph, 1.001)
     )
 end
 
@@ -147,22 +143,22 @@ function variable_voltage_product(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int
             [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(ph)_wr",
             lowerbound = wr_min[bp],
             upperbound = wr_max[bp],
-            start = getstart(ref(pm, nw, :buspairs, bp), "wr_start", ph, 1.0)
+            start = getval(ref(pm, nw, :buspairs, bp), "wr_start", ph, 1.0)
         )
         var(pm, nw, ph)[:wi] = @variable(pm.model,
             wi[bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(ph)_wi",
             lowerbound = wi_min[bp],
             upperbound = wi_max[bp],
-            start = getstart(ref(pm, nw, :buspairs, bp), "wi_start", ph)
+            start = getval(ref(pm, nw, :buspairs, bp), "wi_start", ph)
         )
     else
         var(pm, nw, ph)[:wr] = @variable(pm.model,
             [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(ph)_wr",
-            start = getstart(ref(pm, nw, :buspairs, bp), "wr_start", ph, 1.0)
+            start = getval(ref(pm, nw, :buspairs, bp), "wr_start", ph, 1.0)
         )
         var(pm, nw, ph)[:wi] = @variable(pm.model,
             [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(ph)_wi",
-            start = getstart(ref(pm, nw, :buspairs, bp), "wi_start", ph)
+            start = getval(ref(pm, nw, :buspairs, bp), "wi_start", ph)
         )
     end
 end
@@ -176,13 +172,13 @@ function variable_voltage_product_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, 
         wr[b in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_wr",
         lowerbound = min(0, wr_min[bi_bp[b]]),
         upperbound = max(0, wr_max[bi_bp[b]]),
-        start = getstart(ref(pm, nw, :buspairs), bi_bp[b], "wr_start", 1.0)
+        start = getval(ref(pm, nw, :buspairs, bi_bp[b]), "wr_start", ph, 1.0)
     )
     var(pm, nw, ph)[:wi] = @variable(pm.model,
         wi[b in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_wi",
         lowerbound = min(0, wi_min[bi_bp[b]]),
         upperbound = max(0, wi_max[bi_bp[b]]),
-        start = getstart(ref(pm, nw, :buspairs, bi_bp[b]), "wi_start", ph)
+        start = getval(ref(pm, nw, :buspairs, bi_bp[b]), "wi_start", ph)
     )
 end
 
@@ -325,7 +321,7 @@ function variable_active_branch_flow_ne(pm::GenericPowerModel; nw::Int=pm.cnw, p
         [(l,i,j) in ref(pm, nw, :ne_arcs)], basename="$(nw)_$(ph)_p_ne",
         lowerbound = -ref(pm, nw, :ne_branch, l, "rate_a", ph),
         upperbound =  ref(pm, nw, :ne_branch, l, "rate_a", ph),
-        start = getstart(ref(pm, nw, :ne_branch, l), "p_start", ph)
+        start = getval(ref(pm, nw, :ne_branch, l), "p_start", ph)
     )
 end
 
@@ -335,7 +331,7 @@ function variable_reactive_branch_flow_ne(pm::GenericPowerModel; nw::Int=pm.cnw,
         q_ne[(l,i,j) in ref(pm, nw, :ne_arcs)], basename="$(nw)_$(ph)_q_ne",
         lowerbound = -ref(pm, nw, :ne_branch, l, "rate_a", ph),
         upperbound =  ref(pm, nw, :ne_branch, l, "rate_a", ph),
-        start = getstart(ref(pm, nw, :ne_branch, l), "q_start", ph)
+        start = getval(ref(pm, nw, :ne_branch, l), "q_start", ph)
     )
 end
 
@@ -346,7 +342,7 @@ function variable_branch_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, ph::In
         lowerbound = 0,
         upperbound = 1,
         category = :Int,
-        start = getstart(ref(pm, nw, :branch, l), "branch_z_start", ph, 1.0)
+        start = getval(ref(pm, nw, :branch, l), "branch_z_start", ph, 1.0)
     )
 end
 
@@ -357,6 +353,6 @@ function variable_branch_ne(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cp
         lowerbound = 0,
         upperbound = 1,
         category = :Int,
-        start = getstart(ref(pm, nw, :ne_branch, l), "branch_tnep_start", ph, 1.0)
+        start = getval(ref(pm, nw, :ne_branch, l), "branch_tnep_start", ph, 1.0)
     )
 end
