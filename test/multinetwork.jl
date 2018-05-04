@@ -3,39 +3,6 @@ PMs = PowerModels
 
 @testset "test multinetwork" begin
 
-    function build_mn_data(base_data)
-        mp_data = PowerModels.parse_file(base_data)
-        return InfrastructureModels.replicate(mp_data, 2)
-    end
-
-    function build_mn_data(base_data_1, base_data_2)
-        mp_data_1 = PowerModels.parse_file(base_data_1)
-        mp_data_2 = PowerModels.parse_file(base_data_2)
-        
-        @assert mp_data_1["per_unit"] == mp_data_2["per_unit"]
-        @assert mp_data_1["baseMVA"] == mp_data_2["baseMVA"]
-
-        mn_data = Dict{String,Any}(
-            "name" => "$(mp_data_1["name"]) + $(mp_data_2["name"])",
-            "multinetwork" => true,
-            "per_unit" => mp_data_1["per_unit"],
-            "baseMVA" => mp_data_1["baseMVA"],
-            "nw" => Dict{String,Any}()
-        )
-
-        delete!(mp_data_1, "multinetwork")
-        delete!(mp_data_1, "per_unit")
-        delete!(mp_data_1, "baseMVA")
-        mn_data["nw"]["1"] = mp_data_1
-
-        delete!(mp_data_2, "multinetwork")
-        delete!(mp_data_2, "per_unit")
-        delete!(mp_data_2, "baseMVA")
-        mn_data["nw"]["2"] = mp_data_2
-
-        return mn_data
-    end
-
     @testset "idempotent unit transformation" begin
         @testset "5-bus replicate case" begin
             mn_data = build_mn_data("../test/data/matpower/case5_dc.m")
@@ -256,17 +223,6 @@ PMs = PowerModels
         end
     end
 
-    # currently classed as an error
-    #=
-    @testset "single-network model with multi-network data" begin
-        # this works, but should throw a warning
-        mn_data = build_mn_data("../test/data/matpower/case5_asym.m")
-        result = run_ac_opf(mn_data, ipopt_solver)
-
-        @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 17551; atol = 1e0)
-    end
-    =#
 
     function post_mppf_test(pm::GenericPowerModel)
         for (n, network) in nws(pm)

@@ -16,6 +16,9 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
 
         for (n,nw_data) in pm.data["nw"]
             sol_nw = sol_nws[n] = Dict{String,Any}()
+            if haskey(nw_data, "phases")
+                sol_nw["phases"] = nw_data["phases"]
+            end
             pm.cnw = parse(Int, n)
             solution_builder(pm, sol_nw)
             data_nws[n] = Dict(
@@ -25,6 +28,9 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
             )
         end
     else
+        if haskey(pm.data, "phases")
+            sol["phases"] = pm.data["phases"]
+        end
         solution_builder(pm, sol)
         data["bus_count"] = length(pm.data["bus"])
         data["branch_count"] = length(pm.data["branch"])
@@ -53,9 +59,6 @@ end
 function init_solution(pm::GenericPowerModel)
     data_keys = ["per_unit", "baseMVA", "multinetwork"]
     sol = Dict{String,Any}(key => pm.data[key] for key in data_keys)
-    if haskey(pm.data, "phases")
-        sol["phases"] = pm.data["phases"]
-    end
     return sol
 end
 

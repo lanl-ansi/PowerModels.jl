@@ -51,6 +51,8 @@ include("multinetwork.jl")
 
 include("multiphase.jl")
 
+include("multi-nw-ph.jl")
+
 include("docs.jl")
 
 end

@@ -9,7 +9,7 @@
 
             @test InfrastructureModels.compare_dict(mp_data, build_mp_data("../test/data/matpower/case5_dc.m"))
         end
-        @testset "14+24 hybrid case" begin
+        @testset "24-bus replicate case" begin
             mp_data = build_mp_data("../test/data/matpower/case24.m")
 
             PowerModels.make_mixed_units(mp_data)
@@ -102,9 +102,9 @@
 
 
     @testset "test multi-phase opf variants" begin
-        @testset "ac 5-bus case" begin
-            mp_data = build_mp_data("../test/data/matpower/case5_dc.m")
+        mp_data = build_mp_data("../test/data/matpower/case5_dc.m")
 
+        @testset "ac 5-bus case" begin
             result = PowerModels.run_mp_opf(mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
@@ -116,8 +116,6 @@
         end
 
         @testset "dc 5-bus case" begin
-            mp_data = build_mp_data("../test/data/matpower/case5_dc.m")
-
             result = PowerModels.run_mp_opf(mp_data, DCPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
@@ -129,8 +127,6 @@
         end
 
         @testset "soc 5-bus case" begin
-            mp_data = build_mp_data("../test/data/matpower/case5_dc.m")
-
             result = PowerModels.run_mp_opf(mp_data, SOCWRPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal

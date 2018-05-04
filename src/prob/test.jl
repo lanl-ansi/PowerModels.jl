@@ -91,7 +91,7 @@ end
 
 
 ""
-function run_nm_mp_opf(file, model_constructor, solver; kwargs...)
+function run_mn_mp_opf(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_mn_mp_opf; multinetwork=true, multiphase=true, kwargs...)
 end
 
