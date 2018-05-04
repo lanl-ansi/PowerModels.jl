@@ -88,6 +88,6 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: Abstrac
 
     # place holder while debugging sdp constraint
     #for (i,j) in keys(pm.ref[:nw][n][:buspairs])
-    #    relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
+    #    InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     #end
 end

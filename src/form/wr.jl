@@ -28,7 +28,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: Abstrac
     wi = pm.var[:nw][n][:wi]
 
     for (i,j) in keys(pm.ref[:nw][n][:buspairs])
-        relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
+        InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     end
 end
 
@@ -95,9 +95,9 @@ function constraint_voltage_on_off(pm::GenericPowerModel{T}, n::Int) where T <: 
     constraint_voltage_product_on_off(pm, n)
 
     for (l,i,j) in pm.ref[:nw][n][:arcs_from]
-        relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
-        relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
-        relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
+        InfrastructureModels.relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
+        InfrastructureModels.relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
+        InfrastructureModels.relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
     end
 end
 
@@ -129,9 +129,9 @@ function constraint_voltage_ne(pm::GenericPowerModel{T}, n::Int) where T <: Abst
         @constraint(pm.model, w_to[l] <= z[l]*buses[branches[l]["t_bus"]]["vmax"]^2)
         @constraint(pm.model, w_to[l] >= z[l]*buses[branches[l]["t_bus"]]["vmin"]^2)
 
-        relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
-        relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
-        relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
+        InfrastructureModels.relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
+        InfrastructureModels.relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
+        InfrastructureModels.relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
     end
 end
 
@@ -438,7 +438,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: QCWRFor
     wi = pm.var[:nw][n][:wi]
 
     for (i,b) in pm.ref[:nw][n][:bus]
-        relaxation_sqr(pm.model, v[i], w[i])
+        InfrastructureModels.relaxation_sqr(pm.model, v[i], w[i])
     end
 
     for bp in keys(pm.ref[:nw][n][:buspairs])
@@ -447,12 +447,12 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: QCWRFor
 
         relaxation_sin(pm.model, td[bp], si[bp])
         relaxation_cos(pm.model, td[bp], cs[bp])
-        relaxation_product(pm.model, v[i], v[j], vv[bp])
-        relaxation_product(pm.model, vv[bp], cs[bp], wr[bp])
-        relaxation_product(pm.model, vv[bp], si[bp], wi[bp])
+        InfrastructureModels.relaxation_product(pm.model, v[i], v[j], vv[bp])
+        InfrastructureModels.relaxation_product(pm.model, vv[bp], cs[bp], wr[bp])
+        InfrastructureModels.relaxation_product(pm.model, vv[bp], si[bp], wi[bp])
 
         # this constraint is redudant and useful for debugging
-        #relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])
+        #InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])
    end
 
    for (i,branch) in pm.ref[:nw][n][:branch]
@@ -655,7 +655,7 @@ function constraint_voltage_on_off(pm::GenericPowerModel{T}, n::Int) where T <: 
     td_max = max(abs(td_lb), abs(td_ub))
 
     for (i,b) in pm.ref[:nw][n][:bus]
-        relaxation_sqr(pm.model, v[i], w[i])
+        InfrastructureModels.relaxation_sqr(pm.model, v[i], w[i])
     end
 
     constraint_voltage_magnitude_from_on_off(pm, n) # bounds on vm_fr
@@ -673,18 +673,18 @@ function constraint_voltage_on_off(pm::GenericPowerModel{T}, n::Int) where T <: 
 
         relaxation_sin_on_off(pm.model, td[l], si[l], z[l], td_max)
         relaxation_cos_on_off(pm.model, td[l], cs[l], z[l], td_max)
-        relaxation_product_on_off(pm.model, vm_fr[l], vm_to[l], vv[l], z[l])
-        relaxation_product_on_off(pm.model, vv[l], cs[l], wr[l], z[l])
-        relaxation_product_on_off(pm.model, vv[l], si[l], wi[l], z[l])
+        InfrastructureModels.relaxation_product_on_off(pm.model, vm_fr[l], vm_to[l], vv[l], z[l])
+        InfrastructureModels.relaxation_product_on_off(pm.model, vv[l], cs[l], wr[l], z[l])
+        InfrastructureModels.relaxation_product_on_off(pm.model, vv[l], si[l], wi[l], z[l])
 
         # this constraint is redudant and useful for debugging
-        #relaxation_complex_product(pm.model, w[i], w[j], wr[l], wi[l])
+        #InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[l], wi[l])
 
-        #cs4 = relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
-        relaxation_equality_on_off(pm.model, v[i], vm_fr[l], z[l])
-        relaxation_equality_on_off(pm.model, v[j], vm_to[l], z[l])
-        relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
-        relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
+        #cs4 = InfrastructureModels.relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
+        InfrastructureModels.relaxation_equality_on_off(pm.model, v[i], vm_fr[l], z[l])
+        InfrastructureModels.relaxation_equality_on_off(pm.model, v[j], vm_to[l], z[l])
+        InfrastructureModels.relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
+        InfrastructureModels.relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
 
         # to prevent this constraint from being posted on multiple parallel branchs
         # TODO needs on/off variant
@@ -788,7 +788,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: QCWRTri
     lambda_wi = pm.var[:nw][n][:lambda_wi]
 
     for (i,b) in pm.ref[:nw][n][:bus]
-        relaxation_sqr(pm.model, v[i], w[i])
+        InfrastructureModels.relaxation_sqr(pm.model, v[i], w[i])
     end
 
     for bp in keys(pm.ref[:nw][n][:buspairs])
@@ -797,11 +797,11 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: QCWRTri
 
         relaxation_sin(pm.model, td[bp], si[bp])
         relaxation_cos(pm.model, td[bp], cs[bp])
-        relaxation_trilinear(pm.model, v[i], v[j], cs[bp], wr[bp], lambda_wr[bp,:])
-        relaxation_trilinear(pm.model, v[i], v[j], si[bp], wi[bp], lambda_wi[bp,:])
+        InfrastructureModels.relaxation_trilinear(pm.model, v[i], v[j], cs[bp], wr[bp], lambda_wr[bp,:])
+        InfrastructureModels.relaxation_trilinear(pm.model, v[i], v[j], si[bp], wi[bp], lambda_wi[bp,:])
 
         # this constraint is redudant and useful for debugging
-        #relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])
+        #InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])
    end
 
    for (i,branch) in pm.ref[:nw][n][:branch]
