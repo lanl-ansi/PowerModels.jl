@@ -62,7 +62,7 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
 end
 
 # default generic constructor
-function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{String,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver())
+function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{String,Any}(), setting = Dict{String,Any}(), optimizer = nothing)
 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
@@ -79,7 +79,7 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
     cnw = minimum([k for k in keys(ref[:nw])])
 
     pm = GenericPowerModel{T}(
-        Model(solver = solver), # model
+        Model(optimizer = optimizer), # model
         data, # data
         setting, # setting
         Dict{String,Any}(), # solution
@@ -123,20 +123,35 @@ ext(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ext[:nw][n][key][idx]
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
-function setsolver(pm::GenericPowerModel, solver::MathProgBase.AbstractMathProgSolver)
+function setsolver(pm::GenericPowerModel, solver)
     MOIU.resetoptimizer!(pm.model, solver)
 end
 
-function JuMP.solve(pm::GenericPowerModel)
-    status, solve_time, solve_bytes_alloc, sec_in_gc = @timed solve(pm.model)
+function JuMP.optimize(pm::GenericPowerModel)
+    _, solve_time, solve_bytes_alloc, sec_in_gc = @timed optimize(pm.model)
 
-    try
-        solve_time = getsolvetime(pm.model)
-    catch
-        warn(LOGGER, "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
+    ts = JuMP.terminationstatus(pm.model)
+    ps = JuMP.primalstatus(pm.model)
+    ds = JuMP.dualstatus(pm.model)
+
+    #real_solve_time = getsolvetime(pm.model)
+
+    #if solve_time == nothing
+    #    warn(LOGGER, "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
+    #    real_solve_time = solve_time
+    #end
+
+    warn(LOGGER, "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
+    real_solve_time = solve_time
+
+    if ts == MathOptInterface.Success && pm == MathOptInterface.FeasiblePoint
+        return :LocalOptimal, real_solve_time
+    else
+        return :LocalInfeasible, real_solve_time
     end
 
-    return status, solve_time
+    # future return type
+    #return ts, ps, ds, real_solve_time
 end
 
 ""
@@ -176,9 +191,9 @@ end
 
 ""
 function solve_generic_model(pm::GenericPowerModel, solver; solution_builder = get_solution)
-    setsolver(pm.model, solver)
+    MOIU.resetoptimizer!(pm.model, solver)
 
-    status, solve_time = solve(pm)
+    status, solve_time = optimize(pm)
 
     return build_solution(pm, status, solve_time; solution_builder = solution_builder)
 end

@@ -3,8 +3,8 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
     # TODO assert that the model is solved
 
     if status != :Error
-        objective = getobjectivevalue(pm.model)
-        status = solver_status_dict(Symbol(typeof(pm.model.solver).name.module), status)
+        objective = JuMP.objectivevalue(pm.model)
+        status = solver_status_dict(Symbol(typeof(pm.model.moibackend).name.module), status)
     end
 
     sol = init_solution(pm)
@@ -31,7 +31,7 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
     end
 
     solution = Dict{String,Any}(
-        "solver" => string(typeof(pm.model.solver)),
+        "solver" => string(typeof(pm.model.moibackend)),
         "status" => status,
         "objective" => objective,
         "objective_lb" => guard_getobjbound(pm.model),
