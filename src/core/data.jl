@@ -1216,7 +1216,8 @@ end
 
 "feild names that should not be multi-phase values"
 phaseless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
-    "br_status", "gen_bus", "load_bus", "shunt_bus", "f_bus", "t_bus", "transformer"])
+    "br_status", "gen_bus", "load_bus", "shunt_bus", "f_bus", "t_bus",
+    "transformer", "area", "zone", "base_kv"])
 
 phase_matrix = Set(["br_r", "br_x"])
 
