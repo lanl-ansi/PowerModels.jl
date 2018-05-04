@@ -2,14 +2,16 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- Added support for three-winding transformers in PTI files
-- Added support for unit conversion in transformer entries of PTI files
-- Added support for transformer magnetizing admittance from PTI files
+- Added "source_id" to uniquely identify each component imported from a PTI file
 - Added support for extending PowerModels data with all PTI data fields
+- Extended support for PSS(R)E v33 data (three-winding transformers, two-terminal/vsc hvdc lines)
 - Removed multi-network filter option from objective functions (breaking)
 - Removed option to run multi-network data in single-network models (breaking)
-- Changed test MIP solver from GLPK to CBC
+- Removed add_bus_demand_setpoint function (breaking)
+- Changed parameters and improved performance of KCL constraints (breaking)
 - Improved robustness of matpower data parsing and transformation
+- Changed test MIP solver from GLPK to CBC
+- Fixed minor bug in Power Flow models when the data does not specify a refrence bus
 - Minor issues closed #251
 
 ### v0.6.1
@@ -18,7 +20,7 @@ PowerModels.jl Change Log
 
 ### v0.6.0
 - Dropped support for Julia v0.5 (breaking)
-- Added basic support for PSSE v33 raw data (incl. buses, loads, shunts, generators, branches and two-winding transformers)
+- Added basic support for PSS(R)E v33 data (buses, loads, shunts, generators, branches and two-winding transformers)
 - Added support for table-like data summary, #146
 - Added support for network topology processing
 - Added basic support for Branch Flow formulation variants

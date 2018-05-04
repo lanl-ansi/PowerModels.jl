@@ -62,6 +62,7 @@ sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[
 ```
 """
 
+
 function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractWForms
     w    = var(pm, n, h, :w, i)
     pg   = var(pm, n, h, :pg)

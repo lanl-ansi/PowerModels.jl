@@ -1,6 +1,6 @@
 # Quick Start Guide
 
-Once PowerModels is installed, Ipopt is installed, and a network data file (e.g. `"nesta_case3_lmbd.m"`) has been acquired, an AC Optimal Power Flow can be executed with,
+Once PowerModels is installed, Ipopt is installed, and a network data file (e.g. `"nesta_case3_lmbd.m"` or `"nesta_case3_lmbd.raw"`) has been acquired, an AC Optimal Power Flow can be executed with,
 
 ```julia
 using PowerModels
@@ -15,11 +15,15 @@ Similarly, a DC Optimal Power Flow can be executed with
 run_dc_opf("nesta_case3_lmbd.m", IpoptSolver())
 ```
 
+PTI `.raw` files in the PSS(R)E v33 specification can be run similarly, e.g. in the case of an AC Optimal Power Flow
+
+```julia
+run_ac_opf("nesta_case3_lmbd.raw", IpoptSolver())
+```
 
 ## Getting Results
 
-The run commands in PowerModels return detailed results data in the form of a dictionary.
-This dictionary can be saved for further processing as follows,
+The run commands in PowerModels return detailed results data in the form of a dictionary. Results dictionaries from either Matpower `.m` or PTI `.raw` files will be identical in format. This dictionary can be saved for further processing as follows,
 
 ```julia
 result = run_ac_opf("nesta_case3_lmbd.m", IpoptSolver())
@@ -71,7 +75,13 @@ network_data["load"]["3"]["qd"] = 0.0
 run_opf(network_data, ACPPowerModel, IpoptSolver())
 ```
 
-For additional details about the network data, see the [PowerModels Network Data Format](@ref) section.
+Network data parsed from PTI `.raw` files supports data extensions, i.e. data fields that are within the PSS(R)E specification, but not used by PowerModels for calculation. This can be achieve by
+
+```julia
+network_data = PowerModels.parse_file("nesta_case3_lmbd.raw"; import_all=true)
+```
+
+This network data can be modified in the same way as the previous Matpower `.m` file example. For additional details about the network data, see the [PowerModels Network Data Format](@ref) section.
 
 ## Inspecting AC and DC branch flow results
 The flow AC and DC branch results are not written to the result by default. To inspect the flow results, pass a settings Dict

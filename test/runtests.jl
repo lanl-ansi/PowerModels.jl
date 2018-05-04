@@ -24,35 +24,36 @@ scs_solver = SCSSolver(max_iters=1000000, verbose=0)
 
 include("common.jl")
 
-
 @testset "PowerModels" begin
 
-include("matpower.jl")
+    include("matpower.jl")
 
-include("pti.jl")
+    include("pti.jl")
 
-include("psse.jl")
+    include("psse.jl")
 
-include("output.jl")
+    include("output.jl")
 
-include("modify.jl")
+    include("modify.jl")
 
-include("data.jl")
+    include("data.jl")
 
-include("pf.jl")
+    include("pf.jl")
 
-include("opf.jl")
+    include("opf.jl")
 
-include("ots.jl")
+    include("ots.jl")
 
-include("tnep.jl")
+    include("tnep.jl")
 
-include("multinetwork.jl")
+    include("multinetwork.jl")
 
-include("multiphase.jl")
+    include("multiphase.jl")
 
-include("multi-nw-ph.jl")
+    include("multi-nw-ph.jl")
 
-include("docs.jl")
+    include("docs.jl")
+
+    include("docs.jl")
 
 end
