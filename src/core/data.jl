@@ -431,7 +431,7 @@ function _rescale_cost_model(comp::Dict{String,Any}, scale::Real, multiphase::Bo
                     comp["cost"][i] = item*(scale^(degree-i))
                 end
             else
-                warn(LOGGER, "Skipping generator cost model of type $(comp["model"]) in per unit transformation")
+                warn(LOGGER, "Skipping cost model of type $(comp["model"]) in per unit transformation")
             end
         else
             phases = length(comp["model"])
@@ -446,7 +446,7 @@ function _rescale_cost_model(comp::Dict{String,Any}, scale::Real, multiphase::Bo
                         comp["cost"][ph][i] = item*(scale^(degree-i))
                     end
                 else
-                    warn(LOGGER, "Skipping generator cost model of type $(comp["model"]) on phase $(ph) in per unit transformation")
+                    warn(LOGGER, "Skipping cost model of type $(comp["model"]) on phase $(ph) in per unit transformation")
                 end
             end
         end
