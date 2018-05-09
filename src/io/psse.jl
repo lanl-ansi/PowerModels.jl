@@ -651,7 +651,6 @@ function parse_psse(pti_data::Dict; import_all=false)::Dict
 
     rev = pop!(pti_data["CASE IDENTIFICATION"][1], "REV")
 
-    pm_data["multinetwork"] = false
     pm_data["per_unit"] = false
     pm_data["source_type"] = "pti"
     pm_data["source_version"] = VersionNumber("$rev")
