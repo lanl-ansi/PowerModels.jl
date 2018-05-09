@@ -246,6 +246,21 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         apply_func(dcline, "qmint", rescale)
         apply_func(dcline, "qmaxf", rescale)
         apply_func(dcline, "qminf", rescale)
+
+        if "model" in keys(dcline) && "cost" in keys(dcline)
+            if dcline["model"] == 1
+                for i in 1:2:length(dcline["cost"])
+                    dcline["cost"][i] = dcline["cost"][i]/mva_base
+                end
+            elseif dcline["model"] == 2
+                degree = length(dcline["cost"])
+                for (i, item) in enumerate(dcline["cost"])
+                    dcline["cost"][i] = item*mva_base^(degree-i)
+                end
+            else
+                warn(LOGGER, "Skipping dcline cost model of type $(dcline["model"]) in per unit transformation")
+            end
+        end
     end
 
     if haskey(data, "gen")
@@ -367,6 +382,21 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
         apply_func(dcline, "qmint", rescale)
         apply_func(dcline, "qmaxf", rescale)
         apply_func(dcline, "qminf", rescale)
+
+        if "model" in keys(dcline) && "cost" in keys(dcline)
+            if dcline["model"] == 1
+                for i in 1:2:length(dcline["cost"])
+                    dcline["cost"][i] = dcline["cost"][i]*mva_base
+                end
+            elseif dcline["model"] == 2
+                degree = length(dcline["cost"])
+                for (i, item) in enumerate(dcline["cost"])
+                    dcline["cost"][i] = item/mva_base^(degree-i)
+                end
+            else
+                warn(LOGGER, "Skipping dcline cost model of type $(dcline["model"]) in mixed units transformation")
+            end
+        end
     end
 
     if haskey(data, "gen")

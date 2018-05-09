@@ -23,7 +23,7 @@
         result = run_ac_opf("../test/data/matpower/case5_dc.m", ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 17760.2; atol = 1e0)
+        @test isapprox(result["objective"], 18156.2; atol = 1e0)
     end
     @testset "5-bus with pwl costs" begin
         result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
@@ -424,7 +424,7 @@ end
         result = run_generic_model("../test/data/matpower/case5_dc.m", ACPPowerModel, ipopt_solver, post_opf_var)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 17760.2; atol = 1e0)
+        @test isapprox(result["objective"], 18156.2; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_generic_model("../test/data/matpower/case6.m", ACPPowerModel, ipopt_solver, post_opf_var)
