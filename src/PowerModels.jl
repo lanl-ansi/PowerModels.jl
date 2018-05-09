@@ -3,11 +3,14 @@ isdefined(Base, :__precompile__) && __precompile__()
 module PowerModels
 
 using JSON
-using InfrastructureModels
-using MathProgBase
 using JuMP
+using InfrastructureModels
 using Compat
 using Memento
+
+using MathOptInterface
+const MOI = MathOptInterface
+const MOIU = MOI.Utilities
 
 import Compat: @__MODULE__
 

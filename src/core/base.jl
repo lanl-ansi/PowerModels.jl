@@ -6,10 +6,6 @@ export
     run_generic_model, build_generic_model, solve_generic_model,
     ids, ref, var, ext
 
-import MathOptInterface
-const MOI = MathOptInterface
-const MOIU = MOI.Utilities
-
 ""
 abstract type AbstractPowerFormulation end
 
@@ -122,32 +118,24 @@ ext(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ext[:nw][n][key]
 ext(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ext[:nw][n][key][idx]
 
 
-# TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
-function setsolver(pm::GenericPowerModel, solver)
-    MOIU.resetoptimizer!(pm.model, solver)
-end
-
-function JuMP.optimize(pm::GenericPowerModel)
-    _, solve_time, solve_bytes_alloc, sec_in_gc = @timed optimize(pm.model)
+function optimize(pm::GenericPowerModel)
+    _, timed_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize(pm.model)
 
     ts = JuMP.terminationstatus(pm.model)
     ps = JuMP.primalstatus(pm.model)
     ds = JuMP.dualstatus(pm.model)
 
-    #real_solve_time = getsolvetime(pm.model)
-
-    #if solve_time == nothing
-    #    warn(LOGGER, "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
-    #    real_solve_time = solve_time
-    #end
-
-    warn(LOGGER, "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
-    real_solve_time = solve_time
-
-    if ts == MathOptInterface.Success && pm == MathOptInterface.FeasiblePoint
-        return :LocalOptimal, real_solve_time
+    if MOI.canget(pm.model, MOI.SolveTime())
+        solve_time = MOI.get(pm.model, MOI.SolveTime())
     else
-        return :LocalInfeasible, real_solve_time
+        warn(LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
+        solve_time = timed_time
+    end
+
+    if ts == MOI.Success && ps == MOI.FeasiblePoint
+        return :LocalOptimal, solve_time
+    else
+        return :LocalInfeasible, solve_time
     end
 
     # future return type
@@ -190,8 +178,9 @@ function build_generic_model(data::Dict{String,Any}, model_constructor, post_met
 end
 
 ""
-function solve_generic_model(pm::GenericPowerModel, solver; solution_builder = get_solution)
-    MOIU.resetoptimizer!(pm.model, solver)
+function solve_generic_model(pm::GenericPowerModel, optimizer::MOI.AbstractOptimizer; solution_builder = get_solution)
+    MOI.empty!(optimizer)
+    MOIU.resetoptimizer!(pm.model, optimizer)
 
     status, solve_time = optimize(pm)
 

@@ -154,8 +154,8 @@ end
 "`-rate_a <= p[f_idx] <= rate_a`"
 function constraint_thermal_limit_from(pm::GenericPowerModel{T}, n::Int, f_idx, rate_a) where T <: AbstractDCPForm
     p_fr = pm.con[:nw][n][:sm_fr][f_idx[1]] = pm.var[:nw][n][:p][f_idx]
-    getlowerbound(p_fr) < -rate_a && setlowerbound(p_fr, -rate_a)
-    getupperbound(p_fr) > rate_a && setupperbound(p_fr, rate_a)
+    JuMP.lowerbound(p_fr) < -rate_a && setlowerbound(p_fr, -rate_a)
+    JuMP.upperbound(p_fr) > rate_a && setupperbound(p_fr, rate_a)
 end
 
 "Do nothing, this model is symmetric"

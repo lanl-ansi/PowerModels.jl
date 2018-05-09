@@ -338,7 +338,8 @@ end
     end
 end
 
-
+#=
+# not yet supported in MOI
 @testset "test sdp opf" begin
     @testset "3-bus case" begin
         result = run_opf("../test/data/matpower/case3.m", SDPWRMPowerModel, scs_solver)
@@ -367,7 +368,7 @@ end
     #    @test isapprox(result["objective"], 75153; atol = 1e0)
     #end
 end
-
+=#
 
 
 

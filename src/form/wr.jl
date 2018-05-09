@@ -505,11 +505,11 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, f
 
     td = pm.var[:nw][n][:td][(f_bus, t_bus)]
 
-    if getlowerbound(td) < angmin
+    if JuMP.lowerbound(td) < angmin
         setlowerbound(td, angmin)
     end
 
-    if getupperbound(td) > angmax
+    if JuMP.upperbound(td) > angmax
         setupperbound(td, angmax)
     end
 
@@ -703,9 +703,9 @@ function constraint_power_magnitude_sqr_on_off(pm::GenericPowerModel{T}, n::Int,
     z = pm.var[:nw][n][:branch_z][i]
 
     # TODO see if there is a way to leverage relaxation_complex_product_on_off here
-    w_ub = getupperbound(w)
-    cm_ub = getupperbound(cm)
-    z_ub = getupperbound(z)
+    w_ub = JuMP.upperbound(w)
+    cm_ub = JuMP.upperbound(cm)
+    z_ub = JuMP.upperbound(z)
 
     @constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm*z_ub/tm^2)
     @constraint(pm.model, p_fr^2 + q_fr^2 <= w_ub*cm*z/tm^2)

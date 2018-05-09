@@ -251,6 +251,8 @@ end
 end
 
 
+#= 
+# not yet supported in MOI
 @testset "test sdp pf" begin
     #=
     #seems to be having an issue on linux (04/02/18)
@@ -297,3 +299,4 @@ end
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
 end
+=#

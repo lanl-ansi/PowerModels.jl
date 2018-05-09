@@ -158,7 +158,7 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
         sol_item[param_name] = default_value(item)
         try
             variable = extract_var(var(pm, variable_symbol), idx, item)
-            sol_item[param_name] = scale(getvalue(variable), item)
+            sol_item[param_name] = scale(JuMP.resultvalue(variable), item)
         catch
         end
     end
@@ -222,7 +222,7 @@ function add_dual(
         sol_item[param_name] = default_value(item)
         try
             constraint = extract_con(con(pm, con_symbol), idx, item)
-            sol_item[param_name] = scale(getdual(constraint), item)
+            sol_item[param_name] = scale(JuMP.resultdual(constraint), item)
         catch
             info(LOGGER, "No constraint: $(con_symbol), $(idx)")
         end
