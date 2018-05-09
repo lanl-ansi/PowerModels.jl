@@ -11,6 +11,7 @@ PowerModels.jl Change Log
 - Removed add_bus_demand_setpoint function (breaking)
 - Changed parameters and improved performance of KCL constraints (breaking)
 - Improved robustness of matpower data parsing and transformation
+- Improved testing of convex relaxations
 - Changed test MIP solver from GLPK to CBC
 - Fixed bug where "info" messages were not printed by default
 - Fixed bug in dcline cost function unit conversion

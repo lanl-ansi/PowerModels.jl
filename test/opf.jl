@@ -19,6 +19,12 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17551; atol = 1e0)
     end
+    @testset "5-bus gap case" begin
+        result = run_ac_opf("../test/data/matpower/case5_gap.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], -27497.7; atol = 1e0)
+    end
     @testset "5-bus with dcline costs" begin
         result = run_ac_opf("../test/data/matpower/case5_dc.m", ipopt_solver)
 
@@ -65,6 +71,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17551; atol = 1e0)
     end
+    @testset "5-bus gap case" begin
+        result = run_opf("../test/data/matpower/case5_gap.m", ACRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], -27497.7; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
 
@@ -100,6 +112,12 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17551; atol = 1e0)
+    end
+    @testset "5-bus gap case" begin
+        result = run_opf("../test/data/matpower/case5_gap.m", ACTPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], -27438.7; atol = 1e0)
     end
     @testset "5-bus with pwl costs" begin
         result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
@@ -137,6 +155,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17479; atol = 1e0)
     end
+    @testset "5-bus gap case" begin
+        result = run_dc_opf("../test/data/matpower/case5_gap.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], -27410.0; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_dc_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
 
@@ -172,6 +196,12 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17693; atol = 1e0)
+    end
+    @testset "5-bus gap case" begin
+        result = run_opf("../test/data/matpower/case5_gap.m", DCPLLPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], -32710.0; atol = 1e0)
     end
     @testset "5-bus with pwl costs" begin
         result = run_opf("../test/data/matpower/case5_pwlc.m", DCPLLPowerModel, ipopt_solver)
@@ -215,6 +245,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 14999; atol = 1e0)
     end
+    @testset "5-bus gap case" begin
+        result = run_opf("../test/data/matpower/case5_gap.m", SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], -28237.3; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_opf("../test/data/matpower/case5_pwlc.m", SOCWRPowerModel, ipopt_solver)
 
@@ -254,6 +290,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 14999; atol = 1e0)
     end
+    @testset "5-bus gap case" begin
+        result = run_opf_bf("../test/data/matpower/case5_gap.m", SOCDFPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], -27660.4; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_opf_bf("../test/data/matpower/case5_pwlc.m", SOCDFPowerModel, ipopt_solver)
 
@@ -286,6 +328,12 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 15921; atol = 1e0)
+    end
+    @testset "5-bus gap case" begin
+        result = run_opf("../test/data/matpower/case5_gap.m", QCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], -27659.8; atol = 1e0)
     end
     @testset "5-bus with pwl costs" begin
         result = run_opf("../test/data/matpower/case5_pwlc.m", QCWRPowerModel, ipopt_solver)
@@ -322,6 +370,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 15816.9; atol = 1e0)
     end
+    @testset "5-bus gap case" begin
+        result = run_opf("../test/data/matpower/case5_gap.m", QCWRTriPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], -27659.8; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_opf("../test/data/matpower/case6.m", QCWRTriPowerModel, ipopt_solver)
 
@@ -353,6 +407,18 @@ end
     #    @test result["status"] == :Optimal
     #    @test isapprox(result["objective"], 16664; atol = 1e0)
     #end
+    #@testset "5-bus gap case" begin
+    #    result = run_opf("../test/data/matpower/case5_gap.m", SDPWRMPowerModel, scs_solver)
+
+    #    @test result["status"] == :Optimal
+    #    @test isapprox(result["objective"], TBD; atol = 1e0)
+    #end
+    @testset "14-bus case" begin
+        result = run_opf("../test/data/matpower/case14.m", SDPWRMPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 8079.97; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_opf("../test/data/matpower/case6.m", SDPWRMPowerModel, scs_solver)
 
@@ -419,6 +485,12 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17551; atol = 1e0)
+    end
+    @testset "5-bus gap case" begin
+        result = run_generic_model("../test/data/matpower/case5_gap.m", ACPPowerModel, ipopt_solver, post_opf_var)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], -27497.7; atol = 1e0)
     end
     @testset "5-bus with dcline costs" begin
         result = run_generic_model("../test/data/matpower/case5_dc.m", ACPPowerModel, ipopt_solver, post_opf_var)
