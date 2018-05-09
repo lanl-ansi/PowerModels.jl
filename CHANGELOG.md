@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added component_table function for building matrices from component data
 - Added "source_id" to uniquely identify each component imported from a PTI file
 - Added support for extending PowerModels data with all PTI data fields
 - Extended support for PSS(R)E v33 data (three-winding transformers, two-terminal/vsc hvdc lines)
