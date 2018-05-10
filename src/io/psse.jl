@@ -1,20 +1,5 @@
 # Parse PSS(R)E data from PTI file into PowerModels data format
 
-"""
-    calc_2term_reactive_power(power_demand, min_firing_angle, max_firing_angle)
-
-Calculates the lower and upper limits on the reactive power for a two-terminal
-DC line. See Kimbark (ISBN 0-471-47580-7), Ch 3, Eq (46). Overlap is assumed to
-be <60deg, i.e. the dc line is operating normally. See discussion in cited
-book above.
-"""
-function calc_2term_reactive_power(power_demand, min_firing_angle, max_firing_angle)
-    qmin = abs(power_demand * tand(min_firing_angle))
-    qmax = abs(power_demand * tand((acosd(cosd(max_firing_angle) + 1 / 2) / 2)))
-
-    return qmin, qmax
-end
-
 
 """
     init_bus!(bus, id)
@@ -552,17 +537,22 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["pmint"] = pop!(dcline, "SETVL") > 0 ? -power_demand : power_demand
             sub_data["pmaxt"] = 0.0
 
-            # How to properly use firing angles to calculate qmin, qmax?
-            # sub_data["qminf"], sub_data["qmaxf"] = calc_2term_reactive_power(power_demand, pop!(dcline, "ANMNR"), pop!(dcline, "ANMXR"))
-            # sub_data["qmint"], sub_data["qmaxt"] = calc_2term_reactive_power(power_demand, pop!(dcline, "ANMNI"), pop!(dcline, "ANMXI"))
+            anmn = []
+            for key in ["ANMNR", "ANMNI"]
+                if abs(dcline[key]) <= 90.
+                    push!(anmn, pop!(dcline, key))
+                else
+                    push!(anmn, 0)
+                    warn(LOGGER, "$key outside reasonable limits, setting to 0 degress")
+                end
+            end
 
-            # Relaxed qmin,qmax
-            sub_data["qmaxf"] = max(abs(sub_data["pminf"]), abs(sub_data["pmaxf"]))
-            sub_data["qmaxt"] = max(abs(sub_data["pmint"]), abs(sub_data["pmaxt"]))
-            sub_data["qminf"] = -sub_data["qmaxf"]
-            sub_data["qmint"] = -sub_data["qmaxt"]
+            sub_data["qmaxf"] = 0.0
+            sub_data["qmaxt"] = 0.0
+            sub_data["qminf"] = -max(abs(sub_data["pminf"]), abs(sub_data["pmaxf"])) * cosd(anmn[1])
+            sub_data["qmint"] = -max(abs(sub_data["pmint"]), abs(sub_data["pmaxt"])) * cosd(anmn[2])
 
-            # Can we use resistance to compute a loss?
+            # Can we use "number of bridges in series (NBR/NBI)" to compute a loss?
             sub_data["loss0"] = 0.0
             sub_data["loss1"] = 0.0
 

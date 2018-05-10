@@ -12,7 +12,7 @@ function set_costs!(data::Dict)
     end
 
     for (n, dcline) in data["dcline"]
-        dcline["cost"] = [0., 100., 0.]
+        dcline["cost"] = [0., 0., 0.]
         dcline["ncost"] = 3
         dcline["startup"] = 0.
         dcline["shutdown"] = 0.
