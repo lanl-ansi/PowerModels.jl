@@ -537,10 +537,20 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["pmint"] = pop!(dcline, "SETVL") > 0 ? -power_demand : power_demand
             sub_data["pmaxt"] = 0.0
 
+            anmn = []
+            for key in ["ANMNR", "ANMNI"]
+                if abs(dcline[key]) <= 90.
+                    push!(anmn, pop!(dcline, key))
+                else
+                    push!(anmn, 0)
+                    warn(LOGGER, "$key outside reasonable limits, setting to 0 degress")
+                end
+            end
+
             sub_data["qmaxf"] = 0.0
             sub_data["qmaxt"] = 0.0
-            sub_data["qminf"] = -max(abs(sub_data["pminf"]), abs(sub_data["pmaxf"])) * cosd(dcline["ANMMR"] <= 90. ? pop!(dcline, "ANMNR") : 90)
-            sub_data["qmint"] = -max(abs(sub_data["pmint"]), abs(sub_data["pmaxt"])) * cosd(dcline["ANMMI"] <= 90. ? pop!(dcline, "ANMNI") : 90)
+            sub_data["qminf"] = -max(abs(sub_data["pminf"]), abs(sub_data["pmaxf"])) * cosd(anmn[1])
+            sub_data["qmint"] = -max(abs(sub_data["pmint"]), abs(sub_data["pmaxt"])) * cosd(anmn[2])
 
             # Can we use "number of bridges in series (NBR/NBI)" to compute a loss?
             sub_data["loss0"] = 0.0
