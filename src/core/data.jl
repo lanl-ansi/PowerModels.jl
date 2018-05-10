@@ -145,6 +145,8 @@ function summary(io::IO, data::Dict{String,Any}; kwargs...)
     InfrastructureModels.summary(io, data; kwargs...)
 end
 
+component_table(data::Dict{String,Any}, component::String, args...) = InfrastructureModels.component_table(data, component, args...)
+
 
 "recursively applies new_data to data, overwriting information"
 function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})

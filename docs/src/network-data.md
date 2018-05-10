@@ -95,9 +95,10 @@ The following commands can be used to explore the network data dictionary genera
 network_data = PowerModels.parse_file("nesta_case3_lmbd.m")
 display(network_data) # raw dictionary
 PowerModels.print_summary(network_data) # quick table-like summary
+PowerModels.component_table(network_data, "bus", ["vmin", "vmax"]) # component data in matrix form
 ```
 
-The `print_summary` function generates a table-like text summary of the network data, which is helpful in quickly assessing the values in a data or solution dictionary.
+The `print_summary` function generates a table-like text summary of the network data, which is helpful in quickly assessing the values in a data or solution dictionary.  The `component_table` builds a matrix of data for a given component type where there is one row for each component and one column for each requested data field.  The first column of a component table is the component's identifier (i.e. the index).
 
 For a detailed list of all possible parameters refer to the specification document provided with [Matpower](http://www.pserc.cornell.edu/matpower/). The exception to this is that `"load"` and `"shunt"`, containing `"pd"`, `"qd"` and `"gs"`, `"bs"`, respectively, have been added as additional fields. These values are contained in `"bus"` in the original specification.
 

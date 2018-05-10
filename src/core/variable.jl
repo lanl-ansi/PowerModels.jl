@@ -141,7 +141,7 @@ function variable_voltage_product(pm::GenericPowerModel, n::Int=pm.cnw; bounded 
             start = getstart(pm.ref[:nw][n][:buspairs], bp, "wr_start", 1.0)
         )
         pm.var[:nw][n][:wi] = @variable(pm.model,
-            wi[bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_wi",
+            [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_wi",
             lowerbound = wi_min[bp],
             upperbound = wi_max[bp],
             start = getstart(pm.ref[:nw][n][:buspairs], bp, "wi_start")

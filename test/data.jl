@@ -43,6 +43,41 @@
 end
 
 
+@testset "test data component table" begin
+
+    @testset "5-bus tables" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+
+        ct1 = PowerModels.component_table(data, "bus", "va")
+        @test length(ct1) == 10
+        @test size(ct1,1) == 5
+        @test size(ct1,2) == 2
+
+        ct2 = PowerModels.component_table(data, "bus", ["vmin", "vmax"])
+        @test length(ct2) == 15
+        @test size(ct2,1) == 5
+        @test size(ct2,2) == 3
+
+        ct3 = PowerModels.component_table(data, "gen", ["pmin", "pmax", "qmin", "qmax"])
+        @test length(ct3) == 25
+        @test size(ct3,1) == 5
+        @test size(ct3,2) == 5
+    end
+
+    @testset "14-bus mixed type tables" begin
+        data = PowerModels.parse_file("../test/data/matpower/case14.m")
+
+        ct = PowerModels.component_table(data, "bus", ["vmin", "vmax", "bus_name", "none"])
+        @test length(ct) == 70
+        @test size(ct,1) == 14
+        @test size(ct,2) == 5
+        @test typeof(ct[1,4]) <: AbstractString
+        @test isnan(ct[1,5])
+    end
+
+end
+
+
 @testset "test idempotent units transformations" begin
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case3.m")

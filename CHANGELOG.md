@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added component_table function for building matrices from component data
 - Added "source_id" to uniquely identify each component imported from a PTI file
 - Added support for extending PowerModels data with all PTI data fields
 - Extended support for PSS(R)E v33 data (three-winding transformers, two-terminal/vsc hvdc lines)
@@ -10,9 +11,11 @@ PowerModels.jl Change Log
 - Removed add_bus_demand_setpoint function (breaking)
 - Changed parameters and improved performance of KCL constraints (breaking)
 - Improved robustness of matpower data parsing and transformation
+- Improved testing of convex relaxations
 - Changed test MIP solver from GLPK to CBC
 - Fixed bug where "info" messages were not printed by default
 - Fixed bug in dcline cost function unit conversion
+- Fixed bug where not all JuMP variables were anonymous
 - Fixed minor bug in Power Flow models when the data does not specify a reference bus
 - Minor issues closed #251
 
