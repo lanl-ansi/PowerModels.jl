@@ -323,8 +323,6 @@ Converts a Matpower dict into a PowerModels dict
 function matpower_to_powermodels(mp_data::Dict{String,Any})
     pm_data = deepcopy(mp_data)
 
-    pm_data["multinetwork"] = false
-
     # required default values
     if !haskey(pm_data, "dcline")
         pm_data["dcline"] = []

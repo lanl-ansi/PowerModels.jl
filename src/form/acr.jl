@@ -130,7 +130,7 @@ end
 function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractACRForm
     sol_dict = get(sol, "bus", Dict{String,Any}())
 
-    if pm.data["multinetwork"]
+    if ismultinetwork(pm)
         bus_dict = pm.data["nw"]["$(pm.cnw)"]["bus"]
     else
         bus_dict = pm.data["bus"]

@@ -212,7 +212,7 @@ function build_ref(data::Dict{String,Any})
     refs = Dict{Symbol,Any}()
     nws = refs[:nw] = Dict{Int,Any}()
 
-    if data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         nws_data = data["nw"]
     else
         nws_data = Dict{String,Any}("0" => data)

@@ -10,7 +10,8 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
     sol = init_solution(pm)
     data = Dict{String,Any}("name" => pm.data["name"])
 
-    if pm.data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(pm.data)
+        sol["multinetwork"] = true
         sol_nws = sol["nw"] = Dict{String,Any}()
         data_nws = data["nw"] = Dict{String,Any}()
 
@@ -51,7 +52,7 @@ end
 
 ""
 function init_solution(pm::GenericPowerModel)
-    data_keys = ["per_unit", "baseMVA", "multinetwork"]
+    data_keys = ["per_unit", "baseMVA"]
     return Dict{String,Any}(key => pm.data[key] for key in data_keys)
 end
 
@@ -143,7 +144,7 @@ end
 function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variable_symbol; index_name = "index", default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
     sol_dict = get(sol, dict_name, Dict{String,Any}())
 
-    if pm.data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(pm.data)
         data_dict = pm.data["nw"]["$(pm.cnw)"][dict_name]
     else
         data_dict = pm.data[dict_name]
@@ -207,7 +208,7 @@ function add_dual(
 )
     sol_dict = get(sol, dict_name, Dict{String,Any}())
 
-    if pm.data["multinetwork"]
+    if ismultinetwork(pm)
         data_dict = pm.data["nw"]["$(pm.cnw)"][dict_name]
     else
         data_dict = pm.data[dict_name]
