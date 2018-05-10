@@ -132,11 +132,11 @@ PowerModels.print_summary(network_data) # mixed units form
 Another useful helper function is `update_data`, which takes two network data dictionaries and updates the values in the first dictionary with the values from the second dictionary.  This is particularly helpful when applying sparse updates to network data.  A good example is using the solution of one computation to update the data in preparation for a second computation, like so,
 ```
 data = PowerModels.parse_file("nesta_case3_lmbd.m")
-opf_result = run_ac_opf(data, IpoptSolver())
+opf_result = run_ac_opf(data, IpoptOptimizer())
 PowerModels.print_summary(opf_result["solution"])
 
 PowerModels.update_data(data, opf_result["solution"])
-pf_result = run_ac_pf(data, IpoptSolver())
+pf_result = run_ac_pf(data, IpoptOptimizer())
 PowerModels.print_summary(pf_result["solution"])
 ```
 
@@ -144,7 +144,7 @@ A variety of helper functions are available for processing the topology of the n
 ```
 data = PowerModels.parse_file("nesta_case3_lmbd.m")
 PowerModels.propagate_topology_status(data)
-opf_result = run_ac_opf(data, IpoptSolver())
+opf_result = run_ac_opf(data, IpoptOptimizer())
 ```
 The `test/data/case7_tplgy.m` case provides an example of the kind of component status deductions that can be made.  The `propagate_topology_status` function can be helpful in diagnosing network models that converge to an infeasible solution.
 
