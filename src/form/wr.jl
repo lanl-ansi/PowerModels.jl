@@ -401,7 +401,7 @@ end
 function variable_current_magnitude_sqr(pm::GenericPowerModel{T}, n::Int=pm.cnw) where T
     buspairs = pm.ref[:nw][n][:buspairs]
     pm.var[:nw][n][:cm] = @variable(pm.model,
-        cm[bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_cm",
+        [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_cm",
         lowerbound = 0,
         upperbound = (buspairs[bp]["rate_a"]*buspairs[bp]["tap"]/buspairs[bp]["vm_fr_min"])^2,
         start = getstart(pm.ref[:nw][n][:buspairs], bp, "cm_start")

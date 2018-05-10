@@ -15,6 +15,7 @@ PowerModels.jl Change Log
 - Changed test MIP solver from GLPK to CBC
 - Fixed bug where "info" messages were not printed by default
 - Fixed bug in dcline cost function unit conversion
+- Fixed bug where not all JuMP variables were anonymous
 - Fixed minor bug in Power Flow models when the data does not specify a reference bus
 - Minor issues closed #251
 
