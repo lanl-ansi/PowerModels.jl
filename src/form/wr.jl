@@ -749,10 +749,10 @@ end
 function variable_multipliers(pm::GenericPowerModel{T}, n::Int=pm.cnw) where T <: QCWRTriForm
     buspairs = pm.ref[:nw][n][:buspairs]
     pm.var[:nw][n][:lambda_wr] = @variable(pm.model,
-        [bp in keys(pm.ref[:nw][n][:buspairs]), i=1:8], basename="$(n)_lambda",
+        [bp in keys(pm.ref[:nw][n][:buspairs]), i=1:8], basename="$(n)_wr_lambda_$(bp)_$(i)",
         lowerbound = 0, upperbound = 1)
     pm.var[:nw][n][:lambda_wi] = @variable(pm.model,
-        [bp in keys(pm.ref[:nw][n][:buspairs]), i=1:8], basename="$(n)_lambda",
+        [bp in keys(pm.ref[:nw][n][:buspairs]), i=1:8], basename="$(n)_wi_lambda_$(bp)_$(i)",
         lowerbound = 0, upperbound = 1)
 end
 
