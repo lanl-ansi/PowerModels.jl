@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- nothing
+
+### v0.7.0
 - Added component_table function for building matrices from component data
 - Added "source_id" to uniquely identify each component imported from a PTI file
 - Added support for extending PowerModels data with all PTI data fields
