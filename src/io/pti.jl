@@ -376,7 +376,7 @@ function parse_pti_data(data_string::String, sections::Array)
                 guess_section = ""
             end
 
-            if guess_section == section
+            if guess_section == section && length(sections) > 0
                 section = shift!(sections)
                 continue
             else
