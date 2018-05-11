@@ -74,5 +74,4 @@ import_remaining!
 create_starbus_from_transformer
 find_max_bus_id
 init_bus!
-calc_2term_reactive_power
 ```
