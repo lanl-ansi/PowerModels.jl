@@ -154,8 +154,6 @@ function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
 end
 
 
-InfrastructureModels.ismultinetwork(data::Dict{String,Any}) = (haskey(data, "multinetwork") && data["multinetwork"] == true)
-
 ""
 function apply_func(data::Dict{String,Any}, key::String, func)
     if haskey(data, key)
