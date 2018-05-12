@@ -172,7 +172,7 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
         ref = PowerModels.build_ref(data)
 
-        @assert !(data["multinetwork"])
+        @assert !PowerModels.InfrastructureModels.ismultinetwork(data)
         ref = ref[:nw][0]
 
         @test haskey(data, "name")

@@ -13,11 +13,13 @@ import Compat: @__MODULE__
 
 # Create our module level logger (this will get precompiled)
 const LOGGER = getlogger(@__MODULE__)
-setlevel!(LOGGER, "info")
 
 # Register the module level logger at runtime so that folks can access the logger via `getlogger(PowerModels)`
 # NOTE: If this line is not included then the precompiled `PowerModels.LOGGER` won't be registered at runtime.
-__init__() = Memento.register(LOGGER)
+function __init__()
+    Memento.register(LOGGER)
+    Memento.config(LOGGER, "info")
+end
 
 include("io/matpower.jl")
 include("io/common.jl")

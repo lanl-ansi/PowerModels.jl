@@ -407,7 +407,7 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
         ub[bp] = (getmpv(buspair["rate_a"],ph)*getmpv(buspair["tap"], ph)/getmpv(buspair["vm_fr_min"], ph))^2
     end
     var(pm, nw, ph)[:cm] = @variable(pm.model,
-        cm[bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(ph)_cm",
+        [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(ph)_cm",
         lowerbound = 0,
         upperbound = ub[bp],
         start = getval(buspairs[bp], "cm_start", ph)

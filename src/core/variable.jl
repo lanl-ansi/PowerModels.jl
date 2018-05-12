@@ -146,7 +146,7 @@ function variable_voltage_product(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int
             start = getval(ref(pm, nw, :buspairs, bp), "wr_start", ph, 1.0)
         )
         var(pm, nw, ph)[:wi] = @variable(pm.model,
-            wi[bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(ph)_wi",
+            [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(ph)_wi",
             lowerbound = wi_min[bp],
             upperbound = wi_max[bp],
             start = getval(ref(pm, nw, :buspairs, bp), "wi_start", ph)
@@ -169,13 +169,13 @@ function variable_voltage_product_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, 
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :branch)])
 
     var(pm, nw, ph)[:wr] = @variable(pm.model,
-        wr[b in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_wr",
+        [b in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_wr",
         lowerbound = min(0, wr_min[bi_bp[b]]),
         upperbound = max(0, wr_max[bi_bp[b]]),
         start = getval(ref(pm, nw, :buspairs, bi_bp[b]), "wr_start", ph, 1.0)
     )
     var(pm, nw, ph)[:wi] = @variable(pm.model,
-        wi[b in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_wi",
+        [b in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_wi",
         lowerbound = min(0, wi_min[bi_bp[b]]),
         upperbound = max(0, wi_max[bi_bp[b]]),
         start = getval(ref(pm, nw, :buspairs, bi_bp[b]), "wi_start", ph)
@@ -328,7 +328,7 @@ end
 "variable: `-ne_branch[l][\"rate_a\"] <= q_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
 function variable_reactive_branch_flow_ne(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph)
     var(pm, nw, ph)[:q_ne] = @variable(pm.model,
-        q_ne[(l,i,j) in ref(pm, nw, :ne_arcs)], basename="$(nw)_$(ph)_q_ne",
+        [(l,i,j) in ref(pm, nw, :ne_arcs)], basename="$(nw)_$(ph)_q_ne",
         lowerbound = -ref(pm, nw, :ne_branch, l, "rate_a", ph),
         upperbound =  ref(pm, nw, :ne_branch, l, "rate_a", ph),
         start = getval(ref(pm, nw, :ne_branch, l), "q_start", ph)

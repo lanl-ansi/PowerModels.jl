@@ -63,7 +63,7 @@ getmpv(value::MultiPhaseMatrix, phase_i::Int, phase_j::Int) = value[phase_i, pha
 
 ""
 function calc_theta_delta_bounds(data::Dict{String,Any})
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         error("calc_theta_delta_bounds does not yet support multinetwork data")
     end
 
@@ -174,6 +174,8 @@ function summary(io::IO, data::Dict{String,Any}; kwargs...)
     InfrastructureModels.summary(io, data; kwargs...)
 end
 
+component_table(data::Dict{String,Any}, component::String, args...) = InfrastructureModels.component_table(data, component, args...)
+
 
 "recursively applies new_data to data, overwriting information"
 function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
@@ -204,7 +206,7 @@ function make_per_unit(data::Dict{String,Any})
     if !haskey(data, "per_unit") || data["per_unit"] == false
         data["per_unit"] = true
         mva_base = data["baseMVA"]
-        if data["multinetwork"] == true
+        if InfrastructureModels.ismultinetwork(data)
             for (i,nw_data) in data["nw"]
                 _make_per_unit(nw_data, mva_base)
             end
@@ -313,7 +315,7 @@ function make_mixed_units(data::Dict{String,Any})
     if haskey(data, "per_unit") && data["per_unit"] == true
         data["per_unit"] = false
         mva_base = data["baseMVA"]
-        if data["multinetwork"]
+        if InfrastructureModels.ismultinetwork(data)
             for (i,nw_data) in data["nw"]
                 _make_mixed_units(nw_data, mva_base)
             end
@@ -456,7 +458,7 @@ end
 
 
 function check_phases(data::Dict{String,Any})
-    if data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
             _check_phases(nw_data)
         end
@@ -473,7 +475,7 @@ end
 
 "checks that phase angle differences are within 90 deg., if not tightens"
 function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1.0472)
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         error("check_voltage_angle_differences does not yet support multinetwork data")
     end
 
@@ -504,7 +506,7 @@ end
 
 "checks that each branch has a reasonable thermal rating, if not computes one"
 function check_thermal_limits(data::Dict{String,Any})
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         error("check_thermal_limits does not yet support multinetwork data")
     end
 
@@ -543,7 +545,7 @@ end
 
 "checks that all parallel branches have the same orientation"
 function check_branch_directions(data::Dict{String,Any})
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         error("check_branch_directions does not yet support multinetwork data")
     end
 
@@ -577,7 +579,7 @@ end
 
 "checks that all branches connect two distinct buses"
 function check_branch_loops(data::Dict{String,Any})
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         error("check_branch_loops does not yet support multinetwork data")
     end
 
@@ -591,7 +593,7 @@ end
 
 "checks that all buses are unique and other components link to valid buses"
 function check_connectivity(data::Dict{String,Any})
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         error("check_connectivity does not yet support multinetwork data")
     end
 
@@ -644,7 +646,7 @@ checks that each branch has a reasonable transformer parameters
 this is important because setting tap == 0.0 leads to NaN computations, which are hard to debug
 """
 function check_transformer_parameters(data::Dict{String,Any})
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         error("check_transformer_parameters does not yet support multinetwork data")
     end
 
@@ -674,7 +676,7 @@ end
 
 "checks bus types are consistent with generator connections, if not, fixes them"
 function check_bus_types(data::Dict{String,Any})
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         error("check_bus_types does not yet support multinetwork data")
     end
 
@@ -708,7 +710,7 @@ end
 
 "checks that parameters for dc lines are reasonable"
 function check_dcline_limits(data::Dict{String,Any})
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         error("check_dcline_limits does not yet support multinetwork data")
     end
 
@@ -755,7 +757,7 @@ end
 
 "throws warnings if generator and dc line voltage setpoints are not consistent with the bus voltage setpoint"
 function check_voltage_setpoints(data::Dict{String,Any})
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         error("check_voltage_setpoints does not yet support multinetwork data")
     end
 
@@ -791,7 +793,7 @@ end
 
 "throws warnings if cost functions are malformed"
 function check_cost_functions(data::Dict{String,Any})
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         error("check_cost_functions does not yet support multinetwork data")
     end
     if haskey(data, "phases")
@@ -850,7 +852,7 @@ Works on a PowerModels data dict, so that a it can be used without a GenericPowe
 Warning: this implementation has quadratic complexity, in the worst case
 """
 function propagate_topology_status(data::Dict{String,Any})
-    if data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
             _propagate_topology_status(nw_data)
         end
@@ -1031,7 +1033,7 @@ end
 determines the largest connected component of the network and turns everything else off
 """
 function select_largest_component(data::Dict{String,Any})
-    if data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
             _select_largest_component(nw_data)
         end
@@ -1064,7 +1066,7 @@ end
 checks that each connected components has a reference bus, if not, adds one
 """
 function check_refrence_buses(data::Dict{String,Any})
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
             _check_refrence_buses(nw_data)
         end
@@ -1163,7 +1165,7 @@ computes the connected components of the network graph
 returns a set of sets of bus ids, each set is a connected component
 """
 function connected_components(data::Dict{String,Any})
-    if haskey(data, "multinetwork") && data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         error("connected_components does not yet support multinetwork data")
     end
 
@@ -1223,7 +1225,7 @@ end
 
 "Transforms single-phase network data into multi-phase data"
 function make_multiphase(data::Dict{String,Any}, phases::Int)
-    if data["multinetwork"] == true
+    if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
             _make_multiphase(nw_data, phases)
         end
