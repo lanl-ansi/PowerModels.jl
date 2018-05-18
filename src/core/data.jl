@@ -40,6 +40,16 @@ Base.size(mpv::MultiPhaseValue, a...) = size(mpv.values, a...)
 Base.getindex(mpv::MultiPhaseValue, args...) = mpv.values[args...]
 
 Base.show(io::IO, mpv::MultiPhaseValue) = Base.show(io, mpv.values)
+
+Base.:+(a...) = +((isa(item, MultiPhaseValue) ? item.values : item for item in [a...])...)
+Base.:-(a...) = -((isa(item, MultiPhaseValue) ? item.values : item for item in [a...])...)
+Base.:*(a...) = *((isa(item, MultiPhaseValue) ? item.values : item for item in [a...])...)
+Base.:/(a...) = /((isa(item, MultiPhaseValue) ? item.values : item for item in [a...])...)
+Base.:^(a::MultiPhaseValue, b::Integer) = a.values^b
+Base.:^(a::MultiPhaseValue, b::AbstractFloat) = a.values^b
+Base.transpose(a::MultiPhaseValue) = a.values'
+Base.diagm(a::MultiPhaseValue) = diagm(a.values)
+
 JSON.lower(mpv::MultiPhaseValue) = mpv.values
 
 "converts a MultiPhaseValue value to a string in summary"
