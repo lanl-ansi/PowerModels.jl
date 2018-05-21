@@ -45,9 +45,3 @@ mpc.branch = [
 	3	 4	 0.00297	 0.0297	 0.00674	 426.0	 426.0	 426.0	 0.0	 0.0	 1	 -4.41979643164	 2.02540580579;
 	4	 5	 0.00297	 0.0297	 0.00674	 240.0	 240.0	 240.0	 0.0	 0.0	 1	 -5.06895761352	 -0.827924013964;
 ];
-
-%% dcline data
-%	fbus	tbus	status	Pf	Pt	Qf	Qt	Vf	Vt	Pmin	Pmax	QminF	QmaxF	QminT	QmaxT	loss0	loss1
-mpc.dcline = [
-	3	5	1	0 0	0	0	1.1	1.05555	0	0 	0	0	0 0	0	0;
-];
