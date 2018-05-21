@@ -86,15 +86,15 @@ This network data can be modified in the same way as the previous Matpower `.m` 
 ## Inspecting AC and DC branch flow results
 The flow AC and DC branch results are not written to the result by default. To inspect the flow results, pass a settings Dict
 ```julia
-result = run_opf("case3_dc.m", ACPPowerModel, IpoptSolver(), setting = Dict("output" => Dict("line_flows" => true)))
+result = run_opf("case3_dc.m", ACPPowerModel, IpoptSolver(), setting = Dict("output" => Dict("branch_flows" => true)))
 result["solution"]["dcline"]["1"]
 result["solution"]["branch"]["2"]
 ```
 
-The losses of a AC or DC branch can be derived:
+The losses of an AC or DC branch can be derived:
 ```julia
-loss_ac =  Dict(name => data["p_to"]+data["p_from"] for (name, data) in result["solution"]["branch"])
-loss_dc =  Dict(name => data["p_to"]+data["p_from"] for (name, data) in result["solution"]["dcline"])
+loss_ac =  Dict(name => data["pt"]+data["pf"] for (name, data) in result["solution"]["branch"])
+loss_dc =  Dict(name => data["pt"]+data["pf"] for (name, data) in result["solution"]["dcline"])
 ```
 
 
