@@ -44,8 +44,8 @@ function calc_series_current_magnitude_bound(branches, buses)
         g_sh_to = branch["g_to"]
         b_sh_fr = branch["b_fr"]
         b_sh_to = branch["b_to"]
-        zmag_fr = abs(g_sh_fr + im*b_sh_fr)
-        zmag_to = abs(g_sh_to + im*b_sh_to)
+        ymag_fr = abs(g_sh_fr + im*b_sh_fr)
+        ymag_to = abs(g_sh_to + im*b_sh_to)
 
         vmax_fr = bus_fr["vmax"]
         vmax_to = bus_fr["vmax"]
@@ -56,15 +56,47 @@ function calc_series_current_magnitude_bound(branches, buses)
         tap_to = 1 # no transformer on to side, keeps expressions symmetric.
         smax = branch["rate_a"]
 
-        cmax_tot_fr = smax*tap_fr/vmin_fr
-        cmax_tot_to = smax*tap_to/vmin_to
+        cmax_tot_fr = smax/(vmin_fr/tap_fr) #|I|=|S|/|U|
+        cmax_tot_to = smax/(vmin_to/tap_to)
 
-        cmax_sh_fr = zmag_fr * vmax_fr
-        cmax_sh_to = zmag_to * vmax_to
+        cmax_sh_fr = ymag_fr * (vmax_fr/tap_fr)
+        cmax_sh_to = ymag_to * (vmax_to/tap_to)
 
         cmax[key] = max(cmax_tot_fr + cmax_sh_fr, cmax_tot_to + cmax_sh_to)
     end
     return cmax
+end
+
+
+""
+function calc_series_active_power_bound(branches, buses)
+    pmax = Dict([(key, 0.0) for key in keys(branches)])
+    for (key, branch) in branches
+        bus_fr = buses[branch["f_bus"]]
+        g_sh_fr = branch["g_fr"]
+        vmax_fr = bus_fr["vmax"]
+        tap_fr = branch["tap"]
+        smax = branch["rate_a"]
+
+        pmax[key] = smax + abs(g_sh_fr) * (vmax_fr/tap_fr)^2
+    end
+    return pmax
+end
+
+
+""
+function calc_series_reactive_power_bound(branches, buses)
+    qmax = Dict([(key, 0.0) for key in keys(branches)])
+    for (key, branch) in branches
+        bus_fr = buses[branch["f_bus"]]
+        b_sh_fr = branch["g_fr"]
+        vmax_fr = bus_fr["vmax"]
+        tap_fr = branch["tap"]
+        smax = branch["rate_a"]
+
+        qmax[key] = smax + abs(b_sh_fr) * (vmax_fr/tap_fr)^2
+    end
+    return qmax
 end
 
 
