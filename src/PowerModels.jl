@@ -35,6 +35,7 @@ include("core/constraint.jl")
 include("core/relaxation_scheme.jl")
 include("core/objective.jl")
 include("core/solution.jl")
+include("core/multiphase.jl")
 
 include("form/acp.jl")
 include("form/acr.jl")
