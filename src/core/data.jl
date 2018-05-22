@@ -44,25 +44,20 @@ function calc_series_current_magnitude_bound(branches, buses)
         g_sh_to = branch["g_to"]
         b_sh_fr = branch["b_fr"]
         b_sh_to = branch["b_to"]
-        ymag_fr = abs(g_sh_fr + im*b_sh_fr)
-        ymag_to = abs(g_sh_to + im*b_sh_to)
+        r_s = branch["br_r"]
+        x_s = branch["br_x"]
 
         vmax_fr = bus_fr["vmax"]
         vmax_to = bus_fr["vmax"]
-        vmin_fr = bus_fr["vmin"]
-        vmin_to = bus_fr["vmin"]
 
         tap_fr = branch["tap"]
         tap_to = 1 # no transformer on to side, keeps expressions symmetric.
         smax = branch["rate_a"]
 
-        cmax_tot_fr = smax/(vmin_fr/tap_fr) #|I|=|S|/|U|
-        cmax_tot_to = smax/(vmin_to/tap_to)
+        cmax_p = (2*smax + abs(g_sh_fr)*vmax_fr^2 + abs(g_sh_to)*vmax_to^2)/(abs(r_s))
+        cmax_q = (2*smax + abs(b_sh_fr)*vmax_fr^2 + abs(b_sh_to)*vmax_to^2)/(abs(x_s))
 
-        cmax_sh_fr = ymag_fr * (vmax_fr/tap_fr)
-        cmax_sh_to = ymag_to * (vmax_to/tap_to)
-
-        cmax[key] = max(cmax_tot_fr + cmax_sh_fr, cmax_tot_to + cmax_sh_to)
+        cmax[key] = min(cmax_p, cmax_q)
     end
     return cmax
 end
