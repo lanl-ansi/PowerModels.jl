@@ -437,28 +437,25 @@ function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1
     assert("per_unit" in keys(data) && data["per_unit"])
 
     if haskey(data, "phases")
-        n = data["phases"]
-        shifted = haskey(data, "phases_offset") && data["phases_offset"] ? 1 : 0
-
-        for h in 1:n
+        for h in 1:data["phases"]
             for (i, branch) in data["branch"]
-                angmin = branch["angmin"][h] - 2*pi/n*(h-1) * shifted
-                angmax = branch["angmax"][h] - 2*pi/n*(h-1) * shifted
+                angmin = branch["angmin"][h]
+                angmax = branch["angmax"][h]
 
                 if angmin <= -pi/2
-                    warn(LOGGER, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $i, phase $h from $(rad2deg(angmin)) to -$(rad2deg(2*pi/n*(h-1)-default_pad)) deg.")
-                    branch["angmin"][h] = 2*pi/n*(h-1) * shifted - default_pad
+                    warn(LOGGER, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $i, phase $h from $(rad2deg(angmin)) to -$(rad2deg(default_pad)) deg.")
+                    branch["angmin"][h] = -default_pad
                 end
 
                 if angmax >= pi/2
-                    warn(LOGGER, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $i, phase $h from $(rad2deg(angmax)) to $(rad2deg(2*pi/n*(h-1)+default_pad)) deg.")
-                    branch["angmax"][h] = 2*pi/n*(h-1) * shifted + default_pad
+                    warn(LOGGER, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $i, phase $h from $(rad2deg(angmax)) to $(rad2deg(default_pad)) deg.")
+                    branch["angmax"][h] = default_pad
                 end
 
                 if angmin == 0.0 && angmax == 0.0
-                    warn(LOGGER, "angmin and angmax values are 0, widening these values on branch $i, phase $h to $(rad2deg(2*pi/n*(h-1))) +/- $(rad2deg(default_pad)) deg.")
-                    branch["angmin"][h] = 2*pi/n*(h-1) * shifted - default_pad
-                    branch["angmax"][h] = 2*pi/n*(h-1) * shifted + default_pad
+                    warn(LOGGER, "angmin and angmax values are 0, widening these values on branch $i, phase $h to +/- $(rad2deg(default_pad)) deg.")
+                    branch["angmin"][h] = -default_pad
+                    branch["angmax"][h] = default_pad
                 end
             end
         end
