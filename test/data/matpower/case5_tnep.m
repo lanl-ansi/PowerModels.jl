@@ -4,12 +4,6 @@ function mpc = case5_tnep
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 
-%% area data
-%	area	refbus
-mpc.areas = [
-	1	 4;
-];
-
 %% bus data
 %	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
 mpc.bus = [

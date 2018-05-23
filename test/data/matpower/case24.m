@@ -1,6 +1,7 @@
 % from pglib-opf - https://github.com/power-grid-lib/pglib-opf
 % tests missing angmin,angmax data correction
 % tests branch orientation data correction
+% tests mpc.areas
 
 function mpc = case24
 mpc.version = '2';

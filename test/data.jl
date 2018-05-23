@@ -13,7 +13,6 @@
         @test contains(output, "Table: load")
         @test contains(output, "Table: gen")
         @test contains(output, "Table: branch")
-        @test contains(output, "Table: areas")
     end
 
     @testset "5-bus summary from file location" begin
@@ -26,7 +25,6 @@
         @test contains(output, "Table: load")
         @test contains(output, "Table: gen")
         @test contains(output, "Table: branch")
-        @test contains(output, "Table: areas")
     end
 
     @testset "5-bus solution summary from dict" begin
