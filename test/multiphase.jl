@@ -187,4 +187,79 @@
         @test !InfrastructureModels.compare_dict(mp_data, build_mp_data("../test/data/matpower/case5_asym.m"))
     end
 
+
+    @testset "multiphase operations" begin
+        mp_data = build_mp_data("../test/data/matpower/case3.m")
+
+        a, b, c, d = mp_data["branch"]["1"]["br_r"], mp_data["branch"]["1"]["br_x"], mp_data["branch"]["1"]["b_fr"], mp_data["branch"]["1"]["b_to"]
+        e = PowerModels.MultiPhaseVector([0.225, 0.225, 0.225, 0.225])
+        angs_rad = mp_data["branch"]["1"]["angmin"]
+
+        # Transpose
+        @test all((a').values == (a).values)
+        @test all(c' == RowVector([0.225, 0.225, 0.225]))
+
+        # Basic Math (Matrices)
+        x = a + b
+        y = a - b
+        z = a * b
+        w = a / b
+
+        @test all(x.values - [0.685 0.0 0.0; 0.0 0.685 0.0; 0.0 0.0 0.685] .<= 1e-12)
+        @test all(y.values - [-0.555 0.0 0.0; 0.0 -0.555 0.0; 0.0 0.0 -0.555] .<= 1e-12)
+        @test all(z.values - [0.0403 0.0 0.0; 0.0 0.0403 0.0; 0.0 0.0 0.0403] .<= 1e-12)
+        @test all(w.values - [0.104839 0.0 0.0; 0.0 0.104839 0.0; 0.0 0.0 0.104839] .<= 1e-12)
+
+        @test isa(x, PowerModels.MultiPhaseMatrix)
+        @test isa(y, PowerModels.MultiPhaseMatrix)
+        @test isa(z, PowerModels.MultiPhaseMatrix)
+        @test isa(w, PowerModels.MultiPhaseMatrix)
+
+        # Basic Math Vectors
+        x = c + d
+        y = c - d
+        z = c^2
+
+        @test all(x.values - [0.45, 0.45, 0.45] .<= 1e-12)
+        @test all(y.values - [0.0, 0.0, 0.0] .<= 1e-12)
+        @test all(c .* d - [0.050625, 0.050625, 0.050625] .<= 1e-12)
+        @test all(c ./ d - [1.0, 1.0, 1.0] .<= 1e-12)
+        @test all(z.values - [0.050625, 0.050625, 0.050625] .<= 1e-12)
+
+        @test isa(x, PowerModels.MultiPhaseVector)
+        @test isa(y, PowerModels.MultiPhaseVector)
+        @test isa(z, PowerModels.MultiPhaseVector)
+
+        # Broadcasting
+        @test all(a .+ c - [0.29   0.225  0.225; 0.225  0.29   0.225; 0.225  0.225  0.29] .<= 1e-12)
+        @test all(c .+ b - [0.845  0.225  0.225; 0.225  0.845  0.225; 0.225  0.225  0.845] .<= 1e-12)
+        @test all(a.values .+ c - [0.29   0.225  0.225; 0.225  0.29   0.225; 0.225  0.225  0.29] .<= 1e-12)
+        @test all(c .+ b.values - [0.845  0.225  0.225; 0.225  0.845  0.225; 0.225  0.225  0.845] .<= 1e-12)
+
+        # Custom Functions
+        @test PowerModels.phases(c) == 3
+        @test PowerModels.phases(a) == 3
+        @test all(size(a) == (3,3))
+        @test isa(JSON.lower(a), Array)
+        @test all(JSON.lower(a) == a.values)
+        @test !isapprox(d, e)
+        @test getmpv(a, 1, 1) == a[1,1]
+
+        # diagm
+        @test all(diagm(c).values .== [0.225 0.0 0.0; 0.0 0.225 0.0; 0.0 0.0 0.225])
+
+        # rad2deg/deg2rad
+        angs_deg = rad2deg(angs_rad)
+        angs_deg_rad = deg2rad(angs_deg)
+        @test all(angs_deg.values - [-30.0, -30.0, -30.0] .<= 1e-12)
+        @test all(angs_deg_rad.values - angs_rad.values .<= 1e-12)
+
+        @test isa(angs_deg, PowerModels.MultiPhaseVector)
+        @test isa(deg2rad(angs_deg), PowerModels.MultiPhaseVector)
+
+        a_rad = rad2deg(a)
+        @test all(a_rad.values - [3.72423 0.0 0.0; 0.0 3.72423 0.0; 0.0 0.0 3.72423] .<= 1e-12)
+        @test isa(rad2deg(a), PowerModels.MultiPhaseMatrix)
+        @test isa(deg2rad(a), PowerModels.MultiPhaseMatrix)
+    end
 end
