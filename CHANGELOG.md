@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- nothing
+- Relaxed variable bounds in BFM to be consistent with BIM
 
 ### v0.7.0
 - Added component_table function for building matrices from component data
