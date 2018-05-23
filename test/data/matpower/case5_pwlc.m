@@ -1,7 +1,6 @@
-% NESTA v0.6.0
-% tests non-contiguous bus ids
+% tests pwl cost functions
 
-function mpc = nesta_case5_pjm
+function mpc = case5_pwlc
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 

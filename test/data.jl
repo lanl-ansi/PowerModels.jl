@@ -8,7 +8,7 @@
 
         line_count = count(c -> c == '\n', output)
         @test line_count >= 80 && line_count <= 100 
-        @test contains(output, "name: nesta_case5_pjm")
+        @test contains(output, "name: case5")
         @test contains(output, "Table: bus")
         @test contains(output, "Table: load")
         @test contains(output, "Table: gen")
@@ -21,7 +21,7 @@
 
         line_count = count(c -> c == '\n', output)
         @test line_count >= 80 && line_count <= 100 
-        @test contains(output, "name: nesta_case5_pjm")
+        @test contains(output, "name: case5")
         @test contains(output, "Table: bus")
         @test contains(output, "Table: load")
         @test contains(output, "Table: gen")

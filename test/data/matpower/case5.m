@@ -1,11 +1,9 @@
-% NESTA v0.6.0
 % used in tests of,
 % - non-contiguous bus ids
 % - tranformer orentation swapping
 % - dual values 
-%
 
-function mpc = nesta_case5_pjm
+function mpc = case5
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 
