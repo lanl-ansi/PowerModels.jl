@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Minor tidying of matpower test cases
 - Relaxed variable bounds in BFM to be consistent with BIM
 
 ### v0.7.0
