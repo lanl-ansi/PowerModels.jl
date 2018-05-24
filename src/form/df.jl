@@ -133,14 +133,16 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, h
     t_idx = (i, t_bus, f_bus)
 
     branch = ref(pm, n, :branch, i)
-    tm = branch["tap"]
+    tm = getmpv(branch["tap"], h)
     g, b = calc_branch_y(branch)
-    g_sh_fr = branch["g_fr"]
-    g_sh_to = branch["g_to"]
-    b_sh_fr = branch["b_fr"]
-    b_sh_to = branch["b_to"]
+    g, b = getmpv(g, h, h), getmpv(b, h, h)
+    g_sh_fr = getmpv(branch["g_fr"], h)
+    g_sh_to = getmpv(branch["g_to"], h)
+    b_sh_fr = getmpv(branch["b_fr"], h)
+    b_sh_to = getmpv(branch["b_to"], h)
 
     tr, ti = calc_branch_t(branch)
+    tr, ti = getmpv(tr, h), getmpv(ti, h)
 
     # convert series admittance to impedance
     z_s = 1/(g + im*b)
