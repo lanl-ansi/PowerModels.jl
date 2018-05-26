@@ -105,5 +105,7 @@ end
 
 
 getmpv(value::Any, phase::Int) = value
+getmpv(value::Any, phase_i::Int, phase_j::Int) = value
 getmpv(value::MultiPhaseVector, phase::Int) = value[phase]
+getmpv(value::MultiPhaseMatrix{T}, phase::Int) where T = MultiPhaseVector{T}(value[phase])
 getmpv(value::MultiPhaseMatrix, phase_i::Int, phase_j::Int) = value[phase_i, phase_j]
