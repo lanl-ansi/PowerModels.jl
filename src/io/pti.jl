@@ -247,13 +247,15 @@ data types given by `section` and saved into `data::Dict`
 
 """
 function parse_line_element!(data::Dict, elements::Array, section::AbstractString)
+    missing = []
     for (field, dtype) in get_pti_dtypes(section)
         try
             element = shift!(elements)
         catch message
             if isa(message, ArgumentError)
                 debug(LOGGER, "Have run out of elements in $section at $field")
-                break
+                push!(missing, field)
+                continue
             end
         end
 
@@ -281,6 +283,11 @@ function parse_line_element!(data::Dict, elements::Array, section::AbstractStrin
                 error(LOGGER, message)
             end
         end
+    end
+
+    if length(missing) > 0
+        missing_str = join(missing, ", ")
+        warn(LOGGER, "The following fields in $section are missing: $missing_str")
     end
 end
 
