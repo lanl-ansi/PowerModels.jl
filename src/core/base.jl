@@ -130,6 +130,9 @@ ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][k
 ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, ph::Int=pm.cph) = getmpv(pm.ref[:nw][nw][key][idx][param], ph)
 
 
+Base.var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
+Base.var(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
+Base.var(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
 Base.var(pm::GenericPowerModel, nw::Int, ph::Int) = pm.var[:nw][nw][:ph][ph]
 Base.var(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.var[:nw][nw][:ph][ph][key]
 Base.var(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.var[:nw][nw][:ph][ph][key][idx]
@@ -138,7 +141,9 @@ Base.var(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw
 Base.var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph][key]
 Base.var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph][key][idx]
 
-
+con(pm::GenericPowerModel, nw::Int) = pm.con[:nw][nw]
+con(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.con[:nw][nw][key]
+con(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.con[:nw][nw][key][idx]
 con(pm::GenericPowerModel, nw::Int, ph::Int) = pm.con[:nw][nw][:ph][ph]
 con(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.con[:nw][nw][:ph][ph][key]
 con(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.con[:nw][nw][:ph][ph][key][idx]
