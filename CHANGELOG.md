@@ -2,6 +2,10 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- nothing
+
+### v0.7.1
+- Added warning when data is missing in a PTI file
 - Minor tidying of matpower test cases
 - Relaxed variable bounds in BFM to be consistent with BIM
 
