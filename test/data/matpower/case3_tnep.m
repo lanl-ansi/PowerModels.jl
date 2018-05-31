@@ -1,5 +1,6 @@
-% based on NESTA v0.6.0
-function mpc = case3_lmbd_tnep
+% tests extra data needed for tnep problems
+
+function mpc = case3_tnep
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 

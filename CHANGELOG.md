@@ -8,6 +8,11 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.7.1
+- Added warning when data is missing in a PTI file
+- Minor tidying of matpower test cases
+- Relaxed variable bounds in BFM to be consistent with BIM
+
 ### v0.7.0
 - Added component_table function for building matrices from component data
 - Added "source_id" to uniquely identify each component imported from a PTI file

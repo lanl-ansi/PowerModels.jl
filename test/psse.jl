@@ -184,7 +184,10 @@ end
         @test_warn(TESTLOG, "Could not find bus 1, returning 0 for field vm",
                    PowerModels.get_bus_value(1, "vm", dummy_data))
 
-        @test_warn(getlogger(PowerModels), "PTI v33.0.0 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.",
+        @test_warn(TESTLOG, "PTI v33.0.0 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.",
+                   PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
+
+        @test_warn(TESTLOG, "The following fields in BUS are missing: NVHI, NVLO, EVHI, EVLO",
                    PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
 
         setlevel!(TESTLOG, "error")

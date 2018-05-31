@@ -3,16 +3,6 @@
 
 ""
 function calc_theta_delta_bounds(data::Dict{String,Any})
-    if InfrastructureModels.ismultinetwork(data)
-        error("calc_theta_delta_bounds does not yet support multinetwork data")
-    end
-
-    phases = 1
-    if haskey(data, "phases")
-        phases = data["phases"]
-    end
-    phase_ids = 1:phases
-
     bus_count = length(data["bus"])
     branches = [branch for branch in values(data["branch"])]
     if haskey(data, "ne_branch")
@@ -21,6 +11,12 @@ function calc_theta_delta_bounds(data::Dict{String,Any})
 
     angle_min = Real[]
     angle_max = Real[]
+
+    phases = 1
+    if haskey(data, "phases")
+        phases = data["phases"]
+    end
+    phase_ids = 1:phases
 
     for ph in phase_ids
         angle_mins = [getmpv(branch["angmin"], ph) for branch in branches]

@@ -26,10 +26,13 @@ end
 
 function variable_active_branch_series_flow(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
+        branches = ref(pm, nw, :branch)
+        buses = ref(pm, nw, :bus)
+        pmax = calc_series_active_power_bound(branches, buses, ph)
         var(pm, nw, ph)[:p_s] = @variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(ph)_p_s",
-            lowerbound = -ref(pm, nw, :branch, l, "rate_a", ph),
-            upperbound =  ref(pm, nw, :branch, l, "rate_a", ph),
+            lowerbound = -pmax[l],
+            upperbound =  pmax[l],
             start = getval(ref(pm, nw, :branch, l), "p_start", ph)
         )
     else
@@ -43,10 +46,13 @@ end
 
 function variable_reactive_branch_series_flow(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true)
     if bounded
+        branches = ref(pm, nw, :branch)
+        buses = ref(pm, nw, :bus)
+        qmax = calc_series_reactive_power_bound(branches, buses, ph)
         var(pm, nw, ph)[:q_s] = @variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(ph)_q_s",
-            lowerbound = -ref(pm, nw, :branch, l, "rate_a", ph),
-            upperbound =  ref(pm, nw, :branch, l, "rate_a", ph),
+            lowerbound = -qmax[l],
+            upperbound =  qmax[l],
             start = getval(ref(pm, nw, :branch, l), "q_start", ph)
         )
     else
@@ -96,11 +102,11 @@ function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::In
     ccm =  var(pm, n, h, :ccm, i)
 
     #define series flow expressions to simplify Ohm's law
-    p_fr_s = p_fr - g_sh_fr*(w_fr/tm^2)
-    q_fr_s = q_fr + b_sh_fr*(w_fr/tm^2)
+    p_s_fr = p_fr - g_sh_fr*(w_fr/tm^2)
+    q_s_fr = q_fr + b_sh_fr*(w_fr/tm^2)
 
     #KVL over the line:
-    @constraint(pm.model, w_to == (w_fr/tm^2) - 2*(r*p_fr_s + x*q_fr_s) + (r^2 + x^2)*ccm)
+    @constraint(pm.model, w_to == (w_fr/tm^2) - 2*(r*p_s_fr + x*q_s_fr) + (r^2 + x^2)*ccm)
 
 end
 
