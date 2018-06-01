@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- nothing
+
+### v0.7.2
 - Removed Memento depreciation warnings
 
 ### v0.7.1
