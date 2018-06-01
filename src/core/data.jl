@@ -396,7 +396,7 @@ function _rescale_cost_model(comp::Dict{String,Any}, scale::Real, multiphase::Bo
                         comp["cost"][ph][i] = item*(scale^(degree-i))
                     end
                 else
-                    warn(LOGGER, "Skipping cost model of type $(comp["model"]) on phase $(ph) in per unit transformation")
+                    warn(LOGGER, "Skipping cost model of type $(comp["model"][ph]) on phase $(ph) in per unit transformation")
                 end
             end
         end
@@ -844,14 +844,14 @@ function _propagate_topology_status(data::Dict{String,Any})
     buses = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
 
     for (i,load) in data["load"]
-        if load["status"] != 0 && load["pd"] == 0.0 && load["qd"] == 0.0
+        if load["status"] != 0 && all(load["pd"] .== 0.0) && all(load["qd"] .== 0.0)
             info(LOGGER, "deactivating load $(load["index"]) due to zero pd and qd")
             load["status"] = 0
         end
     end
 
     for (i,shunt) in data["shunt"]
-        if shunt["status"] != 0 && shunt["gs"] == 0.0 && shunt["bs"] == 0.0
+        if shunt["status"] != 0 && all(shunt["gs"] .== 0.0) && all(shunt["bs"] .== 0.0)
             info(LOGGER, "deactivating shunt $(shunt["index"]) due to zero gs and bs")
             shunt["status"] = 0
         end
@@ -1004,7 +1004,7 @@ function _propagate_topology_status(data::Dict{String,Any})
 
     info(LOGGER, "topology status propagation fixpoint reached in $(iteration) rounds")
 
-    check_refrence_buses(data)
+    check_reference_buses(data)
 end
 
 
@@ -1039,26 +1039,26 @@ function _select_largest_component(data::Dict{String,Any})
         end
     end
 
-    check_refrence_buses(data)
+    check_reference_buses(data)
 end
 
 
 """
 checks that each connected components has a reference bus, if not, adds one
 """
-function check_refrence_buses(data::Dict{String,Any})
+function check_reference_buses(data::Dict{String,Any})
     if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
-            _check_refrence_buses(nw_data)
+            _check_reference_buses(nw_data)
         end
     else
-        _check_refrence_buses(data)
+        _check_reference_buses(data)
     end
 end
 
 
 ""
-function _check_refrence_buses(data::Dict{String,Any})
+function _check_reference_buses(data::Dict{String,Any})
     bus_lookup = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
     bus_gen = bus_gen_lookup(data["gen"], data["bus"])
 

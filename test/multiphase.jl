@@ -1,3 +1,44 @@
+TESTLOG = getlogger(PowerModels)
+
+""
+function post_tp_opf(pm::PowerModels.GenericPowerModel)
+    for h in PowerModels.phase_ids(pm)
+        PowerModels.variable_voltage(pm, ph=h)
+        PowerModels.variable_generation(pm, ph=h)
+        PowerModels.variable_branch_flow(pm, ph=h)
+        PowerModels.variable_dcline_flow(pm, ph=h)
+    end
+
+    for h in PowerModels.phase_ids(pm)
+        PowerModels.constraint_voltage(pm, ph=h)
+
+        for i in ids(pm, :ref_buses)
+            PowerModels.constraint_theta_ref(pm, i, ph=h)
+        end
+
+        for i in ids(pm, :bus)
+            PowerModels.constraint_kcl_shunt(pm, i, ph=h)
+        end
+
+        for i in ids(pm, :branch)
+            PowerModels.constraint_ohms_yt_from(pm, i, ph=h)
+            PowerModels.constraint_ohms_yt_to(pm, i, ph=h)
+
+            PowerModels.constraint_voltage_angle_difference(pm, i, ph=h)
+
+            PowerModels.constraint_thermal_limit_from(pm, i, ph=h)
+            PowerModels.constraint_thermal_limit_to(pm, i, ph=h)
+        end
+
+        for i in ids(pm, :dcline)
+            PowerModels.constraint_dcline(pm, i, ph=h)
+        end
+    end
+
+    PowerModels.objective_min_fuel_cost(pm)
+end
+
+
 @testset "test multiphase" begin
 
     @testset "idempotent unit transformation" begin
@@ -187,6 +228,106 @@
         @test !InfrastructureModels.compare_dict(mp_data, build_mp_data("../test/data/matpower/case5_asym.m"))
     end
 
+
+    @testset "test errors and warnings" begin
+        data = PowerModels.parse_file("../test/data/matpower/case3.m")
+        data["gen"]["1"]["model"] = 3
+
+        mp_data_2p = PowerModels.parse_file("../test/data/matpower/case3.m")
+        mp_data_3p = PowerModels.parse_file("../test/data/matpower/case3.m")
+
+        PowerModels.make_multiphase(mp_data_2p, 2)
+        PowerModels.make_multiphase(mp_data_3p, 3)
+
+        mp_data_2p["gen"]["1"]["model"] = [3, 1]
+
+        @test_throws(TESTLOG, ErrorException, PowerModels.update_data(mp_data_2p, mp_data_3p))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_keys(mp_data_3p, ["load"]))
+
+        setlevel!(TESTLOG, "warn")
+        TESTLOG.propagate = false
+
+        @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units(data))
+        @test_warn(TESTLOG, "Skipping cost model of type 3 on phase 1 in per unit transformation", PowerModels.make_mixed_units(mp_data_2p))
+
+        PowerModels.make_per_unit(mp_data_2p)
+
+        @test_nowarn PowerModels.check_voltage_angle_differences(mp_data_3p)
+
+        mp_data_2p["branch"]["1"]["angmin"] = [-pi, 0]
+        mp_data_2p["branch"]["1"]["angmax"] = [ pi, 0]
+
+        @test_warn(TESTLOG, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch 1, phase 1 from -180.0 to -60.0001403060998 deg.",
+            PowerModels.check_voltage_angle_differences(mp_data_2p))
+
+        mp_data_2p["branch"]["1"]["angmin"] = [-pi, 0]
+        mp_data_2p["branch"]["1"]["angmax"] = [ pi, 0]
+
+        @test_warn(TESTLOG, "angmin and angmax values are 0, widening these values on branch 1, phase 2 to +/- 60.0001403060998 deg.",
+            PowerModels.check_voltage_angle_differences(mp_data_2p))
+
+        mp_data_2p["branch"]["1"]["angmin"] = [-pi, 0]
+        mp_data_2p["branch"]["1"]["angmax"] = [ pi, 0]
+
+        @test_warn(TESTLOG, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch 1, phase 1 from 180.0 to 60.0001403060998 deg.",
+            PowerModels.check_voltage_angle_differences(mp_data_2p))
+
+        @test_warn(TESTLOG, "skipping network that is already multiphase", PowerModels.make_multiphase(mp_data_3p, 3))
+
+        mp_data_3p["load"]["1"]["pd"] = mp_data_3p["load"]["1"]["qd"] = [0, 0, 0]
+        mp_data_3p["shunt"]["1"] = Dict{String,Any}("gs"=>[0,0,0], "bs"=>[0,0,0], "status"=>1, "shunt_bus"=>1, "index"=>1)
+
+        PowerModels.propagate_topology_status(mp_data_3p)
+
+        @test mp_data_3p["load"]["1"]["status"] == 0
+        @test mp_data_3p["shunt"]["1"]["status"] == 0
+
+        setlevel!(TESTLOG, "error")
+        TESTLOG.propagate = true
+
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_thermal_limits(mp_data_3p))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_branch_directions(mp_data_3p))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_transformer_parameters(mp_data_3p))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_setpoints(mp_data_3p))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_dcline_limits(mp_data_3p))
+
+        @test_throws(TESTLOG, ErrorException, PowerModels.run_ac_opf(mp_data_3p, ipopt_solver))
+
+        mp_data_3p["branch"]["1"]["f_bus"] = mp_data_3p["branch"]["1"]["t_bus"] = 1
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_branch_loops(mp_data_3p))
+
+        mp_data_3p["phases"] = 0
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_phases(mp_data_3p))
+
+    end
+
+    @testset "multiphase extensions" begin
+        mp_data = build_mp_data("../test/data/matpower/case3.m")
+        pm = build_generic_model(mp_data, PowerModels.ACPPowerModel, post_tp_opf; multiphase=true)
+
+        @test haskey(var(pm, pm.cnw), :ph)
+        @test length(var(pm, pm.cnw)) == 1
+
+        @test length(var(pm, pm.cnw, :ph)) == 3
+        @test length(var(pm, pm.cnw, :ph, 1)) == 8
+        @test length(var(pm)) == 8
+        @test haskey(var(pm, pm.cnw, :ph, 1), :vm)
+        @test var(pm, :vm, 1) == var(pm, pm.cnw, pm.cph, :vm, 1)
+
+        @test haskey(PowerModels.con(pm, pm.cnw), :ph)
+        @test length(PowerModels.con(pm, pm.cnw)) == 1
+        @test length(PowerModels.con(pm, pm.cnw, :ph)) == 3
+        @test length(PowerModels.con(pm, pm.cnw, :ph, 1)) == 4
+        @test PowerModels.con(pm, pm.cnw, pm.cph, :kcl_p, 1) == PowerModels.con(pm, :kcl_p, 1)
+
+        @test length(PowerModels.ref(pm, pm.cnw)) == 37
+        @test length(PowerModels.ref(pm)) == 37
+        @test PowerModels.ref(pm, pm.cnw, :bus, 1, "bus_i") == 1
+        @test PowerModels.ref(pm, :bus, 1, "vmax") == 1.1
+
+
+    end
 
     @testset "multiphase operations" begin
         mp_data = build_mp_data("../test/data/matpower/case3.m")
