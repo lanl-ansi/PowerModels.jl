@@ -326,6 +326,7 @@ end
         @test PowerModels.ref(pm, :bus, 1, "vmax") == 1.1
 
         @test PowerModels.ismultiphase(pm)
+        @test PowerModels.ismultiphase(pm, pm.cnw)
 
         @test length(PowerModels.nw_ids(pm)) == 1
     end
