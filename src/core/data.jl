@@ -19,8 +19,8 @@ function calc_theta_delta_bounds(data::Dict{String,Any})
     phase_ids = 1:phases
 
     for ph in phase_ids
-        angle_mins = [getmpv(branch["angmin"], ph) for branch in branches]
-        angle_maxs = [getmpv(branch["angmax"], ph) for branch in branches]
+        angle_mins = [branch["angmin"][ph] for branch in branches]
+        angle_maxs = [branch["angmax"][ph] for branch in branches]
 
         sort!(angle_mins)
         sort!(angle_maxs, rev=true)

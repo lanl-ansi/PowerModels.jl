@@ -122,12 +122,12 @@ ref(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
-ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, ph::Int) = getmpv(pm.ref[:nw][nw][key][idx][param], ph)
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, ph::Int) = pm.ref[:nw][nw][key][idx][param][ph]
 
 ref(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
 ref(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
 ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
-ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, ph::Int=pm.cph) = getmpv(pm.ref[:nw][nw][key][idx][param], ph)
+ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ref[:nw][nw][key][idx][param][ph]
 
 
 Base.var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
@@ -424,8 +424,8 @@ function buspair_parameters(arcs_from, branches, buses, phase_ids)
         j = branch["t_bus"]
 
         for h in phase_ids
-            bp_angmin[(i,j)][h] = max(getmpv(bp_angmin[(i,j)], h), getmpv(branch["angmin"], h))
-            bp_angmax[(i,j)][h] = min(getmpv(bp_angmax[(i,j)], h), getmpv(branch["angmax"], h))
+            bp_angmin[(i,j)][h] = max(bp_angmin[(i,j)][h], branch["angmin"][h])
+            bp_angmax[(i,j)][h] = min(bp_angmax[(i,j)][h], branch["angmax"][h])
         end
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end

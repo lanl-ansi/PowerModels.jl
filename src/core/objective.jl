@@ -189,7 +189,7 @@ data is a list of components
 function get_lines(data, ph::Int)
     lines = Dict{Int,Any}()
     for (i,comp) in data
-        @assert getmpv(comp["model"], ph) == 1
+        @assert comp["model"][ph] == 1
         line_data = slope_intercepts(getmpv(comp["cost"], ph))
         lines[i] = line_data
         for i in 2:length(line_data)
