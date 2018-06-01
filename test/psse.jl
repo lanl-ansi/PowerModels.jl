@@ -179,7 +179,6 @@ end
         dummy_data = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw")
 
         setlevel!(TESTLOG, "warn")
-        TESTLOG.propagate = false
 
         @test_warn(TESTLOG, "Could not find bus 1, returning 0 for field vm",
                    PowerModels.get_bus_value(1, "vm", dummy_data))
@@ -191,7 +190,6 @@ end
                    PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
 
         setlevel!(TESTLOG, "error")
-        TESTLOG.propagate = true
     end
 
     @testset "three-winding transformer" begin
