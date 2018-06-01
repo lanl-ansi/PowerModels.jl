@@ -1,4 +1,4 @@
-export MultiPhaseValue, MultiPhaseVector, MultiPhaseMatrix, phases, getmpv
+export MultiPhaseValue, MultiPhaseVector, MultiPhaseMatrix, phases
 
 
 "a data structure for working with multiphase datasets"

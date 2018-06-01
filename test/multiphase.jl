@@ -243,7 +243,7 @@
         @test isa(JSON.lower(a), Array)
         @test all(JSON.lower(a) == a.values)
         @test !isapprox(d, e)
-        @test getmpv(a, 1, 1) == a[1,1]
+        @test PowerModels.getmpv(a, 1, 1) == a[1,1]
 
         # diagm
         @test all(diagm(c).values .== [0.225 0.0 0.0; 0.0 0.225 0.0; 0.0 0.0 0.225])

@@ -70,7 +70,7 @@ function variable_voltage_magnitude_from_on_off(pm::GenericPowerModel; nw::Int=p
     var(pm, nw, ph)[:vm_fr] = @variable(pm.model,
         [i in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_vm_fr",
         lowerbound = 0,
-        upperbound = getmpv(buses[branches[i]["f_bus"]]["vmax"], ph),
+        upperbound = buses[branches[i]["f_bus"]]["vmax"][ph],
         start = getval(ref(pm, nw, :branch, i), "vm_fr_start", ph, 1.0)
     )
 end
@@ -83,7 +83,7 @@ function variable_voltage_magnitude_to_on_off(pm::GenericPowerModel; nw::Int=pm.
     var(pm, nw, ph)[:vm_to] = @variable(pm.model,
         [i in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_vm_to",
         lowerbound = 0,
-        upperbound = getmpv(buses[branches[i]["t_bus"]]["vmax"], ph),
+        upperbound = buses[branches[i]["t_bus"]]["vmax"][ph],
         start = getval(ref(pm, nw, :branch, i), "vm_to_start", ph, 1.0)
     )
 end
@@ -115,7 +115,7 @@ function variable_voltage_magnitude_sqr_from_on_off(pm::GenericPowerModel; nw::I
     var(pm, nw, ph)[:w_fr] = @variable(pm.model,
         [i in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_w_fr",
         lowerbound = 0,
-        upperbound = getmpv(buses[branches[i]["f_bus"]]["vmax"], ph)^2,
+        upperbound = buses[branches[i]["f_bus"]]["vmax"][ph]^2,
         start = getval(ref(pm, nw, :branch, i), "w_fr_start", ph, 1.001)
     )
 end
@@ -128,7 +128,7 @@ function variable_voltage_magnitude_sqr_to_on_off(pm::GenericPowerModel; nw::Int
     var(pm, nw, ph)[:w_to] = @variable(pm.model,
         [i in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_w_to",
         lowerbound = 0,
-        upperbound = getmpv(buses[branches[i]["t_bus"]]["vmax"], ph)^2,
+        upperbound = buses[branches[i]["t_bus"]]["vmax"][ph]^2,
         start = getval(ref(pm, nw, :branch, i), "w_to_start", ph, 1.001)
     )
 end
