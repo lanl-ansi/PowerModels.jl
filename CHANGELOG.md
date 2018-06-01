@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- nothing
+- Removed Memento depreciation warnings
 
 ### v0.7.1
 - Added warning when data is missing in a PTI file

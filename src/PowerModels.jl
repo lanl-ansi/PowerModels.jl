@@ -18,7 +18,7 @@ const LOGGER = getlogger(@__MODULE__)
 # NOTE: If this line is not included then the precompiled `PowerModels.LOGGER` won't be registered at runtime.
 function __init__()
     Memento.register(LOGGER)
-    Memento.config(LOGGER, "info")
+    Memento.config!(LOGGER, "info")
 end
 
 include("io/matpower.jl")
