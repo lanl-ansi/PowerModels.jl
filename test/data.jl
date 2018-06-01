@@ -7,7 +7,7 @@
         output = sprint(PowerModels.summary, data)
 
         line_count = count(c -> c == '\n', output)
-        @test line_count >= 80 && line_count <= 100 
+        @test line_count >= 80 && line_count <= 100
         @test contains(output, "name: case5")
         @test contains(output, "Table: bus")
         @test contains(output, "Table: load")
@@ -19,7 +19,7 @@
         output = sprint(PowerModels.summary, "../test/data/matpower/case5.m")
 
         line_count = count(c -> c == '\n', output)
-        @test line_count >= 80 && line_count <= 100 
+        @test line_count >= 80 && line_count <= 100
         @test contains(output, "name: case5")
         @test contains(output, "Table: bus")
         @test contains(output, "Table: load")
@@ -32,7 +32,7 @@
         output = sprint(PowerModels.summary, result["solution"])
 
         line_count = count(c -> c == '\n', output)
-        @test line_count >= 20 && line_count <= 30 
+        @test line_count >= 20 && line_count <= 30
         @test contains(output, "baseMVA: 100.0")
         @test contains(output, "Table: bus")
         @test contains(output, "Table: gen")
@@ -286,7 +286,42 @@ end
             end
         end
     end
+end
 
+@testset "test errors and warnings" begin
+    data = PowerModels.parse_file("../test/data/matpower/case3.m")
+
+    # check_cost_functions
+    data["gen"]["1"]["model"] = 1
+    data["gen"]["1"]["ncost"] = 1
+    data["gen"]["1"]["cost"] = [0, 1, 0]
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+
+    data["gen"]["1"]["cost"] = [0, 0]
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+
+    data["gen"]["1"]["ncost"] = 2
+    data["gen"]["1"]["cost"] = [0, 0, 0, 0]
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+
+    # check_connectivity
+
+    #warnings
+    setlevel!(TESTLOG, "warn")
+
+    data["gen"]["1"]["cost"][3] = 3000
+    @test_warn(TESTLOG, "pwl x value 3000 is outside the generator bounds 0.0-20.0", PowerModels.check_cost_functions(data))
+
+    data["dcline"]["1"]["loss0"] = -1
+    @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0", PowerModels.check_dcline_limits(data))
+
+    data["dcline"]["1"]["loss1"] = -1
+    @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1 from -1 to 0.0", PowerModels.check_dcline_limits(data))
+
+    @test data["dcline"]["1"]["loss0"] == 0.0
+    @test data["dcline"]["1"]["loss1"] == 0.0
+
+    setlevel!(TESTLOG, "error")
 end
 
 

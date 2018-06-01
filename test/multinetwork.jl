@@ -1,5 +1,6 @@
 using JuMP
 PMs = PowerModels
+TESTLOG = getlogger(PowerModels)
 
 @testset "test multinetwork" begin
 
@@ -251,6 +252,27 @@ PMs = PowerModels
             end
         end
 
+    end
+
+    @testset "test errors and warnings" begin
+        mn_data = build_mn_data("../test/data/matpower/case5.m")
+
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_angle_differences(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_thermal_limits(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_branch_directions(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_branch_loops(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_transformer_parameters(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_bus_types(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_dcline_limits(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_setpoints(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.connected_components(mn_data))
+
+        @test_nowarn PowerModels.check_reference_buses(mn_data)
+        @test_nowarn PowerModels.make_multiphase(mn_data, 3)
+
+        @test_throws(TESTLOG, ErrorException, PowerModels.run_ac_opf(mn_data, ipopt_solver))
     end
 
 end
