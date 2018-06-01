@@ -638,7 +638,7 @@ function check_transformer_parameters(data::Dict{String,Any})
             branch["tap"] = 1.0
         else
             if branch["tap"] <= 0.0
-                warn(LOGGER, "branch found with non-posative tap value of $(branch["tap"]), setting a tap to 1.0")
+                warn(LOGGER, "branch found with non-positive tap value of $(branch["tap"]), setting a tap to 1.0")
                 branch["tap"] = 1.0
             end
         end
