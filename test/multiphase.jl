@@ -318,13 +318,17 @@ end
         @test length(PowerModels.con(pm, pm.cnw, :ph)) == 3
         @test length(PowerModels.con(pm, pm.cnw, :ph, 1)) == 4
         @test PowerModels.con(pm, pm.cnw, pm.cph, :kcl_p, 1) == PowerModels.con(pm, :kcl_p, 1)
+        @test length(PowerModels.con(pm)) == 4
 
         @test length(PowerModels.ref(pm, pm.cnw)) == 37
         @test length(PowerModels.ref(pm)) == 37
         @test PowerModels.ref(pm, pm.cnw, :bus, 1, "bus_i") == 1
         @test PowerModels.ref(pm, :bus, 1, "vmax") == 1.1
 
+        @test PowerModels.ismultiphase(pm)
+        @test PowerModels.ismultiphase(pm, pm.cnw)
 
+        @test length(PowerModels.nw_ids(pm)) == 1
     end
 
     @testset "multiphase operations" begin
@@ -400,5 +404,14 @@ end
         @test all(a_rad.values - [3.72423 0.0 0.0; 0.0 3.72423 0.0; 0.0 0.0 3.72423] .<= 1e-12)
         @test isa(rad2deg(a), PowerModels.MultiPhaseMatrix)
         @test isa(deg2rad(a), PowerModels.MultiPhaseMatrix)
+
+        setlevel!(TESTLOG, "warn")
+        @test_nowarn show(DevNull, a)
+
+        @test_nowarn a[1, 1] = 9.0
+        @test a[1,1] == 9.0
+
+        @test_nowarn PowerModels.summary(DevNull, mp_data)
+        setlevel!(TESTLOG, "error")
     end
 end

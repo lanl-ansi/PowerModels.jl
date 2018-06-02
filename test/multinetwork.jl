@@ -269,8 +269,11 @@ TESTLOG = getlogger(PowerModels)
         @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mn_data))
         @test_throws(TESTLOG, ErrorException, PowerModels.connected_components(mn_data))
 
+        setlevel!(TESTLOG, "warn")
         @test_nowarn PowerModels.check_reference_buses(mn_data)
         @test_nowarn PowerModels.make_multiphase(mn_data, 3)
+        @test_nowarn PowerModels.check_phases(mn_data)
+        setlevel!(TESTLOG, "error")
 
         @test_throws(TESTLOG, ErrorException, PowerModels.run_ac_opf(mn_data, ipopt_solver))
     end

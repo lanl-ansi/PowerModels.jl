@@ -304,10 +304,44 @@ end
     data["gen"]["1"]["cost"] = [0, 0, 0, 0]
     @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
 
+    data["gen"]["1"]["model"] = 2
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+
     # check_connectivity
+    data["load"]["1"]["load_bus"] = 1000
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+
+    data["load"]["1"]["load_bus"] = 1
+    data["shunt"]["1"] = Dict{String,Any}("gs"=>0, "bs"=>1, "shunt_bus"=>1000, "index"=>1, "status"=>1)
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+
+    data["shunt"]["1"]["shunt_bus"] = 1
+    data["gen"]["1"]["gen_bus"] = 1000
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+
+    data["gen"]["1"]["gen_bus"] = 1
+    data["branch"]["1"]["f_bus"] = 1000
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+
+    data["branch"]["1"]["f_bus"] = 1
+    data["branch"]["1"]["t_bus"] = 1000
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+
+    data["branch"]["1"]["t_bus"] = 3
+    data["dcline"]["1"]["f_bus"] = 1000
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+
+    data["dcline"]["1"]["f_bus"] = 1
+    data["dcline"]["1"]["t_bus"] = 1000
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+    data["dcline"]["1"]["t_bus"] = 2
 
     #warnings
     setlevel!(TESTLOG, "warn")
+
+    data["gen"]["1"]["model"] = 3
+    @test_warn(TESTLOG, "Unknown generator cost model of type 3", PowerModels.check_cost_functions(data))
+    data["gen"]["1"]["model"] = 1
 
     data["gen"]["1"]["cost"][3] = 3000
     @test_warn(TESTLOG, "pwl x value 3000 is outside the generator bounds 0.0-20.0", PowerModels.check_cost_functions(data))
@@ -320,6 +354,18 @@ end
 
     @test data["dcline"]["1"]["loss0"] == 0.0
     @test data["dcline"]["1"]["loss1"] == 0.0
+
+    data["dcline"]["1"]["loss1"] = 100
+    @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1 from 100 to 0.0", PowerModels.check_dcline_limits(data))
+
+    delete!(data["branch"]["1"], "tap")
+    @test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.check_transformer_parameters(data))
+
+    delete!(data["branch"]["1"], "shift")
+    @test_warn(TESTLOG, "branch found without shift value, setting a shift to 0.0", PowerModels.check_transformer_parameters(data))
+
+    data["branch"]["1"]["tap"] = -1
+    @test_warn(TESTLOG, "branch found with non-positive tap value of -1, setting a tap to 1.0", PowerModels.check_transformer_parameters(data))
 
     setlevel!(TESTLOG, "error")
 end
