@@ -230,26 +230,41 @@ end
 
 
     @testset "test errors and warnings" begin
-        data = PowerModels.parse_file("../test/data/matpower/case3.m")
-        data["gen"]["1"]["model"] = 3
-
         mp_data_2p = PowerModels.parse_file("../test/data/matpower/case3.m")
         mp_data_3p = PowerModels.parse_file("../test/data/matpower/case3.m")
 
         PowerModels.make_multiphase(mp_data_2p, 2)
         PowerModels.make_multiphase(mp_data_3p, 3)
 
-        mp_data_2p["gen"]["1"]["model"] = [3, 1]
-
         @test_throws(TESTLOG, ErrorException, PowerModels.update_data(mp_data_2p, mp_data_3p))
         @test_throws(TESTLOG, ErrorException, PowerModels.check_keys(mp_data_3p, ["load"]))
 
+        # check_cost_functions
+        mp_data_3p["gen"]["1"]["model"][2] = 1
+        mp_data_3p["gen"]["1"]["ncost"][2] = 1
+        mp_data_3p["gen"]["1"]["cost"][2] = [0.0, 1.0, 0.0]
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
+
+        mp_data_3p["gen"]["1"]["cost"][2] = [0.0, 0.0]
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
+
+        mp_data_3p["gen"]["1"]["ncost"][2] = 2
+        mp_data_3p["gen"]["1"]["cost"][2] = [0.0, 0.0, 0.0, 0.0]
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
+
+        mp_data_3p["gen"]["1"]["model"][2] = 2
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
+
         setlevel!(TESTLOG, "info")
 
-        @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units(data))
-        @test_warn(TESTLOG, "Skipping cost model of type 3 on phase 1 in per unit transformation", PowerModels.make_mixed_units(mp_data_2p))
+        mp_data_3p["gen"]["1"]["model"][2] = 3
+        @test_warn(TESTLOG, "Skipping cost model of type 3 on phase 2 in per unit transformation", PowerModels.make_mixed_units(mp_data_3p))
+        @test_warn(TESTLOG, "Skipping cost model of type 3 on phase 2 in per unit transformation", PowerModels.make_per_unit(mp_data_3p))
+        @test_warn(TESTLOG, "Unknown generator cost model of type 3", PowerModels.check_cost_functions(mp_data_3p))
 
-        @test_warn(TESTLOG, "Skipping cost model of type 3 on phase 1 in per unit transformation", PowerModels.make_per_unit(mp_data_2p))
+        mp_data_3p["gen"]["1"]["model"][2] = 1
+        mp_data_3p["gen"]["1"]["cost"][2][3] = 3000
+        @test_warn(TESTLOG, "pwl x value 3000.0 is outside the generator bounds 0.0-20.0", PowerModels.check_cost_functions(mp_data_3p))
 
         @test_nowarn PowerModels.check_voltage_angle_differences(mp_data_3p)
 
@@ -277,18 +292,52 @@ end
         mp_data_3p["shunt"]["1"] = Dict{String,Any}("gs"=>[0,0,0], "bs"=>[0,0,0], "status"=>1, "shunt_bus"=>1, "index"=>1)
 
         Memento.Test.@test_log(TESTLOG, "info", "deactivating load 1 due to zero pd and qd", PowerModels.propagate_topology_status(mp_data_3p))
-
         @test mp_data_3p["load"]["1"]["status"] == 0
         @test mp_data_3p["shunt"]["1"]["status"] == 0
 
-        setlevel!(TESTLOG, "error")
+        mp_data_3p["dcline"]["1"]["loss0"][2] = -1.0
+        @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0", PowerModels.check_dcline_limits(mp_data_3p))
 
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_thermal_limits(mp_data_3p))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_branch_directions(mp_data_3p))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_transformer_parameters(mp_data_3p))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_setpoints(mp_data_3p))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_dcline_limits(mp_data_3p))
+        mp_data_3p["dcline"]["1"]["loss1"][2] = -1.0
+        @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1 from -1.0 to 0.0", PowerModels.check_dcline_limits(mp_data_3p))
+
+        @test mp_data_3p["dcline"]["1"]["loss0"][2] == 0.0
+        @test mp_data_3p["dcline"]["1"]["loss1"][2] == 0.0
+
+        mp_data_3p["dcline"]["1"]["loss1"][2] = 100.0
+        @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1 from 100.0 to 0.0", PowerModels.check_dcline_limits(mp_data_3p))
+
+        delete!(mp_data_3p["branch"]["1"], "tap")
+        @test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.check_transformer_parameters(mp_data_3p))
+
+        delete!(mp_data_3p["branch"]["1"], "shift")
+        @test_warn(TESTLOG, "branch found without shift value, setting a shift to 0.0", PowerModels.check_transformer_parameters(mp_data_3p))
+
+        mp_data_3p["branch"]["1"]["tap"][2] = -1.0
+        @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.check_transformer_parameters(mp_data_3p))
+
+        mp_data_3p["branch"]["1"]["rate_a"][2] = -1.0
+        @test_warn(TESTLOG, "this code only supports positive rate_a values, changing the value on branch 1 from -100.0 to 100.47227335656343", PowerModels.check_thermal_limits(mp_data_3p))
+        @test isapprox(mp_data_3p["branch"]["1"]["rate_a"][2], 1.0047227335; atol=1e-6)
+
+        mp_data_3p["branch"]["4"] = deepcopy(mp_data_3p["branch"]["1"])
+        mp_data_3p["branch"]["4"]["f_bus"] = mp_data_3p["branch"]["1"]["t_bus"]
+        mp_data_3p["branch"]["4"]["t_bus"] = mp_data_3p["branch"]["1"]["f_bus"]
+        @test_warn(TESTLOG, "reversing the orientation of branch 1 (1, 3) to be consistent with other parallel branches", PowerModels.check_branch_directions(mp_data_3p))
+        @test mp_data_3p["branch"]["4"]["f_bus"] == mp_data_3p["branch"]["1"]["f_bus"]
+        @test mp_data_3p["branch"]["4"]["t_bus"] == mp_data_3p["branch"]["1"]["t_bus"]
+
+        mp_data_3p["gen"]["1"]["vg"][2] = 2.0
+        @test_warn(TESTLOG, "the phase 2 voltage setpoint on generator 1 does not match the value at bus 1", PowerModels.check_voltage_setpoints(mp_data_3p))
+
+        mp_data_3p["dcline"]["1"]["vf"][2] = 2.0
+        @test_warn(TESTLOG, "the phase 2 from bus voltage setpoint on dc line 1 does not match the value at bus 1", PowerModels.check_voltage_setpoints(mp_data_3p))
+
+        mp_data_3p["dcline"]["1"]["vt"][2] = 2.0
+        @test_warn(TESTLOG, "the phase 2 to bus voltage setpoint on dc line 1 does not match the value at bus 2", PowerModels.check_voltage_setpoints(mp_data_3p))
+
+
+        setlevel!(TESTLOG, "error")
 
         @test_throws(TESTLOG, ErrorException, PowerModels.run_ac_opf(mp_data_3p, ipopt_solver))
 
@@ -297,7 +346,6 @@ end
 
         mp_data_3p["phases"] = 0
         @test_throws(TESTLOG, ErrorException, PowerModels.check_phases(mp_data_3p))
-
     end
 
     @testset "multiphase extensions" begin
@@ -362,16 +410,22 @@ end
         x = c + d
         y = c - d
         z = c^2
+        w = 1 ./ c
+        u = 1 .* d
 
         @test all(x.values - [0.45, 0.45, 0.45] .<= 1e-12)
         @test all(y.values - [0.0, 0.0, 0.0] .<= 1e-12)
         @test all(c .* d - [0.050625, 0.050625, 0.050625] .<= 1e-12)
         @test all(c ./ d - [1.0, 1.0, 1.0] .<= 1e-12)
         @test all(z.values - [0.050625, 0.050625, 0.050625] .<= 1e-12)
+        @test all(w.values - [4.444444444444445, 4.444444444444445, 4.444444444444445] .<= 1e-12)
+        @test all(u.values - d.values .<= 1e-12)
 
         @test isa(x, PowerModels.MultiPhaseVector)
         @test isa(y, PowerModels.MultiPhaseVector)
         @test isa(z, PowerModels.MultiPhaseVector)
+        @test isa(w, PowerModels.MultiPhaseVector)
+        @test isa(u, PowerModels.MultiPhaseVector)
 
         # Broadcasting
         @test all(a .+ c - [0.29   0.225  0.225; 0.225  0.29   0.225; 0.225  0.225  0.29] .<= 1e-12)
