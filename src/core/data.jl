@@ -386,7 +386,7 @@ function _rescale_cost_model(comp::Dict{String,Any}, scale::Real, multiphase::Bo
         else
             phases = length(comp["model"])
             for ph in 1:phases
-                ph_str = phases > 1 ? " on phase $(ph)" : ""
+                ph_str = isa(comp["model"], PowerModels.MultiPhaseValue) ? " on phase $(ph)" : ""
                 if comp["model"][ph] == 1
                     for i in 1:2:length(comp["cost"][ph])
                         comp["cost"][ph][i] = comp["cost"][ph][i]/scale
@@ -434,7 +434,7 @@ function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1
     assert("per_unit" in keys(data) && data["per_unit"])
 
     for ph in 1:get(data, "phases", 1)
-        ph_str = get(data, "phases", 1) > 1 ? ", phase $(ph)" : ""
+        ph_str = haskey(data, "phases") ? ", phase $(ph)" : ""
         for (i, branch) in data["branch"]
             angmin = branch["angmin"][ph]
             angmax = branch["angmax"][ph]
@@ -484,7 +484,7 @@ function check_thermal_limits(data::Dict{String,Any})
 
     for (i, branch) in data["branch"]
         for ph in 1:get(data, "phases", 1)
-            ph_str = get(data, "phases", 1) > 1 ? ", phase $(ph)" : ""
+            ph_str = haskey(data, "phases") ? ", phase $(ph)" : ""
             if branch["rate_a"][ph] <= 0.0
                 theta_max = max(abs(branch["angmin"][ph]), abs(branch["angmax"][ph]))
 
@@ -630,7 +630,7 @@ function check_transformer_parameters(data::Dict{String,Any})
             end
         else
             for ph in 1:get(data, "phases", 1)
-                ph_str = get(data, "phases", 1) > 1 ? " on phase $(ph)" : ""
+                ph_str = haskey(data, "phases") ? " on phase $(ph)" : ""
                 if branch["tap"][ph] <= 0.0
                     warn(LOGGER, "branch found with non-positive tap value of $(branch["tap"][ph]), setting a tap to 1.0$(ph_str)")
                     if haskey(data, "phases")
@@ -697,7 +697,7 @@ function check_dcline_limits(data::Dict{String,Any})
     mva_base = data["baseMVA"]
 
     for ph in 1:get(data, "phases", 1)
-        ph_str = get(data, "phases", 1) > 1 ? ", phase $(ph)" : ""
+        ph_str = haskey(data, "phases") ? ", phase $(ph)" : ""
         for (i, dcline) in data["dcline"]
             if dcline["loss0"][ph] < 0.0
                 new_rate = 0.0
@@ -756,7 +756,7 @@ function check_voltage_setpoints(data::Dict{String,Any})
     end
 
     for ph in 1:get(data, "phases", 1)
-        ph_str = get(data, "phases", 1) > 1 ? "phase $(ph) " : ""
+        ph_str = haskey(data, "phases") ? "phase $(ph) " : ""
         for (i,gen) in data["gen"]
             bus_id = gen["gen_bus"]
             bus = data["bus"]["$(bus_id)"]
