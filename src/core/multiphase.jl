@@ -51,14 +51,16 @@ Base.getindex(mpv::MultiPhaseValue, args...) = mpv.values[args...]
 
 Base.show(io::IO, mpv::MultiPhaseValue) = Base.show(io, mpv.values)
 
-Base.broadcast(f, a::MultiPhaseValue, b::MultiPhaseValue) = broadcast(f, a.values, b.values)
-Base.broadcast(f, a, b::MultiPhaseValue) = broadcast(f, a, b.values)
-Base.broadcast(f, a::MultiPhaseValue, b) = broadcast(f, a.values, b)
+Base.broadcast(f::Any, a, b::MultiPhaseValue) = broadcast(f, a, b.values)
+Base.broadcast(f::Any, a::MultiPhaseValue, b) = broadcast(f, a.values, b)
+Base.broadcast(f::Any, a::MultiPhaseValue, b::MultiPhaseValue) = broadcast(f, a.values, b.values)
 
 Base.:+(a::MultiPhaseVector{T}, b...) where T = MultiPhaseVector{T}(+(a.values, (isa(i, MultiPhaseValue) ? i.values : i for i in [b...])...))
 Base.:-(a::MultiPhaseVector{T}, b...) where T = MultiPhaseVector{T}(-(a.values, (isa(i, MultiPhaseValue) ? i.values : i for i in [b...])...))
 Base.:*(a::MultiPhaseVector{T}, b...) where T = MultiPhaseVector{T}(*(a.values, (isa(i, MultiPhaseValue) ? i.values : i for i in [b...])...))
 Base.:/(a::MultiPhaseVector{T}, b...) where T = MultiPhaseVector{T}(/(a.values, (isa(i, MultiPhaseValue) ? i.values : i for i in [b...])...))
+Base.:*(a::Real, b::MultiPhaseVector{T}) where T = MultiPhaseVector{T}(Base.broadcast(*, a, b.values))
+Base.:/(a::Real, b::MultiPhaseVector{T}) where T = MultiPhaseVector{T}(Base.broadcast(/, a, b.values))
 
 Base.:+(a::MultiPhaseMatrix{T}, b...) where T = MultiPhaseMatrix{T}(+(a.values, (isa(i, MultiPhaseValue) ? i.values : i for i in [b...])...))
 Base.:-(a::MultiPhaseMatrix{T}, b...) where T = MultiPhaseMatrix{T}(-(a.values, (isa(i, MultiPhaseValue) ? i.values : i for i in [b...])...))

@@ -386,6 +386,7 @@ function _rescale_cost_model(comp::Dict{String,Any}, scale::Real, multiphase::Bo
         else
             phases = length(comp["model"])
             for ph in 1:phases
+                ph_str = isa(comp["model"], PowerModels.MultiPhaseValue) ? " on phase $(ph)" : ""
                 if comp["model"][ph] == 1
                     for i in 1:2:length(comp["cost"][ph])
                         comp["cost"][ph][i] = comp["cost"][ph][i]/scale
@@ -396,7 +397,7 @@ function _rescale_cost_model(comp::Dict{String,Any}, scale::Real, multiphase::Bo
                         comp["cost"][ph][i] = item*(scale^(degree-i))
                     end
                 else
-                    warn(LOGGER, "Skipping cost model of type $(comp["model"][ph]) on phase $(ph) in per unit transformation")
+                    warn(LOGGER, "Skipping cost model of type $(comp["model"][ph])$(ph_str) in per unit transformation")
                 end
             end
         end
@@ -432,48 +433,40 @@ function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1
 
     assert("per_unit" in keys(data) && data["per_unit"])
 
-    if haskey(data, "phases")
-        for h in 1:data["phases"]
-            for (i, branch) in data["branch"]
-                angmin = branch["angmin"][h]
-                angmax = branch["angmax"][h]
-
-                if angmin <= -pi/2
-                    warn(LOGGER, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $i, phase $h from $(rad2deg(angmin)) to -$(rad2deg(default_pad)) deg.")
-                    branch["angmin"][h] = -default_pad
-                end
-
-                if angmax >= pi/2
-                    warn(LOGGER, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $i, phase $h from $(rad2deg(angmax)) to $(rad2deg(default_pad)) deg.")
-                    branch["angmax"][h] = default_pad
-                end
-
-                if angmin == 0.0 && angmax == 0.0
-                    warn(LOGGER, "angmin and angmax values are 0, widening these values on branch $i, phase $h to +/- $(rad2deg(default_pad)) deg.")
-                    branch["angmin"][h] = -default_pad
-                    branch["angmax"][h] = default_pad
-                end
-            end
-        end
-    else
+    for ph in 1:get(data, "phases", 1)
+        ph_str = haskey(data, "phases") ? ", phase $(ph)" : ""
         for (i, branch) in data["branch"]
-            angmin = branch["angmin"]
-            angmax = branch["angmax"]
+            angmin = branch["angmin"][ph]
+            angmax = branch["angmax"][ph]
 
             if angmin <= -pi/2
-                warn(LOGGER, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $i from $(rad2deg(angmin)) to -$(rad2deg(default_pad)) deg.")
-                branch["angmin"] = -default_pad
+                warn(LOGGER, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $i$(ph_str) from $(rad2deg(angmin)) to -$(rad2deg(default_pad)) deg.")
+                if haskey(data, "phases")
+                    branch["angmin"][ph] = -default_pad
+                else
+                    branch["angmin"] = -default_pad
+                end
             end
 
             if angmax >= pi/2
-                warn(LOGGER, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $i from $(rad2deg(angmax)) to $(rad2deg(default_pad)) deg.")
-                branch["angmax"] = default_pad
+                warn(LOGGER, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $i$(ph_str) from $(rad2deg(angmax)) to $(rad2deg(default_pad)) deg.")
+                if haskey(data, "phases")
+                    branch["angmax"][ph] = default_pad
+                else
+                    branch["angmax"] = default_pad
+                end
+
             end
 
             if angmin == 0.0 && angmax == 0.0
-                warn(LOGGER, "angmin and angmax values are 0, widening these values on branch $i to +/- $(rad2deg(default_pad)) deg.")
-                branch["angmin"] =  -default_pad
-                branch["angmax"] = default_pad
+                warn(LOGGER, "angmin and angmax values are 0, widening these values on branch $i$(ph_str) to +/- $(rad2deg(default_pad)) deg.")
+                if haskey(data, "phases")
+                    branch["angmin"][ph] = -default_pad
+                    branch["angmax"][ph] =  default_pad
+                else
+                    branch["angmin"] = -default_pad
+                    branch["angmax"] =  default_pad
+                end
             end
         end
     end
@@ -486,34 +479,37 @@ function check_thermal_limits(data::Dict{String,Any})
         error("check_thermal_limits does not yet support multinetwork data")
     end
 
-    if haskey(data, "phases")
-        error("check_thermal_limits does not yet support multiphase data")
-    end
-
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
     for (i, branch) in data["branch"]
-        if branch["rate_a"] <= 0.0
-            theta_max = max(abs(branch["angmin"]), abs(branch["angmax"]))
+        for ph in 1:get(data, "phases", 1)
+            ph_str = haskey(data, "phases") ? ", phase $(ph)" : ""
+            if branch["rate_a"][ph] <= 0.0
+                theta_max = max(abs(branch["angmin"][ph]), abs(branch["angmax"][ph]))
 
-            r = branch["br_r"]
-            x = branch["br_x"]
-            g =  r / (r^2 + x^2)
-            b = -x / (r^2 + x^2)
+                r = branch["br_r"][ph, ph]
+                x = branch["br_x"][ph, ph]
+                g =  r / (r^2 + x^2)
+                b = -x / (r^2 + x^2)
 
-            y_mag = sqrt(g^2 + b^2)
+                y_mag = sqrt(g^2 + b^2)
 
-            fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"]
-            to_vmax = data["bus"][string(branch["t_bus"])]["vmax"]
-            m_vmax = max(fr_vmax, to_vmax)
+                fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"][ph]
+                to_vmax = data["bus"][string(branch["t_bus"])]["vmax"][ph]
+                m_vmax = max(fr_vmax, to_vmax)
 
-            c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
+                c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
 
-            new_rate = y_mag*m_vmax*c_max
+                new_rate = y_mag*m_vmax*c_max
 
-            warn(LOGGER, "this code only supports positive rate_a values, changing the value on branch $(branch["index"]) from $(mva_base*branch["rate_a"]) to $(mva_base*new_rate)")
-            branch["rate_a"] = new_rate
+                warn(LOGGER, "this code only supports positive rate_a values, changing the value on branch $(branch["index"])$(ph_str) from $(mva_base*branch["rate_a"][ph]) to $(mva_base*new_rate)")
+                if haskey(data, "phases")
+                    branch["rate_a"][ph] = new_rate
+                else
+                    branch["rate_a"] = new_rate
+                end
+            end
         end
     end
 end
@@ -523,10 +519,6 @@ end
 function check_branch_directions(data::Dict{String,Any})
     if InfrastructureModels.ismultinetwork(data)
         error("check_branch_directions does not yet support multinetwork data")
-    end
-
-    if haskey(data, "phases")
-        error("check_thermal_limits does not yet support multiphase data")
     end
 
     orientations = Set()
@@ -539,9 +531,9 @@ function check_branch_directions(data::Dict{String,Any})
             branch_orginal = copy(branch)
             branch["f_bus"] = branch_orginal["t_bus"]
             branch["t_bus"] = branch_orginal["f_bus"]
-            branch["tap"] = 1/branch_orginal["tap"]
-            branch["br_r"] = branch_orginal["br_r"]*branch_orginal["tap"]^2
-            branch["br_x"] = branch_orginal["br_x"]*branch_orginal["tap"]^2
+            branch["tap"] = 1 ./ branch_orginal["tap"]
+            branch["br_r"] = branch_orginal["br_r"] .* branch_orginal["tap"]'.^2
+            branch["br_x"] = branch_orginal["br_x"] .* branch_orginal["tap"]'.^2
             branch["shift"] = -branch_orginal["shift"]
             branch["angmin"] = -branch_orginal["angmax"]
             branch["angmax"] = -branch_orginal["angmin"]
@@ -626,25 +618,36 @@ function check_transformer_parameters(data::Dict{String,Any})
         error("check_transformer_parameters does not yet support multinetwork data")
     end
 
-    if haskey(data, "phases")
-        error("check_thermal_limits does not yet support multiphase data")
-    end
-
     assert("per_unit" in keys(data) && data["per_unit"])
 
     for (i, branch) in data["branch"]
         if !haskey(branch, "tap")
             warn(LOGGER, "branch found without tap value, setting a tap to 1.0")
-            branch["tap"] = 1.0
-        else
-            if branch["tap"] <= 0.0
-                warn(LOGGER, "branch found with non-positive tap value of $(branch["tap"]), setting a tap to 1.0")
+            if haskey(data, "phases")
+                branch["tap"] = MultiPhaseVector{Float64}(ones(data["phases"]))
+            else
                 branch["tap"] = 1.0
+            end
+        else
+            for ph in 1:get(data, "phases", 1)
+                ph_str = haskey(data, "phases") ? " on phase $(ph)" : ""
+                if branch["tap"][ph] <= 0.0
+                    warn(LOGGER, "branch found with non-positive tap value of $(branch["tap"][ph]), setting a tap to 1.0$(ph_str)")
+                    if haskey(data, "phases")
+                        branch["tap"][ph] = 1.0
+                    else
+                        branch["tap"] = 1.0
+                    end
+                end
             end
         end
         if !haskey(branch, "shift")
             warn(LOGGER, "branch found without shift value, setting a shift to 0.0")
-            branch["shift"] = 0.0
+            if haskey(data, "phases")
+                branch["shift"] = MultiPhaseVector{Float64}(zeros(data["phases"]))
+            else
+                branch["shift"] = 0.0
+            end
         end
     end
 end
@@ -690,42 +693,57 @@ function check_dcline_limits(data::Dict{String,Any})
         error("check_dcline_limits does not yet support multinetwork data")
     end
 
-    if haskey(data, "phases")
-        error("check_dcline_limits does not yet support multiphase data")
-    end
-
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
-    for (i, dcline) in data["dcline"]
-        if dcline["loss0"] < 0.0
-            new_rate = 0.0
-            warn(LOGGER, "this code only supports positive loss0 values, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
-            dcline["loss0"] = new_rate
-          end
+    for ph in 1:get(data, "phases", 1)
+        ph_str = haskey(data, "phases") ? ", phase $(ph)" : ""
+        for (i, dcline) in data["dcline"]
+            if dcline["loss0"][ph] < 0.0
+                new_rate = 0.0
+                warn(LOGGER, "this code only supports positive loss0 values, changing the value on dcline $(dcline["index"])$(ph_str) from $(mva_base*dcline["loss0"][ph]) to $(mva_base*new_rate)")
+                if haskey(data, "phases")
+                    dcline["loss0"][ph] = new_rate
+                else
+                    dcline["loss0"] = new_rate
+                end
+            end
 
-        if dcline["loss0"] >= dcline["pmaxf"]*(1-dcline["loss1"] )+ dcline["pmaxt"]
-            new_rate = 0.0
-            warn(LOGGER, "this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
-            dcline["loss0"] = new_rate
-          end
+            if dcline["loss0"][ph] >= dcline["pmaxf"][ph]*(1-dcline["loss1"][ph] )+ dcline["pmaxt"][ph]
+                new_rate = 0.0
+                warn(LOGGER, "this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"])$(ph_str) from $(mva_base*dcline["loss0"][ph]) to $(mva_base*new_rate)")
+                if haskey(data, "phases")
+                    dcline["loss0"][ph] = new_rate
+                else
+                    dcline["loss0"] = new_rate
+                end
+            end
 
-        if dcline["loss1"] < 0.0
-            new_rate = 0.0
-            warn(LOGGER, "this code only supports positive loss1 values, changing the value on dcline $(dcline["index"]) from $(dcline["loss1"]) to $(new_rate)")
-            dcline["loss1"] = new_rate
-        end
+            if dcline["loss1"][ph] < 0.0
+                new_rate = 0.0
+                warn(LOGGER, "this code only supports positive loss1 values, changing the value on dcline $(dcline["index"])$(ph_str) from $(dcline["loss1"][ph]) to $(new_rate)")
+                if haskey(data, "phases")
+                    dcline["loss1"][ph] = new_rate
+                else
+                    dcline["loss1"] = new_rate
+                end
+            end
 
-        if dcline["loss1"] >= 1.0
-            new_rate = 0.0
-            warn(LOGGER, "this code only supports loss1 values < 1, changing the value on dcline $(dcline["index"]) from $(dcline["loss1"]) to $(new_rate)")
-            dcline["loss1"] = new_rate
-        end
+            if dcline["loss1"][ph] >= 1.0
+                new_rate = 0.0
+                warn(LOGGER, "this code only supports loss1 values < 1, changing the value on dcline $(dcline["index"])$(ph_str) from $(dcline["loss1"][ph]) to $(new_rate)")
+                if haskey(data, "phases")
+                    dcline["loss1"][ph] = new_rate
+                else
+                    dcline["loss1"] = new_rate
+                end
+            end
 
-        if dcline["pmint"] <0.0 && dcline["loss1"] > 0.0
-            #new_rate = 0.0
-            warn(LOGGER, "the dc line model is not meant to be used bi-directionally when loss1 > 0, be careful interpreting the results as the dc line losses can now be negative. change loss1 to 0 to avoid this warning")
-            #dcline["loss0"] = new_rate
+            if dcline["pmint"][ph] <0.0 && dcline["loss1"][ph] > 0.0
+                #new_rate = 0.0
+                warn(LOGGER, "the dc line model is not meant to be used bi-directionally when loss1 > 0, be careful interpreting the results as the dc line losses can now be negative. change loss1 to 0 to avoid this warning")
+                #dcline["loss0"] = new_rate
+            end
         end
     end
 end
@@ -737,43 +755,40 @@ function check_voltage_setpoints(data::Dict{String,Any})
         error("check_voltage_setpoints does not yet support multinetwork data")
     end
 
-    if haskey(data, "phases")
-        error("check_voltage_setpoints does not yet support multiphase data")
-    end
-
-    for (i,gen) in data["gen"]
-        bus_id = gen["gen_bus"]
-        bus = data["bus"]["$(bus_id)"]
-        if gen["vg"] != bus["vm"]
-           warn(LOGGER, "the voltage setpoint on generator $(i) does not match the value at bus $(bus_id)")
-        end
-    end
-
-    for (i, dcline) in data["dcline"]
-        bus_fr_id = dcline["f_bus"]
-        bus_to_id = dcline["t_bus"]
-
-        bus_fr = data["bus"]["$(bus_fr_id)"]
-        bus_to = data["bus"]["$(bus_to_id)"]
-
-        if dcline["vf"] != bus_fr["vm"]
-           warn(LOGGER, "the from bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_fr_id)")
+    for ph in 1:get(data, "phases", 1)
+        ph_str = haskey(data, "phases") ? "phase $(ph) " : ""
+        for (i,gen) in data["gen"]
+            bus_id = gen["gen_bus"]
+            bus = data["bus"]["$(bus_id)"]
+            if gen["vg"][ph] != bus["vm"][ph]
+                warn(LOGGER, "the $(ph_str)voltage setpoint on generator $(i) does not match the value at bus $(bus_id)")
+            end
         end
 
-        if dcline["vt"] != bus_to["vm"]
-           warn(LOGGER, "the to bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_to_id)")
+        for (i, dcline) in data["dcline"]
+            bus_fr_id = dcline["f_bus"]
+            bus_to_id = dcline["t_bus"]
+
+            bus_fr = data["bus"]["$(bus_fr_id)"]
+            bus_to = data["bus"]["$(bus_to_id)"]
+
+            if dcline["vf"][ph] != bus_fr["vm"][ph]
+                warn(LOGGER, "the $(ph_str)from bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_fr_id)")
+            end
+
+            if dcline["vt"][ph] != bus_to["vm"][ph]
+                warn(LOGGER, "the $(ph_str)to bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_to_id)")
+            end
         end
     end
 end
+
 
 
 "throws warnings if cost functions are malformed"
 function check_cost_functions(data::Dict{String,Any})
     if InfrastructureModels.ismultinetwork(data)
         error("check_cost_functions does not yet support multinetwork data")
-    end
-    if haskey(data, "phases")
-        error("check_cost_functions does not yet support multiphase data")
     end
 
     for (i,gen) in data["gen"]
@@ -788,33 +803,36 @@ end
 ""
 function _check_cost_functions(id, comp)
     if "model" in keys(comp) && "cost" in keys(comp)
-        if comp["model"] == 1
-            if length(comp["cost"]) != 2*comp["ncost"]
-                error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values")
-            end
-            if length(comp["cost"]) < 4
-                error("cost includes $(comp["ncost"]) points, but at least two points are required")
-            end
-            for i in 3:2:length(comp["cost"])
-                if comp["cost"][i-2] >= comp["cost"][i]
-                    error("non-increasing x values in pwl cost model")
+        for ph in 1:length(comp["ncost"])
+            ph_str = length(comp["ncost"]) > 1 ? "phase $(ph) " : ""
+            if comp["model"][ph] == 1
+                if length(PowerModels.getmpv(comp["cost"], ph)) != 2*comp["ncost"][ph]
+                    error("$(ph_str)ncost of $(comp["ncost"][ph]) not consistent with $(length(PowerModels.getmpv(comp["cost"], ph))) cost values")
                 end
-            end
-            if "pmin" in keys(comp) && "pmax" in keys(comp)
-                pmin = comp["pmin"]
-                pmax = comp["pmax"]
-                for i in 3:2:length(comp["cost"])
-                    if comp["cost"][i] < pmin || comp["cost"][i] > pmax
-                        warn(LOGGER, "pwl x value $(comp["cost"][i]) is outside the generator bounds $(pmin)-$(pmax)")
+                if length(PowerModels.getmpv(comp["cost"], ph)) < 4
+                    error("$(ph_str)cost includes $(comp["ncost"][ph]) points, but at least two points are required")
+                end
+                for i in 3:2:length(PowerModels.getmpv(comp["cost"], ph))
+                    if PowerModels.getmpv(comp["cost"], ph)[i-2] >= PowerModels.getmpv(comp["cost"], ph)[i]
+                        error("non-increasing x values in $(ph_str)pwl cost model")
                     end
                 end
+                if "pmin" in keys(comp) && "pmax" in keys(comp)
+                    pmin = comp["pmin"][ph]
+                    pmax = comp["pmax"][ph]
+                    for i in 3:2:length(PowerModels.getmpv(comp["cost"], ph))
+                        if PowerModels.getmpv(comp["cost"], ph)[i] < pmin || PowerModels.getmpv(comp["cost"], ph)[i] > pmax
+                            warn(LOGGER, "$(ph_str)pwl x value $(PowerModels.getmpv(comp["cost"], ph)[i]) is outside the generator bounds $(pmin)-$(pmax)")
+                        end
+                    end
+                end
+            elseif comp["model"][ph] == 2
+                if length(PowerModels.getmpv(comp["cost"], ph)) != comp["ncost"][ph]
+                    error("$(ph_str)ncost of $(comp["ncost"][ph]) not consistent with $(length(PowerModels.getmpv(comp["cost"], ph))) cost values")
+                end
+            else
+                warn(LOGGER, "Unknown $(ph_str)generator cost model of type $(comp["model"][ph])")
             end
-        elseif comp["model"] == 2
-            if length(comp["cost"]) != comp["ncost"]
-                error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values")
-            end
-        else
-            warn(LOGGER, "Unknown generator cost model of type $(comp["model"])")
         end
     end
 end
