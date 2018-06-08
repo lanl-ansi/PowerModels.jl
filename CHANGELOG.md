@@ -1,12 +1,9 @@
 PowerModels.jl Change Log
 =================
 
-### Multiphase
+### Staged
 - Added support for network data with multiple phases
 - Improved helper functions ref, var, con to work with multiple networks and phases
-
-### Staged
-- nothing
 
 ### v0.7.1
 - Added warning when data is missing in a PTI file
