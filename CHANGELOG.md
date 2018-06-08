@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- nothing
+- Added support for network data with multiple phases
+- Improved helper functions ref, var, con to work with multiple networks and phases
 
 ### v0.7.2
 - Removed Memento depreciation warnings

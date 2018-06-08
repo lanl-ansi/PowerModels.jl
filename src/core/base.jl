@@ -4,7 +4,10 @@ export
     GenericPowerModel,
     setdata, setsolver, solve,
     run_generic_model, build_generic_model, solve_generic_model,
+    ismultinetwork, nw_ids, nws,
+    ismultiphase, phase_ids,
     ids, ref, var, ext
+
 
 ""
 abstract type AbstractPowerFormulation end
@@ -49,6 +52,7 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     var::Dict{Symbol,Any} # JuMP variables
     con::Dict{Symbol,Any} # JuMP constraint references
     cnw::Int # current network index value
+    cph::Int # current phase index value
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -67,55 +71,87 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
 
     var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
     con = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
-    for nw_id in keys(ref[:nw])
-        var[:nw][nw_id] = Dict{Symbol,Any}()
-        con[:nw][nw_id] = Dict{Symbol,Any}()
+    for (nw_id, nw) in ref[:nw]
+        nw_var = var[:nw][nw_id] = Dict{Symbol,Any}()
+        nw_con = con[:nw][nw_id] = Dict{Symbol,Any}()
+
+        nw_var[:ph] = Dict{Int,Any}()
+        nw_con[:ph] = Dict{Int,Any}()
+
+        for ph_id in nw[:phase_ids]
+            nw_var[:ph][ph_id] = Dict{Symbol,Any}()
+            nw_con[:ph][ph_id] = Dict{Symbol,Any}()
+        end
     end
 
-    cnw = minimum([k for k in keys(ref[:nw])])
+    cnw = minimum([k for k in keys(var[:nw])])
+    cph = minimum([k for k in keys(var[:nw][cnw][:ph])])
 
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
-        data, # data
-        setting, # setting
+        data,
+        setting,
         Dict{String,Any}(), # solution
         ref,
-        var, # vars
+        var,
         con,
         cnw,
-        ext # ext
+        cph,
+        ext
     )
 
     return pm
 end
 
-
-### Helper functions for working with multinetworks
+### Helper functions for working with multinetworks and multiphases
 ismultinetwork(pm::GenericPowerModel) = (length(pm.ref[:nw]) > 1)
-nws(pm::GenericPowerModel) = keys(pm.ref[:nw])
+nw_ids(pm::GenericPowerModel) = keys(pm.ref[:nw])
+nws(pm::GenericPowerModel) = pm.ref[:nw]
 
-ids(pm::GenericPowerModel, key::Symbol) = ids(pm, pm.cnw, key)
-ids(pm::GenericPowerModel, n::Int, key::Symbol) = keys(pm.ref[:nw][n][key])
+ismultiphase(pm::GenericPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :phases)
+ismultiphase(pm::GenericPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :phases)
+phase_ids(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw][:phase_ids]
+phase_ids(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:phase_ids]
 
-ref(pm::GenericPowerModel, key::Symbol) = ref(pm, pm.cnw, key)
-ref(pm::GenericPowerModel, key::Symbol, idx) = ref(pm, pm.cnw, key, idx)
-ref(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ref[:nw][n][key]
-ref(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ref[:nw][n][key][idx]
 
-Base.var(pm::GenericPowerModel, key::Symbol) = var(pm, pm.cnw, key)
-Base.var(pm::GenericPowerModel, key::Symbol, idx) = var(pm, pm.cnw, key, idx)
-Base.var(pm::GenericPowerModel, n::Int, key::Symbol) = pm.var[:nw][n][key]
-Base.var(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.var[:nw][n][key][idx]
+ids(pm::GenericPowerModel, nw::Int, key::Symbol) = keys(pm.ref[:nw][nw][key])
+ids(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = keys(pm.ref[:nw][nw][key])
 
-con(pm::GenericPowerModel, key::Symbol) = con(pm, pm.cnw, key)
-con(pm::GenericPowerModel, key::Symbol, idx) = con(pm, pm.cnw, key, idx)
-con(pm::GenericPowerModel, n::Int, key::Symbol) = pm.con[:nw][n][key]
-con(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.con[:nw][n][key][idx]
 
-ext(pm::GenericPowerModel, key::Symbol) = ext(pm, pm.cnw, key)
-ext(pm::GenericPowerModel, key::Symbol, idx) = ext(pm, pm.cnw, key, idx)
-ext(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ext[:nw][n][key]
-ext(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ext[:nw][n][key][idx]
+ref(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, ph::Int) = pm.ref[:nw][nw][key][idx][param][ph]
+
+ref(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
+ref(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
+ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
+ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ref[:nw][nw][key][idx][param][ph]
+
+
+Base.var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
+Base.var(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
+Base.var(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
+Base.var(pm::GenericPowerModel, nw::Int, ph::Int) = pm.var[:nw][nw][:ph][ph]
+Base.var(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.var[:nw][nw][:ph][ph][key]
+Base.var(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.var[:nw][nw][:ph][ph][key][idx]
+
+Base.var(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph]
+Base.var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph][key]
+Base.var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph][key][idx]
+
+con(pm::GenericPowerModel, nw::Int) = pm.con[:nw][nw]
+con(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.con[:nw][nw][key]
+con(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.con[:nw][nw][key][idx]
+con(pm::GenericPowerModel, nw::Int, ph::Int) = pm.con[:nw][nw][:ph][ph]
+con(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.con[:nw][nw][:ph][ph][key]
+con(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.con[:nw][nw][:ph][ph][key][idx]
+
+con(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph]
+con(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph][key]
+con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph][key][idx]
+
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
@@ -157,12 +193,16 @@ function build_generic_model(file::String,  model_constructor, post_method; kwar
 end
 
 ""
-function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; multinetwork=false, kwargs...)
+function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; multinetwork=false, multiphase=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
     pm = model_constructor(data; kwargs...)
 
     if !multinetwork && ismultinetwork(pm)
         error(LOGGER, "attempted to build a single-network model with multi-network data")
+    end
+
+    if !multiphase && ismultiphase(pm)
+        error(LOGGER, "attempted to build a single-phase model with multi-phase data")
     end
 
     post_method(pm)
@@ -210,6 +250,7 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 """
 function build_ref(data::Dict{String,Any})
     refs = Dict{Symbol,Any}()
+
     nws = refs[:nw] = Dict{Int,Any}()
 
     if InfrastructureModels.ismultinetwork(data)
@@ -218,22 +259,24 @@ function build_ref(data::Dict{String,Any})
         nws_data = Dict{String,Any}("0" => data)
     end
 
-    for (n,nw_data) in nws_data
+    for (n, nw_data) in nws_data
         nw_id = parse(Int, n)
         ref = nws[nw_id] = Dict{Symbol,Any}()
 
         for (key, item) in nw_data
-            if isa(item, Dict)
-                item_lookup = Dict([(parse(Int, k), v) for (k,v) in item])
+            if isa(item, Dict{String,Any})
+                item_lookup = Dict{Int,Any}([(parse(Int, k), v) for (k,v) in item])
                 ref[Symbol(key)] = item_lookup
             else
                 ref[Symbol(key)] = item
             end
         end
 
-        off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
-        ref[:off_angmin] = off_angmin
-        ref[:off_angmax] = off_angmax
+        if !haskey(ref, :phases)
+            ref[:phase_ids] = 1:1
+        else
+            ref[:phase_ids] = 1:ref[:phases]
+        end
 
         # filter turned off stuff
         ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
@@ -324,9 +367,11 @@ function build_ref(data::Dict{String,Any})
 
         ref[:ref_buses] = ref_buses
 
+        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:phase_ids])
 
-        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])
-
+        off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
+        ref[:off_angmin] = off_angmin
+        ref[:off_angmax] = off_angmax
 
         if haskey(ref, :ne_branch)
             ref[:ne_branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:ne_branch])
@@ -341,7 +386,7 @@ function build_ref(data::Dict{String,Any})
             end
             ref[:ne_bus_arcs] = ne_bus_arcs
 
-            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus])
+            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus], ref[:phase_ids])
         end
 
     end
@@ -355,9 +400,10 @@ function biggest_generator(gens)
     biggest_gen = nothing
     biggest_value = -Inf
     for (k,gen) in gens
-        if gen["pmax"] > biggest_value
+        pmax = maximum(gen["pmax"])
+        if pmax > biggest_value
             biggest_gen = gen
-            biggest_value = gen["pmax"]
+            biggest_value = pmax
         end
     end
     assert(biggest_gen != nothing)
@@ -366,19 +412,21 @@ end
 
 
 "compute bus pair level structures"
-function buspair_parameters(arcs_from, branches, buses)
+function buspair_parameters(arcs_from, branches, buses, phase_ids)
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
 
-    bp_angmin = Dict([(bp, -Inf) for bp in buspair_indexes])
-    bp_angmax = Dict([(bp, Inf) for bp in buspair_indexes])
+    bp_angmin = Dict([(bp, MultiPhaseVector([-Inf for h in phase_ids])) for bp in buspair_indexes])
+    bp_angmax = Dict([(bp, MultiPhaseVector([ Inf for h in phase_ids])) for bp in buspair_indexes])
     bp_branch = Dict([(bp, Inf) for bp in buspair_indexes])
 
     for (l,branch) in branches
         i = branch["f_bus"]
         j = branch["t_bus"]
 
-        bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
-        bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
+        for h in phase_ids
+            bp_angmin[(i,j)][h] = max(bp_angmin[(i,j)][h], branch["angmin"][h])
+            bp_angmax[(i,j)][h] = min(bp_angmax[(i,j)][h], branch["angmax"][h])
+        end
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end
 
@@ -392,7 +440,9 @@ function buspair_parameters(arcs_from, branches, buses)
         "vm_fr_max"=>buses[i]["vmax"],
         "vm_to_min"=>buses[j]["vmin"],
         "vm_to_max"=>buses[j]["vmax"]
-        )) for (i,j) in buspair_indexes])
+        )) for (i,j) in buspair_indexes]
+    )
 
     return buspairs
 end
+

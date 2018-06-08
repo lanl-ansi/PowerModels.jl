@@ -27,6 +27,7 @@ include("io/pti.jl")
 include("io/psse.jl")
 
 include("core/data.jl")
+include("core/ref.jl")
 include("core/base.jl")
 include("core/variable.jl")
 include("core/constraint_template.jl")
@@ -34,6 +35,7 @@ include("core/constraint.jl")
 include("core/relaxation_scheme.jl")
 include("core/objective.jl")
 include("core/solution.jl")
+include("core/multiphase.jl")
 
 include("form/acp.jl")
 include("form/acr.jl")
@@ -50,5 +52,6 @@ include("prob/opf.jl")
 include("prob/opf_bf.jl")
 include("prob/ots.jl")
 include("prob/tnep.jl")
+include("prob/test.jl")
 
 end

@@ -36,6 +36,7 @@ end
 ""
 function check_network_data(data::Dict{String,Any})
     add_powermodels_version(data)
+    check_phases(data)
     make_per_unit(data)
     check_connectivity(data)
     check_transformer_parameters(data)
