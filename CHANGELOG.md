@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Adding mathematical model to documentation
 - Added support for network data with multiple phases
 - Improved helper functions ref, var, con to work with multiple networks and phases
 
