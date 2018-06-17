@@ -105,7 +105,7 @@ end
             result = PowerModels.run_mp_opf(mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 17720.6; atol = 1e-1)
+            @test isapprox(result["objective"], 47267.9; atol = 1e-1)
 
             for ph in 1:mp_data["phases"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][ph], 1.58067; atol = 1e-3)
@@ -240,30 +240,30 @@ end
         @test_throws(TESTLOG, ErrorException, PowerModels.check_keys(mp_data_3p, ["load"]))
 
         # check_cost_functions
-        mp_data_3p["gen"]["1"]["model"][2] = 1
-        mp_data_3p["gen"]["1"]["ncost"][2] = 1
-        mp_data_3p["gen"]["1"]["cost"][2] = [0.0, 1.0, 0.0]
+        mp_data_3p["gen"]["1"]["model"] = 1
+        mp_data_3p["gen"]["1"]["ncost"] = 1
+        mp_data_3p["gen"]["1"]["cost"] = [0.0, 1.0, 0.0]
         @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
 
-        mp_data_3p["gen"]["1"]["cost"][2] = [0.0, 0.0]
+        mp_data_3p["gen"]["1"]["cost"] = [0.0, 0.0]
         @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
 
-        mp_data_3p["gen"]["1"]["ncost"][2] = 2
-        mp_data_3p["gen"]["1"]["cost"][2] = [0.0, 0.0, 0.0, 0.0]
+        mp_data_3p["gen"]["1"]["ncost"] = 2
+        mp_data_3p["gen"]["1"]["cost"] = [0.0, 0.0, 0.0, 0.0]
         @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
 
-        mp_data_3p["gen"]["1"]["model"][2] = 2
+        mp_data_3p["gen"]["1"]["model"] = 2
         @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
 
         setlevel!(TESTLOG, "info")
 
-        mp_data_3p["gen"]["1"]["model"][2] = 3
-        @test_warn(TESTLOG, "Skipping cost model of type 3 on phase 2 in per unit transformation", PowerModels.make_mixed_units(mp_data_3p))
-        @test_warn(TESTLOG, "Skipping cost model of type 3 on phase 2 in per unit transformation", PowerModels.make_per_unit(mp_data_3p))
-        @test_warn(TESTLOG, "Unknown phase 2 generator cost model of type 3", PowerModels.check_cost_functions(mp_data_3p))
+        mp_data_3p["gen"]["1"]["model"] = 3
+        @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units(mp_data_3p))
+        @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_per_unit(mp_data_3p))
+        @test_warn(TESTLOG, "Unknown generator cost model of type 3", PowerModels.check_cost_functions(mp_data_3p))
 
-        mp_data_3p["gen"]["1"]["model"][2] = 1
-        mp_data_3p["gen"]["1"]["cost"][2][3] = 3000
+        mp_data_3p["gen"]["1"]["model"] = 1
+        mp_data_3p["gen"]["1"]["cost"][3] = 3000
         @test_warn(TESTLOG, "pwl x value 3000.0 is outside the generator bounds 0.0-20.0", PowerModels.check_cost_functions(mp_data_3p))
 
         @test_nowarn PowerModels.check_voltage_angle_differences(mp_data_3p)

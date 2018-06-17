@@ -12,13 +12,11 @@ function check_cost_models(pm::GenericPowerModel)
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
             if haskey(gen, "cost")
-                for h in phase_ids(pm, n)
-                    if model == nothing
-                        model = gen["model"][h]
-                    else
-                        if gen["model"][h] != model
-                            error("cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
-                        end
+                if model == nothing
+                    model = gen["model"]
+                else
+                    if gen["model"] != model
+                        error("cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
                     end
                 end
             else
@@ -28,13 +26,11 @@ function check_cost_models(pm::GenericPowerModel)
 
         for (i,dcline) in nw_ref[:dcline]
             if haskey(dcline, "model")
-                for h in phase_ids(pm, n)
-                    if model == nothing
-                        model = dcline["model"][h]
-                    else
-                        if dcline["model"][h] != model
-                            error("cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
-                        end
+                if model == nothing
+                    model = dcline["model"]
+                else
+                    if dcline["model"] != model
+                        error("cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
                     end
                 end
             else
@@ -71,19 +67,15 @@ Checks that all cost models are polynomials, quadratic or less
 function check_polynomial_cost_models(pm::GenericPowerModel)
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
-            for h in phase_ids(pm, n)
-                @assert gen["model"][h] == 2
-                if length(gen["cost"][h]) > 3
-                    error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(gen["cost"][h])) on generator $(i)")
-                end
+            @assert gen["model"] == 2
+            if length(gen["cost"]) > 3
+                error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(gen["cost"])) on generator $(i)")
             end
         end
         for (i,dcline) in nw_ref[:dcline]
-            for h in phase_ids(pm, n)
-                @assert dcline["model"][h] == 2
-                if length(dcline["cost"][h]) > 3
-                    error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(dcline["cost"][h])) on dcline $(i)")
-                end
+            @assert dcline["model"] == 2
+            if length(dcline["cost"]) > 3
+                error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(dcline["cost"])) on dcline $(i)")
             end
         end
     end
@@ -102,10 +94,12 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
 
     return @objective(pm.model, Min,
         sum(
-            sum(
-                sum(   getmpv(gen["cost"],h)[1]*var(pm, n, h, :pg, i)^2 + getmpv(gen["cost"],h)[2]*var(pm, n, h, :pg, i) + getmpv(gen["cost"],h)[3] for (i,gen) in nw_ref[:gen]) +
-                sum(getmpv(dcline["cost"],h)[1]*var(pm, n, h, :p_dc, from_idx[n][i])^2 + getmpv(dcline["cost"],h)[2]*var(pm, n, h, :p_dc, from_idx[n][i]) + getmpv(dcline["cost"],h)[3] for (i,dcline) in nw_ref[:dcline])
-            for h in phase_ids(pm, n))
+            sum(   gen["cost"][1]*sum( var(pm, n, h, :pg, i) for h in phase_ids(pm, n))^2 +
+                   gen["cost"][2]*sum( var(pm, n, h, :pg, i) for h in phase_ids(pm, n))+
+                   gen["cost"][3] for (i,gen) in nw_ref[:gen]) +
+            sum(   dcline["cost"][1]*sum( var(pm, n, h, :p_dc, from_idx[n][i]) for h in phase_ids(pm, n))^2 +
+                   dcline["cost"][2]*sum( var(pm, n, h, :p_dc, from_idx[n][i]) for h in phase_ids(pm, n)) +
+                   dcline["cost"][3] for (i,dcline) in nw_ref[:dcline])
         for (n, nw_ref) in nws(pm))
     )
 end
@@ -147,10 +141,12 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
 
     return @objective(pm.model, Min,
         sum(
-            sum(
-                sum(   getmpv(gen["cost"],h)[1]*var(pm, n, h, :pg_sqr, i)      + getmpv(gen["cost"],h)[2]*var(pm, n, h, :pg, i)                   + getmpv(gen["cost"],h)[3] for (i,gen) in nw_ref[:gen]) +
-                sum(getmpv(dcline["cost"],h)[1]*var(pm, n, h, :p_dc_sqr, i) + getmpv(dcline["cost"],h)[2]*var(pm, n, h, :p_dc, from_idx[n][i]) + getmpv(dcline["cost"],h)[3] for (i,dcline) in nw_ref[:dcline])
-            for h in phase_ids(pm, n))
+            sum( gen["cost"][1]*sum( var(pm, n, h, :pg_sqr, i) for h in phase_ids(pm, n)) +
+                 gen["cost"][2]*sum( var(pm, n, h, :pg, i) for h in phase_ids(pm, n)) +
+                 gen["cost"][3] for (i,gen) in nw_ref[:gen]) +
+            sum( dcline["cost"][1]*sum( var(pm, n, h, :p_dc_sqr, i) for h in phase_ids(pm, n)) +
+                 dcline["cost"][2]*sum( var(pm, n, h, :p_dc, from_idx[n][i])  for h in phase_ids(pm, n)) +
+                 dcline["cost"][3] for (i,dcline) in nw_ref[:dcline])
         for (n, nw_ref) in nws(pm))
     )
 end
@@ -186,11 +182,11 @@ end
 compute lines in m and b from from pwl cost models
 data is a list of components
 """
-function get_lines(data, ph::Int)
+function get_lines(data)
     lines = Dict{Int,Any}()
     for (i,comp) in data
-        @assert comp["model"][ph] == 1
-        line_data = slope_intercepts(getmpv(comp["cost"], ph))
+        @assert comp["model"] == 1
+        line_data = slope_intercepts(comp["cost"])
         lines[i] = line_data
         for i in 2:length(line_data)
             if line_data[i-1]["slope"] > line_data[i]["slope"]
@@ -206,40 +202,36 @@ end
 function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
 
     for (n, nw_ref) in nws(pm)
-        for h in phase_ids(pm, n)
-            pg_cost = var(pm, n, h)[:pg_cost] = @variable(pm.model, 
-                [i in ids(pm, n, :gen)], basename="$(n)_$(h)_pg_cost"
-            )
+        pg_cost = var(pm, n)[:pg_cost] = @variable(pm.model, 
+            [i in ids(pm, n, :gen)], basename="$(n)_pg_cost"
+        )
 
-            # pwl cost
-            gen_lines = get_lines(nw_ref[:gen], h)
-            for (i, gen) in nw_ref[:gen]
-                for line in gen_lines[i]
-                    @constraint(pm.model, pg_cost[i] >= line["slope"]*var(pm, n, h, :pg, i) + line["intercept"])
-                end
+        # pwl cost
+        gen_lines = get_lines(nw_ref[:gen])
+        for (i, gen) in nw_ref[:gen]
+            for line in gen_lines[i]
+                @constraint(pm.model, pg_cost[i] >= line["slope"]*sum(var(pm, n, h, :pg, i) for h in phase_ids(pm, n)) + line["intercept"])
             end
-
-            dc_p_cost = var(pm, n, h)[:p_dc_cost] = @variable(pm.model, 
-                [i in ids(pm, n, :dcline)], basename="$(n)_$(h)_dc_p_cost",
-            )
-
-            # pwl cost
-            dcline_lines = get_lines(nw_ref[:dcline], h)
-            for (i, dcline) in nw_ref[:dcline]
-                for line in dcline_lines[i]
-                    @constraint(pm.model, dc_p_cost[i] >= line["slope"]*var(pm, n, h, :p_dc)[i] + line["intercept"])
-                end
-            end
-
         end
+
+        dc_p_cost = var(pm, n)[:p_dc_cost] = @variable(pm.model, 
+            [i in ids(pm, n, :dcline)], basename="$(n)_dc_p_cost",
+        )
+
+        # pwl cost
+        dcline_lines = get_lines(nw_ref[:dcline])
+        for (i, dcline) in nw_ref[:dcline]
+            for line in dcline_lines[i]
+                @constraint(pm.model, dc_p_cost[i] >= line["slope"]*sum(var(pm, n, h, :p_dc)[i] for h in phase_ids(pm, n)) + line["intercept"])
+            end
+        end
+
     end
 
     return @objective(pm.model, Min,
         sum(
-            sum(
-                sum( var(pm, n, h,   :pg_cost, i) for (i,gen) in nw_ref[:gen]) +
-                sum( var(pm, n, h, :p_dc_cost, i) for (i,dcline) in nw_ref[:dcline])
-            for h in phase_ids(pm, n))
+            sum( var(pm, n,   :pg_cost, i) for (i,gen) in nw_ref[:gen]) +
+            sum( var(pm, n, :p_dc_cost, i) for (i,dcline) in nw_ref[:dcline])
         for (n, nw_ref) in nws(pm))
     )
 end
