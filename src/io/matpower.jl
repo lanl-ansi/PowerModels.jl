@@ -626,7 +626,7 @@ end
 "merges Matpower tables based on the table extension syntax"
 function merge_generic_data(data::Dict{String,Any})
     mp_matrix_names = [name[5:length(name)] for name in mp_data_names]
-
+    
     key_to_delete = []
     for (k,v) in data
         if isa(v, Array)
@@ -773,40 +773,55 @@ function export_matpower(io::Base.PipeEndpoint, data::Dict{String,Any})
     println(io)
 
     # Print the extra bus data
-    export_extra_data(io, data, "bus", Dict("index" => "index", "gs" => "gs", "bs" => "bs", "zone" => "zone", "bus_i" => "bus_i", "zone" => "zone", "bus_type" => "bus_type", "qd" => "qd",  "vmax" => "vmax", "area" => "area",  "vmin" => "vmin", "va" => "va", "vm" => "vm", "base_kv" => "base_kv", "pd" => "pd" ))
-    
-     
-    
+    export_extra_data(io, data, "bus", Set(["index", "gs", "bs", "zone", "bus_i", "bus_type", "qd",  "vmax", "area",  "vmin", "va", "vm", "base_kv", "pd"]))
+        
     # Print the extra bus string data
+    export_extra_data_string(io, data, "bus", Set(["index", "gs", "bs", "zone", "bus_i", "bus_type", "qd",  "vmax", "area",  "vmin", "va", "vm", "base_kv", "pd"]))
 
     # Print the extra generator data
+    export_extra_data(io, data, "gen", Set(["index", "gen_bus", "pg", "qg", "qmax", "qmin", "vg", "mbase", "gen_status", "pmax", "pmin", "pc1", "pc2", "qc1min", "qc1max", "qc2min", "qc2max", "ramp_agc", "ramp_10", "ramp_30", "ramp_q", "apf", "ncost", "model", "shutdown", "startup", "cost"]))
 
     # Print the extra generator string data
+    export_extra_data_string(io, data, "gen", Set(["index", "gen_bus", "pg", "qg", "qmax", "qmin", "vg", "mbase", "gen_status", "pmax", "pmin", "pc1", "pc2", "qc1min", "qc1max", "qc2min", "qc2max", "ramp_agc", "ramp_10", "ramp_30", "ramp_q", "apf", "ncost", "model", "shutdown", "startup", "cost"]))
 
     # Print the extra branch data
-
+    export_extra_data(io, data, "branch", Set(["index", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "g_to", "g_fr"]))
+      
     # print the extra branch string data
+    export_extra_data_string(io, data, "branch", Set(["index", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "g_to", "g_fr"]))
 
     # print the extra load data
+    export_extra_data(io, data, "load", Set(["index", "load_bus", "status", "qd", "pd"]))
 
     # print the extra load string data
+    export_extra_data_string(io, data, "load", Set(["index", "load_bus", "status", "qd", "pd"]))
 
     # print the extra shunt data
+    export_extra_data(io, data, "shunt", Set(["index", "shunt_bus", "status", "gs", "bs"]))
 
     # print the extra shunt string data
-
+    export_extra_data_string(io, data, "shunt", Set(["index", "shunt_bus", "status", "gs", "bs"]))
+      
     # print the extra component data
-
-    # print the extra component string data
-
-    
-
+    for (key, value) in data
+        if key != "bus" && key != "gen" && key != "branch" && key != "load" && key != "shunt"
+            export_extra_data(io, data, key)
+            export_extra_data_string(io, data, key)          
+        end      
+    end
     
 end
 
 "Export fields of a component type"
-function export_extra_data(io::Base.PipeEndpoint, data::Dict{String,Any}, component, excluded_fields=Dict("index" => "index"))
-    
+function export_extra_data(io::Base.PipeEndpoint, data::Dict{String,Any}, component, excluded_fields=Set(["index"]))
+    if !isa(data[component], Dict)
+        return  
+    end 
+
+    if length(data[component]) == 0
+        return
+    end
+       
     # Gather the fields
     included_fields = []   
     c = nothing 
@@ -815,7 +830,7 @@ function export_extra_data(io::Base.PipeEndpoint, data::Dict{String,Any}, compon
         break    
     end 
     for (key, value) in c
-        if !haskey(excluded_fields, key) && !isa(value, String)
+        if !in(key, excluded_fields) && !isa(value, String)
             push!(included_fields, key)
         end      
     end
@@ -858,3 +873,69 @@ function export_extra_data(io::Base.PipeEndpoint, data::Dict{String,Any}, compon
     println(io, "];")
     println(io)    
 end
+
+"Export the string fields of a component type"
+function export_extra_data_string(io::Base.PipeEndpoint, data::Dict{String,Any}, component, excluded_fields=Set(["index"]))
+    if !isa(data[component], Dict)
+        return  
+    end 
+
+    if length(data[component]) == 0
+        return
+    end  
+  
+    # Gather the fields
+    included_fields = []   
+    c = nothing 
+    for temp in values(data[component])
+        c = temp
+        break    
+    end 
+    for (key, value) in c
+        if !in(key, excluded_fields) && isa(value, String)
+            push!(included_fields, key)
+        end      
+    end
+    
+    if length(included_fields) == 0
+        return
+    end
+    
+    # Print the header
+    print(io, "%column_names% ")
+    for field in included_fields
+        print(io, field)
+        print(io, " ")  
+    end
+    println(io)
+    print(io, "mpc.")
+    print(io, component)
+    println(io, "_data_strings = {")
+    
+    # sort the data
+    components = Dict{Int, Dict}()
+    for (idx,c) in data[component]
+        components[c["index"]] = c
+    end    
+        
+    # print the data    
+    i = 1
+    for (idx,c) in sort(components)
+        if idx != c["index"]
+            warn(LOGGER, "The index of a component does not match the matpower assigned index. Any data that uses component indexes for reference is corrupted.");           
+        end 
+     
+        for field in included_fields
+            print(io,"\t'")
+            print(io,c[field])
+            print(io,"'")            
+        end
+        println(io)
+        i = i+1
+    end
+    println(io, "};")
+    println(io)    
+end
+
+
+
