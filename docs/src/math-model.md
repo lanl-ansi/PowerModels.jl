@@ -46,7 +46,7 @@ A complete mathematical model is as follows,
 & {v^l}_i \leq |V_i| \leq {v^u}_i \;\; \forall i \in N \\
 & \sum_{\substack{k \in G_i}} S^g_k - \sum_{\substack{k \in L_i}} {{S^d}_k} - \sum_{\substack{k \in S_i}} {Y^s}_{k} |V_i|^2 = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} S_{ij} \;\; \forall i\in N \\ 
 & S_{ij} = \left( Y_{ij} + {Y^c}_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2} - Y^*_{ij} \frac{V_i V^*_j}{{T}_{ij}} \;\; \forall (i,j)\in E \\
-& S_{ji} = \left( Y^*_{ij} + {Y^c}_{ji} \right)^* |V_j|^2 - Y^*_{ij} \frac{V^*_i V_j}{{T}^*_{ij}} \;\; \forall (i,j)\in E \\
+& S_{ji} = \left( Y_{ij} + {Y^c}_{ji} \right)^* |V_j|^2 - Y^*_{ij} \frac{V^*_i V_j}{{T}^*_{ij}} \;\; \forall (i,j)\in E \\
 & |S_{ij}| \leq {s^u}_{ij} \;\; \forall (i,j) \in E \cup E^R \\
 & {\theta^{\Delta l}}_{ij} \leq \angle (V_i V^*_j) \leq {\theta^{\Delta u}}_{ij} \;\; \forall (i,j) \in E
 %
