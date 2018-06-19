@@ -1,36 +1,36 @@
-@testset "test matpower export" begin
-    file = "../test/data/matpower/case30.m"
-    data = PowerModels.parse_file(file)
+
+function test_case(filename::AbstractString)
+    temp_file = "temp.m"
+    source_data = PowerModels.parse_file(filename)        
+
+    io = open(temp_file, "w")         
+    PowerModels.export_matpower(io, source_data)
+    close(io)    
+    destination_data = PowerModels.parse_file(temp_file)  
     
-    buses = Dict{Int, Dict}()
-    for (idx,bus) in data["bus"]
-        buses[bus["index"]] = bus
+    @test InfrastructureModels.compare_dict(source_data, destination_data) == true
+            
+    #rm(temp_file)
+end  
+
+@testset "test idempotent matpower export" begin
+    @testset "test frankenstein_00" begin
+        file = "../test/data/matpower/frankenstein_00.m"
+        test_case(file)    
     end
     
-    loads = Dict{Int, Dict}()
-    for (idx,load) in data["load"]
-        loads[load["index"]] = load
-    end        
- 
-    i = 1
-    for (idx, bus) in sort(buses)
-        bus["name"] = string(i)
-        i = i + 1     
-    end    
-        
-    i = 100
-    for (idx, load) in sort(loads)
-        load["extra"] = i
-        i = i + 1     
-    end    
+    @testset "test case14" begin
+        file = "../test/data/matpower/case14.m"
+        test_case(file)    
+    end
     
-    components = Dict{String, Dict}()
-    component = Dict{String, Any}()
-    component["index"] = 1
-    component["number"] = 1000.0
-    component["string"] = "temp"         
-    components["1"] = component
-    data["component"] = components
+    @testset "test case2" begin
+        file = "../test/data/matpower/case2.m"
+        test_case(file)    
+    end
     
-    PowerModels.export_matpower(STDOUT, data)
+    @testset "test case24" begin
+        file = "../test/data/matpower/case24.m"
+        test_case(file)    
+    end
 end

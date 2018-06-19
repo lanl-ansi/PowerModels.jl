@@ -129,7 +129,9 @@ mp_dcline_columns = [
 
 ""
 function parse_matpower_file(file_string::String)
-    data_string = readstring(open(file_string))
+    io = open(file_string)
+    data_string = readstring(io)
+    close(io)
     return parse_matpower_string(data_string)
 end
 
@@ -666,28 +668,51 @@ function merge_generic_data(data::Dict{String,Any})
 end
 
 "Export a power flow case in matpower format"
-function export_matpower(io::Base.PipeEndpoint, data::Dict{String,Any})
-    
+function export_matpower(io::IO, data::Dict{String,Any})
+
+    # create some useful maps and data structures
+    buses = Dict{Int, Dict}()
+    for (idx,bus) in data["bus"]
+        buses[bus["index"]] = bus
+    end
+    generators = Dict{Int, Dict}()
+    for (idx,gen) in data["gen"]
+        generators[gen["index"]] = gen
+    end
+    branches = Dict{Int, Dict}()
+    for (idx,branch) in data["branch"]
+       branches[branch["index"]] = branch
+    end
+    dclines = Dict{Int, Dict}()
+    for (idx,dcline) in data["dcline"]
+       dclines[dcline["index"]] = dcline
+    end
+                    
+    pd = Dict{Int, Float64}()
+    qd = Dict{Int, Float64}()
+    gs = Dict{Int, Float64}()
+    bs = Dict{Int, Float64}()
+      
     # collect all the loads
     for (idx,bus) in sort(data["bus"])
-        bus["pd"] = 0
-        bus["qd"] = 0  
+        pd[bus["index"]] = 0
+        qd[bus["index"]] = 0  
     end
     for (idx,load) in sort(data["load"])
-        bus = data["bus"][string(load["load_bus"])]
-        bus["pd"] = bus["pd"] + load["pd"]  
-        bus["qd"] = bus["qd"] + load["qd"]  
+        bus = buses[load["load_bus"]]
+        pd[bus["index"]] = pd[bus["index"]] + load["pd"] 
+        qd[bus["index"]] = qd[bus["index"]] + load["qd"] 
     end
 
     # collect all the shunts
     for (idx,bus) in sort(data["bus"])
-        bus["gs"] = 0
-        bus["bs"] = 0  
+        gs[bus["index"]] = 0
+        bs[bus["index"]] = 0
     end
     for (idx, shunt) in data["shunt"]
-        bus = data["bus"][string(shunt["shunt_bus"])]
-        bus["gs"] = bus["gs"] + shunt["gs"]
-        bus["bs"] = bus["bs"] + shunt["bs"]      
+        bus = buses[shunt["shunt_bus"]]
+        bs[bus["index"]] = bs[bus["index"]] + shunt["bs"] 
+        gs[bus["index"]] = gs[bus["index"]] + shunt["gs"] 
     end
 
     mvabase = data["baseMVA"]
@@ -698,31 +723,48 @@ function export_matpower(io::Base.PipeEndpoint, data::Dict{String,Any})
     println(io)
     println(io, "%%-----  Power Flow Data  -----%%")
     println(io, "%% system MVA base")
-    print(io, "mpc.baseMVA = ")
-    print(io, mvabase)
-    println(io, ";")
-    println(io)
-    
+    println(io, "mpc.baseMVA = ", mvabase, ";")
+    println(io, "function mpc = ", data["name"])
+        
     # Print the bus data
-    buses = Dict{Int, Dict}()
-    for (idx,bus) in data["bus"]
-        buses[bus["index"]] = bus
-    end        
     println(io, "%% bus data")
     println(io, "%    bus_i    type    Pd    Qd    Gs    Bs    area    Vm    Va    baseKV    zone    Vmax    Vmin")
     println(io, "mpc.bus = [")
     for (idx,bus) in sort(buses)
-        s = @sprintf "\t%d\t%d\t%g\t%g\t%g\t%g\t%d\t%f\t%f\t%g\t%d\t%g\t%g" bus["index"] bus["bus_type"] (bus["pd"]*mvabase) (bus["qd"]*mvabase) (bus["gs"]*mvabase) (bus["bs"]*mvabase) bus["area"] bus["vm"] rad2deg(bus["va"]) bus["base_kv"] bus["zone"] bus["vmax"] bus["vmin"]
-        println(io, s)
+        println(io, "\t", bus["index"], 
+                    "\t", bus["bus_type"], 
+                    "\t", (pd[bus["index"]]*mvabase), 
+                    "\t", (qd[bus["index"]]*mvabase), 
+                    "\t", (gs[bus["index"]]*mvabase), 
+                    "\t", (bs[bus["index"]]*mvabase), 
+                    "\t", bus["area"], 
+                    "\t", bus["vm"], 
+                    "\t", rad2deg(bus["va"]), 
+                    "\t", bus["base_kv"], 
+                    "\t", bus["zone"], 
+                    "\t", bus["vmax"], 
+                    "\t", bus["vmin"],
+                    "\t", (haskey(bus,"lam_p") ? bus["lam_p"] : ""),   
+                    "\t", (haskey(bus,"lam_q") ? bus["lam_q"] : ""),   
+                    "\t", (haskey(bus,"mu_vmax") ? bus["mu_vmax"] : ""),   
+                    "\t", (haskey(bus,"mu_vmin") ? bus["mu_vmin"] : ""),   
+                    )
     end  
     println(io, "];")
     println(io)  
     
+    # Print the bus names
+    if haskey(collect(values(buses))[1], "bus_name")
+        println(io, "%% bus names")
+        println(io, "mpc.bus_name = {")
+        for (idx,bus) in sort(buses)
+            println(io, "\t'", bus["bus_name"], "'") 
+        end    
+        println(io, "};")
+        println(io)
+    end
+    
     # Print the generator data
-    generators = Dict{Int, Dict}()
-    for (idx,gen) in data["gen"]
-        generators[gen["index"]] = gen
-    end    
     println(io, "%% generator data")
     println(io, "%    bus    Pg    Qg    Qmax    Qmin    Vg    mBase    status    Pmax    Pmin    Pc1    Pc2    Qc1min    Qc1max    Qc2min    Qc2max    ramp_agc    ramp_10    ramp_30    ramp_q    apf")
     println(io, "mpc.gen = [")
@@ -731,89 +773,149 @@ function export_matpower(io::Base.PipeEndpoint, data::Dict{String,Any})
         if idx != gen["index"]
             warn(LOGGER, "The index of the generator does not match the matpower assigned index. Any data that uses generator indexes for reference is corrupted.");           
         end  
-        s = @sprintf "\t%d\t%g\t%g\t%g\t%g\t%f\t%g\t%d\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g\t%g" gen["gen_bus"] (gen["pg"]*mvabase) (gen["qg"]*mvabase) (gen["qmax"]*mvabase) (gen["qmin"]*mvabase) gen["vg"] gen["mbase"] gen["gen_status"] (gen["pmax"]*mvabase) (gen["pmin"]*mvabase) gen["pc1"] gen["pc2"] gen["qc1min"] gen["qc1max"] gen["qc2min"] gen["qc2max"] gen["ramp_agc"] (haskey(gen, "ramp_10") ? gen["ramp_10"] : 0) gen["ramp_30"] gen["ramp_q"] gen["apf"]
-        println(io, s)      
+        println(io, "\t", gen["gen_bus"], 
+                    "\t", (gen["pg"]*mvabase),
+                    "\t", (gen["qg"]*mvabase),
+                    "\t", (gen["qmax"]*mvabase),
+                    "\t", (gen["qmin"]*mvabase),
+                    "\t", gen["vg"],
+                    "\t", gen["mbase"],
+                    "\t", gen["gen_status"],
+                    "\t", (gen["pmax"]*mvabase),
+                    "\t", (gen["pmin"]*mvabase),
+                    "\t", gen["pc1"],
+                    "\t", gen["pc2"],
+                    "\t", gen["qc1min"],
+                    "\t", gen["qc1max"],
+                    "\t", gen["qc2min"],
+                    "\t", gen["qc2max"],
+                    "\t", gen["ramp_agc"],
+                    "\t", (haskey(gen, "ramp_10") ? gen["ramp_10"] : 0),
+                    "\t", gen["ramp_30"],
+                    "\t", gen["ramp_q"], 
+                    "\t", gen["apf"],
+                    "\t", (haskey(gen, "mu_pmax") ? gen["mu_pmax"] : ""),
+                    "\t", (haskey(gen, "mu_pmin") ? gen["mu_pmin"] : ""),
+                    "\t", (haskey(gen, "mu_qmax") ? gen["mu_qmax"] : ""),
+                    "\t", (haskey(gen, "mu_qmin") ? gen["mu_qmin"] : ""),
+                    )      
         i = i+1
     end
     println(io,"];")
     println(io)
     
     # Print the branch data
-    branches = Dict{Int, Dict}()
-    for (idx,branch) in data["branch"]
-       branches[branch["index"]] = branch
-    end
-    println("%% branch data")
-    println("%    fbus    tbus    r    x    b    rateA    rateB    rateC    ratio    angle    status    angmin    angmax")
-    println("mpc.branch = [")
+    println(io, "%% branch data")
+    println(io, "%    fbus    tbus    r    x    b    rateA    rateB    rateC    ratio    angle    status    angmin    angmax")
+    println(io, "mpc.branch = [")
     i = 1
     for (idx,branch) in sort(branches)
         if idx != branch["index"]
             warn(LOGGER, "The index of the branch does not match the matpower assigned index. Any data that uses branch indexes for reference is corrupted.");           
         end 
-        s = @sprintf "\t%d\t%d\t%f\t%f\t%f\t%g\t%g\t%g\t%g\t%f\t%d\t%f\t%f" branch["f_bus"] branch["t_bus"] branch["br_r"] branch["br_x"] (haskey(branch,"b_to") ? branch["b_to"] + branch["b_fr"]  : 0) (branch["rate_a"]*mvabase) (branch["rate_b"]*mvabase) (branch["rate_c"]*mvabase) branch["tap"] (rad2deg(branch["shift"])) branch["br_status"] (rad2deg(branch["angmin"])) (rad2deg(branch["angmax"]))
-        println(io, s) 
-      
+        println(io, "\t", branch["f_bus"], 
+                    "\t", branch["t_bus"], 
+                    "\t", branch["br_r"], 
+                    "\t", branch["br_x"], 
+                    "\t", (haskey(branch,"b_to") ? branch["b_to"] + branch["b_fr"]  : 0), 
+                    "\t", (branch["rate_a"]*mvabase), 
+                    "\t", (branch["rate_b"]*mvabase), 
+                    "\t", (branch["rate_c"]*mvabase), 
+                    "\t", (branch["transformer"] ? branch["tap"] : 0), 
+                    "\t", (branch["transformer"] ? (rad2deg(branch["shift"])) : 0), 
+                    "\t", branch["br_status"], 
+                    "\t", (rad2deg(branch["angmin"])), 
+                    "\t", (rad2deg(branch["angmax"])),
+                    "\t", (haskey(branch, "pf") ? branch["pf"]*mvabase : ""),
+                    "\t", (haskey(branch, "qf") ? branch["qf"]*mvabase : ""),
+                    "\t", (haskey(branch, "pt") ? branch["pt"]*mvabase : ""),
+                    "\t", (haskey(branch, "qt") ? branch["qt"]*mvabase : ""),
+                    "\t", (haskey(branch, "mu_sf") ? branch["mu_sf"] : ""),
+                    "\t", (haskey(branch, "mu_st") ? branch["mu_st"] : ""),
+                    "\t", (haskey(branch, "mu_angmin") ? branch["mu_angmin"] : ""),
+                    "\t", (haskey(branch, "mu_angmax") ? branch["mu_angmax"] : ""),                        
+                    ) 
+                                                  
         i = i+1
     end
     println(io, "];")
     println(io)
+    
+    # print the dcline data
+    println(io, "%% dcline data")
+    println(io, "%	fbus	tbus	status	Pf	Pt	Qf	Qt	Vf	Vt	Pmin	Pmax	QminF	QmaxF	QminT	QmaxT	loss0	loss1")
+    println(io, "mpc.dcline = [")
+    for (idx, dcline) in sort(dclines)
+        println(io, "\t", dcline["f_bus"],
+                    "\t", dcline["t_bus"],
+                    "\t", dcline["br_status"],
+                    "\t", dcline["pf"],
+                    "\t", dcline["pt"],
+                    "\t", dcline["qf"],
+                    "\t", dcline["qt"],
+                    "\t", dcline["vf"],
+                    "\t", dcline["vt"],
+                    "\t", dcline["pmin"],
+                    "\t", dcline["pmax"],
+                    "\t", dcline["qminf"],
+                    "\t", dcline["qmaxf"],
+                    "\t", dcline["qmint"],
+                    "\t", dcline["qmaxt"],
+                    "\t", dcline["loss0"],
+                    "\t", dcline["loss1"],
+                    "\t", dcline["mu_pmin"],
+                    "\t", dcline["mu_pmax"],
+                    "\t", dcline["mu_qminf"],
+                    "\t", dcline["mu_qmaxf"],
+                    "\t", dcline["mu_qmint"],
+                    "\t", dcline["mu_qmaxt"],
+        )
+    end     
+    println(io, "];")
+    println(io)
+    
+    
        
     # Print the gen cost data
-    println(io, "%%-----  OPF Data  -----%%")
-    println(io, "%% generator cost data")
-    println(io, "%    1    startup    shutdown    n    x1    y1    ...    xn    yn")
-    println(io, "%    2    startup    shutdown    n    c(n-1)    ...    c0")
-    println(io, "mpc.gencost = [")
-    for (idx,gen) in (sort(generators))
-        s = @sprintf "\t2\t0\t0\t3\t%f\t%f\t%f" (gen["cost"][1] / mvabase^2) (gen["cost"][2] / mvabase) gen["cost"][3]
-        println(io, s)
+    if haskey(collect(values(generators))[1], "cost")
+        println(io, "%%-----  OPF Data  -----%%")
+        println(io, "%% generator cost data")
+        println(io, "%    1    startup    shutdown    n    x1    y1    ...    xn    yn")
+        println(io, "%    2    startup    shutdown    n    c(n-1)    ...    c0")
+        println(io, "mpc.gencost = [")
+        for (idx,gen) in (sort(generators))
+            println(io, "\t2\t", gen["startup"], "\t", gen["shutdown"], "\t", length(gen["cost"]),  "\t", (gen["cost"][1] / mvabase^2), "\t", (gen["cost"][2] / mvabase), "\t", gen["cost"][3])
+        end
+        println(io, "];");
+        println(io)
     end
-    println(io, "];");
-    println(io)
 
     # Print the extra bus data
-    export_extra_data(io, data, "bus", Set(["index", "gs", "bs", "zone", "bus_i", "bus_type", "qd",  "vmax", "area",  "vmin", "va", "vm", "base_kv", "pd"]))
+    export_extra_data(io, data, "bus", Set(["index", "gs", "bs", "zone", "bus_i", "bus_type", "qd",  "vmax", "area", "vmin", "va", "vm", "base_kv", "pd", "bus_name", "lam_p", "lam_q", "mu_vmax", "mu_vmin"]))
         
-    # Print the extra bus string data
-    export_extra_data_string(io, data, "bus", Set(["index", "gs", "bs", "zone", "bus_i", "bus_type", "qd",  "vmax", "area",  "vmin", "va", "vm", "base_kv", "pd"]))
-
     # Print the extra generator data
-    export_extra_data(io, data, "gen", Set(["index", "gen_bus", "pg", "qg", "qmax", "qmin", "vg", "mbase", "gen_status", "pmax", "pmin", "pc1", "pc2", "qc1min", "qc1max", "qc2min", "qc2max", "ramp_agc", "ramp_10", "ramp_30", "ramp_q", "apf", "ncost", "model", "shutdown", "startup", "cost"]))
-
-    # Print the extra generator string data
-    export_extra_data_string(io, data, "gen", Set(["index", "gen_bus", "pg", "qg", "qmax", "qmin", "vg", "mbase", "gen_status", "pmax", "pmin", "pc1", "pc2", "qc1min", "qc1max", "qc2min", "qc2max", "ramp_agc", "ramp_10", "ramp_30", "ramp_q", "apf", "ncost", "model", "shutdown", "startup", "cost"]))
+    export_extra_data(io, data, "gen", Set(["index", "gen_bus", "pg", "qg", "qmax", "qmin", "vg", "mbase", "gen_status", "pmax", "pmin", "pc1", "pc2", "qc1min", "qc1max", "qc2min", "qc2max", "ramp_agc", "ramp_10", "ramp_30", "ramp_q", "apf", "ncost", "model", "shutdown", "startup", "cost", "mu_pmax", "mu_pmin", "mu_qmax", "mu_qmin"]))
 
     # Print the extra branch data
-    export_extra_data(io, data, "branch", Set(["index", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "g_to", "g_fr"]))
+    export_extra_data(io, data, "branch", Set(["index", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "g_to", "g_fr", "pf", "qf", "pt", "qt", "mu_sf", "mu_st", "mu_angmin", "mu_angmax"]))
       
-    # print the extra branch string data
-    export_extra_data_string(io, data, "branch", Set(["index", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "g_to", "g_fr"]))
-
     # print the extra load data
     export_extra_data(io, data, "load", Set(["index", "load_bus", "status", "qd", "pd"]))
-
-    # print the extra load string data
-    export_extra_data_string(io, data, "load", Set(["index", "load_bus", "status", "qd", "pd"]))
 
     # print the extra shunt data
     export_extra_data(io, data, "shunt", Set(["index", "shunt_bus", "status", "gs", "bs"]))
 
-    # print the extra shunt string data
-    export_extra_data_string(io, data, "shunt", Set(["index", "shunt_bus", "status", "gs", "bs"]))
-      
     # print the extra component data
     for (key, value) in data
-        if key != "bus" && key != "gen" && key != "branch" && key != "load" && key != "shunt"
+        if key != "bus" && key != "gen" && key != "branch" && key != "load" && key != "shunt" && key != "dcline"
             export_extra_data(io, data, key)
-            export_extra_data_string(io, data, key)          
         end      
     end
     
 end
 
 "Export fields of a component type"
-function export_extra_data(io::Base.PipeEndpoint, data::Dict{String,Any}, component, excluded_fields=Set(["index"]))
+function export_extra_data(io::IO, data::Dict{String,Any}, component, excluded_fields=Set(["index"]))
     if !isa(data[component], Dict)
         return  
     end 
@@ -824,13 +926,9 @@ function export_extra_data(io::Base.PipeEndpoint, data::Dict{String,Any}, compon
        
     # Gather the fields
     included_fields = []   
-    c = nothing 
-    for temp in values(data[component])
-        c = temp
-        break    
-    end 
+    c = collect(values(data[component]))[1]
     for (key, value) in c
-        if !in(key, excluded_fields) && !isa(value, String)
+        if !in(key, excluded_fields)
             push!(included_fields, key)
         end      
     end
@@ -848,7 +946,7 @@ function export_extra_data(io::Base.PipeEndpoint, data::Dict{String,Any}, compon
     println(io)
     print(io, "mpc.")
     print(io, component)
-    println(io, "_data = [")
+    println(io, " = {")
     
     # sort the data
     components = Dict{Int, Dict}()
@@ -865,70 +963,13 @@ function export_extra_data(io::Base.PipeEndpoint, data::Dict{String,Any}, compon
      
         for field in included_fields
             print(io,"\t")
+            if isa(c[field], String)
+                print(io, "'")
+            end  
             print(io,c[field])
-        end
-        println(io)
-        i = i+1
-    end
-    println(io, "];")
-    println(io)    
-end
-
-"Export the string fields of a component type"
-function export_extra_data_string(io::Base.PipeEndpoint, data::Dict{String,Any}, component, excluded_fields=Set(["index"]))
-    if !isa(data[component], Dict)
-        return  
-    end 
-
-    if length(data[component]) == 0
-        return
-    end  
-  
-    # Gather the fields
-    included_fields = []   
-    c = nothing 
-    for temp in values(data[component])
-        c = temp
-        break    
-    end 
-    for (key, value) in c
-        if !in(key, excluded_fields) && isa(value, String)
-            push!(included_fields, key)
-        end      
-    end
-    
-    if length(included_fields) == 0
-        return
-    end
-    
-    # Print the header
-    print(io, "%column_names% ")
-    for field in included_fields
-        print(io, field)
-        print(io, " ")  
-    end
-    println(io)
-    print(io, "mpc.")
-    print(io, component)
-    println(io, "_data_strings = {")
-    
-    # sort the data
-    components = Dict{Int, Dict}()
-    for (idx,c) in data[component]
-        components[c["index"]] = c
-    end    
-        
-    # print the data    
-    i = 1
-    for (idx,c) in sort(components)
-        if idx != c["index"]
-            warn(LOGGER, "The index of a component does not match the matpower assigned index. Any data that uses component indexes for reference is corrupted.");           
-        end 
-     
-        for field in included_fields
-            print(io,"\t'")
-            print(io,c[field])
-            print(io,"'")            
+            if isa(c[field], String)
+                print(io, "'")
+            end              
         end
         println(io)
         i = i+1
