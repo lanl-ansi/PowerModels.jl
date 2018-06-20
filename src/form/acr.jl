@@ -18,25 +18,25 @@ ACRPowerModel(data::Dict{String,Any}; kwargs...) =
 
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...) where T <: AbstractACRForm
-    variable_voltage_real(pm, n; kwargs...)
-    variable_voltage_imaginary(pm, n; kwargs...)
+function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACRForm
+    variable_voltage_real(pm; kwargs...)
+    variable_voltage_imaginary(pm; kwargs...)
 end
 
 
 "add constraints for voltage magnitude"
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: AbstractACRForm
-    vr = pm.var[:nw][n][:vr]
-    vi = pm.var[:nw][n][:vi]
+function constraint_voltage(pm::GenericPowerModel{T}, n::Int, h::Int) where T <: AbstractACRForm
+    vr = var(pm, n, h, :vr)
+    vi = var(pm, n, h, :vi)
 
-    for (i,bus) in pm.ref[:nw][n][:bus]
+    for (i,bus) in ref(pm, n, :bus)
         @constraint(pm.model, bus["vmin"]^2 <= (vr[i]^2 + vi[i]^2))
         @constraint(pm.model, bus["vmax"]^2 >= (vr[i]^2 + vi[i]^2))
     end
 
     # does not seem to improve convergence
     #wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
-    #for bp in keys(pm.ref[:buspairs])
+    #for bp in ids(pm, nw, :buspairs)
     #    i,j = bp
     #    @constraint(pm.model, wr_min[bp] <= vr[i]*vr[j] + vi[i]*vi[j])
     #    @constraint(pm.model, wr_max[bp] >= vr[i]*vr[j] + vi[i]*vi[j])
@@ -48,31 +48,29 @@ end
 
 
 "`v[i] == vm`"
-function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, i, vm) where T <: AbstractACRForm
-    vr = pm.var[:nw][n][:vr][i]
-    vi = pm.var[:nw][n][:vi][i]
+function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, h::Int, i, vm) where T <: AbstractACRForm
+    vr = var(pm, n, h, :vr, i)
+    vi = var(pm, n, h, :vi, i)
 
     @constraint(pm.model, (vr^2 + vi^2) == vm^2)
 end
 
 
 "reference bus angle constraint"
-function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, i::Int) where T <: AbstractACRForm
-    @constraint(pm.model, pm.var[:nw][n][:vi][i] == 0)
+function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, h::Int, i::Int) where T <: AbstractACRForm
+    @constraint(pm.model, var(pm, n, h, :vi)[i] == 0)
 end
 
 
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACRForm
-    vr = pm.var[:nw][n][:vr][i]
-    vi = pm.var[:nw][n][:vi][i]
-    p = pm.var[:nw][n][:p]
-    q = pm.var[:nw][n][:q]
-    pg = pm.var[:nw][n][:pg]
-    qg = pm.var[:nw][n][:qg]
-    p_dc = pm.var[:nw][n][:p_dc]
-    q_dc = pm.var[:nw][n][:q_dc]
-    load = pm.ref[:nw][n][:load]
-    shunt = pm.ref[:nw][n][:shunt]
+function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACRForm
+    vr = var(pm, n, h, :vr, i)
+    vi = var(pm, n, h, :vi, i)
+    p  = var(pm, n, h, :p)
+    q  = var(pm, n, h, :q)
+    pg = var(pm, n, h, :pg)
+    qg = var(pm, n, h, :qg)
+    p_dc = var(pm, n, h, :p_dc)
+    q_dc = var(pm, n, h, :q_dc)
 
     @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*(vr^2 + vi^2))
     @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*(vr^2 + vi^2))
@@ -82,13 +80,13 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: AbstractACRForm
-    p_fr = pm.var[:nw][n][:p][f_idx]
-    q_fr = pm.var[:nw][n][:q][f_idx]
-    vr_fr = pm.var[:nw][n][:vr][f_bus]
-    vr_to = pm.var[:nw][n][:vr][t_bus]
-    vi_fr = pm.var[:nw][n][:vi][f_bus]
-    vi_to = pm.var[:nw][n][:vi][t_bus]
+function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, h::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: AbstractACRForm
+    p_fr = var(pm, n, h, :p, f_idx)
+    q_fr = var(pm, n, h, :q, f_idx)
+    vr_fr = var(pm, n, h, :vr, f_bus)
+    vr_to = var(pm, n, h, :vr, t_bus)
+    vi_fr = var(pm, n, h, :vi, f_bus)
+    vi_to = var(pm, n, h, :vi, t_bus)
 
     @constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*(vr_fr^2 + vi_fr^2) + (-g*tr+b*ti)/tm^2*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr-g*ti)/tm^2*(vi_fr*vr_to - vr_fr*vi_to) )
     @constraint(pm.model, q_fr == -(b+b_fr)/tm^2*(vr_fr^2 + vi_fr^2) - (-b*tr-g*ti)/tm^2*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr+b*ti)/tm^2*(vi_fr*vr_to - vr_fr*vi_to) )
@@ -97,13 +95,13 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm) where T <: AbstractACRForm
-    p_to = pm.var[:nw][n][:p][t_idx]
-    q_to = pm.var[:nw][n][:q][t_idx]
-    vr_fr = pm.var[:nw][n][:vr][f_bus]
-    vr_to = pm.var[:nw][n][:vr][t_bus]
-    vi_fr = pm.var[:nw][n][:vi][f_bus]
-    vi_to = pm.var[:nw][n][:vi][t_bus]
+function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, h::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm) where T <: AbstractACRForm
+    p_to = var(pm, n, h, :p, t_idx)
+    q_to = var(pm, n, h, :q, t_idx)
+    vr_fr = var(pm, n, h, :vr, f_bus)
+    vr_to = var(pm, n, h, :vr, t_bus)
+    vi_fr = var(pm, n, h, :vi, f_bus)
+    vi_to = var(pm, n, h, :vi, t_bus)
 
     @constraint(pm.model, p_to ==  (g+g_to)*(vr_to^2 + vi_to^2) + (-g*tr-b*ti)/tm^2*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr+g*ti)/tm^2*(-(vi_fr*vr_to - vr_fr*vi_to)) )
     @constraint(pm.model, q_to == -(b+b_to)*(vr_to^2 + vi_to^2) - (-b*tr+g*ti)/tm^2*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr-b*ti)/tm^2*(-(vi_fr*vr_to - vr_fr*vi_to)) )
@@ -113,13 +111,13 @@ end
 """
 branch phase angle difference bounds
 """
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, f_idx, angmin, angmax) where T <: AbstractACRForm
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, h::Int, f_idx, angmin, angmax) where T <: AbstractACRForm
     i, f_bus, t_bus = f_idx
 
-    vr_fr = pm.var[:nw][n][:vr][f_bus]
-    vr_to = pm.var[:nw][n][:vr][t_bus]
-    vi_fr = pm.var[:nw][n][:vi][f_bus]
-    vi_to = pm.var[:nw][n][:vi][t_bus]
+    vr_fr = var(pm, n, h, :vr, f_bus)
+    vr_to = var(pm, n, h, :vr, t_bus)
+    vi_fr = var(pm, n, h, :vi, f_bus)
+    vi_to = var(pm, n, h, :vi, t_bus)
 
     @constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) <= tan(angmax)*(vr_fr*vr_to + vi_fr*vi_to))
     @constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to))

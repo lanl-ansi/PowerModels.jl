@@ -23,8 +23,8 @@ AbstractWForms = Union{AbstractWRForms, AbstractDFForm}
 AbstractPForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm}
 
 "`t[ref_bus] == 0`"
-function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, i::Int) where T <: AbstractPForms
-    @constraint(pm.model, pm.var[:nw][n][:va][i] == 0)
+function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, h::Int, i::Int) where T <: AbstractPForms
+    @constraint(pm.model, var(pm, n, h, :va)[i] == 0)
 end
 
 """
@@ -33,25 +33,25 @@ t[f_bus] - t[t_bus] <= angmax
 t[f_bus] - t[t_bus] >= angmin
 ```
 """
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, f_idx, angmin, angmax) where T <: AbstractPForms
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, h::Int, f_idx, angmin, angmax) where T <: AbstractPForms
     i, f_bus, t_bus = f_idx
 
-    va_fr = pm.var[:nw][n][:va][f_bus]
-    va_to = pm.var[:nw][n][:va][t_bus]
+    va_fr = var(pm, n, h, :va, f_bus)
+    va_to = var(pm, n, h, :va, t_bus)
 
     @constraint(pm.model, va_fr - va_to <= angmax)
     @constraint(pm.model, va_fr - va_to >= angmin)
 end
 
 
-function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, i, vm) where T <: AbstractWForms
-    w = pm.var[:nw][n][:w][i]
+function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, h::Int, i, vm) where T <: AbstractWForms
+    w = var(pm, n, h, :w, i)
 
     @constraint(pm.model, w == vm^2)
 end
 
 "Do nothing, no way to represent this in these variables"
-function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, ref_bus::Int) where T <: AbstractWForms
+function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, h::Int, ref_bus::Int) where T <: AbstractWForms
 end
 
 
@@ -62,16 +62,15 @@ sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[
 ```
 """
 
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractWForms
-    w = pm.var[:nw][n][:w][i]
-    pg = pm.var[:nw][n][:pg]
-    qg = pm.var[:nw][n][:qg]
-    p = pm.var[:nw][n][:p]
-    q = pm.var[:nw][n][:q]
-    p_dc = pm.var[:nw][n][:p_dc]
-    q_dc = pm.var[:nw][n][:q_dc]
-    load = pm.ref[:nw][n][:load]
-    shunt = pm.ref[:nw][n][:shunt]
+
+function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractWForms
+    w    = var(pm, n, h, :w, i)
+    pg   = var(pm, n, h, :pg)
+    qg   = var(pm, n, h, :qg)
+    p    = var(pm, n, h, :p)
+    q    = var(pm, n, h, :q)
+    p_dc = var(pm, n, h, :p_dc)
+    q_dc = var(pm, n, h, :q_dc)
 
     @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*w)
     @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*w)
@@ -84,18 +83,16 @@ sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc]
 sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts)*w[i]
 ```
 """
-function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractWRForms
-    w = pm.var[:nw][n][:w][i]
-    pg = pm.var[:nw][n][:pg]
-    qg = pm.var[:nw][n][:qg]
-    p = pm.var[:nw][n][:p]
-    q = pm.var[:nw][n][:q]
-    p_ne = pm.var[:nw][n][:p_ne]
-    q_ne = pm.var[:nw][n][:q_ne]
-    p_dc = pm.var[:nw][n][:p_dc]
-    q_dc = pm.var[:nw][n][:q_dc]
-    load = pm.ref[:nw][n][:load]
-    shunt = pm.ref[:nw][n][:shunt]
+function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, h::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractWRForms
+    w    = var(pm, n, h, :w, i)
+    pg   = var(pm, n, h, :pg)
+    qg   = var(pm, n, h, :qg)
+    p    = var(pm, n, h, :p)
+    q    = var(pm, n, h, :q)
+    p_ne = var(pm, n, h, :p_ne)
+    q_ne = var(pm, n, h, :q_ne)
+    p_dc = var(pm, n, h, :p_dc)
+    q_dc = var(pm, n, h, :q_dc)
 
     @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*w)
     @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*w)
@@ -105,12 +102,12 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: AbstractWRForms
-    p_fr = pm.var[:nw][n][:p][f_idx]
-    q_fr = pm.var[:nw][n][:q][f_idx]
-    w_fr = pm.var[:nw][n][:w][f_bus]
-    wr = pm.var[:nw][n][:wr][(f_bus, t_bus)]
-    wi = pm.var[:nw][n][:wi][(f_bus, t_bus)]
+function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, h::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: AbstractWRForms
+    p_fr = var(pm, n, h, :p, f_idx)
+    q_fr = var(pm, n, h, :q, f_idx)
+    w_fr = var(pm, n, h, :w, f_bus)
+    wr   = var(pm, n, h, :wr, (f_bus, t_bus))
+    wi   = var(pm, n, h, :wi, (f_bus, t_bus))
 
     @constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi )
     @constraint(pm.model, q_fr == -(b+b_fr)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi )
@@ -120,12 +117,12 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm) where T <: AbstractWRForms
-    q_to = pm.var[:nw][n][:q][t_idx]
-    p_to = pm.var[:nw][n][:p][t_idx]
-    w_to = pm.var[:nw][n][:w][t_bus]
-    wr = pm.var[:nw][n][:wr][(f_bus, t_bus)]
-    wi = pm.var[:nw][n][:wi][(f_bus, t_bus)]
+function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, h::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm) where T <: AbstractWRForms
+    q_to = var(pm, n, h, :q, t_idx)
+    p_to = var(pm, n, h, :p, t_idx)
+    w_to = var(pm, n, h, :w, t_bus)
+    wr   = var(pm, n, h, :wr, (f_bus, t_bus))
+    wi   = var(pm, n, h, :wi, (f_bus, t_bus))
 
     @constraint(pm.model, p_to ==  (g+g_to)*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi )
     @constraint(pm.model, q_to == -(b+b_to)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
@@ -133,13 +130,13 @@ end
 
 
 ""
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, f_idx, angmin, angmax) where T <: AbstractWRForms
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, h::Int, f_idx, angmin, angmax) where T <: AbstractWRForms
     i, f_bus, t_bus = f_idx
 
-    w_fr = pm.var[:nw][n][:w][f_bus]
-    w_to = pm.var[:nw][n][:w][t_bus]
-    wr = pm.var[:nw][n][:wr][(f_bus, t_bus)]
-    wi = pm.var[:nw][n][:wi][(f_bus, t_bus)]
+    w_fr = var(pm, n, h, :w, f_bus)
+    w_to = var(pm, n, h, :w, t_bus)
+    wr   = var(pm, n, h, :wr, (f_bus, t_bus))
+    wi   = var(pm, n, h, :wi, (f_bus, t_bus))
 
     @constraint(pm.model, wi <= tan(angmax)*wr)
     @constraint(pm.model, wi >= tan(angmin)*wr)

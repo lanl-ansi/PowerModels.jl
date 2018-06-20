@@ -17,6 +17,9 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
 
         for (n,nw_data) in pm.data["nw"]
             sol_nw = sol_nws[n] = Dict{String,Any}()
+            if haskey(nw_data, "phases")
+                sol_nw["phases"] = nw_data["phases"]
+            end
             pm.cnw = parse(Int, n)
             solution_builder(pm, sol_nw)
             data_nws[n] = Dict(
@@ -26,6 +29,9 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
             )
         end
     else
+        if haskey(pm.data, "phases")
+            sol["phases"] = pm.data["phases"]
+        end
         solution_builder(pm, sol)
         data["bus_count"] = length(pm.data["bus"])
         data["branch_count"] = length(pm.data["branch"])
@@ -156,11 +162,22 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
     for (i,item) in data_dict
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
-        sol_item[param_name] = default_value(item)
-        try
-            variable = extract_var(var(pm, variable_symbol), idx, item)
-            sol_item[param_name] = scale(getvalue(variable), item)
-        catch
+
+        num_phases = length(phase_ids(pm))
+        ph_idx = 1
+        sol_item[param_name] = MultiPhaseVector(default_value(item), num_phases)
+        for phase in phase_ids(pm)
+            try
+                variable = extract_var(var(pm, variable_symbol, ph=phase), idx, item)
+                sol_item[param_name][ph_idx] = scale(getvalue(variable), item)
+            catch
+            end
+            ph_idx += 1
+        end
+
+        # remove MultiPhaseValue, if it was not a ismultiphase phase network
+        if !ismultiphase(pm)
+            sol_item[param_name] = sol_item[param_name][1]
         end
     end
 end
@@ -220,15 +237,27 @@ function add_dual(
     for (i,item) in data_dict
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
-        sol_item[param_name] = default_value(item)
-        try
-            constraint = extract_con(con(pm, con_symbol), idx, item)
-            sol_item[param_name] = scale(getdual(constraint), item)
-        catch
-            info(LOGGER, "No constraint: $(con_symbol), $(idx)")
+
+        num_phases = length(phase_ids(pm))
+        ph_idx = 1
+        sol_item[param_name] = MultiPhaseVector(default_value(item), num_phases)
+        for phase in phase_ids(pm)
+            try
+                constraint = extract_con(con(pm, con_symbol, ph=phase), idx, item)
+                sol_item[param_name][ph_idx] = scale(getdual(constraint), item)
+            catch
+                info(LOGGER, "No constraint: $(con_symbol), $(idx)")
+            end
+            ph_idx += 1
+        end
+
+        # remove MultiPhaseValue, if it was not a ismultiphase phase network
+        if !ismultiphase(pm)
+            sol_item[param_name] = sol_item[param_name][1]
         end
     end
 end
+
 
 solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}(
     :Ipopt => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
