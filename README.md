@@ -45,7 +45,7 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 - Hakan Ergun (@hakanergun) KU Leuven, HVDC lines
 - David Fobes (@pseudocubic) LANL, PSS(R)E v33 data support
 - Rory Finnegan (@rofinn) Invenia, Memento Logging
-- Frederik Geth (@frederikgeth), Branch Flow formulation
+- Frederik Geth (@frederikgeth) CSIRO, Branch Flow formulation
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 
