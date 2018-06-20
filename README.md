@@ -41,10 +41,11 @@ Community-driven development and enhancement of PowerModels are welcome and enco
 
 This code has been developed as part of the Advanced Network Science Initiative at Los Alamos National Laboratory.
 The primary developer is Carleton Coffrin(@ccoffrin) with support from the following contributors,
-- Russell Bent (@rb004f) LANL, TNEP problem specification
+- Russell Bent (@rb004f) LANL, Matpower export, TNEP problem specification
+- Hakan Ergun (@hakanergun) KU Leuven, HVDC lines
 - David Fobes (@pseudocubic) LANL, PSS(R)E v33 data support
 - Rory Finnegan (@rofinn) Invenia, Memento Logging
-- Frederik Geth (@frederikgeth) and Hakan Ergun (@hakanergun) KU Leuven, Branch Flow formulation and HVDC lines
+- Frederik Geth (@frederikgeth), Branch Flow formulation
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 
