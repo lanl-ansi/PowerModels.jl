@@ -86,3 +86,23 @@ mpc.branch_names = {
 	'Branch 2'	456;
 	'Branch 3'	789;
 };
+
+
+%column_names% number string 
+mpc.bus_data = {
+	 1	'FAV SPOT 02'
+	 2	'FAV PLACE 05'
+	 3	'FAV PLC 08'
+};
+
+
+%column_names% extra 
+mpc.load_data = {
+	100
+	101
+};
+
+%column_names% string number 
+mpc.component = {
+	'temp'	1000.0
+};
