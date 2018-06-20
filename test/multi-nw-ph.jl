@@ -162,7 +162,7 @@
             result = PowerModels.run_mn_mp_opf(mn_mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 2.63659e5; atol = 1e0)
+            @test isapprox(result["objective"], 2.67529e5; atol = 1e0)
 
             @test length(result["solution"]["nw"]) == 2
 
@@ -179,7 +179,7 @@
             result = PowerModels.run_mn_mp_opf(mn_mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 1.12131e5; atol = 1e0)
+            @test isapprox(result["objective"], 120623.0; atol = 1e1)
 
             @test length(result["solution"]["nw"]) == 2
 

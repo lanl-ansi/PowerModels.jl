@@ -234,7 +234,7 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         apply_func(dcline, "qmaxf", rescale)
         apply_func(dcline, "qminf", rescale)
 
-        _rescale_cost_model(dcline, mva_base, haskey(data, "phases"))
+        _rescale_cost_model(dcline, mva_base)
     end
 
     if haskey(data, "gen")
@@ -248,7 +248,7 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmax", rescale)
             apply_func(gen, "qmin", rescale)
 
-            _rescale_cost_model(gen, mva_base, haskey(data, "phases"))
+            _rescale_cost_model(gen, mva_base)
         end
     end
 
@@ -346,7 +346,7 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
         apply_func(dcline, "qmaxf", rescale)
         apply_func(dcline, "qminf", rescale)
 
-        _rescale_cost_model(dcline, 1.0/mva_base, haskey(data, "phases"))
+        _rescale_cost_model(dcline, 1.0/mva_base)
     end
 
     if haskey(data, "gen")
@@ -360,7 +360,7 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmax", rescale)
             apply_func(gen, "qmin", rescale)
 
-            _rescale_cost_model(gen, 1.0/mva_base, haskey(data, "phases"))
+            _rescale_cost_model(gen, 1.0/mva_base)
         end
     end
 
@@ -368,38 +368,19 @@ end
 
 
 ""
-function _rescale_cost_model(comp::Dict{String,Any}, scale::Real, multiphase::Bool)
+function _rescale_cost_model(comp::Dict{String,Any}, scale::Real)
     if "model" in keys(comp) && "cost" in keys(comp)
-        if !multiphase
-            if comp["model"] == 1
-                for i in 1:2:length(comp["cost"])
-                    comp["cost"][i] = comp["cost"][i]/scale
-                end
-            elseif comp["model"] == 2
-                degree = length(comp["cost"])
-                for (i, item) in enumerate(comp["cost"])
-                    comp["cost"][i] = item*(scale^(degree-i))
-                end
-            else
-                warn(LOGGER, "Skipping cost model of type $(comp["model"]) in per unit transformation")
+        if comp["model"] == 1
+            for i in 1:2:length(comp["cost"])
+                comp["cost"][i] = comp["cost"][i]/scale
+            end
+        elseif comp["model"] == 2
+            degree = length(comp["cost"])
+            for (i, item) in enumerate(comp["cost"])
+                comp["cost"][i] = item*(scale^(degree-i))
             end
         else
-            phases = length(comp["model"])
-            for ph in 1:phases
-                ph_str = isa(comp["model"], PowerModels.MultiPhaseValue) ? " on phase $(ph)" : ""
-                if comp["model"][ph] == 1
-                    for i in 1:2:length(comp["cost"][ph])
-                        comp["cost"][ph][i] = comp["cost"][ph][i]/scale
-                    end
-                elseif comp["model"][ph] == 2
-                    degree = length(comp["cost"][ph])
-                    for (i, item) in enumerate(comp["cost"][ph])
-                        comp["cost"][ph][i] = item*(scale^(degree-i))
-                    end
-                else
-                    warn(LOGGER, "Skipping cost model of type $(comp["model"][ph])$(ph_str) in per unit transformation")
-                end
-            end
+            warn(LOGGER, "Skipping cost model of type $(comp["model"]) in per unit transformation")
         end
     end
 end
@@ -1237,7 +1218,8 @@ end
 "feild names that should not be multi-phase values"
 phaseless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
     "br_status", "gen_bus", "load_bus", "shunt_bus", "f_bus", "t_bus",
-    "transformer", "area", "zone", "base_kv"])
+    "transformer", "area", "zone", "base_kv",
+    "model", "ncost", "cost", "startup", "shutdown"])
 
 phase_matrix = Set(["br_r", "br_x"])
 
