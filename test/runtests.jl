@@ -46,10 +46,9 @@ include("common.jl")
 
     include("tnep.jl")
 
-    include("multinetwork.jl")
+   include("multinetwork.jl")
 
-    include("docs.jl")
+   include("docs.jl")
     
-   include("export.jl")
-
+  
 end

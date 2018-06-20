@@ -506,8 +506,8 @@ function mp2pm_dcline(data::Dict{String,Any})
         loss0 = dcline["loss0"]
         loss1 = dcline["loss1"]
 
-#        delete!(dcline, "pmin")
-#        delete!(dcline, "pmax")
+        delete!(dcline, "pmin")
+        delete!(dcline, "pmax")
 
         if pmin >= 0 && pmax >=0
             pminf = pmin
@@ -538,6 +538,10 @@ function mp2pm_dcline(data::Dict{String,Any})
         dcline["pmint"] = pmint
         dcline["pmaxf"] = pmaxf
         dcline["pminf"] = pminf
+          
+        # preserve the old pmin and pmax values  
+        dcline["mp_pmin"] = pmin  
+        dcline["mp_pmax"] = pmax  
 
         dcline["pt"] = -dcline["pt"] # matpower has opposite convention
         dcline["qf"] = -dcline["qf"] # matpower has opposite convention
@@ -670,6 +674,13 @@ end
 "Export a power flow case in matpower format"
 function export_matpower(io::IO, data::Dict{String,Any})
 
+    is_per_unit = data["per_unit"]
+    #convert data to mixed unit
+    if is_per_unit
+       make_mixed_units(data)  
+    end
+      
+  
     # create some useful maps and data structures
     buses = Dict{Int, Dict}()
     for (idx,bus) in data["bus"]
@@ -721,7 +732,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
         gs[bus["index"]] = gs[bus["index"]] + shunt["gs"] 
     end
 
-    mvabase = data["baseMVA"]
+    mvaBase = data["baseMVA"]
 
     # Print the header information  
     println(io, "%% MATPOWER Case Format : Version 2")
@@ -729,7 +740,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     println(io)
     println(io, "%%-----  Power Flow Data  -----%%")
     println(io, "%% system MVA base")
-    println(io, "mpc.baseMVA = ", mvabase, ";")
+    println(io, "mpc.baseMVA = ", mvaBase, ";")
     println(io, "function mpc = ", data["name"])
         
     # Print the bus data
@@ -739,13 +750,13 @@ function export_matpower(io::IO, data::Dict{String,Any})
     for (idx,bus) in sort(buses)
         println(io, "\t", bus["index"], 
                     "\t", bus["bus_type"], 
-                    "\t", (pd[bus["index"]]*mvabase), 
-                    "\t", (qd[bus["index"]]*mvabase), 
-                    "\t", (gs[bus["index"]]*mvabase), 
-                    "\t", (bs[bus["index"]]*mvabase), 
+                    "\t", (pd[bus["index"]]), 
+                    "\t", (qd[bus["index"]]), 
+                    "\t", (gs[bus["index"]]), 
+                    "\t", (bs[bus["index"]]), 
                     "\t", bus["area"], 
                     "\t", bus["vm"], 
-                    "\t", rad2deg(bus["va"]), 
+                    "\t", (bus["va"]), 
                     "\t", bus["base_kv"], 
                     "\t", bus["zone"], 
                     "\t", bus["vmax"], 
@@ -780,26 +791,26 @@ function export_matpower(io::IO, data::Dict{String,Any})
             warn(LOGGER, "The index of the generator does not match the matpower assigned index. Any data that uses generator indexes for reference is corrupted.");           
         end  
         println(io, "\t", gen["gen_bus"], 
-                    "\t", (gen["pg"]*mvabase),
-                    "\t", (gen["qg"]*mvabase),
-                    "\t", (gen["qmax"]*mvabase),
-                    "\t", (gen["qmin"]*mvabase),
+                    "\t", (gen["pg"]),
+                    "\t", (gen["qg"]),
+                    "\t", (gen["qmax"]),
+                    "\t", (gen["qmin"]),
                     "\t", gen["vg"],
                     "\t", gen["mbase"],
                     "\t", gen["gen_status"],
-                    "\t", (gen["pmax"]*mvabase),
-                    "\t", (gen["pmin"]*mvabase),
-                    "\t", gen["pc1"],
-                    "\t", gen["pc2"],
-                    "\t", gen["qc1min"],
-                    "\t", gen["qc1max"],
-                    "\t", gen["qc2min"],
-                    "\t", gen["qc2max"],
-                    "\t", gen["ramp_agc"],
-                    "\t", (haskey(gen, "ramp_10") ? gen["ramp_10"] : 0),
-                    "\t", gen["ramp_30"],
-                    "\t", gen["ramp_q"], 
-                    "\t", gen["apf"],
+                    "\t", (gen["pmax"]),
+                    "\t", (gen["pmin"]),
+                    "\t", (haskey(gen, "pc1") ? gen["pc1"] : ""),
+                    "\t", (haskey(gen, "pc2") ? gen["pc2"] : ""),
+                    "\t", (haskey(gen, "qc1min") ? gen["qc1min"] : ""),
+                    "\t", (haskey(gen, "qc1max") ? gen["qc1max"] : ""),
+                    "\t", (haskey(gen, "qc2min") ? gen["qc2min"] : ""),
+                    "\t", (haskey(gen, "qc2max") ? gen["qc2max"] : ""),
+                    "\t", (haskey(gen, "ramp_agc") ? gen["ramp_agc"] : ""),
+                    "\t", (haskey(gen, "ramp_10") ? gen["ramp_10"] : haskey(gen, "ramp_30") ? 0 : ""),
+                    "\t", (haskey(gen, "ramp_30") ? gen["ramp_30"] : ""),
+                    "\t", (haskey(gen, "ramp_q") ? gen["ramp_q"] : ""), 
+                    "\t", (haskey(gen, "apf") ? gen["apf"] : ""),
                     "\t", (haskey(gen, "mu_pmax") ? gen["mu_pmax"] : ""),
                     "\t", (haskey(gen, "mu_pmin") ? gen["mu_pmin"] : ""),
                     "\t", (haskey(gen, "mu_qmax") ? gen["mu_qmax"] : ""),
@@ -823,19 +834,19 @@ function export_matpower(io::IO, data::Dict{String,Any})
                     "\t", branch["t_bus"], 
                     "\t", branch["br_r"], 
                     "\t", branch["br_x"], 
-                    "\t", (haskey(branch,"b_to") ? branch["b_to"] + branch["b_fr"]  : 0), 
-                    "\t", (branch["rate_a"]*mvabase), 
-                    "\t", (branch["rate_b"]*mvabase), 
-                    "\t", (branch["rate_c"]*mvabase), 
+                    "\t", (branch["b_to"] + branch["b_fr"]), 
+                    "\t", (branch["rate_a"]), 
+                    "\t", (branch["rate_b"]), 
+                    "\t", (branch["rate_c"]), 
                     "\t", (branch["transformer"] ? branch["tap"] : 0), 
-                    "\t", (branch["transformer"] ? (rad2deg(branch["shift"])) : 0), 
+                    "\t", (branch["transformer"] ? ((branch["shift"])) : 0), 
                     "\t", branch["br_status"], 
-                    "\t", (rad2deg(branch["angmin"])), 
-                    "\t", (rad2deg(branch["angmax"])),
-                    "\t", (haskey(branch, "pf") ? branch["pf"]*mvabase : ""),
-                    "\t", (haskey(branch, "qf") ? branch["qf"]*mvabase : ""),
-                    "\t", (haskey(branch, "pt") ? branch["pt"]*mvabase : ""),
-                    "\t", (haskey(branch, "qt") ? branch["qt"]*mvabase : ""),
+                    "\t", ((branch["angmin"])), 
+                    "\t", ((branch["angmax"])),
+                    "\t", (haskey(branch, "pf") ? branch["pf"] : ""),
+                    "\t", (haskey(branch, "qf") ? branch["qf"] : ""),
+                    "\t", (haskey(branch, "pt") ? branch["pt"] : ""),
+                    "\t", (haskey(branch, "qt") ? branch["qt"] : ""),
                     "\t", (haskey(branch, "mu_sf") ? branch["mu_sf"] : ""),
                     "\t", (haskey(branch, "mu_st") ? branch["mu_st"] : ""),
                     "\t", (haskey(branch, "mu_angmin") ? branch["mu_angmin"] : ""),
@@ -855,95 +866,37 @@ function export_matpower(io::IO, data::Dict{String,Any})
         println(io, "\t", dcline["f_bus"],
                     "\t", dcline["t_bus"],
                     "\t", dcline["br_status"],
-                    "\t", (dcline["pf"]*mvabase),
-                    "\t", (-dcline["pt"]*mvabase), # opposite convention
-                    "\t", (-dcline["qf"]*mvabase), # opposite convention
-                    "\t", (-dcline["qt"]*mvabase), # opposite convention
+                    "\t", (dcline["pf"]),
+                    "\t", (-dcline["pt"]), # opposite convention
+                    "\t", (-dcline["qf"]), # opposite convention
+                    "\t", (-dcline["qt"]), # opposite convention
                     "\t", dcline["vf"],
                     "\t", dcline["vt"],
-                    "\t", (dcline["pmin"]),
-                    "\t", (dcline["pmax"]),
-                    "\t", (dcline["qminf"] * mvabase),
-                    "\t", (dcline["qmaxf"] * mvabase),
-                    "\t", (dcline["qmint"] * mvabase),
-                    "\t", (dcline["qmaxt"] * mvabase),
-                    "\t", (dcline["loss0"] * mvabase),
+                    "\t", (haskey(dcline, "mp_pmin") ? dcline["mp_pmin"] : min(dcline["pmaxt"], dcline["pmint"],dcline["pmaxf"],dcline["pminf"])),
+                    "\t", (haskey(dcline, "mp_pmax") ? dcline["mp_pmax"] : max(dcline["pmaxt"], dcline["pmint"],dcline["pmaxf"],dcline["pminf"])),
+                    "\t", (dcline["qminf"]),
+                    "\t", (dcline["qmaxf"]),
+                    "\t", (dcline["qmint"]),
+                    "\t", (dcline["qmaxt"]),
+                    "\t", (dcline["loss0"]),
                     "\t", dcline["loss1"],
-                    "\t", (haskey(dcline, "mu_pmin") ? (dcline["mu_pmin"]*mvabase) : ""),
-                    "\t", (haskey(dcline, "mu_pmax") ? (dcline["mu_pmax"]*mvabase) : ""),
-                    "\t", (haskey(dcline, "mu_qminf") ? (dcline["mu_qminf"]*mvabase) : ""),
-                    "\t", (haskey(dcline, "mu_qmaxf") ? (dcline["mu_qmaxf"]*mvabase) : ""),
-                    "\t", (haskey(dcline, "mu_qmint") ? (dcline["mu_qmint"]*mvabase) : ""),
-                    "\t", (haskey(dcline, "mu_qmaxt") ? (dcline["mu_qmaxt"]*mvabase) : ""),
+                    "\t", (haskey(dcline, "mu_pmin") ? (dcline["mu_pmin"]) : ""),
+                    "\t", (haskey(dcline, "mu_pmax") ? (dcline["mu_pmax"]) : ""),
+                    "\t", (haskey(dcline, "mu_qminf") ? (dcline["mu_qminf"]) : ""),
+                    "\t", (haskey(dcline, "mu_qmaxf") ? (dcline["mu_qmaxf"]) : ""),
+                    "\t", (haskey(dcline, "mu_qmint") ? (dcline["mu_qmint"]) : ""),
+                    "\t", (haskey(dcline, "mu_qmaxt") ? (dcline["mu_qmaxt"]) : ""),
         )
     end     
     println(io, "];")
     println(io)
            
     # Print the gen cost data
-    if haskey(collect(values(generators))[1], "cost")
-        println(io, "%%-----  OPF Data  -----%%")
-        println(io, "%% generator cost data")
-        println(io, "%    1    startup    shutdown    n    x1    y1    ...    xn    yn")
-        println(io, "%    2    startup    shutdown    n    c(n-1)    ...    c0")
-        println(io, "mpc.gencost = [")
+    export_cost_data(io, generators, "mpc.gencost")
         
-        
-        for (idx,gen) in (sort(generators))
-            if gen["model"] == 1
-                print(io, "\t1\t", gen["startup"], "\t", gen["shutdown"], "\t", (length(gen["cost"]) / 2) ),
-                for l=1:length(gen["cost"])
-                    print(io, "\t", gen["cost"][l] * mvabase^(l % 2))  
-                end
-            else                          
-                print(io, "\t2\t", gen["startup"], "\t", gen["shutdown"], "\t", length(gen["cost"])),
-                for l=1:length(gen["cost"])
-                    print(io, "\t", gen["cost"][l] / mvabase^(length(gen["cost"])-l))  
-                end
-            end
-            println(io)   
-        end
-        println(io, "];");
-        println(io)
-    end
-    
-    
-    
-    
-    
-    
-    
     # Print the dcline cost data
-    if length(data["dcline"]) > 0
-        if haskey(collect(values(dclines))[1], "cost")
-            println(io, "%% dcline cost data")
-            println(io, "%    1    startup    shutdown    n    x1    y1    ...    xn    yn")
-            println(io, "%    2    startup    shutdown    n    c(n-1)    ...    c0")
-            println(io, "mpc.dclinecost = [")
-        
-            for (idx,dcline) in (sort(dclines))
-                if dcline["model"] == 1
-                    print(io, "\t1\t", dcline["startup"], "\t", dcline["shutdown"], "\t", (length(dcline["cost"]) / 2) ),
-                    for l=1:length(dcline["cost"])
-                        print(io, "\t", dcline["cost"][l] * mvabase^(l % 2))
-                    end
-                else                          
-                    print(io, "\t2\t", dcline["startup"], "\t", dcline["shutdown"], "\t", length(dcline["cost"])),
-                    for l=1:length(dcline["cost"])
-                        print(io, "\t", dcline["cost"][l] / mvabase^(length(dcline["cost"])-l))
-                    end
-                end
-                println(io)   
-            end
-            println(io, "];");
-            println(io)
-        end
-    end
+    export_cost_data(io, dclines, "mpc.dclinecost")
     
-    
-    
-    
-
     # ne branch is not part of the matpower specs. However, it is treated as a special case by the matpower parser 
     # for example, br_b is converted into b_to and b_fr 
     if haskey(data, "ne_branch")
@@ -959,14 +912,14 @@ function export_matpower(io::IO, data::Dict{String,Any})
                         "\t", branch["br_r"], 
                         "\t", branch["br_x"], 
                         "\t", (haskey(branch,"b_to") ? branch["b_to"] + branch["b_fr"]  : 0), 
-                        "\t", (branch["rate_a"]*mvabase), 
-                        "\t", (branch["rate_b"]*mvabase),
-                        "\t", (branch["rate_c"]*mvabase), 
+                        "\t", (branch["rate_a"]), 
+                        "\t", (branch["rate_b"]),
+                        "\t", (branch["rate_c"]), 
                         "\t", (branch["transformer"] ? branch["tap"] : 0), 
-                        "\t", (branch["transformer"] ? (rad2deg(branch["shift"])) : 0), 
+                        "\t", (branch["transformer"] ? ((branch["shift"])) : 0), 
                         "\t", branch["br_status"], 
-                        "\t", (rad2deg(branch["angmin"])), 
-                        "\t", (rad2deg(branch["angmax"])),
+                        "\t", ((branch["angmin"])), 
+                        "\t", ((branch["angmax"])),
                         "\t", branch["construction_cost"],  
                     )                                                   
             i = i+1
@@ -985,7 +938,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     export_extra_data(io, data, "branch", Set(["index", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "g_to", "g_fr", "pf", "qf", "pt", "qt", "mu_sf", "mu_st", "mu_angmin", "mu_angmax"]); postfix="_data")
 
     # Print the extra dcline data
-    export_extra_data(io, data, "dcline", Set(["index", "mu_qmaxt", "mu_qmint", "mu_qmaxf", "mu_qminf", "mu_pmax", "mu_pmin", "loss0", "loss1", "qmint", "qmaxt", "pmin", "pmax", "qminf", "qmaxf", "f_bus", "t_bus", "br_status", "pf", "pt", "qf", "qt", "vf", "vt", "ncost", "model", "shutdown", "pmaxt", "startup", "pmint", "cost", "pminf", "pmaxf"]); postfix="_data")
+    export_extra_data(io, data, "dcline", Set(["index", "mu_qmaxt", "mu_qmint", "mu_qmaxf", "mu_qminf", "mu_pmax", "mu_pmin", "loss0", "loss1", "qmint", "qmaxt", "pmin", "pmax", "qminf", "qmaxf", "f_bus", "t_bus", "br_status", "pf", "pt", "qf", "qt", "vf", "vt", "ncost", "model", "shutdown", "pmaxt", "startup", "pmint", "cost", "pminf", "pmaxf", "mp_pmax", "mp_pmin"]); postfix="_data")
 
     # Print the extra ne_branch data
     if haskey(data, "ne_branch") 
@@ -1004,6 +957,12 @@ function export_matpower(io::IO, data::Dict{String,Any})
             export_extra_data(io, data, key)
         end      
     end
+    
+    #convert data back to per unit (if necessary)
+    if is_per_unit
+       make_per_unit(data)  
+    end
+    
     
 end
 
@@ -1081,5 +1040,34 @@ function export_extra_data(io::IO, data::Dict{String,Any}, component, excluded_f
     println(io)    
 end
 
-
-
+"Export cost data"
+function export_cost_data(io::IO, components::Dict{Int,Dict}, prefix::String)
+    if length(components) <= 0
+        return
+    end
+  
+    if haskey(collect(values(components))[1], "cost")
+        println(io, "%%-----  OPF Data  -----%%")
+        println(io, "%% cost data")
+        println(io, "%    1    startup    shutdown    n    x1    y1    ...    xn    yn")
+        println(io, "%    2    startup    shutdown    n    c(n-1)    ...    c0")
+        println(io, prefix, " = [")
+                
+        for (idx,gen) in (sort(components))
+            if gen["model"] == 1
+                print(io, "\t1\t", gen["startup"], "\t", gen["shutdown"], "\t", (length(gen["cost"]) / 2) ),
+                for l=1:length(gen["cost"])
+                    print(io, "\t", gen["cost"][l])  
+                end
+            else                          
+                print(io, "\t2\t", gen["startup"], "\t", gen["shutdown"], "\t", length(gen["cost"])),
+                for l=1:length(gen["cost"])
+                    print(io, "\t", gen["cost"][l] )  
+                end
+            end
+            println(io)   
+        end
+        println(io, "];");
+        println(io)
+    end
+end
