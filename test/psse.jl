@@ -38,7 +38,7 @@ end
 
         @testset "AC Model (parse_psse)" begin
             data_pti = PowerModels.parse_psse("../test/data/pti/frankenstein_00.raw")
-            data_mp = PowerModels.parse_psse("../test/data/matpower/frankenstein_00.m")
+            data_mp = PowerModels.parse_file("../test/data/matpower/frankenstein_00.m")
 
             set_costs!(data_mp)
 
