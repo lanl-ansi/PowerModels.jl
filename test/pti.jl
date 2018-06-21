@@ -88,7 +88,7 @@ TESTLOG = getlogger(PowerModels)
 
     @testset "20-bus frankenstein file (parse_pti; iostream)" begin
         data_dict = open("../test/data/pti/frankenstein_20.raw") do f
-            PowerModels.parse_pti(f; filename = "../test/data/pti/frankenstein_20.raw")
+            PowerModels.parse_pti(f)
         end
         @test isa(data_dict, Dict)
 

@@ -576,7 +576,7 @@ proper types.
 """
 function parse_pti(filename::String)::Dict
     open(filename) do f
-        parse_pti(f; filename = filename)
+        parse_pti(f)
     end
 end
 
@@ -587,9 +587,9 @@ end
 Parses PTI data in `io::IOStream`, returning a `Dict` of all the data into the
 proper types.
 """
-function parse_pti(io::IOStream; filename::String = "")::Dict
+function parse_pti(io::IOStream)::Dict
     data_string = readstring(io)
     pti_data = parse_pti_data(data_string, get_pti_sections())
-    pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"[\/\\]*(?:.*[\/\\])*(.*)\.raw", lowercase(filename)).captures[1]
+    pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"[\/\\]*(?:.*[\/\\])*(.*)\.raw", lowercase(io.name)).captures[1]
     return pti_data
 end

@@ -684,14 +684,14 @@ end
 "Parses directly from file"
 function parse_psse(filename::String; import_all=false)::Dict
     open(filename) do f
-        parse_psse(f; filename = filename, import_all=import_all)
+        parse_psse(f; import_all=import_all)
     end
 end
 
 
 "Parses directly from iostream"
-function parse_psse(io::IOStream; filename::String="", import_all=false)::Dict
-    pti_data = parse_pti(io; filename = filename)
+function parse_psse(io::IOStream; import_all=false)::Dict
+    pti_data = parse_pti(io)
 
     return parse_psse(pti_data; import_all=import_all)
 end

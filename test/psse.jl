@@ -53,7 +53,7 @@ end
         @testset "AC Model (parse_psse; iostream)" begin
             filename = "../test/data/pti/frankenstein_00.raw"
             open(filename) do f
-                data_pti = PowerModels.parse_psse(f, filename = filename)
+                data_pti = PowerModels.parse_psse(f)
                 data_mp = PowerModels.parse_file("../test/data/matpower/frankenstein_00.m")
 
                 set_costs!(data_mp)
