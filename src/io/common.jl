@@ -15,8 +15,6 @@ function parse_file(file::String; import_all=false)
         pm_data = parse_json(file)
     end
 
-    check_network_data(pm_data)
-
     return pm_data
 end
 
@@ -30,7 +28,9 @@ end
 ""
 function parse_json(file_string::String)
     data_string = readstring(open(file_string))
-    return JSON.parse(data_string)
+    pm_data = JSON.parse(data_string)
+    check_network_data(pm_data)
+    return pm_data
 end
 
 ""

@@ -7,10 +7,8 @@
 ""
 function parse_matpower(file_string::String)
     mp_data = parse_matpower_file(file_string)
-    #display(mp_data)
-
     pm_data = matpower_to_powermodels(mp_data)
-
+    check_network_data(pm_data)
     return pm_data
 end
 

@@ -675,6 +675,8 @@ function parse_psse(pti_data::Dict; import_all=false)::Dict
         end
     end
 
+    check_network_data(pm_data)
+
     return pm_data
 end
 
