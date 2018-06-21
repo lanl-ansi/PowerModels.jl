@@ -127,16 +127,19 @@ mp_dcline_columns = [
 
 ""
 function parse_matpower_file(file_string::String)
-    open(file_string) do io
+    mp_data = open(file_string) do io
         parse_matpower_file(io)
     end
+
+    return mp_data
 end
 
 
 ""
 function parse_matpower_file(io::IOStream)
     data_string = readstring(io)
-    parse_matpower_string(data_string)
+    
+    return parse_matpower_string(data_string)
 end
 
 
@@ -281,9 +284,6 @@ function parse_matpower_string(data_string::String)
             end
         end
     end
-
-    #println("Case:")
-    #println(case)
 
     return case
 end

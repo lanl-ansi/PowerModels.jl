@@ -575,9 +575,11 @@ to the main PTI parser, returning a `Dict` of all the data parsed into the
 proper types.
 """
 function parse_pti(filename::String)::Dict
-    open(filename) do f
+    pti_data = open(filename) do f
         parse_pti(f)
     end
+
+    return pti_data
 end
 
 
@@ -591,5 +593,6 @@ function parse_pti(io::IOStream)::Dict
     data_string = readstring(io)
     pti_data = parse_pti_data(data_string, get_pti_sections())
     pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"[\/\\]*(?:.*[\/\\])*(.*)\.raw", lowercase(io.name)).captures[1]
+    
     return pti_data
 end

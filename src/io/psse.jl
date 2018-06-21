@@ -683,9 +683,11 @@ end
 
 "Parses directly from file"
 function parse_psse(filename::String; import_all=false)::Dict
-    open(filename) do f
+    pm_data = open(filename) do f
         parse_psse(f; import_all=import_all)
     end
+    
+    return pm_data
 end
 
 
