@@ -29,6 +29,18 @@ using JSON
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
     end
 
+    @testset "30-bus case matpower data (parse_matpower; iostream)" begin
+        open("../test/data/matpower/case30.m") do f
+            data = PowerModels.parse_matpower(f)
+            @test isa(JSON.json(data), String)
+
+            result = run_opf(data, ACPPowerModel, ipopt_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 204.96; atol = 1e-1)
+        end
+    end
+
     @testset "14-bus case file with bus names" begin
         data = PowerModels.parse_file("../test/data/matpower/case14.m")
         @test data["bus"]["1"]["bus_name"] == "Bus 1     HV"

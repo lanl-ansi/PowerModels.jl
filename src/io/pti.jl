@@ -568,16 +568,28 @@ end
 
 
 """
-    parse_pti(filename)
+    parse_pti(filename::String)
 
 Open PTI raw file given by `filename`, passing the file contents as a string
 to the main PTI parser, returning a `Dict` of all the data parsed into the
 proper types.
 """
 function parse_pti(filename::String)::Dict
-    data_string = readstring(open(filename))
+    open(filename) do f
+        parse_pti(f; filename = filename)
+    end
+end
+
+
+"""
+    parse_pti(io::IOStream)
+
+Parses PTI data in `io::IOStream`, returning a `Dict` of all the data into the
+proper types.
+"""
+function parse_pti(io::IOStream; filename::String = "")::Dict
+    data_string = readstring(io)
     pti_data = parse_pti_data(data_string, get_pti_sections())
     pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"[\/\\]*(?:.*[\/\\])*(.*)\.raw", lowercase(filename)).captures[1]
-
     return pti_data
 end

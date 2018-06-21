@@ -27,11 +27,20 @@ end
 
 ""
 function parse_json(file_string::String)
-    data_string = readstring(open(file_string))
+    open(file_string) do f
+        parse_json(f)
+    end
+end
+
+
+""
+function parse_json(io::IOStream)
+    data_string = readstring(io)
     pm_data = JSON.parse(data_string)
     check_network_data(pm_data)
     return pm_data
 end
+
 
 ""
 function check_network_data(data::Dict{String,Any})

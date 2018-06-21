@@ -4,9 +4,9 @@
 #                                                                       #
 #########################################################################
 
-""
-function parse_matpower(file_string::String)
-    mp_data = parse_matpower_file(file_string)
+"Parses the matpwer data from either filename `file` or an IOStream"
+function parse_matpower(file::Union{IOStream, String})
+    mp_data = parse_matpower_file(file)
     pm_data = matpower_to_powermodels(mp_data)
     check_network_data(pm_data)
     return pm_data
@@ -127,10 +127,16 @@ mp_dcline_columns = [
 
 ""
 function parse_matpower_file(file_string::String)
-    io = open(file_string)
+    open(file_string) do io
+        parse_matpower_file(io)
+    end
+end
+
+
+""
+function parse_matpower_file(io::IOStream)
     data_string = readstring(io)
-    close(io)
-    return parse_matpower_string(data_string)
+    parse_matpower_string(data_string)
 end
 
 

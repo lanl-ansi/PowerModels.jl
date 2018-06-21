@@ -50,6 +50,23 @@ end
             @test isapprox(result_mp["objective"], result_pti["objective"]; atol = 1e-5)
         end
 
+        @testset "AC Model (parse_psse; iostream)" begin
+            filename = "../test/data/pti/frankenstein_00.raw"
+            open(filename) do f
+                data_pti = PowerModels.parse_psse(f, filename = filename)
+                data_mp = PowerModels.parse_file("../test/data/matpower/frankenstein_00.m")
+
+                set_costs!(data_mp)
+
+                result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+                result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
+
+                @test result_pti["status"] == :LocalOptimal
+                @test result_mp["status"]  == :LocalOptimal
+                @test isapprox(result_mp["objective"], result_pti["objective"]; atol = 1e-5)
+            end
+        end
+
         @testset "with two-winding transformer unit conversions" begin
             data_pti = PowerModels.parse_file("../test/data/pti/frankenstein_00_2.raw")
 
