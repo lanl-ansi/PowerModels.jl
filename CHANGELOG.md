@@ -3,7 +3,8 @@ PowerModels.jl Change Log
 
 ### Staged
 - Added Matpower data file export function
-- Adding mathematical model to documentation
+- Added mathematical model to documentation
+- Added parsing string data from IO objects
 - Added support for network data with multiple phases
 - Improved helper functions ref, var, con to work with multiple networks and phases
 
