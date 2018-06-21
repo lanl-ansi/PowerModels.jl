@@ -675,13 +675,25 @@ function parse_psse(pti_data::Dict; import_all=false)::Dict
         end
     end
 
+    check_network_data(pm_data)
+
     return pm_data
 end
 
 
 "Parses directly from file"
-function parse_psse(file::String; import_all=false)::Dict
-    pti_data = parse_pti(file)
+function parse_psse(filename::String; import_all=false)::Dict
+    pm_data = open(filename) do f
+        parse_psse(f; import_all=import_all)
+    end
+
+    return pm_data
+end
+
+
+"Parses directly from iostream"
+function parse_psse(io::IO; import_all=false)::Dict
+    pti_data = parse_pti(io)
 
     return parse_psse(pti_data; import_all=import_all)
 end

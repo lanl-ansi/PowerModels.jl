@@ -54,8 +54,42 @@ TESTLOG = getlogger(PowerModels)
         @test length(data_dict["OWNER"][1]) == 2
     end
 
-    @testset "20-bus frankenstein file" begin
+    @testset "20-bus frankenstein file (parse_file)" begin
         data_dict = PowerModels.parse_pti("../test/data/pti/frankenstein_20.raw")
+        @test isa(data_dict, Dict)
+
+        @test length(data_dict["BRANCH"]) == 2
+        for item in data_dict["BRANCH"]
+            @test length(item) == 24
+        end
+
+        @test length(data_dict["TRANSFORMER"][2]) == 83
+
+        @test length(data_dict["SWITCHED SHUNT"]) == 2
+        @test length(data_dict["SWITCHED SHUNT"][1]) == 16
+        @test length(data_dict["SWITCHED SHUNT"][2]) == 12
+    end
+
+    @testset "20-bus frankenstein file (parse_pti)" begin
+        data_dict = PowerModels.parse_pti("../test/data/pti/frankenstein_20.raw")
+        @test isa(data_dict, Dict)
+
+        @test length(data_dict["BRANCH"]) == 2
+        for item in data_dict["BRANCH"]
+            @test length(item) == 24
+        end
+
+        @test length(data_dict["TRANSFORMER"][2]) == 83
+
+        @test length(data_dict["SWITCHED SHUNT"]) == 2
+        @test length(data_dict["SWITCHED SHUNT"][1]) == 16
+        @test length(data_dict["SWITCHED SHUNT"][2]) == 12
+    end
+
+    @testset "20-bus frankenstein file (parse_pti; iostream)" begin
+        data_dict = open("../test/data/pti/frankenstein_20.raw") do f
+            PowerModels.parse_pti(f)
+        end
         @test isa(data_dict, Dict)
 
         @test length(data_dict["BRANCH"]) == 2
