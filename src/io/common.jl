@@ -34,7 +34,7 @@ end
 
 
 ""
-function parse_json(io::IOStream)
+function parse_json(io::IO)
     data_string = readstring(io)
     pm_data = JSON.parse(data_string)
     check_network_data(pm_data)

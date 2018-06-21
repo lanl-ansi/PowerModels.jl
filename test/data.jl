@@ -4,14 +4,15 @@ function test_case(filename::AbstractString, parse_file::Function)
     temp_file = "temp.m"
     source_data = parse_file(filename)        
 
-    io = open(temp_file, "w")         
+    io = PipeBuffer() # open(temp_file, "w")         
     PowerModels.export_matpower(io, source_data)
-    close(io)    
-    destination_data = PowerModels.parse_file(temp_file)  
+    # close(io)    
+    destination_data = PowerModels.parse_matpower(io)
+    # destination_data = PowerModels.parse_file(temp_file)  
     
     @test InfrastructureModels.compare_dict(source_data, destination_data)
             
-    rm(temp_file)
+    # rm(temp_file)
 end
 
 

@@ -4,8 +4,8 @@
 #                                                                       #
 #########################################################################
 
-"Parses the matpwer data from either filename `file` or an IOStream"
-function parse_matpower(file::Union{IOStream, String})
+"Parses the matpwer data from either a filename or an IO object"
+function parse_matpower(file::Union{IO, String})
     mp_data = parse_matpower_file(file)
     pm_data = matpower_to_powermodels(mp_data)
     check_network_data(pm_data)
@@ -136,7 +136,7 @@ end
 
 
 ""
-function parse_matpower_file(io::IOStream)
+function parse_matpower_file(io::IO)
     data_string = readstring(io)
     
     return parse_matpower_string(data_string)
