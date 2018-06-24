@@ -1,17 +1,17 @@
 # this file contains (balanced) convexified DistFlow formulation, in W space
 export
-    SOCDFPowerModel, SOCDFForm
+    SOCBFPowerModel, SOCBFForm
 ""
 abstract type AbstractDFForm <: AbstractPowerFormulation end
 
 ""
-abstract type SOCDFForm <: AbstractDFForm end
+abstract type SOCBFForm <: AbstractDFForm end
 
 ""
-const SOCDFPowerModel = GenericPowerModel{SOCDFForm}
+const SOCBFPowerModel = GenericPowerModel{SOCBFForm}
 
 "default SOC constructor"
-SOCDFPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCDFForm; kwargs...)
+SOCBFPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCBFForm; kwargs...)
 
 
 
