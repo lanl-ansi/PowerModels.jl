@@ -63,10 +63,26 @@ function variable_reactive_branch_series_flow(pm::GenericPowerModel; nw::Int=pm.
     end
 end
 
+""
+function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.cph) where T <: AbstractDFForm
+    branch = ref(pm, nw, :branch)
+    bus = ref(pm, nw, :bus)
+    ub = Dict()
+    for (i, b) in branch
+        ub[i] = ((b["rate_a"][ph]*b["tap"][ph])/(bus[b["f_bus"]]["vmin"][ph]))^2
+    end
+    var(pm, nw, ph)[:cm] = @variable(pm.model,
+        [i in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_cm",
+        lowerbound = 0,
+        upperbound = ub[i],
+        start = getval(branch[i], "cm_start", ph)
+    )
+end
 
 ""
 function variable_branch_current(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDFForm
     variable_branch_series_current_magnitude_sqr(pm; kwargs...)
+    variable_current_magnitude_sqr(pm; kwargs...)
 end
 
 ""
@@ -85,9 +101,15 @@ function constraint_flow_losses(pm::GenericPowerModel{T}, n::Int, h::Int, i, f_b
     w_fr = var(pm, n, h, :w, f_bus)
     w_to = var(pm, n, h, :w, t_bus)
     ccm =  var(pm, n, h, :ccm, i)
+    cm =  var(pm, n, h, :cm, i)
 
     @constraint(pm.model, p_fr + p_to ==  g_sh_fr*(w_fr/tm^2) + r*ccm +  g_sh_to*w_to)
     @constraint(pm.model, q_fr + q_to == -b_sh_fr*(w_fr/tm^2) + x*ccm + -b_sh_to*w_to)
+
+    ym_sh_sqr = g_sh_fr^2 + b_sh_fr^2
+
+    @constraint(pm.model, p_fr + p_to == r*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)) + g_sh_fr*(w_fr/tm^2) + g_sh_to*w_to)
+    @constraint(pm.model, q_fr + q_to == x*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)) - b_sh_fr*(w_fr/tm^2) - b_sh_to*w_to)
 end
 
 
@@ -100,6 +122,8 @@ function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::In
     w_fr = var(pm, n, h, :w, f_bus)
     w_to = var(pm, n, h, :w, t_bus)
     ccm =  var(pm, n, h, :ccm, i)
+    cm =  var(pm, n, h, :cm, i)
+
 
     #define series flow expressions to simplify Ohm's law
     p_s_fr = p_fr - g_sh_fr*(w_fr/tm^2)
@@ -108,6 +132,9 @@ function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::In
     #KVL over the line:
     @constraint(pm.model, w_to == (w_fr/tm^2) - 2*(r*p_s_fr + x*q_s_fr) + (r^2 + x^2)*ccm)
 
+    ym_sh_sqr = g_sh_fr^2 + b_sh_fr^2
+
+    @constraint(pm.model, (1+2*(r*g_sh_fr - x*b_sh_fr))*(w_fr/tm^2) - w_to ==  2*(r*p_fr + x*q_fr) - (r^2 + x^2)*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)))
 end
 
 """
@@ -116,6 +143,8 @@ Defines relationship between branch (series) power flow, branch (series) current
 function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, h::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractDFForm
     p_fr   = var(pm, n, h, :p, f_idx)
     q_fr   = var(pm, n, h, :q, f_idx)
+    cm = var(pm, n, h, :cm, i)
+
     p_s_fr = var(pm, n, h, :p_s, f_idx)
     q_s_fr = var(pm, n, h, :q_s, f_idx)
     w_fr   = var(pm, n, h, :w, f_bus)
@@ -130,7 +159,7 @@ function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, h::Int, i, 
     #q_fr_s = q_fr + b_sh_fr*(w_fr/tm^2)
 
     # convex constraint linking p, q, w and ccm
-    #@constraint(pm.model, p_fr_s^2 + q_fr_s^2 <= (w_fr/tm^2)*ccm)
+    @constraint(pm.model, p_fr^2 + q_fr^2 <= (w_fr/tm^2)*cm)
 end
 
 
