@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Removed explicit series variables from branch flow model
 - Added Matpower data file export function
 - Added mathematical model to documentation
 - Added parsing string data from IO objects
