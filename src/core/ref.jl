@@ -2,38 +2,6 @@
 
 
 ""
-function calc_series_active_power_bound(branches, buses, phase::Int=1)
-    pmax = Dict([(key, 0.0) for key in keys(branches)])
-    for (key, branch) in branches
-        bus_fr = buses[branch["f_bus"]]
-        g_sh_fr = branch["g_fr"][phase]
-        vmax_fr = bus_fr["vmax"][phase]
-        tap_fr = branch["tap"][phase]
-        smax = branch["rate_a"][phase]
-
-        pmax[key] = smax + abs(g_sh_fr) * (vmax_fr/tap_fr)^2
-    end
-    return pmax
-end
-
-
-""
-function calc_series_reactive_power_bound(branches, buses, phase::Int=1)
-    qmax = Dict([(key, 0.0) for key in keys(branches)])
-    for (key, branch) in branches
-        bus_fr = buses[branch["f_bus"]]
-        b_sh_fr = branch["g_fr"][phase]
-        vmax_fr = bus_fr["vmax"][phase]
-        tap_fr = branch["tap"][phase]
-        smax = branch["rate_a"][phase]
-
-        qmax[key] = smax + abs(b_sh_fr) * (vmax_fr/tap_fr)^2
-    end
-    return qmax
-end
-
-
-""
 function calc_voltage_product_bounds(buspairs, phase::Int=1)
     wr_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
     wr_max = Dict([(bp,  Inf) for bp in keys(buspairs)])

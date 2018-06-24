@@ -234,6 +234,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
+    @testset "5-bus case with hvdc line" begin
+        result = run_pf_bf("../test/data/matpower/case5_dc.m", SOCBFPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+    end
     @testset "6-bus case" begin
         result = run_pf_bf("../test/data/matpower/case6.m", SOCBFPowerModel, ipopt_solver)
 
