@@ -2,11 +2,12 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- Removed explicit series variables from branch flow model
+- Added support for asymmetric line charging in all formulations
 - Added Matpower data file export function
 - Added mathematical model to documentation
 - Added parsing string data from IO objects
 - Added support for network data with multiple phases
+- Removed explicit series variables from branch flow model
 - Improved helper functions ref, var, con to work with multiple networks and phases
 
 ### v0.7.2
