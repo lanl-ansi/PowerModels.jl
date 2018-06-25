@@ -19,7 +19,7 @@ StandardDCPForm <: AbstractDCPForm
 SOCWRForm <: AbstractWRForm
 QCWRForm <: AbstractWRForm
 
-SOCDFForm <: AbstractWForm
+SOCBFForm <: AbstractWForm
 ```
 
 ## Power Models
@@ -33,7 +33,7 @@ DCPPowerModel = GenericPowerModel{StandardDCPForm}
 SOCWRPowerModel = GenericPowerModel{SOCWRForm}
 QCWRPowerModel = GenericPowerModel{QCWRForm}
 
-SOCDFPowerModel = GenericPowerModel{SOCDFForm}
+SOCBFPowerModel = GenericPowerModel{SOCBFForm}
 ```
 
 For details on `GenericPowerModel`, see the section on [Power Model](@ref).
