@@ -488,16 +488,15 @@ end
 function constraint_power_magnitude_link(pm::GenericPowerModel{T}, n::Int, h::Int, f_bus, t_bus, arc_from, g, b, g_fr, b_fr, g_to, b_to, tr, ti, tm) where T <: QCWRForm
     w_fr = var(pm, n, h, :w, f_bus)
     w_to = var(pm, n, h, :w, t_bus)
+    p_fr = var(pm, n, h, :p, arc_from)
     q_fr = var(pm, n, h, :q, arc_from)
     wr = var(pm, n, h, :wr, (f_bus, t_bus))
     wi = var(pm, n, h, :wi, (f_bus, t_bus))
     cm = var(pm, n, h, :cm, (f_bus, t_bus))
 
-    assert(g_fr == 0 && g_to == 0)
-    c = b_fr + b_to
+    ym_sh_sqr = g_fr^2 + b_fr^2
 
-    # TODO: Derive updated constraint from first principles
-    @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - c*q_fr - ((c/2)/tm^2)^2*w_fr)
+    @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - ym_sh_sqr*(w_fr/tm^2) + 2*(g_fr*p_fr - b_fr*q_fr))
 end
 
 "`t[ref_bus] == 0`"
@@ -733,16 +732,15 @@ end
 function constraint_power_magnitude_link_on_off(pm::GenericPowerModel{T}, n::Int, h::Int, i, arc_from, g, b, g_fr, b_fr, g_to, b_to, tr, ti, tm) where T <: QCWRForm
     w_fr = var(pm, n, h, :w_fr, i)
     w_to = var(pm, n, h, :w_to, i)
+    p_fr = var(pm, n, h, :p, arc_from)
     q_fr = var(pm, n, h, :q, arc_from)
     wr   = var(pm, n, h, :wr, i)
     wi   = var(pm, n, h, :wi, i)
     cm   = var(pm, n, h, :cm, i)
 
-    assert(g_fr == 0.0 && g_to == 0.0)
-    c = b_fr + b_to
+    ym_sh_sqr = g_fr^2 + b_fr^2
 
-    # TODO: Derive updated constraint from first principles
-    @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - c*q_fr - ((c/2)/tm^2)^2*w_fr)
+    @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - ym_sh_sqr*(w_fr/tm^2) + 2*(g_fr*p_fr - b_fr*q_fr))
 end
 
 

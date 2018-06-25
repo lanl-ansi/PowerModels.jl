@@ -25,6 +25,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 15174; atol = 1e0)
     end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_ots("../test/data/pti/case5_alc.raw", ACPPowerModel, juniper_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1002.52; atol = 1e0)
+    end
     #Omitting this test, returns local infeasible
     #@testset "6-bus case" begin
     #    result = run_ots("../test/data/matpower/case6.m", ACPPowerModel, juniper_solver)
@@ -111,6 +117,12 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 15051.4; atol = 1e0)
     end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_ots("../test/data/pti/case5_alc.raw", SOCWRPowerModel, pajarito_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 1004.8; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_ots("../test/data/matpower/case6.m", SOCWRPowerModel, pajarito_solver)
 
@@ -146,6 +158,12 @@ end
 
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 14999.7; atol = 1e0)
+    end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_ots("../test/data/pti/case5_alc.raw", QCWRPowerModel, pajarito_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 1003.97; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_ots("../test/data/matpower/case6.m", QCWRPowerModel, pajarito_solver)
