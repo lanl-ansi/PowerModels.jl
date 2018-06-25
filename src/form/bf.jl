@@ -2,10 +2,10 @@
 export
     SOCBFPowerModel, SOCBFForm
 ""
-abstract type AbstractDFForm <: AbstractPowerFormulation end
+abstract type AbstractBFForm <: AbstractPowerFormulation end
 
 ""
-abstract type SOCBFForm <: AbstractDFForm end
+abstract type SOCBFForm <: AbstractBFForm end
 
 ""
 const SOCBFPowerModel = GenericPowerModel{SOCBFForm}
@@ -16,7 +16,7 @@ SOCBFPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOC
 
 
 ""
-function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true) where T <: AbstractDFForm
+function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true) where T <: AbstractBFForm
     branch = ref(pm, nw, :branch)
     bus = ref(pm, nw, :bus)
     ub = Dict()
@@ -41,19 +41,19 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
 end
 
 ""
-function variable_branch_current(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDFForm
+function variable_branch_current(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractBFForm
     variable_current_magnitude_sqr(pm; kwargs...)
 end
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDFForm
+function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractBFForm
     variable_voltage_magnitude_sqr(pm; kwargs...)
 end
 
 """
 Defines branch flow model power flow equations
 """
-function constraint_flow_losses(pm::GenericPowerModel{T}, n::Int, h::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm) where T <: AbstractDFForm
+function constraint_flow_losses(pm::GenericPowerModel{T}, n::Int, h::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm) where T <: AbstractBFForm
     p_fr = var(pm, n, h, :p, f_idx)
     q_fr = var(pm, n, h, :q, f_idx)
     p_to = var(pm, n, h, :p, t_idx)
@@ -72,7 +72,7 @@ end
 """
 Defines voltage drop over a branch, linking from and to side voltage magnitude
 """
-function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::Int, h::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm) where T <: AbstractDFForm
+function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::Int, h::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFForm
     p_fr = var(pm, n, h, :p, f_idx)
     q_fr = var(pm, n, h, :q, f_idx)
     w_fr = var(pm, n, h, :w, f_bus)
@@ -87,7 +87,7 @@ end
 """
 Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
-function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, h::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractDFForm
+function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, h::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFForm
     p_fr   = var(pm, n, h, :p, f_idx)
     q_fr   = var(pm, n, h, :q, f_idx)
     w_fr   = var(pm, n, h, :w, f_bus)
@@ -98,7 +98,7 @@ function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, h::Int, i, 
 end
 
 
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, h::Int, f_idx, angmin, angmax) where T <: AbstractDFForm
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, h::Int, f_idx, angmin, angmax) where T <: AbstractBFForm
     i, f_bus, t_bus = f_idx
     t_idx = (i, t_bus, f_bus)
 
