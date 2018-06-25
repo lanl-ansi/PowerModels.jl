@@ -31,6 +31,12 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 18156.2; atol = 1e0)
     end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_ac_opf("../test/data/pti/case5_alc.raw", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1005.31; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
 
@@ -77,6 +83,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -27497.7; atol = 1e0)
     end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf("../test/data/pti/case5_alc.raw", ACRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1005.31; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
 
@@ -118,6 +130,12 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -27438.7; atol = 1e0)
+    end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf("../test/data/pti/case5_alc.raw", ACTPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1005.31; atol = 1e0)
     end
     @testset "5-bus with pwl costs" begin
         result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
@@ -161,6 +179,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -27410.0; atol = 1e0)
     end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_dc_opf("../test/data/pti/case5_alc.raw", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1000.0; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_dc_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
 
@@ -202,6 +226,12 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -32710.0; atol = 1e0)
+    end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf("../test/data/pti/case5_alc.raw", DCPLLPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1001.17; atol = 1e0)
     end
     @testset "5-bus with pwl costs" begin
         result = run_opf("../test/data/matpower/case5_pwlc.m", DCPLLPowerModel, ipopt_solver)
@@ -251,6 +281,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -28237.3; atol = 1e0)
     end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf("../test/data/pti/case5_alc.raw", SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1005.27; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_opf("../test/data/matpower/case5_pwlc.m", SOCWRPowerModel, ipopt_solver)
 
@@ -296,6 +332,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -27659.8; atol = 1e0)
     end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf_bf("../test/data/pti/case5_alc.raw", SOCBFPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1005.27; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_opf_bf("../test/data/matpower/case5_pwlc.m", SOCBFPowerModel, ipopt_solver)
 
@@ -334,6 +376,12 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -27659.8; atol = 1e0)
+    end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf("../test/data/pti/case5_alc.raw", QCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1005.27; atol = 1e0)
     end
     @testset "5-bus with pwl costs" begin
         result = run_opf("../test/data/matpower/case5_pwlc.m", QCWRPowerModel, ipopt_solver)
@@ -413,6 +461,12 @@ end
     #    @test result["status"] == :Optimal
     #    @test isapprox(result["objective"], TBD; atol = 1e0)
     #end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf("../test/data/pti/case5_alc.raw", SDPWRMPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 1005.31; atol = 1e-1)
+    end
     @testset "14-bus case" begin
         result = run_opf("../test/data/matpower/case14.m", SDPWRMPowerModel, scs_solver)
 
