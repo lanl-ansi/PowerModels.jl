@@ -567,7 +567,7 @@ function add_dcline_costs(data::Dict{String,Any})
                     "startup" => 0.0,
                     "shutdown" => 0.0,
                     "ncost" => 2,
-                    "cost" => [0.0, 0.0, 0.0, 0.0]
+                    "cost" => [dcline["pminf"], 0.0, dcline["pmaxf"], 0.0]
                 )
                 push!(data["dclinecost"], dclinecost)
             end

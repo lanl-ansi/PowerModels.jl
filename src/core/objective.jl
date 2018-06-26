@@ -221,8 +221,9 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
         # pwl cost
         dcline_lines = get_lines(nw_ref[:dcline])
         for (i, dcline) in nw_ref[:dcline]
+            arc = (i, dcline["f_bus"], dcline["t_bus"])
             for line in dcline_lines[i]
-                @constraint(pm.model, dc_p_cost[i] >= line["slope"]*sum(var(pm, n, h, :p_dc)[i] for h in phase_ids(pm, n)) + line["intercept"])
+                @constraint(pm.model, dc_p_cost[i] >= line["slope"]*sum(var(pm, n, h, :p_dc)[arc] for h in phase_ids(pm, n)) + line["intercept"])
             end
         end
 
