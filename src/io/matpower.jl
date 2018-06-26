@@ -556,7 +556,7 @@ end
 
 "adds dcline costs, if gen costs exist"
 function add_dcline_costs(data::Dict{String,Any})
-    if length(data["gencost"]) > 0 && length(data["dclinecost"]) <= 0
+    if length(data["gencost"]) > 0 && length(data["dclinecost"]) <= 0 && length(data["dcline"]) > 0
         warn(LOGGER, "added zero cost function data for dclines")
         model = data["gencost"][1]["model"]
         if model == 1
