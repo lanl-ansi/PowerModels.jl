@@ -103,42 +103,37 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, h
     t_idx = (i, t_bus, f_bus)
 
     branch = ref(pm, n, :branch, i)
-    tm = getmpv(branch["tap"], h)
+    tm = branch["tap"][h]
     g, b = calc_branch_y(branch)
-    g, b = getmpv(g, h, h), getmpv(b, h, h)
-    g_sh_fr = getmpv(branch["g_fr"], h)
-    g_sh_to = getmpv(branch["g_to"], h)
-    b_sh_fr = getmpv(branch["b_fr"], h)
-    b_sh_to = getmpv(branch["b_to"], h)
+    g, b = g[h,h], b[h,h]
+    g_fr = branch["g_fr"][h]
+    g_to = branch["g_to"][h]
+    b_fr = branch["b_fr"][h]
+    b_to = branch["b_to"][h]
 
     tr, ti = calc_branch_t(branch)
-    tr, ti = getmpv(tr, h), getmpv(ti, h)
+    tr, ti = tr[h], ti[h]
 
     # convert series admittance to impedance
-    z_s = 1/(g + im*b)
-    r_s = real(z_s)
-    x_s = imag(z_s)
+    z = 1/(g + im*b)
+    r = real(z)
+    x = imag(z)
 
     # getting the variables
     w_fr = var(pm, n, h, :w, f_bus)
-    w_to = var(pm, n, h, :w, t_bus)
-
     p_fr = var(pm, n, h, :p, f_idx)
-    p_to = var(pm, n, h, :p, t_idx)
-
     q_fr = var(pm, n, h, :q, f_idx)
-    q_to = var(pm, n, h, :q, t_idx)
 
-    tzr = r_s*tr - x_s*ti
-    tzi = r_s*ti + x_s*tr
+    tzr = r*tr + x*ti
+    tzi = r*ti - x*tr
 
     @constraint(pm.model,
-        tan(angmin)*(( tr + tzr*g_sh_fr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
-                 <= ((-ti - tzi*g_sh_fr - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
+        tan(angmin)*((tr + tzr*g_fr + tzi*b_fr)*(w_fr/tm^2) - tzr*p_fr + tzi*q_fr)
+                 <= ((ti + tzi*g_fr - tzr*b_fr)*(w_fr/tm^2) - tzi*p_fr - tzr*q_fr)
         )
     @constraint(pm.model,
-        tan(angmax)*(( tr + tzr*g_sh_fr - tzi*b_sh_fr)*(w_fr/tm^2) - tzr*p_fr - tzi*q_fr)
-                 >= ((-ti - tzi*g_sh_fr - tzr*b_sh_fr)*(w_fr/tm^2) - tzr*q_fr + tzi*p_fr)
+        tan(angmax)*((tr + tzr*g_fr + tzi*b_fr)*(w_fr/tm^2) - tzr*p_fr + tzi*q_fr)
+                 >= ((ti + tzi*g_fr - tzr*b_fr)*(w_fr/tm^2) - tzi*p_fr - tzr*q_fr)
         )
 end
 
