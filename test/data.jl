@@ -388,3 +388,34 @@ end
         @test isapprox(result["objective"], 5907; atol = 1e0)
     end
 end
+
+@testset "test impedance to admittance" begin
+    branch = Dict{String, Any}()
+    branch["br_r"] = 1
+    branch["br_x"] = 2
+    g,b  = PowerModels.calc_branch_y(branch)
+    @test isapprox(g, 0.2)
+    @test isapprox(b, -0.4)
+
+    branch["br_r"] = 0
+    branch["br_x"] = 0
+    g,b  = PowerModels.calc_branch_y(branch)
+    @test isapprox(g, 0)
+    @test isapprox(b, 0)
+
+    branch["br_r"] = PowerModels.MultiPhaseMatrix([1 2;3 4])
+    branch["br_x"] = PowerModels.MultiPhaseMatrix([1 2;3 4])
+    g,b  = PowerModels.calc_branch_y(branch)
+
+    @test typeof(g) <: PowerModels.MultiPhaseMatrix
+    @test isapprox(g.values, [-1.0 0.5; 0.75 -0.25])
+    @test isapprox(b.values, [1.0 -0.5; -0.75 0.25])
+
+    branch["br_r"] = PowerModels.MultiPhaseMatrix([1 2 0;3 4 0; 0 0 0])
+    branch["br_x"] = PowerModels.MultiPhaseMatrix([1 2 0;3 4 0; 0 0 0])
+    g,b  = PowerModels.calc_branch_y(branch)
+
+    @test typeof(g) <: PowerModels.MultiPhaseMatrix
+    @test isapprox(g.values, [-1.0 0.5 0; 0.75 -0.25 0; 0 0 0])
+    @test isapprox(b.values, [1.0 -0.5 0; -0.75 0.25 0; 0 0 0])
+end
