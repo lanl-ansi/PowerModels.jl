@@ -100,7 +100,7 @@ end
 ""
 function Base.isapprox(a::MultiPhaseValue, b::MultiPhaseValue; kwargs...)
     if length(a) == length(b)
-        return all( isapprox(a[i], b[i]) for i in 1:length(a); kwargs...)
+        return all( isapprox(a[i], b[i]; kwargs...) for i in 1:length(a))
     end
     return false
 end
