@@ -29,7 +29,7 @@ end
         result = run_ots("../test/data/pti/case5_alc.raw", ACPPowerModel, juniper_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 1002.52; atol = 1e0)
+        @test isapprox(result["objective"], 1004.25; atol = 1e0)
     end
     #Omitting this test, returns local infeasible
     #@testset "6-bus case" begin
