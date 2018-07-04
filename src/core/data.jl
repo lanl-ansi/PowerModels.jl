@@ -64,30 +64,9 @@ end
 
 ""
 function calc_branch_y(branch::Dict{String,Any})
-    if(typeof(branch["br_r"]) <: MultiPhaseMatrix)
-        y = pinv(branch["br_r"].values + im*branch["br_x"].values)
-        g = PowerModels.MultiPhaseMatrix(real(y))
-        b = PowerModels.MultiPhaseMatrix(imag(y))
-    else
-        r = branch["br_r"]
-        x = branch["br_x"]
-
-        ym = map(+, map(*, r, r), map(*, x, x))
-
-        g = map(_div_zero, r, ym)
-        b = map(-, map(_div_zero, x, ym))
-    end
+    y = pinv(branch["br_r"] + im * branch["br_x"])
+    g, b = real(y), imag(y)
     return g, b
-end
-
-
-# helpful for cases when r and x are zero
-""
-function _div_zero(a::Real, b::Real)
-    if a == 0.0
-        return 0.0
-    end
-    return a/b
 end
 
 
