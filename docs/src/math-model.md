@@ -25,13 +25,13 @@ A complete mathematical model is as follows,
 & S, S_i \mbox{ - shunts and shunts at bus $i$} \nonumber \\
 %
 \mbox{data:} & \nonumber \\ 
-& {S^{gl}}_k, {S^{gu}}_k \;\; \forall k \in G \nonumber \\
+& S^{gl}_k, S^{gu}_k \;\; \forall k \in G \nonumber \\
 & c_{2k}, c_{1k}, c_{0k} \;\; \forall k \in G \nonumber \\
-& {v^l}_i, {v^u}_i \;\; \forall i \in N \nonumber \\
+& v^l_i, v^u_i \;\; \forall i \in N \nonumber \\
 & {S^d}_k \;\; \forall k \in L \nonumber \\
-& {Y^s}_{k} \;\; \forall k \in S \nonumber \\
-& Y_{ij}, {Y^c}_{ij}, {Y^c}_{ji}, {T}_{ij} \;\; \forall (i,j) \in E \nonumber \\
-& {s^u}_{ij}, {\theta^{\Delta l}}_{ij}, {\theta^{\Delta u}}_{ij} \;\; \forall (i,j) \in E \nonumber \\
+& Y^s_{k} \;\; \forall k \in S \nonumber \\
+& Y_{ij}, Y^c_{ij}, Y^c_{ji}, {T}_{ij} \;\; \forall (i,j) \in E \nonumber \\
+& {s^u}_{ij}, \theta^{\Delta l}_{ij}, \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \nonumber \\
 %
 \mbox{variables: } & \nonumber \\
 & S^g_k \;\; \forall k\in G \nonumber \\
@@ -42,13 +42,13 @@ A complete mathematical model is as follows,
 %
 \mbox{subject to: } & \nonumber \\
 & \angle V_{r} = 0  \;\; \forall r \in R \\
-& {S^{gl}}_k \leq S^g_k \leq {S^{gu}}_k \;\; \forall k \in G  \\
-& {v^l}_i \leq |V_i| \leq {v^u}_i \;\; \forall i \in N \\
-& \sum_{\substack{k \in G_i}} S^g_k - \sum_{\substack{k \in L_i}} {{S^d}_k} - \sum_{\substack{k \in S_i}} {Y^s}_{k} |V_i|^2 = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} S_{ij} \;\; \forall i\in N \\ 
-& S_{ij} = \left( Y_{ij} + {Y^c}_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2} - Y^*_{ij} \frac{V_i V^*_j}{{T}_{ij}} \;\; \forall (i,j)\in E \\
-& S_{ji} = \left( Y_{ij} + {Y^c}_{ji} \right)^* |V_j|^2 - Y^*_{ij} \frac{V^*_i V_j}{{T}^*_{ij}} \;\; \forall (i,j)\in E \\
-& |S_{ij}| \leq {s^u}_{ij} \;\; \forall (i,j) \in E \cup E^R \\
-& {\theta^{\Delta l}}_{ij} \leq \angle (V_i V^*_j) \leq {\theta^{\Delta u}}_{ij} \;\; \forall (i,j) \in E
+& S^{gl}_k \leq S^g_k \leq S^{gu}_k \;\; \forall k \in G  \\
+& v^l_i \leq |V_i| \leq v^u_i \;\; \forall i \in N \\
+& \sum_{\substack{k \in G_i}} S^g_k - \sum_{\substack{k \in L_i}} S^d_k - \sum_{\substack{k \in S_i}} Y^s_k |V_i|^2 = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} S_{ij} \;\; \forall i\in N \\ 
+& S_{ij} = \left( Y_{ij} + Y^c_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2} - Y^*_{ij} \frac{V_i V^*_j}{{T}_{ij}} \;\; \forall (i,j)\in E \\
+& S_{ji} = \left( Y_{ij} + Y^c_{ji} \right)^* |V_j|^2 - Y^*_{ij} \frac{V^*_i V_j}{{T}^*_{ij}} \;\; \forall (i,j)\in E \\
+& |S_{ij}| \leq s^u_{ij} \;\; \forall (i,j) \in E \cup E^R \\
+& \theta^{\Delta l}_{ij} \leq \angle (V_i V^*_j) \leq \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E
 %
 \end{align}
 ```
