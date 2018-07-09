@@ -12,13 +12,13 @@ function calc_theta_delta_bounds(data::Dict{String,Any})
     angle_min = Real[]
     angle_max = Real[]
 
-    phases = 1
-    if haskey(data, "phases")
-        phases = data["phases"]
+    conductors = 1
+    if haskey(data, "conductors")
+        conductors = data["conductors"]
     end
-    phase_ids = 1:phases
+    conductor_ids = 1:conductors
 
-    for ph in phase_ids
+    for ph in conductor_ids
         angle_mins = [branch["angmin"][ph] for branch in branches]
         angle_maxs = [branch["angmax"][ph] for branch in branches]
 
@@ -40,7 +40,7 @@ function calc_theta_delta_bounds(data::Dict{String,Any})
         push!(angle_max, angle_max_val)
     end
 
-    if haskey(data, "phases")
+    if haskey(data, "conductors")
         amin = MultiPhaseVector(angle_min)
         amax = MultiPhaseVector(angle_max)
         return amin, amax
@@ -105,12 +105,12 @@ component_table(data::Dict{String,Any}, component::String, args...) = Infrastruc
 
 "recursively applies new_data to data, overwriting information"
 function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
-    if haskey(data, "phases") && haskey(new_data, "phases")
-        if data["phases"] != new_data["phases"]
-            error("update_data requires datasets with the same number of phases")
+    if haskey(data, "conductors") && haskey(new_data, "conductors")
+        if data["conductors"] != new_data["conductors"]
+            error("update_data requires datasets with the same number of conductors")
         end
     else
-        warn(LOGGER, "running update_data with data that does not include phases field, phases may be incorrect")
+        warn(LOGGER, "running update_data with data that does not include conductors field, conductors may be incorrect")
     end
     InfrastructureModels.update_data!(data, new_data)
 end
@@ -371,26 +371,26 @@ end
 
 
 ""
-function check_phases(data::Dict{String,Any})
+function check_conductors(data::Dict{String,Any})
     if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
-            _check_phases(nw_data)
+            _check_conductors(nw_data)
         end
     else
-         _check_phases(data)
+         _check_conductors(data)
     end
 end
 
 
 ""
-function _check_phases(data::Dict{String,Any})
-    if haskey(data, "phases") && data["phases"] < 1
-        error("phase values must be positive integers, given $(data["phases"])")
+function _check_conductors(data::Dict{String,Any})
+    if haskey(data, "conductors") && data["conductors"] < 1
+        error("conductor values must be positive integers, given $(data["conductors"])")
     end
 end
 
 
-"checks that phase angle differences are within 90 deg., if not tightens"
+"checks that voltage angle differences are within 90 deg., if not tightens"
 function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1.0472)
     if InfrastructureModels.ismultinetwork(data)
         error("check_voltage_angle_differences does not yet support multinetwork data")
@@ -398,15 +398,15 @@ function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1
 
     assert("per_unit" in keys(data) && data["per_unit"])
 
-    for ph in 1:get(data, "phases", 1)
-        ph_str = haskey(data, "phases") ? ", phase $(ph)" : ""
+    for ph in 1:get(data, "conductors", 1)
+        ph_str = haskey(data, "conductors") ? ", conductor $(ph)" : ""
         for (i, branch) in data["branch"]
             angmin = branch["angmin"][ph]
             angmax = branch["angmax"][ph]
 
             if angmin <= -pi/2
                 warn(LOGGER, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $i$(ph_str) from $(rad2deg(angmin)) to -$(rad2deg(default_pad)) deg.")
-                if haskey(data, "phases")
+                if haskey(data, "conductors")
                     branch["angmin"][ph] = -default_pad
                 else
                     branch["angmin"] = -default_pad
@@ -415,7 +415,7 @@ function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1
 
             if angmax >= pi/2
                 warn(LOGGER, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $i$(ph_str) from $(rad2deg(angmax)) to $(rad2deg(default_pad)) deg.")
-                if haskey(data, "phases")
+                if haskey(data, "conductors")
                     branch["angmax"][ph] = default_pad
                 else
                     branch["angmax"] = default_pad
@@ -425,7 +425,7 @@ function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1
 
             if angmin == 0.0 && angmax == 0.0
                 warn(LOGGER, "angmin and angmax values are 0, widening these values on branch $i$(ph_str) to +/- $(rad2deg(default_pad)) deg.")
-                if haskey(data, "phases")
+                if haskey(data, "conductors")
                     branch["angmin"][ph] = -default_pad
                     branch["angmax"][ph] =  default_pad
                 else
@@ -448,8 +448,8 @@ function check_thermal_limits(data::Dict{String,Any})
     mva_base = data["baseMVA"]
 
     for (i, branch) in data["branch"]
-        for ph in 1:get(data, "phases", 1)
-            ph_str = haskey(data, "phases") ? ", phase $(ph)" : ""
+        for ph in 1:get(data, "conductors", 1)
+            ph_str = haskey(data, "conductors") ? ", conductor $(ph)" : ""
             if branch["rate_a"][ph] <= 0.0
                 theta_max = max(abs(branch["angmin"][ph]), abs(branch["angmax"][ph]))
 
@@ -469,7 +469,7 @@ function check_thermal_limits(data::Dict{String,Any})
                 new_rate = y_mag*m_vmax*c_max
 
                 warn(LOGGER, "this code only supports positive rate_a values, changing the value on branch $(branch["index"])$(ph_str) from $(mva_base*branch["rate_a"][ph]) to $(mva_base*new_rate)")
-                if haskey(data, "phases")
+                if haskey(data, "conductors")
                     branch["rate_a"][ph] = new_rate
                 else
                     branch["rate_a"] = new_rate
@@ -588,17 +588,17 @@ function check_transformer_parameters(data::Dict{String,Any})
     for (i, branch) in data["branch"]
         if !haskey(branch, "tap")
             warn(LOGGER, "branch found without tap value, setting a tap to 1.0")
-            if haskey(data, "phases")
-                branch["tap"] = MultiPhaseVector{Float64}(ones(data["phases"]))
+            if haskey(data, "conductors")
+                branch["tap"] = MultiPhaseVector{Float64}(ones(data["conductors"]))
             else
                 branch["tap"] = 1.0
             end
         else
-            for ph in 1:get(data, "phases", 1)
-                ph_str = haskey(data, "phases") ? " on phase $(ph)" : ""
+            for ph in 1:get(data, "conductors", 1)
+                ph_str = haskey(data, "conductors") ? " on conductor $(ph)" : ""
                 if branch["tap"][ph] <= 0.0
                     warn(LOGGER, "branch found with non-positive tap value of $(branch["tap"][ph]), setting a tap to 1.0$(ph_str)")
-                    if haskey(data, "phases")
+                    if haskey(data, "conductors")
                         branch["tap"][ph] = 1.0
                     else
                         branch["tap"] = 1.0
@@ -608,8 +608,8 @@ function check_transformer_parameters(data::Dict{String,Any})
         end
         if !haskey(branch, "shift")
             warn(LOGGER, "branch found without shift value, setting a shift to 0.0")
-            if haskey(data, "phases")
-                branch["shift"] = MultiPhaseVector{Float64}(zeros(data["phases"]))
+            if haskey(data, "conductors")
+                branch["shift"] = MultiPhaseVector{Float64}(zeros(data["conductors"]))
             else
                 branch["shift"] = 0.0
             end
@@ -661,13 +661,13 @@ function check_dcline_limits(data::Dict{String,Any})
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
-    for ph in 1:get(data, "phases", 1)
-        ph_str = haskey(data, "phases") ? ", phase $(ph)" : ""
+    for ph in 1:get(data, "conductors", 1)
+        ph_str = haskey(data, "conductors") ? ", conductor $(ph)" : ""
         for (i, dcline) in data["dcline"]
             if dcline["loss0"][ph] < 0.0
                 new_rate = 0.0
                 warn(LOGGER, "this code only supports positive loss0 values, changing the value on dcline $(dcline["index"])$(ph_str) from $(mva_base*dcline["loss0"][ph]) to $(mva_base*new_rate)")
-                if haskey(data, "phases")
+                if haskey(data, "conductors")
                     dcline["loss0"][ph] = new_rate
                 else
                     dcline["loss0"] = new_rate
@@ -677,7 +677,7 @@ function check_dcline_limits(data::Dict{String,Any})
             if dcline["loss0"][ph] >= dcline["pmaxf"][ph]*(1-dcline["loss1"][ph] )+ dcline["pmaxt"][ph]
                 new_rate = 0.0
                 warn(LOGGER, "this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"])$(ph_str) from $(mva_base*dcline["loss0"][ph]) to $(mva_base*new_rate)")
-                if haskey(data, "phases")
+                if haskey(data, "conductors")
                     dcline["loss0"][ph] = new_rate
                 else
                     dcline["loss0"] = new_rate
@@ -687,7 +687,7 @@ function check_dcline_limits(data::Dict{String,Any})
             if dcline["loss1"][ph] < 0.0
                 new_rate = 0.0
                 warn(LOGGER, "this code only supports positive loss1 values, changing the value on dcline $(dcline["index"])$(ph_str) from $(dcline["loss1"][ph]) to $(new_rate)")
-                if haskey(data, "phases")
+                if haskey(data, "conductors")
                     dcline["loss1"][ph] = new_rate
                 else
                     dcline["loss1"] = new_rate
@@ -697,7 +697,7 @@ function check_dcline_limits(data::Dict{String,Any})
             if dcline["loss1"][ph] >= 1.0
                 new_rate = 0.0
                 warn(LOGGER, "this code only supports loss1 values < 1, changing the value on dcline $(dcline["index"])$(ph_str) from $(dcline["loss1"][ph]) to $(new_rate)")
-                if haskey(data, "phases")
+                if haskey(data, "conductors")
                     dcline["loss1"][ph] = new_rate
                 else
                     dcline["loss1"] = new_rate
@@ -720,8 +720,8 @@ function check_voltage_setpoints(data::Dict{String,Any})
         error("check_voltage_setpoints does not yet support multinetwork data")
     end
 
-    for ph in 1:get(data, "phases", 1)
-        ph_str = haskey(data, "phases") ? "phase $(ph) " : ""
+    for ph in 1:get(data, "conductors", 1)
+        ph_str = haskey(data, "conductors") ? "conductor $(ph) " : ""
         for (i,gen) in data["gen"]
             bus_id = gen["gen_bus"]
             bus = data["bus"]["$(bus_id)"]
@@ -769,7 +769,7 @@ end
 function _check_cost_functions(id, comp)
     if "model" in keys(comp) && "cost" in keys(comp)
         for ph in 1:length(comp["ncost"])
-            ph_str = length(comp["ncost"]) > 1 ? "phase $(ph) " : ""
+            ph_str = length(comp["ncost"]) > 1 ? "conductor $(ph) " : ""
             if comp["model"][ph] == 1
                 if length(PowerModels.getmpv(comp["cost"], ph)) != 2*comp["ncost"][ph]
                     error("$(ph_str)ncost of $(comp["ncost"][ph]) not consistent with $(length(PowerModels.getmpv(comp["cost"], ph))) cost values")
@@ -1187,35 +1187,35 @@ function _dfs(i, neighbors, component_lookup, touched)
 end
 
 
-"Transforms single-phase network data into multi-phase data"
-function make_multiphase(data::Dict{String,Any}, phases::Int)
+"Transforms single-conductor network data into multi-conductor data"
+function make_multiconductor(data::Dict{String,Any}, conductors::Int)
     if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
-            _make_multiphase(nw_data, phases)
+            _make_multiconductor(nw_data, conductors)
         end
     else
-         _make_multiphase(data, phases)
+         _make_multiconductor(data, conductors)
     end
 end
 
 
-"feild names that should not be multi-phase values"
-phaseless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
+"feild names that should not be multi-conductor values"
+conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
     "br_status", "gen_bus", "load_bus", "shunt_bus", "f_bus", "t_bus",
     "transformer", "area", "zone", "base_kv",
     "model", "ncost", "cost", "startup", "shutdown"])
 
-phase_matrix = Set(["br_r", "br_x"])
+conductor_matrix = Set(["br_r", "br_x"])
 
 
 ""
-function _make_multiphase(data::Dict{String,Any}, phases::Real)
-    if haskey(data, "phases")
-        warn(LOGGER, "skipping network that is already multiphase")
+function _make_multiconductor(data::Dict{String,Any}, conductors::Real)
+    if haskey(data, "conductors")
+        warn(LOGGER, "skipping network that is already multiconductor")
         return
     end
 
-    data["phases"] = phases
+    data["conductors"] = conductors
 
     for (key, item) in data
         if isa(item, Dict{String,Any})
@@ -1223,13 +1223,13 @@ function _make_multiphase(data::Dict{String,Any}, phases::Real)
                 if isa(item_data, Dict{String,Any})
                     item_ref_data = Dict{String,Any}()
                     for (param, value) in item_data
-                        if param in phaseless
+                        if param in conductorless
                             item_ref_data[param] = value
                         else
-                            if param in phase_matrix
-                                item_ref_data[param] = MultiPhaseMatrix(value, phases)
+                            if param in conductor_matrix
+                                item_ref_data[param] = MultiPhaseMatrix(value, conductors)
                             else
-                                item_ref_data[param] = MultiPhaseVector(value, phases)
+                                item_ref_data[param] = MultiPhaseVector(value, conductors)
                             end
                         end
                     end

@@ -2,18 +2,18 @@
 
 
 ""
-function calc_voltage_product_bounds(buspairs, phase::Int=1)
+function calc_voltage_product_bounds(buspairs, conductor::Int=1)
     wr_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
     wr_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
     wi_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
     wi_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
 
-    buspairs_phase = Dict()
+    buspairs_conductor = Dict()
     for (bp, buspair) in buspairs
-        buspairs_phase[bp] = Dict([(k, getmpv(v, phase)) for (k,v) in buspair])
+        buspairs_conductor[bp] = Dict([(k, getmpv(v, conductor)) for (k,v) in buspair])
     end
 
-    for (bp, buspair) in buspairs_phase
+    for (bp, buspair) in buspairs_conductor
         i,j = bp
 
         if buspair["angmin"] >= 0

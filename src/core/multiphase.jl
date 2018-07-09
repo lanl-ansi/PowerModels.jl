@@ -1,20 +1,20 @@
-export MultiPhaseValue, MultiPhaseVector, MultiPhaseMatrix, phases
+export MultiPhaseValue, MultiPhaseVector, MultiPhaseMatrix, conductors
 
 
-"a data structure for working with multiphase datasets"
+"a data structure for working with multiconductor datasets"
 abstract type MultiPhaseValue{T} end
 
 
-"a data structure for working with multiphase datasets"
+"a data structure for working with multiconductor datasets"
 mutable struct MultiPhaseVector{T} <: MultiPhaseValue{T}
     values::Vector{T}
 end
 
 
-MultiPhaseVector(value::T, phases::Int) where T = MultiPhaseVector([value for i in 1:phases])
+MultiPhaseVector(value::T, conductors::Int) where T = MultiPhaseVector([value for i in 1:conductors])
 Base.map(f, a::MultiPhaseVector{T}) where T = MultiPhaseVector{T}(map(f, a.values))
 Base.map(f, a::MultiPhaseVector{T}, b::MultiPhaseVector{T}) where T = MultiPhaseVector{T}(map(f, a.values, b.values))
-phases(mpv::MultiPhaseVector) = length(mpv.values)
+conductors(mpv::MultiPhaseVector) = length(mpv.values)
 
 
 ""
@@ -29,10 +29,10 @@ mutable struct MultiPhaseMatrix{T} <: MultiPhaseValue{T}
 end
 
 
-MultiPhaseMatrix(value::T, phases::Int) where T = MultiPhaseMatrix(value*eye(phases))
+MultiPhaseMatrix(value::T, conductors::Int) where T = MultiPhaseMatrix(value*eye(conductors))
 Base.map(f, a::MultiPhaseMatrix{T}) where T = MultiPhaseMatrix{T}(map(f, a.values))
 Base.map(f, a::MultiPhaseMatrix{T}, b::MultiPhaseMatrix{T}) where T = MultiPhaseMatrix{T}(map(f, a.values, b.values))
-phases(mpv::MultiPhaseMatrix) = size(mpv.values, 1)
+conductors(mpv::MultiPhaseMatrix) = size(mpv.values, 1)
 
 
 ""
@@ -147,8 +147,8 @@ function Base.isapprox(a::MultiPhaseValue, b::MultiPhaseValue; kwargs...)
 end
 
 
-getmpv(value::Any, phase::Int) = value
-getmpv(value::Any, phase_i::Int, phase_j::Int) = value
-getmpv(value::MultiPhaseVector, phase::Int) = value[phase]
-getmpv(value::MultiPhaseMatrix{T}, phase::Int) where T = MultiPhaseVector{T}(value[phase])
-getmpv(value::MultiPhaseMatrix, phase_i::Int, phase_j::Int) = value[phase_i, phase_j]
+getmpv(value::Any, conductor::Int) = value
+getmpv(value::Any, conductor_i::Int, conductor_j::Int) = value
+getmpv(value::MultiPhaseVector, conductor::Int) = value[conductor]
+getmpv(value::MultiPhaseMatrix{T}, conductor::Int) where T = MultiPhaseVector{T}(value[conductor])
+getmpv(value::MultiPhaseMatrix, conductor_i::Int, conductor_j::Int) = value[conductor_i, conductor_j]

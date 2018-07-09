@@ -1,7 +1,7 @@
 ######
 #
 # These are toy problem formulations used to test advanced features
-# such as multi-network and multi-phase models
+# such as multi-network and multi-conductor models
 #
 ######
 
@@ -104,12 +104,12 @@ end
 
 ""
 function run_mp_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_mp_opf; multiphase=true, kwargs...)
+    return run_generic_model(file, model_constructor, solver, post_mp_opf; multiconductor=true, kwargs...)
 end
 
 ""
 function post_mp_opf(pm::GenericPowerModel)
-    for h in phase_ids(pm)
+    for h in conductor_ids(pm)
         variable_voltage(pm, ph=h)
         variable_generation(pm, ph=h)
         variable_branch_flow(pm, ph=h)
@@ -147,13 +147,13 @@ end
 
 ""
 function run_mn_mp_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_mn_mp_opf; multinetwork=true, multiphase=true, kwargs...)
+    return run_generic_model(file, model_constructor, solver, post_mn_mp_opf; multinetwork=true, multiconductor=true, kwargs...)
 end
 
 ""
 function post_mn_mp_opf(pm::GenericPowerModel)
     for (n, network) in nws(pm)
-        for h in phase_ids(pm, nw=n)
+        for h in conductor_ids(pm, nw=n)
             variable_voltage(pm, nw=n, ph=h)
             variable_generation(pm, nw=n, ph=h)
             variable_branch_flow(pm, nw=n, ph=h)

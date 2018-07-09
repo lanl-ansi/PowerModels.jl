@@ -5,7 +5,7 @@ export
     setdata, setsolver, solve,
     run_generic_model, build_generic_model, solve_generic_model,
     ismultinetwork, nw_ids, nws,
-    ismultiphase, phase_ids,
+    ismulticonductor, conductor_ids,
     ids, ref, var, ext
 
 
@@ -52,7 +52,7 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     var::Dict{Symbol,Any} # JuMP variables
     con::Dict{Symbol,Any} # JuMP constraint references
     cnw::Int # current network index value
-    cph::Int # current phase index value
+    cph::Int # current conductor index value
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -78,7 +78,7 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
         nw_var[:ph] = Dict{Int,Any}()
         nw_con[:ph] = Dict{Int,Any}()
 
-        for ph_id in nw[:phase_ids]
+        for ph_id in nw[:conductor_ids]
             nw_var[:ph][ph_id] = Dict{Symbol,Any}()
             nw_con[:ph][ph_id] = Dict{Symbol,Any}()
         end
@@ -103,15 +103,15 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
     return pm
 end
 
-### Helper functions for working with multinetworks and multiphases
+### Helper functions for working with multinetworks and multiconductors
 ismultinetwork(pm::GenericPowerModel) = (length(pm.ref[:nw]) > 1)
 nw_ids(pm::GenericPowerModel) = keys(pm.ref[:nw])
 nws(pm::GenericPowerModel) = pm.ref[:nw]
 
-ismultiphase(pm::GenericPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :phases)
-ismultiphase(pm::GenericPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :phases)
-phase_ids(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw][:phase_ids]
-phase_ids(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:phase_ids]
+ismulticonductor(pm::GenericPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :conductors)
+ismulticonductor(pm::GenericPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :conductors)
+conductor_ids(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw][:conductor_ids]
+conductor_ids(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:conductor_ids]
 
 
 ids(pm::GenericPowerModel, nw::Int, key::Symbol) = keys(pm.ref[:nw][nw][key])
@@ -193,7 +193,7 @@ function build_generic_model(file::String,  model_constructor, post_method; kwar
 end
 
 ""
-function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; multinetwork=false, multiphase=false, kwargs...)
+function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
     pm = model_constructor(data; kwargs...)
 
@@ -201,8 +201,8 @@ function build_generic_model(data::Dict{String,Any}, model_constructor, post_met
         error(LOGGER, "attempted to build a single-network model with multi-network data")
     end
 
-    if !multiphase && ismultiphase(pm)
-        error(LOGGER, "attempted to build a single-phase model with multi-phase data")
+    if !multiconductor && ismulticonductor(pm)
+        error(LOGGER, "attempted to build a single-conductor model with multi-conductor data")
     end
 
     post_method(pm)
@@ -272,10 +272,10 @@ function build_ref(data::Dict{String,Any})
             end
         end
 
-        if !haskey(ref, :phases)
-            ref[:phase_ids] = 1:1
+        if !haskey(ref, :conductors)
+            ref[:conductor_ids] = 1:1
         else
-            ref[:phase_ids] = 1:ref[:phases]
+            ref[:conductor_ids] = 1:ref[:conductors]
         end
 
         # filter turned off stuff
@@ -367,7 +367,7 @@ function build_ref(data::Dict{String,Any})
 
         ref[:ref_buses] = ref_buses
 
-        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:phase_ids])
+        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:conductor_ids])
 
         off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
         ref[:off_angmin] = off_angmin
@@ -386,7 +386,7 @@ function build_ref(data::Dict{String,Any})
             end
             ref[:ne_bus_arcs] = ne_bus_arcs
 
-            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus], ref[:phase_ids])
+            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus], ref[:conductor_ids])
         end
 
     end
@@ -412,18 +412,18 @@ end
 
 
 "compute bus pair level structures"
-function buspair_parameters(arcs_from, branches, buses, phase_ids)
+function buspair_parameters(arcs_from, branches, buses, conductor_ids)
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
 
-    bp_angmin = Dict([(bp, MultiPhaseVector([-Inf for h in phase_ids])) for bp in buspair_indexes])
-    bp_angmax = Dict([(bp, MultiPhaseVector([ Inf for h in phase_ids])) for bp in buspair_indexes])
+    bp_angmin = Dict([(bp, MultiPhaseVector([-Inf for h in conductor_ids])) for bp in buspair_indexes])
+    bp_angmax = Dict([(bp, MultiPhaseVector([ Inf for h in conductor_ids])) for bp in buspair_indexes])
     bp_branch = Dict([(bp, Inf) for bp in buspair_indexes])
 
     for (l,branch) in branches
         i = branch["f_bus"]
         j = branch["t_bus"]
 
-        for h in phase_ids
+        for h in conductor_ids
             bp_angmin[(i,j)][h] = max(bp_angmin[(i,j)][h], branch["angmin"][h])
             bp_angmax[(i,j)][h] = min(bp_angmax[(i,j)][h], branch["angmax"][h])
         end

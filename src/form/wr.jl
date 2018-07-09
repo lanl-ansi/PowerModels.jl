@@ -338,7 +338,7 @@ function QCWRPowerModel(data::Dict{String,Any}; kwargs...)
 end
 
 
-"Creates variables associated with differences in phase angles"
+"Creates variables associated with differences in voltage angles"
 function variable_voltage_angle_difference(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.cph) where T
     var(pm, nw, ph)[:td] = @variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(ph)_td",

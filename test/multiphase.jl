@@ -2,14 +2,14 @@ TESTLOG = getlogger(PowerModels)
 
 ""
 function post_tp_opf(pm::PowerModels.GenericPowerModel)
-    for h in PowerModels.phase_ids(pm)
+    for h in PowerModels.conductor_ids(pm)
         PowerModels.variable_voltage(pm, ph=h)
         PowerModels.variable_generation(pm, ph=h)
         PowerModels.variable_branch_flow(pm, ph=h)
         PowerModels.variable_dcline_flow(pm, ph=h)
     end
 
-    for h in PowerModels.phase_ids(pm)
+    for h in PowerModels.conductor_ids(pm)
         PowerModels.constraint_voltage(pm, ph=h)
 
         for i in ids(pm, :ref_buses)
@@ -39,7 +39,7 @@ function post_tp_opf(pm::PowerModels.GenericPowerModel)
 end
 
 
-@testset "test multiphase" begin
+@testset "test multi-conductor" begin
 
     @testset "idempotent unit transformation" begin
         @testset "5-bus replicate case" begin
@@ -99,42 +99,42 @@ end
     end
 
 
-    @testset "test multi-phase ac opf" begin
-        @testset "3-bus 3-phase case" begin
-            mp_data = build_mp_data("../test/data/matpower/case3.m", phases=3)
+    @testset "test multi-conductor ac opf" begin
+        @testset "3-bus 3-conductor case" begin
+            mp_data = build_mp_data("../test/data/matpower/case3.m", conductors=3)
             result = PowerModels.run_mp_opf(mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 47267.9; atol = 1e-1)
 
-            for ph in 1:mp_data["phases"]
+            for ph in 1:mp_data["conductors"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][ph], 1.58067; atol = 1e-3)
                 @test isapprox(result["solution"]["bus"]["2"]["va"][ph], 0.12669; atol = 1e-3)
             end
         end
 
-        @testset "5-bus 5-phase case" begin
-            mp_data = build_mp_data("../test/data/matpower/case5.m", phases=5)
+        @testset "5-bus 5-conductor case" begin
+            mp_data = build_mp_data("../test/data/matpower/case5.m", conductors=5)
 
             result = PowerModels.run_mp_opf(mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 91345.5; atol = 1e-1)
-            for ph in 1:mp_data["phases"]
+            for ph in 1:mp_data["conductors"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
                 @test isapprox(result["solution"]["bus"]["2"]["va"][ph], -0.00103692; atol = 1e-5)
             end
         end
 
-        @testset "30-bus 3-phase case" begin
-            mp_data = build_mp_data("../test/data/matpower/case30.m", phases=3)
+        @testset "30-bus 3-conductor case" begin
+            mp_data = build_mp_data("../test/data/matpower/case30.m", conductors=3)
 
             result = PowerModels.run_mp_opf(mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 614.905; atol = 1e-1)
 
-            for ph in 1:mp_data["phases"]
+            for ph in 1:mp_data["conductors"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  2.18839; atol = 1e-3)
                 @test isapprox(result["solution"]["bus"]["2"]["va"][ph], -0.071759; atol = 1e-4)
             end
@@ -142,7 +142,7 @@ end
     end
 
 
-    @testset "test multi-phase opf variants" begin
+    @testset "test multi-conductor opf variants" begin
         mp_data = build_mp_data("../test/data/matpower/case5_dc.m")
 
         @testset "ac 5-bus case" begin
@@ -150,7 +150,7 @@ end
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 54468.5; atol = 1e-1)
-            for ph in 1:mp_data["phases"]
+            for ph in 1:mp_data["conductors"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
                 @test isapprox(result["solution"]["bus"]["2"]["va"][ph], -0.0139117; atol = 1e-4)
             end
@@ -161,7 +161,7 @@ end
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 54272.7; atol = 1e-1)
-            for ph in 1:mp_data["phases"]
+            for ph in 1:mp_data["conductors"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
                 @test isapprox(result["solution"]["bus"]["2"]["va"][ph], -0.0135206; atol = 1e-4)
             end
@@ -172,7 +172,7 @@ end
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 46314.1; atol = 1e-1)
-            for ph in 1:mp_data["phases"]
+            for ph in 1:mp_data["conductors"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
                 @test isapprox(result["solution"]["bus"]["2"]["vm"][ph],  1.08578; atol = 1e-3)
             end
@@ -196,7 +196,7 @@ end
                 @test haskey(bus, "lam_kcl_r")
                 @test haskey(bus, "lam_kcl_i")
 
-                for ph in 1:mp_data["phases"]
+                for ph in 1:mp_data["conductors"]
                     @test bus["lam_kcl_r"][ph] >= -4000 && bus["lam_kcl_r"][ph] <= 0
                     @test isnan(bus["lam_kcl_i"][ph])
                 end
@@ -205,7 +205,7 @@ end
                 @test haskey(branch, "mu_sm_fr")
                 @test haskey(branch, "mu_sm_to")
 
-                for ph in 1:mp_data["phases"]
+                for ph in 1:mp_data["conductors"]
                     @test branch["mu_sm_fr"][ph] >= -1 && branch["mu_sm_fr"][ph] <= 6000
                     @test isnan(branch["mu_sm_to"][ph])
                 end
@@ -233,8 +233,8 @@ end
         mp_data_2p = PowerModels.parse_file("../test/data/matpower/case3.m")
         mp_data_3p = PowerModels.parse_file("../test/data/matpower/case3.m")
 
-        PowerModels.make_multiphase(mp_data_2p, 2)
-        PowerModels.make_multiphase(mp_data_3p, 3)
+        PowerModels.make_multiconductor(mp_data_2p, 2)
+        PowerModels.make_multiconductor(mp_data_3p, 3)
 
         @test_throws(TESTLOG, ErrorException, PowerModels.update_data(mp_data_2p, mp_data_3p))
         @test_throws(TESTLOG, ErrorException, PowerModels.check_keys(mp_data_3p, ["load"]))
@@ -271,22 +271,22 @@ end
         mp_data_2p["branch"]["1"]["angmin"] = [-pi, 0]
         mp_data_2p["branch"]["1"]["angmax"] = [ pi, 0]
 
-        @test_warn(TESTLOG, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch 1, phase 1 from -180.0 to -60.0001403060998 deg.",
+        @test_warn(TESTLOG, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch 1, conductor 1 from -180.0 to -60.0001403060998 deg.",
             PowerModels.check_voltage_angle_differences(mp_data_2p))
 
         mp_data_2p["branch"]["1"]["angmin"] = [-pi, 0]
         mp_data_2p["branch"]["1"]["angmax"] = [ pi, 0]
 
-        @test_warn(TESTLOG, "angmin and angmax values are 0, widening these values on branch 1, phase 2 to +/- 60.0001403060998 deg.",
+        @test_warn(TESTLOG, "angmin and angmax values are 0, widening these values on branch 1, conductor 2 to +/- 60.0001403060998 deg.",
             PowerModels.check_voltage_angle_differences(mp_data_2p))
 
         mp_data_2p["branch"]["1"]["angmin"] = [-pi, 0]
         mp_data_2p["branch"]["1"]["angmax"] = [ pi, 0]
 
-        @test_warn(TESTLOG, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch 1, phase 1 from 180.0 to 60.0001403060998 deg.",
+        @test_warn(TESTLOG, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch 1, conductor 1 from 180.0 to 60.0001403060998 deg.",
             PowerModels.check_voltage_angle_differences(mp_data_2p))
 
-        @test_warn(TESTLOG, "skipping network that is already multiphase", PowerModels.make_multiphase(mp_data_3p, 3))
+        @test_warn(TESTLOG, "skipping network that is already multiconductor", PowerModels.make_multiconductor(mp_data_3p, 3))
 
         mp_data_3p["load"]["1"]["pd"] = mp_data_3p["load"]["1"]["qd"] = [0, 0, 0]
         mp_data_3p["shunt"]["1"] = Dict{String,Any}("gs"=>[0,0,0], "bs"=>[0,0,0], "status"=>1, "shunt_bus"=>1, "index"=>1)
@@ -296,16 +296,16 @@ end
         @test mp_data_3p["shunt"]["1"]["status"] == 0
 
         mp_data_3p["dcline"]["1"]["loss0"][2] = -1.0
-        @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1, phase 2 from -100.0 to 0.0", PowerModels.check_dcline_limits(mp_data_3p))
+        @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1, conductor 2 from -100.0 to 0.0", PowerModels.check_dcline_limits(mp_data_3p))
 
         mp_data_3p["dcline"]["1"]["loss1"][2] = -1.0
-        @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1, phase 2 from -1.0 to 0.0", PowerModels.check_dcline_limits(mp_data_3p))
+        @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1, conductor 2 from -1.0 to 0.0", PowerModels.check_dcline_limits(mp_data_3p))
 
         @test mp_data_3p["dcline"]["1"]["loss0"][2] == 0.0
         @test mp_data_3p["dcline"]["1"]["loss1"][2] == 0.0
 
         mp_data_3p["dcline"]["1"]["loss1"][2] = 100.0
-        @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1, phase 2 from 100.0 to 0.0", PowerModels.check_dcline_limits(mp_data_3p))
+        @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1, conductor 2 from 100.0 to 0.0", PowerModels.check_dcline_limits(mp_data_3p))
 
         delete!(mp_data_3p["branch"]["1"], "tap")
         @test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.check_transformer_parameters(mp_data_3p))
@@ -317,7 +317,7 @@ end
         @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.check_transformer_parameters(mp_data_3p))
 
         mp_data_3p["branch"]["1"]["rate_a"][2] = -1.0
-        @test_warn(TESTLOG, "this code only supports positive rate_a values, changing the value on branch 1, phase 2 from -100.0 to 100.47227335656343", PowerModels.check_thermal_limits(mp_data_3p))
+        @test_warn(TESTLOG, "this code only supports positive rate_a values, changing the value on branch 1, conductor 2 from -100.0 to 100.47227335656343", PowerModels.check_thermal_limits(mp_data_3p))
         @test isapprox(mp_data_3p["branch"]["1"]["rate_a"][2], 1.0047227335; atol=1e-6)
 
         mp_data_3p["branch"]["4"] = deepcopy(mp_data_3p["branch"]["1"])
@@ -328,13 +328,13 @@ end
         @test mp_data_3p["branch"]["4"]["t_bus"] == mp_data_3p["branch"]["1"]["t_bus"]
 
         mp_data_3p["gen"]["1"]["vg"][2] = 2.0
-        @test_warn(TESTLOG, "the phase 2 voltage setpoint on generator 1 does not match the value at bus 1", PowerModels.check_voltage_setpoints(mp_data_3p))
+        @test_warn(TESTLOG, "the conductor 2 voltage setpoint on generator 1 does not match the value at bus 1", PowerModels.check_voltage_setpoints(mp_data_3p))
 
         mp_data_3p["dcline"]["1"]["vf"][2] = 2.0
-        @test_warn(TESTLOG, "the phase 2 from bus voltage setpoint on dc line 1 does not match the value at bus 1", PowerModels.check_voltage_setpoints(mp_data_3p))
+        @test_warn(TESTLOG, "the conductor 2 from bus voltage setpoint on dc line 1 does not match the value at bus 1", PowerModels.check_voltage_setpoints(mp_data_3p))
 
         mp_data_3p["dcline"]["1"]["vt"][2] = 2.0
-        @test_warn(TESTLOG, "the phase 2 to bus voltage setpoint on dc line 1 does not match the value at bus 2", PowerModels.check_voltage_setpoints(mp_data_3p))
+        @test_warn(TESTLOG, "the conductor 2 to bus voltage setpoint on dc line 1 does not match the value at bus 2", PowerModels.check_voltage_setpoints(mp_data_3p))
 
 
         setlevel!(TESTLOG, "error")
@@ -344,13 +344,13 @@ end
         mp_data_3p["branch"]["1"]["f_bus"] = mp_data_3p["branch"]["1"]["t_bus"] = 1
         @test_throws(TESTLOG, ErrorException, PowerModels.check_branch_loops(mp_data_3p))
 
-        mp_data_3p["phases"] = 0
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_phases(mp_data_3p))
+        mp_data_3p["conductors"] = 0
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_conductors(mp_data_3p))
     end
 
-    @testset "multiphase extensions" begin
+    @testset "multiconductor extensions" begin
         mp_data = build_mp_data("../test/data/matpower/case3.m")
-        pm = build_generic_model(mp_data, PowerModels.ACPPowerModel, post_tp_opf; multiphase=true)
+        pm = build_generic_model(mp_data, PowerModels.ACPPowerModel, post_tp_opf; multiconductor=true)
 
         @test haskey(var(pm, pm.cnw), :ph)
         @test length(var(pm, pm.cnw)) == 1
@@ -373,13 +373,13 @@ end
         @test PowerModels.ref(pm, pm.cnw, :bus, 1, "bus_i") == 1
         @test PowerModels.ref(pm, :bus, 1, "vmax") == 1.1
 
-        @test PowerModels.ismultiphase(pm)
-        @test PowerModels.ismultiphase(pm, pm.cnw)
+        @test PowerModels.ismulticonductor(pm)
+        @test PowerModels.ismulticonductor(pm, pm.cnw)
 
         @test length(PowerModels.nw_ids(pm)) == 1
     end
 
-    @testset "multiphase operations" begin
+    @testset "multiconductor operations" begin
         mp_data = build_mp_data("../test/data/matpower/case3.m")
 
         a, b, c, d = mp_data["branch"]["1"]["br_r"], mp_data["branch"]["1"]["br_x"], mp_data["branch"]["1"]["b_fr"], mp_data["branch"]["1"]["b_to"]
@@ -434,8 +434,8 @@ end
         @test all(c .+ b.values - [0.845  0.225  0.225; 0.225  0.845  0.225; 0.225  0.225  0.845] .<= 1e-12)
 
         # Custom Functions
-        @test PowerModels.phases(c) == 3
-        @test PowerModels.phases(a) == 3
+        @test PowerModels.conductors(c) == 3
+        @test PowerModels.conductors(a) == 3
         @test all(size(a) == (3,3))
         @test isa(JSON.lower(a), Array)
         @test all(JSON.lower(a) == a.values)

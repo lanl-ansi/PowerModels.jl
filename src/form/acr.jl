@@ -109,7 +109,7 @@ end
 
 
 """
-branch phase angle difference bounds
+branch voltage angle difference bounds
 """
 function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, h::Int, f_idx, angmin, angmax) where T <: AbstractACRForm
     i, f_bus, t_bus = f_idx

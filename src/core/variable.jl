@@ -4,10 +4,10 @@
 ################################################################################
 
 
-function getval(comp::Dict{String,Any}, key::String, phase::Int, default=0.0)
+function getval(comp::Dict{String,Any}, key::String, conductor::Int, default=0.0)
     if haskey(comp, key)
         vals = comp[key]
-        return getmpv(vals, phase)
+        return getmpv(vals, conductor)
     end
     return default
 end
