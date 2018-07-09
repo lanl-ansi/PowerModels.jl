@@ -9,6 +9,7 @@ PowerModels.jl Change Log
 - Added support for network data with multiple phases
 - Removed explicit series variables from branch flow model
 - Improved helper functions ref, var, con to work with multiple networks and phases
+- Minor robustness improvements to parsing PTI files
 - Minor issues closed #316
 
 ### v0.7.2
