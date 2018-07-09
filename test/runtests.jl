@@ -48,9 +48,9 @@ include("common.jl")
 
     include("multinetwork.jl")
 
-    include("multiphase.jl")
+    include("multiconductor.jl")
 
-    include("multi-nw-ph.jl")
+    include("multi-nw-cnd.jl")
 
     include("docs.jl")
   
