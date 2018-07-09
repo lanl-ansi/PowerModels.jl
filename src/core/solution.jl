@@ -164,15 +164,15 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
 
         num_conductors = length(conductor_ids(pm))
-        ph_idx = 1
+        cnd_idx = 1
         sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
         for conductor in conductor_ids(pm)
             try
-                variable = extract_var(var(pm, variable_symbol, ph=conductor), idx, item)
-                sol_item[param_name][ph_idx] = scale(getvalue(variable), item)
+                variable = extract_var(var(pm, variable_symbol, cnd=conductor), idx, item)
+                sol_item[param_name][cnd_idx] = scale(getvalue(variable), item)
             catch
             end
-            ph_idx += 1
+            cnd_idx += 1
         end
 
         # remove MultiConductorValue, if it was not a ismulticonductor network
@@ -239,16 +239,16 @@ function add_dual(
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
 
         num_conductors = length(conductor_ids(pm))
-        ph_idx = 1
+        cnd_idx = 1
         sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
         for conductor in conductor_ids(pm)
             try
-                constraint = extract_con(con(pm, con_symbol, ph=conductor), idx, item)
-                sol_item[param_name][ph_idx] = scale(getdual(constraint), item)
+                constraint = extract_con(con(pm, con_symbol, cnd=conductor), idx, item)
+                sol_item[param_name][cnd_idx] = scale(getdual(constraint), item)
             catch
                 info(LOGGER, "No constraint: $(con_symbol), $(idx)")
             end
-            ph_idx += 1
+            cnd_idx += 1
         end
 
         # remove MultiConductorValue, if it was not a ismulticonductor network

@@ -121,34 +121,34 @@
 
             @test length(result["solution"]["nw"]) == 3
 
-            for ph in 1:mn_mp_data["conductors"]
+            for c in 1:mn_mp_data["conductors"]
                 @test isapprox(
-                    result["solution"]["nw"]["1"]["gen"]["2"]["pg"][ph],
-                    result["solution"]["nw"]["2"]["gen"]["2"]["pg"][ph]; 
+                    result["solution"]["nw"]["1"]["gen"]["2"]["pg"][c],
+                    result["solution"]["nw"]["2"]["gen"]["2"]["pg"][c]; 
                     atol = 1e-3
                 )
                 @test isapprox(
-                    result["solution"]["nw"]["1"]["gen"]["4"]["pg"][ph],
-                    result["solution"]["nw"]["2"]["gen"]["4"]["pg"][ph]; 
+                    result["solution"]["nw"]["1"]["gen"]["4"]["pg"][c],
+                    result["solution"]["nw"]["2"]["gen"]["4"]["pg"][c]; 
                     atol = 1e-3
                 )
                 @test isapprox(
-                    result["solution"]["nw"]["2"]["gen"]["2"]["pg"][ph],
-                    result["solution"]["nw"]["3"]["gen"]["2"]["pg"][ph]; 
+                    result["solution"]["nw"]["2"]["gen"]["2"]["pg"][c],
+                    result["solution"]["nw"]["3"]["gen"]["2"]["pg"][c]; 
                     atol = 1e-3
                 )
                 @test isapprox(
-                    result["solution"]["nw"]["2"]["gen"]["4"]["pg"][ph],
-                    result["solution"]["nw"]["3"]["gen"]["4"]["pg"][ph]; 
+                    result["solution"]["nw"]["2"]["gen"]["4"]["pg"][c],
+                    result["solution"]["nw"]["3"]["gen"]["4"]["pg"][c]; 
                     atol = 1e-3
                 )
             end
 
             for (nw, network) in result["solution"]["nw"]
                 @test network["conductors"] == 3
-                for ph in 1:network["conductors"]
-                    @test isapprox(network["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
-                    @test isapprox(network["bus"]["2"]["va"][ph], -0.012822; atol = 1e-3)
+                for c in 1:network["conductors"]
+                    @test isapprox(network["gen"]["1"]["pg"][c],  0.4; atol = 1e-3)
+                    @test isapprox(network["bus"]["2"]["va"][c], -0.012822; atol = 1e-3)
                 end
             end
 

@@ -18,9 +18,9 @@ function calc_theta_delta_bounds(data::Dict{String,Any})
     end
     conductor_ids = 1:conductors
 
-    for ph in conductor_ids
-        angle_mins = [branch["angmin"][ph] for branch in branches]
-        angle_maxs = [branch["angmax"][ph] for branch in branches]
+    for c in conductor_ids
+        angle_mins = [branch["angmin"][c] for branch in branches]
+        angle_maxs = [branch["angmax"][c] for branch in branches]
 
         sort!(angle_mins)
         sort!(angle_maxs, rev=true)
@@ -398,25 +398,25 @@ function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1
 
     assert("per_unit" in keys(data) && data["per_unit"])
 
-    for ph in 1:get(data, "conductors", 1)
-        ph_str = haskey(data, "conductors") ? ", conductor $(ph)" : ""
+    for c in 1:get(data, "conductors", 1)
+        cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
         for (i, branch) in data["branch"]
-            angmin = branch["angmin"][ph]
-            angmax = branch["angmax"][ph]
+            angmin = branch["angmin"][c]
+            angmax = branch["angmax"][c]
 
             if angmin <= -pi/2
-                warn(LOGGER, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $i$(ph_str) from $(rad2deg(angmin)) to -$(rad2deg(default_pad)) deg.")
+                warn(LOGGER, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $i$(cnd_str) from $(rad2deg(angmin)) to -$(rad2deg(default_pad)) deg.")
                 if haskey(data, "conductors")
-                    branch["angmin"][ph] = -default_pad
+                    branch["angmin"][c] = -default_pad
                 else
                     branch["angmin"] = -default_pad
                 end
             end
 
             if angmax >= pi/2
-                warn(LOGGER, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $i$(ph_str) from $(rad2deg(angmax)) to $(rad2deg(default_pad)) deg.")
+                warn(LOGGER, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $i$(cnd_str) from $(rad2deg(angmax)) to $(rad2deg(default_pad)) deg.")
                 if haskey(data, "conductors")
-                    branch["angmax"][ph] = default_pad
+                    branch["angmax"][c] = default_pad
                 else
                     branch["angmax"] = default_pad
                 end
@@ -424,10 +424,10 @@ function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1
             end
 
             if angmin == 0.0 && angmax == 0.0
-                warn(LOGGER, "angmin and angmax values are 0, widening these values on branch $i$(ph_str) to +/- $(rad2deg(default_pad)) deg.")
+                warn(LOGGER, "angmin and angmax values are 0, widening these values on branch $i$(cnd_str) to +/- $(rad2deg(default_pad)) deg.")
                 if haskey(data, "conductors")
-                    branch["angmin"][ph] = -default_pad
-                    branch["angmax"][ph] =  default_pad
+                    branch["angmin"][c] = -default_pad
+                    branch["angmax"][c] =  default_pad
                 else
                     branch["angmin"] = -default_pad
                     branch["angmax"] =  default_pad
@@ -448,29 +448,29 @@ function check_thermal_limits(data::Dict{String,Any})
     mva_base = data["baseMVA"]
 
     for (i, branch) in data["branch"]
-        for ph in 1:get(data, "conductors", 1)
-            ph_str = haskey(data, "conductors") ? ", conductor $(ph)" : ""
-            if branch["rate_a"][ph] <= 0.0
-                theta_max = max(abs(branch["angmin"][ph]), abs(branch["angmax"][ph]))
+        for c in 1:get(data, "conductors", 1)
+            cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
+            if branch["rate_a"][c] <= 0.0
+                theta_max = max(abs(branch["angmin"][c]), abs(branch["angmax"][c]))
 
-                r = branch["br_r"][ph, ph]
-                x = branch["br_x"][ph, ph]
+                r = branch["br_r"][c, c]
+                x = branch["br_x"][c, c]
                 g =  r / (r^2 + x^2)
                 b = -x / (r^2 + x^2)
 
                 y_mag = sqrt(g^2 + b^2)
 
-                fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"][ph]
-                to_vmax = data["bus"][string(branch["t_bus"])]["vmax"][ph]
+                fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"][c]
+                to_vmax = data["bus"][string(branch["t_bus"])]["vmax"][c]
                 m_vmax = max(fr_vmax, to_vmax)
 
                 c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
 
                 new_rate = y_mag*m_vmax*c_max
 
-                warn(LOGGER, "this code only supports positive rate_a values, changing the value on branch $(branch["index"])$(ph_str) from $(mva_base*branch["rate_a"][ph]) to $(mva_base*new_rate)")
+                warn(LOGGER, "this code only supports positive rate_a values, changing the value on branch $(branch["index"])$(cnd_str) from $(mva_base*branch["rate_a"][c]) to $(mva_base*new_rate)")
                 if haskey(data, "conductors")
-                    branch["rate_a"][ph] = new_rate
+                    branch["rate_a"][c] = new_rate
                 else
                     branch["rate_a"] = new_rate
                 end
@@ -594,12 +594,12 @@ function check_transformer_parameters(data::Dict{String,Any})
                 branch["tap"] = 1.0
             end
         else
-            for ph in 1:get(data, "conductors", 1)
-                ph_str = haskey(data, "conductors") ? " on conductor $(ph)" : ""
-                if branch["tap"][ph] <= 0.0
-                    warn(LOGGER, "branch found with non-positive tap value of $(branch["tap"][ph]), setting a tap to 1.0$(ph_str)")
+            for c in 1:get(data, "conductors", 1)
+                cnd_str = haskey(data, "conductors") ? " on conductor $(c)" : ""
+                if branch["tap"][c] <= 0.0
+                    warn(LOGGER, "branch found with non-positive tap value of $(branch["tap"][c]), setting a tap to 1.0$(cnd_str)")
                     if haskey(data, "conductors")
-                        branch["tap"][ph] = 1.0
+                        branch["tap"][c] = 1.0
                     else
                         branch["tap"] = 1.0
                     end
@@ -661,50 +661,50 @@ function check_dcline_limits(data::Dict{String,Any})
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
-    for ph in 1:get(data, "conductors", 1)
-        ph_str = haskey(data, "conductors") ? ", conductor $(ph)" : ""
+    for c in 1:get(data, "conductors", 1)
+        cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
         for (i, dcline) in data["dcline"]
-            if dcline["loss0"][ph] < 0.0
+            if dcline["loss0"][c] < 0.0
                 new_rate = 0.0
-                warn(LOGGER, "this code only supports positive loss0 values, changing the value on dcline $(dcline["index"])$(ph_str) from $(mva_base*dcline["loss0"][ph]) to $(mva_base*new_rate)")
+                warn(LOGGER, "this code only supports positive loss0 values, changing the value on dcline $(dcline["index"])$(cnd_str) from $(mva_base*dcline["loss0"][c]) to $(mva_base*new_rate)")
                 if haskey(data, "conductors")
-                    dcline["loss0"][ph] = new_rate
+                    dcline["loss0"][c] = new_rate
                 else
                     dcline["loss0"] = new_rate
                 end
             end
 
-            if dcline["loss0"][ph] >= dcline["pmaxf"][ph]*(1-dcline["loss1"][ph] )+ dcline["pmaxt"][ph]
+            if dcline["loss0"][c] >= dcline["pmaxf"][c]*(1-dcline["loss1"][c] )+ dcline["pmaxt"][c]
                 new_rate = 0.0
-                warn(LOGGER, "this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"])$(ph_str) from $(mva_base*dcline["loss0"][ph]) to $(mva_base*new_rate)")
+                warn(LOGGER, "this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"])$(cnd_str) from $(mva_base*dcline["loss0"][c]) to $(mva_base*new_rate)")
                 if haskey(data, "conductors")
-                    dcline["loss0"][ph] = new_rate
+                    dcline["loss0"][c] = new_rate
                 else
                     dcline["loss0"] = new_rate
                 end
             end
 
-            if dcline["loss1"][ph] < 0.0
+            if dcline["loss1"][c] < 0.0
                 new_rate = 0.0
-                warn(LOGGER, "this code only supports positive loss1 values, changing the value on dcline $(dcline["index"])$(ph_str) from $(dcline["loss1"][ph]) to $(new_rate)")
+                warn(LOGGER, "this code only supports positive loss1 values, changing the value on dcline $(dcline["index"])$(cnd_str) from $(dcline["loss1"][c]) to $(new_rate)")
                 if haskey(data, "conductors")
-                    dcline["loss1"][ph] = new_rate
+                    dcline["loss1"][c] = new_rate
                 else
                     dcline["loss1"] = new_rate
                 end
             end
 
-            if dcline["loss1"][ph] >= 1.0
+            if dcline["loss1"][c] >= 1.0
                 new_rate = 0.0
-                warn(LOGGER, "this code only supports loss1 values < 1, changing the value on dcline $(dcline["index"])$(ph_str) from $(dcline["loss1"][ph]) to $(new_rate)")
+                warn(LOGGER, "this code only supports loss1 values < 1, changing the value on dcline $(dcline["index"])$(cnd_str) from $(dcline["loss1"][c]) to $(new_rate)")
                 if haskey(data, "conductors")
-                    dcline["loss1"][ph] = new_rate
+                    dcline["loss1"][c] = new_rate
                 else
                     dcline["loss1"] = new_rate
                 end
             end
 
-            if dcline["pmint"][ph] <0.0 && dcline["loss1"][ph] > 0.0
+            if dcline["pmint"][c] <0.0 && dcline["loss1"][c] > 0.0
                 #new_rate = 0.0
                 warn(LOGGER, "the dc line model is not meant to be used bi-directionally when loss1 > 0, be careful interpreting the results as the dc line losses can now be negative. change loss1 to 0 to avoid this warning")
                 #dcline["loss0"] = new_rate
@@ -720,13 +720,13 @@ function check_voltage_setpoints(data::Dict{String,Any})
         error("check_voltage_setpoints does not yet support multinetwork data")
     end
 
-    for ph in 1:get(data, "conductors", 1)
-        ph_str = haskey(data, "conductors") ? "conductor $(ph) " : ""
+    for c in 1:get(data, "conductors", 1)
+        cnd_str = haskey(data, "conductors") ? "conductor $(c) " : ""
         for (i,gen) in data["gen"]
             bus_id = gen["gen_bus"]
             bus = data["bus"]["$(bus_id)"]
-            if gen["vg"][ph] != bus["vm"][ph]
-                warn(LOGGER, "the $(ph_str)voltage setpoint on generator $(i) does not match the value at bus $(bus_id)")
+            if gen["vg"][c] != bus["vm"][c]
+                warn(LOGGER, "the $(cnd_str)voltage setpoint on generator $(i) does not match the value at bus $(bus_id)")
             end
         end
 
@@ -737,12 +737,12 @@ function check_voltage_setpoints(data::Dict{String,Any})
             bus_fr = data["bus"]["$(bus_fr_id)"]
             bus_to = data["bus"]["$(bus_to_id)"]
 
-            if dcline["vf"][ph] != bus_fr["vm"][ph]
-                warn(LOGGER, "the $(ph_str)from bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_fr_id)")
+            if dcline["vf"][c] != bus_fr["vm"][c]
+                warn(LOGGER, "the $(cnd_str)from bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_fr_id)")
             end
 
-            if dcline["vt"][ph] != bus_to["vm"][ph]
-                warn(LOGGER, "the $(ph_str)to bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_to_id)")
+            if dcline["vt"][c] != bus_to["vm"][c]
+                warn(LOGGER, "the $(cnd_str)to bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_to_id)")
             end
         end
     end
@@ -768,35 +768,35 @@ end
 ""
 function _check_cost_functions(id, comp)
     if "model" in keys(comp) && "cost" in keys(comp)
-        for ph in 1:length(comp["ncost"])
-            ph_str = length(comp["ncost"]) > 1 ? "conductor $(ph) " : ""
-            if comp["model"][ph] == 1
-                if length(PowerModels.getmpv(comp["cost"], ph)) != 2*comp["ncost"][ph]
-                    error("$(ph_str)ncost of $(comp["ncost"][ph]) not consistent with $(length(PowerModels.getmpv(comp["cost"], ph))) cost values")
+        for c in 1:length(comp["ncost"])
+            cnd_str = length(comp["ncost"]) > 1 ? "conductor $(c) " : ""
+            if comp["model"][c] == 1
+                if length(PowerModels.getmpv(comp["cost"], c)) != 2*comp["ncost"][c]
+                    error("$(cnd_str)ncost of $(comp["ncost"][c]) not consistent with $(length(PowerModels.getmpv(comp["cost"], c))) cost values")
                 end
-                if length(PowerModels.getmpv(comp["cost"], ph)) < 4
-                    error("$(ph_str)cost includes $(comp["ncost"][ph]) points, but at least two points are required")
+                if length(PowerModels.getmpv(comp["cost"], c)) < 4
+                    error("$(cnd_str)cost includes $(comp["ncost"][c]) points, but at least two points are required")
                 end
-                for i in 3:2:length(PowerModels.getmpv(comp["cost"], ph))
-                    if PowerModels.getmpv(comp["cost"], ph)[i-2] >= PowerModels.getmpv(comp["cost"], ph)[i]
-                        error("non-increasing x values in $(ph_str)pwl cost model")
+                for i in 3:2:length(PowerModels.getmpv(comp["cost"], c))
+                    if PowerModels.getmpv(comp["cost"], c)[i-2] >= PowerModels.getmpv(comp["cost"], c)[i]
+                        error("non-increasing x values in $(cnd_str)pwl cost model")
                     end
                 end
                 if "pmin" in keys(comp) && "pmax" in keys(comp)
-                    pmin = comp["pmin"][ph]
-                    pmax = comp["pmax"][ph]
-                    for i in 3:2:length(PowerModels.getmpv(comp["cost"], ph))
-                        if PowerModels.getmpv(comp["cost"], ph)[i] < pmin || PowerModels.getmpv(comp["cost"], ph)[i] > pmax
-                            warn(LOGGER, "$(ph_str)pwl x value $(PowerModels.getmpv(comp["cost"], ph)[i]) is outside the generator bounds $(pmin)-$(pmax)")
+                    pmin = comp["pmin"][c]
+                    pmax = comp["pmax"][c]
+                    for i in 3:2:length(PowerModels.getmpv(comp["cost"], c))
+                        if PowerModels.getmpv(comp["cost"], c)[i] < pmin || PowerModels.getmpv(comp["cost"], c)[i] > pmax
+                            warn(LOGGER, "$(cnd_str)pwl x value $(PowerModels.getmpv(comp["cost"], c)[i]) is outside the generator bounds $(pmin)-$(pmax)")
                         end
                     end
                 end
-            elseif comp["model"][ph] == 2
-                if length(PowerModels.getmpv(comp["cost"], ph)) != comp["ncost"][ph]
-                    error("$(ph_str)ncost of $(comp["ncost"][ph]) not consistent with $(length(PowerModels.getmpv(comp["cost"], ph))) cost values")
+            elseif comp["model"][c] == 2
+                if length(PowerModels.getmpv(comp["cost"], c)) != comp["ncost"][c]
+                    error("$(cnd_str)ncost of $(comp["ncost"][c]) not consistent with $(length(PowerModels.getmpv(comp["cost"], c))) cost values")
                 end
             else
-                warn(LOGGER, "Unknown $(ph_str)generator cost model of type $(comp["model"][ph])")
+                warn(LOGGER, "Unknown $(cnd_str)generator cost model of type $(comp["model"][c])")
             end
         end
     end

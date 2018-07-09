@@ -2,36 +2,36 @@ TESTLOG = getlogger(PowerModels)
 
 ""
 function post_tp_opf(pm::PowerModels.GenericPowerModel)
-    for h in PowerModels.conductor_ids(pm)
-        PowerModels.variable_voltage(pm, ph=h)
-        PowerModels.variable_generation(pm, ph=h)
-        PowerModels.variable_branch_flow(pm, ph=h)
-        PowerModels.variable_dcline_flow(pm, ph=h)
+    for c in PowerModels.conductor_ids(pm)
+        PowerModels.variable_voltage(pm, cnd=c)
+        PowerModels.variable_generation(pm, cnd=c)
+        PowerModels.variable_branch_flow(pm, cnd=c)
+        PowerModels.variable_dcline_flow(pm, cnd=c)
     end
 
-    for h in PowerModels.conductor_ids(pm)
-        PowerModels.constraint_voltage(pm, ph=h)
+    for c in PowerModels.conductor_ids(pm)
+        PowerModels.constraint_voltage(pm, cnd=c)
 
         for i in ids(pm, :ref_buses)
-            PowerModels.constraint_theta_ref(pm, i, ph=h)
+            PowerModels.constraint_theta_ref(pm, i, cnd=c)
         end
 
         for i in ids(pm, :bus)
-            PowerModels.constraint_kcl_shunt(pm, i, ph=h)
+            PowerModels.constraint_kcl_shunt(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
-            PowerModels.constraint_ohms_yt_from(pm, i, ph=h)
-            PowerModels.constraint_ohms_yt_to(pm, i, ph=h)
+            PowerModels.constraint_ohms_yt_from(pm, i, cnd=c)
+            PowerModels.constraint_ohms_yt_to(pm, i, cnd=c)
 
-            PowerModels.constraint_voltage_angle_difference(pm, i, ph=h)
+            PowerModels.constraint_voltage_angle_difference(pm, i, cnd=c)
 
-            PowerModels.constraint_thermal_limit_from(pm, i, ph=h)
-            PowerModels.constraint_thermal_limit_to(pm, i, ph=h)
+            PowerModels.constraint_thermal_limit_from(pm, i, cnd=c)
+            PowerModels.constraint_thermal_limit_to(pm, i, cnd=c)
         end
 
         for i in ids(pm, :dcline)
-            PowerModels.constraint_dcline(pm, i, ph=h)
+            PowerModels.constraint_dcline(pm, i, cnd=c)
         end
     end
 
@@ -107,9 +107,9 @@ end
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 47267.9; atol = 1e-1)
 
-            for ph in 1:mp_data["conductors"]
-                @test isapprox(result["solution"]["gen"]["1"]["pg"][ph], 1.58067; atol = 1e-3)
-                @test isapprox(result["solution"]["bus"]["2"]["va"][ph], 0.12669; atol = 1e-3)
+            for c in 1:mp_data["conductors"]
+                @test isapprox(result["solution"]["gen"]["1"]["pg"][c], 1.58067; atol = 1e-3)
+                @test isapprox(result["solution"]["bus"]["2"]["va"][c], 0.12669; atol = 1e-3)
             end
         end
 
@@ -120,9 +120,9 @@ end
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 91345.5; atol = 1e-1)
-            for ph in 1:mp_data["conductors"]
-                @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
-                @test isapprox(result["solution"]["bus"]["2"]["va"][ph], -0.00103692; atol = 1e-5)
+            for c in 1:mp_data["conductors"]
+                @test isapprox(result["solution"]["gen"]["1"]["pg"][c],  0.4; atol = 1e-3)
+                @test isapprox(result["solution"]["bus"]["2"]["va"][c], -0.00103692; atol = 1e-5)
             end
         end
 
@@ -134,9 +134,9 @@ end
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 614.905; atol = 1e-1)
 
-            for ph in 1:mp_data["conductors"]
-                @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  2.18839; atol = 1e-3)
-                @test isapprox(result["solution"]["bus"]["2"]["va"][ph], -0.071759; atol = 1e-4)
+            for c in 1:mp_data["conductors"]
+                @test isapprox(result["solution"]["gen"]["1"]["pg"][c],  2.18839; atol = 1e-3)
+                @test isapprox(result["solution"]["bus"]["2"]["va"][c], -0.071759; atol = 1e-4)
             end
         end
     end
@@ -150,9 +150,9 @@ end
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 54468.5; atol = 1e-1)
-            for ph in 1:mp_data["conductors"]
-                @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
-                @test isapprox(result["solution"]["bus"]["2"]["va"][ph], -0.0139117; atol = 1e-4)
+            for c in 1:mp_data["conductors"]
+                @test isapprox(result["solution"]["gen"]["1"]["pg"][c],  0.4; atol = 1e-3)
+                @test isapprox(result["solution"]["bus"]["2"]["va"][c], -0.0139117; atol = 1e-4)
             end
         end
 
@@ -161,9 +161,9 @@ end
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 54272.7; atol = 1e-1)
-            for ph in 1:mp_data["conductors"]
-                @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
-                @test isapprox(result["solution"]["bus"]["2"]["va"][ph], -0.0135206; atol = 1e-4)
+            for c in 1:mp_data["conductors"]
+                @test isapprox(result["solution"]["gen"]["1"]["pg"][c],  0.4; atol = 1e-3)
+                @test isapprox(result["solution"]["bus"]["2"]["va"][c], -0.0135206; atol = 1e-4)
             end
         end
 
@@ -172,9 +172,9 @@ end
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 46314.1; atol = 1e-1)
-            for ph in 1:mp_data["conductors"]
-                @test isapprox(result["solution"]["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
-                @test isapprox(result["solution"]["bus"]["2"]["vm"][ph],  1.08578; atol = 1e-3)
+            for c in 1:mp_data["conductors"]
+                @test isapprox(result["solution"]["gen"]["1"]["pg"][c],  0.4; atol = 1e-3)
+                @test isapprox(result["solution"]["bus"]["2"]["vm"][c],  1.08578; atol = 1e-3)
             end
         end
 
@@ -196,18 +196,18 @@ end
                 @test haskey(bus, "lam_kcl_r")
                 @test haskey(bus, "lam_kcl_i")
 
-                for ph in 1:mp_data["conductors"]
-                    @test bus["lam_kcl_r"][ph] >= -4000 && bus["lam_kcl_r"][ph] <= 0
-                    @test isnan(bus["lam_kcl_i"][ph])
+                for c in 1:mp_data["conductors"]
+                    @test bus["lam_kcl_r"][c] >= -4000 && bus["lam_kcl_r"][c] <= 0
+                    @test isnan(bus["lam_kcl_i"][c])
                 end
             end
             for (i, branch) in result["solution"]["branch"]
                 @test haskey(branch, "mu_sm_fr")
                 @test haskey(branch, "mu_sm_to")
 
-                for ph in 1:mp_data["conductors"]
-                    @test branch["mu_sm_fr"][ph] >= -1 && branch["mu_sm_fr"][ph] <= 6000
-                    @test isnan(branch["mu_sm_to"][ph])
+                for c in 1:mp_data["conductors"]
+                    @test branch["mu_sm_fr"][c] >= -1 && branch["mu_sm_fr"][c] <= 6000
+                    @test isnan(branch["mu_sm_to"][c])
                 end
             end
 
@@ -352,20 +352,20 @@ end
         mp_data = build_mp_data("../test/data/matpower/case3.m")
         pm = build_generic_model(mp_data, PowerModels.ACPPowerModel, post_tp_opf; multiconductor=true)
 
-        @test haskey(var(pm, pm.cnw), :ph)
+        @test haskey(var(pm, pm.cnw), :cnd)
         @test length(var(pm, pm.cnw)) == 1
 
-        @test length(var(pm, pm.cnw, :ph)) == 3
-        @test length(var(pm, pm.cnw, :ph, 1)) == 8
+        @test length(var(pm, pm.cnw, :cnd)) == 3
+        @test length(var(pm, pm.cnw, :cnd, 1)) == 8
         @test length(var(pm)) == 8
-        @test haskey(var(pm, pm.cnw, :ph, 1), :vm)
-        @test var(pm, :vm, 1) == var(pm, pm.cnw, pm.cph, :vm, 1)
+        @test haskey(var(pm, pm.cnw, :cnd, 1), :vm)
+        @test var(pm, :vm, 1) == var(pm, pm.cnw, pm.ccnd, :vm, 1)
 
-        @test haskey(PowerModels.con(pm, pm.cnw), :ph)
+        @test haskey(PowerModels.con(pm, pm.cnw), :cnd)
         @test length(PowerModels.con(pm, pm.cnw)) == 1
-        @test length(PowerModels.con(pm, pm.cnw, :ph)) == 3
-        @test length(PowerModels.con(pm, pm.cnw, :ph, 1)) == 4
-        @test PowerModels.con(pm, pm.cnw, pm.cph, :kcl_p, 1) == PowerModels.con(pm, :kcl_p, 1)
+        @test length(PowerModels.con(pm, pm.cnw, :cnd)) == 3
+        @test length(PowerModels.con(pm, pm.cnw, :cnd, 1)) == 4
+        @test PowerModels.con(pm, pm.cnw, pm.ccnd, :kcl_p, 1) == PowerModels.con(pm, :kcl_p, 1)
         @test length(PowerModels.con(pm)) == 4
 
         @test length(PowerModels.ref(pm, pm.cnw)) == 39

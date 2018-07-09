@@ -52,7 +52,7 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     var::Dict{Symbol,Any} # JuMP variables
     con::Dict{Symbol,Any} # JuMP constraint references
     cnw::Int # current network index value
-    cph::Int # current conductor index value
+    ccnd::Int # current conductor index value
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -75,17 +75,17 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
         nw_var = var[:nw][nw_id] = Dict{Symbol,Any}()
         nw_con = con[:nw][nw_id] = Dict{Symbol,Any}()
 
-        nw_var[:ph] = Dict{Int,Any}()
-        nw_con[:ph] = Dict{Int,Any}()
+        nw_var[:cnd] = Dict{Int,Any}()
+        nw_con[:cnd] = Dict{Int,Any}()
 
-        for ph_id in nw[:conductor_ids]
-            nw_var[:ph][ph_id] = Dict{Symbol,Any}()
-            nw_con[:ph][ph_id] = Dict{Symbol,Any}()
+        for cnd_id in nw[:conductor_ids]
+            nw_var[:cnd][cnd_id] = Dict{Symbol,Any}()
+            nw_con[:cnd][cnd_id] = Dict{Symbol,Any}()
         end
     end
 
     cnw = minimum([k for k in keys(var[:nw])])
-    cph = minimum([k for k in keys(var[:nw][cnw][:ph])])
+    ccnd = minimum([k for k in keys(var[:nw][cnw][:cnd])])
 
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
@@ -96,7 +96,7 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
         var,
         con,
         cnw,
-        cph,
+        ccnd,
         ext
     )
 
@@ -122,35 +122,35 @@ ref(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
-ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, ph::Int) = pm.ref[:nw][nw][key][idx][param][ph]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, cnd::Int) = pm.ref[:nw][nw][key][idx][param][cnd]
 
 ref(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
 ref(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
 ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
-ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ref[:nw][nw][key][idx][param][ph]
+ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.ref[:nw][nw][key][idx][param][cnd]
 
 
 Base.var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
 Base.var(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
 Base.var(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
-Base.var(pm::GenericPowerModel, nw::Int, ph::Int) = pm.var[:nw][nw][:ph][ph]
-Base.var(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.var[:nw][nw][:ph][ph][key]
-Base.var(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.var[:nw][nw][:ph][ph][key][idx]
+Base.var(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
+Base.var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
+Base.var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 
-Base.var(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph]
-Base.var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph][key]
-Base.var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph][key][idx]
+Base.var(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
+Base.var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
+Base.var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 
 con(pm::GenericPowerModel, nw::Int) = pm.con[:nw][nw]
 con(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.con[:nw][nw][key]
 con(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.con[:nw][nw][key][idx]
-con(pm::GenericPowerModel, nw::Int, ph::Int) = pm.con[:nw][nw][:ph][ph]
-con(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.con[:nw][nw][:ph][ph][key]
-con(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.con[:nw][nw][:ph][ph][key][idx]
+con(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.con[:nw][nw][:cnd][cnd]
+con(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.con[:nw][nw][:cnd][cnd][key]
+con(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.con[:nw][nw][:cnd][cnd][key][idx]
 
-con(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph]
-con(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph][key]
-con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph][key][idx]
+con(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd]
+con(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key]
+con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key][idx]
 
 
 
@@ -415,17 +415,17 @@ end
 function buspair_parameters(arcs_from, branches, buses, conductor_ids)
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
 
-    bp_angmin = Dict([(bp, MultiConductorVector([-Inf for h in conductor_ids])) for bp in buspair_indexes])
-    bp_angmax = Dict([(bp, MultiConductorVector([ Inf for h in conductor_ids])) for bp in buspair_indexes])
+    bp_angmin = Dict([(bp, MultiConductorVector([-Inf for c in conductor_ids])) for bp in buspair_indexes])
+    bp_angmax = Dict([(bp, MultiConductorVector([ Inf for c in conductor_ids])) for bp in buspair_indexes])
     bp_branch = Dict([(bp, Inf) for bp in buspair_indexes])
 
     for (l,branch) in branches
         i = branch["f_bus"]
         j = branch["t_bus"]
 
-        for h in conductor_ids
-            bp_angmin[(i,j)][h] = max(bp_angmin[(i,j)][h], branch["angmin"][h])
-            bp_angmax[(i,j)][h] = min(bp_angmax[(i,j)][h], branch["angmax"][h])
+        for c in conductor_ids
+            bp_angmin[(i,j)][c] = max(bp_angmin[(i,j)][c], branch["angmin"][c])
+            bp_angmax[(i,j)][c] = min(bp_angmax[(i,j)][c], branch["angmax"][c])
         end
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end
