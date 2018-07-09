@@ -415,8 +415,8 @@ end
 function buspair_parameters(arcs_from, branches, buses, conductor_ids)
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
 
-    bp_angmin = Dict([(bp, MultiPhaseVector([-Inf for h in conductor_ids])) for bp in buspair_indexes])
-    bp_angmax = Dict([(bp, MultiPhaseVector([ Inf for h in conductor_ids])) for bp in buspair_indexes])
+    bp_angmin = Dict([(bp, MultiConductorVector([-Inf for h in conductor_ids])) for bp in buspair_indexes])
+    bp_angmax = Dict([(bp, MultiConductorVector([ Inf for h in conductor_ids])) for bp in buspair_indexes])
     bp_branch = Dict([(bp, Inf) for bp in buspair_indexes])
 
     for (l,branch) in branches

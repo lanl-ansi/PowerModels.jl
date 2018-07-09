@@ -41,8 +41,8 @@ function calc_theta_delta_bounds(data::Dict{String,Any})
     end
 
     if haskey(data, "conductors")
-        amin = MultiPhaseVector(angle_min)
-        amax = MultiPhaseVector(angle_max)
+        amin = MultiConductorVector(angle_min)
+        amax = MultiConductorVector(angle_max)
         return amin, amax
     else
         return angle_min[1], angle_max[1]
@@ -119,8 +119,8 @@ end
 ""
 function apply_func(data::Dict{String,Any}, key::String, func)
     if haskey(data, key)
-        if isa(data[key], MultiPhaseVector)
-            data[key] = MultiPhaseVector([func(v) for v in data[key]])
+        if isa(data[key], MultiConductorVector)
+            data[key] = MultiConductorVector([func(v) for v in data[key]])
         else
             data[key] = func(data[key])
         end
@@ -589,7 +589,7 @@ function check_transformer_parameters(data::Dict{String,Any})
         if !haskey(branch, "tap")
             warn(LOGGER, "branch found without tap value, setting a tap to 1.0")
             if haskey(data, "conductors")
-                branch["tap"] = MultiPhaseVector{Float64}(ones(data["conductors"]))
+                branch["tap"] = MultiConductorVector{Float64}(ones(data["conductors"]))
             else
                 branch["tap"] = 1.0
             end
@@ -609,7 +609,7 @@ function check_transformer_parameters(data::Dict{String,Any})
         if !haskey(branch, "shift")
             warn(LOGGER, "branch found without shift value, setting a shift to 0.0")
             if haskey(data, "conductors")
-                branch["shift"] = MultiPhaseVector{Float64}(zeros(data["conductors"]))
+                branch["shift"] = MultiConductorVector{Float64}(zeros(data["conductors"]))
             else
                 branch["shift"] = 0.0
             end
@@ -1227,9 +1227,9 @@ function _make_multiconductor(data::Dict{String,Any}, conductors::Real)
                             item_ref_data[param] = value
                         else
                             if param in conductor_matrix
-                                item_ref_data[param] = MultiPhaseMatrix(value, conductors)
+                                item_ref_data[param] = MultiConductorMatrix(value, conductors)
                             else
-                                item_ref_data[param] = MultiPhaseVector(value, conductors)
+                                item_ref_data[param] = MultiConductorVector(value, conductors)
                             end
                         end
                     end

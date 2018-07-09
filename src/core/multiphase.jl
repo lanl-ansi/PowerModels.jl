@@ -1,145 +1,145 @@
-export MultiPhaseValue, MultiPhaseVector, MultiPhaseMatrix, conductors
+export MultiConductorValue, MultiConductorVector, MultiConductorMatrix, conductors
 
 
 "a data structure for working with multiconductor datasets"
-abstract type MultiPhaseValue{T} end
+abstract type MultiConductorValue{T} end
 
 
 "a data structure for working with multiconductor datasets"
-mutable struct MultiPhaseVector{T} <: MultiPhaseValue{T}
+mutable struct MultiConductorVector{T} <: MultiConductorValue{T}
     values::Vector{T}
 end
 
 
-MultiPhaseVector(value::T, conductors::Int) where T = MultiPhaseVector([value for i in 1:conductors])
-Base.map(f, a::MultiPhaseVector{T}) where T = MultiPhaseVector{T}(map(f, a.values))
-Base.map(f, a::MultiPhaseVector{T}, b::MultiPhaseVector{T}) where T = MultiPhaseVector{T}(map(f, a.values, b.values))
-conductors(mpv::MultiPhaseVector) = length(mpv.values)
+MultiConductorVector(value::T, conductors::Int) where T = MultiConductorVector([value for i in 1:conductors])
+Base.map(f, a::MultiConductorVector{T}) where T = MultiConductorVector{T}(map(f, a.values))
+Base.map(f, a::MultiConductorVector{T}, b::MultiConductorVector{T}) where T = MultiConductorVector{T}(map(f, a.values, b.values))
+conductors(mpv::MultiConductorVector) = length(mpv.values)
 
 
 ""
-function Base.setindex!(mpv::MultiPhaseVector{T}, v::T, i::Int) where T
+function Base.setindex!(mpv::MultiConductorVector{T}, v::T, i::Int) where T
     mpv.values[i] = v
 end
 
 
 ""
-mutable struct MultiPhaseMatrix{T} <: MultiPhaseValue{T}
+mutable struct MultiConductorMatrix{T} <: MultiConductorValue{T}
     values::Matrix{T}
 end
 
 
-MultiPhaseMatrix(value::T, conductors::Int) where T = MultiPhaseMatrix(value*eye(conductors))
-Base.map(f, a::MultiPhaseMatrix{T}) where T = MultiPhaseMatrix{T}(map(f, a.values))
-Base.map(f, a::MultiPhaseMatrix{T}, b::MultiPhaseMatrix{T}) where T = MultiPhaseMatrix{T}(map(f, a.values, b.values))
-conductors(mpv::MultiPhaseMatrix) = size(mpv.values, 1)
+MultiConductorMatrix(value::T, conductors::Int) where T = MultiConductorMatrix(value*eye(conductors))
+Base.map(f, a::MultiConductorMatrix{T}) where T = MultiConductorMatrix{T}(map(f, a.values))
+Base.map(f, a::MultiConductorMatrix{T}, b::MultiConductorMatrix{T}) where T = MultiConductorMatrix{T}(map(f, a.values, b.values))
+conductors(mpv::MultiConductorMatrix) = size(mpv.values, 1)
 
 
 ""
-function Base.setindex!(mpv::MultiPhaseMatrix{T}, v::T, i::Int, j::Int) where T
+function Base.setindex!(mpv::MultiConductorMatrix{T}, v::T, i::Int, j::Int) where T
     mpv.values[i,j] = v
 end
 
 
-Base.start(mpv::MultiPhaseValue) = start(mpv.values)
-Base.next(mpv::MultiPhaseValue, state) = next(mpv.values, state)
-Base.done(mpv::MultiPhaseValue, state) = done(mpv.values, state)
+Base.start(mpv::MultiConductorValue) = start(mpv.values)
+Base.next(mpv::MultiConductorValue, state) = next(mpv.values, state)
+Base.done(mpv::MultiConductorValue, state) = done(mpv.values, state)
 
-Base.length(mpv::MultiPhaseValue) = length(mpv.values)
-Base.size(mpv::MultiPhaseValue, a...) = size(mpv.values, a...)
-Base.getindex(mpv::MultiPhaseValue, args...) = mpv.values[args...]
+Base.length(mpv::MultiConductorValue) = length(mpv.values)
+Base.size(mpv::MultiConductorValue, a...) = size(mpv.values, a...)
+Base.getindex(mpv::MultiConductorValue, args...) = mpv.values[args...]
 
-Base.show(io::IO, mpv::MultiPhaseValue) = Base.show(io, mpv.values)
+Base.show(io::IO, mpv::MultiConductorValue) = Base.show(io, mpv.values)
 
-Base.broadcast(f::Any, a::Any, b::MultiPhaseValue) = broadcast(f, a, b.values)
-Base.broadcast(f::Any, a::MultiPhaseValue, b::Any) = broadcast(f, a.values, b)
-Base.broadcast(f::Any, a::MultiPhaseValue, b::MultiPhaseValue) = broadcast(f, a.values, b.values)
+Base.broadcast(f::Any, a::Any, b::MultiConductorValue) = broadcast(f, a, b.values)
+Base.broadcast(f::Any, a::MultiConductorValue, b::Any) = broadcast(f, a.values, b)
+Base.broadcast(f::Any, a::MultiConductorValue, b::MultiConductorValue) = broadcast(f, a.values, b.values)
 
 # Vectors
-Base.:+(a::MultiPhaseVector) = MultiPhaseVector(+(a.values))
-Base.:+(a::MultiPhaseVector, b::Union{Array,Number}) = MultiPhaseVector(+(a.values, b))
-Base.:+(a::Union{Array,Number}, b::MultiPhaseVector) = MultiPhaseVector(+(a, b.values))
-Base.:+(a::MultiPhaseVector, b::MultiPhaseVector) = MultiPhaseVector(+(a.values, b.values))
+Base.:+(a::MultiConductorVector) = MultiConductorVector(+(a.values))
+Base.:+(a::MultiConductorVector, b::Union{Array,Number}) = MultiConductorVector(+(a.values, b))
+Base.:+(a::Union{Array,Number}, b::MultiConductorVector) = MultiConductorVector(+(a, b.values))
+Base.:+(a::MultiConductorVector, b::MultiConductorVector) = MultiConductorVector(+(a.values, b.values))
 
-Base.:-(a::MultiPhaseVector) = MultiPhaseVector(-(a.values))
-Base.:-(a::MultiPhaseVector, b::Union{Array,Number}) = MultiPhaseVector(-(a.values, b))
-Base.:-(a::Union{Array,Number}, b::MultiPhaseVector) = MultiPhaseVector(-(a, b.values))
-Base.:-(a::MultiPhaseVector, b::MultiPhaseVector) = MultiPhaseVector(-(a.values, b.values))
+Base.:-(a::MultiConductorVector) = MultiConductorVector(-(a.values))
+Base.:-(a::MultiConductorVector, b::Union{Array,Number}) = MultiConductorVector(-(a.values, b))
+Base.:-(a::Union{Array,Number}, b::MultiConductorVector) = MultiConductorVector(-(a, b.values))
+Base.:-(a::MultiConductorVector, b::MultiConductorVector) = MultiConductorVector(-(a.values, b.values))
 
-Base.:*(a::Number, b::MultiPhaseVector) = MultiPhaseVector(*(a, b.values))
-Base.:*(a::MultiPhaseVector, b::Number) = MultiPhaseVector(*(a.values, b))
-Base.:*(a::Array, b::MultiPhaseVector) = MultiPhaseVector(Base.broadcast(*, a, b.values))
-Base.:*(a::MultiPhaseVector, b::Array) = MultiPhaseVector(Base.broadcast(*, a.values, b))
-Base.:*(a::MultiPhaseVector, b::MultiPhaseVector) = MultiPhaseVector(Base.broadcast(*, a.values, b.values))
+Base.:*(a::Number, b::MultiConductorVector) = MultiConductorVector(*(a, b.values))
+Base.:*(a::MultiConductorVector, b::Number) = MultiConductorVector(*(a.values, b))
+Base.:*(a::Array, b::MultiConductorVector) = MultiConductorVector(Base.broadcast(*, a, b.values))
+Base.:*(a::MultiConductorVector, b::Array) = MultiConductorVector(Base.broadcast(*, a.values, b))
+Base.:*(a::MultiConductorVector, b::MultiConductorVector) = MultiConductorVector(Base.broadcast(*, a.values, b.values))
 
-Base.:/(a::MultiPhaseVector, b::Number) = MultiPhaseVector(/(a.values, b))
-Base.:/(a::Union{Array,Number}, b::MultiPhaseVector) = MultiPhaseVector(Base.broadcast(/, a, b.values))
-Base.:/(a::MultiPhaseVector, b::MultiPhaseVector) = MultiPhaseVector(Base.broadcast(/, a.values, b.values))
+Base.:/(a::MultiConductorVector, b::Number) = MultiConductorVector(/(a.values, b))
+Base.:/(a::Union{Array,Number}, b::MultiConductorVector) = MultiConductorVector(Base.broadcast(/, a, b.values))
+Base.:/(a::MultiConductorVector, b::MultiConductorVector) = MultiConductorVector(Base.broadcast(/, a.values, b.values))
 
-Base.:*(a::MultiPhaseVector, b::RowVector) = MultiPhaseMatrix(Base.broadcast(*, a.values, b))
-Base.:*(a::RowVector, b::MultiPhaseVector) = MultiPhaseMatrix(Base.broadcast(*, a, b.values))
+Base.:*(a::MultiConductorVector, b::RowVector) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
+Base.:*(a::RowVector, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
 
 # Matrices
-Base.:+(a::MultiPhaseMatrix) = MultiPhaseMatrix(+(a.values))
-Base.:+(a::MultiPhaseMatrix, b::Union{Array,Number}) = MultiPhaseMatrix(+(a.values, b))
-Base.:+(a::Union{Array,Number}, b::MultiPhaseMatrix) = MultiPhaseMatrix(+(a, b.values))
-Base.:+(a::MultiPhaseMatrix, b::MultiPhaseMatrix) = MultiPhaseMatrix(+(a.values, b.values))
+Base.:+(a::MultiConductorMatrix) = MultiConductorMatrix(+(a.values))
+Base.:+(a::MultiConductorMatrix, b::Union{Array,Number}) = MultiConductorMatrix(+(a.values, b))
+Base.:+(a::Union{Array,Number}, b::MultiConductorMatrix) = MultiConductorMatrix(+(a, b.values))
+Base.:+(a::MultiConductorMatrix, b::MultiConductorMatrix) = MultiConductorMatrix(+(a.values, b.values))
 
-Base.:-(a::MultiPhaseMatrix) = MultiPhaseMatrix(-(a.values))
-Base.:-(a::MultiPhaseMatrix, b::Union{Array,Number}) = MultiPhaseMatrix(-(a.values, b))
-Base.:-(a::Union{Array,Number}, b::MultiPhaseMatrix) = MultiPhaseMatrix(-(a, b.values))
-Base.:-(a::MultiPhaseMatrix, b::MultiPhaseMatrix) = MultiPhaseMatrix(-(a.values, b.values))
+Base.:-(a::MultiConductorMatrix) = MultiConductorMatrix(-(a.values))
+Base.:-(a::MultiConductorMatrix, b::Union{Array,Number}) = MultiConductorMatrix(-(a.values, b))
+Base.:-(a::Union{Array,Number}, b::MultiConductorMatrix) = MultiConductorMatrix(-(a, b.values))
+Base.:-(a::MultiConductorMatrix, b::MultiConductorMatrix) = MultiConductorMatrix(-(a.values, b.values))
 
-Base.:*(a::MultiPhaseMatrix, b::Union{Array,Number}) = MultiPhaseMatrix(*(a.values, b))
-Base.:*(a::Union{Array,Number}, b::MultiPhaseMatrix) = MultiPhaseMatrix(*(a, b.values))
-Base.:*(a::MultiPhaseMatrix, b::MultiPhaseMatrix) = MultiPhaseMatrix(*(a.values, b.values))
+Base.:*(a::MultiConductorMatrix, b::Union{Array,Number}) = MultiConductorMatrix(*(a.values, b))
+Base.:*(a::Union{Array,Number}, b::MultiConductorMatrix) = MultiConductorMatrix(*(a, b.values))
+Base.:*(a::MultiConductorMatrix, b::MultiConductorMatrix) = MultiConductorMatrix(*(a.values, b.values))
 
-Base.:/(a::MultiPhaseMatrix, b::Union{Array,Number}) = MultiPhaseMatrix(/(a.values, b))
-Base.:/(a::Union{Array,Number}, b::MultiPhaseMatrix) = MultiPhaseMatrix(/(a, b.values))
-Base.:/(a::MultiPhaseMatrix, b::MultiPhaseMatrix) = MultiPhaseMatrix(/(a.values, b.values))
+Base.:/(a::MultiConductorMatrix, b::Union{Array,Number}) = MultiConductorMatrix(/(a.values, b))
+Base.:/(a::Union{Array,Number}, b::MultiConductorMatrix) = MultiConductorMatrix(/(a, b.values))
+Base.:/(a::MultiConductorMatrix, b::MultiConductorMatrix) = MultiConductorMatrix(/(a.values, b.values))
 
-Base.:*(a::MultiPhaseMatrix, b::MultiPhaseVector) = MultiPhaseVector(*(a.values, b.values))
-Base.:/(a::MultiPhaseMatrix, b::RowVector) = MultiPhaseVector(squeeze(/(a.values, b), 2))
+Base.:*(a::MultiConductorMatrix, b::MultiConductorVector) = MultiConductorVector(*(a.values, b.values))
+Base.:/(a::MultiConductorMatrix, b::RowVector) = MultiConductorVector(squeeze(/(a.values, b), 2))
 
-Base.:^(a::MultiPhaseVector, b::Complex) = MultiPhaseVector(Base.broadcast(^, a.values, b))
-Base.:^(a::MultiPhaseVector, b::Integer) = MultiPhaseVector(Base.broadcast(^, a.values, b))
-Base.:^(a::MultiPhaseVector, b::AbstractFloat) = MultiPhaseVector(Base.broadcast(^, a.values, b))
-Base.:^(a::MultiPhaseMatrix, b::Complex) = MultiPhaseMatrix(a.values ^ b)
-Base.:^(a::MultiPhaseMatrix, b::Integer) = MultiPhaseMatrix(a.values ^ b)
-Base.:^(a::MultiPhaseMatrix, b::AbstractFloat) = MultiPhaseMatrix(a.values ^ b)
+Base.:^(a::MultiConductorVector, b::Complex) = MultiConductorVector(Base.broadcast(^, a.values, b))
+Base.:^(a::MultiConductorVector, b::Integer) = MultiConductorVector(Base.broadcast(^, a.values, b))
+Base.:^(a::MultiConductorVector, b::AbstractFloat) = MultiConductorVector(Base.broadcast(^, a.values, b))
+Base.:^(a::MultiConductorMatrix, b::Complex) = MultiConductorMatrix(a.values ^ b)
+Base.:^(a::MultiConductorMatrix, b::Integer) = MultiConductorMatrix(a.values ^ b)
+Base.:^(a::MultiConductorMatrix, b::AbstractFloat) = MultiConductorMatrix(a.values ^ b)
 
-Base.inv(a::MultiPhaseMatrix) = MultiPhaseMatrix(inv(a.values))
-Base.pinv(a::MultiPhaseMatrix) = MultiPhaseMatrix(pinv(a.values))
+Base.inv(a::MultiConductorMatrix) = MultiConductorMatrix(inv(a.values))
+Base.pinv(a::MultiConductorMatrix) = MultiConductorMatrix(pinv(a.values))
 
-Base.real(a::MultiPhaseVector) = MultiPhaseVector(real(a.values))
-Base.real(a::MultiPhaseMatrix) = MultiPhaseMatrix(real(a.values))
-Base.imag(a::MultiPhaseVector) = MultiPhaseVector(imag(a.values))
-Base.imag(a::MultiPhaseMatrix) = MultiPhaseMatrix(imag(a.values))
+Base.real(a::MultiConductorVector) = MultiConductorVector(real(a.values))
+Base.real(a::MultiConductorMatrix) = MultiConductorMatrix(real(a.values))
+Base.imag(a::MultiConductorVector) = MultiConductorVector(imag(a.values))
+Base.imag(a::MultiConductorMatrix) = MultiConductorMatrix(imag(a.values))
 
-Base.transpose(a::MultiPhaseVector) = a.values'
-Base.transpose(a::MultiPhaseMatrix) = MultiPhaseMatrix(a.values')
+Base.transpose(a::MultiConductorVector) = a.values'
+Base.transpose(a::MultiConductorMatrix) = MultiConductorMatrix(a.values')
 
-Base.diag(a::MultiPhaseMatrix) = MultiPhaseVector(diag(a.values))
-Base.diagm(a::MultiPhaseVector) = MultiPhaseMatrix(diagm(a.values))
+Base.diag(a::MultiConductorMatrix) = MultiConductorVector(diag(a.values))
+Base.diagm(a::MultiConductorVector) = MultiConductorMatrix(diagm(a.values))
 
-Base.rad2deg(a::MultiPhaseVector) = MultiPhaseVector(map(rad2deg, a.values))
-Base.rad2deg(a::MultiPhaseMatrix) = MultiPhaseMatrix(map(rad2deg, a.values))
+Base.rad2deg(a::MultiConductorVector) = MultiConductorVector(map(rad2deg, a.values))
+Base.rad2deg(a::MultiConductorMatrix) = MultiConductorMatrix(map(rad2deg, a.values))
 
-Base.deg2rad(a::MultiPhaseVector) = MultiPhaseVector(map(deg2rad, a.values))
-Base.deg2rad(a::MultiPhaseMatrix) = MultiPhaseMatrix(map(deg2rad, a.values))
+Base.deg2rad(a::MultiConductorVector) = MultiConductorVector(map(deg2rad, a.values))
+Base.deg2rad(a::MultiConductorMatrix) = MultiConductorMatrix(map(deg2rad, a.values))
 
-JSON.lower(mpv::MultiPhaseValue) = mpv.values
+JSON.lower(mpv::MultiConductorValue) = mpv.values
 
 
-"converts a MultiPhaseValue value to a string in summary"
-function InfrastructureModels._value2string(mpv::MultiPhaseValue, float_precision::Int)
+"converts a MultiConductorValue value to a string in summary"
+function InfrastructureModels._value2string(mpv::MultiConductorValue, float_precision::Int)
     a = join([InfrastructureModels._value2string(v, float_precision) for v in mpv.values], ", ")
     return "[$(a)]"
 end
 
 
 ""
-function Base.isapprox(a::MultiPhaseValue, b::MultiPhaseValue; kwargs...)
+function Base.isapprox(a::MultiConductorValue, b::MultiConductorValue; kwargs...)
     if length(a) == length(b)
         return all( isapprox(a[i], b[i]; kwargs...) for i in 1:length(a))
     end
@@ -149,6 +149,6 @@ end
 
 getmpv(value::Any, conductor::Int) = value
 getmpv(value::Any, conductor_i::Int, conductor_j::Int) = value
-getmpv(value::MultiPhaseVector, conductor::Int) = value[conductor]
-getmpv(value::MultiPhaseMatrix{T}, conductor::Int) where T = MultiPhaseVector{T}(value[conductor])
-getmpv(value::MultiPhaseMatrix, conductor_i::Int, conductor_j::Int) = value[conductor_i, conductor_j]
+getmpv(value::MultiConductorVector, conductor::Int) = value[conductor]
+getmpv(value::MultiConductorMatrix{T}, conductor::Int) where T = MultiConductorVector{T}(value[conductor])
+getmpv(value::MultiConductorMatrix, conductor_i::Int, conductor_j::Int) = value[conductor_i, conductor_j]

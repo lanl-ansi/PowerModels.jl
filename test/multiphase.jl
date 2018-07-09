@@ -383,7 +383,7 @@ end
         mp_data = build_mp_data("../test/data/matpower/case3.m")
 
         a, b, c, d = mp_data["branch"]["1"]["br_r"], mp_data["branch"]["1"]["br_x"], mp_data["branch"]["1"]["b_fr"], mp_data["branch"]["1"]["b_to"]
-        e = PowerModels.MultiPhaseVector([0.225, 0.225, 0.225, 0.225])
+        e = PowerModels.MultiConductorVector([0.225, 0.225, 0.225, 0.225])
         angs_rad = mp_data["branch"]["1"]["angmin"]
 
         # Transpose
@@ -401,10 +401,10 @@ end
         @test all(z.values - [0.0403 0.0 0.0; 0.0 0.0403 0.0; 0.0 0.0 0.0403] .<= 1e-12)
         @test all(w.values - [0.104839 0.0 0.0; 0.0 0.104839 0.0; 0.0 0.0 0.104839] .<= 1e-12)
 
-        @test isa(x, PowerModels.MultiPhaseMatrix)
-        @test isa(y, PowerModels.MultiPhaseMatrix)
-        @test isa(z, PowerModels.MultiPhaseMatrix)
-        @test isa(w, PowerModels.MultiPhaseMatrix)
+        @test isa(x, PowerModels.MultiConductorMatrix)
+        @test isa(y, PowerModels.MultiConductorMatrix)
+        @test isa(z, PowerModels.MultiConductorMatrix)
+        @test isa(w, PowerModels.MultiConductorMatrix)
 
         # Basic Math Vectors
         x = c + d
@@ -421,11 +421,11 @@ end
         @test all(w.values - [4.444444444444445, 4.444444444444445, 4.444444444444445] .<= 1e-12)
         @test all(u.values - d.values .<= 1e-12)
 
-        @test isa(x, PowerModels.MultiPhaseVector)
-        @test isa(y, PowerModels.MultiPhaseVector)
-        @test isa(z, PowerModels.MultiPhaseVector)
-        @test isa(w, PowerModels.MultiPhaseVector)
-        @test isa(u, PowerModels.MultiPhaseVector)
+        @test isa(x, PowerModels.MultiConductorVector)
+        @test isa(y, PowerModels.MultiConductorVector)
+        @test isa(z, PowerModels.MultiConductorVector)
+        @test isa(w, PowerModels.MultiConductorVector)
+        @test isa(u, PowerModels.MultiConductorVector)
 
         # Broadcasting
         @test all(a .+ c - [0.29   0.225  0.225; 0.225  0.29   0.225; 0.225  0.225  0.29] .<= 1e-12)
@@ -451,13 +451,13 @@ end
         @test all(angs_deg.values - [-30.0, -30.0, -30.0] .<= 1e-12)
         @test all(angs_deg_rad.values - angs_rad.values .<= 1e-12)
 
-        @test isa(angs_deg, PowerModels.MultiPhaseVector)
-        @test isa(deg2rad(angs_deg), PowerModels.MultiPhaseVector)
+        @test isa(angs_deg, PowerModels.MultiConductorVector)
+        @test isa(deg2rad(angs_deg), PowerModels.MultiConductorVector)
 
         a_rad = rad2deg(a)
         @test all(a_rad.values - [3.72423 0.0 0.0; 0.0 3.72423 0.0; 0.0 0.0 3.72423] .<= 1e-12)
-        @test isa(rad2deg(a), PowerModels.MultiPhaseMatrix)
-        @test isa(deg2rad(a), PowerModels.MultiPhaseMatrix)
+        @test isa(rad2deg(a), PowerModels.MultiConductorMatrix)
+        @test isa(deg2rad(a), PowerModels.MultiConductorMatrix)
 
         setlevel!(TESTLOG, "warn")
         @test_nowarn show(DevNull, a)

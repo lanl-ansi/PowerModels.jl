@@ -165,7 +165,7 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
 
         num_conductors = length(conductor_ids(pm))
         ph_idx = 1
-        sol_item[param_name] = MultiPhaseVector(default_value(item), num_conductors)
+        sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
         for conductor in conductor_ids(pm)
             try
                 variable = extract_var(var(pm, variable_symbol, ph=conductor), idx, item)
@@ -175,7 +175,7 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
             ph_idx += 1
         end
 
-        # remove MultiPhaseValue, if it was not a ismulticonductor network
+        # remove MultiConductorValue, if it was not a ismulticonductor network
         if !ismulticonductor(pm)
             sol_item[param_name] = sol_item[param_name][1]
         end
@@ -240,7 +240,7 @@ function add_dual(
 
         num_conductors = length(conductor_ids(pm))
         ph_idx = 1
-        sol_item[param_name] = MultiPhaseVector(default_value(item), num_conductors)
+        sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
         for conductor in conductor_ids(pm)
             try
                 constraint = extract_con(con(pm, con_symbol, ph=conductor), idx, item)
@@ -251,7 +251,7 @@ function add_dual(
             ph_idx += 1
         end
 
-        # remove MultiPhaseValue, if it was not a ismulticonductor network
+        # remove MultiConductorValue, if it was not a ismulticonductor network
         if !ismulticonductor(pm)
             sol_item[param_name] = sol_item[param_name][1]
         end
