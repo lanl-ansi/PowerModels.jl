@@ -432,13 +432,13 @@ function parse_pti_data(data_string::String, sections::Array)
 
             elseif section == "TRANSFORMER"
                 section_data = Dict{String,Any}()
-                if length(split(data_lines[line_number + 1], ',')) == 3  && parse(Int64, split(line, ',')[3]) == 0 # two winding transformer
+                if length(get_line_elements(data_lines[line_number + 1])[1]) == 3  && parse(Int64, get_line_elements(line)[1][3]) == 0 # two winding transformer
                     temp_section = "TRANSFORMER TWO WINDING"
-                    elements = split(join(data_lines[line_number:line_number + 3], ','), ',')
+                    (elements, comment) = get_line_elements(join(data_lines[line_number:line_number + 3], ','))
                     skip_lines = 3
-                elseif length(split(data_lines[line_number + 1], ',')) == 11 && parse(Int64, split(line, ',')[3]) != 0 # three winding transformer
+                elseif length(get_line_elements(data_lines[line_number + 1])[1]) == 11 && parse(Int64, get_line_elements(line)[1][3]) != 0 # three winding transformer
                     temp_section = "TRANSFORMER THREE WINDING"
-                    elements = split(join(data_lines[line_number:line_number + 4], ','), ',')
+                    (elements, comment) = get_line_elements(join(data_lines[line_number:line_number + 4], ','))
                     skip_lines = 4
                 else
                     error(LOGGER, "Cannot detect type of Transformer")
@@ -447,7 +447,7 @@ function parse_pti_data(data_string::String, sections::Array)
                 parse_line_element!(section_data, elements, temp_section)
 
             elseif section == "VOLTAGE SOURCE CONVERTER"
-                if length(split(line, ',')) == 11
+                if length(get_line_elements(line)[1]) == 11
                     section_data = Dict{String,Any}()
                     parse_line_element!(section_data, elements, section)
                     skip_sublines = 2
@@ -478,8 +478,8 @@ function parse_pti_data(data_string::String, sections::Array)
 
             elseif section == "TWO-TERMINAL DC"
                 section_data = Dict{String,Any}()
-                if length(split(line, ',')) == 12
-                    elements = split(join(data_lines[line_number:line_number + 2], ','), ',')
+                if length(get_line_elements(line)[1]) == 12
+                    (elements, comment) = get_line_elements(join(data_lines[line_number:line_number + 2], ','))
                     skip_lines = 2
                 end
 
