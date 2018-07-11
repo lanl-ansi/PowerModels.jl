@@ -324,7 +324,7 @@ indicated at the end of a line with a `'/'` character, are also extracted
 separately, and `Array{Array{String}, String}` is returned.
 """
 function get_line_elements(line::AbstractString)::Array
-    match_string = r"(-*\d*\.*\d+[eE]*[+-]*\d*)|(\'[^\']*?\')|(\"[^\"]*?\")|(\w+)|\,(\s+)?\,|(\/.*)"
+    match_string = r"(-*\d*\.*\d+[eE]*[+-]*\d*)|(\'.{12}\')|(\'[^\']*?\')|(\"[^\"]*?\")|(\w+)|\,(\s+)?\,|(\/.*)"
     matches = matchall(match_string, line)
 
     debug(LOGGER, "$line")
