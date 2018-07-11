@@ -56,7 +56,7 @@ Returns the maximum bus id in `pm_data`
 function find_max_bus_id(pm_data::Dict)::Int
     max_id = 0
     for bus in pm_data["bus"]
-        if bus["index"] > max_id
+        if bus["index"] > max_id && !endswith(bus["name"], "starbus")
             max_id = bus["index"]
         end
     end
