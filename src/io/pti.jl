@@ -287,7 +287,11 @@ function parse_line_element!(data::Dict, elements::Array, section::AbstractStrin
 
     if length(missing) > 0
         missing_str = join(missing, ", ")
-        warn(LOGGER, "The following fields in $section are missing: $missing_str")
+        if !(section == "SWITCHED SHUNT" && startswith(missing_str, "N")) &&
+            !(section == "MULTI-SECTION LINE" && startswith(missing_str, "DUM")) &&
+            !(section == "IMPEDANCE CORRECTION" && startswith(missing_str, "T"))
+            warn(LOGGER, "The following fields in $section are missing: $missing_str")
+        end
     end
 end
 
