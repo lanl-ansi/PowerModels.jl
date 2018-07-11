@@ -29,7 +29,14 @@ This enables the definition of a wide variety of power network formulations and 
 * Matpower ".m" files
 * PTI ".raw" files (PSS(R)E v33 specfication)
 
-For further information, consult the package [documentation](https://lanl-ansi.github.io/PowerModels.jl/stable/).
+
+## Documentation
+
+The package [documentation](https://lanl-ansi.github.io/PowerModels.jl/stable/) includes a variety of useful information including a [quick-start guide](https://lanl-ansi.github.io/PowerModels.jl/stable/quickguide.html), [network model specification](https://lanl-ansi.github.io/PowerModels.jl/stable/network-data.html), and [baseline results](https://lanl-ansi.github.io/PowerModels.jl/stable/experiment-results.html).
+
+Additionally, these presentations provide a brief introduction to various aspects of PowerModels,
+- [PSCC 2018](https://youtu.be/AEEzt3IjLaM)
+- [JuMP Developers Meetup 2017](https://youtu.be/W4LOKR7B4ts)
 
 
 ## Development
