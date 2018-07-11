@@ -15,18 +15,18 @@ SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SD
 
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true) where T <: AbstractWRMForm
-    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :buspairs), ph)
+function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: AbstractWRMForm
+    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
     bus_ids = ids(pm, nw, :bus)
 
     w_index = 1:length(bus_ids)
     lookup_w_index = Dict([(bi,i) for (i,bi) in enumerate(bus_ids)])
 
-    WR = var(pm, nw, ph)[:WR] = @variable(pm.model,
-        [1:length(bus_ids), 1:length(bus_ids)], Symmetric, basename="$(nw)_$(ph)_WR"
+    WR = var(pm, nw, cnd)[:WR] = @variable(pm.model,
+        [1:length(bus_ids), 1:length(bus_ids)], Symmetric, basename="$(nw)_$(cnd)_WR"
     )
-    WI = var(pm, nw, ph)[:WI] = @variable(pm.model,
-        [1:length(bus_ids), 1:length(bus_ids)], basename="$(nw)_$(ph)_WI"
+    WI = var(pm, nw, cnd)[:WI] = @variable(pm.model,
+        [1:length(bus_ids), 1:length(bus_ids)], basename="$(nw)_$(cnd)_WI"
     )
 
     # bounds on diagonal
@@ -36,8 +36,8 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.c
         wi_ii = WR[w_idx,w_idx]
 
         if bounded
-            setlowerbound(wr_ii, getmpv(bus["vmin"], ph)^2)
-            setupperbound(wr_ii, getmpv(bus["vmax"], ph)^2)
+            setlowerbound(wr_ii, getmpv(bus["vmin"], cnd)^2)
+            setupperbound(wr_ii, getmpv(bus["vmax"], cnd)^2)
 
             #this breaks SCS on the 3 bus exmple
             #setlowerbound(wi_ii, 0)
@@ -61,29 +61,29 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.c
         end
     end
 
-    var(pm, nw, ph)[:w] = Dict{Int,Any}()
+    var(pm, nw, cnd)[:w] = Dict{Int,Any}()
     for (i, bus) in ref(pm, nw, :bus)
         w_idx = lookup_w_index[i]
-        var(pm, nw, ph, :w)[i] = WR[w_idx,w_idx]
+        var(pm, nw, cnd, :w)[i] = WR[w_idx,w_idx]
     end
 
-    var(pm, nw, ph)[:wr] = Dict{Tuple{Int,Int},Any}()
-    var(pm, nw, ph)[:wi] = Dict{Tuple{Int,Int},Any}()
+    var(pm, nw, cnd)[:wr] = Dict{Tuple{Int,Int},Any}()
+    var(pm, nw, cnd)[:wi] = Dict{Tuple{Int,Int},Any}()
     for (i,j) in ids(pm, nw, :buspairs)
         w_fr_index = lookup_w_index[i]
         w_to_index = lookup_w_index[j]
 
-        var(pm, nw, ph, :wr)[(i,j)] = WR[w_fr_index, w_to_index]
-        var(pm, nw, ph, :wi)[(i,j)] = WI[w_fr_index, w_to_index]
+        var(pm, nw, cnd, :wr)[(i,j)] = WR[w_fr_index, w_to_index]
+        var(pm, nw, cnd, :wi)[(i,j)] = WI[w_fr_index, w_to_index]
     end
 
 end
 
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, ph::Int) where T <: AbstractWRMForm
-    WR = var(pm, nw, ph)[:WR]
-    WI = var(pm, nw, ph)[:WI]
+function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: AbstractWRMForm
+    WR = var(pm, nw, cnd)[:WR]
+    WI = var(pm, nw, cnd)[:WI]
 
     @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
 

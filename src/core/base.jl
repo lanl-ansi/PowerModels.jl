@@ -5,7 +5,7 @@ export
     setdata, setsolver, solve,
     run_generic_model, build_generic_model, solve_generic_model,
     ismultinetwork, nw_ids, nws,
-    ismultiphase, phase_ids,
+    ismulticonductor, conductor_ids,
     ids, ref, var, ext
 
 
@@ -52,7 +52,7 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     var::Dict{Symbol,Any} # JuMP variables
     con::Dict{Symbol,Any} # JuMP constraint references
     cnw::Int # current network index value
-    cph::Int # current phase index value
+    ccnd::Int # current conductor index value
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -75,17 +75,17 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
         nw_var = var[:nw][nw_id] = Dict{Symbol,Any}()
         nw_con = con[:nw][nw_id] = Dict{Symbol,Any}()
 
-        nw_var[:ph] = Dict{Int,Any}()
-        nw_con[:ph] = Dict{Int,Any}()
+        nw_var[:cnd] = Dict{Int,Any}()
+        nw_con[:cnd] = Dict{Int,Any}()
 
-        for ph_id in nw[:phase_ids]
-            nw_var[:ph][ph_id] = Dict{Symbol,Any}()
-            nw_con[:ph][ph_id] = Dict{Symbol,Any}()
+        for cnd_id in nw[:conductor_ids]
+            nw_var[:cnd][cnd_id] = Dict{Symbol,Any}()
+            nw_con[:cnd][cnd_id] = Dict{Symbol,Any}()
         end
     end
 
     cnw = minimum([k for k in keys(var[:nw])])
-    cph = minimum([k for k in keys(var[:nw][cnw][:ph])])
+    ccnd = minimum([k for k in keys(var[:nw][cnw][:cnd])])
 
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
@@ -96,22 +96,22 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
         var,
         con,
         cnw,
-        cph,
+        ccnd,
         ext
     )
 
     return pm
 end
 
-### Helper functions for working with multinetworks and multiphases
+### Helper functions for working with multinetworks and multiconductors
 ismultinetwork(pm::GenericPowerModel) = (length(pm.ref[:nw]) > 1)
 nw_ids(pm::GenericPowerModel) = keys(pm.ref[:nw])
 nws(pm::GenericPowerModel) = pm.ref[:nw]
 
-ismultiphase(pm::GenericPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :phases)
-ismultiphase(pm::GenericPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :phases)
-phase_ids(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw][:phase_ids]
-phase_ids(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:phase_ids]
+ismulticonductor(pm::GenericPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :conductors)
+ismulticonductor(pm::GenericPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :conductors)
+conductor_ids(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw][:conductor_ids]
+conductor_ids(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:conductor_ids]
 
 
 ids(pm::GenericPowerModel, nw::Int, key::Symbol) = keys(pm.ref[:nw][nw][key])
@@ -122,35 +122,35 @@ ref(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
-ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, ph::Int) = pm.ref[:nw][nw][key][idx][param][ph]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, cnd::Int) = pm.ref[:nw][nw][key][idx][param][cnd]
 
 ref(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
 ref(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
 ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
-ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.ref[:nw][nw][key][idx][param][ph]
+ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.ref[:nw][nw][key][idx][param][cnd]
 
 
 Base.var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
 Base.var(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
 Base.var(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
-Base.var(pm::GenericPowerModel, nw::Int, ph::Int) = pm.var[:nw][nw][:ph][ph]
-Base.var(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.var[:nw][nw][:ph][ph][key]
-Base.var(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.var[:nw][nw][:ph][ph][key][idx]
+Base.var(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
+Base.var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
+Base.var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 
-Base.var(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph]
-Base.var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph][key]
-Base.var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.var[:nw][nw][:ph][ph][key][idx]
+Base.var(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
+Base.var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
+Base.var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 
 con(pm::GenericPowerModel, nw::Int) = pm.con[:nw][nw]
 con(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.con[:nw][nw][key]
 con(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.con[:nw][nw][key][idx]
-con(pm::GenericPowerModel, nw::Int, ph::Int) = pm.con[:nw][nw][:ph][ph]
-con(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol) = pm.con[:nw][nw][:ph][ph][key]
-con(pm::GenericPowerModel, nw::Int, ph::Int, key::Symbol, idx) = pm.con[:nw][nw][:ph][ph][key][idx]
+con(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.con[:nw][nw][:cnd][cnd]
+con(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.con[:nw][nw][:cnd][cnd][key]
+con(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.con[:nw][nw][:cnd][cnd][key][idx]
 
-con(pm::GenericPowerModel; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph]
-con(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph][key]
-con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, ph::Int=pm.cph) = pm.con[:nw][nw][:ph][ph][key][idx]
+con(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd]
+con(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key]
+con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key][idx]
 
 
 
@@ -193,7 +193,7 @@ function build_generic_model(file::String,  model_constructor, post_method; kwar
 end
 
 ""
-function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; multinetwork=false, multiphase=false, kwargs...)
+function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
     pm = model_constructor(data; kwargs...)
 
@@ -201,8 +201,8 @@ function build_generic_model(data::Dict{String,Any}, model_constructor, post_met
         error(LOGGER, "attempted to build a single-network model with multi-network data")
     end
 
-    if !multiphase && ismultiphase(pm)
-        error(LOGGER, "attempted to build a single-phase model with multi-phase data")
+    if !multiconductor && ismulticonductor(pm)
+        error(LOGGER, "attempted to build a single-conductor model with multi-conductor data")
     end
 
     post_method(pm)
@@ -272,10 +272,10 @@ function build_ref(data::Dict{String,Any})
             end
         end
 
-        if !haskey(ref, :phases)
-            ref[:phase_ids] = 1:1
+        if !haskey(ref, :conductors)
+            ref[:conductor_ids] = 1:1
         else
-            ref[:phase_ids] = 1:ref[:phases]
+            ref[:conductor_ids] = 1:ref[:conductors]
         end
 
         # filter turned off stuff
@@ -367,7 +367,7 @@ function build_ref(data::Dict{String,Any})
 
         ref[:ref_buses] = ref_buses
 
-        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:phase_ids])
+        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:conductor_ids])
 
         off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
         ref[:off_angmin] = off_angmin
@@ -386,7 +386,7 @@ function build_ref(data::Dict{String,Any})
             end
             ref[:ne_bus_arcs] = ne_bus_arcs
 
-            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus], ref[:phase_ids])
+            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus], ref[:conductor_ids])
         end
 
     end
@@ -412,20 +412,20 @@ end
 
 
 "compute bus pair level structures"
-function buspair_parameters(arcs_from, branches, buses, phase_ids)
+function buspair_parameters(arcs_from, branches, buses, conductor_ids)
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
 
-    bp_angmin = Dict([(bp, MultiPhaseVector([-Inf for h in phase_ids])) for bp in buspair_indexes])
-    bp_angmax = Dict([(bp, MultiPhaseVector([ Inf for h in phase_ids])) for bp in buspair_indexes])
+    bp_angmin = Dict([(bp, MultiConductorVector([-Inf for c in conductor_ids])) for bp in buspair_indexes])
+    bp_angmax = Dict([(bp, MultiConductorVector([ Inf for c in conductor_ids])) for bp in buspair_indexes])
     bp_branch = Dict([(bp, Inf) for bp in buspair_indexes])
 
     for (l,branch) in branches
         i = branch["f_bus"]
         j = branch["t_bus"]
 
-        for h in phase_ids
-            bp_angmin[(i,j)][h] = max(bp_angmin[(i,j)][h], branch["angmin"][h])
-            bp_angmax[(i,j)][h] = min(bp_angmax[(i,j)][h], branch["angmax"][h])
+        for c in conductor_ids
+            bp_angmin[(i,j)][c] = max(bp_angmin[(i,j)][c], branch["angmin"][c])
+            bp_angmax[(i,j)][c] = min(bp_angmax[(i,j)][c], branch["angmax"][c])
         end
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end

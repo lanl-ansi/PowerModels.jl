@@ -6,9 +6,9 @@ PowerModels.jl Change Log
 - Added Matpower data file export function
 - Added mathematical model to documentation
 - Added parsing string data from IO objects
-- Added support for network data with multiple phases
+- Added support for network data with multiple conductors
 - Removed explicit series variables from branch flow model
-- Improved helper functions ref, var, con to work with multiple networks and phases
+- Improved helper functions ref, var, con to work with multiple networks and conductors
 - Minor robustness improvements to parsing PTI files
 - Minor issues closed #316
 
@@ -93,7 +93,7 @@ PowerModels.jl Change Log
 - Made index_name an optional parameter in add_setpoint (breaking)
 - Moved check_cost_models into the objective building function
 - Fixed out of range bug in calc_theta_delta_bounds
-- Fixed bug in phase angle differences in AbstractACPForms
+- Fixed bug in voltage angle differences in AbstractACPForms
 - Fixed bugs in AbstractDCPLLForm and added OPF test
 
 ### v0.3.4
@@ -104,7 +104,7 @@ PowerModels.jl Change Log
 - Added w-theta formulation of AC-OPF
 - Added data units checks to update_data
 - Made branch flow parameter names consistent with Matpower
-- Fixed bug in constants for w-space phase angle difference constraints
+- Fixed bug in constants for w-space voltage angle difference constraints
 - Fixed bug when no reference bus was specified
 - Fixed dcline parsing bug
 
@@ -138,7 +138,7 @@ PowerModels.jl Change Log
 - Strengthened convex formulations with Lifted Nonlinear Cuts (LNCs)
 - Added ability to easily inspect the JuMP model produced by PowerModels
 - Added constraint templates to provide an abstraction layer between the network data and network constraint definitions
-- Moved system wide phase angle difference bounds to the "ref" dictionary
+- Moved system wide voltage angle difference bounds to the "ref" dictionary
 - Refactored model definitions to be based on complex numbers
 
 ### v0.2.3

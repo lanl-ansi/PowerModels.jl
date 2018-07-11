@@ -1,4 +1,4 @@
-% tests asymetrical branch phase angle differences
+% tests asymetrical branch voltage angle differences
 
 function mpc = case5_asym
 mpc.version = '2';

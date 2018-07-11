@@ -1,4 +1,4 @@
-@testset "test multinetwork multiphase" begin
+@testset "test multinetwork multi-conductor" begin
 
     @testset "idempotent unit transformation" begin
         @testset "5-bus replicate case" begin
@@ -107,10 +107,10 @@
     end
 
 
-    @testset "test multi-network multi-phase ac opf" begin
+    @testset "test multi-network multi-conductor ac opf" begin
 
-        @testset "3 period 5-bus 3-phase asymmetric case" begin
-            mn_mp_data = build_mn_mp_data("../test/data/matpower/case5_asym.m", replicates=3, phases=3)
+        @testset "3 period 5-bus 3-conductor asymmetric case" begin
+            mn_mp_data = build_mn_mp_data("../test/data/matpower/case5_asym.m", replicates=3, conductors=3)
 
             @test length(mn_mp_data["nw"]) == 3
 
@@ -121,41 +121,41 @@
 
             @test length(result["solution"]["nw"]) == 3
 
-            for ph in 1:mn_mp_data["phases"]
+            for c in 1:mn_mp_data["conductors"]
                 @test isapprox(
-                    result["solution"]["nw"]["1"]["gen"]["2"]["pg"][ph],
-                    result["solution"]["nw"]["2"]["gen"]["2"]["pg"][ph]; 
+                    result["solution"]["nw"]["1"]["gen"]["2"]["pg"][c],
+                    result["solution"]["nw"]["2"]["gen"]["2"]["pg"][c]; 
                     atol = 1e-3
                 )
                 @test isapprox(
-                    result["solution"]["nw"]["1"]["gen"]["4"]["pg"][ph],
-                    result["solution"]["nw"]["2"]["gen"]["4"]["pg"][ph]; 
+                    result["solution"]["nw"]["1"]["gen"]["4"]["pg"][c],
+                    result["solution"]["nw"]["2"]["gen"]["4"]["pg"][c]; 
                     atol = 1e-3
                 )
                 @test isapprox(
-                    result["solution"]["nw"]["2"]["gen"]["2"]["pg"][ph],
-                    result["solution"]["nw"]["3"]["gen"]["2"]["pg"][ph]; 
+                    result["solution"]["nw"]["2"]["gen"]["2"]["pg"][c],
+                    result["solution"]["nw"]["3"]["gen"]["2"]["pg"][c]; 
                     atol = 1e-3
                 )
                 @test isapprox(
-                    result["solution"]["nw"]["2"]["gen"]["4"]["pg"][ph],
-                    result["solution"]["nw"]["3"]["gen"]["4"]["pg"][ph]; 
+                    result["solution"]["nw"]["2"]["gen"]["4"]["pg"][c],
+                    result["solution"]["nw"]["3"]["gen"]["4"]["pg"][c]; 
                     atol = 1e-3
                 )
             end
 
             for (nw, network) in result["solution"]["nw"]
-                @test network["phases"] == 3
-                for ph in 1:network["phases"]
-                    @test isapprox(network["gen"]["1"]["pg"][ph],  0.4; atol = 1e-3)
-                    @test isapprox(network["bus"]["2"]["va"][ph], -0.012822; atol = 1e-3)
+                @test network["conductors"] == 3
+                for c in 1:network["conductors"]
+                    @test isapprox(network["gen"]["1"]["pg"][c],  0.4; atol = 1e-3)
+                    @test isapprox(network["bus"]["2"]["va"][c], -0.012822; atol = 1e-3)
                 end
             end
 
         end
 
-        @testset "14+24 3-phase hybrid case" begin
-            mn_mp_data = build_mn_mp_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m", phases_1=3, phases_2=3)
+        @testset "14+24 3-conductor hybrid case" begin
+            mn_mp_data = build_mn_mp_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m", conductors_1=3, conductors_2=3)
 
             @test length(mn_mp_data["nw"]) == 2
 
@@ -167,12 +167,12 @@
             @test length(result["solution"]["nw"]) == 2
 
             for (nw, network) in result["solution"]["nw"]
-                @test network["phases"] == 3
+                @test network["conductors"] == 3
             end
         end
 
-        @testset "14+24 mixed-phase hybrid case" begin
-            mn_mp_data = build_mn_mp_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m", phases_1=4, phases_2=0)
+        @testset "14+24 mixed-conductor hybrid case" begin
+            mn_mp_data = build_mn_mp_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m", conductors_1=4, conductors_2=0)
 
             @test length(mn_mp_data["nw"]) == 2
 
@@ -186,16 +186,16 @@
             nw_sol_1 = result["solution"]["nw"]["1"]
             nw_sol_2 = result["solution"]["nw"]["2"]
 
-            @test nw_sol_1["phases"] == 4
-            @test !haskey(nw_sol_2, "phases")
+            @test nw_sol_1["conductors"] == 4
+            @test !haskey(nw_sol_2, "conductors")
 
         end
     end
 
 
 
-    @testset "test multi-network multi-phase opf variants" begin
-        mn_mp_data = build_mn_mp_data("../test/data/matpower/case5_dc.m", "../test/data/matpower/case14.m", phases_1=4, phases_2=0)
+    @testset "test multi-network multi-conductor opf variants" begin
+        mn_mp_data = build_mn_mp_data("../test/data/matpower/case5_dc.m", "../test/data/matpower/case14.m", conductors_1=4, conductors_2=0)
 
         @testset "ac 5/14-bus case" begin
             result = PowerModels.run_mn_mp_opf(mn_mp_data, ACPPowerModel, ipopt_solver)
@@ -222,7 +222,7 @@
 
 
     @testset "test solution feedback" begin
-        mn_mp_data = build_mn_mp_data("../test/data/matpower/case5_dc.m", "../test/data/matpower/case5_asym.m", phases_1=4, phases_2=0)
+        mn_mp_data = build_mn_mp_data("../test/data/matpower/case5_dc.m", "../test/data/matpower/case5_asym.m", conductors_1=4, conductors_2=0)
 
         result = PowerModels.run_mn_mp_opf(mn_mp_data, ACPPowerModel, ipopt_solver)
 
@@ -231,7 +231,7 @@
 
         PowerModels.update_data(mn_mp_data, result["solution"])
 
-        @test !InfrastructureModels.compare_dict(mn_mp_data, build_mn_mp_data("../test/data/matpower/case5_dc.m", "../test/data/matpower/case5_asym.m", phases_1=4, phases_2=0))
+        @test !InfrastructureModels.compare_dict(mn_mp_data, build_mn_mp_data("../test/data/matpower/case5_dc.m", "../test/data/matpower/case5_asym.m", conductors_1=4, conductors_2=0))
     end
 
 end

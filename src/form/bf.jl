@@ -16,26 +16,26 @@ SOCBFPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOC
 
 
 ""
-function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw, ph::Int=pm.cph, bounded = true) where T <: AbstractBFForm
+function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: AbstractBFForm
     branch = ref(pm, nw, :branch)
     bus = ref(pm, nw, :bus)
     ub = Dict()
     for (i, b) in branch
-        ub[i] = ((b["rate_a"][ph]*b["tap"][ph])/(bus[b["f_bus"]]["vmin"][ph]))^2
+        ub[i] = ((b["rate_a"][cnd]*b["tap"][cnd])/(bus[b["f_bus"]]["vmin"][cnd]))^2
     end
 
     if bounded
-        var(pm, nw, ph)[:cm] = @variable(pm.model,
-            [i in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_cm",
+        var(pm, nw, cnd)[:cm] = @variable(pm.model,
+            [i in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_cm",
             lowerbound = 0,
             upperbound = ub[i],
-            start = getval(branch[i], "cm_start", ph)
+            start = getval(branch[i], "cm_start", cnd)
         )
     else
-        var(pm, nw, ph)[:cm] = @variable(pm.model,
-            [i in ids(pm, nw, :branch)], basename="$(nw)_$(ph)_cm",
+        var(pm, nw, cnd)[:cm] = @variable(pm.model,
+            [i in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_cm",
             lowerbound = 0,
-            start = getval(branch[i], "cm_start", ph)
+            start = getval(branch[i], "cm_start", cnd)
         )
     end
 end
@@ -53,14 +53,14 @@ end
 """
 Defines branch flow model power flow equations
 """
-function constraint_flow_losses(pm::GenericPowerModel{T}, n::Int, h::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm) where T <: AbstractBFForm
-    p_fr = var(pm, n, h, :p, f_idx)
-    q_fr = var(pm, n, h, :q, f_idx)
-    p_to = var(pm, n, h, :p, t_idx)
-    q_to = var(pm, n, h, :q, t_idx)
-    w_fr = var(pm, n, h, :w, f_bus)
-    w_to = var(pm, n, h, :w, t_bus)
-    cm =  var(pm, n, h, :cm, i)
+function constraint_flow_losses(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm) where T <: AbstractBFForm
+    p_fr = var(pm, n, c, :p, f_idx)
+    q_fr = var(pm, n, c, :q, f_idx)
+    p_to = var(pm, n, c, :p, t_idx)
+    q_to = var(pm, n, c, :q, t_idx)
+    w_fr = var(pm, n, c, :w, f_bus)
+    w_to = var(pm, n, c, :w, t_bus)
+    cm =  var(pm, n, c, :cm, i)
 
     ym_sh_sqr = g_sh_fr^2 + b_sh_fr^2
 
@@ -72,12 +72,12 @@ end
 """
 Defines voltage drop over a branch, linking from and to side voltage magnitude
 """
-function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::Int, h::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFForm
-    p_fr = var(pm, n, h, :p, f_idx)
-    q_fr = var(pm, n, h, :q, f_idx)
-    w_fr = var(pm, n, h, :w, f_bus)
-    w_to = var(pm, n, h, :w, t_bus)
-    cm =  var(pm, n, h, :cm, i)
+function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFForm
+    p_fr = var(pm, n, c, :p, f_idx)
+    q_fr = var(pm, n, c, :q, f_idx)
+    w_fr = var(pm, n, c, :w, f_bus)
+    w_to = var(pm, n, c, :w, t_bus)
+    cm =  var(pm, n, c, :cm, i)
 
     ym_sh_sqr = g_sh_fr^2 + b_sh_fr^2
 
@@ -87,32 +87,32 @@ end
 """
 Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
-function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, h::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFForm
-    p_fr   = var(pm, n, h, :p, f_idx)
-    q_fr   = var(pm, n, h, :q, f_idx)
-    w_fr   = var(pm, n, h, :w, f_bus)
-    cm = var(pm, n, h, :cm, i)
+function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFForm
+    p_fr   = var(pm, n, c, :p, f_idx)
+    q_fr   = var(pm, n, c, :q, f_idx)
+    w_fr   = var(pm, n, c, :w, f_bus)
+    cm = var(pm, n, c, :cm, i)
 
     # convex constraint linking p, q, w and ccm
     @constraint(pm.model, p_fr^2 + q_fr^2 <= (w_fr/tm^2)*cm)
 end
 
 
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, h::Int, f_idx, angmin, angmax) where T <: AbstractBFForm
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, angmin, angmax) where T <: AbstractBFForm
     i, f_bus, t_bus = f_idx
     t_idx = (i, t_bus, f_bus)
 
     branch = ref(pm, n, :branch, i)
-    tm = branch["tap"][h]
+    tm = branch["tap"][c]
     g, b = calc_branch_y(branch)
-    g, b = g[h,h], b[h,h]
-    g_fr = branch["g_fr"][h]
-    g_to = branch["g_to"][h]
-    b_fr = branch["b_fr"][h]
-    b_to = branch["b_to"][h]
+    g, b = g[c,c], b[c,c]
+    g_fr = branch["g_fr"][c]
+    g_to = branch["g_to"][c]
+    b_fr = branch["b_fr"][c]
+    b_to = branch["b_to"][c]
 
     tr, ti = calc_branch_t(branch)
-    tr, ti = tr[h], ti[h]
+    tr, ti = tr[c], ti[c]
 
     # convert series admittance to impedance
     z = 1/(g + im*b)
@@ -120,9 +120,9 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, h
     x = imag(z)
 
     # getting the variables
-    w_fr = var(pm, n, h, :w, f_bus)
-    p_fr = var(pm, n, h, :p, f_idx)
-    q_fr = var(pm, n, h, :q, f_idx)
+    w_fr = var(pm, n, c, :w, f_bus)
+    p_fr = var(pm, n, c, :p, f_idx)
+    q_fr = var(pm, n, c, :q, f_idx)
 
     tzr = r*tr + x*ti
     tzi = r*ti - x*tr

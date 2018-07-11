@@ -37,7 +37,7 @@ result["objective"]
 ```
 
 The `"solution"` field contains detailed information about the solution produced by the run method.
-For example, the following dictionary comprehension can be used to inspect the bus phase angles in the solution,
+For example, the following dictionary comprehension can be used to inspect the bus voltage angles in the solution,
 
 ```
 Dict(name => data["va"] for (name, data) in result["solution"]["bus"])
