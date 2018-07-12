@@ -103,12 +103,12 @@ end
 
 
 ""
-function run_mp_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_mp_opf; multiconductor=true, kwargs...)
+function run_mc_opf(file, model_constructor, solver; kwargs...)
+    return run_generic_model(file, model_constructor, solver, post_mc_opf; multiconductor=true, kwargs...)
 end
 
 ""
-function post_mp_opf(pm::GenericPowerModel)
+function post_mc_opf(pm::GenericPowerModel)
     for c in conductor_ids(pm)
         variable_voltage(pm, cnd=c)
         variable_generation(pm, cnd=c)
@@ -146,12 +146,12 @@ end
 
 
 ""
-function run_mn_mp_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_mn_mp_opf; multinetwork=true, multiconductor=true, kwargs...)
+function run_mn_mc_opf(file, model_constructor, solver; kwargs...)
+    return run_generic_model(file, model_constructor, solver, post_mn_mc_opf; multinetwork=true, multiconductor=true, kwargs...)
 end
 
 ""
-function post_mn_mp_opf(pm::GenericPowerModel)
+function post_mn_mc_opf(pm::GenericPowerModel)
     for (n, network) in nws(pm)
         for c in conductor_ids(pm, nw=n)
             variable_voltage(pm, nw=n, cnd=c)
