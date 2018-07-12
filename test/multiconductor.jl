@@ -1,6 +1,6 @@
 TESTLOG = getlogger(PowerModels)
 
-""
+"an example of building a multi-phase model in an extention package"
 function post_tp_opf(pm::PowerModels.GenericPowerModel)
     for c in PowerModels.conductor_ids(pm)
         PowerModels.variable_voltage(pm, cnd=c)
