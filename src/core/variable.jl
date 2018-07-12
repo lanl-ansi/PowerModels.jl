@@ -7,7 +7,7 @@
 function getval(comp::Dict{String,Any}, key::String, conductor::Int, default=0.0)
     if haskey(comp, key)
         vals = comp[key]
-        return getmpv(vals, conductor)
+        return getmcv(vals, conductor)
     end
     return default
 end
