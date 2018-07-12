@@ -55,8 +55,8 @@ function calc_branch_t(branch::Dict{String,Any})
     tap_ratio = branch["tap"]
     angle_shift = branch["shift"]
 
-    tr = map(*, tap_ratio, map(cos, angle_shift))
-    ti = map(*, tap_ratio, map(sin, angle_shift))
+    tr = tap_ratio.*cos.(angle_shift)
+    ti = tap_ratio.*sin.(angle_shift)
 
     return tr, ti
 end
@@ -771,29 +771,29 @@ function _check_cost_functions(id, comp)
         for c in 1:length(comp["ncost"])
             cnd_str = length(comp["ncost"]) > 1 ? "conductor $(c) " : ""
             if comp["model"][c] == 1
-                if length(PowerModels.getmpv(comp["cost"], c)) != 2*comp["ncost"][c]
-                    error("$(cnd_str)ncost of $(comp["ncost"][c]) not consistent with $(length(PowerModels.getmpv(comp["cost"], c))) cost values")
+                if length(PowerModels.getmcv(comp["cost"], c)) != 2*comp["ncost"][c]
+                    error("$(cnd_str)ncost of $(comp["ncost"][c]) not consistent with $(length(PowerModels.getmcv(comp["cost"], c))) cost values")
                 end
-                if length(PowerModels.getmpv(comp["cost"], c)) < 4
+                if length(PowerModels.getmcv(comp["cost"], c)) < 4
                     error("$(cnd_str)cost includes $(comp["ncost"][c]) points, but at least two points are required")
                 end
-                for i in 3:2:length(PowerModels.getmpv(comp["cost"], c))
-                    if PowerModels.getmpv(comp["cost"], c)[i-2] >= PowerModels.getmpv(comp["cost"], c)[i]
+                for i in 3:2:length(PowerModels.getmcv(comp["cost"], c))
+                    if PowerModels.getmcv(comp["cost"], c)[i-2] >= PowerModels.getmcv(comp["cost"], c)[i]
                         error("non-increasing x values in $(cnd_str)pwl cost model")
                     end
                 end
                 if "pmin" in keys(comp) && "pmax" in keys(comp)
                     pmin = comp["pmin"][c]
                     pmax = comp["pmax"][c]
-                    for i in 3:2:length(PowerModels.getmpv(comp["cost"], c))
-                        if PowerModels.getmpv(comp["cost"], c)[i] < pmin || PowerModels.getmpv(comp["cost"], c)[i] > pmax
-                            warn(LOGGER, "$(cnd_str)pwl x value $(PowerModels.getmpv(comp["cost"], c)[i]) is outside the generator bounds $(pmin)-$(pmax)")
+                    for i in 3:2:length(PowerModels.getmcv(comp["cost"], c))
+                        if PowerModels.getmcv(comp["cost"], c)[i] < pmin || PowerModels.getmcv(comp["cost"], c)[i] > pmax
+                            warn(LOGGER, "$(cnd_str)pwl x value $(PowerModels.getmcv(comp["cost"], c)[i]) is outside the generator bounds $(pmin)-$(pmax)")
                         end
                     end
                 end
             elseif comp["model"][c] == 2
-                if length(PowerModels.getmpv(comp["cost"], c)) != comp["ncost"][c]
-                    error("$(cnd_str)ncost of $(comp["ncost"][c]) not consistent with $(length(PowerModels.getmpv(comp["cost"], c))) cost values")
+                if length(PowerModels.getmcv(comp["cost"], c)) != comp["ncost"][c]
+                    error("$(cnd_str)ncost of $(comp["ncost"][c]) not consistent with $(length(PowerModels.getmcv(comp["cost"], c))) cost values")
                 end
             else
                 warn(LOGGER, "Unknown $(cnd_str)generator cost model of type $(comp["model"][c])")

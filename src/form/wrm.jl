@@ -36,8 +36,8 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         wi_ii = WR[w_idx,w_idx]
 
         if bounded
-            setlowerbound(wr_ii, getmpv(bus["vmin"], cnd)^2)
-            setupperbound(wr_ii, getmpv(bus["vmax"], cnd)^2)
+            setlowerbound(wr_ii, (bus["vmin"][cnd])^2)
+            setupperbound(wr_ii, (bus["vmax"][cnd])^2)
 
             #this breaks SCS on the 3 bus exmple
             #setlowerbound(wi_ii, 0)

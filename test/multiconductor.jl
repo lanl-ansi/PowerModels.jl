@@ -1,6 +1,6 @@
 TESTLOG = getlogger(PowerModels)
 
-""
+"an example of building a multi-phase model in an extention package"
 function post_tp_opf(pm::PowerModels.GenericPowerModel)
     for c in PowerModels.conductor_ids(pm)
         PowerModels.variable_voltage(pm, cnd=c)
@@ -43,27 +43,27 @@ end
 
     @testset "idempotent unit transformation" begin
         @testset "5-bus replicate case" begin
-            mp_data = build_mp_data("../test/data/matpower/case5_dc.m")
+            mp_data = build_mc_data("../test/data/matpower/case5_dc.m")
 
             PowerModels.make_mixed_units(mp_data)
             PowerModels.make_per_unit(mp_data)
 
-            @test InfrastructureModels.compare_dict(mp_data, build_mp_data("../test/data/matpower/case5_dc.m"))
+            @test InfrastructureModels.compare_dict(mp_data, build_mc_data("../test/data/matpower/case5_dc.m"))
         end
         @testset "24-bus replicate case" begin
-            mp_data = build_mp_data("../test/data/matpower/case24.m")
+            mp_data = build_mc_data("../test/data/matpower/case24.m")
 
             PowerModels.make_mixed_units(mp_data)
             PowerModels.make_per_unit(mp_data)
 
-            @test InfrastructureModels.compare_dict(mp_data, build_mp_data("../test/data/matpower/case24.m"))
+            @test InfrastructureModels.compare_dict(mp_data, build_mc_data("../test/data/matpower/case24.m"))
         end
     end
 
 
     @testset "topology processing" begin
         @testset "7-bus replicate status case" begin
-            mp_data = build_mp_data("../test/data/matpower/case7_tplgy.m")
+            mp_data = build_mc_data("../test/data/matpower/case7_tplgy.m")
             PowerModels.propagate_topology_status(mp_data)
             PowerModels.select_largest_component(mp_data)
 
@@ -101,8 +101,8 @@ end
 
     @testset "test multi-conductor ac opf" begin
         @testset "3-bus 3-conductor case" begin
-            mp_data = build_mp_data("../test/data/matpower/case3.m", conductors=3)
-            result = PowerModels.run_mp_opf(mp_data, ACPPowerModel, ipopt_solver)
+            mp_data = build_mc_data("../test/data/matpower/case3.m", conductors=3)
+            result = PowerModels.run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 47267.9; atol = 1e-1)
@@ -114,9 +114,9 @@ end
         end
 
         @testset "5-bus 5-conductor case" begin
-            mp_data = build_mp_data("../test/data/matpower/case5.m", conductors=5)
+            mp_data = build_mc_data("../test/data/matpower/case5.m", conductors=5)
 
-            result = PowerModels.run_mp_opf(mp_data, ACPPowerModel, ipopt_solver)
+            result = PowerModels.run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 91345.5; atol = 1e-1)
@@ -127,9 +127,9 @@ end
         end
 
         @testset "30-bus 3-conductor case" begin
-            mp_data = build_mp_data("../test/data/matpower/case30.m", conductors=3)
+            mp_data = build_mc_data("../test/data/matpower/case30.m", conductors=3)
 
-            result = PowerModels.run_mp_opf(mp_data, ACPPowerModel, ipopt_solver)
+            result = PowerModels.run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 614.905; atol = 1e-1)
@@ -143,10 +143,10 @@ end
 
 
     @testset "test multi-conductor opf variants" begin
-        mp_data = build_mp_data("../test/data/matpower/case5_dc.m")
+        mp_data = build_mc_data("../test/data/matpower/case5_dc.m")
 
         @testset "ac 5-bus case" begin
-            result = PowerModels.run_mp_opf(mp_data, ACPPowerModel, ipopt_solver)
+            result = PowerModels.run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 54468.5; atol = 1e-1)
@@ -157,7 +157,7 @@ end
         end
 
         @testset "dc 5-bus case" begin
-            result = PowerModels.run_mp_opf(mp_data, DCPPowerModel, ipopt_solver)
+            result = PowerModels.run_mc_opf(mp_data, DCPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 54272.7; atol = 1e-1)
@@ -168,7 +168,7 @@ end
         end
 
         @testset "soc 5-bus case" begin
-            result = PowerModels.run_mp_opf(mp_data, SOCWRPowerModel, ipopt_solver)
+            result = PowerModels.run_mc_opf(mp_data, SOCWRPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 46314.1; atol = 1e-1)
@@ -184,9 +184,9 @@ end
     @testset "dual variable case" begin
 
         @testset "test dc polar opf" begin
-            mp_data = build_mp_data("../test/data/matpower/case5.m")
+            mp_data = build_mc_data("../test/data/matpower/case5.m")
 
-            result = PowerModels.run_mp_opf(mp_data, DCPPowerModel, ipopt_solver, setting = Dict("output" => Dict("duals" => true)))
+            result = PowerModels.run_mc_opf(mp_data, DCPPowerModel, ipopt_solver, setting = Dict("output" => Dict("duals" => true)))
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 52839.6; atol = 1e0)
@@ -216,16 +216,16 @@ end
 
 
     @testset "test solution feedback" begin
-        mp_data = build_mp_data("../test/data/matpower/case5_asym.m")
+        mp_data = build_mc_data("../test/data/matpower/case5_asym.m")
 
-        result = PowerModels.run_mp_opf(mp_data, ACPPowerModel, ipopt_solver)
+        result = PowerModels.run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 52655.7; atol = 1e0)
 
         PowerModels.update_data(mp_data, result["solution"])
 
-        @test !InfrastructureModels.compare_dict(mp_data, build_mp_data("../test/data/matpower/case5_asym.m"))
+        @test !InfrastructureModels.compare_dict(mp_data, build_mc_data("../test/data/matpower/case5_asym.m"))
     end
 
 
@@ -349,7 +349,7 @@ end
     end
 
     @testset "multiconductor extensions" begin
-        mp_data = build_mp_data("../test/data/matpower/case3.m")
+        mp_data = build_mc_data("../test/data/matpower/case3.m")
         pm = build_generic_model(mp_data, PowerModels.ACPPowerModel, post_tp_opf; multiconductor=true)
 
         @test haskey(var(pm, pm.cnw), :cnd)
@@ -380,7 +380,7 @@ end
     end
 
     @testset "multiconductor operations" begin
-        mp_data = build_mp_data("../test/data/matpower/case3.m")
+        mp_data = build_mc_data("../test/data/matpower/case3.m")
 
         a, b, c, d = mp_data["branch"]["1"]["br_r"], mp_data["branch"]["1"]["br_x"], mp_data["branch"]["1"]["b_fr"], mp_data["branch"]["1"]["b_to"]
         e = PowerModels.MultiConductorVector([0.225, 0.225, 0.225, 0.225])
@@ -440,7 +440,7 @@ end
         @test isa(JSON.lower(a), Array)
         @test all(JSON.lower(a) == a.values)
         @test !isapprox(d, e)
-        @test PowerModels.getmpv(a, 1, 1) == a[1,1]
+        @test PowerModels.getmcv(a, 1, 1) == a[1,1]
 
         # diagm
         @test all(diagm(c).values .== [0.225 0.0 0.0; 0.0 0.225 0.0; 0.0 0.0 0.225])

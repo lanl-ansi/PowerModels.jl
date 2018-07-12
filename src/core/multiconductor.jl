@@ -14,12 +14,12 @@ end
 MultiConductorVector(value::T, conductors::Int) where T = MultiConductorVector([value for i in 1:conductors])
 Base.map(f, a::MultiConductorVector{T}) where T = MultiConductorVector{T}(map(f, a.values))
 Base.map(f, a::MultiConductorVector{T}, b::MultiConductorVector{T}) where T = MultiConductorVector{T}(map(f, a.values, b.values))
-conductors(mpv::MultiConductorVector) = length(mpv.values)
+conductors(mcv::MultiConductorVector) = length(mcv.values)
 
 
 ""
-function Base.setindex!(mpv::MultiConductorVector{T}, v::T, i::Int) where T
-    mpv.values[i] = v
+function Base.setindex!(mcv::MultiConductorVector{T}, v::T, i::Int) where T
+    mcv.values[i] = v
 end
 
 
@@ -32,24 +32,24 @@ end
 MultiConductorMatrix(value::T, conductors::Int) where T = MultiConductorMatrix(value*eye(conductors))
 Base.map(f, a::MultiConductorMatrix{T}) where T = MultiConductorMatrix{T}(map(f, a.values))
 Base.map(f, a::MultiConductorMatrix{T}, b::MultiConductorMatrix{T}) where T = MultiConductorMatrix{T}(map(f, a.values, b.values))
-conductors(mpv::MultiConductorMatrix) = size(mpv.values, 1)
+conductors(mcv::MultiConductorMatrix) = size(mcv.values, 1)
 
 
 ""
-function Base.setindex!(mpv::MultiConductorMatrix{T}, v::T, i::Int, j::Int) where T
-    mpv.values[i,j] = v
+function Base.setindex!(mcv::MultiConductorMatrix{T}, v::T, i::Int, j::Int) where T
+    mcv.values[i,j] = v
 end
 
 
-Base.start(mpv::MultiConductorValue) = start(mpv.values)
-Base.next(mpv::MultiConductorValue, state) = next(mpv.values, state)
-Base.done(mpv::MultiConductorValue, state) = done(mpv.values, state)
+Base.start(mcv::MultiConductorValue) = start(mcv.values)
+Base.next(mcv::MultiConductorValue, state) = next(mcv.values, state)
+Base.done(mcv::MultiConductorValue, state) = done(mcv.values, state)
 
-Base.length(mpv::MultiConductorValue) = length(mpv.values)
-Base.size(mpv::MultiConductorValue, a...) = size(mpv.values, a...)
-Base.getindex(mpv::MultiConductorValue, args...) = mpv.values[args...]
+Base.length(mcv::MultiConductorValue) = length(mcv.values)
+Base.size(mcv::MultiConductorValue, a...) = size(mcv.values, a...)
+Base.getindex(mcv::MultiConductorValue, args...) = mcv.values[args...]
 
-Base.show(io::IO, mpv::MultiConductorValue) = Base.show(io, mpv.values)
+Base.show(io::IO, mcv::MultiConductorValue) = Base.show(io, mcv.values)
 
 Base.broadcast(f::Any, a::Any, b::MultiConductorValue) = broadcast(f, a, b.values)
 Base.broadcast(f::Any, a::MultiConductorValue, b::Any) = broadcast(f, a.values, b)
@@ -128,12 +128,12 @@ Base.rad2deg(a::MultiConductorMatrix) = MultiConductorMatrix(map(rad2deg, a.valu
 Base.deg2rad(a::MultiConductorVector) = MultiConductorVector(map(deg2rad, a.values))
 Base.deg2rad(a::MultiConductorMatrix) = MultiConductorMatrix(map(deg2rad, a.values))
 
-JSON.lower(mpv::MultiConductorValue) = mpv.values
+JSON.lower(mcv::MultiConductorValue) = mcv.values
 
 
 "converts a MultiConductorValue value to a string in summary"
-function InfrastructureModels._value2string(mpv::MultiConductorValue, float_precision::Int)
-    a = join([InfrastructureModels._value2string(v, float_precision) for v in mpv.values], ", ")
+function InfrastructureModels._value2string(mcv::MultiConductorValue, float_precision::Int)
+    a = join([InfrastructureModels._value2string(v, float_precision) for v in mcv.values], ", ")
     return "[$(a)]"
 end
 
@@ -147,8 +147,8 @@ function Base.isapprox(a::MultiConductorValue, b::MultiConductorValue; kwargs...
 end
 
 
-getmpv(value::Any, conductor::Int) = value
-getmpv(value::Any, conductor_i::Int, conductor_j::Int) = value
-getmpv(value::MultiConductorVector, conductor::Int) = value[conductor]
-getmpv(value::MultiConductorMatrix{T}, conductor::Int) where T = MultiConductorVector{T}(value[conductor])
-getmpv(value::MultiConductorMatrix, conductor_i::Int, conductor_j::Int) = value[conductor_i, conductor_j]
+getmcv(value::Any, conductor::Int) = value
+getmcv(value::Any, conductor_i::Int, conductor_j::Int) = value
+getmcv(value::MultiConductorVector, conductor::Int) = value[conductor]
+getmcv(value::MultiConductorMatrix{T}, conductor::Int) where T = MultiConductorVector{T}(value[conductor])
+getmcv(value::MultiConductorMatrix, conductor_i::Int, conductor_j::Int) = value[conductor_i, conductor_j]

@@ -284,7 +284,7 @@ function variable_voltage_magnitude_sqr_from_ne(pm::GenericPowerModel{T}; nw::In
     var(pm, nw, cnd)[:w_fr_ne] = @variable(pm.model,
         [i in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_w_fr_ne",
         lowerbound = 0,
-        upperbound = getmpv(buses[branches[i]["f_bus"]]["vmax"], cnd)^2,
+        upperbound = (buses[branches[i]["f_bus"]]["vmax"][cnd])^2,
         start = getval(ref(pm, nw, :bus, i), "w_fr_start", cnd, 1.001)
     )
 end
@@ -297,7 +297,7 @@ function variable_voltage_magnitude_sqr_to_ne(pm::GenericPowerModel{T}; nw::Int=
     var(pm, nw, cnd)[:w_to_ne] = @variable(pm.model,
         [i in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_w_to_ne",
         lowerbound = 0,
-        upperbound = getmpv(buses[branches[i]["t_bus"]]["vmax"], cnd)^2,
+        upperbound = (buses[branches[i]["t_bus"]]["vmax"][cnd])^2,
         start = getval(ref(pm, nw, :bus, i), "w_to", cnd, 1.001)
     )
 end
@@ -353,8 +353,8 @@ function variable_voltage_magnitude_product(pm::GenericPowerModel{T}; nw::Int=pm
     buspairs = ref(pm, nw, :buspairs)
     var(pm, nw, cnd)[:vv] = @variable(pm.model,
         [bp in keys(buspairs)], basename="$(nw)_$(cnd)_vv",
-        lowerbound = getmpv(buspairs[bp]["vm_fr_min"], cnd)*getmpv(buspairs[bp]["vm_to_min"], cnd),
-        upperbound = getmpv(buspairs[bp]["vm_fr_max"], cnd)*getmpv(buspairs[bp]["vm_to_max"], cnd),
+        lowerbound = buspairs[bp]["vm_fr_min"][cnd]*buspairs[bp]["vm_to_min"][cnd],
+        upperbound = buspairs[bp]["vm_fr_max"][cnd]*buspairs[bp]["vm_to_max"][cnd],
         start = getval(buspairs[bp], "vv_start", cnd, 1.0)
     )
 end
@@ -365,8 +365,8 @@ function variable_cosine(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.c
     cos_max = Dict([(bp,  Inf) for bp in ids(pm, nw, :buspairs)])
 
     for (bp, buspair) in ref(pm, nw, :buspairs)
-        angmin = getmpv(buspair["angmin"], cnd)
-        angmax = getmpv(buspair["angmax"], cnd)
+        angmin = buspair["angmin"][cnd]
+        angmax = buspair["angmax"][cnd]
         if angmin >= 0
             cos_max[bp] = cos(angmin)
             cos_min[bp] = cos(angmax)
@@ -404,7 +404,7 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
     buspairs = ref(pm, nw, :buspairs)
     ub = Dict()
     for (bp, buspair) in buspairs
-        ub[bp] = (getmpv(buspair["rate_a"],cnd)*getmpv(buspair["tap"], cnd)/getmpv(buspair["vm_fr_min"], cnd))^2
+        ub[bp] = ((buspair["rate_a"][cnd]*buspair["tap"][cnd])/buspair["vm_fr_min"][cnd])^2
     end
     var(pm, nw, cnd)[:cm] = @variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(cnd)_cm",
@@ -572,8 +572,8 @@ function variable_voltage_magnitude_product_on_off(pm::GenericPowerModel{T}; nw:
     branches = ref(pm, nw, :branch)
     buses = ref(pm, nw, :bus)
 
-    vv_min = Dict([(l, getmpv(buses[branch["f_bus"]]["vmin"], cnd)*getmpv(buses[branch["t_bus"]]["vmin"], cnd)) for (l, branch) in branches])
-    vv_max = Dict([(l, getmpv(buses[branch["f_bus"]]["vmax"], cnd)*getmpv(buses[branch["t_bus"]]["vmax"], cnd)) for (l, branch) in branches])
+    vv_min = Dict([(l, buses[branch["f_bus"]]["vmin"][cnd]*buses[branch["t_bus"]]["vmin"][cnd]) for (l, branch) in branches])
+    vv_max = Dict([(l, buses[branch["f_bus"]]["vmax"][cnd]*buses[branch["t_bus"]]["vmax"][cnd]) for (l, branch) in branches])
 
     var(pm, nw, cnd)[:vv] = @variable(pm.model,
         [l in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_vv",
@@ -590,8 +590,8 @@ function variable_cosine_on_off(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::I
     cos_max = Dict([(l,  Inf) for l in ids(pm, nw, :branch)])
 
     for (l, branch) in ref(pm, nw, :branch)
-        angmin = getmpv(branch["angmin"], cnd)
-        angmax = getmpv(branch["angmax"], cnd)
+        angmin = branch["angmin"][cnd]
+        angmax = branch["angmax"][cnd]
         if angmin >= 0
             cos_max[l] = cos(angmin)
             cos_min[l] = cos(angmax)
@@ -633,7 +633,7 @@ function variable_current_magnitude_sqr_on_off(pm::GenericPowerModel{T}; nw::Int
     cm_max = Dict()
     for (l, branch) in branches
         vm_fr_min = ref(pm, nw, :bus, branch["f_bus"], "vmin", cnd)
-        cm_max[l] = (getmpv(branch["rate_a"],cnd)*getmpv(branch["tap"],cnd)/vm_fr_min)^2
+        cm_max[l] = ((branch["rate_a"][cnd]*branch["tap"][cnd])/vm_fr_min)^2
     end
 
     var(pm, nw, cnd)[:cm] = @variable(pm.model,
