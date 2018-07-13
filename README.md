@@ -35,6 +35,7 @@ This enables the definition of a wide variety of power network formulations and 
 The package [documentation](https://lanl-ansi.github.io/PowerModels.jl/stable/) includes a variety of useful information including a [quick-start guide](https://lanl-ansi.github.io/PowerModels.jl/stable/quickguide.html), [network model specification](https://lanl-ansi.github.io/PowerModels.jl/stable/network-data.html), and [baseline results](https://lanl-ansi.github.io/PowerModels.jl/stable/experiment-results.html).
 
 Additionally, these presentations provide a brief introduction to various aspects of PowerModels,
+- [Network Model Update, v0.6](https://youtu.be/j7r4onyiNRQ)
 - [PSCC 2018](https://youtu.be/AEEzt3IjLaM)
 - [JuMP Developers Meetup 2017](https://youtu.be/W4LOKR7B4ts)
 
