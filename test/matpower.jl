@@ -207,12 +207,12 @@ end
 
     function test_case(filename::AbstractString, parse_file::Function)
         temp_file = "temp.m"
-        source_data = parse_file(filename)        
+        source_data = parse_file(filename)
 
         io = PipeBuffer()
         PowerModels.export_matpower(io, source_data)
         destination_data = PowerModels.parse_matpower(io)
-        
+
         @test InfrastructureModels.compare_dict(source_data, destination_data)
     end
 
@@ -221,31 +221,31 @@ end
         test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
-    
+
     @testset "test case14" begin
         file = "../test/data/matpower/case14.m"
         test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
-    
+
     @testset "test case2" begin
         file = "../test/data/matpower/case2.m"
         test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
-    
+
     @testset "test case24" begin
         file = "../test/data/matpower/case24.m"
         test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
-    
+
     @testset "test case3_tnep" begin
         file = "../test/data/matpower/case3_tnep.m"
         test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
-    
+
     @testset "test case30" begin
         file = "../test/data/matpower/case30.m"
         test_case(file, PowerModels.parse_file)
@@ -292,7 +292,7 @@ end
         file = "../test/data/matpower/case5_dc.m"
         test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
-    end  
+    end
 
     @testset "test case5 tnep" begin
         file = "../test/data/matpower/case5_tnep.m"
@@ -304,5 +304,5 @@ end
         file = "../test/data/matpower/case7_tplgy.m"
         test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
-    end        
+    end
 end

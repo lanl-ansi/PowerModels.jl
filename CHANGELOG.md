@@ -2,13 +2,16 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- nothing
+
+### v0.8.0
 - Added support for asymmetric line charging in all formulations
 - Added Matpower data file export function
 - Added mathematical model to documentation
 - Added parsing string data from IO objects
-- Added support for network data with multiple conductors
+- Added support for network data with multiple conductors (breaking)
 - Removed explicit series variables from branch flow model
-- Improved helper functions ref, var, con to work with multiple networks and conductors
+- Improved helper functions ref, var, con to work with multiple networks and multiple conductors
 - Minor robustness improvements to parsing PTI files
 - Minor issues closed #316
 
