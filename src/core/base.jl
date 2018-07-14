@@ -6,7 +6,7 @@ export
     run_generic_model, build_generic_model, solve_generic_model,
     ismultinetwork, nw_ids, nws,
     ismulticonductor, conductor_ids,
-    ids, ref, var, ext
+    ids, ref, var, con, ext
 
 
 ""
