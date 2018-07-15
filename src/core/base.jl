@@ -367,7 +367,7 @@ function build_ref(data::Dict{String,Any})
 
         ref[:ref_buses] = ref_buses
 
-        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:conductor_ids])
+        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:conductor_ids], haskey(ref, :conductors))
 
         off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
         ref[:off_angmin] = off_angmin
@@ -386,7 +386,7 @@ function build_ref(data::Dict{String,Any})
             end
             ref[:ne_bus_arcs] = ne_bus_arcs
 
-            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus], ref[:conductor_ids])
+            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus], ref[:conductor_ids], haskey(ref, :conductors))
         end
 
     end
@@ -412,25 +412,38 @@ end
 
 
 "compute bus pair level structures"
-function buspair_parameters(arcs_from, branches, buses, conductor_ids)
+function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismulticondcutor)
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
 
-    bp_angmin = Dict([(bp, MultiConductorVector([-Inf for c in conductor_ids])) for bp in buspair_indexes])
-    bp_angmax = Dict([(bp, MultiConductorVector([ Inf for c in conductor_ids])) for bp in buspair_indexes])
-    bp_branch = Dict([(bp, Inf) for bp in buspair_indexes])
+    bp_branch = Dict([(bp, typemax(Int64)) for bp in buspair_indexes])
+
+    if ismulticondcutor
+        bp_angmin = Dict([(bp, MultiConductorVector([-Inf for c in conductor_ids])) for bp in buspair_indexes])
+        bp_angmax = Dict([(bp, MultiConductorVector([ Inf for c in conductor_ids])) for bp in buspair_indexes])
+    else
+        assert(length(conductor_ids) == 1)
+        bp_angmin = Dict([(bp, -Inf) for bp in buspair_indexes])
+        bp_angmax = Dict([(bp,  Inf) for bp in buspair_indexes])
+    end
 
     for (l,branch) in branches
         i = branch["f_bus"]
         j = branch["t_bus"]
 
-        for c in conductor_ids
-            bp_angmin[(i,j)][c] = max(bp_angmin[(i,j)][c], branch["angmin"][c])
-            bp_angmax[(i,j)][c] = min(bp_angmax[(i,j)][c], branch["angmax"][c])
+        if ismulticondcutor
+            for c in conductor_ids
+                bp_angmin[(i,j)][c] = max(bp_angmin[(i,j)][c], branch["angmin"][c])
+                bp_angmax[(i,j)][c] = min(bp_angmax[(i,j)][c], branch["angmax"][c])
+            end
+        else
+            bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
+            bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
         end
+
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end
 
-    buspairs = Dict([((i,j), Dict(
+    buspairs = Dict([((i,j), Dict{String,Any}(
         "branch"=>bp_branch[(i,j)],
         "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],

@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- nothing
+- Added support for implicit single phase to buspairs data
 
 ### v0.8.0
 - Added support for asymmetric line charging in all formulations
