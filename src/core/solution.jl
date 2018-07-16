@@ -165,7 +165,7 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
 
         num_conductors = length(conductor_ids(pm))
         cnd_idx = 1
-        sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
+        sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
         for conductor in conductor_ids(pm)
             try
                 variable = extract_var(var(pm, variable_symbol, cnd=conductor), idx, item)
