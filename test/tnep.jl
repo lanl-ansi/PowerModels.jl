@@ -2,7 +2,7 @@
 
 function check_tnep_status(sol)
     for (idx,val) in sol["ne_branch"]
-        @test isapprox(val["built"], 0.0, rtol=1e-6) || isapprox(val["built"], 1.0, rtol=1e-6)
+        @test isapprox(val["built"], 0.0, atol=1e-6, rtol=1e-6) || isapprox(val["built"], 1.0, atol=1e-6, rtol=1e-6)
     end
 end
 
