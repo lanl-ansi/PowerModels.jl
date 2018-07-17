@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - nothing
 
 ### v0.8.1
+- Strengthened the QCWRTri Power Flow formulation
 - Added support for implicit single conductor to buspairs data
 - Made add_setpoint more flexible when working with a mixture of data types
 - Fixed a bug in TNEP voltage variable definitions

@@ -787,6 +787,29 @@ function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: QCWRTr
     variable_current_magnitude_sqr(pm; kwargs...)
 end
 
+"qc lambda formulation based relaxation tightening"
+function relaxation_tighten_vv(m, x, y, lambda_a, lambda_b)
+    x_ub = getupperbound(x)
+    x_lb = getlowerbound(x)
+    y_ub = getupperbound(y)
+    y_lb = getlowerbound(y)
+
+    @assert length(lambda_a) == 8
+    @assert length(lambda_b) == 8
+
+    val = [x_lb * y_lb 
+           x_lb * y_lb 
+           x_lb * y_ub
+           x_lb * y_ub
+           x_ub * y_lb
+           x_ub * y_lb
+           x_ub * y_ub
+           x_ub * y_ub]
+
+    @constraint(m, sum(lambda_a[i]*val[i] - lambda_b[i]*val[i] for i in 1:8) == 0)
+
++end 
+
 ""
 function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRTriForm
     v = var(pm, n, c, :vm)
@@ -814,6 +837,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <:
         relaxation_cos(pm.model, td[bp], cs[bp])
         InfrastructureModels.relaxation_trilinear(pm.model, v[i], v[j], cs[bp], wr[bp], lambda_wr[bp,:])
         InfrastructureModels.relaxation_trilinear(pm.model, v[i], v[j], si[bp], wi[bp], lambda_wi[bp,:])
+		relaxation_tighten_vv(pm.model, v[i], v[j], lambda_wr[bp,:], lambda_wi[bp,:])
 
         # this constraint is redudant and useful for debugging
         #InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])
