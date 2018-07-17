@@ -5,7 +5,7 @@ PowerModels.jl Change Log
 - nothing
 
 ### v0.8.1
-- Added support for implicit single phase to buspairs data
+- Added support for implicit single conductor to buspairs data
 - Made add_setpoint more flexible when working with a mixture of data types
 
 ### v0.8.0
