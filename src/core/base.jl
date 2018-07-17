@@ -4,13 +4,16 @@ export
     GenericPowerModel,
     setdata, setsolver, solve,
     run_generic_model, build_generic_model, solve_generic_model,
-    ids, ref, var, ext
+    ismultinetwork, nw_ids, nws,
+    ismulticonductor, conductor_ids,
+    ids, ref, var, con, ext
+
 
 ""
-@compat abstract type AbstractPowerFormulation end
+abstract type AbstractPowerFormulation end
 
 ""
-@compat abstract type AbstractConicPowerFormulation <: AbstractPowerFormulation end
+abstract type AbstractConicPowerFormulation <: AbstractPowerFormulation end
 
 """
 ```
@@ -38,7 +41,7 @@ Methods on `GenericPowerModel` for defining variables and adding constraints sho
 * add them to `model::JuMP.Model`, and
 * follow the conventions for variable and constraint names.
 """
-type GenericPowerModel{T<:AbstractPowerFormulation}
+mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     model::Model
 
     data::Dict{String,Any}
@@ -49,6 +52,7 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
     var::Dict{Symbol,Any} # JuMP variables
     con::Dict{Symbol,Any} # JuMP constraint references
     cnw::Int # current network index value
+    ccnd::Int # current conductor index value
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -67,52 +71,87 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
 
     var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
     con = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
-    for nw_id in keys(ref[:nw])
-        var[:nw][nw_id] = Dict{Symbol,Any}()
-        con[:nw][nw_id] = Dict{Symbol,Any}()
+    for (nw_id, nw) in ref[:nw]
+        nw_var = var[:nw][nw_id] = Dict{Symbol,Any}()
+        nw_con = con[:nw][nw_id] = Dict{Symbol,Any}()
+
+        nw_var[:cnd] = Dict{Int,Any}()
+        nw_con[:cnd] = Dict{Int,Any}()
+
+        for cnd_id in nw[:conductor_ids]
+            nw_var[:cnd][cnd_id] = Dict{Symbol,Any}()
+            nw_con[:cnd][cnd_id] = Dict{Symbol,Any}()
+        end
     end
 
-    cnw = minimum([k for k in keys(ref[:nw])])
+    cnw = minimum([k for k in keys(var[:nw])])
+    ccnd = minimum([k for k in keys(var[:nw][cnw][:cnd])])
 
     pm = GenericPowerModel{T}(
         Model(solver = solver), # model
-        data, # data
-        setting, # setting
+        data,
+        setting,
         Dict{String,Any}(), # solution
         ref,
-        var, # vars
+        var,
         con,
         cnw,
-        ext # ext
+        ccnd,
+        ext
     )
 
     return pm
 end
 
+### Helper functions for working with multinetworks and multiconductors
+ismultinetwork(pm::GenericPowerModel) = (length(pm.ref[:nw]) > 1)
+nw_ids(pm::GenericPowerModel) = keys(pm.ref[:nw])
+nws(pm::GenericPowerModel) = pm.ref[:nw]
 
-### Helper functions for ignoring multinetwork support
-ids(pm::GenericPowerModel, key::Symbol) = ids(pm, pm.cnw, key)
-ids(pm::GenericPowerModel, n::Int, key::Symbol) = keys(pm.ref[:nw][n][key])
+ismulticonductor(pm::GenericPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :conductors)
+ismulticonductor(pm::GenericPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :conductors)
+conductor_ids(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw][:conductor_ids]
+conductor_ids(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:conductor_ids]
 
-ref(pm::GenericPowerModel, key::Symbol) = ref(pm, pm.cnw, key)
-ref(pm::GenericPowerModel, key::Symbol, idx) = ref(pm, pm.cnw, key, idx)
-ref(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ref[:nw][n][key]
-ref(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ref[:nw][n][key][idx]
 
-Base.var(pm::GenericPowerModel, key::Symbol) = var(pm, pm.cnw, key)
-Base.var(pm::GenericPowerModel, key::Symbol, idx) = var(pm, pm.cnw, key, idx)
-Base.var(pm::GenericPowerModel, n::Int, key::Symbol) = pm.var[:nw][n][key]
-Base.var(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.var[:nw][n][key][idx]
+ids(pm::GenericPowerModel, nw::Int, key::Symbol) = keys(pm.ref[:nw][nw][key])
+ids(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = keys(pm.ref[:nw][nw][key])
 
-con(pm::GenericPowerModel, key::Symbol) = con(pm, pm.cnw, key)
-con(pm::GenericPowerModel, key::Symbol, idx) = con(pm, pm.cnw, key, idx)
-con(pm::GenericPowerModel, n::Int, key::Symbol) = pm.con[:nw][n][key]
-con(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.con[:nw][n][key][idx]
 
-ext(pm::GenericPowerModel, key::Symbol) = ext(pm, pm.cnw, key)
-ext(pm::GenericPowerModel, key::Symbol, idx) = ext(pm, pm.cnw, key, idx)
-ext(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ext[:nw][n][key]
-ext(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ext[:nw][n][key][idx]
+ref(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
+ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, cnd::Int) = pm.ref[:nw][nw][key][idx][param][cnd]
+
+ref(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
+ref(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
+ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
+ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.ref[:nw][nw][key][idx][param][cnd]
+
+
+Base.var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
+Base.var(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
+Base.var(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
+Base.var(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
+Base.var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
+Base.var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
+
+Base.var(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
+Base.var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
+Base.var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
+
+con(pm::GenericPowerModel, nw::Int) = pm.con[:nw][nw]
+con(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.con[:nw][nw][key]
+con(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.con[:nw][nw][key][idx]
+con(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.con[:nw][nw][:cnd][cnd]
+con(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.con[:nw][nw][:cnd][cnd][key]
+con(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.con[:nw][nw][:cnd][cnd][key][idx]
+
+con(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd]
+con(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key]
+con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key][idx]
+
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
@@ -126,7 +165,7 @@ function JuMP.solve(pm::GenericPowerModel)
     try
         solve_time = getsolvetime(pm.model)
     catch
-        warn("there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
+        warn(LOGGER, "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
     end
 
     return status, solve_time
@@ -154,12 +193,16 @@ function build_generic_model(file::String,  model_constructor, post_method; kwar
 end
 
 ""
-function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; multinetwork=false, kwargs...)
+function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
     pm = model_constructor(data; kwargs...)
 
-    if !multinetwork && data["multinetwork"]
-        warn("building a single network model with multinetwork data, only network ($(pm.cnw)) will be used.")
+    if !multinetwork && ismultinetwork(pm)
+        error(LOGGER, "attempted to build a single-network model with multi-network data")
+    end
+
+    if !multiconductor && ismulticonductor(pm)
+        error(LOGGER, "attempted to build a single-conductor model with multi-conductor data")
     end
 
     post_method(pm)
@@ -193,6 +236,8 @@ Some of the common keys include:
 * `:bus_arcs` -- the mapping `Dict(i => [(l,i,j) for (l,i,j) in ref[:arcs]])`,
 * `:buspairs` -- (see `buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])`),
 * `:bus_gens` -- the mapping `Dict(i => [gen["gen_bus"] for (i,gen) in ref[:gen]])`.
+* `:bus_loads` -- the mapping `Dict(i => [load["load_bus"] for (i,load) in ref[:load]])`.
+* `:bus_shunts` -- the mapping `Dict(i => [shunt["shunt_bus"] for (i,shunt) in ref[:shunt]])`.
 * `:arcs_from_dc` -- the set `[(i,b["f_bus"],b["t_bus"]) for (i,b) in ref[:dcline]]`,
 * `:arcs_to_dc` -- the set `[(i,b["t_bus"],b["f_bus"]) for (i,b) in ref[:dcline]]`,
 * `:arcs_dc` -- the set of arcs from both `arcs_from_dc` and `arcs_to_dc`,
@@ -205,33 +250,38 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 """
 function build_ref(data::Dict{String,Any})
     refs = Dict{Symbol,Any}()
+
     nws = refs[:nw] = Dict{Int,Any}()
 
-    if data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(data)
         nws_data = data["nw"]
     else
         nws_data = Dict{String,Any}("0" => data)
     end
 
-    for (n,nw_data) in nws_data
+    for (n, nw_data) in nws_data
         nw_id = parse(Int, n)
         ref = nws[nw_id] = Dict{Symbol,Any}()
 
         for (key, item) in nw_data
-            if isa(item, Dict)
-                item_lookup = Dict([(parse(Int, k), v) for (k,v) in item])
+            if isa(item, Dict{String,Any})
+                item_lookup = Dict{Int,Any}([(parse(Int, k), v) for (k,v) in item])
                 ref[Symbol(key)] = item_lookup
             else
                 ref[Symbol(key)] = item
             end
         end
 
-        off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
-        ref[:off_angmin] = off_angmin
-        ref[:off_angmax] = off_angmax
+        if !haskey(ref, :conductors)
+            ref[:conductor_ids] = 1:1
+        else
+            ref[:conductor_ids] = 1:ref[:conductors]
+        end
 
         # filter turned off stuff
         ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
+        ref[:load] = filter((i, load) -> load["status"] == 1 && load["load_bus"] in keys(ref[:bus]), ref[:load])
+        ref[:shunt] = filter((i, shunt) -> shunt["status"] == 1 && shunt["shunt_bus"] in keys(ref[:bus]), ref[:shunt])
         ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
         ref[:branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
         ref[:dcline] = filter((i, dcline) -> dcline["br_status"] == 1 && dcline["f_bus"] in keys(ref[:bus]) && dcline["t_bus"] in keys(ref[:bus]), ref[:dcline])
@@ -271,6 +321,18 @@ function build_ref(data::Dict{String,Any})
         end
         ref[:bus_gens] = bus_gens
 
+        bus_loads = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (i, load) in ref[:load]
+            push!(bus_loads[load["load_bus"]], i)
+        end
+        ref[:bus_loads] = bus_loads
+
+        bus_shunts = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (i,shunt) in ref[:shunt]
+            push!(bus_shunts[shunt["shunt_bus"]], i)
+        end
+        ref[:bus_shunts] = bus_shunts
+
         bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
         for (l,i,j) in ref[:arcs]
             push!(bus_arcs[i], (l,i,j))
@@ -294,19 +356,22 @@ function build_ref(data::Dict{String,Any})
         if length(ref_buses) == 0
             big_gen = biggest_generator(ref[:gen])
             gen_bus = big_gen["gen_bus"]
-            ref_buses[gen_bus] = ref[:bus][gen_bus]
-            warn("no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
+            ref_bus = ref_buses[gen_bus] = ref[:bus][gen_bus]
+            ref_bus["bus_type"] = 3
+            warn(LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
         end
 
         if length(ref_buses) > 1
-            warn("multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
+            warn(LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
         end
 
         ref[:ref_buses] = ref_buses
 
+        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:conductor_ids], haskey(ref, :conductors))
 
-        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus])
-
+        off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
+        ref[:off_angmin] = off_angmin
+        ref[:off_angmax] = off_angmax
 
         if haskey(ref, :ne_branch)
             ref[:ne_branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:ne_branch])
@@ -321,7 +386,7 @@ function build_ref(data::Dict{String,Any})
             end
             ref[:ne_bus_arcs] = ne_bus_arcs
 
-            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus])
+            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus], ref[:conductor_ids], haskey(ref, :conductors))
         end
 
     end
@@ -335,9 +400,10 @@ function biggest_generator(gens)
     biggest_gen = nothing
     biggest_value = -Inf
     for (k,gen) in gens
-        if gen["pmax"] > biggest_value
+        pmax = maximum(gen["pmax"])
+        if pmax > biggest_value
             biggest_gen = gen
-            biggest_value = gen["pmax"]
+            biggest_value = pmax
         end
     end
     assert(biggest_gen != nothing)
@@ -346,23 +412,38 @@ end
 
 
 "compute bus pair level structures"
-function buspair_parameters(arcs_from, branches, buses)
+function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismulticondcutor)
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
 
-    bp_angmin = Dict([(bp, -Inf) for bp in buspair_indexes])
-    bp_angmax = Dict([(bp, Inf) for bp in buspair_indexes])
-    bp_branch = Dict([(bp, Inf) for bp in buspair_indexes])
+    bp_branch = Dict([(bp, typemax(Int64)) for bp in buspair_indexes])
+
+    if ismulticondcutor
+        bp_angmin = Dict([(bp, MultiConductorVector([-Inf for c in conductor_ids])) for bp in buspair_indexes])
+        bp_angmax = Dict([(bp, MultiConductorVector([ Inf for c in conductor_ids])) for bp in buspair_indexes])
+    else
+        assert(length(conductor_ids) == 1)
+        bp_angmin = Dict([(bp, -Inf) for bp in buspair_indexes])
+        bp_angmax = Dict([(bp,  Inf) for bp in buspair_indexes])
+    end
 
     for (l,branch) in branches
         i = branch["f_bus"]
         j = branch["t_bus"]
 
-        bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
-        bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
+        if ismulticondcutor
+            for c in conductor_ids
+                bp_angmin[(i,j)][c] = max(bp_angmin[(i,j)][c], branch["angmin"][c])
+                bp_angmax[(i,j)][c] = min(bp_angmax[(i,j)][c], branch["angmax"][c])
+            end
+        else
+            bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
+            bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
+        end
+
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end
 
-    buspairs = Dict([((i,j), Dict(
+    buspairs = Dict([((i,j), Dict{String,Any}(
         "branch"=>bp_branch[(i,j)],
         "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],
@@ -372,7 +453,9 @@ function buspair_parameters(arcs_from, branches, buses)
         "vm_fr_max"=>buses[i]["vmax"],
         "vm_to_min"=>buses[j]["vmin"],
         "vm_to_max"=>buses[j]["vmax"]
-        )) for (i,j) in buspair_indexes])
+        )) for (i,j) in buspair_indexes]
+    )
 
     return buspairs
 end
+

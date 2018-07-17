@@ -11,7 +11,8 @@ makedocs(
         "Manual" => [
             "Getting Started" => "quickguide.md",
             "Network Data Format" => "network-data.md",
-            "Result Data Format" => "result-data.md"
+            "Result Data Format" => "result-data.md",
+            "Mathematical Model" => "math-model.md"
         ],
         "Library" => [
             "Network Formulations" => "formulations.md",
@@ -35,5 +36,5 @@ deploydocs(
     make = nothing,
     target = "build",
     repo = "github.com/lanl-ansi/PowerModels.jl.git",
-    julia = "0.5"
+    julia = "0.6"
 )

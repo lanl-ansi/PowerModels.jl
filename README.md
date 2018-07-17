@@ -27,8 +27,17 @@ This enables the definition of a wide variety of power network formulations and 
 
 **Network Data Formats**
 * Matpower ".m" files
+* PTI ".raw" files (PSS(R)E v33 specfication)
 
-For further information, consult the package [documentation](https://lanl-ansi.github.io/PowerModels.jl/stable/).
+
+## Documentation
+
+The package [documentation](https://lanl-ansi.github.io/PowerModels.jl/stable/) includes a variety of useful information including a [quick-start guide](https://lanl-ansi.github.io/PowerModels.jl/stable/quickguide.html), [network model specification](https://lanl-ansi.github.io/PowerModels.jl/stable/network-data.html), and [baseline results](https://lanl-ansi.github.io/PowerModels.jl/stable/experiment-results.html).
+
+Additionally, these presentations provide a brief introduction to various aspects of PowerModels,
+- [Network Model Update, v0.6](https://youtu.be/j7r4onyiNRQ)
+- [PSCC 2018](https://youtu.be/AEEzt3IjLaM)
+- [JuMP Developers Meetup 2017](https://youtu.be/W4LOKR7B4ts)
 
 
 ## Development
@@ -40,8 +49,11 @@ Community-driven development and enhancement of PowerModels are welcome and enco
 
 This code has been developed as part of the Advanced Network Science Initiative at Los Alamos National Laboratory.
 The primary developer is Carleton Coffrin(@ccoffrin) with support from the following contributors,
-- Russell Bent (@rb004f) LANL, TNEP problem specification
-- Frederik Geth(@frederikgeth) and Hakan Ergun(@hakanergun) KU Leuven, HVDC line implementation
+- Russell Bent (@rb004f) LANL, Matpower export, TNEP problem specification
+- Hakan Ergun (@hakanergun) KU Leuven, HVDC lines
+- David Fobes (@pseudocubic) LANL, PSS(R)E v33 data support
+- Rory Finnegan (@rofinn) Invenia, Memento Logging
+- Frederik Geth (@frederikgeth) CSIRO, Branch Flow formulation
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 

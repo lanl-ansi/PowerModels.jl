@@ -10,21 +10,28 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
     sol = init_solution(pm)
     data = Dict{String,Any}("name" => pm.data["name"])
 
-    if pm.data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(pm.data)
+        sol["multinetwork"] = true
         sol_nws = sol["nw"] = Dict{String,Any}()
         data_nws = data["nw"] = Dict{String,Any}()
 
         for (n,nw_data) in pm.data["nw"]
             sol_nw = sol_nws[n] = Dict{String,Any}()
+            if haskey(nw_data, "conductors")
+                sol_nw["conductors"] = nw_data["conductors"]
+            end
             pm.cnw = parse(Int, n)
             solution_builder(pm, sol_nw)
             data_nws[n] = Dict(
-                "name" => nw_data["name"],
+                "name" => get(nw_data, "name", "anonymous"),
                 "bus_count" => length(nw_data["bus"]),
                 "branch_count" => length(nw_data["branch"])
             )
         end
     else
+        if haskey(pm.data, "conductors")
+            sol["conductors"] = pm.data["conductors"]
+        end
         solution_builder(pm, sol)
         data["bus_count"] = length(pm.data["bus"])
         data["branch_count"] = length(pm.data["branch"])
@@ -51,7 +58,7 @@ end
 
 ""
 function init_solution(pm::GenericPowerModel)
-    data_keys = ["per_unit", "baseMVA", "multinetwork"]
+    data_keys = ["per_unit", "baseMVA"]
     return Dict{String,Any}(key => pm.data[key] for key in data_keys)
 end
 
@@ -93,13 +100,6 @@ function add_generator_power_setpoint(sol, pm::GenericPowerModel)
     mva_base = pm.data["baseMVA"]
     add_setpoint(sol, pm, "gen", "pg", :pg)
     add_setpoint(sol, pm, "gen", "qg", :qg)
-end
-
-""
-function add_bus_demand_setpoint(sol, pm::GenericPowerModel)
-    mva_base = pm.data["baseMVA"]
-    add_setpoint(sol, pm, "bus", "pd", :pd; default_value = (item) -> item["pd"]*mva_base)
-    add_setpoint(sol, pm, "bus", "qd", :qd; default_value = (item) -> item["qd"]*mva_base)
 end
 
 ""
@@ -150,7 +150,7 @@ end
 function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variable_symbol; index_name = "index", default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
     sol_dict = get(sol, dict_name, Dict{String,Any}())
 
-    if pm.data["multinetwork"]
+    if InfrastructureModels.ismultinetwork(pm.data)
         data_dict = pm.data["nw"]["$(pm.cnw)"][dict_name]
     else
         data_dict = pm.data[dict_name]
@@ -162,11 +162,22 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
     for (i,item) in data_dict
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
-        sol_item[param_name] = default_value(item)
-        try
-            variable = extract_var(var(pm, variable_symbol), idx, item)
-            sol_item[param_name] = scale(getvalue(variable), item)
-        catch
+
+        num_conductors = length(conductor_ids(pm))
+        cnd_idx = 1
+        sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
+        for conductor in conductor_ids(pm)
+            try
+                variable = extract_var(var(pm, variable_symbol, cnd=conductor), idx, item)
+                sol_item[param_name][cnd_idx] = scale(getvalue(variable), item)
+            catch
+            end
+            cnd_idx += 1
+        end
+
+        # remove MultiConductorValue, if it was not a ismulticonductor network
+        if !ismulticonductor(pm)
+            sol_item[param_name] = sol_item[param_name][1]
         end
     end
 end
@@ -214,7 +225,7 @@ function add_dual(
 )
     sol_dict = get(sol, dict_name, Dict{String,Any}())
 
-    if pm.data["multinetwork"]
+    if ismultinetwork(pm)
         data_dict = pm.data["nw"]["$(pm.cnw)"][dict_name]
     else
         data_dict = pm.data[dict_name]
@@ -226,21 +237,34 @@ function add_dual(
     for (i,item) in data_dict
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
-        sol_item[param_name] = default_value(item)
-        try
-            constraint = extract_con(con(pm, con_symbol), idx, item)
-            sol_item[param_name] = scale(getdual(constraint), item)
-        catch
-            # info("No constraint: $(con_symbol), $(idx)") # if we want to log this info.
+
+        num_conductors = length(conductor_ids(pm))
+        cnd_idx = 1
+        sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
+        for conductor in conductor_ids(pm)
+            try
+                constraint = extract_con(con(pm, con_symbol, cnd=conductor), idx, item)
+                sol_item[param_name][cnd_idx] = scale(getdual(constraint), item)
+            catch
+                info(LOGGER, "No constraint: $(con_symbol), $(idx)")
+            end
+            cnd_idx += 1
+        end
+
+        # remove MultiConductorValue, if it was not a ismulticonductor network
+        if !ismulticonductor(pm)
+            sol_item[param_name] = sol_item[param_name][1]
         end
     end
 end
 
+
 solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}(
     :Ipopt => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
+    :Juniper => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
     :ConicNonlinearBridge => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
     # note that AmplNLWriter.AmplNLSolver is the solver type of bonmin
-    :AmplNLWriter => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible)
+    :AmplNLWriter => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
     )
 
 "translates solver status codes to our status codes"

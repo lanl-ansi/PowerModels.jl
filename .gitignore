@@ -6,3 +6,4 @@ deps/deps.jl
 docs/build/
 docs/site/
 docs/.documenter
+.project

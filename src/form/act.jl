@@ -1,43 +1,65 @@
 ### w-theta form of the non-convex AC equations
 
-export 
+export
     ACTPowerModel, StandardACTForm
 
 ""
-@compat abstract type AbstractACTForm <: AbstractPowerFormulation end
+abstract type AbstractACTForm <: AbstractPowerFormulation end
 
 ""
-@compat abstract type StandardACTForm <: AbstractACTForm end
+abstract type StandardACTForm <: AbstractACTForm end
 
 ""
 const ACTPowerModel = GenericPowerModel{StandardACTForm}
 
 "default AC constructor"
-ACTPowerModel(data::Dict{String,Any}; kwargs...) = 
+ACTPowerModel(data::Dict{String,Any}; kwargs...) =
     GenericPowerModel(data, StandardACTForm; kwargs...)
 
-""
-function variable_voltage{T <: AbstractACTForm}(pm::GenericPowerModel{T}, n::Int=pm.cnw; kwargs...)
-    variable_voltage_angle(pm, n; kwargs...)
-    variable_voltage_magnitude_sqr(pm, n; kwargs...)
-    variable_voltage_product(pm, n; kwargs...)
+"`t[ref_bus] == 0`"
+function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) where T <: AbstractACTForm
+    @constraint(pm.model, var(pm, n, c, :va)[i] == 0)
 end
 
-function constraint_voltage{T <: StandardACTForm}(pm::GenericPowerModel{T}, n::Int)
-    t = pm.var[:nw][n][:va]
-    w = pm.var[:nw][n][:w]
-    wr = pm.var[:nw][n][:wr]
-    wi = pm.var[:nw][n][:wi]
+""
+function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACTForm
+    variable_voltage_angle(pm; kwargs...)
+    variable_voltage_magnitude_sqr(pm; kwargs...)
+    variable_voltage_product(pm; kwargs...)
+end
 
-    for (i,j) in keys(pm.ref[:nw][n][:buspairs])
+function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: StandardACTForm
+    t  = var(pm, n, c, :va)
+    w  = var(pm, n, c,  :w)
+    wr = var(pm, n, c, :wr)
+    wi = var(pm, n, c, :wi)
+
+    for (i,j) in ids(pm, n, :buspairs)
         @constraint(pm.model, wr[(i,j)]^2 + wi[(i,j)]^2 == w[i]*w[j])
         @NLconstraint(pm.model, wi[(i,j)] == tan(t[i] - t[j])*wr[(i,j)])
     end
 end
 
 
+"""
+```
+t[f_bus] - t[t_bus] <= angmax
+t[f_bus] - t[t_bus] >= angmin
+```
+"""
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, angmin, angmax) where T <: StandardACTForm
+    i, f_bus, t_bus = f_idx
+
+    va_fr = var(pm, n, c, :va)[f_bus]
+    va_to = var(pm, n, c, :va)[t_bus]
+
+    @constraint(pm.model, va_fr - va_to <= angmax)
+    @constraint(pm.model, va_fr - va_to >= angmin)
+end
+
+
 ""
-function add_bus_voltage_setpoint{T <: AbstractACTForm}(sol, pm::GenericPowerModel{T})
+function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractACTForm
     add_setpoint(sol, pm, "bus", "vm", :w; scale = (x,item) -> sqrt(x))
     add_setpoint(sol, pm, "bus", "va", :va)
 end

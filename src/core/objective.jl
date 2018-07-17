@@ -4,113 +4,248 @@
 ################################################################################
 
 """
-Checks that all cost models are polynomials, quadratic or less
+Checks that all cost models are present and of the same type
 """
-function check_cost_models(pm::GenericPowerModel, nws)
-    for n in nws
-        ref = pm.ref[:nw][n]
-        for (i,gen) in ref[:gen]
+function check_cost_models(pm::GenericPowerModel)
+    model = nothing
+
+    for (n, nw_ref) in nws(pm)
+        for (i,gen) in nw_ref[:gen]
             if haskey(gen, "cost")
-                if gen["model"] != 2
-                    error("only cost model 2 is supported at this time, given cost model $(gen["model"]) on generator $(i)")
-                end
-                if length(gen["cost"]) > 3
-                    error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(gen["cost"])) on generator $(i)")
+                if model == nothing
+                    model = gen["model"]
+                else
+                    if gen["model"] != model
+                        error("cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
+                    end
                 end
             else
                 error("no cost given for generator $(i)")
             end
         end
-        for (i,dcline) in ref[:dcline]
-            if haskey(dcline, "model") 
-                if haskey(dcline, "model") && dcline["model"] != 2
-                    error("only cost model 2 is supported at this time, given cost model $(dcline["model"]) on dcline $(i)")
-                end
-                if haskey(dcline, "cost") && length(dcline["cost"]) > 3
-                    error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(dcline["cost"])) on dcline $(i)")
+
+        for (i,dcline) in nw_ref[:dcline]
+            if haskey(dcline, "model")
+                if model == nothing
+                    model = dcline["model"]
+                else
+                    if dcline["model"] != model
+                        error("cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
+                    end
                 end
             else
                 error("no cost given for dcline $(i)")
             end
         end
     end
+
+    return model
 end
 
 
+
+
 ""
-function objective_min_fuel_cost(pm::GenericPowerModel, nws=[pm.cnw])
-    check_cost_models(pm, nws)
+function objective_min_fuel_cost(pm::GenericPowerModel)
+    model = check_cost_models(pm)
 
-    pg = Dict(n => pm.var[:nw][n][:pg] for n in nws)
-    dc_p = Dict(n => pm.var[:nw][n][:p_dc] for n in nws)
-
-    from_idx = Dict()
-    for n in nws
-        ref = pm.ref[:nw][n]
-        from_idx[n] = Dict(arc[1] => arc for arc in ref[:arcs_from_dc])
+    if model == 1
+        return objective_min_pwl_fuel_cost(pm)
+    elseif model == 2
+        return objective_min_polynomial_fuel_cost(pm)
+    else
+        error("Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
 
-    return @objective(pm.model, Min, 
+end
+
+
+
+"""
+Checks that all cost models are polynomials, quadratic or less
+"""
+function check_polynomial_cost_models(pm::GenericPowerModel)
+    for (n, nw_ref) in nws(pm)
+        for (i,gen) in nw_ref[:gen]
+            @assert gen["model"] == 2
+            if length(gen["cost"]) > 3
+                error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(gen["cost"])) on generator $(i)")
+            end
+        end
+        for (i,dcline) in nw_ref[:dcline]
+            @assert dcline["model"] == 2
+            if length(dcline["cost"]) > 3
+                error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(dcline["cost"])) on dcline $(i)")
+            end
+        end
+    end
+end
+
+
+
+""
+function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
+    check_polynomial_cost_models(pm)
+
+    from_idx = Dict()
+    for (n, nw_ref) in nws(pm)
+        from_idx[n] = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
+    end
+
+    return @objective(pm.model, Min,
         sum(
-            sum(gen["cost"][1]*pg[n][i]^2 + gen["cost"][2]*pg[n][i] + gen["cost"][3] for (i,gen) in pm.ref[:nw][n][:gen]) +
-            sum(dcline["cost"][1]*dc_p[n][from_idx[n][i]]^2 + dcline["cost"][2]*dc_p[n][from_idx[n][i]] + dcline["cost"][3] for (i,dcline) in pm.ref[:nw][n][:dcline])
-        for n in nws)
+            sum(   gen["cost"][1]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))^2 +
+                   gen["cost"][2]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))+
+                   gen["cost"][3] for (i,gen) in nw_ref[:gen]) +
+            sum(   dcline["cost"][1]*sum( var(pm, n, c, :p_dc, from_idx[n][i]) for c in conductor_ids(pm, n))^2 +
+                   dcline["cost"][2]*sum( var(pm, n, c, :p_dc, from_idx[n][i]) for c in conductor_ids(pm, n)) +
+                   dcline["cost"][3] for (i,dcline) in nw_ref[:dcline])
+        for (n, nw_ref) in nws(pm))
     )
 end
 
-""
-function objective_min_fuel_cost{T <: AbstractConicPowerFormulation}(pm::GenericPowerModel{T}, nws=[pm.cnw])
-    check_cost_models(pm, nws)
 
-    pg = Dict(n => pm.var[:nw][n][:pg] for n in nws)
-    dc_p = Dict(n => pm.var[:nw][n][:p_dc] for n in nws)
+""
+function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <: AbstractConicPowerFormulation
+    check_polynomial_cost_models(pm)
 
     from_idx = Dict()
-    for n in nws
-        ref = pm.ref[:nw][n]
-        from_idx[n] = Dict(arc[1] => arc for arc in ref[:arcs_from_dc])
+    for (n, nw_ref) in nws(pm)
+        from_idx[n] = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
     end
 
     pg_sqr = Dict()
     dc_p_sqr = Dict()
-    for n in nws
-        pg_sqr[n] = pm.var[:nw][n][:pg_sqr] = @variable(pm.model, 
-            [i in keys(pm.ref[:nw][n][:gen])], basename="$(n)_pg_sqr",
-            lowerbound = pm.ref[:nw][n][:gen][i]["pmin"]^2,
-            upperbound = pm.ref[:nw][n][:gen][i]["pmax"]^2
-        )
-        for (i, gen) in pm.ref[:nw][n][:gen]
-            @constraint(pm.model, norm([2*pg[n][i], pg_sqr[n][i]-1]) <= pg_sqr[n][i]+1)
-        end
+    for (n, nw_ref) in nws(pm)
+        for c in conductor_ids(pm, n)
+            pg_sqr = var(pm, n, c)[:pg_sqr] = @variable(pm.model, 
+                [i in ids(pm, n, :gen)], basename="$(n)_$(c)_pg_sqr",
+                lowerbound = ref(pm, n, :gen, i, "pmin", c)^2,
+                upperbound = ref(pm, n, :gen, i, "pmax", c)^2
+            )
+            for (i, gen) in nw_ref[:gen]
+                @constraint(pm.model, norm([2*var(pm, n, c, :pg, i), pg_sqr[i]-1]) <= pg_sqr[i]+1)
+            end
 
-        dc_p_sqr[n] = pm.var[:nw][n][:dc_p_sqr] = @variable(pm.model, 
-            [i in keys(pm.ref[:nw][n][:dcline])], basename="$(n)_dc_p_sqr",
-            lowerbound = pm.ref[:nw][n][:dcline][i]["pminf"]^2,
-            upperbound = pm.ref[:nw][n][:dcline][i]["pmaxf"]^2
-        )
+            dc_p_sqr = var(pm, n, c)[:p_dc_sqr] = @variable(pm.model, 
+                [i in ids(pm, n, :dcline)], basename="$(n)_$(c)_dc_p_sqr",
+                lowerbound = ref(pm, n, :dcline, i, "pminf", c)^2,
+                upperbound = ref(pm, n, :dcline, i, "pmaxf", c)^2
+            )
 
-        for (i, dcline) in pm.ref[:nw][n][:dcline]
-            @constraint(pm.model, norm([2*dc_p[n][from_idx[n][i]], dc_p_sqr[n][i]-1]) <= dc_p_sqr[n][i]+1)
+            for (i, dcline) in nw_ref[:dcline]
+                @constraint(pm.model, norm([2*var(pm, n, c, :p_dc)[from_idx[n][i]], dc_p_sqr[i]-1]) <= dc_p_sqr[i]+1)
+            end
         end
     end
 
     return @objective(pm.model, Min,
         sum(
-            sum( gen["cost"][1]*pg_sqr[n][i] + gen["cost"][2]*pg[n][i] + gen["cost"][3] for (i,gen) in pm.ref[:nw][n][:gen]) +
-            sum(dcline["cost"][1]*dc_p_sqr[n][i]^2 + dcline["cost"][2]*dc_p[n][from_idx[n][i]] + dcline["cost"][3] for (i,dcline) in pm.ref[:nw][n][:dcline])
-        for n in nws)
+            sum( gen["cost"][1]*sum( var(pm, n, c, :pg_sqr, i) for c in conductor_ids(pm, n)) +
+                 gen["cost"][2]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) +
+                 gen["cost"][3] for (i,gen) in nw_ref[:gen]) +
+            sum( dcline["cost"][1]*sum( var(pm, n, c, :p_dc_sqr, i) for c in conductor_ids(pm, n)) +
+                 dcline["cost"][2]*sum( var(pm, n, c, :p_dc, from_idx[n][i])  for c in conductor_ids(pm, n)) +
+                 dcline["cost"][3] for (i,dcline) in nw_ref[:dcline])
+        for (n, nw_ref) in nws(pm))
     )
 end
 
 
-"Cost of building branchs"
-function objective_tnep_cost(pm::GenericPowerModel, nws=[pm.cnw])
-    branch_ne = Dict(n => pm.var[:nw][n][:branch_ne] for n in nws)
-    branches = Dict(n => pm.ref[:nw][n][:ne_branch] for n in nws)
+"""
+compute m and b from points pwl points
+"""
+function slope_intercepts(points::Array{T,1}) where T <: Real
+    line_data = []
 
+    for i in 3:2:length(points)
+        x1 = points[i-2]
+        y1 = points[i-1]
+        x2 = points[i-0]
+        y2 = points[i+1]
+
+        m = (y2 - y1)/(x2 - x1)
+        b = y1 - m * x1
+
+        line = Dict{String,Any}(
+            "slope" => m,
+            "intercept" => b
+        )
+        push!(line_data, line)
+    end
+
+    return line_data
+end
+
+
+"""
+compute lines in m and b from from pwl cost models
+data is a list of components
+"""
+function get_lines(data)
+    lines = Dict{Int,Any}()
+    for (i,comp) in data
+        @assert comp["model"] == 1
+        line_data = slope_intercepts(comp["cost"])
+        lines[i] = line_data
+        for i in 2:length(line_data)
+            if line_data[i-1]["slope"] > line_data[i]["slope"]
+                error("non-convex pwl function found in points $(comp["cost"])\nlines: $(line_data)")
+            end
+        end
+    end
+    return lines
+end
+
+
+""
+function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
+
+    for (n, nw_ref) in nws(pm)
+        pg_cost = var(pm, n)[:pg_cost] = @variable(pm.model, 
+            [i in ids(pm, n, :gen)], basename="$(n)_pg_cost"
+        )
+
+        # pwl cost
+        gen_lines = get_lines(nw_ref[:gen])
+        for (i, gen) in nw_ref[:gen]
+            for line in gen_lines[i]
+                @constraint(pm.model, pg_cost[i] >= line["slope"]*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line["intercept"])
+            end
+        end
+
+        dc_p_cost = var(pm, n)[:p_dc_cost] = @variable(pm.model, 
+            [i in ids(pm, n, :dcline)], basename="$(n)_dc_p_cost",
+        )
+
+        # pwl cost
+        dcline_lines = get_lines(nw_ref[:dcline])
+        for (i, dcline) in nw_ref[:dcline]
+            arc = (i, dcline["f_bus"], dcline["t_bus"])
+            for line in dcline_lines[i]
+                @constraint(pm.model, dc_p_cost[i] >= line["slope"]*sum(var(pm, n, c, :p_dc)[arc] for c in conductor_ids(pm, n)) + line["intercept"])
+            end
+        end
+
+    end
+
+    return @objective(pm.model, Min,
+        sum(
+            sum( var(pm, n,   :pg_cost, i) for (i,gen) in nw_ref[:gen]) +
+            sum( var(pm, n, :p_dc_cost, i) for (i,dcline) in nw_ref[:dcline])
+        for (n, nw_ref) in nws(pm))
+    )
+end
+
+
+"Cost of building branches"
+function objective_tnep_cost(pm::GenericPowerModel)
     return @objective(pm.model, Min, 
         sum(
-            sum( branch["construction_cost"]*branch_ne[n][i] for (i,branch) in branches[n])
-        for n in nws)
+            sum(
+                sum( branch["construction_cost"]*var(pm, n, c, :branch_ne, i) for (i,branch) in nw_ref[:ne_branch] )
+            for c in conductor_ids(pm, n))
+        for (n, nw_ref) in nws(pm))
     )
 end
+

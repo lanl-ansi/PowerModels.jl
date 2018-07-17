@@ -2,6 +2,73 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- nothing
+
+### v0.8.1
+- Added support for implicit single conductor to buspairs data
+- Made add_setpoint more flexible when working with a mixture of data types
+
+### v0.8.0
+- Added support for asymmetric line charging in all formulations
+- Added Matpower data file export function
+- Added mathematical model to documentation
+- Added parsing string data from IO objects
+- Added support for network data with multiple conductors (breaking)
+- Removed explicit series variables from branch flow model
+- Improved helper functions ref, var, con to work with multiple networks and multiple conductors
+- Minor robustness improvements to parsing PTI files
+- Minor issues closed #316
+
+### v0.7.2
+- Removed Memento depreciation warnings
+
+### v0.7.1
+- Added warning when data is missing in a PTI file
+- Minor tidying of matpower test cases
+- Relaxed variable bounds in BFM to be consistent with BIM
+
+### v0.7.0
+- Added component_table function for building matrices from component data
+- Added "source_id" to uniquely identify each component imported from a PTI file
+- Added support for extending PowerModels data with all PTI data fields
+- Extended support for PSS(R)E v33 data (three-winding transformers, two-terminal/vsc hvdc lines)
+- Allow multinetwork as an optional parameter
+- Removed multi-network filter option from objective functions (breaking)
+- Removed option to run multi-network data in single-network models (breaking)
+- Removed add_bus_demand_setpoint function (breaking)
+- Changed parameters and improved performance of KCL constraints (breaking)
+- Improved robustness of matpower data parsing and transformation
+- Improved testing of convex relaxations
+- Changed test MIP solver from GLPK to CBC
+- Fixed bug where "info" messages were not printed by default
+- Fixed bug in dcline cost function unit conversion
+- Fixed bug where not all JuMP variables were anonymous
+- Fixed minor bug in Power Flow models when the data does not specify a reference bus
+- Minor issues closed #251
+
+### v0.6.1
+- Moved to Juniper for non-convex MINLP tests
+- Fixed minor bug in non-convex MINLP formulations
+
+### v0.6.0
+- Dropped support for Julia v0.5 (breaking)
+- Added basic support for PSS(R)E v33 data (buses, loads, shunts, generators, branches and two-winding transformers)
+- Added support for table-like data summary, #146
+- Added support for network topology processing
+- Added basic support for Branch Flow formulation variants
+- Added support for parsing PTI files into a Dict
+- Refactored implementation of WRM formulation
+- Updated branch mathematical model and Matpower parser to support asymmetrical line charging
+- Added explicit load and shunt components to the PowerModels network data structure
+- Refactored Matlab and Matpower parsing functions
+- Leveraging InfrastructureModels package for Matlab data parsing, #233, #247
+- Migrated logging tools from Logging to Memento
+- Updated struct and type parameter syntax to Julia v0.6
+- Fixed a mathematical bug when swapping the orientation of a transformer
+- Minor issues closed #51, #131, #220
+
+### v0.5.1
+- Added support for convex piecewise linear cost functions
 - Added lambda-based convex hull relaxation scheme for trilinear products
 - Added QCWRTri Power Flow formulation
 - Added kcl and thermal limit dual values in linear power flow formulations
@@ -23,7 +90,7 @@ PowerModels.jl Change Log
 - Added pm.var and made all JuMP variables anonymous (breaking)
 - Added support for SDP, ACR, and ACT Power Flow formulations
 - Added cost model zero filtering to matpower parser
-- Eliminated usage of pm.model.ext, for details see [#149](https://github.com/lanl-ansi/PowerModels.jl/pull/149)
+- Eliminated usage of pm.model.ext, #149
 - Made solution default units per-unit (breaking)
 - Removed deprecated bus-less constraint_theta_ref function (breaking)
 - Renamed polar voltage variables v,t to vm,va (breaking)
@@ -33,7 +100,7 @@ PowerModels.jl Change Log
 - Made index_name an optional parameter in add_setpoint (breaking)
 - Moved check_cost_models into the objective building function
 - Fixed out of range bug in calc_theta_delta_bounds
-- Fixed bug in phase angle differences in AbstractACPForms
+- Fixed bug in voltage angle differences in AbstractACPForms
 - Fixed bugs in AbstractDCPLLForm and added OPF test
 
 ### v0.3.4
@@ -44,7 +111,7 @@ PowerModels.jl Change Log
 - Added w-theta formulation of AC-OPF
 - Added data units checks to update_data
 - Made branch flow parameter names consistent with Matpower
-- Fixed bug in constants for w-space phase angle difference constraints
+- Fixed bug in constants for w-space voltage angle difference constraints
 - Fixed bug when no reference bus was specified
 - Fixed dcline parsing bug
 
@@ -78,7 +145,7 @@ PowerModels.jl Change Log
 - Strengthened convex formulations with Lifted Nonlinear Cuts (LNCs)
 - Added ability to easily inspect the JuMP model produced by PowerModels
 - Added constraint templates to provide an abstraction layer between the network data and network constraint definitions
-- Moved system wide phase angle difference bounds to the "ref" dictionary
+- Moved system wide voltage angle difference bounds to the "ref" dictionary
 - Refactored model definitions to be based on complex numbers
 
 ### v0.2.3

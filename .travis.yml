@@ -3,24 +3,17 @@ os:
   - linux
   - osx
 julia:
-  - 0.5
   - 0.6
   - nightly
 matrix:
   allow_failures:
     - julia: nightly
-    - os: osx
-      julia: 0.5
 cache:
  directories:
    - /home/travis/.julia
-sudo: false
 addons:
   apt_packages:
     - gfortran
-    - liblapack-dev
-    - libgmp-dev
-    - libglpk-dev
 
 before_install:
     # don't keep an old version of the code in the cache

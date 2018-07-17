@@ -1,8 +1,9 @@
-% based on NESTA v0.6.0 case
+% from pglib-opf - https://github.com/power-grid-lib/pglib-opf
 % tests missing angmin,angmax data correction
 % tests branch orientation data correction
+% tests mpc.areas
 
-function mpc = nesta_case24_ieee_rts__sad
+function mpc = case24
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 

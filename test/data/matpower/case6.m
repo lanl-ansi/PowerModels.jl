@@ -1,7 +1,7 @@
 % Case to test two connected components in the network data
-% the case is two replicates of the nesta_case3_lmbd network
+% the case is two replicates of the case3 network
 
-function mpc = nesta_case3_lmbd_2x
+function mpc = case6
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 

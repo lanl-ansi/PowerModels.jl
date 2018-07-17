@@ -1,11 +1,13 @@
 % Case to test adding data to matpower file
-% also tests basic ac and hvdc modeling
-% based on nesta_case3_lmbd from NESTA v0.6.0
+% tests refrence bus detection
+% tests basic ac and hvdc modeling
+% tests when gencost is present but not dclinecost
+
 function mpc = case3
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 mpc.bus = [
-	1	 3	 110.0	 40.0	 0.0	 0.0	 1	    1.10000	   -0.00000	 240.0	 1	    1.10000	    0.90000;
+	1	 2	 110.0	 40.0	 0.0	 0.0	 1	    1.10000	   -0.00000	 240.0	 1	    1.10000	    0.90000;
 	2	 2	 110.0	 40.0	 0.0	 0.0	 1	    0.92617	    7.25883	 240.0	 1	    1.10000	    0.90000;
 	3	 2	 95.0	 50.0	 0.0	 0.0	 1	    0.90000	  -17.26710	 240.0	 2	    1.10000	    0.90000;
 ];
@@ -31,10 +33,6 @@ mpc.branch = [
 mpc.dcline = [
 	1	 2	 1	 10	 10	 25.91	 -4.16	 1.1	 0.92617	 10	 900 -900 900 -900 900	 0	 0	 0	 0	 0	 0	 0	 0
 ]
-
-mpc.dclinecost = [
-	2	 0.0	 0.0	 1	   0.0;
-];
 
 
 % matpower data format extentions
@@ -87,4 +85,24 @@ mpc.branch_names = {
 	'Branch 1'	123;
 	'Branch 2'	456;
 	'Branch 3'	789;
+};
+
+
+%column_names% number string 
+mpc.bus_data = {
+	 1	'FAV SPOT 02'
+	 2	'FAV PLACE 05'
+	 3	'FAV PLC 08'
+};
+
+
+%column_names% extra 
+mpc.load_data = {
+	100
+	101
+};
+
+%column_names% string number 
+mpc.component = {
+	'temp'	1000.0
 };

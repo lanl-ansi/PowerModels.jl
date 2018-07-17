@@ -1,5 +1,6 @@
-% NESTA v0.6.0
-function mpc = nesta_case30_ieee
+% from pglib-opf - https://github.com/power-grid-lib/pglib-opf
+
+function mpc = case30
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 
