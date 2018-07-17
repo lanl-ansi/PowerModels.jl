@@ -7,6 +7,7 @@ PowerModels.jl Change Log
 ### v0.8.1
 - Added support for implicit single conductor to buspairs data
 - Made add_setpoint more flexible when working with a mixture of data types
+- Improved the QC lambda-based relaxation
 
 ### v0.8.0
 - Added support for asymmetric line charging in all formulations
