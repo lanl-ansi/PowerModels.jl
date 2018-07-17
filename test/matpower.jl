@@ -185,7 +185,7 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
 
         @test haskey(data, "ne_branch")
-        @test data["ne_branch"]["1"]["f_bus"] == 1
+        @test data["ne_branch"]["1"]["f_bus"] == 2
         @test data["ne_branch"]["1"]["construction_cost"] == 1
         @test isa(JSON.json(data), String)
     end

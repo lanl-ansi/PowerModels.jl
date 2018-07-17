@@ -285,7 +285,7 @@ function variable_voltage_magnitude_sqr_from_ne(pm::GenericPowerModel{T}; nw::In
         [i in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_w_fr_ne",
         lowerbound = 0,
         upperbound = (buses[branches[i]["f_bus"]]["vmax"][cnd])^2,
-        start = getval(ref(pm, nw, :bus, i), "w_fr_start", cnd, 1.001)
+        start = getval(ref(pm, nw, :bus, branches[i]["f_bus"]), "w_fr_start", cnd, 1.001)
     )
 end
 
@@ -298,7 +298,7 @@ function variable_voltage_magnitude_sqr_to_ne(pm::GenericPowerModel{T}; nw::Int=
         [i in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_w_to_ne",
         lowerbound = 0,
         upperbound = (buses[branches[i]["t_bus"]]["vmax"][cnd])^2,
-        start = getval(ref(pm, nw, :bus, i), "w_to", cnd, 1.001)
+        start = getval(ref(pm, nw, :bus, branches[i]["t_bus"]), "w_to_start", cnd, 1.001)
     )
 end
 

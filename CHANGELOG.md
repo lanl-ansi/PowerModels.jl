@@ -7,6 +7,7 @@ PowerModels.jl Change Log
 ### v0.8.1
 - Added support for implicit single phase to buspairs data
 - Made add_setpoint more flexible when working with a mixture of data types
+- Fixed a bug in TNEP voltage variable definitions
 
 ### v0.8.0
 - Added support for asymmetric line charging in all formulations
