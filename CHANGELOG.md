@@ -2,7 +2,11 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- nothing
+
+### v0.8.1
 - Added support for implicit single phase to buspairs data
+- Made add_setpoint more flexible when working with a mixture of data types
 
 ### v0.8.0
 - Added support for asymmetric line charging in all formulations
