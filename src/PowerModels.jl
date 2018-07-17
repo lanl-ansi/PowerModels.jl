@@ -41,6 +41,7 @@ include("form/dcp.jl")
 include("form/bf.jl")
 include("form/wr.jl")
 include("form/wrm.jl")
+include("form/wrmdecomp.jl")
 include("form/shared.jl")
 
 include("prob/pf.jl")
