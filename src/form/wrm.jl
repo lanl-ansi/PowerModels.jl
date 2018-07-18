@@ -196,15 +196,15 @@ function constraint_voltage(pm::GenericPowerModel{SDPDecompForm}, nw::Int, cnd::
     cadj = chordal_extension(pm)
     mc = maximal_cliques(cadj)
 
-    # `partition` is a list of lists that partitions the set of nodes,
+    # `clique_grouping` is a list of lists that partitions the set of nodes,
     # must consist of combinations of maximal cliques of a chordal extension
     # of the power grid graph
-    partition = mc
+    clique_grouping = mc
 
     WR = var(pm, nw, cnd)[:WR]
     WI = var(pm, nw, cnd)[:WI]
 
-    for group in partition
+    for group in clique_grouping
         WRgroup = WR[group, group]
         WIgroup = WI[group, group]
         @SDconstraint(pm.model, [WRgroup WIgroup; -WIgroup WRgroup] >= 0)
