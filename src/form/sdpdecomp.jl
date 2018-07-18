@@ -15,8 +15,7 @@ SDPDecompPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data,
 
 """
     adj = adjacency_matrix(pm, nw)
-Given an instance of PowerModels.GenericPowerModel and a network
-index (0 by default), return a sparse adjacency matrix.
+Return a sparse adjacency matrix.
 """
 function adjacency_matrix(pm::GenericPowerModel, nw::Int=pm.cnw)
     bus_ids = ids(pm, nw, :bus)
@@ -34,8 +33,7 @@ end
 
 """
     cadj = chordal_extension(pm, nw)
-Given an instance of PowerModels.GenericPowerModel and a network
-index (0 by default), return an adjacency matrix corresponding
+Return an adjacency matrix corresponding
 to a chordal extension of the power grid graph.
 """
 function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
@@ -56,7 +54,7 @@ end
 """
     peo = mcs(A)
 Maximum cardinality search for graph adjacency matrix A.
-Returns a perfect elimination order.
+Returns a perfect elimination ordering.
 """
 function mcs(A)
     n = size(A, 1)
@@ -104,20 +102,15 @@ function maximal_cliques(cadj::SparseMatrixCSC{Float64,Int64}, peo::Vector{Int})
     mc = [sort(c) for c in mc]
     return mc
 end
-
-"""
-    mc = maximal_cliques(cadj)
-Convenience method for automatically computing a perfect
-elimination order via mcs.
-"""
 maximal_cliques(cadj::SparseMatrixCSC{Float64,Int64}) = maximal_cliques(cadj, mcs(cadj))
 
 function constraint_voltage(pm::GenericPowerModel{SDPDecompForm}, nw::Int, cnd::Int)
     cadj = chordal_extension(pm)
-
     mc = maximal_cliques(cadj)
 
-    # `partition` is a list of lists that partitions the set of nodes
+    # `partition` is a list of lists that partitions the set of nodes,
+    # must consist of combinations of maximal cliques of a chordal extension
+    # of the power grid graph
     partition = mc
 
     WR = var(pm, nw, cnd)[:WR]
@@ -128,9 +121,4 @@ function constraint_voltage(pm::GenericPowerModel{SDPDecompForm}, nw::Int, cnd::
         WIgroup = WI[group, group]
         @SDconstraint(pm.model, [WRgroup WIgroup; -WIgroup WRgroup] >= 0)
     end
-
-    # place holder while debugging sdp constraint
-    #for (i,j) in ids(pm, nw, :buspairs)
-    #    InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
-    #end
 end
