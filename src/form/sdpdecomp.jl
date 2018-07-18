@@ -2,9 +2,6 @@ export
     SDPDecompPowerModel, SDPDecompForm
 
 ""
-abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
-
-""
 abstract type SDPDecompForm <: AbstractWRMForm end
 
 ""
