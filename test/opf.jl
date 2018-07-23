@@ -535,6 +535,53 @@ end
     #end
 end
 
+@testset "test sdp opf with constraint decomposition and greedy merge" begin
+    @testset "3-bus case" begin
+        result = run_opf("../test/data/matpower/case3.m", SDPDecompMergePowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 5851.3; atol = 1e0)
+    end
+    # TODO see if convergence time can be improved
+    #@testset "5-bus asymmetric case" begin
+    #    result = run_opf("../test/data/matpower/case5_asym.m", SDPDecompMergePowerModel, scs_solver)
+
+    #    @test result["status"] == :Optimal
+    #    @test isapprox(result["objective"], 16664; atol = 1e0)
+    #end
+    #@testset "5-bus gap case" begin
+    #    result = run_opf("../test/data/matpower/case5_gap.m", SDPDecompMergePowerModel, scs_solver)
+
+    #    @test result["status"] == :Optimal
+    #    @test isapprox(result["objective"], TBD; atol = 1e0)
+    #end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf("../test/data/pti/case5_alc.raw", SDPDecompMergePowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 1005.31; atol = 1e-1)
+    end
+    @testset "14-bus case" begin
+        result = run_opf("../test/data/matpower/case14.m", SDPDecompMergePowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 8079.97; atol = 1e0)
+    end
+    @testset "6-bus case" begin
+        result = run_opf("../test/data/matpower/case6.m", SDPDecompMergePowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 11558.5; atol = 1e0)
+    end
+    # TODO replace this with smaller case, way too slow for unit testing
+    #@testset "24-bus rts case" begin
+    #    result = run_opf("../test/data/matpower/case24.m", SDPDecompMergePowerModel, scs_solver)
+
+    #    @test result["status"] == :Optimal
+    #    @test isapprox(result["objective"], 75153; atol = 1e0)
+    #end
+end
+
 
 @testset "test ac v+t polar opf" begin
     PMs = PowerModels
