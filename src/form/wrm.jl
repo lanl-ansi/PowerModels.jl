@@ -120,10 +120,10 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         n = length(group)
         voltage_product_groups[gidx] = Dict()
         voltage_product_groups[gidx][:WR] = var(pm, nw, cnd)[:voltage_product_groups][gidx][:WR] =
-        @variable(pm.model, [1:n, 1:n], Symmetric, basename="$(nw)_$(cnd)_WR")
+        @variable(pm.model, [1:n, 1:n], Symmetric, basename="$(nw)_$(cnd)_$(gidx)_WR")
 
         voltage_product_groups[gidx][:WI] = var(pm, nw, cnd)[:voltage_product_groups][gidx][:WI] =
-        @variable(pm.model, [1:n, 1:n], basename="$(nw)_$(cnd)_WI") # why not Symmetric?
+        @variable(pm.model, [1:n, 1:n], basename="$(nw)_$(cnd)_$(gidx)_WI")
     end
 
     # voltage product bounds
@@ -175,11 +175,11 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
                 end
 
                 # for non-semidefinite constraints
-                # if !((i_bus, j_bus) in visited_buspairs)
-                    # push!(visited_buspairs, (i_bus, j_bus))
+                if !((i_bus, j_bus) in visited_buspairs)
+                    push!(visited_buspairs, (i_bus, j_bus))
                     var(pm, nw, cnd, :wr)[(i_bus,j_bus)] = WR[i, j]
                     var(pm, nw, cnd, :wi)[(i_bus,j_bus)] = WI[i, j]
-                # end
+                end
             end
         end
     end
