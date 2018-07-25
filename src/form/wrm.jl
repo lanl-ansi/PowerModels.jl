@@ -31,7 +31,7 @@ SDPDecompPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data,
 SDPDecompMergePowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPDecompMergeForm; kwargs...)
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: AbstractWRMForm
+function variable_voltage(pm::GenericPowerModel{SDPWRMForm}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
     bus_ids = ids(pm, nw, :bus)
 
@@ -92,12 +92,101 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         var(pm, nw, cnd, :wr)[(i,j)] = WR[w_fr_index, w_to_index]
         var(pm, nw, cnd, :wi)[(i,j)] = WI[w_fr_index, w_to_index]
     end
-
 end
 
+function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true) where T <: AbstractWRMForm
+
+    if haskey(pm.ext, :clique_grouping) && haskey(pm.ext, :lookup_index)
+        groups = pm.ext[:clique_grouping]
+        lookup_index = pm.ext[:lookup_index]
+        lookup_bus_index = map(reverse, lookup_index)
+    else
+        cadj, lookup_index = chordal_extension(pm)
+        groups = maximal_cliques(cadj)
+        lookup_bus_index = map(reverse, lookup_index)
+        groups = [[lookup_bus_index[gi] for gi in g] for g in groups]
+        if T == SDPDecompMergeForm
+            groups = greedy_merge(groups)
+        end
+        pm.ext[:clique_grouping] = groups
+        pm.ext[:lookup_index] = lookup_index
+    end
+
+    voltage_product_groups =
+        var(pm, nw, cnd)[:voltage_product_groups] =
+        Vector{Dict{Symbol, Array{JuMP.Variable, 2}}}(length(groups))
+
+    for (gidx, group) in enumerate(groups)
+        n = length(group)
+        voltage_product_groups[gidx] = Dict()
+        voltage_product_groups[gidx][:WR] = var(pm, nw, cnd)[:voltage_product_groups][gidx][:WR] =
+        @variable(pm.model, [1:n, 1:n], Symmetric, basename="$(nw)_$(cnd)_WR")
+
+        voltage_product_groups[gidx][:WI] = var(pm, nw, cnd)[:voltage_product_groups][gidx][:WI] =
+        @variable(pm.model, [1:n, 1:n], basename="$(nw)_$(cnd)_WI") # why not Symmetric?
+    end
+
+    # voltage product bounds
+    visited_buses = []
+    visited_buspairs = []
+    var(pm, nw, cnd)[:w] = Dict{Int,Any}()
+    var(pm, nw, cnd)[:wr] = Dict{Tuple{Int,Int},Any}()
+    var(pm, nw, cnd)[:wi] = Dict{Tuple{Int,Int},Any}()
+    for (gidx, voltage_product_group) in enumerate(voltage_product_groups)
+        WR, WI = voltage_product_group[:WR], voltage_product_group[:WI]
+        group = groups[gidx]
+        ng = length(group)
+
+        # diagonal bounds
+        for (group_idx, bus_id) in enumerate(group)
+            # group_idx indexes into group
+            # bus_id indexes into ref(pm, nw, :bus)
+            bus = ref(pm, nw, :bus, bus_id)
+
+            wr_ii = WR[group_idx, group_idx]
+            # wi_ii = WI[group_idx, group_idx] # not used
+
+            if bounded
+                setupperbound(wr_ii, (bus["vmax"][cnd])^2)
+                setlowerbound(wr_ii, (bus["vmin"][cnd])^2)
+            else
+                setlowerbound(wr_ii, 0)
+            end
+
+            # for non-semidefinite constraints
+            if !(bus_id in visited_buses)
+                push!(visited_buses, bus_id)
+                var(pm, nw, cnd, :w)[bus_id] = wr_ii
+            end
+        end
+
+        # off-diagonal bounds
+        wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
+        offdiag_indices = [(i, j) for i in 1:ng, j in 1:ng if i != j]
+        for (i, j) in offdiag_indices
+            i_bus, j_bus = group[i], group[j]
+            if (i_bus, j_bus) in ids(pm, nw, :buspairs)
+                if bounded
+                    setupperbound(WR[i, j], wr_max[i_bus, j_bus])
+                    setlowerbound(WR[i, j], wr_min[i_bus, j_bus])
+
+                    setupperbound(WI[i, j], wi_max[i_bus, j_bus])
+                    setlowerbound(WI[i, j], wi_min[i_bus, j_bus])
+                end
+
+                # for non-semidefinite constraints
+                # if !((i_bus, j_bus) in visited_buspairs)
+                    # push!(visited_buspairs, (i_bus, j_bus))
+                    var(pm, nw, cnd, :wr)[(i_bus,j_bus)] = WR[i, j]
+                    var(pm, nw, cnd, :wi)[(i_bus,j_bus)] = WI[i, j]
+                # end
+            end
+        end
+    end
+end
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: AbstractWRMForm
+function constraint_voltage(pm::GenericPowerModel{SDPWRMForm}, nw::Int, cnd::Int)
     WR = var(pm, nw, cnd)[:WR]
     WI = var(pm, nw, cnd)[:WI]
 
@@ -109,9 +198,57 @@ function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T
     #end
 end
 
+function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: AbstractWRMForm
+    pair_matrix(group) = [(i, j) for i in group, j in group]
+
+    groups = pm.ext[:clique_grouping]
+    voltage_product_groups = var(pm, nw, cnd)[:voltage_product_groups]
+
+    # semidefinite constraint for each group in clique grouping
+    for voltage_product_group in voltage_product_groups
+        WR = voltage_product_group[:WR]
+        WI = voltage_product_group[:WI]
+        @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
+    end
+
+    # linking constraints
+    tree = prim(overlap_graph(groups))
+    overlapping_pairs = [ind2sub(tree, i) for i in find(tree)]
+    for (i, j) in overlapping_pairs
+        gi, gj = groups[i], groups[j]
+        var_i, var_j = voltage_product_groups[i], voltage_product_groups[j]
+
+        Gi, Gj = pair_matrix(gi), pair_matrix(gj)
+        overlap_i, overlap_j = overlap_indices(Gi, Gj)
+        indices = zip(overlap_i, overlap_j)
+        for (idx_i, idx_j) in indices
+            @constraint(pm.model, var_i[:WR][idx_i] == var_j[:WR][idx_j])
+            @constraint(pm.model, var_i[:WI][idx_i] == var_j[:WI][idx_j])
+        end
+    end
+end
+
+# Old decomposition implementation: trust JuMP/solver to set up linking constraints
+# function constraint_voltage(pm::GenericPowerModel{SDPDecompMergeForm}, nw::Int, cnd::Int)
+#     WR = var(pm, nw, cnd)[:WR]
+#     WI = var(pm, nw, cnd)[:WI]
+#
+#     cadj, lookup_index = chordal_extension(pm)
+#     cliques = maximal_cliques(cadj)
+#     clique_grouping = greedy_merge(cliques)
+#     for group in clique_grouping
+#         WRgroup = WR[group, group]
+#         WIgroup = WI[group, group]
+#         @SDconstraint(pm.model, [WRgroup WIgroup; -WIgroup WRgroup] >= 0)
+#     end
+# end
+
 """
     adj = adjacency_matrix(pm, nw)
-Return a sparse adjacency matrix.
+Return:
+- a sparse adjacency matrix
+- `lookup_index` s.t. `lookup_index[bus_id]` returns the integer index
+of the bus with `bus_id` in the adjacency matrix.
 """
 function adjacency_matrix(pm::GenericPowerModel, nw::Int=pm.cnw)
     bus_ids = ids(pm, nw, :bus)
@@ -120,20 +257,23 @@ function adjacency_matrix(pm::GenericPowerModel, nw::Int=pm.cnw)
     nb = length(bus_ids)
     nl = length(buspairs)
 
-    reindex = Dict([(bi, i) for (i, bi) in enumerate(bus_ids)])
-    f = [reindex[bp[1]] for bp in keys(buspairs)]
-    t = [reindex[bp[2]] for bp in keys(buspairs)]
+    lookup_index = Dict([(bi, i) for (i, bi) in enumerate(bus_ids)])
+    f = [lookup_index[bp[1]] for bp in keys(buspairs)]
+    t = [lookup_index[bp[2]] for bp in keys(buspairs)]
 
-    return sparse([f;t], [t;f], ones(2nl), nb, nb)
+    return sparse([f;t], [t;f], ones(2nl), nb, nb), lookup_index
 end
 
 """
     cadj = chordal_extension(pm, nw)
-Return an adjacency matrix corresponding
-to a chordal extension of the power grid graph.
+Return:
+- a sparse adjacency matrix corresponding to a chordal extension
+of the power grid graph.
+- `lookup_index` s.t. `lookup_index[bus_id]` returns the integer index
+of the bus with `bus_id` in the adjacency matrix.
 """
 function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
-    adj = adjacency_matrix(pm, nw)
+    adj, lookup_index = adjacency_matrix(pm, nw)
     nb = size(adj, 1)
     diag_el = sum(adj, 1)[:]
     W = Hermitian(adj + spdiagm(diag_el, 0))
@@ -144,7 +284,7 @@ function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
     f_idx, t_idx, V = findnz(Rchol)
     cadj = sparse([f_idx;t_idx], [t_idx;f_idx], ones(2*length(f_idx)), nb, nb)
     cadj = cadj[p, p] # revert to original bus ordering (invert cholfact permutation)
-    return cadj
+    return cadj, lookup_index
 end
 
 """
@@ -310,34 +450,27 @@ function greedy_merge(groups::Vector{Vector{Int64}}, merge_cost::Function=merge_
     return merged_groups
 end
 
-function constraint_voltage(pm::GenericPowerModel{SDPDecompForm}, nw::Int, cnd::Int)
-    if haskey(pm.ext, :clique_grouping)
-        clique_grouping = pm.ext[:clique_grouping]
-    else
-        cadj = chordal_extension(pm)
-        clique_grouping = maximal_cliques(cadj)
-    end
-
-    WR = var(pm, nw, cnd)[:WR]
-    WI = var(pm, nw, cnd)[:WI]
-
-    for group in clique_grouping
-        WRgroup = WR[group, group]
-        WIgroup = WI[group, group]
-        @SDconstraint(pm.model, [WRgroup WIgroup; -WIgroup WRgroup] >= 0)
+function filter_flipped_pairs!(pairs)
+    for (i, j) in pairs
+        if i != j && (j, i) in pairs
+            filter!(x -> x != (j, i), pairs)
+        end
     end
 end
 
-function constraint_voltage(pm::GenericPowerModel{SDPDecompMergeForm}, nw::Int, cnd::Int)
-    WR = var(pm, nw, cnd)[:WR]
-    WI = var(pm, nw, cnd)[:WI]
+"""
+    idx_a, idx_b = overlap_indices(A, B)
+Given two arrays (sizes need not match) that share some values, return:
 
-    cadj = chordal_extension(pm)
-    cliques = maximal_cliques(cadj)
-    clique_grouping = greedy_merge(cliques)
-    for group in clique_grouping
-        WRgroup = WR[group, group]
-        WIgroup = WI[group, group]
-        @SDconstraint(pm.model, [WRgroup WIgroup; -WIgroup WRgroup] >= 0)
-    end
+- linear index of shared values in A
+- linear index of shared values in B
+
+Thus, A[idx_a] == B[idx_b].
+"""
+function overlap_indices(A::Array, B::Array, symmetric=true)
+    overlap = intersect(A, B)
+    symmetric && filter_flipped_pairs!(overlap)
+    idx_a = [findfirst(A, o) for o in overlap]
+    idx_b = [findfirst(B, o) for o in overlap]
+    return idx_a, idx_b
 end
