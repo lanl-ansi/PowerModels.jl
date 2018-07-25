@@ -575,15 +575,19 @@ end
     end
     @testset "passing in decomposition" begin
         PMs = PowerModels
-        pm = build_generic_model("../test/data/matpower/case14.m", SDPDecompPowerModel, PMs.post_opf)
+        data = PMs.parse_file("../test/data/matpower/case14.m")
+        pm = GenericPowerModel(data, SDPDecompForm)
+
         cadj, lookup_index = PMs.chordal_extension(pm)
         cliques = PMs.maximal_cliques(cadj)
         lookup_bus_index = map(reverse, lookup_index)
         groups = [[lookup_bus_index[gi] for gi in g] for g in cliques]
-        pm.ext[:clique_grouping] = groups
-        pm.ext[:lookup_index] = lookup_index
         @test PMs.problem_size(groups) == 344
 
+        pm.ext[:clique_grouping] = groups
+        pm.ext[:lookup_index] = lookup_index
+
+        PMs.post_opf(pm)
         result = solve_generic_model(pm, scs_solver; solution_builder=PMs.get_solution)
 
         @test result["status"] == :Optimal

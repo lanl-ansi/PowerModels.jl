@@ -144,7 +144,6 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
             bus = ref(pm, nw, :bus, bus_id)
 
             wr_ii = WR[group_idx, group_idx]
-            # wi_ii = WI[group_idx, group_idx] # not used
 
             if bounded
                 setupperbound(wr_ii, (bus["vmax"][cnd])^2)
