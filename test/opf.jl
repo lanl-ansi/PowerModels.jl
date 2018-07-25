@@ -573,6 +573,22 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 11558.5; atol = 1e0)
     end
+    @testset "passing in decomposition" begin
+        PMs = PowerModels
+        pm = build_generic_model("../test/data/matpower/case14.m", SDPDecompPowerModel, PMs.post_opf)
+        cadj, lookup_index = PMs.chordal_extension(pm)
+        cliques = PMs.maximal_cliques(cadj)
+        lookup_bus_index = map(reverse, lookup_index)
+        groups = [[lookup_bus_index[gi] for gi in g] for g in cliques]
+        pm.ext[:clique_grouping] = groups
+        pm.ext[:lookup_index] = lookup_index
+        @test PMs.problem_size(groups) == 344
+
+        result = solve_generic_model(pm, scs_solver; solution_builder=PMs.get_solution)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 8079.97; atol = 1e0)
+    end
     # TODO replace this with smaller case, way too slow for unit testing
     #@testset "24-bus rts case" begin
     #    result = run_opf("../test/data/matpower/case24.m", SDPDecompMergePowerModel, scs_solver)
