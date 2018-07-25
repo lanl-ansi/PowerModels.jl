@@ -354,11 +354,6 @@ function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
         
         info(LOGGER, "iteration $(current_iteration+1), vm range: $vm_range_final, td range: $td_range_final")
 
-        # bound reduction computation
-        total_reduction = sqrt(total_vm_reduction + total_td_reduction)
-        total_td_reduction = sqrt(total_td_reduction)
-        total_vm_reduction = sqrt(total_vm_reduction)
-
         time_elapsed += toq()
 
         # populate the modifications, update the data, and rebuild the bound-tightening model
