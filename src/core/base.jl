@@ -62,7 +62,7 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
 end
 
 # default generic constructor
-function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{String,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver())
+function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver())
 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
@@ -458,4 +458,3 @@ function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismultico
 
     return buspairs
 end
-
