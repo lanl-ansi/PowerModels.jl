@@ -27,7 +27,12 @@ function check_obbt_options(ub::Float64, rel_gap::Float64, ub_constraint::Bool)
     end
 end 
 
-function constraint_obj_bound_polynomial(pm::GenericPowerModel, bound)
+function constraint_obj_bound(pm::GenericPowerModel, bound)
+    model = PowerModels.check_cost_models(pm)
+    if model != 2 
+        error("Only cost models of type 2 is supported at this time, given cost model type $(model)")
+    end 
+    
     PowerModels.check_polynomial_cost_models(pm)
 
     from_idx = Dict(arc[1] => arc for arc in ref(pm, :arcs_from_dc))
@@ -47,14 +52,6 @@ function constraint_obj_bound_polynomial(pm::GenericPowerModel, bound)
     )
 end 
 
-function constraint_obj_bound(pm::GenericPowerModel, bound)
-    model = PowerModels.check_cost_models(pm)
-    if model != 2 
-        error("Only cost models of type 2 is supported at this time, given cost model type $(model)")
-    end 
-    constraint_obj_bound_polynomial(pm, bound)
-end 
-
 function create_modifications(pm::GenericPowerModel, 
     vm_lb::Dict{Any,Float64}, vm_ub::Dict{Any,Float64}, 
     td_lb::Dict{Any,Float64}, td_ub::Dict{Any,Float64}) 
@@ -65,16 +62,12 @@ function create_modifications(pm::GenericPowerModel,
     modifications["bus"] = Dict{String,Any}()
     modifications["branch"] = Dict{String,Any}()
 
-    buses = ids(pm, :bus)
-    buspairs = ids(pm, :buspairs)
-    branches = ids(pm, :branch)
-
-    for bus in buses
+    for bus in ids(pm, :bus)
         index = string(ref(pm, :bus, bus, "index"))
         modifications["bus"][index] = Dict{String,Any}( "vmin" => vm_lb[bus], "vmax" => vm_ub[bus] )
     end 
 
-    for branch in branches 
+    for branch in ids(pm, :branch)
         index = string(ref(pm, :branch, branch, "index"))
         f_bus = ref(pm, :branch, branch, "f_bus") 
         t_bus = ref(pm, :branch, branch, "t_bus")
@@ -85,60 +78,23 @@ function create_modifications(pm::GenericPowerModel,
     return modifications
 end 
 
-function create_modifications(pm::GenericPowerModel, lb::Float64, ub::Float64, id::Int64)
-    
-    modifications = Dict{String,Any}()
-
-    modifications["per_unit"] = true
-    modifications["bus"] = Dict{String,Any}()
-
-    index = string(ref(pm, :bus, id, "index"))
-    modifications["bus"][index] = Dict{String,Any}( "vmin" => lb, "vmax" => ub )
-
-    return modifications
-
-end 
-
-function create_modifications(pm::GenericPowerModel, lb::Float64, ub::Float64, id::Tuple{Int64,Int64})
-
-    modifications = Dict{String,Any}()
-
-    modifications["per_unit"] = true
-    modifications["branch"] = Dict{String,Any}()
-
-    branches = ids(pm, :branch)
-
-
-    for branch in branches 
-        index = string(ref(pm, :branch, branch, "index"))
-        f_bus = ref(pm, :branch, branch, "f_bus") 
-        t_bus = ref(pm, :branch, branch, "t_bus")
-        bp = (f_bus, t_bus)
-        if bp == id 
-            modifications["branch"][index] = Dict{String,Any}( "angmin" => lb, "angmax" => ub )
-        end
-    end 
-
-    return modifications
-
-end
 
 function run_obbt_opf(file::String, model_constructor, solver; kwargs...)
     data = PowerModels.parse_file(file)
     return run_obbt_opf(data, model_constructor, solver; kwargs...)
 end 
 
-function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
+function run_obbt_opf(data::Dict{String,Any}, solver;
+    model_constructor = QCWRTriPowerModel,
     max_iter = 100, 
     time_limit = 3600.0,
     upper_bound = Inf,
     upper_bound_constraint = false, 
-    sequential_obbt = false,
     rel_gap_tol = Inf,
     min_bound_width = 1e-2,
     improvement_tol = 1e-3, 
-    output_tol = 1e+5,
-    termination = "avg",
+    precision = 5,
+    termination = :avg,
     kwargs...)
 
     info(LOGGER, "maximum OBBT iterations set to default value of $max_iter")
@@ -155,7 +111,7 @@ function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
     check_obbt_options(upper_bound, rel_gap_tol, upper_bound_constraint)
 
     # check termination norm criteria for obbt 
-    (termination != "avg" && termination != "max") && (error(LOGGER, "OBBT termination criteria can only be max or avg"))
+    (termination != :avg && termination != :max) && (error(LOGGER, "OBBT termination criteria can only be :max or :avg"))
 
     # pass status 
     status_pass = [:LocalOptimal, :Optimal]
@@ -170,8 +126,10 @@ function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
         error(LOGGER, "relaxation is infeasible, implying the ACOPF is infeasible")
     end 
     current_rel_gap = Inf 
-    (!isinf(rel_gap_tol)) && (current_rel_gap = (upper_bound - current_relaxation_objective)/upper_bound)
-    info(LOGGER, "Initial relaxation gap = $current_rel_gap")
+    if !isinf(upper_bound)
+        current_rel_gap = (upper_bound - current_relaxation_objective)/upper_bound
+        info(LOGGER, "Initial relaxation gap = $current_rel_gap")
+    end 
 
     
     model_bt = build_generic_model(data, model_constructor, PowerModels.post_opf)
@@ -217,8 +175,8 @@ function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
     time_elapsed = 0.0
 
     check_termination = true 
-    (termination == "avg") && (check_termination = (avg_vm_reduction > improvement_tol || avg_td_reduction > improvement_tol))
-    (termination == "max") && (check_termination = (max_vm_reduction > improvement_tol || max_td_reduction > improvement_tol))
+    (termination == :avg) && (check_termination = (avg_vm_reduction > improvement_tol || avg_td_reduction > improvement_tol))
+    (termination == :max) && (check_termination = (max_vm_reduction > improvement_tol || max_td_reduction > improvement_tol))
 
     while check_termination
         tic()
@@ -238,7 +196,7 @@ function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
             @objective(model_bt.model, Min, vm[bus])
             result_bt = solve_generic_model(model_bt, solver)
             if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
-                nlb = floor(output_tol * getobjectivevalue(model_bt.model))/output_tol
+                nlb = floor(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nlb > vm_lb[bus]) && (lb = nlb)
             end
 
@@ -247,7 +205,7 @@ function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
             @objective(model_bt.model, Max, vm[bus])
             result_bt = solve_generic_model(model_bt, solver)
             if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
-                nub = ceil(output_tol * getobjectivevalue(model_bt.model))/output_tol
+                nub = ceil(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nub < vm_ub[bus]) && (ub = nub)
             end 
 
@@ -274,15 +232,6 @@ function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
                 vm_reduction = 0.0
             end 
             
-            # sequential obbt model update
-            if vm_reduction != 0.0 && sequential_obbt
-                modifications = create_modifications(model_bt, vm_lb[bus], vm_ub[bus], bus)
-                PowerModels.update_data(data, modifications)
-                model_bt = build_generic_model(data, model_constructor, PowerModels.post_opf)
-                (upper_bound_constraint) && (constraint_obj_bound(model_bt, upper_bound))
-                vm = var(model_bt, :vm)
-                td = var(model_bt, :td)
-            end
             total_vm_reduction += (vm_reduction)
             max_vm_reduction = max(vm_reduction, max_vm_reduction)
         end 
@@ -299,7 +248,7 @@ function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
             @objective(model_bt.model, Min, td[bp])
             result_bt = solve_generic_model(model_bt, solver)
             if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
-                nlb = floor(output_tol * getobjectivevalue(model_bt.model))/output_tol
+                nlb = floor(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nlb > td_lb[bp]) && (lb = nlb)
             end
 
@@ -308,7 +257,7 @@ function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
             @objective(model_bt.model, Max, td[bp])
             result_bt = solve_generic_model(model_bt, solver)
             if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
-                nub = ceil(output_tol * getobjectivevalue(model_bt.model))/output_tol
+                nub = ceil(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nub < td_ub[bp]) && (ub = nub)
             end 
 
@@ -335,15 +284,6 @@ function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
                 td_reduction = 0.0
             end 
 
-            # sequential obbt model update
-            if td_reduction != 0.0 && sequential_obbt
-                modifications = create_modifications(model_bt, td_lb[bp], td_ub[bp], bp)
-                PowerModels.update_data(data, modifications)
-                model_bt = build_generic_model(data, model_constructor, PowerModels.post_opf)
-                (upper_bound_constraint) && (constraint_obj_bound(model_bt, upper_bound))
-                vm = var(model_bt, :vm)
-                td = var(model_bt, :td)
-            end
             total_td_reduction += (td_reduction)
             max_td_reduction = max(td_reduction, max_td_reduction)
 
@@ -352,8 +292,6 @@ function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
 
         td_range_final = sum([td_ub[bp] - td_lb[bp] for bp in buspairs])
         
-        info(LOGGER, "iteration $(current_iteration+1), vm range: $vm_range_final, td range: $td_range_final")
-
         time_elapsed += toq()
 
         # populate the modifications, update the data, and rebuild the bound-tightening model
@@ -375,9 +313,11 @@ function run_obbt_opf(data::Dict{String,Any}, model_constructor, solver;
             warn(LOGGER, "using the previous iteration's gap to check relative gap stopping criteria")
         end
 
+        info(LOGGER, "iteration $(current_iteration+1), vm range: $vm_range_final, td range: $td_range_final, relaxation obj: $final_relaxation_objective")
+
         # termination criteria update 
-        (termination == "avg") && (check_termination = (avg_vm_reduction > improvement_tol || avg_td_reduction > improvement_tol))
-        (termination == "max") && (check_termination = (max_vm_reduction > improvement_tol || max_td_reduction > improvement_tol))
+        (termination == :avg) && (check_termination = (avg_vm_reduction > improvement_tol || avg_td_reduction > improvement_tol))
+        (termination == :max) && (check_termination = (max_vm_reduction > improvement_tol || max_td_reduction > improvement_tol))
         # interation counter update
         current_iteration += 1
         # check all the stopping criteria
