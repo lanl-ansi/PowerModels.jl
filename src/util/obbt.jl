@@ -79,9 +79,9 @@ function create_modifications(pm::GenericPowerModel,
 end 
 
 
-function run_obbt_opf(file::String, model_constructor, solver; kwargs...)
+function run_obbt_opf(file::String, solver; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_obbt_opf(data, model_constructor, solver; kwargs...)
+    return run_obbt_opf(data, solver; kwargs...)
 end 
 
 function run_obbt_opf(data::Dict{String,Any}, solver;
