@@ -93,7 +93,7 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
     rel_gap_tol = Inf,
     min_bound_width = 1e-2,
     improvement_tol = 1e-3, 
-    precision = 5,
+    precision = 4,
     termination = :avg,
     kwargs...)
 
