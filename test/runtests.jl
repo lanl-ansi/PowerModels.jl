@@ -9,7 +9,7 @@ setlevel!(getlogger(PowerModels), "error")
 using Cbc
 using Ipopt
 using SCS
-using Pajarito
+using Pavito
 using Juniper
 
 using Base.Test
@@ -19,7 +19,7 @@ ipopt_solver = IpoptSolver(tol=1e-6, print_level=0)
 cbc_solver = CbcSolver()
 juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
 #juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
-pajarito_solver = PajaritoSolver(mip_solver=cbc_solver, cont_solver=ipopt_solver, log_level=0)
+pavito_solver = PavitoSolver(mip_solver=cbc_solver, cont_solver=ipopt_solver, mip_solver_drives=false, log_level=0)
 scs_solver = SCSSolver(max_iters=1000000, verbose=0)
 
 include("common.jl")
