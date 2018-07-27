@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- nothing
+- Update MINLP solvers used in testing
 
 ### v0.8.1
 - Strengthened the QCWRTri Power Flow formulation
