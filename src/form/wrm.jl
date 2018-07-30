@@ -243,7 +243,7 @@ end
 # end
 
 """
-    adj = adjacency_matrix(pm, nw)
+    adj, lookup_index = adjacency_matrix(pm, nw)
 Return:
 - a sparse adjacency matrix
 - `lookup_index` s.t. `lookup_index[bus_id]` returns the integer index
@@ -432,19 +432,31 @@ in objective value associated with merging the two groups.
 
 This function assumes that merge costs grow with increasing overlap between groups.
 """
-function greedy_merge(groups::Vector{Vector{Int64}}, merge_cost::Function=merge_cost)
+function greedy_merge(groups::Vector{Vector{Int64}}, merge_cost::Function=merge_cost; nmerge=Inf)
     merged_groups = copy(groups)
+    function stop_condition(delta, merges)
+        if nmerge == Inf
+            return delta >= 0
+        else
+            return merges == nmerge
+        end
+    end
 
-    delta = -1
-    while delta < 0
+    merges = 0
+    stop_cond = false
+    while !stop_cond
         T = prim(overlap_graph(merged_groups))
         potential_merges = [ind2sub(T, idx) for idx in find(T)]
         length(potential_merges) == 0 && break
         merge_costs = [merge_cost(merged_groups, merge...) for merge in potential_merges]
         delta, merge_idx = findmin(merge_costs)
-        delta == 0 && break
+        if nmerge == Inf && delta == 0
+            break
+        end
         i, k = potential_merges[merge_idx]
         merge_groups!(merged_groups, i, k)
+        merges += 1
+        stop_cond = stop_condition(delta, merges)
     end
     return merged_groups
 end
