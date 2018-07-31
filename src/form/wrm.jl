@@ -1,6 +1,8 @@
 export
-    SDPWRMPowerModel, SDPWRMForm, SDPDecompPowerModel, SDPDecompForm,
-    SDPDecompMergePowerModel, SDPDecompMergeForm
+    SDPWRMPowerModel, SDPWRMForm,
+    SDPDecompPowerModel, SDPDecompForm,
+    SDPDecompMergePowerModel, SDPDecompMergeForm,
+    SDPDecompSOCPowerModel, SDPDecompSOCForm
 
 ""
 abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
@@ -15,6 +17,9 @@ abstract type SDPDecompForm <: AbstractWRMForm end
 abstract type SDPDecompMergeForm <: AbstractWRMForm end
 
 ""
+abstract type SDPDecompSOCForm <: AbstractWRMForm end
+
+""
 const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
 
 ""
@@ -24,11 +29,16 @@ const SDPDecompPowerModel = GenericPowerModel{SDPDecompForm}
 const SDPDecompMergePowerModel = GenericPowerModel{SDPDecompMergeForm}
 
 ""
+const SDPDecompSOCPowerModel = GenericPowerModel{SDPDecompSOCForm}
+
+""
 SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPWRMForm; kwargs...)
 
 SDPDecompPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPDecompForm; kwargs...)
 
 SDPDecompMergePowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPDecompMergeForm; kwargs...)
+
+SDPDecompSOCPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPDecompSOCForm; kwargs...)
 
 ""
 function variable_voltage(pm::GenericPowerModel{SDPWRMForm}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
@@ -119,11 +129,15 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
     for (gidx, group) in enumerate(groups)
         n = length(group)
         voltage_product_groups[gidx] = Dict()
-        voltage_product_groups[gidx][:WR] = var(pm, nw, cnd)[:voltage_product_groups][gidx][:WR] =
-        @variable(pm.model, [1:n, 1:n], Symmetric, basename="$(nw)_$(cnd)_$(gidx)_WR")
+        voltage_product_groups[gidx][:WR] =
+            var(pm, nw, cnd)[:voltage_product_groups][gidx][:WR] =
+            @variable(pm.model, [1:n, 1:n], Symmetric,
+                basename="$(nw)_$(cnd)_$(gidx)_WR")
 
-        voltage_product_groups[gidx][:WI] = var(pm, nw, cnd)[:voltage_product_groups][gidx][:WI] =
-        @variable(pm.model, [1:n, 1:n], basename="$(nw)_$(cnd)_$(gidx)_WI")
+        voltage_product_groups[gidx][:WI] =
+            var(pm, nw, cnd)[:voltage_product_groups][gidx][:WI] =
+            @variable(pm.model, [1:n, 1:n],
+                basename="$(nw)_$(cnd)_$(gidx)_WI")
     end
 
     # voltage product bounds
@@ -176,8 +190,8 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
                 # for non-semidefinite constraints
                 if !((i_bus, j_bus) in visited_buspairs)
                     push!(visited_buspairs, (i_bus, j_bus))
-                    var(pm, nw, cnd, :wr)[(i_bus,j_bus)] = WR[i, j]
-                    var(pm, nw, cnd, :wi)[(i_bus,j_bus)] = WI[i, j]
+                    var(pm, nw, cnd, :wr)[(i_bus, j_bus)] = WR[i, j]
+                    var(pm, nw, cnd, :wi)[(i_bus, j_bus)] = WI[i, j]
                 end
             end
         end
@@ -204,10 +218,29 @@ function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T
     voltage_product_groups = var(pm, nw, cnd)[:voltage_product_groups]
 
     # semidefinite constraint for each group in clique grouping
-    for voltage_product_group in voltage_product_groups
+    for (gidx, voltage_product_group) in enumerate(voltage_product_groups)
+        group = groups[gidx]
+        ng = length(group)
         WR = voltage_product_group[:WR]
         WI = voltage_product_group[:WI]
-        @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
+
+        if T == SDPDecompSOCForm && ng == 2
+            wr_ii = WR[1, 1]
+            wr_jj = WR[2, 2]
+            wr_ij = WR[1, 2]
+            wi_ij = WI[1, 2]
+
+            # rotated SOC form (Mosek says infeasible)
+            # @constraint(pm.model, wr_ii - wr_jj >= norm([wr_ij, wi_ij]))
+
+            # standard SOC form
+            @constraint(pm.model, (wr_ii + wr_jj)/2 >= norm([(wr_ii - wr_jj)/2; wr_ij; wi_ij]))
+
+            # apparently unnecessary
+            # @constraint(pm.model, wr_ij == WR[2, 1])
+        else
+            @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
+        end
     end
 
     # linking constraints
