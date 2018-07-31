@@ -132,6 +132,7 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
     var(pm, nw, cnd)[:w] = Dict{Int,Any}()
     var(pm, nw, cnd)[:wr] = Dict{Tuple{Int,Int},Any}()
     var(pm, nw, cnd)[:wi] = Dict{Tuple{Int,Int},Any}()
+    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
     for (gidx, voltage_product_group) in enumerate(voltage_product_groups)
         WR, WI = voltage_product_group[:WR], voltage_product_group[:WI]
         group = groups[gidx]
@@ -160,7 +161,6 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         end
 
         # off-diagonal bounds
-        wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
         offdiag_indices = [(i, j) for i in 1:ng, j in 1:ng if i != j]
         for (i, j) in offdiag_indices
             i_bus, j_bus = group[i], group[j]
