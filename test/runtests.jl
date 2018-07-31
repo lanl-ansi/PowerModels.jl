@@ -52,6 +52,8 @@ include("common.jl")
 
     include("multi-nw-cnd.jl")
 
+    include("util.jl")
+
     include("docs.jl")
   
 end

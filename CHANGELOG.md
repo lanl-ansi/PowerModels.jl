@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added optimality-based bound tightening functionality for the QC relaxations
 - Update MINLP solvers used in testing
 
 ### v0.8.1
