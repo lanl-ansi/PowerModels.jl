@@ -173,6 +173,8 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
 
     current_iteration = 0
     time_elapsed = 0.0
+    max_vm_iteration_time = 0.0
+    max_td_iteration_time = 0.0
 
     check_termination = true 
     (termination == :avg) && (check_termination = (avg_vm_reduction > improvement_tol || avg_td_reduction > improvement_tol))
@@ -191,23 +193,30 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
         for bus in buses
             (vm_ub[bus] - vm_lb[bus] < min_bound_width) && (continue)
             
+            start_time = time()
             # vm lower bound solve 
             lb = NaN 
             @objective(model_bt.model, Min, vm[bus])
             result_bt = solve_generic_model(model_bt, solver)
-            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
+            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal || result_bt["status"] == :SubOptimal)
                 nlb = floor(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nlb > vm_lb[bus]) && (lb = nlb)
+            else 
+                error(LOGGER, "BT minimization problem for vm[$bus] errored - change tolerances.")
             end
 
             #vm upper bound solve
             ub = NaN 
             @objective(model_bt.model, Max, vm[bus])
             result_bt = solve_generic_model(model_bt, solver)
-            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
+            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal || result_bt["status"] == :SubOptimal)
                 nub = ceil(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nub < vm_ub[bus]) && (ub = nub)
+            else 
+                error(LOGGER, "BT maximization problem for vm[$bus] errored - change tolerances.")
             end 
+            end_time = time() - start_time
+            max_vm_iteration_time = max(end_time, max_vm_iteration_time)
 
             # sanity checks
             (lb > ub) && (warn(LOGGER, "bt lb > ub - adjust tolerances in solver to avoid issue"); continue)
@@ -243,23 +252,30 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
         for bp in buspairs
             (td_ub[bp] - td_lb[bp] < min_bound_width) && (continue)
 
+            start_time = time()
             # td lower bound solve 
             lb = NaN 
             @objective(model_bt.model, Min, td[bp])
             result_bt = solve_generic_model(model_bt, solver)
-            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
+            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal || result_bt["status"] == :SubOptimal)
                 nlb = floor(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nlb > td_lb[bp]) && (lb = nlb)
+            else
+                error(LOGGER, "BT minimization problem for td[$bp] errored - change tolerances")
             end
 
             # td upper bound solve 
             ub = NaN 
             @objective(model_bt.model, Max, td[bp])
             result_bt = solve_generic_model(model_bt, solver)
-            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
+            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal || result_bt["status"] == :SubOptimal)
                 nub = ceil(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nub < td_ub[bp]) && (ub = nub)
+            else 
+                error(LOGGER, "BT maximization problem for td[$bp] errored - change tolerances.")
             end 
+            end_time = time() - start_time
+            max_td_iteration_time = max(end_time, max_td_iteration_time)
 
             # sanity checks 
             (lb > ub) && (warn(LOGGER, "bt lb > ub - adjust tolerances in solver to avoid issue"); continue)
@@ -330,6 +346,12 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
         
     end 
 
+    branches_vad_same_sign_count = 0
+    for (key, branch) in data["branch"]
+        is_same_sign = (branch["angmax"] >=0 && branch["angmin"] >= 0) || (branch["angmax"] <=0 && branch["angmin"] <= 0)
+        (is_same_sign) && (branches_vad_same_sign_count += 1)
+    end 
+
     stats["final_relaxation_objective"] = final_relaxation_objective
     stats["final_rel_gap_from_ub"] = isnan(upper_bound) ? Inf : current_rel_gap
     stats["vm_range_final"] = vm_range_final
@@ -340,6 +362,10 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
 
     stats["run_time"] = time_elapsed
     stats["iteration_count"] = current_iteration
+
+    stats["max_vm_iteration_time"] = round(max_vm_iteration_time, 2)
+    stats["max_td_iteration_time"] = round(max_td_iteration_time, 2)
+    stats["vad_sign_determined"] = branches_vad_same_sign_count
 
     return data, stats
 
