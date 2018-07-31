@@ -56,6 +56,7 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 - Frederik Geth (@frederikgeth) CSIRO, Branch Flow formulation
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
+- Kaarthik Sundar (@kaarthiksundar) LANL, OBBT utility
 
 
 ## Citing PowerModels
