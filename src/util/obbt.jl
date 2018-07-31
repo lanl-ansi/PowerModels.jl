@@ -198,7 +198,7 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
             lb = NaN 
             @objective(model_bt.model, Min, vm[bus])
             result_bt = solve_generic_model(model_bt, solver)
-            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal || result_bt["status"] == :SubOptimal)
+            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
                 nlb = floor(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nlb > vm_lb[bus]) && (lb = nlb)
             else 
@@ -209,7 +209,7 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
             ub = NaN 
             @objective(model_bt.model, Max, vm[bus])
             result_bt = solve_generic_model(model_bt, solver)
-            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal || result_bt["status"] == :SubOptimal)
+            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
                 nub = ceil(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nub < vm_ub[bus]) && (ub = nub)
             else 
@@ -257,7 +257,7 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
             lb = NaN 
             @objective(model_bt.model, Min, td[bp])
             result_bt = solve_generic_model(model_bt, solver)
-            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal || result_bt["status"] == :SubOptimal)
+            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
                 nlb = floor(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nlb > td_lb[bp]) && (lb = nlb)
             else
@@ -268,7 +268,7 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
             ub = NaN 
             @objective(model_bt.model, Max, td[bp])
             result_bt = solve_generic_model(model_bt, solver)
-            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal || result_bt["status"] == :SubOptimal)
+            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
                 nub = ceil(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nub < td_ub[bp]) && (ub = nub)
             else 
