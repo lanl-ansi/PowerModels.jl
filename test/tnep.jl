@@ -30,7 +30,7 @@ end
 
 @testset "test soc tnep" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/matpower/case3_tnep.m", SOCWRPowerModel, pajarito_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_tnep("../test/data/matpower/case3_tnep.m", SOCWRPowerModel, pavito_solver; setting = Dict("output" => Dict("branch_flows" => true)))
 
         check_tnep_status(result["solution"])
 
@@ -38,7 +38,7 @@ end
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
     @testset "5-bus rts case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", SOCWRPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/matpower/case5_tnep.m", SOCWRPowerModel, pavito_solver)
 
         check_tnep_status(result["solution"])
 
@@ -50,7 +50,7 @@ end
 
 @testset "test qc tnep" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/matpower/case3_tnep.m", QCWRPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/matpower/case3_tnep.m", QCWRPowerModel, pavito_solver)
 
         check_tnep_status(result["solution"])
 
@@ -59,7 +59,7 @@ end
     end
     # omitting due to numerical stability issues on Linux
     #@testset "5-bus rts case" begin
-    #    result = run_tnep("../test/data/matpower/case5_tnep.m", QCWRPowerModel, pajarito_solver)
+    #    result = run_tnep("../test/data/matpower/case5_tnep.m", QCWRPowerModel, pavito_solver)
 
     #    check_tnep_status(result["solution"])
 
@@ -71,7 +71,7 @@ end
 
 @testset "test dc tnep" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/matpower/case3_tnep.m", DCPPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/matpower/case3_tnep.m", DCPPowerModel, pavito_solver)
 
         check_tnep_status(result["solution"])
 
@@ -82,7 +82,7 @@ end
     #=
     # skip this one becouse it is breaking Julia package tests
     @testset "5-bus case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", DCPPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/matpower/case5_tnep.m", DCPPowerModel, pavito_solver)
 
         check_tnep_status(result["solution"])
 
@@ -94,7 +94,7 @@ end
 
 @testset "test dc-losses tnep" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/matpower/case3_tnep.m", DCPLLPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/matpower/case3_tnep.m", DCPLLPowerModel, pavito_solver)
 
         check_tnep_status(result["solution"])
 
@@ -103,7 +103,7 @@ end
     end
 
     @testset "5-bus case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", DCPLLPowerModel, pajarito_solver)
+        result = run_tnep("../test/data/matpower/case5_tnep.m", DCPLLPowerModel, pavito_solver)
 
         check_tnep_status(result["solution"])
 
@@ -115,7 +115,7 @@ end
 
 @testset "test tnep branch flow output" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/matpower/case3_tnep.m", SOCWRPowerModel, pajarito_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_tnep("../test/data/matpower/case3_tnep.m", SOCWRPowerModel, pavito_solver; setting = Dict("output" => Dict("branch_flows" => true)))
 
         check_tnep_status(result["solution"])
 

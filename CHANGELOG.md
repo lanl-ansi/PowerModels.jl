@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- nothing
+- Added optimality-based bound tightening functionality for the QC relaxations
+- Update MINLP solvers used in testing
 
 ### v0.8.1
 - Strengthened the QCWRTri Power Flow formulation
