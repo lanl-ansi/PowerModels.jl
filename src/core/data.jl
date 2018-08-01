@@ -453,12 +453,11 @@ function check_thermal_limits(data::Dict{String,Any})
             if branch["rate_a"][c] <= 0.0
                 theta_max = max(abs(branch["angmin"][c]), abs(branch["angmax"][c]))
 
-                r = branch["br_r"][c, c]
-                x = branch["br_x"][c, c]
-                g =  r / (r^2 + x^2)
-                b = -x / (r^2 + x^2)
-
-                y_mag = sqrt(g^2 + b^2)
+                r = branch["br_r"]
+                x = branch["br_x"]
+                z = r + im * x
+                y = pinv(z)
+                y_mag = abs.(y[c,c])
 
                 fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"][c]
                 to_vmax = data["bus"][string(branch["t_bus"])]["vmax"][c]
