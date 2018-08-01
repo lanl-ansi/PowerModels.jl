@@ -102,9 +102,11 @@ function import_remaining!(data_out::Dict, data_in::Dict, import_all::Bool; excl
             if !(k in exclude)
                 if isa(v, Array)
                     for (n, item) in enumerate(v)
-                        import_remaining!(item, item, import_all)
-                        if isa(item, Dict) && !("index" in keys(item))
-                            item["index"] = n
+                        if isa(item, Dict)
+                            import_remaining!(item, item, import_all)
+                            if !("index" in keys(item))
+                                item["index"] = n
+                            end
                         end
                     end
                 elseif isa(v, Dict)
