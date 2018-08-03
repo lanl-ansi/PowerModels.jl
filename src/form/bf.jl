@@ -1,11 +1,17 @@
 # this file contains (balanced) convexified DistFlow formulation, in W space
 export
     SOCBFPowerModel, SOCBFForm
+
 ""
 abstract type AbstractBFForm <: AbstractPowerFormulation end
 
 ""
+abstract type AbstractBFConicForm <: AbstractConicPowerFormulation end
+
+""
 abstract type SOCBFForm <: AbstractBFForm end
+
+
 
 ""
 const SOCBFPowerModel = GenericPowerModel{SOCBFForm}
