@@ -20,14 +20,14 @@ function constraint_thermal_limit_to(pm::GenericPowerModel, n::Int, c::Int, t_id
 end
 
 "`norm([p[f_idx]; q[f_idx]]) <= rate_a`"
-function constraint_thermal_limit_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, rate_a) where T<:AbstractConicPowerFormulation
+function constraint_thermal_limit_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, rate_a) where T <: AbstractConicForms
     p_fr = var(pm, n, c, :p, f_idx)
     q_fr = var(pm, n, c, :q, f_idx)
     @constraint(pm.model, norm([p_fr; q_fr]) <= rate_a)
 end
 
 "`norm([p[t_idx]; q[t_idx]]) <= rate_a`"
-function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t_idx, rate_a) where T<:AbstractConicPowerFormulation
+function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t_idx, rate_a) where T <: AbstractConicForms
     p_to = var(pm, n, c, :p, t_idx)
     q_to = var(pm, n, c, :q, t_idx)
     @constraint(pm.model, norm([p_to; q_to]) <= rate_a)
