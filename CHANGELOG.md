@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Added optimality-based bound tightening functionality for the QC relaxations
 - Added branch flow conic forms, e.g. AbstractBFConicForm, SOCBFConicPowerModel
 - Update MINLP solvers used in testing
+- Minor issues closed #328
 
 ### v0.8.1
 - Strengthened the QCWRTri Power Flow formulation
