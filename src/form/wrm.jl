@@ -31,6 +31,15 @@ const SDPDecompMergePowerModel = GenericPowerModel{SDPDecompMergeForm}
 ""
 const SDPDecompSOCPowerModel = GenericPowerModel{SDPDecompSOCForm}
 
+struct SDconstraintDecomposition
+    "Each sub-vector consists of bus IDs corresponding to a clique grouping"
+    decomp::Vector{Vector{Int64}}
+    "Adjacency matrix of chordal graph extension"
+    adj::SparseMatrixCSC{Int64, Int64}
+    "`lookup_index[bus_id] --> idx` for mapping between 1:n and bus indices"
+    lookup_index::Dict
+end
+
 ""
 SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPWRMForm; kwargs...)
 
@@ -106,9 +115,10 @@ end
 
 function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true) where T <: AbstractWRMForm
 
-    if haskey(pm.ext, :clique_grouping) && haskey(pm.ext, :lookup_index)
-        groups = pm.ext[:clique_grouping]
-        lookup_index = pm.ext[:lookup_index]
+    if haskey(pm.ext, :SDconstraintDecomposition)
+        decomp = pm.ext[:SDconstraintDecomposition]
+        groups = decomp.decomp
+        lookup_index = decomp.lookup_index
         lookup_bus_index = map(reverse, lookup_index)
     else
         cadj, lookup_index = chordal_extension(pm)
@@ -118,8 +128,7 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         if T == SDPDecompMergeForm
             groups = greedy_merge(groups)
         end
-        pm.ext[:clique_grouping] = groups
-        pm.ext[:lookup_index] = lookup_index
+        pm.ext[:SDconstraintDecomposition] = SDconstraintDecomposition(groups, cadj, lookup_index)
     end
 
     voltage_product_groups =
@@ -214,7 +223,8 @@ end
 function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: AbstractWRMForm
     pair_matrix(group) = [(i, j) for i in group, j in group]
 
-    groups = pm.ext[:clique_grouping]
+    decomp = pm.ext[:SDconstraintDecomposition]
+    groups = decomp.decomp
     voltage_product_groups = var(pm, nw, cnd)[:voltage_product_groups]
 
     # semidefinite constraint for each group in clique grouping
@@ -293,7 +303,7 @@ function adjacency_matrix(pm::GenericPowerModel, nw::Int=pm.cnw)
     f = [lookup_index[bp[1]] for bp in keys(buspairs)]
     t = [lookup_index[bp[2]] for bp in keys(buspairs)]
 
-    return sparse([f;t], [t;f], ones(2nl), nb, nb), lookup_index
+    return sparse([f;t], [t;f], ones(Int64, 2nl), nb, nb), lookup_index
 end
 
 """

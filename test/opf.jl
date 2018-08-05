@@ -584,8 +584,7 @@ end
         groups = [[lookup_bus_index[gi] for gi in g] for g in cliques]
         @test PMs.problem_size(groups) == 344
 
-        pm.ext[:clique_grouping] = groups
-        pm.ext[:lookup_index] = lookup_index
+        pm.ext[:SDconstraintDecomposition] = PMs.SDconstraintDecomposition(groups, cadj, lookup_index)
 
         PMs.post_opf(pm)
         result = solve_generic_model(pm, scs_solver; solution_builder=PMs.get_solution)
