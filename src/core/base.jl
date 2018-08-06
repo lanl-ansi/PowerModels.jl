@@ -9,11 +9,24 @@ export
     ids, ref, var, con, ext
 
 
-""
+"root of type hierarchy"
 abstract type AbstractPowerFormulation end
 
-""
+"variants that target conic solvers"
 abstract type AbstractConicPowerFormulation <: AbstractPowerFormulation end
+
+"for branch flow models"
+abstract type AbstractBFForm <: AbstractPowerFormulation end
+
+"for variants of branch flow models that target QP or NLP solvers"
+abstract type AbstractBFQPForm <: AbstractBFForm end
+
+"for variants of branch flow models that target conic solvers"
+abstract type AbstractBFConicForm <: AbstractBFForm end
+
+"union of all conic form branches"
+AbstractConicForms = Union{AbstractConicPowerFormulation, AbstractBFConicForm}
+
 
 """
 ```

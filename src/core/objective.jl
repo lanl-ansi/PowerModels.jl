@@ -106,7 +106,7 @@ end
 
 
 ""
-function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <: AbstractConicPowerFormulation
+function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <: AbstractConicForms
     check_polynomial_cost_models(pm)
 
     from_idx = Dict()

@@ -358,6 +358,28 @@ end
     end
 end
 
+@testset "test soc conic distflow opf_bf" begin
+    @testset "3-bus case" begin
+        result = run_opf_bf("../test/data/matpower/case3.m", SOCBFConicPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 5746.7; atol = 1e1)
+    end
+    @testset "5-bus transformer swap case" begin
+        result = run_opf_bf("../test/data/matpower/case5.m", SOCBFConicPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 15051; atol = 1e1)
+    end
+    @testset "5-bus asymmetric case" begin
+        result = run_opf_bf("../test/data/matpower/case5_asym.m", SOCBFConicPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 14999; atol = 1e1)
+    end
+end
+
+
 @testset "test qc opf" begin
     @testset "3-bus case" begin
         result = run_opf("../test/data/matpower/case3.m", QCWRPowerModel, ipopt_solver)

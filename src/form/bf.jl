@@ -1,17 +1,28 @@
 # this file contains (balanced) convexified DistFlow formulation, in W space
 export
-    SOCBFPowerModel, SOCBFForm
-""
-abstract type AbstractBFForm <: AbstractPowerFormulation end
+    SOCBFPowerModel, SOCBFForm,
+    SOCBFConicPowerModel, SOCBFConicForm
+
 
 ""
-abstract type SOCBFForm <: AbstractBFForm end
+abstract type SOCBFForm <: AbstractBFQPForm end
 
 ""
 const SOCBFPowerModel = GenericPowerModel{SOCBFForm}
 
 "default SOC constructor"
 SOCBFPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCBFForm; kwargs...)
+
+
+""
+abstract type SOCBFConicForm <: AbstractBFConicForm end
+
+""
+const SOCBFConicPowerModel = GenericPowerModel{SOCBFConicForm}
+
+"default SOC constructor"
+SOCBFConicPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCBFConicForm; kwargs...)
+
 
 
 
@@ -87,7 +98,7 @@ end
 """
 Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
-function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFForm
+function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFQPForm
     p_fr   = var(pm, n, c, :p, f_idx)
     q_fr   = var(pm, n, c, :q, f_idx)
     w_fr   = var(pm, n, c, :w, f_bus)
@@ -95,6 +106,20 @@ function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, 
 
     # convex constraint linking p, q, w and ccm
     @constraint(pm.model, p_fr^2 + q_fr^2 <= (w_fr/tm^2)*cm)
+end
+
+
+"""
+Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
+"""
+function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFConicForm
+    p_fr   = var(pm, n, c, :p, f_idx)
+    q_fr   = var(pm, n, c, :q, f_idx)
+    w_fr   = var(pm, n, c, :w, f_bus)
+    cm = var(pm, n, c, :cm, i)
+
+    # convex constraint linking p, q, w and ccm
+    @constraint(pm.model, norm([2*p_fr; 2*q_fr; w_fr/tm - cm]) <= w_fr/tm + cm)
 end
 
 
