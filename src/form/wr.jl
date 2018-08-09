@@ -808,7 +808,7 @@ function relaxation_tighten_vv(m, x, y, lambda_a, lambda_b)
 
     @constraint(m, sum(lambda_a[i]*val[i] - lambda_b[i]*val[i] for i in 1:8) == 0)
 
-+end 
+end 
 
 ""
 function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRTriForm
