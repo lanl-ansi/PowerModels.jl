@@ -8,20 +8,19 @@ To improve the quality of the convex relaxations available in PowerModels and al
 
 ```julia
 data, stats = run_obbt_opf("case3.m", IpoptSolver());
-# stats is a dictionary that contains some useful information output by algorithm
 # data is a dictionary that contains the parsed network data with tightened bounds
+# stats is a dictionary that contains some useful information output by algorithm
 Dict{String,Any} with 19 entries:
   "initial_relaxation_objective" => 5817.91
   "vm_range_init"                => 0.6
   "final_relaxation_objective"   => 5901.96
-  "max_td_iteration_time"        => 0.03
   "avg_vm_range_init"            => 0.2
   "final_rel_gap_from_ub"        => NaN
   "run_time"                     => 0.832232
-  "model_constructor"            => PowerModels.GenericPowerModel{PowerModels.Q…
-  "max_vm_iteration_time"        => 0.06
+  "model_constructor"            => PowerModels.GenericPowerModel{...}
   "avg_td_range_final"           => 0.436166
   "initial_rel_gap_from_ub"      => Inf
+  "sim_parallel_run_time"        => 1.13342
   "upper_bound"                  => Inf
   "vm_range_final"               => 0.6
   "vad_sign_determined"          => 2
