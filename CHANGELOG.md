@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- Added sim_parallel_run_time to OBBT stats.
+- Added sim_parallel_run_time to OBBT stats
 - Fixed a bug in quadratic conic objective functions
 
 ### v0.8.2
