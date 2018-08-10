@@ -20,7 +20,7 @@ Dict{String,Any} with 19 entries:
   "model_constructor"            => PowerModels.GenericPowerModel{...}
   "avg_td_range_final"           => 0.436166
   "initial_rel_gap_from_ub"      => Inf
-  "parallel_run_time"            => 1.13342
+  "sim_parallel_run_time"        => 1.13342
   "upper_bound"                  => Inf
   "vm_range_final"               => 0.6
   "vad_sign_determined"          => 2

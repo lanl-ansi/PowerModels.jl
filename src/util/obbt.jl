@@ -366,10 +366,8 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
 
     stats["run_time"] = time_elapsed
     stats["iteration_count"] = current_iteration
-    stats["parallel_run_time"] = parallel_time_elapsed
+    stats["sim_parallel_run_time"] = parallel_time_elapsed
 
-    #stats["max_vm_iteration_time"] = round(max_vm_iteration_time, 2)
-    #stats["max_td_iteration_time"] = round(max_td_iteration_time, 2)
     stats["vad_sign_determined"] = branches_vad_same_sign_count
 
     return data, stats
