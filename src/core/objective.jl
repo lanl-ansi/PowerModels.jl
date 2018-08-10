@@ -118,16 +118,16 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
     dc_p_sqr = Dict()
     for (n, nw_ref) in nws(pm)
         for c in conductor_ids(pm, n)
-            pg_sqr = var(pm, n, c)[:pg_sqr] = @variable(pm.model, 
+            pg_sqr = var(pm, n, c)[:pg_sqr] = @variable(pm.model,
                 [i in ids(pm, n, :gen)], basename="$(n)_$(c)_pg_sqr",
-                lowerbound = ref(pm, n, :gen, i, "pmin", c)^2,
-                upperbound = ref(pm, n, :gen, i, "pmax", c)^2
-            )
+                lowerbound = 0.0,
+                upperbound = max(ref(pm, n, :gen, i, "pmax", c)^2, ref(pm, n, :gen, i, "pmin", c)^2)
+                )
             for (i, gen) in nw_ref[:gen]
                 @constraint(pm.model, norm([2*var(pm, n, c, :pg, i), pg_sqr[i]-1]) <= pg_sqr[i]+1)
             end
 
-            dc_p_sqr = var(pm, n, c)[:p_dc_sqr] = @variable(pm.model, 
+            dc_p_sqr = var(pm, n, c)[:p_dc_sqr] = @variable(pm.model,
                 [i in ids(pm, n, :dcline)], basename="$(n)_$(c)_dc_p_sqr",
                 lowerbound = ref(pm, n, :dcline, i, "pminf", c)^2,
                 upperbound = ref(pm, n, :dcline, i, "pmaxf", c)^2
@@ -202,7 +202,7 @@ end
 function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
 
     for (n, nw_ref) in nws(pm)
-        pg_cost = var(pm, n)[:pg_cost] = @variable(pm.model, 
+        pg_cost = var(pm, n)[:pg_cost] = @variable(pm.model,
             [i in ids(pm, n, :gen)], basename="$(n)_pg_cost"
         )
 
@@ -214,7 +214,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
             end
         end
 
-        dc_p_cost = var(pm, n)[:p_dc_cost] = @variable(pm.model, 
+        dc_p_cost = var(pm, n)[:p_dc_cost] = @variable(pm.model,
             [i in ids(pm, n, :dcline)], basename="$(n)_dc_p_cost",
         )
 
@@ -240,7 +240,7 @@ end
 
 "Cost of building branches"
 function objective_tnep_cost(pm::GenericPowerModel)
-    return @objective(pm.model, Min, 
+    return @objective(pm.model, Min,
         sum(
             sum(
                 sum( branch["construction_cost"]*var(pm, n, c, :branch_ne, i) for (i,branch) in nw_ref[:ne_branch] )
@@ -248,4 +248,3 @@ function objective_tnep_cost(pm::GenericPowerModel)
         for (n, nw_ref) in nws(pm))
     )
 end
-
