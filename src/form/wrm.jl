@@ -1,8 +1,6 @@
 export
     SDPWRMPowerModel, SDPWRMForm,
-    SDPDecompPowerModel, SDPDecompForm,
-    SDPDecompMergePowerModel, SDPDecompMergeForm,
-    SDPDecompSOCPowerModel, SDPDecompSOCForm
+    SDPDecompPowerModel, SDPDecompForm
 
 ""
 abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
@@ -14,22 +12,10 @@ abstract type SDPWRMForm <: AbstractWRMForm end
 abstract type SDPDecompForm <: AbstractWRMForm end
 
 ""
-abstract type SDPDecompMergeForm <: AbstractWRMForm end
-
-""
-abstract type SDPDecompSOCForm <: AbstractWRMForm end
-
-""
 const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
 
 ""
 const SDPDecompPowerModel = GenericPowerModel{SDPDecompForm}
-
-""
-const SDPDecompMergePowerModel = GenericPowerModel{SDPDecompMergeForm}
-
-""
-const SDPDecompSOCPowerModel = GenericPowerModel{SDPDecompSOCForm}
 
 struct SDconstraintDecomposition
     "Each sub-vector consists of bus IDs corresponding to a clique grouping"
@@ -44,10 +30,6 @@ end
 SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPWRMForm; kwargs...)
 
 SDPDecompPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPDecompForm; kwargs...)
-
-SDPDecompMergePowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPDecompMergeForm; kwargs...)
-
-SDPDecompSOCPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPDecompSOCForm; kwargs...)
 
 ""
 function variable_voltage(pm::GenericPowerModel{SDPWRMForm}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
@@ -113,7 +95,7 @@ function variable_voltage(pm::GenericPowerModel{SDPWRMForm}; nw::Int=pm.cnw, cnd
     end
 end
 
-function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true) where T <: AbstractWRMForm
+function variable_voltage(pm::GenericPowerModel{SDPDecompForm}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true)
 
     if haskey(pm.ext, :SDconstraintDecomposition)
         decomp = pm.ext[:SDconstraintDecomposition]
@@ -125,9 +107,6 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         groups = maximal_cliques(cadj)
         lookup_bus_index = map(reverse, lookup_index)
         groups = [[lookup_bus_index[gi] for gi in g] for g in groups]
-        if T == SDPDecompMergeForm
-            groups = greedy_merge(groups)
-        end
         pm.ext[:SDconstraintDecomposition] = SDconstraintDecomposition(groups, cadj, lookup_index)
     end
 
@@ -213,14 +192,9 @@ function constraint_voltage(pm::GenericPowerModel{SDPWRMForm}, nw::Int, cnd::Int
     WI = var(pm, nw, cnd)[:WI]
 
     @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
-
-    # place holder while debugging sdp constraint
-    #for (i,j) in ids(pm, nw, :buspairs)
-    #    InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
-    #end
 end
 
-function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: AbstractWRMForm
+function constraint_voltage(pm::GenericPowerModel{SDPDecompForm}, nw::Int, cnd::Int)
     pair_matrix(group) = [(i, j) for i in group, j in group]
 
     decomp = pm.ext[:SDconstraintDecomposition]
@@ -234,20 +208,16 @@ function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T
         WR = voltage_product_group[:WR]
         WI = voltage_product_group[:WI]
 
-        if T == SDPDecompSOCForm && ng == 2
+        # Lower-dimensional SOC constraint equiv. to SDP for 2-vertex
+        # clique
+        if ng == 2
             wr_ii = WR[1, 1]
             wr_jj = WR[2, 2]
             wr_ij = WR[1, 2]
             wi_ij = WI[1, 2]
 
-            # rotated SOC form (Mosek says infeasible)
-            # @constraint(pm.model, wr_ii - wr_jj >= norm([wr_ij, wi_ij]))
-
-            # standard SOC form
+            # standard SOC form (Mosek doesn't like rotated form)
             @constraint(pm.model, (wr_ii + wr_jj)/2 >= norm([(wr_ii - wr_jj)/2; wr_ij; wi_ij]))
-
-            # apparently unnecessary
-            # @constraint(pm.model, wr_ij == WR[2, 1])
         else
             @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
         end
@@ -270,21 +240,6 @@ function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T
     end
 end
 
-# Old decomposition implementation: trust JuMP/solver to set up linking constraints
-# function constraint_voltage(pm::GenericPowerModel{SDPDecompMergeForm}, nw::Int, cnd::Int)
-#     WR = var(pm, nw, cnd)[:WR]
-#     WI = var(pm, nw, cnd)[:WI]
-#
-#     cadj, lookup_index = chordal_extension(pm)
-#     cliques = maximal_cliques(cadj)
-#     clique_grouping = greedy_merge(cliques)
-#     for group in clique_grouping
-#         WRgroup = WR[group, group]
-#         WIgroup = WI[group, group]
-#         @SDconstraint(pm.model, [WRgroup WIgroup; -WIgroup WRgroup] >= 0)
-#     end
-# end
-
 """
     adj, lookup_index = adjacency_matrix(pm, nw)
 Return:
@@ -303,7 +258,7 @@ function adjacency_matrix(pm::GenericPowerModel, nw::Int=pm.cnw)
     f = [lookup_index[bp[1]] for bp in keys(buspairs)]
     t = [lookup_index[bp[2]] for bp in keys(buspairs)]
 
-    return sparse([f;t], [t;f], ones(Int64, 2nl), nb, nb), lookup_index
+    return sparse([f;t], [t;f], trues(2nl), nb, nb), lookup_index
 end
 
 """
@@ -327,30 +282,6 @@ function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
     cadj = sparse([f_idx;t_idx], [t_idx;f_idx], ones(2*length(f_idx)), nb, nb)
     cadj = cadj[p, p] # revert to original bus ordering (invert cholfact permutation)
     return cadj, lookup_index
-end
-
-"""
-    peo = mcs(A)
-Maximum cardinality search for graph adjacency matrix A.
-Returns a perfect elimination ordering.
-"""
-function mcs(A)
-    n = size(A, 1)
-    w = zeros(Int, n)
-    peo = zeros(Int, n)
-    unnumbered = collect(1:n)
-
-    for i = n:-1:1
-        z = unnumbered[indmax(w[unnumbered])]
-        filter!(x -> x != z, unnumbered)
-        peo[i] = z
-
-        Nz = find(A[:, z])
-        for y in intersect(Nz, unnumbered)
-            w[y] += 1
-        end
-    end
-    return peo
 end
 
 """
@@ -383,28 +314,27 @@ end
 maximal_cliques(cadj::SparseMatrixCSC{Float64,Int64}) = maximal_cliques(cadj, mcs(cadj))
 
 """
-    A = overlap_graph(groups)
-Return adjacency matrix for overlap graph associated with `groups`.
-I.e. if `A[i, j] = k`, then `groups[i]` and `groups[j]` share `k` elements.
+    peo = mcs(A)
+Maximum cardinality search for graph adjacency matrix A.
+Returns a perfect elimination ordering for chordal graphs.
 """
-function overlap_graph(groups)
-    n = length(groups)
-    I = Vector{Int}()
-    J = Vector{Int}()
-    V = Vector{Int}()
-    for (i, gi) in enumerate(groups)
-        for (j, gj) in enumerate(groups)
-            if gi != gj
-                overlap = length(intersect(gi, gj))
-                if overlap > 0
-                    push!(I, i)
-                    push!(J, j)
-                    push!(V, overlap)
-                end
-            end
+function mcs(A)
+    n = size(A, 1)
+    w = zeros(Int, n)
+    peo = zeros(Int, n)
+    unnumbered = collect(1:n)
+
+    for i = n:-1:1
+        z = unnumbered[indmax(w[unnumbered])]
+        filter!(x -> x != z, unnumbered)
+        peo[i] = z
+
+        Nz = find(A[:, z])
+        for y in intersect(Nz, unnumbered)
+            w[y] += 1
         end
     end
-    return sparse(I, J, V, n, n)
+    return peo
 end
 
 """
@@ -439,69 +369,28 @@ function prim(A, minweight=false)
 end
 
 """
-    ps = problem_size(groups)
-Returns the sum of variables and linking constraints corresponding to the
-semidefinite constraint decomposition given by `groups`. This function is
-not necessary for the operation of clique merge, since `merge_cost`
-computes the change in problem size for a proposed group merge.
+    A = overlap_graph(groups)
+Return adjacency matrix for overlap graph associated with `groups`.
+I.e. if `A[i, j] = k`, then `groups[i]` and `groups[j]` share `k` elements.
 """
-function problem_size(groups)
-    nvars(n::Integer) = n*(2*n + 1)
-    A = prim(overlap_graph(groups))
-    return sum(nvars.(Int64.(nonzeros(A)))) + sum(nvars.(length.(groups)))
-end
-
-function merge_cost(groups, i, k)
-    nvars(n::Integer) = n*(2*n + 1)
-    nvars(g::Vector) = nvars(length(g))
-
-    gi, gk = groups[i], groups[k]
-    overlap = intersect(gi, gk)
-    gnew = union(gi, gk)
-    return nvars(gnew) - nvars(gi) - nvars(gk) - nvars(overlap)
-end
-
-function merge_groups!(groups, i, k)
-    gi, gk = groups[i], groups[k]
-    filter!(g -> g != gi && g != gk, groups)
-    push!(groups, union(gi, gk))
-end
-
-"""
-    merged_groups = greedy_merge(groups)
-Greedily merge groups belonging to `groups`. Merge costs are computed by the function
-`merge_cost`, which accepts `groups` and two group indices, and returns the change
-in objective value associated with merging the two groups.
-
-This function assumes that merge costs grow with increasing overlap between groups.
-"""
-function greedy_merge(groups::Vector{Vector{Int64}}, merge_cost::Function=merge_cost; nmerge=Inf)
-    merged_groups = copy(groups)
-    function stop_condition(delta, merges)
-        if nmerge == Inf
-            return delta >= 0
-        else
-            return merges == nmerge
+function overlap_graph(groups)
+    n = length(groups)
+    I = Vector{Int}()
+    J = Vector{Int}()
+    V = Vector{Int}()
+    for (i, gi) in enumerate(groups)
+        for (j, gj) in enumerate(groups)
+            if gi != gj
+                overlap = length(intersect(gi, gj))
+                if overlap > 0
+                    push!(I, i)
+                    push!(J, j)
+                    push!(V, overlap)
+                end
+            end
         end
     end
-
-    merges = 0
-    stop_cond = false
-    while !stop_cond
-        T = prim(overlap_graph(merged_groups))
-        potential_merges = [ind2sub(T, idx) for idx in find(T)]
-        length(potential_merges) == 0 && break
-        merge_costs = [merge_cost(merged_groups, merge...) for merge in potential_merges]
-        delta, merge_idx = findmin(merge_costs)
-        if nmerge == Inf && delta == 0
-            break
-        end
-        i, k = potential_merges[merge_idx]
-        merge_groups!(merged_groups, i, k)
-        merges += 1
-        stop_cond = stop_condition(delta, merges)
-    end
-    return merged_groups
+    return sparse(I, J, V, n, n)
 end
 
 function filter_flipped_pairs!(pairs)
@@ -527,4 +416,17 @@ function overlap_indices(A::Array, B::Array, symmetric=true)
     idx_a = [findfirst(A, o) for o in overlap]
     idx_b = [findfirst(B, o) for o in overlap]
     return idx_a, idx_b
+end
+
+"""
+    ps = problem_size(groups)
+Returns the sum of variables and linking constraints corresponding to the
+semidefinite constraint decomposition given by `groups`. This function is
+not necessary for the operation of clique merge, since `merge_cost`
+computes the change in problem size for a proposed group merge.
+"""
+function problem_size(groups)
+    nvars(n::Integer) = n*(2*n + 1)
+    A = prim(overlap_graph(groups))
+    return sum(nvars.(Int64.(nonzeros(A)))) + sum(nvars.(length.(groups)))
 end
