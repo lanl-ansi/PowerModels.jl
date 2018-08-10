@@ -12,7 +12,8 @@ makedocs(
             "Getting Started" => "quickguide.md",
             "Network Data Format" => "network-data.md",
             "Result Data Format" => "result-data.md",
-            "Mathematical Model" => "math-model.md"
+            "Mathematical Model" => "math-model.md",
+            "Utilities" => "utilities.md"
         ],
         "Library" => [
             "Network Formulations" => "formulations.md",

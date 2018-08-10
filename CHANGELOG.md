@@ -2,7 +2,20 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- Added support for implicit single phase to buspairs data
+- Added sim_parallel_run_time to OBBT stats
+- Fixed a bug in quadratic conic objective functions
+
+### v0.8.2
+- Added optimality-based bound tightening (OBBT) functionality for the QC relaxations
+- Added branch flow conic forms, e.g. AbstractBFConicForm, SOCBFConicPowerModel
+- Update MINLP solvers used in testing
+- Minor issues closed #328
+
+### v0.8.1
+- Strengthened the QCWRTri Power Flow formulation
+- Added support for implicit single conductor to buspairs data
+- Made add_setpoint more flexible when working with a mixture of data types
+- Fixed a bug in TNEP voltage variable definitions
 
 ### v0.8.0
 - Added support for asymmetric line charging in all formulations

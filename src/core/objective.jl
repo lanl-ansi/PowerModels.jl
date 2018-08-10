@@ -106,7 +106,7 @@ end
 
 
 ""
-function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <: AbstractConicPowerFormulation
+function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <: AbstractConicForms
     check_polynomial_cost_models(pm)
 
     from_idx = Dict()
@@ -118,19 +118,52 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
     dc_p_sqr = Dict()
     for (n, nw_ref) in nws(pm)
         for c in conductor_ids(pm, n)
+            pg_sqr_ub = Dict{Int,Real}()
+            pg_sqr_lb = Dict{Int,Real}()
+            for (i, gen) in ref(pm, n, :gen)
+                pmin = gen["pmin"][c]
+                pmax = gen["pmax"][c]
+
+                pg_sqr_ub[i] = max(pmin^2, pmax^2)
+                pg_sqr_lb[i] = 0.0
+                if pmin > 0.0
+                    pg_sqr_lb[i] = pmin^2
+                end
+                if pmax < 0.0
+                    pg_sqr_lb[i] = pmax^2
+                end
+            end
+
             pg_sqr = var(pm, n, c)[:pg_sqr] = @variable(pm.model,
                 [i in ids(pm, n, :gen)], basename="$(n)_$(c)_pg_sqr",
-                lowerbound = 0.0,
-                upperbound = max(ref(pm, n, :gen, i, "pmax", c)^2, ref(pm, n, :gen, i, "pmin", c)^2)
-                )
+                lowerbound = pg_sqr_lb[i],
+                upperbound = pg_sqr_ub[i]
+            )
             for (i, gen) in nw_ref[:gen]
                 @constraint(pm.model, norm([2*var(pm, n, c, :pg, i), pg_sqr[i]-1]) <= pg_sqr[i]+1)
             end
 
+
+            dc_p_sqr_ub = Dict{Int,Real}()
+            dc_p_sqr_lb = Dict{Int,Real}()
+            for (i, dcline) in ref(pm, n, :dcline)
+                pmin = dcline["pminf"][c]
+                pmax = dcline["pmaxf"][c]
+
+                dc_p_sqr_ub[i] = max(pmin^2, pmax^2)
+                dc_p_sqr_lb[i] = 0.0
+                if pmin > 0.0
+                    dc_p_sqr_lb[i] = pmin^2
+                end
+                if pmax < 0.0
+                    dc_p_sqr_lb[i] = pmax^2
+                end
+            end
+
             dc_p_sqr = var(pm, n, c)[:p_dc_sqr] = @variable(pm.model,
                 [i in ids(pm, n, :dcline)], basename="$(n)_$(c)_dc_p_sqr",
-                lowerbound = ref(pm, n, :dcline, i, "pminf", c)^2,
-                upperbound = ref(pm, n, :dcline, i, "pmaxf", c)^2
+                lowerbound = dc_p_sqr_lb[i],
+                upperbound = dc_p_sqr_ub[i]
             )
 
             for (i, dcline) in nw_ref[:dcline]
@@ -202,7 +235,7 @@ end
 function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
 
     for (n, nw_ref) in nws(pm)
-        pg_cost = var(pm, n)[:pg_cost] = @variable(pm.model,
+        pg_cost = var(pm, n)[:pg_cost] = @variable(pm.model, 
             [i in ids(pm, n, :gen)], basename="$(n)_pg_cost"
         )
 
@@ -214,7 +247,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
             end
         end
 
-        dc_p_cost = var(pm, n)[:p_dc_cost] = @variable(pm.model,
+        dc_p_cost = var(pm, n)[:p_dc_cost] = @variable(pm.model, 
             [i in ids(pm, n, :dcline)], basename="$(n)_dc_p_cost",
         )
 
@@ -240,7 +273,7 @@ end
 
 "Cost of building branches"
 function objective_tnep_cost(pm::GenericPowerModel)
-    return @objective(pm.model, Min,
+    return @objective(pm.model, Min, 
         sum(
             sum(
                 sum( branch["construction_cost"]*var(pm, n, c, :branch_ne, i) for (i,branch) in nw_ref[:ne_branch] )
@@ -248,3 +281,4 @@ function objective_tnep_cost(pm::GenericPowerModel)
         for (n, nw_ref) in nws(pm))
     )
 end
+

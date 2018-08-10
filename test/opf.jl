@@ -37,6 +37,12 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 1005.31; atol = 1e0)
     end
+    @testset "5-bus with negative generators" begin
+        result = run_ac_opf("../test/data/matpower/case5_npg.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 9003.35; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
 
@@ -287,6 +293,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 1005.27; atol = 1e0)
     end
+    @testset "5-bus with negative generators" begin
+        result = run_opf("../test/data/matpower/case5_npg.m", SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 3613.72; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_opf("../test/data/matpower/case5_pwlc.m", SOCWRPowerModel, ipopt_solver)
 
@@ -358,6 +370,34 @@ end
     end
 end
 
+@testset "test soc conic distflow opf_bf" begin
+    @testset "3-bus case" begin
+        result = run_opf_bf("../test/data/matpower/case3.m", SOCBFConicPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 5746.7; atol = 1e1)
+    end
+    @testset "5-bus transformer swap case" begin
+        result = run_opf_bf("../test/data/matpower/case5.m", SOCBFConicPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 15051; atol = 1e1)
+    end
+    @testset "5-bus asymmetric case" begin
+        result = run_opf_bf("../test/data/matpower/case5_asym.m", SOCBFConicPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 14999; atol = 1e1)
+    end
+    @testset "5-bus with negative generators" begin
+        result = run_opf_bf("../test/data/matpower/case5_npg.m", SOCBFConicPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 3610.49; atol = 1e1)
+    end
+end
+
+
 @testset "test qc opf" begin
     @testset "3-bus case" begin
         result = run_opf("../test/data/matpower/case3.m", QCWRPowerModel, ipopt_solver)
@@ -410,13 +450,13 @@ end
         result = run_opf("../test/data/matpower/case3.m", QCWRTriPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 5817.58; atol = 1e0)
+        @test isapprox(result["objective"], 5817.91; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
         result = run_opf("../test/data/matpower/case5_asym.m", QCWRTriPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 15816.9; atol = 1e0)
+        @test isapprox(result["objective"], 15929.2; atol = 1e0)
     end
     @testset "5-bus gap case" begin
         result = run_opf("../test/data/matpower/case5_gap.m", QCWRTriPowerModel, ipopt_solver)
@@ -436,7 +476,7 @@ end
         result = run_opf("../test/data/matpower/case24.m", QCWRTriPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 76752.3; atol = 1e0)
+        @test isapprox(result["objective"], 76785.4; atol = 1e0)
     end
 end
 
@@ -467,6 +507,12 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 1005.31; atol = 1e-1)
     end
+    #@testset "5-bus with negative generators" begin
+    #    result = run_opf("../test/data/matpower/case5_npg.m", SDPWRMPowerModel, scs_solver)
+
+    #    @test result["status"] == :LocalOptimal
+    #    @test isapprox(result["objective"], 7291.69; atol = 1e0) # Mosek v8 value
+    #end
     @testset "14-bus case" begin
         result = run_opf("../test/data/matpower/case14.m", SDPWRMPowerModel, scs_solver)
 

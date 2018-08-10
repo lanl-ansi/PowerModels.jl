@@ -110,7 +110,9 @@ function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
             error("update_data requires datasets with the same number of conductors")
         end
     else
-        warn(LOGGER, "running update_data with data that does not include conductors field, conductors may be incorrect")
+        if (haskey(data, "conductors") && !haskey(new_data, "conductors")) || (!haskey(data, "conductors") && haskey(new_data, "conductors"))
+            warn(LOGGER, "running update_data with missing onductors fields, conductors may be incorrect")
+        end
     end
     InfrastructureModels.update_data!(data, new_data)
 end
@@ -453,12 +455,11 @@ function check_thermal_limits(data::Dict{String,Any})
             if branch["rate_a"][c] <= 0.0
                 theta_max = max(abs(branch["angmin"][c]), abs(branch["angmax"][c]))
 
-                r = branch["br_r"][c, c]
-                x = branch["br_x"][c, c]
-                g =  r / (r^2 + x^2)
-                b = -x / (r^2 + x^2)
-
-                y_mag = sqrt(g^2 + b^2)
+                r = branch["br_r"]
+                x = branch["br_x"]
+                z = r + im * x
+                y = pinv(z)
+                y_mag = abs.(y[c,c])
 
                 fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"][c]
                 to_vmax = data["bus"][string(branch["t_bus"])]["vmax"][c]

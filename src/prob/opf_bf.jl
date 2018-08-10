@@ -1,11 +1,13 @@
 export run_opf_bf, run_ac_opf_bf, run_dc_opf_bf
 
 ""
-function run_opf_bf(file, model_constructor, solver; kwargs...)
-    if model_constructor != SOCBFPowerModel
-        error(LOGGER, "The problem type opf_bf at the moment only supports the SOCBFForm formulation")
-    end
+function run_opf_bf(file, model_constructor::Type{GenericPowerModel{T}}, solver; kwargs...) where T <: AbstractBFForm
     return run_generic_model(file, model_constructor, solver, post_opf_bf; kwargs...)
+end
+
+""
+function run_opf_bf(file, model_constructor, solver; kwargs...)
+    error(LOGGER, "The problem type opf_bf at the moment only supports subtypes of AbstractBFForm")
 end
 
 ""

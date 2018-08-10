@@ -6,16 +6,22 @@ PowerModels data structure. All fields from PTI files will be imported if
 `import_all` is true (Default: false).
 """
 function parse_file(file::String; import_all=false)
-    if endswith(file, ".m")
-        pm_data = PowerModels.parse_matpower(file)
-    elseif endswith(lowercase(file), ".raw")
-        info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
-        pm_data = PowerModels.parse_psse(file; import_all=import_all)
-    else
-        pm_data = parse_json(file)
-    end
+    try
+        if endswith(file, ".m")
+            pm_data = PowerModels.parse_matpower(file)
+        elseif endswith(lowercase(file), ".raw")
+            info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
+            pm_data = PowerModels.parse_psse(file; import_all=import_all)
+        else
+            pm_data = parse_json(file)
+        end
 
-    return pm_data
+        return pm_data
+    catch e
+        if isa(e, UnicodeError)
+            error(LOGGER, "UnicodeError: PowerModels can only load UTF-8 or ASCII encoded files, re-encode \"$file\" to supported encoding")
+        end
+    end
 end
 
 
