@@ -110,7 +110,9 @@ function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
             error("update_data requires datasets with the same number of conductors")
         end
     else
-        warn(LOGGER, "running update_data with data that does not include conductors field, conductors may be incorrect")
+        if (haskey(data, "conductors") && !haskey(new_data, "conductors")) || (!haskey(data, "conductors") && haskey(new_data, "conductors"))
+            warn(LOGGER, "running update_data with missing onductors fields, conductors may be incorrect")
+        end
     end
     InfrastructureModels.update_data!(data, new_data)
 end
