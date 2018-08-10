@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
-- nothing
+- Fixed a bug in quadratic conic objective functions
 
 ### v0.8.2
 - Added optimality-based bound tightening functionality for the QC relaxations
