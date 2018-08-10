@@ -279,7 +279,7 @@ function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
     L, p = sparse(F[:L]), invperm(F[:p])
     Rchol = L - spdiagm(diag(L), 0)
     f_idx, t_idx, V = findnz(Rchol)
-    cadj = sparse([f_idx;t_idx], [t_idx;f_idx], ones(2*length(f_idx)), nb, nb)
+    cadj = sparse([f_idx;t_idx], [t_idx;f_idx], trues(2*length(f_idx)), nb, nb)
     cadj = cadj[p, p] # revert to original bus ordering (invert cholfact permutation)
     return cadj, lookup_index
 end
@@ -289,7 +289,7 @@ end
 Given a chordal graph adjacency matrix and perfect elimination
 ordering, return the set of maximal cliques.
 """
-function maximal_cliques(cadj::SparseMatrixCSC{Float64,Int64}, peo::Vector{Int})
+function maximal_cliques(cadj::SparseMatrixCSC, peo::Vector{Int})
     nb = size(cadj, 1)
 
     # use peo to obtain one clique for each vertex
@@ -311,7 +311,7 @@ function maximal_cliques(cadj::SparseMatrixCSC{Float64,Int64}, peo::Vector{Int})
     mc = [sort(c) for c in mc]
     return mc
 end
-maximal_cliques(cadj::SparseMatrixCSC{Float64,Int64}) = maximal_cliques(cadj, mcs(cadj))
+maximal_cliques(cadj::SparseMatrixCSC) = maximal_cliques(cadj, mcs(cadj))
 
 """
     peo = mcs(A)
@@ -349,7 +349,7 @@ function prim(A, minweight=false)
     candidate_edges = []
     unvisited = collect(1:n)
     next_node = 1 # convention
-    T = spzeros(n, n)
+    T = spzeros(Int64, n, n)
 
     while length(unvisited) > 1
         current_node = next_node
