@@ -758,48 +758,85 @@ function check_cost_functions(data::Dict{String,Any})
     end
 
     for (i,gen) in data["gen"]
-        _check_cost_functions(i,gen)
+        _check_cost_functions(i, gen, "generator")
     end
     for (i, dcline) in data["dcline"]
-        _check_cost_functions(i,dcline)
+        _check_cost_functions(i, dcline, "dcline")
     end
 end
 
 
 ""
-function _check_cost_functions(id, comp)
+function _check_cost_functions(id, comp, type_name)
+    #println(comp)
     if "model" in keys(comp) && "cost" in keys(comp)
-        for c in 1:length(comp["ncost"])
-            cnd_str = length(comp["ncost"]) > 1 ? "conductor $(c) " : ""
-            if comp["model"][c] == 1
-                if length(PowerModels.getmcv(comp["cost"], c)) != 2*comp["ncost"][c]
-                    error("$(cnd_str)ncost of $(comp["ncost"][c]) not consistent with $(length(PowerModels.getmcv(comp["cost"], c))) cost values")
-                end
-                if length(PowerModels.getmcv(comp["cost"], c)) < 4
-                    error("$(cnd_str)cost includes $(comp["ncost"][c]) points, but at least two points are required")
-                end
-                for i in 3:2:length(PowerModels.getmcv(comp["cost"], c))
-                    if PowerModels.getmcv(comp["cost"], c)[i-2] >= PowerModels.getmcv(comp["cost"], c)[i]
-                        error("non-increasing x values in $(cnd_str)pwl cost model")
-                    end
-                end
-                if "pmin" in keys(comp) && "pmax" in keys(comp)
-                    pmin = comp["pmin"][c]
-                    pmax = comp["pmax"][c]
-                    for i in 3:2:length(PowerModels.getmcv(comp["cost"], c))
-                        if PowerModels.getmcv(comp["cost"], c)[i] < pmin || PowerModels.getmcv(comp["cost"], c)[i] > pmax
-                            warn(LOGGER, "$(cnd_str)pwl x value $(PowerModels.getmcv(comp["cost"], c)[i]) is outside the generator bounds $(pmin)-$(pmax)")
-                        end
-                    end
-                end
-            elseif comp["model"][c] == 2
-                if length(PowerModels.getmcv(comp["cost"], c)) != comp["ncost"][c]
-                    error("$(cnd_str)ncost of $(comp["ncost"][c]) not consistent with $(length(PowerModels.getmcv(comp["cost"], c))) cost values")
-                end
-            else
-                warn(LOGGER, "Unknown $(cnd_str)generator cost model of type $(comp["model"][c])")
+        if comp["model"] == 1
+            if length(comp["cost"]) != 2*comp["ncost"]
+                error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
             end
+            if length(comp["cost"]) < 4
+                error("cost includes $(comp["ncost"]) points, but at least two points are required on $(type_name) $(id)")
+            end
+            for i in 3:2:length(comp["cost"])
+                if comp["cost"][i-2] >= comp["cost"][i]
+                    error("non-increasing x values in pwl cost model on $(type_name) $(id)")
+                end
+            end
+            if "pmin" in keys(comp) && "pmax" in keys(comp)
+                pmin = sum(comp["pmin"]) # sum supports multi-conductor case
+                pmax = sum(comp["pmax"])
+                for i in 3:2:length(comp["cost"])
+                    if comp["cost"][i] < pmin || comp["cost"][i] > pmax
+                        warn(LOGGER, "pwl x value $(comp["cost"][i]) is outside the bounds $(pmin)-$(pmax) on $(type_name) $(id)")
+                    end
+                end
+            end
+            _simplify_pwl_cost(id, comp, type_name)
+        elseif comp["model"] == 2
+            if length(comp["cost"]) != comp["ncost"]
+                error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
+            end
+        else
+            warn(LOGGER, "Unknown cost model of type $(comp["model"]) on $(type_name) $(id)")
         end
+    end
+end
+
+
+"checks the slope of each segment in a pwl function, simplifies the function if the slope changes is below a tolerance"
+function _simplify_pwl_cost(id, comp, type_name, tolerance = 1e-2)
+    @assert comp["model"] == 1
+
+    slopes = Float64[]
+    smpl_cost = Float64[]
+    prev_slope = nothing
+
+    x2, y2 = 0.0, 0.0
+
+    for i in 3:2:length(comp["cost"])
+        x1 = comp["cost"][i-2]
+        y1 = comp["cost"][i-1]
+        x2 = comp["cost"][i-0]
+        y2 = comp["cost"][i+1]
+
+        m = (y2 - y1)/(x2 - x1)
+
+        if prev_slope == nothing || (abs(prev_slope - m) > tolerance)
+            push!(smpl_cost, x1)
+            push!(smpl_cost, y1)
+            prev_slope = m
+        end
+
+        push!(slopes, m)
+    end
+
+    push!(smpl_cost, x2)
+    push!(smpl_cost, y2)
+
+    if length(smpl_cost) < length(comp["cost"])
+        warn(LOGGER, "simplifying pwl cost on $(type_name) $(id), $(comp["cost"]) -> $(smpl_cost)")
+        comp["cost"] = smpl_cost
+        comp["ncost"] = length(smpl_cost)/2
     end
 end
 

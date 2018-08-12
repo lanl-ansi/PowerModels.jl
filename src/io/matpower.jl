@@ -675,7 +675,13 @@ function merge_generic_data(data::Dict{String,Any})
     end
 end
 
-"Export a power flow case in matpower format"
+
+"Export power network data in the matpower format"
+function export_matpower(data::Dict{String,Any})
+    return sprint(export_matpower, data)
+end
+
+"Export power network data in the matpower format"
 function export_matpower(io::IO, data::Dict{String,Any})
 
     is_per_unit = data["per_unit"]
@@ -1049,8 +1055,19 @@ function export_cost_data(io::IO, components::Dict{Int,Dict}, prefix::String)
     if length(components) <= 0
         return
     end
-  
-    if haskey(collect(values(components))[1], "cost")
+
+    a_comp = collect(values(components))[1]
+    if haskey(a_comp, "cost")
+        ncost = length(a_comp["cost"])
+        model = a_comp["model"]
+
+        for (i,comp) in components
+            if length(comp["cost"]) != ncost || comp["model"] != model
+                warn(LOGGER, "heterogeneous cost functions will be ommited in Matpower data")
+                return
+            end
+        end
+
         println(io, "%%-----  OPF Data  -----%%")
         println(io, "%% cost data")
         println(io, "%    1    startup    shutdown    n    x1    y1    ...    xn    yn")
@@ -1059,17 +1076,17 @@ function export_cost_data(io::IO, components::Dict{Int,Dict}, prefix::String)
                 
         for (idx,gen) in (sort(components))
             if gen["model"] == 1
-                print(io, "\t1\t", gen["startup"], "\t", gen["shutdown"], "\t", (length(gen["cost"]) / 2) ),
+                print(io, "\t1\t", gen["startup"], "\t", gen["shutdown"], "\t", (length(gen["cost"])/2) ),
                 for l=1:length(gen["cost"])
-                    print(io, "\t", gen["cost"][l])  
+                    print(io, "\t", gen["cost"][l])
                 end
             else                          
                 print(io, "\t2\t", gen["startup"], "\t", gen["shutdown"], "\t", length(gen["cost"])),
                 for l=1:length(gen["cost"])
-                    print(io, "\t", gen["cost"][l] )  
+                    print(io, "\t", gen["cost"][l])
                 end
             end
-            println(io)   
+            println(io)
         end
         println(io, "];");
         println(io)
