@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added data simplification for piecewise linear cost functions
 - Added sim_parallel_run_time to OBBT stats
 - Fixed a bug in quadratic conic objective functions
 
