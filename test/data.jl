@@ -342,11 +342,11 @@ end
     data["gen"]["1"]["model"] = 3
     @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units(data))
     @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_per_unit(data))
-    @test_warn(TESTLOG, "Unknown generator cost model of type 3", PowerModels.check_cost_functions(data))
+    @test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.check_cost_functions(data))
     data["gen"]["1"]["model"] = 1
 
     data["gen"]["1"]["cost"][3] = 3000
-    @test_warn(TESTLOG, "pwl x value 3000 is outside the generator bounds 0.0-20.0", PowerModels.check_cost_functions(data))
+    @test_warn(TESTLOG, "pwl x value 3000 is outside the bounds 0.0-20.0 on generator 1", PowerModels.check_cost_functions(data))
 
     data["dcline"]["1"]["loss0"] = -1.0
     @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0", PowerModels.check_dcline_limits(data))
