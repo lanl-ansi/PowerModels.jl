@@ -768,6 +768,7 @@ end
 
 ""
 function _check_cost_functions(id, comp, type_name)
+    #println(comp)
     if "model" in keys(comp) && "cost" in keys(comp)
         if comp["model"] == 1
             if length(comp["cost"]) != 2*comp["ncost"]
@@ -790,6 +791,7 @@ function _check_cost_functions(id, comp, type_name)
                     end
                 end
             end
+            _simplify_pwl_cost(id, comp, type_name)
         elseif comp["model"] == 2
             if length(comp["cost"]) != comp["ncost"]
                 error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
@@ -797,6 +799,44 @@ function _check_cost_functions(id, comp, type_name)
         else
             warn(LOGGER, "Unknown cost model of type $(comp["model"]) on $(type_name) $(id)")
         end
+    end
+end
+
+
+"checks the slope of each segment in a pwl function, simplifies the function if the slope changes is below a tolerance"
+function _simplify_pwl_cost(id, comp, type_name, tolerance = 1e-2)
+    @assert comp["model"] == 1
+
+    slopes = Float64[]
+    smpl_cost = Float64[]
+    prev_slope = nothing
+
+    x2, y2 = 0.0, 0.0
+
+    for i in 3:2:length(comp["cost"])
+        x1 = comp["cost"][i-2]
+        y1 = comp["cost"][i-1]
+        x2 = comp["cost"][i-0]
+        y2 = comp["cost"][i+1]
+
+        m = (y2 - y1)/(x2 - x1)
+
+        if prev_slope == nothing || (abs(prev_slope - m) > tolerance)
+            push!(smpl_cost, x1)
+            push!(smpl_cost, y1)
+            prev_slope = m
+        end
+
+        push!(slopes, m)
+    end
+
+    push!(smpl_cost, x2)
+    push!(smpl_cost, y2)
+
+    if length(smpl_cost) < length(comp["cost"])
+        warn(LOGGER, "simplifying pwl cost on $(type_name) $(id), $(comp["cost"]) -> $(smpl_cost)")
+        comp["cost"] = smpl_cost
+        comp["ncost"] = length(smpl_cost)/2
     end
 end
 
