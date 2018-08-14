@@ -27,7 +27,10 @@ makedocs(
             "Relaxation Schemes" => "relaxations.md",
             "File IO" => "parser.md"
         ],
-        "Developer" => "developer.md",
+        "Developer" => [
+                "Developer" => "developer.md",
+                "Formulation Details" => "formulation-details.md"
+        ],
         "Experiment Results" => "experiment-results.md"
     ]
 )
