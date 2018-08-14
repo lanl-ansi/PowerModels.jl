@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Added data simplification for piecewise linear cost functions
 - Added sim_parallel_run_time to OBBT stats
 - Fixed a bug in quadratic conic objective functions
+- Expanded documentation (mathematical model, formulations, references for formulations) 
 
 ### v0.8.2
 - Added optimality-based bound tightening (OBBT) functionality for the QC relaxations
