@@ -1,16 +1,13 @@
 # The PowerModels Mathematical Model
 
 As PowerModels implements a variety of power network optimization problems, the implementation is the best reference for precise mathematical formulations.  This section provides a complex number based mathematical specification for a prototypical AC Optimal Power Flow problem, to provide an overview of the typical mathematical models in PowerModels.
-
-
-## AC Optimal Power Flow
+## Sets and Parameters
 
 PowerModels implements a slightly generalized version of the AC Optimal Power Flow problem from [Matpower](http://www.pserc.cornell.edu/matpower/).  These generalizations make it possible for PowerModels to more accurately capture industrial transmission network datasets.  The core generalizations are,
 
-- Support for multiple load and shunt components on each bus
-- Line charging that supports a conductance and asymmetrical values
+- Support for multiple load (${S^d}_k$) and shunt ($Y^s_{k}$) components on each bus $i$
+- Line charging that supports a conductance and asymmetrical values ($Y^c_{ij}, Y^c_{ji}$)
 
-A complete mathematical model is as follows,
 
 ```math
 
@@ -33,10 +30,21 @@ A complete mathematical model is as follows,
 & Y_{ij}, Y^c_{ij}, Y^c_{ji}, {T}_{ij} \;\; \forall (i,j) \in E \nonumber \\
 & {s^u}_{ij}, \theta^{\Delta l}_{ij}, \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \nonumber \\
 %
-\mbox{variables: } & \nonumber \\
-& S^g_k \;\; \forall k\in G \nonumber \\
-& V_i \;\; \forall i\in N \nonumber \\
-& S_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber \\
+\end{align}
+```
+
+## AC Optimal Power Flow
+
+A complete mathematical model is as follows,
+
+```math
+
+\begin{align}
+%
+\mbox{variables: } &  \\
+& S^g_k \;\; \forall k\in G  \label{var_generation}\\
+& V_i \;\; \forall i\in N \label{var_voltage} \\
+& S_{ij} \;\; \forall (i,j) \in E \cup E^R  \label{var_complex_power} \\
 %
 \mbox{minimize: } & \sum_{k \in G} c_{2k} (\Re(S^g_k))^2 + c_{1k}\Re(S^g_k) + c_{0k} \label{eq_objective}\\
 %
@@ -56,16 +64,19 @@ A complete mathematical model is as follows,
 Note that for clarity of this presentation some model variants that PowerModels supports have been omitted (e.g. piecewise linear cost functions and HVDC lines).  Details about these variants is available in the [Matpower](http://www.pserc.cornell.edu/matpower/) documentation.
 
 
-### Mapping to `constraint_template.jl`
-- Eq. $\eqref{eq_objective}$ - `objective_min_fuel_cost`
-- Eq. $\eqref{eq_ref_bus}$ - `constraint_theta_ref`
-- Eq. $\eqref{eq_gen_bounds}$ - bounds of `variable_generation`
-- Eq. $\eqref{eq_voltage_bounds}$ - bounds of `variable_voltage`
-- Eq. $\eqref{eq_kcl_shunt}$ - `constraint_kcl_shunt`
-- Eq. $\eqref{eq_power_from}$ - `constraint_ohms_yt_from`
-- Eq. $\eqref{eq_power_to}$ - `constraint_ohms_yt_to`
-- Eq. $\eqref{eq_thermal_limit}$ - `constraint_thermal_limit_from` and `constraint_thermal_limit_to`
-- Eq. $\eqref{eq_angle_difference}$ - `constraint_voltage_angle_difference`
+### Mapping to function names
+- Eq. $\eqref{var_generation}$ - `variable_generation` in `variable.jl`
+- Eq. $\eqref{var_voltage}$ - `variable_voltage` in `variable.jl`
+- Eq. $\eqref{var_complex_power}$ - `variable_branch_flow` in `variable.jl`
+- Eq. $\eqref{eq_objective}$ - `objective_min_fuel_cost` in `objective.jl`
+- Eq. $\eqref{eq_ref_bus}$ - `constraint_theta_ref` in `constraint_template.jl`
+- Eq. $\eqref{eq_gen_bounds}$ - bounds of `variable_generation` in `variable.jl`
+- Eq. $\eqref{eq_voltage_bounds}$ - bounds of `variable_voltage` in `variable.jl`
+- Eq. $\eqref{eq_kcl_shunt}$ - `constraint_kcl_shunt` in `constraint_template.jl`
+- Eq. $\eqref{eq_power_from}$ - `constraint_ohms_yt_from` in `constraint_template.jl`
+- Eq. $\eqref{eq_power_to}$ - `constraint_ohms_yt_to` in `constraint_template.jl`
+- Eq. $\eqref{eq_thermal_limit}$ - `constraint_thermal_limit_from` and `constraint_thermal_limit_to` in `constraint_template.jl`
+- Eq. $\eqref{eq_angle_difference}$ - `constraint_voltage_angle_difference` in `constraint_template.jl`
 
 
 
@@ -82,7 +93,7 @@ A complete mathematical formulation for a Branch Flow Model is conceived as:
 & S^g_k \;\; \forall k\in G \nonumber \\
 & V_i \;\; \forall i\in N \nonumber \\
 & S_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber \\
-& I^{s}_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber \\
+& I^{s}_{ij} \;\; \forall (i,j) \in E \cup E^R \label{var_branch_current}\\
 %
 \mbox{minimize: } & \sum_{k \in G} c_{2k} (\Re(S^g_k))^2 + c_{1k}\Re(S^g_k) + c_{0k} \nonumber\\
 %
@@ -103,8 +114,9 @@ A complete mathematical formulation for a Branch Flow Model is conceived as:
 
 Note that constraints $\eqref{eq_line_losses} - \eqref{eq_ohms_bfm}$ replace $\eqref{eq_power_from} - \eqref{eq_power_to}$ but the remainder of the problem formulation is identical. Furthermore, the problems have the same feasible set.  
 
-### Mapping to `constraint_template.jl`
-- Eq. $\eqref{eq_line_losses}$ - `constraint_flow_losses`
-- Eq. $\eqref{eq_series_power_flow}$ - implicit, substituted out
-- Eq. $\eqref{eq_complex_power_definition}$ - `constraint_branch_current`
-- Eq. $\eqref{eq_ohms_bfm}$ - `constraint_voltage_magnitude_difference`
+### Mapping to function names
+- Eq. $\eqref{var_branch_current}$ - `variable_branch_current` in `variable.jl`
+- Eq. $\eqref{eq_line_losses}$ - `constraint_flow_losses` in `constraint_template.jl`
+- Eq. $\eqref{eq_series_power_flow}$ - implicit, substituted out before implementation
+- Eq. $\eqref{eq_complex_power_definition}$ - `constraint_branch_current` in `constraint_template.jl`
+- Eq. $\eqref{eq_ohms_bfm}$ - `constraint_voltage_magnitude_difference` in `constraint_template.jl`
