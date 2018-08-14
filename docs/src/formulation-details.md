@@ -2,14 +2,13 @@
 
 This section provides references to understand the formulations as provided by PowerModels. The list is not meant as a literature discussion, but to give the main starting points to understand the implementation of the formulations.
 
-The history of AC OPF formulations up to 2012 is discussed in:
-- Cain, M. B., O’ Neill, R. P., & Castillo, A. (2012). History of optimal power flow and formulations. <https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-formulation-testing.pdf>
+- Molzahn, D., & Hiskens, I. (forthcoming). A Survey of Relaxations and Approximations of the Power Flow Equations. Foundations and Trends in Electric Energy Systems
+- Coffrin, C., & Roald, L. (2018). Convex relaxations in power system optimization: a brief introduction. [Math.OC], 1–5. Retrieved from <http://arxiv.org/abs/1807.07227>
+- Coffrin, C., Hijazi, H., & Van Hentenryck, P. (2016). The QC relaxation: a theoretical and computational study on optimal power flow. IEEE Trans. Power Syst., 31(4), 3008–3018. <https://doi.org/10.1109/TPWRS.2015.2463111>
 
-A handbook for developing an understanding of the principles of convex relaxation applied to optimal power flow is:
-- Taylor, J. A. (2015). Convex optimization of power systems (1st ed.). Cambridge University Press.
 
 ## Notes on the mathematical model for all formulations
-PowerModels implements a slightly generalized version of the AC Optimal Power Flow problem from [Matpower](http://www.pserc.cornell.edu/matpower/), as discussed [here](./math-model.html).
+PowerModels implements a slightly generalized version of the AC Optimal Power Flow problem from [Matpower](http://www.pserc.cornell.edu/matpower/), as discussed in [The PowerModels Mathematical Model](@ref) and presented [here](https://www.youtube.com/watch?v=j7r4onyiNRQ).
 
 In the next subsections the differences between PowerModels' bus and branch models and those commonly used in the literature are discussed.
 Consideration is given to these differences when implementing formulations from articles.
