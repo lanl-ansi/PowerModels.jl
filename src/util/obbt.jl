@@ -173,8 +173,7 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
 
     current_iteration = 0
     time_elapsed = 0.0
-    max_vm_iteration_time = 0.0
-    max_td_iteration_time = 0.0
+    parallel_time_elapsed = 0.0
 
     check_termination = true 
     (termination == :avg) && (check_termination = (avg_vm_reduction > improvement_tol || avg_td_reduction > improvement_tol))
@@ -188,6 +187,9 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
         total_td_reduction = 0.0 
         avg_td_reduction = 0.0 
         max_td_reduction = 0.0 
+        max_vm_iteration_time = 0.0
+        max_td_iteration_time = 0.0
+
 
         # bound-tightening for the vm variables
         for bus in buses
@@ -307,7 +309,9 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
         avg_td_reduction = total_td_reduction/length(buspairs)
 
         td_range_final = sum([td_ub[bp] - td_lb[bp] for bp in buspairs])
-        
+
+        parallel_time_elapsed += max(max_vm_iteration_time, max_td_iteration_time)
+
         time_elapsed += toq()
 
         # populate the modifications, update the data, and rebuild the bound-tightening model
@@ -343,8 +347,8 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
             info(LOGGER, "relative optimality gap < $rel_gap_tol")
             break 
         end
-        
-    end 
+
+    end
 
     branches_vad_same_sign_count = 0
     for (key, branch) in data["branch"]
@@ -362,9 +366,8 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
 
     stats["run_time"] = time_elapsed
     stats["iteration_count"] = current_iteration
+    stats["sim_parallel_run_time"] = parallel_time_elapsed
 
-    stats["max_vm_iteration_time"] = round(max_vm_iteration_time, 2)
-    stats["max_td_iteration_time"] = round(max_td_iteration_time, 2)
     stats["vad_sign_determined"] = branches_vad_same_sign_count
 
     return data, stats

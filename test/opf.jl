@@ -37,6 +37,12 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 1005.31; atol = 1e0)
     end
+    @testset "5-bus with negative generators" begin
+        result = run_ac_opf("../test/data/matpower/case5_npg.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 9003.35; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
 
@@ -287,6 +293,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 1005.27; atol = 1e0)
     end
+    @testset "5-bus with negative generators" begin
+        result = run_opf("../test/data/matpower/case5_npg.m", SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 3613.72; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_opf("../test/data/matpower/case5_pwlc.m", SOCWRPowerModel, ipopt_solver)
 
@@ -376,6 +388,12 @@ end
 
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 14999; atol = 1e1)
+    end
+    @testset "5-bus with negative generators" begin
+        result = run_opf_bf("../test/data/matpower/case5_npg.m", SOCBFConicPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 3610.49; atol = 1e1)
     end
 end
 
@@ -489,6 +507,12 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 1005.31; atol = 1e-1)
     end
+    #@testset "5-bus with negative generators" begin
+    #    result = run_opf("../test/data/matpower/case5_npg.m", SDPWRMPowerModel, scs_solver)
+
+    #    @test result["status"] == :LocalOptimal
+    #    @test isapprox(result["objective"], 7291.69; atol = 1e0) # Mosek v8 value
+    #end
     @testset "14-bus case" begin
         result = run_opf("../test/data/matpower/case14.m", SDPWRMPowerModel, scs_solver)
 

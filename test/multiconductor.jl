@@ -260,11 +260,11 @@ end
         mp_data_3p["gen"]["1"]["model"] = 3
         @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units(mp_data_3p))
         @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_per_unit(mp_data_3p))
-        @test_warn(TESTLOG, "Unknown generator cost model of type 3", PowerModels.check_cost_functions(mp_data_3p))
+        @test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.check_cost_functions(mp_data_3p))
 
         mp_data_3p["gen"]["1"]["model"] = 1
         mp_data_3p["gen"]["1"]["cost"][3] = 3000
-        @test_warn(TESTLOG, "pwl x value 3000.0 is outside the generator bounds 0.0-20.0", PowerModels.check_cost_functions(mp_data_3p))
+        @test_warn(TESTLOG, "pwl x value 3000.0 is outside the bounds 0.0-60.0 on generator 1", PowerModels.check_cost_functions(mp_data_3p))
 
         @test_nowarn PowerModels.check_voltage_angle_differences(mp_data_3p)
 
