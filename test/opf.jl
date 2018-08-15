@@ -43,6 +43,12 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 9003.35; atol = 1e0)
     end
+    @testset "5-bus with only current limit data" begin
+        result = run_ac_opf("../test/data/matpower/case5_clm.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 16987.4; atol = 1e0)
+    end
     @testset "5-bus with pwl costs" begin
         result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
 
