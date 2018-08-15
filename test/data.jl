@@ -7,26 +7,26 @@
         output = sprint(PowerModels.summary, data)
 
         line_count = count(c -> c == '\n', output)
-        @test line_count >= 80 && line_count <= 100
-        @test occursin(output, "name: nesta_case5_pjm")
-        @test occursin(output, "Table: bus")
-        @test occursin(output, "Table: load")
-        @test occursin(output, "Table: gen")
-        @test occursin(output, "Table: branch")
-        @test occursin(output, "Table: areas")
+        @test line_count >= 80 && line_count <= 100 
+        @test contains(output, "name: nesta_case5_pjm")
+        @test contains(output, "Table: bus")
+        @test contains(output, "Table: load")
+        @test contains(output, "Table: gen")
+        @test contains(output, "Table: branch")
+        @test contains(output, "Table: areas")
     end
 
     @testset "5-bus summary from file location" begin
         output = sprint(PowerModels.summary, "../test/data/matpower/case5.m")
 
         line_count = count(c -> c == '\n', output)
-        @test line_count >= 80 && line_count <= 100
-        @test occursin(output, "name: nesta_case5_pjm")
-        @test occursin(output, "Table: bus")
-        @test occursin(output, "Table: load")
-        @test occursin(output, "Table: gen")
-        @test occursin(output, "Table: branch")
-        @test occursin(output, "Table: areas")
+        @test line_count >= 80 && line_count <= 100 
+        @test contains(output, "name: nesta_case5_pjm")
+        @test contains(output, "Table: bus")
+        @test contains(output, "Table: load")
+        @test contains(output, "Table: gen")
+        @test contains(output, "Table: branch")
+        @test contains(output, "Table: areas")
     end
 
     @testset "5-bus solution summary from dict" begin
