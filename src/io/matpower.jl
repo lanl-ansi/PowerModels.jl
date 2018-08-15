@@ -477,8 +477,11 @@ function standardize_cost_terms(data::Dict{String,Any})
     end
 end
 
+
 "sets all branch transformer taps to 1.0, to simplify branch models"
 function mp2pm_branch(data::Dict{String,Any})
+    #bus_vm_max = Dict{Int64,Float64}(parse(Int64, i) => bus["vmax"] for (i,bus) in data["bus"])
+
     branches = [branch for branch in data["branch"]]
     if haskey(data, "ne_branch")
         append!(branches, data["ne_branch"])
@@ -498,6 +501,12 @@ function mp2pm_branch(data::Dict{String,Any})
         branch["b_to"] = branch["br_b"] / 2.0
 
         delete!(branch, "br_b")
+
+        #vm_max = max(bus_vm_max[branch["f_bus"]], bus_vm_max[branch["t_bus"]])
+
+        #branch["c_rating_a"] = branch["rate_a"]/vm_max
+        #branch["c_rating_b"] = branch["rate_b"]/vm_max
+        #branch["c_rating_c"] = branch["rate_c"]/vm_max
     end
 end
 
