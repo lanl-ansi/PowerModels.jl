@@ -21,9 +21,19 @@ struct SDconstraintDecomposition
     "Each sub-vector consists of bus IDs corresponding to a clique grouping"
     decomp::Vector{Vector{Int64}}
     "Adjacency matrix of chordal graph extension"
-    adj::SparseMatrixCSC{Int64, Int64}
+    cadj::SparseMatrixCSC{Int64, Int64}
     "`lookup_index[bus_id] --> idx` for mapping between 1:n and bus indices"
     lookup_index::Dict
+    "A chordal extension and maximal cliques are uniquely determined by a graph ordering"
+    ordering::Vector{Int64}
+end
+import Base: ==
+function ==(d1::SDconstraintDecomposition, d2::SDconstraintDecomposition)
+    eq = true
+    for f in fieldnames(SDconstraintDecomposition)
+        eq = eq && (getfield(d1, f) == getfield(d2, f))
+    end
+    return eq
 end
 
 ""
@@ -95,7 +105,7 @@ function variable_voltage(pm::GenericPowerModel{SDPWRMForm}; nw::Int=pm.cnw, cnd
     end
 end
 
-function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true) where T <: AbstractWRMForm
+function variable_voltage(pm::GenericPowerModel{SDPDecompForm}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true)
 
     if haskey(pm.ext, :SDconstraintDecomposition)
         decomp = pm.ext[:SDconstraintDecomposition]
@@ -103,11 +113,11 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         lookup_index = decomp.lookup_index
         lookup_bus_index = map(reverse, lookup_index)
     else
-        cadj, lookup_index = chordal_extension(pm)
+        cadj, lookup_index, ordering = chordal_extension(pm)
         groups = maximal_cliques(cadj)
         lookup_bus_index = map(reverse, lookup_index)
         groups = [[lookup_bus_index[gi] for gi in g] for g in groups]
-        pm.ext[:SDconstraintDecomposition] = SDconstraintDecomposition(groups, cadj, lookup_index)
+        pm.ext[:SDconstraintDecomposition] = SDconstraintDecomposition(groups, cadj, lookup_index, ordering)
     end
 
     voltage_product_groups =
@@ -194,7 +204,7 @@ function constraint_voltage(pm::GenericPowerModel{SDPWRMForm}, nw::Int, cnd::Int
     @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
 end
 
-function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: AbstractWRMForm
+function constraint_voltage(pm::GenericPowerModel{SDPDecompForm}, nw::Int, cnd::Int)
     pair_matrix(group) = [(i, j) for i in group, j in group]
 
     decomp = pm.ext[:SDconstraintDecomposition]
@@ -262,12 +272,13 @@ function adjacency_matrix(pm::GenericPowerModel, nw::Int=pm.cnw)
 end
 
 """
-    cadj = chordal_extension(pm, nw)
+    cadj, lookup_index, ordering = chordal_extension(pm, nw)
 Return:
 - a sparse adjacency matrix corresponding to a chordal extension
 of the power grid graph.
 - `lookup_index` s.t. `lookup_index[bus_id]` returns the integer index
 of the bus with `bus_id` in the adjacency matrix.
+- the graph ordering that may be used to reconstruct the chordal extension
 """
 function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
     adj, lookup_index = adjacency_matrix(pm, nw)
@@ -276,12 +287,13 @@ function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
     W = Hermitian(adj + spdiagm(diag_el, 0))
 
     F = cholfact(W)
-    L, p = sparse(F[:L]), invperm(F[:p])
+    L, p = sparse(F[:L]), F[:p]
+    q = invperm(p)
     Rchol = L - spdiagm(diag(L), 0)
     f_idx, t_idx, V = findnz(Rchol)
     cadj = sparse([f_idx;t_idx], [t_idx;f_idx], trues(2*length(f_idx)), nb, nb)
-    cadj = cadj[p, p] # revert to original bus ordering (invert cholfact permutation)
-    return cadj, lookup_index
+    cadj = cadj[q, q] # revert to original bus ordering (invert cholfact permutation)
+    return cadj, lookup_index, p
 end
 
 """
