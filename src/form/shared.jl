@@ -145,6 +145,24 @@ end
 
 
 ""
+function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractWRForms
+    l,i,j = f_idx
+    t_idx = (l,j,i)
+
+    w_fr = var(pm, n, c, :w, i)
+    w_to = var(pm, n, c, :w, j)
+
+    p_fr = var(pm, n, c, :p, f_idx)
+    q_fr = var(pm, n, c, :q, f_idx)
+    @constraint(pm.model, p_fr^2 + q_fr^2 <= w_fr*c_rating_a^2)
+
+    p_to = var(pm, n, c, :p, t_idx)
+    q_to = var(pm, n, c, :q, t_idx)
+    @constraint(pm.model, p_to^2 + q_to^2 <= w_to*c_rating_a^2)
+end
+
+
+""
 function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractWForms
     add_setpoint(sol, pm, "bus", "vm", :w; scale = (x,item) -> sqrt(x))
     # What should the default value be?
