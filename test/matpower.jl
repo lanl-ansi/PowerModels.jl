@@ -230,80 +230,67 @@ end
 
     @testset "test case2" begin
         file = "../test/data/matpower/case2.m"
-        test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
 
     @testset "test case24" begin
         file = "../test/data/matpower/case24.m"
-        test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
 
     @testset "test case3_tnep" begin
         file = "../test/data/matpower/case3_tnep.m"
-        test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
 
     @testset "test case30" begin
         file = "../test/data/matpower/case30.m"
-        test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
 
     @testset "test case5 asym" begin
         file = "../test/data/matpower/case5_asym.m"
-        test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
 
     @testset "test case5 gap" begin
         file = "../test/data/matpower/case5_gap.m"
-        test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
 
     # currently not idempotent due to pwl function simplification
     #@testset "test case5 pwlc" begin
     #    file = "../test/data/matpower/case5_pwlc.m"
-    #    test_case(file, PowerModels.parse_file)
     #    test_case(file, PowerModels.parse_matpower)
     #end
 
     @testset "test case5" begin
         file = "../test/data/matpower/case5.m"
-        test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
 
     @testset "test case6" begin
         file = "../test/data/matpower/case6.m"
-        test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
 
     @testset "test case3" begin
         file = "../test/data/matpower/case3.m"
-        test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
 
     @testset "test case5 dc" begin
         file = "../test/data/matpower/case5_dc.m"
-        test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
 
     @testset "test case5 tnep" begin
         file = "../test/data/matpower/case5_tnep.m"
-        test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
 
     @testset "test case7 tplgy" begin
         file = "../test/data/matpower/case7_tplgy.m"
-        test_case(file, PowerModels.parse_file)
         test_case(file, PowerModels.parse_matpower)
     end
 end

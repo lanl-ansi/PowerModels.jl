@@ -157,6 +157,16 @@ function psse2pm_branch!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
             import_remaining!(sub_data, branch, import_all; exclude=["B", "BI", "BJ"])
 
+            if sub_data["rate_a"] == 0.0
+                delete!(sub_data, "rate_a")
+            end
+            if sub_data["rate_b"] == 0.0
+                delete!(sub_data, "rate_b")
+            end
+            if sub_data["rate_c"] == 0.0
+                delete!(sub_data, "rate_c")
+            end
+
             push!(pm_data["branch"], sub_data)
         end
     end
@@ -382,6 +392,16 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 sub_data["rate_b"] = pop!(transformer, "RATB1")
                 sub_data["rate_c"] = pop!(transformer, "RATC1")
 
+                if sub_data["rate_a"] == 0.0
+                    delete!(sub_data, "rate_a")
+                end
+                if sub_data["rate_b"] == 0.0
+                    delete!(sub_data, "rate_b")
+                end
+                if sub_data["rate_c"] == 0.0
+                    delete!(sub_data, "rate_c")
+                end
+
                 sub_data["tap"] = pop!(transformer, "WINDV1") / pop!(transformer, "WINDV2")
                 sub_data["shift"] = pop!(transformer, "ANG1")
 
@@ -466,6 +486,16 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     sub_data["rate_a"] = pop!(transformer, "RATA$m")
                     sub_data["rate_b"] = pop!(transformer, "RATB$m")
                     sub_data["rate_c"] = pop!(transformer, "RATC$m")
+
+                    if sub_data["rate_a"] == 0.0
+                        delete!(sub_data, "rate_a")
+                    end
+                    if sub_data["rate_b"] == 0.0
+                        delete!(sub_data, "rate_b")
+                    end
+                    if sub_data["rate_c"] == 0.0
+                        delete!(sub_data, "rate_c")
+                    end
 
                     sub_data["tap"] = pop!(transformer, "WINDV$m")
                     sub_data["shift"] = pop!(transformer, "ANG$m")

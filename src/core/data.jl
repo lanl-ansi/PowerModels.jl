@@ -457,8 +457,12 @@ function check_thermal_limits(data::Dict{String,Any})
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
-    for (i, branch) in data["branch"]
+    branches = [branch for branch in values(data["branch"])]
+    if haskey(data, "ne_branch")
+        append!(branches, values(data["ne_branch"]))
+    end
 
+    for branch in branches
         if !haskey(branch, "rate_a")
             if haskey(data, "conductors")
                 branch["rate_a"] = MultiConductorVector(0.0, data["conductors"])
@@ -512,7 +516,12 @@ function check_current_limits(data::Dict{String,Any})
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
-    for (i, branch) in data["branch"]
+    branches = [branch for branch in values(data["branch"])]
+    if haskey(data, "ne_branch")
+        append!(branches, values(data["ne_branch"]))
+    end
+
+    for branch in branches
 
         if !haskey(branch, "c_rating_a")
             if haskey(data, "conductors")
