@@ -192,6 +192,10 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "rate_b", rescale)
         apply_func(branch, "rate_c", rescale)
 
+        apply_func(branch, "c_rating_a", rescale)
+        apply_func(branch, "c_rating_b", rescale)
+        apply_func(branch, "c_rating_c", rescale)
+
         apply_func(branch, "shift", deg2rad)
         apply_func(branch, "angmax", deg2rad)
         apply_func(branch, "angmin", deg2rad)
@@ -303,6 +307,10 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "rate_a", rescale)
         apply_func(branch, "rate_b", rescale)
         apply_func(branch, "rate_c", rescale)
+
+        apply_func(branch, "c_rating_a", rescale)
+        apply_func(branch, "c_rating_b", rescale)
+        apply_func(branch, "c_rating_c", rescale)
 
         apply_func(branch, "shift", rad2deg)
         apply_func(branch, "angmax", rad2deg)
@@ -506,7 +514,15 @@ function check_current_limits(data::Dict{String,Any})
                 to_vmax = data["bus"][string(branch["t_bus"])]["vmax"][c]
                 m_vmax = max(fr_vmax, to_vmax)
 
-                new_c_rating = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
+                new_c_rating = y_mag*sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
+
+                if branch["rate_a"] > 0.0
+                    fr_vmin = data["bus"][string(branch["f_bus"])]["vmin"][c]
+                    to_vmin = data["bus"][string(branch["t_bus"])]["vmin"][c]
+                    vm_min = min(fr_vmin, to_vmin)
+
+                    new_c_rating = min(new_c_rating, branch["rate_a"]/vm_min)
+                end
 
                 warn(LOGGER, "this code only supports positive c_rating_a values, changing the value on branch $(branch["index"])$(cnd_str) from $(mva_base*branch["c_rating_a"][c]) to $(mva_base*new_c_rating)")
                 if haskey(data, "conductors")

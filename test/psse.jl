@@ -351,10 +351,10 @@ end
             data = PowerModels.parse_file("../test/data/pti/case30.raw"; import_all=true)
 
             @test length(data) == 21
-            for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [15, 14, 14, 45, 29])
+            for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [15, 14, 14, 45, 32])
                 for item in values(data[key])
                     if key == "branch" && item["transformer"]
-                        @test length(item) == 42
+                        @test length(item) == 45
                     else
                         @test length(item) == n
                     end

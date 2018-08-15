@@ -57,11 +57,34 @@ function check_network_data(data::Dict{String,Any})
     check_transformer_parameters(data)
     check_voltage_angle_differences(data)
     check_thermal_limits(data)
-    #check_current_limits(data)
+    check_current_limits(data)
     check_branch_directions(data)
     check_branch_loops(data)
     check_bus_types(data)
     check_dcline_limits(data)
     check_voltage_setpoints(data)
     check_cost_functions(data)
+end
+
+
+"""
+checks if the given pm_data has current ratings, if not adds some.
+Note, assumes the data is still in list form, not Dict form
+"""
+function add_branch_current_ratings!(pm_data::Dict)
+    bus_vm_min = Dict{Int64,Float64}(bus["index"] => bus["vmin"] for bus in pm_data["bus"])
+
+    for branch in pm_data["branch"]
+        vm_min = min(bus_vm_min[branch["f_bus"]], bus_vm_min[branch["t_bus"]])
+
+        if !haskey(branch, "c_rating_a")
+            branch["c_rating_a"] = branch["rate_a"]/vm_min
+        end
+        if !haskey(branch, "c_rating_b")
+            branch["c_rating_b"] = branch["rate_b"]/vm_min
+        end
+        if !haskey(branch, "c_rating_c")
+            branch["c_rating_c"] = branch["rate_c"]/vm_min
+        end
+    end
 end

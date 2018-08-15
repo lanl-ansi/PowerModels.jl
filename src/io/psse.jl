@@ -127,6 +127,8 @@ Parses PSS(R)E-style Branch data into a PowerModels-style Dict. "source_id" is
 given by `["I", "J", "CKT"]` in PSS(R)E Branch specification.
 """
 function psse2pm_branch!(pm_data::Dict, pti_data::Dict, import_all::Bool)
+    
+
     pm_data["branch"] = []
     if haskey(pti_data, "BRANCH")
         for (i, branch) in enumerate(pti_data["BRANCH"])
@@ -630,7 +632,6 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 end
 
 
-
 """
     parse_psse(pti_data)
 
@@ -659,10 +660,13 @@ function parse_psse(pti_data::Dict; import_all=false)::Dict
     psse2pm_transformer!(pm_data, pti_data, import_all)
     psse2pm_dcline!(pm_data, pti_data, import_all)
 
-    import_remaining!(pm_data, pti_data, import_all; exclude=["CASE IDENTIFICATION", "BUS", "LOAD",
-                                                              "FIXED SHUNT", "SWITCHED SHUNT", "GENERATOR",
-                                                              "BRANCH", "TRANSFORMER", "TWO-TERMINAL DC",
-                                                              "VOLTAGE SOURCE CONVERTER"])
+    import_remaining!(pm_data, pti_data, import_all; exclude=[
+        "CASE IDENTIFICATION", "BUS", "LOAD", "FIXED SHUNT",
+        "SWITCHED SHUNT", "GENERATOR","BRANCH", "TRANSFORMER",
+        "TWO-TERMINAL DC", "VOLTAGE SOURCE CONVERTER"
+    ])
+
+    add_branch_current_ratings!(pm_data)
 
     # update lookup structure
     for (k, v) in pm_data
