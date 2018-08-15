@@ -353,8 +353,6 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     merge_generator_cost_data(pm_data)
     merge_generic_data(pm_data)
 
-    add_branch_current_ratings!(pm_data)
-
     # split loads and shunts from buses
     split_loads_shunts(pm_data)
 

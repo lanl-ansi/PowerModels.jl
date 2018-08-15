@@ -666,8 +666,6 @@ function parse_psse(pti_data::Dict; import_all=false)::Dict
         "TWO-TERMINAL DC", "VOLTAGE SOURCE CONVERTER"
     ])
 
-    add_branch_current_ratings!(pm_data)
-
     # update lookup structure
     for (k, v) in pm_data
         if isa(v, Array)
