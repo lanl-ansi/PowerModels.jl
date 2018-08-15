@@ -148,8 +148,14 @@ end
 
 ""
 function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
-    rescale      = x -> x/mva_base
-    rescale_dual = x -> x*mva_base
+    # to be consistent with matpower's opf.flow_lim= 'I' with current magnitude
+    # limit defined in MVA at 1 p.u. voltage
+    ka_base = mva_base
+
+    rescale        = x -> x/mva_base
+    rescale_dual   = x -> x*mva_base
+    rescale_ampere = x -> x/ka_base
+
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
@@ -192,9 +198,9 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "rate_b", rescale)
         apply_func(branch, "rate_c", rescale)
 
-        apply_func(branch, "c_rating_a", rescale)
-        apply_func(branch, "c_rating_b", rescale)
-        apply_func(branch, "c_rating_c", rescale)
+        apply_func(branch, "c_rating_a", rescale_ampere)
+        apply_func(branch, "c_rating_b", rescale_ampere)
+        apply_func(branch, "c_rating_c", rescale_ampere)
 
         apply_func(branch, "shift", deg2rad)
         apply_func(branch, "angmax", deg2rad)
@@ -263,8 +269,13 @@ end
 
 ""
 function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
-    rescale      = x -> x*mva_base
-    rescale_dual = x -> x/mva_base
+    # to be consistent with matpower's opf.flow_lim= 'I' with current magnitude
+    # limit defined in MVA at 1 p.u. voltage
+    ka_base = mva_base
+
+    rescale        = x -> x*mva_base
+    rescale_dual   = x -> x/mva_base
+    rescale_ampere = x -> x*ka_base
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
@@ -308,9 +319,9 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "rate_b", rescale)
         apply_func(branch, "rate_c", rescale)
 
-        apply_func(branch, "c_rating_a", rescale)
-        apply_func(branch, "c_rating_b", rescale)
-        apply_func(branch, "c_rating_c", rescale)
+        apply_func(branch, "c_rating_a", rescale_ampere)
+        apply_func(branch, "c_rating_b", rescale_ampere)
+        apply_func(branch, "c_rating_c", rescale_ampere)
 
         apply_func(branch, "shift", rad2deg)
         apply_func(branch, "angmax", rad2deg)
