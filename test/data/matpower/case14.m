@@ -1,3 +1,5 @@
+% Case to test no explicit branch limits
+
 % from matpower - http://www.pserc.cornell.edu/matpower/
 
 function mpc = case14
