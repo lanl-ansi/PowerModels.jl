@@ -9,7 +9,19 @@ abstract type AbstractACPForm <: AbstractPowerFormulation end
 ""
 abstract type StandardACPForm <: AbstractACPForm end
 
-""
+"""
+AC power flow formulation with polar bus voltage variables.
+
+```
+@techreport{Cain2012,
+author = {Cain, Mary B and {O' Neill}, Richard P and Castillo, Anya},
+pages = {1--36},
+title = {{History of optimal power flow and formulations}},
+url = {https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-formulation-testing.pdf}
+year = {2012}
+}
+```
+"""
 const ACPPowerModel = GenericPowerModel{StandardACPForm}
 
 "default AC constructor"

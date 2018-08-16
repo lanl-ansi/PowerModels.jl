@@ -45,40 +45,49 @@ Nevertheless, in the literature, a simplified bus model is often used:
 
 
 ## `ACPPowerModel`
-- Cain, M. B., O’ Neill, R. P., & Castillo, A. (2012). History of optimal power flow and formulations. <https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-formulation-testing.pdf>
-
+```@docs
+ACPPowerModel
+```
 
 ## `ACRPowerModel`
-- Cain, M. B., O’ Neill, R. P., & Castillo, A. (2012). History of optimal power flow and formulations. <https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-formulation-testing.pdf>
-
+```@docs
+ACRPowerModel
+```
 
 ## `ACTPowerModel`
-- Jabr, R. A. (2008). Optimal power flow using an extended conic quadratic formulation. IEEE Trans. Power Syst., 23(3), 1000–1008. <https://doi.org/10.1109/TPWRS.2008.926439>
+```@docs
+ACTPowerModel
+```
 
 ## `DCPPowerModel`
-- Stott, B., Jardim, J., & Alsac, O. (2009). DC power flow revisited. IEEE Trans. Power Syst., 24(3), 1290–1300. <https://doi.org/10.1109/TPWRS.2009.2021235>
+```@docs
+DCPPowerModel
+```
+
 
 ## `SDPWRMPowerModel`
-Original paper:
-- Bai, X., Wei, H., Fujisawa, K., & Wang, Y. (2008). Semidefinite programming for optimal power flow problems. Int. J. Elec. Power & Energy Syst., 30(6–7), 383–392. <https://doi.org/10.1016/j.ijepes.2007.12.003>
-First use of 'W' to represent voltage products in BIM SDP:
-- Sojoudi, S., & Lavaei, J. (2012). Physics of power networks makes hard optimization problems easy to solve. In IEEE Power and Energy Soc. General Meeting (pp. 1–8). San Diego, CA. <https://doi.org/10.1109/PESGM.2012.6345272>
-
-
+```@docs
+SDPWRMPowerModel
+```
 
 ## `SOCWRPowerModel`
-- Jabr, R. A. (2006). Radial distribution load flow using conic programming. IEEE Trans. Power Syst., 21(3), 2005–2006. <https://doi.org/10.1109/TPWRS.2006.879234>
+```@docs
+SOCWRPowerModel
+```
+
 
 
 ## `QCWRPowerModel`
-- Hijazi, H., Coffrin, C., & Van Hentenryck, P. (2016). Convex quadratic relaxations for mixed-integer nonlinear programs in power systems. Math. Prog. Comp., 1–47.
-
+```@docs
+QCWRPowerModel
+```
 ## `QCWRTriPowerModel`
-Same as `QCWRPowerModel` but with McCormick's envelopes for product of *three* variables.
+```@docs
+QCWRTriPowerModel
+```
 
 
 ## `SOCBFPowerModel`
-Original work:
-- Farivar, M. and Low, S. H. (2012) “Branch flow model: Relaxations and convexification,” in Proc. 51st IEEE Conf. Decision and Control.
-Extended with transformers as follows:
-- Coffrin, C., Hijazi, H. L., & Van Hentenryck, P. (2015). DistFlow Extensions for AC Transmission Systems, 1–20. Retrieved from <http://arxiv.org/abs/1506.04773>
+```@docs
+SOCBFPowerModel
+```

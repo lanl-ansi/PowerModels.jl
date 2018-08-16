@@ -15,20 +15,23 @@ PowerModels implements a slightly generalized version of the AC Optimal Power Fl
 %
 \mbox{sets:} & \nonumber \\
 & N \mbox{ - buses}\nonumber \\
-& R \mbox{ - refrences buses}\nonumber \\
+& R \mbox{ - reference buses}\nonumber \\
 & E, E^R \mbox{ - branches, forward and reverse orientation} \nonumber \\
 & G, G_i \mbox{ - generators and generators at bus $i$} \nonumber \\
 & L, L_i \mbox{ - loads and loads at bus $i$} \nonumber \\
 & S, S_i \mbox{ - shunts and shunts at bus $i$} \nonumber \\
 %
 \mbox{data:} & \nonumber \\
-& S^{gl}_k, S^{gu}_k \;\; \forall k \in G \nonumber \\
-& c_{2k}, c_{1k}, c_{0k} \;\; \forall k \in G \nonumber \\
-& v^l_i, v^u_i \;\; \forall i \in N \nonumber \\
-& {S^d}_k \;\; \forall k \in L \nonumber \\
-& Y^s_{k} \;\; \forall k \in S \nonumber \\
-& Y_{ij}, Y^c_{ij}, Y^c_{ji}, {T}_{ij} \;\; \forall (i,j) \in E \nonumber \\
-& {s^u}_{ij}, \theta^{\Delta l}_{ij}, \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \nonumber \\
+& S^{gl}_k, S^{gu}_k \;\; \forall k \in G \nonumber \mbox{ - generator complex power bounds}\\
+& c_{2k}, c_{1k}, c_{0k} \;\; \forall k \in G \nonumber  \mbox{ - generator cost components}\\
+& v^l_i, v^u_i \;\; \forall i \in N \nonumber \mbox{ - voltage bounds}\\
+& {S^d}_k \;\; \forall k \in L \nonumber \mbox{ - load complex power consumption}\\
+& Y^s_{k} \;\; \forall k \in S \nonumber \mbox{ - bus shunt admittance}\\
+& Y_{ij}, Y^c_{ij}, Y^c_{ji} \;\; \forall (i,j) \in E \nonumber \mbox{ - branch pi-section parameters}\\
+& {T}_{ij} \;\; \forall (i,j) \in E \nonumber \mbox{ - branch complex transformation ratio}\\
+& {s^u}_{ij}  \;\; \forall (i,j) \in E \nonumber \mbox{ - branch apparent power limit}\\
+& i^u_{ij}  \;\; \forall (i,j) \in E \nonumber \mbox{ - branch current limit}\\
+& \theta^{\Delta l}_{ij}, \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \nonumber \mbox{ - branch voltage angle difference bounds}\\
 %
 \end{align}
 ```
@@ -42,9 +45,9 @@ A complete mathematical model is as follows,
 \begin{align}
 %
 \mbox{variables: } &  \\
-& S^g_k \;\; \forall k\in G  \label{var_generation}\\
-& V_i \;\; \forall i\in N \label{var_voltage} \\
-& S_{ij} \;\; \forall (i,j) \in E \cup E^R  \label{var_complex_power} \\
+& S^g_k \;\; \forall k\in G \mbox{ - generator complex power dispatch} \label{var_generation}\\
+& V_i \;\; \forall i\in N \label{var_voltage} \mbox{ - bus complex voltage}\\
+& S_{ij} \;\; \forall (i,j) \in E \cup E^R  \label{var_complex_power} \mbox{ - branch complex power flow}\\
 %
 \mbox{minimize: } & \sum_{k \in G} c_{2k} (\Re(S^g_k))^2 + c_{1k}\Re(S^g_k) + c_{0k} \label{eq_objective}\\
 %
@@ -56,6 +59,7 @@ A complete mathematical model is as follows,
 & S_{ij} = \left( Y_{ij} + Y^c_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2} - Y^*_{ij} \frac{V_i V^*_j}{{T}_{ij}} \;\; \forall (i,j)\in E \label{eq_power_from}\\
 & S_{ji} = \left( Y_{ij} + Y^c_{ji} \right)^* |V_j|^2 - Y^*_{ij} \frac{V^*_i V_j}{{T}^*_{ij}} \;\; \forall (i,j)\in E \label{eq_power_to}\\
 & |S_{ij}| \leq s^u_{ij} \;\; \forall (i,j) \in E \cup E^R \label{eq_thermal_limit}\\
+& |I_{ij}| \leq i^u_{ij} \;\; \forall (i,j) \in E \cup E^R \label{eq_current_limit}\\
 & \theta^{\Delta l}_{ij} \leq \angle (V_i V^*_j) \leq \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \label{eq_angle_difference}
 %
 \end{align}
@@ -76,6 +80,7 @@ Note that for clarity of this presentation some model variants that PowerModels 
 - Eq. $\eqref{eq_power_from}$ - `constraint_ohms_yt_from` in `constraint_template.jl`
 - Eq. $\eqref{eq_power_to}$ - `constraint_ohms_yt_to` in `constraint_template.jl`
 - Eq. $\eqref{eq_thermal_limit}$ - `constraint_thermal_limit_from` and `constraint_thermal_limit_to` in `constraint_template.jl`
+- Eq. $\eqref{eq_current_limit}$ - `constraint_current_limit` in `constraint_template.jl`
 - Eq. $\eqref{eq_angle_difference}$ - `constraint_voltage_angle_difference` in `constraint_template.jl`
 
 
@@ -93,7 +98,7 @@ A complete mathematical formulation for a Branch Flow Model is conceived as:
 & S^g_k \;\; \forall k\in G \nonumber \\
 & V_i \;\; \forall i\in N \nonumber \\
 & S_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber \\
-& I^{s}_{ij} \;\; \forall (i,j) \in E \cup E^R \label{var_branch_current}\\
+& I^{s}_{ij} \;\; \forall (i,j) \in E \cup E^R \label{var_branch_current}  \mbox{ - branch complex (series) current}\\
 %
 \mbox{minimize: } & \sum_{k \in G} c_{2k} (\Re(S^g_k))^2 + c_{1k}\Re(S^g_k) + c_{0k} \nonumber\\
 %
@@ -107,6 +112,7 @@ A complete mathematical formulation for a Branch Flow Model is conceived as:
 & S^{s}_{ij} = \frac{V_i}{{T}_{ij}} (I^{s}_{ij})^*  \;\; \forall (i,j)\in E \label{eq_complex_power_definition} \\
 & \frac{V_i}{{T}_{ij}} = V_j + z_{ij} I^{s}_{ij}  \;\; \forall (i,j)\in E \label{eq_ohms_bfm} \\
 & |S_{ij}| \leq s^u_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber\\
+& |I_{ij}| \leq i^u_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber\\
 & \theta^{\Delta l}_{ij} \leq \angle (V_i V^*_j) \leq \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \nonumber
 %
 \end{align}
