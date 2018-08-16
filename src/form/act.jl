@@ -20,7 +20,6 @@ year={2007},
 volume={22},
 number={4},
 pages={2285-2286},
-keywords={load flow control;optimisation;power system management;conic quadratic format;load flow equation;meshed networks;radial network;second-order cone program;polynomial-time interior point methods;trigonometric functional constraint;energy management system functions;conic quadratic optimization method;load flow control;nonlinear programming;optimization methods;Load flow;Equations;Steady-state;Polynomials;Voltage;Power system modeling;Testing;Energy management;Robustness;Optimization methods;Load flow control;nonlinear programming;optimization methods},
 doi={10.1109/TPWRS.2007.907590},
 ISSN={0885-8950},
 month={Nov},}

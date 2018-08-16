@@ -10,7 +10,7 @@ abstract type AbstractACRForm <: AbstractPowerFormulation end
 abstract type StandardACRForm <: AbstractACRForm end
 
 """
-AC power flow formulation with polar bus voltage variables.
+AC power flow formulation with rectangular bus voltage variables.
 
 ```
 @techreport{Cain2012,

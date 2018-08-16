@@ -22,7 +22,6 @@ year={2006},
 volume={21},
 number={3},
 pages={1458-1459},
-keywords={convex programming;load flow;power distribution;radial distribution load flow problem;conic programming;convex optimization problem;interior-point method;numerical ill-conditioning;distribution power flow equations;radial system optimization problems;Load flow;Voltage;Power system modeling;Reactive power;Polynomials;Nonlinear equations;Optimization methods;Power systems;System testing;Load flow control;nonlinear programming;optimization methods},
 doi={10.1109/TPWRS.2006.879234},
 ISSN={0885-8950},
 month={Aug},}

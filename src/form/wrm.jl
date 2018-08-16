@@ -23,7 +23,6 @@ issn = "0142-0615",
 doi = "https://doi.org/10.1016/j.ijepes.2007.12.003",
 url = "http://www.sciencedirect.com/science/article/pii/S0142061507001378",
 author = "Xiaoqing Bai and Hua Wei and Katsuki Fujisawa and Yong Wang",
-keywords = "Optimal power flow, Interior point method, Semidefinite programming"
 }
 ```
 First paper to use "W" variables in the BIM of AC OPF:
@@ -35,7 +34,6 @@ year={2012},
 volume={},
 number={},
 pages={1-8},
-keywords={computational complexity;distribution networks;load flow;optimisation;polynomials;transmission networks;power networks;optimization problems;optimal power flow problem;quadratic cost function;polynomial time;IEEE benchmark systems;arbitrary convex cost functions;solvability;Lagrangian dual;large-scale network;graph sparsity;computational complexity;Phase shifters;Polynomials;Cost function;Computational complexity;Power transmission lines},
 doi={10.1109/PESGM.2012.6345272},
 ISSN={1932-5517},
 month={July},}

@@ -12,6 +12,20 @@ abstract type StandardACPForm <: AbstractACPForm end
 """
 AC power flow formulation with polar bus voltage variables.
 
+The seminal reference of AC OPF:
+```
+@article{carpentier1962contribution,
+  title={Contribution to the economic dispatch problem},
+  author={Carpentier, J},
+  journal={Bulletin de la Societe Francoise des Electriciens},
+  volume={3},
+  number={8},
+  pages={431--447},
+  year={1962}
+}
+```
+
+History and discussion:
 ```
 @techreport{Cain2012,
 author = {Cain, Mary B and {O' Neill}, Richard P and Castillo, Anya},
