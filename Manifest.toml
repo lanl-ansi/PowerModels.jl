@@ -71,6 +71,12 @@ version = "0.8.5"
 deps = ["LinearAlgebra", "Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
+[[JSON]]
+deps = ["Dates", "Distributed", "Mmap", "Pkg", "Sockets", "Test", "Unicode"]
+git-tree-sha1 = "fec8e4d433072731466d37ed0061b3ba7f70eeb9"
+uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
+version = "0.19.0"
+
 [[JuMP]]
 deps = ["Calculus", "Compat", "DataStructures", "ForwardDiff", "MathOptInterface", "NaNMath"]
 git-tree-sha1 = "6b0ce33ffcb99a2757c308a11fd06bdd40bf0335"
