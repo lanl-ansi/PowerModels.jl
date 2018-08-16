@@ -42,6 +42,9 @@ month={July},}
 """
 const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
 
+
+abstract type SDPDecompForm <: SDPWRMForm end
+
 ""
 const SDPDecompPowerModel = GenericPowerModel{SDPDecompForm}
 
