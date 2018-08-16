@@ -67,6 +67,12 @@ git-tree-sha1 = "0dd11038da4efce9ce457b1cf47a52eaf6251bd3"
 uuid = "f6369f11-7733-5829-9624-2563aa707210"
 version = "0.8.5"
 
+[[InfrastructureModels]]
+deps = ["Compat", "JuMP", "Memento"]
+git-tree-sha1 = "c044aad130379c10b5d03376b01ea5f4c842828f"
+uuid = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
+version = "0.0.8"
+
 [[InteractiveUtils]]
 deps = ["LinearAlgebra", "Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
@@ -108,6 +114,12 @@ git-tree-sha1 = "6bb3530fb9ed16a2f9324d6de54ec5ab9e5822e0"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 version = "0.5.1"
 
+[[Memento]]
+deps = ["Compat", "JSON", "Nullables", "Syslogs"]
+git-tree-sha1 = "fb72f98eb7752f00e32f593c74f2e566ebf7061b"
+uuid = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
+version = "0.9.0"
+
 [[Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
 
@@ -116,6 +128,12 @@ deps = ["Compat"]
 git-tree-sha1 = "ce3b85e484a5d4c71dd5316215069311135fa9f2"
 uuid = "77ba4419-2d1f-58cd-9bb1-8ffee604a2e3"
 version = "0.3.2"
+
+[[Nullables]]
+deps = ["Compat", "Pkg"]
+git-tree-sha1 = "7777136d2169f07b9674a9d8dbd550d99fd250b8"
+uuid = "4d1e1d77-625e-5b40-9113-a560ec7a8ecd"
+version = "0.0.7"
 
 [[Pkg]]
 deps = ["Dates", "LibGit2", "Markdown", "Printf", "REPL", "Random", "SHA", "UUIDs"]
@@ -165,6 +183,12 @@ version = "0.8.3"
 [[Statistics]]
 deps = ["LinearAlgebra", "SparseArrays"]
 uuid = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
+
+[[Syslogs]]
+deps = ["Compat", "Nullables"]
+git-tree-sha1 = "d3e512a044cc8873c741d88758f8e1888c7c47d3"
+uuid = "cea106d9-e007-5e6c-ad93-58fe2094e9c4"
+version = "0.2.0"
 
 [[Test]]
 deps = ["Distributed", "InteractiveUtils", "Logging", "Random"]
