@@ -34,10 +34,10 @@
         output = sprint(PowerModels.summary, result["solution"])
 
         line_count = count(c -> c == '\n', output)
-        @test line_count >= 20 && line_count <= 30 
-        @test contains(output, "baseMVA: 100.0")
-        @test contains(output, "Table: bus")
-        @test contains(output, "Table: gen")
+        @test line_count >= 20 && line_count <= 30
+        @test occursin(output, "baseMVA: 100.0")
+        @test occursin(output, "Table: bus")
+        @test occursin(output, "Table: gen")
     end
 
 end
