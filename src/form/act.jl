@@ -9,7 +9,22 @@ abstract type AbstractACTForm <: AbstractPowerFormulation end
 ""
 abstract type StandardACTForm <: AbstractACTForm end
 
-""
+"""
+AC power flow formulation (nonconvex) with variables for voltage angle, voltage magnitude squared, and real and imaginary part of voltage crossproducts. A tangens constraint is added to represent meshed networks in an exact manner.
+```
+@ARTICLE{4349090,
+author={R. A. Jabr},
+journal={IEEE Transactions on Power Systems},
+title={A Conic Quadratic Format for the Load Flow Equations of Meshed Networks},
+year={2007},
+volume={22},
+number={4},
+pages={2285-2286},
+doi={10.1109/TPWRS.2007.907590},
+ISSN={0885-8950},
+month={Nov},}
+```
+"""
 const ACTPowerModel = GenericPowerModel{StandardACTForm}
 
 "default AC constructor"

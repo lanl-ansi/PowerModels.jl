@@ -8,7 +8,24 @@ abstract type AbstractDCPForm <: AbstractPowerFormulation end
 ""
 abstract type StandardDCPForm <: AbstractDCPForm end
 
-""
+"""
+Linearized 'DC' power flow formulation with polar voltage variables.
+
+```
+@ARTICLE{4956966,
+author={B. Stott and J. Jardim and O. Alsac},
+journal={IEEE Transactions on Power Systems},
+title={DC Power Flow Revisited},
+year={2009},
+volume={24},
+number={3},
+pages={1290-1300},
+keywords={load flow;power markets;power system management;power system security;pricing;DC network power flow models;congestion-constrained market applications;electric power industry;Load flow;Power system modeling;Power generation economics;Large-scale systems;Testing;Application software;Reliability theory;Load flow analysis;Pricing;Software systems;Congestion revenue rights;contingency analysis;dc power flow;economic dispatch;financial transmission rights;LMP pricing;unit commitment},
+doi={10.1109/TPWRS.2009.2021235},
+ISSN={0885-8950},
+month={Aug},}
+```
+"""
 const DCPPowerModel = GenericPowerModel{StandardDCPForm}
 
 "default DC constructor"
