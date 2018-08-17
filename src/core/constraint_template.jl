@@ -448,6 +448,20 @@ function constraint_thermal_limit_to_ne(pm::GenericPowerModel, i::Int; nw::Int=p
 end
 
 
+### Branch - Current Limit Constraints ###
+
+"""
+Adds a current magnitude limit constraint for the desired branch to the PowerModel.
+"""
+function constraint_current_limit(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    branch = ref(pm, nw, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+
+    constraint_current_limit(pm, nw, cnd, f_idx, branch["c_rating_a"][cnd])
+end
+
 
 ### Branch - Phase Angle Difference Constraints ###
 

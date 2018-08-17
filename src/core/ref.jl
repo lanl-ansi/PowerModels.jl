@@ -1,6 +1,35 @@
 # tools for working with a PowerModels ref dict structures
 
 
+"computes flow bounds on branches"
+function calc_branch_flow_bounds(branches, buses, conductor::Int=1)
+    flow_lb = Dict() 
+    flow_ub = Dict()
+
+    for (i, branch) in branches
+        flow_lb[i] = -Inf
+        flow_ub[i] = Inf
+
+        if haskey(branch, "rate_a")
+            flow_lb[i] = max(flow_lb[i], -branch["rate_a"][conductor])
+            flow_ub[i] = min(flow_ub[i],  branch["rate_a"][conductor])
+        end
+
+        if haskey(branch, "c_rating_a")
+            fr_vmin = buses[branch["f_bus"]]["vmin"][conductor]
+            to_vmin = buses[branch["t_bus"]]["vmin"][conductor]
+            m_vmin = min(fr_vmin, to_vmin)
+
+            flow_lb[i] = max(flow_lb[i], -branch["c_rating_a"][conductor]/m_vmin)
+            flow_ub[i] = min(flow_ub[i],  branch["c_rating_a"][conductor]/m_vmin)
+        end
+
+    end
+
+    return flow_lb, flow_ub
+end
+
+
 ""
 function calc_voltage_product_bounds(buspairs, conductor::Int=1)
     wr_min = Dict([(bp, -Inf) for bp in keys(buspairs)])

@@ -2,8 +2,10 @@ PowerModels.jl Change Log
 =================
 
 ### Staged
+- Added support for current limits, issue #342
 - Added data simplification for piecewise linear cost functions
 - Added sim_parallel_run_time to OBBT stats
+- Made thermal limits optional in the data model
 - Fixed a bug in quadratic conic objective functions
 - Expanded documentation (mathematical model, formulations, references for formulations) 
 

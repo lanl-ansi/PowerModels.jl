@@ -68,6 +68,23 @@ function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int,
 end
 
 
+function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractACPForm
+    l,i,j = f_idx
+    t_idx = (l,j,i)
+
+    vm_fr = var(pm, n, c, :vm, i)
+    vm_to = var(pm, n, c, :vm, j)
+
+    p_fr = var(pm, n, c, :p, f_idx)
+    q_fr = var(pm, n, c, :q, f_idx)
+    @constraint(pm.model, p_fr^2 + q_fr^2 <= vm_fr^2*c_rating_a^2)
+
+    p_to = var(pm, n, c, :p, t_idx)
+    q_to = var(pm, n, c, :q, t_idx)
+    @constraint(pm.model, p_to^2 + q_to^2 <= vm_to^2*c_rating_a^2)
+end
+
+
 """
 ```
 sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*v^2

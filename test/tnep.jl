@@ -16,15 +16,15 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
-    # omitting due to numerical stability issues on Linux
-    #@testset "5-bus case" begin
-    #    result = run_tnep("../test/data/matpower/case5_tnep.m", ACPPowerModel, juniper_solver)
 
-    #    check_tnep_status(result["solution"])
+    @testset "5-bus case" begin
+        result = run_tnep("../test/data/matpower/case5_tnep.m", ACPPowerModel, juniper_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 1; atol = 1e-2)
-    #end
+        check_tnep_status(result["solution"])
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1; atol = 1e-2)
+    end
 end
 
 
@@ -37,6 +37,7 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
+
     @testset "5-bus rts case" begin
         result = run_tnep("../test/data/matpower/case5_tnep.m", SOCWRPowerModel, pavito_solver)
 
@@ -57,19 +58,21 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
-    # omitting due to numerical stability issues on Linux
-    #@testset "5-bus rts case" begin
-    #    result = run_tnep("../test/data/matpower/case5_tnep.m", QCWRPowerModel, pavito_solver)
 
-    #    check_tnep_status(result["solution"])
+    @testset "5-bus rts case" begin
+        result = run_tnep("../test/data/matpower/case5_tnep.m", QCWRPowerModel, pavito_solver)
 
-    #    @test result["status"] == :Optimal
-    #    @test isapprox(result["objective"], 1; atol = 1e-2)
-    #end
+        check_tnep_status(result["solution"])
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 1; atol = 1e-2)
+    end
 end
 
 
 @testset "test dc tnep" begin
+    #=
+    # Seems to be a bug in Pavito
     @testset "3-bus case" begin
         result = run_tnep("../test/data/matpower/case3_tnep.m", DCPPowerModel, pavito_solver)
 
@@ -78,9 +81,8 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
+    =#
 
-    #=
-    # skip this one becouse it is breaking Julia package tests
     @testset "5-bus case" begin
         result = run_tnep("../test/data/matpower/case5_tnep.m", DCPPowerModel, pavito_solver)
 
@@ -89,7 +91,6 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 1; atol = 1e-2)
     end
-    =#
 end
 
 @testset "test dc-losses tnep" begin

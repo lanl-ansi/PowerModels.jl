@@ -123,3 +123,23 @@ function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T
     #    InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     #end
 end
+
+
+""
+function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractWRMForm
+    l,i,j = f_idx
+    t_idx = (l,j,i)
+
+    w_fr = var(pm, n, c, :w, i)
+    w_to = var(pm, n, c, :w, j)
+
+    p_fr = var(pm, n, c, :p, f_idx)
+    q_fr = var(pm, n, c, :q, f_idx)
+    @constraint(pm.model, norm([2*p_fr; 2*q_fr; w_fr*c_rating_a^2-1]) <= w_fr*c_rating_a^2+1)
+
+    p_to = var(pm, n, c, :p, t_idx)
+    q_to = var(pm, n, c, :q, t_idx)
+    @constraint(pm.model, norm([2*p_to; 2*q_to; w_to*c_rating_a^2-1]) <= w_to*c_rating_a^2+1)
+end
+
+

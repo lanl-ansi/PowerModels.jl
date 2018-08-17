@@ -58,10 +58,12 @@ end
 ""
 function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: StandardDCPForm
     if bounded
+        flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
+
         var(pm, nw, cnd)[:p] = @variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(cnd)_p",
-            lowerbound = -ref(pm, nw, :branch, l, "rate_a", cnd),
-            upperbound =  ref(pm, nw, :branch, l, "rate_a", cnd),
+            lowerbound = flow_lb[l],
+            upperbound = flow_ub[l],
             start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     else
@@ -172,6 +174,16 @@ end
 
 "Do nothing, this model is symmetric"
 function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t_idx, rate_a) where T <: AbstractDCPForm
+end
+
+function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractDCPForm
+    l,i,j = f_idx
+    t_idx = (l,j,i)
+
+    p_fr = var(pm, n, c, :p, f_idx)
+
+    getlowerbound(p_fr) < -c_rating_a && setlowerbound(p_fr, -c_rating_a)
+    getupperbound(p_fr) >  c_rating_a && setupperbound(p_fr,  c_rating_a)
 end
 
 ""
