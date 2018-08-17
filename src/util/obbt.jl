@@ -204,7 +204,8 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
                 nlb = floor(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nlb > vm_lb[bus]) && (lb = nlb)
             else 
-                error(LOGGER, "BT minimization problem for vm[$bus] errored - change tolerances.")
+                warn(LOGGER, "BT minimization problem for vm[$bus] errored - change tolerances.")
+                continue
             end
 
             #vm upper bound solve
@@ -215,7 +216,8 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
                 nub = ceil(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nub < vm_ub[bus]) && (ub = nub)
             else 
-                error(LOGGER, "BT maximization problem for vm[$bus] errored - change tolerances.")
+                warn(LOGGER, "BT maximization problem for vm[$bus] errored - change tolerances.")
+                continue
             end 
             end_time = time() - start_time
             max_vm_iteration_time = max(end_time, max_vm_iteration_time)
@@ -263,7 +265,8 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
                 nlb = floor(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nlb > td_lb[bp]) && (lb = nlb)
             else
-                error(LOGGER, "BT minimization problem for td[$bp] errored - change tolerances")
+                warn(LOGGER, "BT minimization problem for td[$bp] errored - change tolerances")
+                continue
             end
 
             # td upper bound solve 
@@ -274,7 +277,8 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
                 nub = ceil(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nub < td_ub[bp]) && (ub = nub)
             else 
-                error(LOGGER, "BT maximization problem for td[$bp] errored - change tolerances.")
+                warn(LOGGER, "BT maximization problem for td[$bp] errored - change tolerances.")
+                continue
             end 
             end_time = time() - start_time
             max_td_iteration_time = max(end_time, max_td_iteration_time)
