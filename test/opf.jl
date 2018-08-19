@@ -220,6 +220,51 @@ end
     #end
 end
 
+@testset "test nfa opf" begin
+    @testset "3-bus case" begin
+        result = run_opf("../test/data/matpower/case3.m", NFAPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 5638.97; atol = 1e0)
+    end
+    @testset "5-bus asymmetric case" begin
+        result = run_opf("../test/data/matpower/case5_asym.m", NFAPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 14810.0; atol = 1e0)
+    end
+    @testset "5-bus gap case" begin
+        result = run_opf("../test/data/matpower/case5_gap.m", NFAPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], -27410.0; atol = 1e0)
+    end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf("../test/data/pti/case5_alc.raw", NFAPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1000.0; atol = 1e0)
+    end
+    @testset "5-bus with pwl costs" begin
+        result = run_opf("../test/data/matpower/case5_pwlc.m", NFAPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42565.8; atol = 1e0)
+    end
+    @testset "6-bus case" begin
+        result = run_opf("../test/data/matpower/case6.m", NFAPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 11383.8; atol = 1e0)
+    end
+    @testset "24-bus rts case" begin
+        result = run_opf("../test/data/matpower/case24.m", NFAPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 61001.2; atol = 1e0)
+    end
+end
+
 @testset "test dc+ll opf" begin
     @testset "3-bus case" begin
         result = run_opf("../test/data/matpower/case3.m", DCPLLPowerModel, ipopt_solver)
