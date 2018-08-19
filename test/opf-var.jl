@@ -206,7 +206,7 @@ end
         result = run_generic_model("../test/data/matpower/case6.m", ACPPowerModel, ipopt_solver, post_opf_var)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 11567; atol = 1e0)
+        @test isapprox(result["objective"], 11625.3; atol = 1e0)
         @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
         @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
