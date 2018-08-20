@@ -46,6 +46,25 @@ end
 
 
 ""
+function run_mn_opb(file, model_constructor, solver; kwargs...)
+    return run_generic_model(file, model_constructor, solver, post_mn_opb; multinetwork=true, kwargs...)
+end
+
+""
+function post_mn_opb(pm::GenericPowerModel)
+    for (n, network) in nws(pm)
+        variable_generation(pm, nw=n)
+
+        for i in ids(pm, :components, nw=n)
+            constraint_power_balance(pm, i, nw=n)
+        end
+    end
+
+    objective_min_gen_fuel_cost(pm)
+end
+
+
+""
 function run_mn_opf(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_mn_opf; multinetwork=true, kwargs...)
 end

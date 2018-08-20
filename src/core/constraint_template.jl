@@ -59,6 +59,37 @@ function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, i::Int; nw
 end
 
 
+### Power Balance Constraints ###
+
+"ensures that power generation and demand are balanced"
+function constraint_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    comp_buses = ref(pm, nw, :components, i)
+
+    comp_gens = Set{Int64}()
+    for bus_id in comp_buses, gen_id in PowerModels.ref(pm, nw, :bus_gens, bus_id)
+        push!(comp_gens, gen_id)
+    end
+
+    comp_loads = Set{Int64}()
+    for bus_id in comp_buses, load_id in PowerModels.ref(pm, nw, :bus_loads, bus_id)
+        push!(comp_loads, load_id)
+    end
+
+    comp_shunts = Set{Int64}()
+    for bus_id in comp_buses, shunt_id in PowerModels.ref(pm, nw, :bus_shunts, bus_id)
+        push!(comp_shunts, shunt_id)
+    end
+
+    comp_pd = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in comp_loads)
+    comp_qd = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in comp_loads)
+
+    comp_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in comp_shunts)
+    comp_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in comp_shunts)
+
+    constraint_power_balance(pm, nw, cnd, i, comp_gens, comp_pd, comp_qd, comp_gs, comp_bs)
+end
+
+
 ### Bus - KCL Constraints ###
 
 ""

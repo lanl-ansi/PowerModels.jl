@@ -60,6 +60,20 @@ function objective_min_fuel_cost(pm::GenericPowerModel)
 end
 
 
+""
+function objective_min_gen_fuel_cost(pm::GenericPowerModel)
+    model = check_cost_models(pm)
+
+    if model == 1
+        return objective_min_gen_pwl_fuel_cost(pm)
+    elseif model == 2
+        return objective_min_gen_polynomial_fuel_cost(pm)
+    else
+        error("Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
+    end
+
+end
+
 
 """
 Checks that all cost models are polynomials, quadratic or less
@@ -100,6 +114,22 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
             sum(   dcline["cost"][1]*sum( var(pm, n, c, :p_dc, from_idx[n][i]) for c in conductor_ids(pm, n))^2 +
                    dcline["cost"][2]*sum( var(pm, n, c, :p_dc, from_idx[n][i]) for c in conductor_ids(pm, n)) +
                    dcline["cost"][3] for (i,dcline) in nw_ref[:dcline])
+        for (n, nw_ref) in nws(pm))
+    )
+end
+
+
+""
+function objective_min_gen_polynomial_fuel_cost(pm::GenericPowerModel)
+    check_polynomial_cost_models(pm)
+
+    return @objective(pm.model, Min,
+        sum(
+            sum(
+                gen["cost"][1]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))^2 +
+                gen["cost"][2]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))+
+                gen["cost"][3]
+            for (i,gen) in nw_ref[:gen])
         for (n, nw_ref) in nws(pm))
     )
 end
@@ -266,6 +296,31 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
         sum(
             sum( var(pm, n,   :pg_cost, i) for (i,gen) in nw_ref[:gen]) +
             sum( var(pm, n, :p_dc_cost, i) for (i,dcline) in nw_ref[:dcline])
+        for (n, nw_ref) in nws(pm))
+    )
+end
+
+
+""
+function objective_min_gen_pwl_fuel_cost(pm::GenericPowerModel)
+
+    for (n, nw_ref) in nws(pm)
+        pg_cost = var(pm, n)[:pg_cost] = @variable(pm.model, 
+            [i in ids(pm, n, :gen)], basename="$(n)_pg_cost"
+        )
+
+        # pwl cost
+        gen_lines = get_lines(nw_ref[:gen])
+        for (i, gen) in nw_ref[:gen]
+            for line in gen_lines[i]
+                @constraint(pm.model, pg_cost[i] >= line["slope"]*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line["intercept"])
+            end
+        end
+    end
+
+    return @objective(pm.model, Min,
+        sum(
+            sum( var(pm, n, :pg_cost, i) for (i,gen) in nw_ref[:gen])
         for (n, nw_ref) in nws(pm))
     )
 end

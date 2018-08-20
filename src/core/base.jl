@@ -291,6 +291,10 @@ function build_ref(data::Dict{String,Any})
             ref[:conductor_ids] = 1:ref[:conductors]
         end
 
+        # add connected components
+        component_sets = PowerModels.connected_components(nw_data)
+        ref[:components] = Dict(i => c for (i,c) in enumerate(sort(collect(component_sets); by=length)))
+
         # filter turned off stuff
         ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
         ref[:load] = filter((i, load) -> load["status"] == 1 && load["load_bus"] in keys(ref[:bus]), ref[:load])

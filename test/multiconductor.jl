@@ -368,8 +368,8 @@ end
         @test PowerModels.con(pm, pm.cnw, pm.ccnd, :kcl_p, 1) == PowerModels.con(pm, :kcl_p, 1)
         @test length(PowerModels.con(pm)) == 4
 
-        @test length(PowerModels.ref(pm, pm.cnw)) == 39
-        @test length(PowerModels.ref(pm)) == 39
+        @test length(PowerModels.ref(pm, pm.cnw)) == 40
+        @test length(PowerModels.ref(pm)) == 40
         @test PowerModels.ref(pm, pm.cnw, :bus, 1, "bus_i") == 1
         @test PowerModels.ref(pm, :bus, 1, "vmax") == 1.1
 

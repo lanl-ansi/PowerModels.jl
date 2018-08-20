@@ -43,6 +43,7 @@ include("form/wr.jl")
 include("form/wrm.jl")
 include("form/shared.jl")
 
+include("prob/opb.jl")
 include("prob/pf.jl")
 include("prob/pf_bf.jl")
 include("prob/opf.jl")
