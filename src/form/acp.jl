@@ -28,11 +28,11 @@ The seminal reference of AC OPF:
 History and discussion:
 ```
 @techreport{Cain2012,
-author = {Cain, Mary B and {O' Neill}, Richard P and Castillo, Anya},
-pages = {1--36},
-title = {{History of optimal power flow and formulations}},
-url = {https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-formulation-testing.pdf}
-year = {2012}
+  author = {Cain, Mary B and {O' Neill}, Richard P and Castillo, Anya},
+  title = {{History of optimal power flow and formulations}},
+  year = {2012}
+  pages = {1--36},
+  url = {https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-formulation-testing.pdf}
 }
 ```
 """
