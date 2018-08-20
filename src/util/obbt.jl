@@ -123,7 +123,10 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
         error(LOGGER, "the upper bound provided to OBBT is not a valid ACOPF upper bound")
     end 
     if !(result_relaxation["status"] in status_pass) 
-        error(LOGGER, "relaxation is infeasible, implying the ACOPF is infeasible")
+        warn(LOGGER, "initial relaxation solve status is $(result_relaxation["status"])")
+        if result_relaxation["status"] == :SubOptimal
+            warn(LOGGER, "continuing with the bound-tightening algorithm")
+        end
     end 
     current_rel_gap = Inf 
     if !isinf(upper_bound)
