@@ -564,13 +564,13 @@ end
         data = PMs.parse_file("../test/data/matpower/case14.m")
         pm = GenericPowerModel(data, SDPDecompForm)
 
-        cadj, lookup_index = PMs.chordal_extension(pm)
+        cadj, lookup_index, σ = PMs.chordal_extension(pm)
         cliques = PMs.maximal_cliques(cadj)
         lookup_bus_index = map(reverse, lookup_index)
         groups = [[lookup_bus_index[gi] for gi in g] for g in cliques]
         @test PMs.problem_size(groups) == 344
 
-        pm.ext[:SDconstraintDecomposition] = PMs.SDconstraintDecomposition(groups, cadj, lookup_index)
+        pm.ext[:SDconstraintDecomposition] = PMs.SDconstraintDecomposition(groups, lookup_index, σ)
 
         PMs.post_opf(pm)
         result = solve_generic_model(pm, scs_solver; solution_builder=PMs.get_solution)

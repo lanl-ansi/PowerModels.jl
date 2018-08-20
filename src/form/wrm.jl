@@ -51,8 +51,6 @@ const SDPDecompPowerModel = GenericPowerModel{SDPDecompForm}
 struct SDconstraintDecomposition
     "Each sub-vector consists of bus IDs corresponding to a clique grouping"
     decomp::Vector{Vector{Int64}}
-    "Adjacency matrix of chordal graph extension"
-    cadj::SparseMatrixCSC{Int64, Int64}
     "`lookup_index[bus_id] --> idx` for mapping between 1:n and bus indices"
     lookup_index::Dict
     "A chordal extension and maximal cliques are uniquely determined by a graph ordering"
@@ -148,7 +146,7 @@ function variable_voltage(pm::GenericPowerModel{SDPDecompForm}; nw::Int=pm.cnw, 
         groups = maximal_cliques(cadj)
         lookup_bus_index = map(reverse, lookup_index)
         groups = [[lookup_bus_index[gi] for gi in g] for g in groups]
-        pm.ext[:SDconstraintDecomposition] = SDconstraintDecomposition(groups, cadj, lookup_index, ordering)
+        pm.ext[:SDconstraintDecomposition] = SDconstraintDecomposition(groups, lookup_index, ordering)
     end
 
     voltage_product_groups =
