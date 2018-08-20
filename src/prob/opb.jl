@@ -7,11 +7,11 @@ end
 
 "the optimal power balance problem"
 function run_opb(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, run_opb; kwargs...)
+    return run_generic_model(file, model_constructor, solver, post_opb; kwargs...)
 end
 
 ""
-function run_opb(pm::GenericPowerModel)
+function post_opb(pm::GenericPowerModel)
     variable_generation(pm)
 
     objective_min_gen_fuel_cost(pm)
