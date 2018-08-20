@@ -14,17 +14,18 @@ Second-order cone relaxation of bus injection model of AC OPF.
 
 The implementation casts this as a convex quadratically constrained problem.
 ```
-@ARTICLE{1664986,
-author={R. A. Jabr},
-journal={IEEE Transactions on Power Systems},
-title={Radial distribution load flow using conic programming},
-year={2006},
-volume={21},
-number={3},
-pages={1458-1459},
-doi={10.1109/TPWRS.2006.879234},
-ISSN={0885-8950},
-month={Aug},}
+@article{1664986,
+  author={R. A. Jabr},
+  title={Radial distribution load flow using conic programming},
+  journal={IEEE Transactions on Power Systems},
+  year={2006},
+  month={Aug},
+  volume={21},
+  number={3},
+  pages={1458-1459},
+  doi={10.1109/TPWRS.2006.879234},
+  ISSN={0885-8950}
+}
 ```
 """
 const SOCWRPowerModel = GenericPowerModel{SOCWRForm}
@@ -350,21 +351,17 @@ abstract type QCWRForm <: AbstractWRForm end
 "Quadratic-Convex" relaxation of AC OPF
 ```
 @Article{Hijazi2017,
-author="Hijazi, Hassan
-and Coffrin, Carleton
-and Hentenryck, Pascal Van",
-title="Convex quadratic relaxations for mixed-integer nonlinear programs in power systems",
-journal="Mathematical Programming Computation",
-year="2017",
-month="Sep",
-day="01",
-volume="9",
-number="3",
-pages="321--367",
-abstract="This paper presents a set of new convex quadratic relaxations for nonlinear and mixed-integer nonlinear programs arising in power systems. The considered models are motivated by hybrid discrete/continuous applications where existing approximations do not provide optimality guarantees. The new relaxations offer computational efficiency along with minimal optimality gaps, providing an interesting alternative to state-of-the-art semidefinite programming relaxations. Three case studies in optimal power flow, optimal transmission switching and capacitor placement demonstrate the benefits of the new relaxations.",
-issn="1867-2957",
-doi="10.1007/s12532-016-0112-z",
-url="https://doi.org/10.1007/s12532-016-0112-z"
+  author="Hijazi, Hassan and Coffrin, Carleton and Hentenryck, Pascal Van",
+  title="Convex quadratic relaxations for mixed-integer nonlinear programs in power systems",
+  journal="Mathematical Programming Computation",
+  year="2017",
+  month="Sep",
+  volume="9",
+  number="3",
+  pages="321--367",
+  issn="1867-2957",
+  doi="10.1007/s12532-016-0112-z",
+  url="https://doi.org/10.1007/s12532-016-0112-z"
 }
 ```
 """
@@ -789,21 +786,17 @@ abstract type QCWRTriForm <: QCWRForm end
 "Quadratic-Convex" relaxation of AC OPF with convex hull of triple product
 ```
 @Article{Hijazi2017,
-author="Hijazi, Hassan
-and Coffrin, Carleton
-and Hentenryck, Pascal Van",
-title="Convex quadratic relaxations for mixed-integer nonlinear programs in power systems",
-journal="Mathematical Programming Computation",
-year="2017",
-month="Sep",
-day="01",
-volume="9",
-number="3",
-pages="321--367",
-abstract="This paper presents a set of new convex quadratic relaxations for nonlinear and mixed-integer nonlinear programs arising in power systems. The considered models are motivated by hybrid discrete/continuous applications where existing approximations do not provide optimality guarantees. The new relaxations offer computational efficiency along with minimal optimality gaps, providing an interesting alternative to state-of-the-art semidefinite programming relaxations. Three case studies in optimal power flow, optimal transmission switching and capacitor placement demonstrate the benefits of the new relaxations.",
-issn="1867-2957",
-doi="10.1007/s12532-016-0112-z",
-url="https://doi.org/10.1007/s12532-016-0112-z"
+  author="Hijazi, Hassan and Coffrin, Carleton and Hentenryck, Pascal Van",
+  title="Convex quadratic relaxations for mixed-integer nonlinear programs in power systems",
+  journal="Mathematical Programming Computation",
+  year="2017",
+  month="Sep",
+  volume="9",
+  number="3",
+  pages="321--367",
+  issn="1867-2957",
+  doi="10.1007/s12532-016-0112-z",
+  url="https://doi.org/10.1007/s12532-016-0112-z"
 }
 ```
 """
