@@ -1,10 +1,17 @@
 export
     SOCWRPowerModel, SOCWRForm,
     QCWRPowerModel, QCWRForm,
+    SOCWRConicPowerModel, SOCWRConicForm,
     QCWRTriPowerModel, QCWRTriForm
 
 ""
 abstract type AbstractWRForm <: AbstractPowerFormulation end
+
+""
+abstract type AbstractWRConicForm <: AbstractConicPowerFormulation end
+
+""
+abstract type SOCWRConicForm <: AbstractWRConicForm end
 
 ""
 abstract type SOCWRForm <: AbstractWRForm end
@@ -30,11 +37,26 @@ The implementation casts this as a convex quadratically constrained problem.
 """
 const SOCWRPowerModel = GenericPowerModel{SOCWRForm}
 
+"""
+Second-order cone relaxation of bus injection model of AC OPF.
+
+This implementation casts the problem as a convex conic problem.
+"""
+const SOCWRConicPowerModel = GenericPowerModel{SOCWRConicForm}
+
 "default SOC constructor"
 SOCWRPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCWRForm; kwargs...)
 
+SOCWRConicPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCWRConicForm; kwargs...)
+
 ""
 function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractWRForm
+    variable_voltage_magnitude_sqr(pm; kwargs...)
+    variable_voltage_product(pm; kwargs...)
+end
+
+""
+function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractWRConicForm
     variable_voltage_magnitude_sqr(pm; kwargs...)
     variable_voltage_product(pm; kwargs...)
 end
@@ -50,6 +72,22 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <:
     end
 end
 
+"SOC form of constraint: `c^2 + d^2 <= a*b`"
+function relaxation_complex_product_soc(m, a, b, c, d)
+    @assert (getlowerbound(a) >= 0 && getlowerbound(b) >= 0) || (getupperbound(a) <= 0 && getupperbound(b) <= 0)
+    @constraint(m, (a + b)/2 >= norm([(a - b)/2; c; d]))
+end
+
+""
+function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRConicForm
+    w  = var(pm, n, c,  :w)
+    wr = var(pm, n, c, :wr)
+    wi = var(pm, n, c, :wi)
+
+    for (i,j) in ids(pm, n, :buspairs)
+        relaxation_complex_product_soc(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
+    end
+end
 
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
