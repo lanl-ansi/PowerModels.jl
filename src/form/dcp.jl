@@ -1,5 +1,5 @@
 export
-    DCPPowerModel, SymmetricDCPForm,
+    DCPPowerModel, DCPlosslessForm,
     NFAPowerModel, NFAForm,
     DCPLLPowerModel, StandardDCPLLForm
 
@@ -7,9 +7,9 @@ export
 abstract type AbstractDCPForm <: AbstractPowerFormulation end
 
 "active power only formulations where p[(i,j)] = -p[(j,i)]"
-abstract type SymmetricDCPForm <: AbstractDCPForm end
+abstract type DCPlosslessForm <: AbstractDCPForm end
 
-const StandardDCPForm = SymmetricDCPForm
+const StandardDCPForm = DCPlosslessForm
 
 """
 Linearized 'DC' power flow formulation with polar voltage variables.
@@ -29,11 +29,11 @@ ISSN={0885-8950},
 month={Aug},}
 ```
 """
-const DCPPowerModel = GenericPowerModel{SymmetricDCPForm}
+const DCPPowerModel = GenericPowerModel{DCPlosslessForm}
 
 "default DC constructor"
 DCPPowerModel(data::Dict{String,Any}; kwargs...) =
-    GenericPowerModel(data, SymmetricDCPForm; kwargs...)
+    GenericPowerModel(data, DCPlosslessForm; kwargs...)
 
 ""
 function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
@@ -63,7 +63,7 @@ end
 
 
 ""
-function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: SymmetricDCPForm
+function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: DCPlosslessForm
     if bounded
         flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
 
@@ -87,7 +87,7 @@ function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, c
 end
 
 ""
-function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: SymmetricDCPForm
+function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: DCPlosslessForm
     var(pm, nw, cnd)[:p_ne] = @variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs_from)], basename="$(nw)_$(cnd)_p_ne",
         lowerbound = -ref(pm, nw, :ne_branch, l, "rate_a", cnd),
@@ -119,7 +119,7 @@ end
 
 
 ""
-function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gens, comp_pd, comp_qd, comp_gs, comp_bs) where T <: SymmetricDCPForm
+function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gens, comp_pd, comp_qd, comp_gs, comp_bs) where T <: DCPlosslessForm
     pg   = var(pm, n, c, :pg)
 
     @constraint(pm.model, sum(pg[g] for g in comp_gens) == sum(pd for pd in values(comp_pd)) + sum(gs for gs in values(comp_gs))*1.0^2)
@@ -295,7 +295,7 @@ end
 
 
 
-abstract type NFAForm <: SymmetricDCPForm end
+abstract type NFAForm <: DCPlosslessForm end
 
 """
 The an active power only network flow approximation, also known as the transportation model.
