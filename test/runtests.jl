@@ -7,7 +7,7 @@ setlevel!(getlogger(InfrastructureModels), "error")
 setlevel!(getlogger(PowerModels), "error")
 
 #using Cbc
-using Ipopt
+#using Ipopt
 #using SCS
 #using Pajarito
 #using Juniper
@@ -15,7 +15,7 @@ using Ipopt
 using Base.Test
 
 # default setup for solvers
-ipopt_solver = IpoptOptimizer(tol=1e-6, print_level=0)
+#ipopt_solver = IpoptOptimizer(tol=1e-6, print_level=0)
 #cbc_solver = CbcSolver()
 #juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
 ##juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
@@ -26,22 +26,22 @@ include("common.jl")
 
 @testset "PowerModels" begin
 
-    include("matpower.jl")
+    #include("matpower.jl")
 
-    include("pti.jl")
+    #include("pti.jl")
 
-    include("psse.jl")
+    #include("psse.jl")
 
-    include("output.jl")
+    #include("output.jl")
 
-    include("modify.jl")
+    #include("modify.jl")
 
-    include("data.jl")
+    #include("data.jl")
 
     # needs FeasibilitySense in Ipopt
     #include("pf.jl")
 
-    include("opf.jl")
+    #include("opf.jl")
 
     # needs MI solvers
     #include("ots.jl")
@@ -49,8 +49,8 @@ include("common.jl")
     # needs MI solvers
     #include("tnep.jl")
 
-    include("multinetwork.jl")
+    #include("multinetwork.jl")
 
-    include("docs.jl")
+    #include("docs.jl")
 
 end
