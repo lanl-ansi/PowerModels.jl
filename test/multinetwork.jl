@@ -111,6 +111,25 @@ TESTLOG = getlogger(PowerModels)
     @testset "2 period 5-bus asymmetric case" begin
         mn_data = build_mn_data("../test/data/matpower/case5_asym.m")
 
+
+        @testset "test dc polar opb" begin
+            result = PowerModels.run_mn_opb(mn_data, DCPPowerModel, ipopt_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 29620.0; atol = 1e0)
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["2"]["pg"]; 
+                atol = 1e-3
+            )
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["4"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["4"]["pg"]; 
+                atol = 1e-3
+            )
+        end
+
+
         @testset "test ac polar opf" begin
             result = PowerModels.run_mn_opf(mn_data, ACPPowerModel, ipopt_solver)
 
@@ -150,6 +169,23 @@ TESTLOG = getlogger(PowerModels)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 29999.4; atol = 1e0)
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["2"]["pg"]; 
+                atol = 1e-3
+            )
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["4"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["4"]["pg"]; 
+                atol = 1e-3
+            )
+        end
+
+        @testset "test nfa opf" begin
+            result = PowerModels.run_mn_opf(mn_data, NFAPowerModel, ipopt_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 29620.0; atol = 1e0)
             @test isapprox(
                 result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
                 result["solution"]["nw"]["2"]["gen"]["2"]["pg"]; 

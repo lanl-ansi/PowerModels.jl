@@ -3,12 +3,15 @@ PowerModels.jl Change Log
 
 ### Staged
 - Added support for current limits, issue #342
+- Added a optimal power balance problem specification
+- Added a network flow approximation formulation, NFAPowerModel
 - Added conic variant of the SOCWRPowerModel model, SOCWRConicPowerModel (thanks to @kersulis)
 - Added data simplification for piecewise linear cost functions
 - Added sim_parallel_run_time to OBBT stats
 - Made thermal limits optional in the data model
 - Fixed a bug in quadratic conic objective functions
-- Expanded documentation (mathematical model, formulations, references for formulations) 
+- Fixed a bug where dcline reactive variables entered active power only formulations
+- Expanded documentation (mathematical model, formulations, references for formulations)
 
 ### v0.8.2
 - Added optimality-based bound tightening (OBBT) functionality for the QC relaxations

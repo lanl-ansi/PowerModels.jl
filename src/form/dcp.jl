@@ -1,12 +1,15 @@
 export
-    DCPPowerModel, StandardDCPForm,
+    DCPPowerModel, DCPlosslessForm,
+    NFAPowerModel, NFAForm,
     DCPLLPowerModel, StandardDCPLLForm
 
 ""
 abstract type AbstractDCPForm <: AbstractPowerFormulation end
 
-""
-abstract type StandardDCPForm <: AbstractDCPForm end
+"active power only formulations where p[(i,j)] = -p[(j,i)]"
+abstract type DCPlosslessForm <: AbstractDCPForm end
+
+const StandardDCPForm = DCPlosslessForm
 
 """
 Linearized 'DC' power flow formulation with polar voltage variables.
@@ -26,11 +29,11 @@ Linearized 'DC' power flow formulation with polar voltage variables.
 }
 ```
 """
-const DCPPowerModel = GenericPowerModel{StandardDCPForm}
+const DCPPowerModel = GenericPowerModel{DCPlosslessForm}
 
 "default DC constructor"
 DCPPowerModel(data::Dict{String,Any}; kwargs...) =
-    GenericPowerModel(data, StandardDCPForm; kwargs...)
+    GenericPowerModel(data, DCPlosslessForm; kwargs...)
 
 ""
 function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
@@ -54,9 +57,13 @@ end
 function variable_reactive_branch_flow_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
 end
 
+"dc models ignore reactive power flows"
+function variable_reactive_dcline_flow(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
+end
+
 
 ""
-function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: StandardDCPForm
+function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: DCPlosslessForm
     if bounded
         flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
 
@@ -80,7 +87,7 @@ function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, c
 end
 
 ""
-function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: StandardDCPForm
+function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: DCPlosslessForm
     var(pm, nw, cnd)[:p_ne] = @variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs_from)], basename="$(nw)_$(cnd)_p_ne",
         lowerbound = -ref(pm, nw, :ne_branch, l, "rate_a", cnd),
@@ -109,6 +116,16 @@ end
 "do nothing, this model does not have reactive variables"
 function constraint_reactive_gen_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, i, qg) where T <: AbstractDCPForm
 end
+
+
+""
+function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gens, comp_pd, comp_qd, comp_gs, comp_bs) where T <: DCPlosslessForm
+    pg   = var(pm, n, c, :pg)
+
+    @constraint(pm.model, sum(pg[g] for g in comp_gens) == sum(pd for pd in values(comp_pd)) + sum(gs for gs in values(comp_gs))*1.0^2)
+    # omit reactive constraint
+end
+
 
 ""
 function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
@@ -177,9 +194,6 @@ function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t
 end
 
 function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractDCPForm
-    l,i,j = f_idx
-    t_idx = (l,j,i)
-
     p_fr = var(pm, n, c, :p, f_idx)
 
     getlowerbound(p_fr) < -c_rating_a && setlowerbound(p_fr, -c_rating_a)
@@ -277,6 +291,37 @@ function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int
     @constraint(pm.model, va_fr - va_to <= angmax*z + vad_max*(1-z))
     @constraint(pm.model, va_fr - va_to >= angmin*z + vad_min*(1-z))
 end
+
+
+
+
+abstract type NFAForm <: DCPlosslessForm end
+
+"""
+The an active power only network flow approximation, also known as the transportation model.
+"""
+const NFAPowerModel = GenericPowerModel{NFAForm}
+
+"default DC constructor"
+NFAPowerModel(data::Dict{String,Any}; kwargs...) =
+    GenericPowerModel(data, NFAForm; kwargs...)
+
+"nothing to do, no voltage angle variables"
+function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: NFAForm
+end
+
+"nothing to do, no voltage angle variables"
+function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) where T <: NFAForm
+end
+
+"nothing to do, no voltage angle variables"
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, angmin, angmax) where T <: NFAForm
+end
+
+"nothing to do, no voltage angle variables"
+function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: NFAForm
+end
+
 
 
 
