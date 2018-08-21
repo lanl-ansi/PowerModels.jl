@@ -72,12 +72,6 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <:
     end
 end
 
-"SOC form of constraint: `c^2 + d^2 <= a*b`"
-function relaxation_complex_product_soc(m, a, b, c, d)
-    @assert (getlowerbound(a) >= 0 && getlowerbound(b) >= 0) || (getupperbound(a) <= 0 && getupperbound(b) <= 0)
-    @constraint(m, (a + b)/2 >= norm([(a - b)/2; c; d]))
-end
-
 ""
 function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRConicForm
     w  = var(pm, n, c,  :w)
@@ -85,7 +79,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <:
     wi = var(pm, n, c, :wi)
 
     for (i,j) in ids(pm, n, :buspairs)
-        relaxation_complex_product_soc(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
+        InfrastructureModels.relaxation_complex_product_conic(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     end
 end
 
