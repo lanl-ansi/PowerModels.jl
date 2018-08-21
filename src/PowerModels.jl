@@ -7,7 +7,7 @@ using JuMP
 using InfrastructureModels
 using Compat
 using Memento
-using Pkg
+import Pkg
 
 using MathOptInterface
 const MOI = MathOptInterface
