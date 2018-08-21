@@ -18,7 +18,7 @@
 # instead.
 #
 
-AbstractWRForms = Union{AbstractACTForm, AbstractWRForm, AbstractWRMForm}
+AbstractWRForms = Union{AbstractACTForm, AbstractWRForm, AbstractWRConicForm, AbstractWRMForm}
 AbstractWForms = Union{AbstractWRForms, AbstractBFForm}
 AbstractPForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm}
 
