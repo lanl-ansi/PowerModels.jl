@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Added support for current limits, issue #342
+- Added conic variant of the SOCWRPowerModel model, SOCWRConicPowerModel (thanks to @kersulis)
 - Added data simplification for piecewise linear cost functions
 - Added sim_parallel_run_time to OBBT stats
 - Made thermal limits optional in the data model
