@@ -68,7 +68,7 @@ mp_bus_columns = [
 ]
 
 mp_bus_name_columns = [
-    ("bus_name", String)
+    ("bus_name", Union{String,SubString{String}})
 ]
 
 mp_gen_columns = [
