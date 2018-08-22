@@ -1,7 +1,10 @@
 PowerModels.jl Change Log
-=================
+=========================
 
 ### Staged
+- nothing
+
+### v0.8.3
 - Added support for current limits, issue #342
 - Added a optimal power balance problem specification
 - Added a network flow approximation formulation, NFAPowerModel
