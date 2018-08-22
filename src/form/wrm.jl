@@ -258,7 +258,7 @@ function constraint_voltage(pm::GenericPowerModel{SDPDecompForm}, nw::Int, cnd::
 
             # standard SOC form (Mosek doesn't like rotated form)
             @constraint(pm.model, (wr_ii + wr_jj) >= norm([(wr_ii - wr_jj); 2*wr_ij; 2*wi_ij]))
-            @constraint(pm.model, wi_ij == wi_ji)
+            @constraint(pm.model, wi_ij == -wi_ji)
         else
             @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
         end
