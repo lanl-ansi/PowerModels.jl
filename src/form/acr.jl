@@ -9,7 +9,19 @@ abstract type AbstractACRForm <: AbstractPowerFormulation end
 ""
 abstract type StandardACRForm <: AbstractACRForm end
 
-""
+"""
+AC power flow formulation with rectangular bus voltage variables.
+
+```
+@techreport{Cain2012,
+author = {Cain, Mary B and {O' Neill}, Richard P and Castillo, Anya},
+pages = {1--36},
+title = {{History of optimal power flow and formulations}},
+url = {https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-formulation-testing.pdf}
+year = {2012}
+}
+```
+"""
 const ACRPowerModel = GenericPowerModel{StandardACRForm}
 
 "default rectangular AC constructor"
@@ -105,6 +117,25 @@ function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, 
 
     @constraint(pm.model, p_to ==  (g+g_to)*(vr_to^2 + vi_to^2) + (-g*tr-b*ti)/tm^2*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr+g*ti)/tm^2*(-(vi_fr*vr_to - vr_fr*vi_to)) )
     @constraint(pm.model, q_to == -(b+b_to)*(vr_to^2 + vi_to^2) - (-b*tr+g*ti)/tm^2*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr-b*ti)/tm^2*(-(vi_fr*vr_to - vr_fr*vi_to)) )
+end
+
+
+function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractACRForm
+    l,i,j = f_idx
+    t_idx = (l,j,i)
+
+    vr_fr = var(pm, n, c, :vr, i)
+    vr_to = var(pm, n, c, :vr, j)
+    vi_fr = var(pm, n, c, :vi, i)
+    vi_to = var(pm, n, c, :vi, j)
+
+    p_fr = var(pm, n, c, :p, f_idx)
+    q_fr = var(pm, n, c, :q, f_idx)
+    @constraint(pm.model, p_fr^2 + q_fr^2 <= (vr_fr^2 + vi_fr^2)*c_rating_a^2)
+
+    p_to = var(pm, n, c, :p, t_idx)
+    q_to = var(pm, n, c, :q, t_idx)
+    @constraint(pm.model, p_to^2 + q_to^2 <= (vr_to^2 + vi_to^2)*c_rating_a^2)
 end
 
 

@@ -9,7 +9,33 @@ abstract type AbstractACPForm <: AbstractPowerFormulation end
 ""
 abstract type StandardACPForm <: AbstractACPForm end
 
-""
+"""
+AC power flow formulation with polar bus voltage variables.
+
+The seminal reference of AC OPF:
+```
+@article{carpentier1962contribution,
+  title={Contribution to the economic dispatch problem},
+  author={Carpentier, J},
+  journal={Bulletin de la Societe Francoise des Electriciens},
+  volume={3},
+  number={8},
+  pages={431--447},
+  year={1962}
+}
+```
+
+History and discussion:
+```
+@techreport{Cain2012,
+  author = {Cain, Mary B and {O' Neill}, Richard P and Castillo, Anya},
+  title = {{History of optimal power flow and formulations}},
+  year = {2012}
+  pages = {1--36},
+  url = {https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-formulation-testing.pdf}
+}
+```
+"""
 const ACPPowerModel = GenericPowerModel{StandardACPForm}
 
 "default AC constructor"
@@ -39,6 +65,23 @@ end
 function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, k::Int, i::Int, vm) where T <: AbstractACPForm
     v = var(pm, n, k, :vm, i)
     @constraint(pm.model, v == vm)
+end
+
+
+function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractACPForm
+    l,i,j = f_idx
+    t_idx = (l,j,i)
+
+    vm_fr = var(pm, n, c, :vm, i)
+    vm_to = var(pm, n, c, :vm, j)
+
+    p_fr = var(pm, n, c, :p, f_idx)
+    q_fr = var(pm, n, c, :q, f_idx)
+    @constraint(pm.model, p_fr^2 + q_fr^2 <= vm_fr^2*c_rating_a^2)
+
+    p_to = var(pm, n, c, :p, t_idx)
+    q_to = var(pm, n, c, :q, t_idx)
+    @constraint(pm.model, p_to^2 + q_to^2 <= vm_to^2*c_rating_a^2)
 end
 
 

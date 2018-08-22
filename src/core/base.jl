@@ -291,6 +291,10 @@ function build_ref(data::Dict{String,Any})
             ref[:conductor_ids] = 1:ref[:conductors]
         end
 
+        # add connected components
+        component_sets = PowerModels.connected_components(nw_data)
+        ref[:components] = Dict(i => c for (i,c) in enumerate(sort(collect(component_sets); by=length)))
+
         # filter turned off stuff
         ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
         ref[:load] = filter((i, load) -> load["status"] == 1 && load["load_bus"] in keys(ref[:bus]), ref[:load])
@@ -460,7 +464,6 @@ function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismultico
         "branch"=>bp_branch[(i,j)],
         "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],
-        "rate_a"=>branches[bp_branch[(i,j)]]["rate_a"],
         "tap"=>branches[bp_branch[(i,j)]]["tap"],
         "vm_fr_min"=>buses[i]["vmin"],
         "vm_fr_max"=>buses[i]["vmax"],
@@ -468,6 +471,17 @@ function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismultico
         "vm_to_max"=>buses[j]["vmax"]
         )) for (i,j) in buspair_indexes]
     )
+
+    # add optional parameters
+    for bp in buspair_indexes
+        branch = branches[bp_branch[bp]]
+        if haskey(branch, "rate_a")
+            buspairs[bp]["rate_a"] = branch["rate_a"]
+        end
+        if haskey(branch, "c_rating_a")
+            buspairs[bp]["c_rating_a"] = branch["c_rating_a"]
+        end
+    end
 
     return buspairs
 end

@@ -148,8 +148,14 @@ end
 
 ""
 function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
-    rescale      = x -> x/mva_base
-    rescale_dual = x -> x*mva_base
+    # to be consistent with matpower's opf.flow_lim= 'I' with current magnitude
+    # limit defined in MVA at 1 p.u. voltage
+    ka_base = mva_base
+
+    rescale        = x -> x/mva_base
+    rescale_dual   = x -> x*mva_base
+    rescale_ampere = x -> x/ka_base
+
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
@@ -191,6 +197,10 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "rate_a", rescale)
         apply_func(branch, "rate_b", rescale)
         apply_func(branch, "rate_c", rescale)
+
+        apply_func(branch, "c_rating_a", rescale_ampere)
+        apply_func(branch, "c_rating_b", rescale_ampere)
+        apply_func(branch, "c_rating_c", rescale_ampere)
 
         apply_func(branch, "shift", deg2rad)
         apply_func(branch, "angmax", deg2rad)
@@ -259,8 +269,13 @@ end
 
 ""
 function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
-    rescale      = x -> x*mva_base
-    rescale_dual = x -> x/mva_base
+    # to be consistent with matpower's opf.flow_lim= 'I' with current magnitude
+    # limit defined in MVA at 1 p.u. voltage
+    ka_base = mva_base
+
+    rescale        = x -> x*mva_base
+    rescale_dual   = x -> x/mva_base
+    rescale_ampere = x -> x*ka_base
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
@@ -303,6 +318,10 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "rate_a", rescale)
         apply_func(branch, "rate_b", rescale)
         apply_func(branch, "rate_c", rescale)
+
+        apply_func(branch, "c_rating_a", rescale_ampere)
+        apply_func(branch, "c_rating_b", rescale_ampere)
+        apply_func(branch, "c_rating_c", rescale_ampere)
 
         apply_func(branch, "shift", rad2deg)
         apply_func(branch, "angmax", rad2deg)
@@ -440,7 +459,7 @@ function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1
 end
 
 
-"checks that each branch has a reasonable thermal rating, if not computes one"
+"checks that each branch has a reasonable thermal rating-a, if not computes one"
 function check_thermal_limits(data::Dict{String,Any})
     if InfrastructureModels.ismultinetwork(data)
         error("check_thermal_limits does not yet support multinetwork data")
@@ -449,7 +468,20 @@ function check_thermal_limits(data::Dict{String,Any})
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
-    for (i, branch) in data["branch"]
+    branches = [branch for branch in values(data["branch"])]
+    if haskey(data, "ne_branch")
+        append!(branches, values(data["ne_branch"]))
+    end
+
+    for branch in branches
+        if !haskey(branch, "rate_a")
+            if haskey(data, "conductors")
+                branch["rate_a"] = MultiConductorVector(0.0, data["conductors"])
+            else
+                branch["rate_a"] = 0.0
+            end
+        end
+
         for c in 1:get(data, "conductors", 1)
             cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
             if branch["rate_a"][c] <= 0.0
@@ -469,11 +501,77 @@ function check_thermal_limits(data::Dict{String,Any})
 
                 new_rate = y_mag*m_vmax*c_max
 
-                warn(LOGGER, "this code only supports positive rate_a values, changing the value on branch $(branch["index"])$(cnd_str) from $(mva_base*branch["rate_a"][c]) to $(mva_base*new_rate)")
+                if haskey(branch, "c_rating_a") && branch["c_rating_a"][c] > 0.0
+                    new_rate = min(new_rate, branch["c_rating_a"][c]*m_vmax)
+                end
+
+                warn(LOGGER, "this code only supports positive rate_a values, changing the value on branch $(branch["index"])$(cnd_str) to $(mva_base*new_rate)")
+
                 if haskey(data, "conductors")
                     branch["rate_a"][c] = new_rate
                 else
                     branch["rate_a"] = new_rate
+                end
+            end
+        end
+    end
+end
+
+
+"checks that each branch has a reasonable current rating-a, if not computes one"
+function check_current_limits(data::Dict{String,Any})
+    if InfrastructureModels.ismultinetwork(data)
+        error("check_current_limits does not yet support multinetwork data")
+    end
+
+    assert("per_unit" in keys(data) && data["per_unit"])
+    mva_base = data["baseMVA"]
+
+    branches = [branch for branch in values(data["branch"])]
+    if haskey(data, "ne_branch")
+        append!(branches, values(data["ne_branch"]))
+    end
+
+    for branch in branches
+
+        if !haskey(branch, "c_rating_a")
+            if haskey(data, "conductors")
+                branch["c_rating_a"] = MultiConductorVector(0.0, data["conductors"])
+            else
+                branch["c_rating_a"] = 0.0
+            end
+        end
+
+        for c in 1:get(data, "conductors", 1)
+            cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
+            if branch["c_rating_a"][c] <= 0.0
+                theta_max = max(abs(branch["angmin"][c]), abs(branch["angmax"][c]))
+
+                r = branch["br_r"]
+                x = branch["br_x"]
+                z = r + im * x
+                y = pinv(z)
+                y_mag = abs.(y[c,c])
+
+                fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"][c]
+                to_vmax = data["bus"][string(branch["t_bus"])]["vmax"][c]
+                m_vmax = max(fr_vmax, to_vmax)
+
+                new_c_rating = y_mag*sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
+
+                if haskey(branch, "rate_a") && branch["rate_a"][c] > 0.0
+                    fr_vmin = data["bus"][string(branch["f_bus"])]["vmin"][c]
+                    to_vmin = data["bus"][string(branch["t_bus"])]["vmin"][c]
+                    vm_min = min(fr_vmin, to_vmin)
+
+                    new_c_rating = min(new_c_rating, branch["rate_a"]/vm_min)
+                end
+
+                warn(LOGGER, "this code only supports positive c_rating_a values, changing the value on branch $(branch["index"])$(cnd_str) to $(mva_base*new_c_rating)")
+                if haskey(data, "conductors")
+                    branch["c_rating_a"][c] = new_c_rating
+                else
+                    branch["c_rating_a"] = new_c_rating
                 end
             end
         end

@@ -18,7 +18,7 @@
 # instead.
 #
 
-AbstractWRForms = Union{AbstractACTForm, AbstractWRForm, AbstractWRMForm}
+AbstractWRForms = Union{AbstractACTForm, AbstractWRForm, AbstractWRConicForm, AbstractWRMForm}
 AbstractWForms = Union{AbstractWRForms, AbstractBFForm}
 AbstractPForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm}
 
@@ -141,6 +141,24 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
     @constraint(pm.model, wi <= tan(angmax)*wr)
     @constraint(pm.model, wi >= tan(angmin)*wr)
     cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
+end
+
+
+""
+function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractWRForms
+    l,i,j = f_idx
+    t_idx = (l,j,i)
+
+    w_fr = var(pm, n, c, :w, i)
+    w_to = var(pm, n, c, :w, j)
+
+    p_fr = var(pm, n, c, :p, f_idx)
+    q_fr = var(pm, n, c, :q, f_idx)
+    @constraint(pm.model, p_fr^2 + q_fr^2 <= w_fr*c_rating_a^2)
+
+    p_to = var(pm, n, c, :p, t_idx)
+    q_to = var(pm, n, c, :q, t_idx)
+    @constraint(pm.model, p_to^2 + q_to^2 <= w_to*c_rating_a^2)
 end
 
 

@@ -236,10 +236,12 @@ end
 "variable: `p[l,i,j]` for `(l,i,j)` in `arcs`"
 function variable_active_branch_flow(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     if bounded
+        flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
+
         var(pm, nw, cnd)[:p] = @variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(cnd)_p",
-            lowerbound = -ref(pm, nw, :branch, l, "rate_a", cnd),
-            upperbound =  ref(pm, nw, :branch, l, "rate_a", cnd),
+            lowerbound = flow_lb[l],
+            upperbound = flow_ub[l],
             start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     else
@@ -253,10 +255,12 @@ end
 "variable: `q[l,i,j]` for `(l,i,j)` in `arcs`"
 function variable_reactive_branch_flow(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     if bounded
+        flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
+
         var(pm, nw, cnd)[:q] = @variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(cnd)_q",
-            lowerbound = -ref(pm, nw, :branch, l, "rate_a", cnd),
-            upperbound =  ref(pm, nw, :branch, l, "rate_a", cnd),
+            lowerbound = flow_lb[l],
+            upperbound = flow_ub[l],
             start = getval(ref(pm, nw, :branch, l), "q_start", cnd)
         )
     else
