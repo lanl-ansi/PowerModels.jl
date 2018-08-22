@@ -249,17 +249,17 @@ function constraint_voltage(pm::GenericPowerModel{SDPDecompForm}, nw::Int, cnd::
 
         # Lower-dimensional SOC constraint equiv. to SDP for 2-vertex
         # clique
-        if ng == 2
-            wr_ii = WR[1, 1]
-            wr_jj = WR[2, 2]
-            wr_ij = WR[1, 2]
-            wi_ij = WI[1, 2]
+        # if ng == 2
+        #     wr_ii = WR[1, 1]
+        #     wr_jj = WR[2, 2]
+        #     wr_ij = WR[1, 2]
+        #     wi_ij = WI[1, 2]
 
             # standard SOC form (Mosek doesn't like rotated form)
-            @constraint(pm.model, (wr_ii + wr_jj)/2 >= norm([(wr_ii - wr_jj)/2; wr_ij; wi_ij]))
-        else
-            @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
-        end
+            # @constraint(pm.model, (wr_ii + wr_jj) >= norm([(wr_ii - wr_jj); 2*wr_ij; 2*wi_ij]))
+        # else
+        @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
+        # end
     end
 
     # linking constraints
