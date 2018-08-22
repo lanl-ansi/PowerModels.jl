@@ -1,5 +1,5 @@
 name = "PowerModels"
-uuid = "23a24fe6-a169-11e8-146b-9d23c58f08d1"
+uuid = "bcd98974-b02a-5e2f-9ee0-a103f5c450dd"
 version = "0.7.0"
 
 [deps]
