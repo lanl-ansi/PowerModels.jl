@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Added Julia version upper bound
 
 ### v0.8.3
 - Added support for current limits, issue #342
