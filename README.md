@@ -61,14 +61,16 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 
 ## Citing PowerModels
 
-If you find PowerModels useful in your work, we kindly request that you cite the following [technical report](https://arxiv.org/abs/1711.01728):
+If you find PowerModels useful in your work, we kindly request that you cite the following [publication](https://ieeexplore.ieee.org/document/8442948/):
 ```
-@misc{1711.01728,
-  author = {Carleton Coffrin and Russell Bent and Kaarthik Sundar and Yeesian Ng and Miles Lubin},
-  title = {PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations},
-  year = {2017},
-  eprint = {arXiv:1711.01728},
-  url = {http://arxiv.org/abs/1711.01728}
+@inproceedings{8442948, 
+  author = {Carleton Coffrin and Russell Bent and Kaarthik Sundar and Yeesian Ng and Miles Lubin}, 
+  title = {PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations}, 
+  booktitle = {2018 Power Systems Computation Conference (PSCC)}, 
+  year = {2018},
+  month = {June},
+  pages = {1-8}, 
+  doi = {10.23919/PSCC.2018.8442948}
 }
 ```
 Citation of the orginal works for problem denifitions (e.g. OPF) and power flow formulations (e.g. SOC) is also encuraged when publishing works that use PowerModels.
