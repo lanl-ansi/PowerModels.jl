@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Improved OBBT bound update logic
+- Added Julia version upper bound
 
 ### v0.8.3
 - Added support for current limits, issue #342
