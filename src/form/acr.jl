@@ -120,6 +120,25 @@ function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, 
 end
 
 
+function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractACRForm
+    l,i,j = f_idx
+    t_idx = (l,j,i)
+
+    vr_fr = var(pm, n, c, :vr, i)
+    vr_to = var(pm, n, c, :vr, j)
+    vi_fr = var(pm, n, c, :vi, i)
+    vi_to = var(pm, n, c, :vi, j)
+
+    p_fr = var(pm, n, c, :p, f_idx)
+    q_fr = var(pm, n, c, :q, f_idx)
+    @constraint(pm.model, p_fr^2 + q_fr^2 <= (vr_fr^2 + vi_fr^2)*c_rating_a^2)
+
+    p_to = var(pm, n, c, :p, t_idx)
+    q_to = var(pm, n, c, :q, t_idx)
+    @constraint(pm.model, p_to^2 + q_to^2 <= (vr_to^2 + vi_to^2)*c_rating_a^2)
+end
+
+
 """
 branch voltage angle difference bounds
 """

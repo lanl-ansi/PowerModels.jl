@@ -20,7 +20,7 @@ cbc_solver = CbcSolver()
 juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
 #juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
 pavito_solver = PavitoSolver(mip_solver=cbc_solver, cont_solver=ipopt_solver, mip_solver_drives=false, log_level=0)
-scs_solver = SCSSolver(max_iters=1000000, verbose=0)
+scs_solver = SCSSolver(max_iters=1.5e6, verbose=0)
 
 include("common.jl")
 
@@ -38,9 +38,13 @@ include("common.jl")
 
     include("data.jl")
 
+    include("opb.jl")
+
     include("pf.jl")
 
     include("opf.jl")
+
+    include("opf-var.jl")
 
     include("ots.jl")
 
@@ -55,5 +59,5 @@ include("common.jl")
     include("util.jl")
 
     include("docs.jl")
-  
+
 end

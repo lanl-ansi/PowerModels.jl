@@ -67,7 +67,7 @@ end
         check_br_status(result["solution"])
 
         @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 11396.3; atol = 1e0)
+        @test isapprox(result["objective"], 11391.8; atol = 1e0)
     end
 end
 
@@ -95,7 +95,7 @@ end
         check_br_status(result["solution"])
 
         @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 11515.6; atol = 1e0)
+        @test isapprox(result["objective"], 11574.3; atol = 1e0)
     end
 end
 
@@ -129,7 +129,7 @@ end
         check_br_status(result["solution"])
 
         @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 11559.8; atol = 1e0)
+        @test isapprox(result["objective"], 11472.3; atol = 1e0)
     end
 end
 
@@ -171,6 +171,6 @@ end
         check_br_status(result["solution"])
 
         @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 11567.1; atol = 1e0)
+        @test isapprox(result["objective"], 11472.3; atol = 1e0)
     end
 end

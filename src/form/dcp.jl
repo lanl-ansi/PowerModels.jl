@@ -1,36 +1,39 @@
 export
-    DCPPowerModel, StandardDCPForm,
+    DCPPowerModel, DCPlosslessForm,
+    NFAPowerModel, NFAForm,
     DCPLLPowerModel, StandardDCPLLForm
 
 ""
 abstract type AbstractDCPForm <: AbstractPowerFormulation end
 
-""
-abstract type StandardDCPForm <: AbstractDCPForm end
+"active power only formulations where p[(i,j)] = -p[(j,i)]"
+abstract type DCPlosslessForm <: AbstractDCPForm end
+
+const StandardDCPForm = DCPlosslessForm
 
 """
 Linearized 'DC' power flow formulation with polar voltage variables.
 
 ```
 @ARTICLE{4956966,
-author={B. Stott and J. Jardim and O. Alsac},
-journal={IEEE Transactions on Power Systems},
-title={DC Power Flow Revisited},
-year={2009},
-volume={24},
-number={3},
-pages={1290-1300},
-keywords={load flow;power markets;power system management;power system security;pricing;DC network power flow models;congestion-constrained market applications;electric power industry;Load flow;Power system modeling;Power generation economics;Large-scale systems;Testing;Application software;Reliability theory;Load flow analysis;Pricing;Software systems;Congestion revenue rights;contingency analysis;dc power flow;economic dispatch;financial transmission rights;LMP pricing;unit commitment},
-doi={10.1109/TPWRS.2009.2021235},
-ISSN={0885-8950},
-month={Aug},}
+  author={B. Stott and J. Jardim and O. Alsac},
+  journal={IEEE Transactions on Power Systems},
+  title={DC Power Flow Revisited},
+  year={2009},
+  month={Aug},
+  volume={24},
+  number={3},
+  pages={1290-1300},
+  doi={10.1109/TPWRS.2009.2021235},
+  ISSN={0885-8950}
+}
 ```
 """
-const DCPPowerModel = GenericPowerModel{StandardDCPForm}
+const DCPPowerModel = GenericPowerModel{DCPlosslessForm}
 
 "default DC constructor"
 DCPPowerModel(data::Dict{String,Any}; kwargs...) =
-    GenericPowerModel(data, StandardDCPForm; kwargs...)
+    GenericPowerModel(data, DCPlosslessForm; kwargs...)
 
 ""
 function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
@@ -54,14 +57,20 @@ end
 function variable_reactive_branch_flow_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
 end
 
+"dc models ignore reactive power flows"
+function variable_reactive_dcline_flow(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
+end
+
 
 ""
-function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: StandardDCPForm
+function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: DCPlosslessForm
     if bounded
+        flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
+
         var(pm, nw, cnd)[:p] = @variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(cnd)_p",
-            lowerbound = -ref(pm, nw, :branch, l, "rate_a", cnd),
-            upperbound =  ref(pm, nw, :branch, l, "rate_a", cnd),
+            lowerbound = flow_lb[l],
+            upperbound = flow_ub[l],
             start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     else
@@ -78,7 +87,7 @@ function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, c
 end
 
 ""
-function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: StandardDCPForm
+function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: DCPlosslessForm
     var(pm, nw, cnd)[:p_ne] = @variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs_from)], basename="$(nw)_$(cnd)_p_ne",
         lowerbound = -ref(pm, nw, :ne_branch, l, "rate_a", cnd),
@@ -107,6 +116,16 @@ end
 "do nothing, this model does not have reactive variables"
 function constraint_reactive_gen_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, i, qg) where T <: AbstractDCPForm
 end
+
+
+""
+function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gens, comp_pd, comp_qd, comp_gs, comp_bs) where T <: DCPlosslessForm
+    pg   = var(pm, n, c, :pg)
+
+    @constraint(pm.model, sum(pg[g] for g in comp_gens) == sum(pd for pd in values(comp_pd)) + sum(gs for gs in values(comp_gs))*1.0^2)
+    # omit reactive constraint
+end
+
 
 ""
 function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
@@ -172,6 +191,13 @@ end
 
 "Do nothing, this model is symmetric"
 function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t_idx, rate_a) where T <: AbstractDCPForm
+end
+
+function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractDCPForm
+    p_fr = var(pm, n, c, :p, f_idx)
+
+    getlowerbound(p_fr) < -c_rating_a && setlowerbound(p_fr, -c_rating_a)
+    getupperbound(p_fr) >  c_rating_a && setupperbound(p_fr,  c_rating_a)
 end
 
 ""
@@ -265,6 +291,37 @@ function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int
     @constraint(pm.model, va_fr - va_to <= angmax*z + vad_max*(1-z))
     @constraint(pm.model, va_fr - va_to >= angmin*z + vad_min*(1-z))
 end
+
+
+
+
+abstract type NFAForm <: DCPlosslessForm end
+
+"""
+The an active power only network flow approximation, also known as the transportation model.
+"""
+const NFAPowerModel = GenericPowerModel{NFAForm}
+
+"default DC constructor"
+NFAPowerModel(data::Dict{String,Any}; kwargs...) =
+    GenericPowerModel(data, NFAForm; kwargs...)
+
+"nothing to do, no voltage angle variables"
+function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: NFAForm
+end
+
+"nothing to do, no voltage angle variables"
+function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) where T <: NFAForm
+end
+
+"nothing to do, no voltage angle variables"
+function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, angmin, angmax) where T <: NFAForm
+end
+
+"nothing to do, no voltage angle variables"
+function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: NFAForm
+end
+
 
 
 

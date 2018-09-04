@@ -59,6 +59,37 @@ function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, i::Int; nw
 end
 
 
+### Power Balance Constraints ###
+
+"ensures that power generation and demand are balanced"
+function constraint_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    comp_buses = ref(pm, nw, :components, i)
+
+    comp_gens = Set{Int64}()
+    for bus_id in comp_buses, gen_id in PowerModels.ref(pm, nw, :bus_gens, bus_id)
+        push!(comp_gens, gen_id)
+    end
+
+    comp_loads = Set{Int64}()
+    for bus_id in comp_buses, load_id in PowerModels.ref(pm, nw, :bus_loads, bus_id)
+        push!(comp_loads, load_id)
+    end
+
+    comp_shunts = Set{Int64}()
+    for bus_id in comp_buses, shunt_id in PowerModels.ref(pm, nw, :bus_shunts, bus_id)
+        push!(comp_shunts, shunt_id)
+    end
+
+    comp_pd = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in comp_loads)
+    comp_qd = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in comp_loads)
+
+    comp_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in comp_shunts)
+    comp_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in comp_shunts)
+
+    constraint_power_balance(pm, nw, cnd, i, comp_gens, comp_pd, comp_qd, comp_gs, comp_bs)
+end
+
+
 ### Bus - KCL Constraints ###
 
 ""
@@ -447,6 +478,20 @@ function constraint_thermal_limit_to_ne(pm::GenericPowerModel, i::Int; nw::Int=p
     constraint_thermal_limit_to_ne(pm, nw, cnd, i, t_idx, branch["rate_a"][cnd])
 end
 
+
+### Branch - Current Limit Constraints ###
+
+"""
+Adds a current magnitude limit constraint for the desired branch to the PowerModel.
+"""
+function constraint_current_limit(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    branch = ref(pm, nw, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+
+    constraint_current_limit(pm, nw, cnd, f_idx, branch["c_rating_a"][cnd])
+end
 
 
 ### Branch - Phase Angle Difference Constraints ###
