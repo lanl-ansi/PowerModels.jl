@@ -22,6 +22,7 @@ This enables the definition of a wide variety of power network formulations and 
 **Core Network Formulations**
 * AC (polar and rectangular coordinates)
 * DC Approximation (polar coordinates)
+* SDP Relaxation (W-space)
 * SOC Relaxation (W-space)
 * QC Relaxation (W+L-space)
 
@@ -54,6 +55,7 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 - David Fobes (@pseudocubic) LANL, PSS(R)E v33 data support
 - Rory Finnegan (@rofinn) Invenia, Memento Logging
 - Frederik Geth (@frederikgeth) CSIRO, Branch Flow formulation
+- Jonas Kersulis (@kersulis) University of Michigan, Sparse SDP formulation
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 - Kaarthik Sundar (@kaarthiksundar) LANL, OBBT utility
