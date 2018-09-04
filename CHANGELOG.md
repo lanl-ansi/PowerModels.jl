@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Improved OBBT bound update logic
 
 ### v0.8.3
 - Added support for current limits, issue #342
