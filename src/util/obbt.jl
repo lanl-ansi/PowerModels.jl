@@ -334,7 +334,7 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
             current_rel_gap = (upper_bound - result_relaxation["objective"])/upper_bound
             final_relaxation_objective = result_relaxation["objective"]
         else 
-            warn(LOGGER, "$model_constructor infeasible for iteration $(current_iteration+1)")
+            warn(LOGGER, "relaxation solve failed in iteration $(current_iteration+1)")
             warn(LOGGER, "using the previous iteration's gap to check relative gap stopping criteria")
         end
 
