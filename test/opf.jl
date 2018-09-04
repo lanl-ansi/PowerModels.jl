@@ -647,26 +647,26 @@ end
 
 @testset "test sdp opf with constraint decomposition" begin
     @testset "3-bus case" begin
-        result = run_opf("../test/data/matpower/case3.m", SDPDecompPowerModel, scs_solver)
+        result = run_opf("../test/data/matpower/case3.m", SparseSDPWRMPowerModel, scs_solver)
 
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 5851.3; atol = 1e0)
     end
     @testset "5-bus with asymmetric line charge" begin
-        result = run_opf("../test/data/pti/case5_alc.raw", SDPDecompPowerModel, scs_solver)
+        result = run_opf("../test/data/pti/case5_alc.raw", SparseSDPWRMPowerModel, scs_solver)
 
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 1005.31; atol = 1e-1)
     end
     @testset "14-bus case" begin
-        result = run_opf("../test/data/matpower/case14.m", SDPDecompPowerModel, scs_solver)
+        result = run_opf("../test/data/matpower/case14.m", SparseSDPWRMPowerModel, scs_solver)
 
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 8079.97; atol = 1e0)
     end
     # multiple components are not currently supported by this form
     #@testset "6-bus case" begin
-    #    result = run_opf("../test/data/matpower/case6.m", SDPDecompPowerModel, scs_solver)
+    #    result = run_opf("../test/data/matpower/case6.m", SparseSDPWRMPowerModel, scs_solver)
     #
     #    @test result["status"] == :Optimal
     #    @test isapprox(result["objective"], 11578.8; atol = 1e0)
@@ -674,7 +674,7 @@ end
     @testset "passing in decomposition" begin
         PMs = PowerModels
         data = PMs.parse_file("../test/data/matpower/case14.m")
-        pm = GenericPowerModel(data, SDPDecompForm)
+        pm = GenericPowerModel(data, SparseSDPWRMForm)
 
         cadj, lookup_index, sigma = PMs.chordal_extension(pm)
         cliques = PMs.maximal_cliques(cadj)

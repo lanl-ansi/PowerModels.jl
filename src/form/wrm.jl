@@ -1,9 +1,29 @@
 export
     SDPWRMPowerModel, SDPWRMForm,
-    SDPDecompPowerModel, SDPDecompForm
+    SparseSDPWRMPowerModel, SparseSDPWRMForm
 
 ""
 abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
+
+""
+function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractWRMForm
+    l,i,j = f_idx
+    t_idx = (l,j,i)
+
+    w_fr = var(pm, n, c, :w, i)
+    w_to = var(pm, n, c, :w, j)
+
+    p_fr = var(pm, n, c, :p, f_idx)
+    q_fr = var(pm, n, c, :q, f_idx)
+    @constraint(pm.model, norm([2*p_fr; 2*q_fr; w_fr*c_rating_a^2-1]) <= w_fr*c_rating_a^2+1)
+
+    p_to = var(pm, n, c, :p, t_idx)
+    q_to = var(pm, n, c, :q, t_idx)
+    @constraint(pm.model, norm([2*p_to; 2*q_to; w_to*c_rating_a^2-1]) <= w_to*c_rating_a^2+1)
+end
+
+
+
 
 ""
 abstract type SDPWRMForm <: AbstractWRMForm end
@@ -42,36 +62,21 @@ First paper to use "W" variables in the BIM of AC OPF:
 """
 const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
 
-
-abstract type SDPDecompForm <: SDPWRMForm end
-
-""
-const SDPDecompPowerModel = GenericPowerModel{SDPDecompForm}
-
-struct SDconstraintDecomposition
-    "Each sub-vector consists of bus IDs corresponding to a clique grouping"
-    decomp::Vector{Vector{Int64}}
-    "`lookup_index[bus_id] --> idx` for mapping between 1:n and bus indices"
-    lookup_index::Dict
-    "A chordal extension and maximal cliques are uniquely determined by a graph ordering"
-    ordering::Vector{Int64}
-end
-import Base: ==
-function ==(d1::SDconstraintDecomposition, d2::SDconstraintDecomposition)
-    eq = true
-    for f in fieldnames(SDconstraintDecomposition)
-        eq = eq && (getfield(d1, f) == getfield(d2, f))
-    end
-    return eq
-end
-
 ""
 SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPWRMForm; kwargs...)
 
-SDPDecompPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPDecompForm; kwargs...)
 
 ""
-function variable_voltage(pm::GenericPowerModel{SDPWRMForm}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: SDPWRMForm
+    WR = var(pm, nw, cnd)[:WR]
+    WI = var(pm, nw, cnd)[:WI]
+
+    @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
+end
+
+
+""
+function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: SDPWRMForm
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
     bus_ids = ids(pm, nw, :bus)
 
@@ -134,7 +139,36 @@ function variable_voltage(pm::GenericPowerModel{SDPWRMForm}; nw::Int=pm.cnw, cnd
     end
 end
 
-function variable_voltage(pm::GenericPowerModel{SDPDecompForm}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true)
+
+
+
+
+abstract type SparseSDPWRMForm <: SDPWRMForm end
+
+""
+const SparseSDPWRMPowerModel = GenericPowerModel{SparseSDPWRMForm}
+
+""
+SparseSDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SparseSDPWRMForm; kwargs...)
+
+struct SDconstraintDecomposition
+    "Each sub-vector consists of bus IDs corresponding to a clique grouping"
+    decomp::Vector{Vector{Int64}}
+    "`lookup_index[bus_id] --> idx` for mapping between 1:n and bus indices"
+    lookup_index::Dict
+    "A chordal extension and maximal cliques are uniquely determined by a graph ordering"
+    ordering::Vector{Int64}
+end
+import Base: ==
+function ==(d1::SDconstraintDecomposition, d2::SDconstraintDecomposition)
+    eq = true
+    for f in fieldnames(SDconstraintDecomposition)
+        eq = eq && (getfield(d1, f) == getfield(d2, f))
+    end
+    return eq
+end
+
+function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true) where T <: SparseSDPWRMForm
 
     if haskey(pm.ext, :SDconstraintDecomposition)
         decomp = pm.ext[:SDconstraintDecomposition]
@@ -225,15 +259,8 @@ function variable_voltage(pm::GenericPowerModel{SDPDecompForm}; nw::Int=pm.cnw, 
     end
 end
 
-""
-function constraint_voltage(pm::GenericPowerModel{SDPWRMForm}, nw::Int, cnd::Int)
-    WR = var(pm, nw, cnd)[:WR]
-    WI = var(pm, nw, cnd)[:WI]
 
-    @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
-end
-
-function constraint_voltage(pm::GenericPowerModel{SDPDecompForm}, nw::Int, cnd::Int)
+function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: SparseSDPWRMForm
     pair_matrix(group) = [(i, j) for i in group, j in group]
 
     decomp = pm.ext[:SDconstraintDecomposition]
@@ -281,6 +308,7 @@ function constraint_voltage(pm::GenericPowerModel{SDPDecompForm}, nw::Int, cnd::
     end
 end
 
+
 """
     adj, lookup_index = adjacency_matrix(pm, nw)
 Return:
@@ -301,6 +329,7 @@ function adjacency_matrix(pm::GenericPowerModel, nw::Int=pm.cnw)
 
     return sparse([f;t], [t;f], trues(2nl), nb, nb), lookup_index
 end
+
 
 """
     cadj, lookup_index, ordering = chordal_extension(pm, nw)
@@ -326,6 +355,7 @@ function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
     cadj = cadj[q, q] # revert to original bus ordering (invert cholfact permutation)
     return cadj, lookup_index, p
 end
+
 
 """
     mc = maximal_cliques(cadj, peo)
@@ -411,6 +441,7 @@ function prim(A, minweight=false)
     return T
 end
 
+
 """
     A = overlap_graph(groups)
 Return adjacency matrix for overlap graph associated with `groups`.
@@ -436,6 +467,7 @@ function overlap_graph(groups)
     return sparse(I, J, V, n, n)
 end
 
+
 function filter_flipped_pairs!(pairs)
     for (i, j) in pairs
         if i != j && (j, i) in pairs
@@ -443,6 +475,7 @@ function filter_flipped_pairs!(pairs)
         end
     end
 end
+
 
 """
     idx_a, idx_b = overlap_indices(A, B)
@@ -461,6 +494,7 @@ function overlap_indices(A::Array, B::Array, symmetric=true)
     return idx_a, idx_b
 end
 
+
 """
     ps = problem_size(groups)
 Returns the sum of variables and linking constraints corresponding to the
@@ -473,23 +507,4 @@ function problem_size(groups)
     A = prim(overlap_graph(groups))
     return sum(nvars.(Int64.(nonzeros(A)))) + sum(nvars.(length.(groups)))
 end
-
-
-""
-function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractWRMForm
-    l,i,j = f_idx
-    t_idx = (l,j,i)
-
-    w_fr = var(pm, n, c, :w, i)
-    w_to = var(pm, n, c, :w, j)
-
-    p_fr = var(pm, n, c, :p, f_idx)
-    q_fr = var(pm, n, c, :q, f_idx)
-    @constraint(pm.model, norm([2*p_fr; 2*q_fr; w_fr*c_rating_a^2-1]) <= w_fr*c_rating_a^2+1)
-
-    p_to = var(pm, n, c, :p, t_idx)
-    q_to = var(pm, n, c, :q, t_idx)
-    @constraint(pm.model, norm([2*p_to; 2*q_to; w_to*c_rating_a^2-1]) <= w_to*c_rating_a^2+1)
-end
-
 
