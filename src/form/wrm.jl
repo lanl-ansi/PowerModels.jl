@@ -1,6 +1,6 @@
 export
     SDPWRMPowerModel, SDPWRMForm,
-    SDPDecompPowerModel, SDPDecompForm
+    SparseSDPWRMPowerModel, SparseSDPWRMForm
 
 ""
 abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
@@ -43,10 +43,10 @@ First paper to use "W" variables in the BIM of AC OPF:
 const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
 
 
-abstract type SDPDecompForm <: SDPWRMForm end
+abstract type SparseSDPWRMForm <: SDPWRMForm end
 
 ""
-const SDPDecompPowerModel = GenericPowerModel{SDPDecompForm}
+const SparseSDPWRMPowerModel = GenericPowerModel{SparseSDPWRMForm}
 
 struct SDconstraintDecomposition
     "Each sub-vector consists of bus IDs corresponding to a clique grouping"
@@ -68,7 +68,7 @@ end
 ""
 SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPWRMForm; kwargs...)
 
-SDPDecompPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPDecompForm; kwargs...)
+SparseSDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SparseSDPWRMForm; kwargs...)
 
 ""
 function variable_voltage(pm::GenericPowerModel{SDPWRMForm}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
@@ -134,7 +134,7 @@ function variable_voltage(pm::GenericPowerModel{SDPWRMForm}; nw::Int=pm.cnw, cnd
     end
 end
 
-function variable_voltage(pm::GenericPowerModel{SDPDecompForm}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true)
+function variable_voltage(pm::GenericPowerModel{SparseSDPWRMForm}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true)
 
     if haskey(pm.ext, :SDconstraintDecomposition)
         decomp = pm.ext[:SDconstraintDecomposition]
@@ -233,7 +233,7 @@ function constraint_voltage(pm::GenericPowerModel{SDPWRMForm}, nw::Int, cnd::Int
     @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
 end
 
-function constraint_voltage(pm::GenericPowerModel{SDPDecompForm}, nw::Int, cnd::Int)
+function constraint_voltage(pm::GenericPowerModel{SparseSDPWRMForm}, nw::Int, cnd::Int)
     pair_matrix(group) = [(i, j) for i in group, j in group]
 
     decomp = pm.ext[:SDconstraintDecomposition]
