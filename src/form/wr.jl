@@ -283,8 +283,8 @@ function variable_voltage_magnitude_sqr_from_ne(pm::GenericPowerModel{T}, n::Int
 
     pm.var[:nw][n][:w_fr_ne] = @variable(pm.model,
         [i in keys(pm.ref[:nw][n][:ne_branch])], basename="$(n)_w_fr_ne",
-        lowerbound = 0,
-        upperbound = buses[branches[i]["f_bus"]]["vmax"]^2,
+        lower_bound = 0,
+        upper_bound = buses[branches[i]["f_bus"]]["vmax"]^2,
         start = getstart(pm.ref[:nw][n][:bus], i, "w_fr_start", 1.001)
     )
 end
@@ -296,8 +296,8 @@ function variable_voltage_magnitude_sqr_to_ne(pm::GenericPowerModel{T}, n::Int=p
 
     pm.var[:nw][n][:w_to_ne] = @variable(pm.model,
         [i in keys(pm.ref[:nw][n][:ne_branch])], basename="$(n)_w_to_ne",
-        lowerbound = 0,
-        upperbound = buses[branches[i]["t_bus"]]["vmax"]^2,
+        lower_bound = 0,
+        upper_bound = buses[branches[i]["t_bus"]]["vmax"]^2,
         start = getstart(pm.ref[:nw][n][:bus], i, "w_to", 1.001)
     )
 end
@@ -309,15 +309,15 @@ function variable_voltage_product_ne(pm::GenericPowerModel{T}, n::Int=pm.cnw) wh
 
     pm.var[:nw][n][:wr_ne] = @variable(pm.model,
         [b in keys(pm.ref[:nw][n][:ne_branch])], basename="$(n)_wr_ne",
-        lowerbound = min(0, wr_min[bi_bp[b]]),
-        upperbound = max(0, wr_max[bi_bp[b]]),
+        lower_bound = min(0, wr_min[bi_bp[b]]),
+        upper_bound = max(0, wr_max[bi_bp[b]]),
         start = getstart(pm.ref[:nw][n][:ne_buspairs], bi_bp[b], "wr_start", 1.0)
     )
 
     pm.var[:nw][n][:wi_ne] = @variable(pm.model,
         [b in keys(pm.ref[:nw][n][:ne_branch])], basename="$(n)_wi_ne",
-        lowerbound = min(0, wi_min[bi_bp[b]]),
-        upperbound = max(0, wi_max[bi_bp[b]]),
+        lower_bound = min(0, wi_min[bi_bp[b]]),
+        upper_bound = max(0, wi_max[bi_bp[b]]),
         start = getstart(pm.ref[:nw][n][:ne_buspairs], bi_bp[b], "wi_start")
     )
 end
@@ -342,8 +342,8 @@ end
 function variable_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int=pm.cnw) where T
     pm.var[:nw][n][:td] = @variable(pm.model,
         [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_td",
-        lowerbound = pm.ref[:nw][n][:buspairs][bp]["angmin"],
-        upperbound = pm.ref[:nw][n][:buspairs][bp]["angmax"],
+        lower_bound = pm.ref[:nw][n][:buspairs][bp]["angmin"],
+        upper_bound = pm.ref[:nw][n][:buspairs][bp]["angmax"],
         start = getstart(pm.ref[:nw][n][:buspairs], bp, "td_start")
     )
 end
@@ -353,8 +353,8 @@ function variable_voltage_magnitude_product(pm::GenericPowerModel{T}, n::Int=pm.
     buspairs = pm.ref[:nw][n][:buspairs]
     pm.var[:nw][n][:vv] = @variable(pm.model,
         [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_vv",
-        lowerbound = buspairs[bp]["vm_fr_min"]*buspairs[bp]["vm_to_min"],
-        upperbound = buspairs[bp]["vm_fr_max"]*buspairs[bp]["vm_to_max"],
+        lower_bound = buspairs[bp]["vm_fr_min"]*buspairs[bp]["vm_to_min"],
+        upper_bound = buspairs[bp]["vm_fr_max"]*buspairs[bp]["vm_to_max"],
         start = getstart(pm.ref[:nw][n][:buspairs], bp, "vv_start", 1.0)
     )
 end
@@ -381,8 +381,8 @@ function variable_cosine(pm::GenericPowerModel{T}, n::Int=pm.cnw) where T
 
     pm.var[:nw][n][:cs] = @variable(pm.model,
         [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_cs",
-        lowerbound = cos_min[bp],
-        upperbound = cos_max[bp],
+        lower_bound = cos_min[bp],
+        upper_bound = cos_max[bp],
         start = getstart(pm.ref[:nw][n][:buspairs], bp, "cs_start", 1.0)
     )
 end
@@ -391,8 +391,8 @@ end
 function variable_sine(pm::GenericPowerModel, n::Int=pm.cnw)
     pm.var[:nw][n][:si] = @variable(pm.model,
         [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_si",
-        lowerbound = sin(pm.ref[:nw][n][:buspairs][bp]["angmin"]),
-        upperbound = sin(pm.ref[:nw][n][:buspairs][bp]["angmax"]),
+        lower_bound = sin(pm.ref[:nw][n][:buspairs][bp]["angmin"]),
+        upper_bound = sin(pm.ref[:nw][n][:buspairs][bp]["angmax"]),
         start = getstart(pm.ref[:nw][n][:buspairs], bp, "si_start")
     )
 end
@@ -402,8 +402,8 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}, n::Int=pm.cnw)
     buspairs = pm.ref[:nw][n][:buspairs]
     pm.var[:nw][n][:cm] = @variable(pm.model,
         [bp in keys(pm.ref[:nw][n][:buspairs])], basename="$(n)_cm",
-        lowerbound = 0,
-        upperbound = (buspairs[bp]["rate_a"]*buspairs[bp]["tap"]/buspairs[bp]["vm_fr_min"])^2,
+        lower_bound = 0,
+        upper_bound = (buspairs[bp]["rate_a"]*buspairs[bp]["tap"]/buspairs[bp]["vm_fr_min"])^2,
         start = getstart(pm.ref[:nw][n][:buspairs], bp, "cm_start")
     )
 end
@@ -505,12 +505,12 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, f
 
     td = pm.var[:nw][n][:td][(f_bus, t_bus)]
 
-    if JuMP.lowerbound(td) < angmin
-        setlowerbound(td, angmin)
+    if JuMP.lower_bound(td) < angmin
+        setlower_bound(td, angmin)
     end
 
-    if JuMP.upperbound(td) > angmax
-        setupperbound(td, angmax)
+    if JuMP.upper_bound(td) > angmax
+        setupper_bound(td, angmax)
     end
 
     w_fr = pm.var[:nw][n][:w][f_bus]
@@ -556,8 +556,8 @@ end
 function variable_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n::Int=pm.cnw) where T
     pm.var[:nw][n][:td] = @variable(pm.model,
         [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_td",
-        lowerbound = min(0, pm.ref[:nw][n][:branch][l]["angmin"]),
-        upperbound = max(0, pm.ref[:nw][n][:branch][l]["angmax"]),
+        lower_bound = min(0, pm.ref[:nw][n][:branch][l]["angmin"]),
+        upper_bound = max(0, pm.ref[:nw][n][:branch][l]["angmax"]),
         start = getstart(pm.ref[:nw][n][:branch], l, "td_start")
     )
 end
@@ -569,8 +569,8 @@ function variable_voltage_magnitude_product_on_off(pm::GenericPowerModel{T}, n::
 
     pm.var[:nw][n][:vv] = @variable(pm.model,
         [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_vv",
-        lowerbound = min(0, vv_min[l]),
-        upperbound = max(0, vv_max[l]),
+        lower_bound = min(0, vv_min[l]),
+        upper_bound = max(0, vv_max[l]),
         start = getstart(pm.ref[:nw][n][:branch], l, "vv_start", 1.0)
     )
 end
@@ -598,8 +598,8 @@ function variable_cosine_on_off(pm::GenericPowerModel{T}, n::Int=pm.cnw) where T
 
     pm.var[:nw][n][:cs] = @variable(pm.model,
         [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_cs",
-        lowerbound = min(0, cos_min[l]),
-        upperbound = max(0, cos_max[l]),
+        lower_bound = min(0, cos_min[l]),
+        upper_bound = max(0, cos_max[l]),
         start = getstart(pm.ref[:nw][n][:branch], l, "cs_start", 1.0)
     )
 end
@@ -608,8 +608,8 @@ end
 function variable_sine_on_off(pm::GenericPowerModel, n::Int=pm.cnw)
     pm.var[:nw][n][:si] = @variable(pm.model,
         [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_si",
-        lowerbound = min(0, sin(pm.ref[:nw][n][:branch][l]["angmin"])),
-        upperbound = max(0, sin(pm.ref[:nw][n][:branch][l]["angmax"])),
+        lower_bound = min(0, sin(pm.ref[:nw][n][:branch][l]["angmin"])),
+        upper_bound = max(0, sin(pm.ref[:nw][n][:branch][l]["angmax"])),
         start = getstart(pm.ref[:nw][n][:branch], l, "si_start")
     )
 end
@@ -622,8 +622,8 @@ function variable_current_magnitude_sqr_on_off(pm::GenericPowerModel{T}, n::Int=
 
     pm.var[:nw][n][:cm] = @variable(pm.model,
         [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_cm",
-        lowerbound = cm_min[l],
-        upperbound = cm_max[l],
+        lower_bound = cm_min[l],
+        upper_bound = cm_max[l],
         start = getstart(pm.ref[:nw][n][:branch], l, "cm_start")
     )
 end
@@ -703,9 +703,9 @@ function constraint_power_magnitude_sqr_on_off(pm::GenericPowerModel{T}, n::Int,
     z = pm.var[:nw][n][:branch_z][i]
 
     # TODO see if there is a way to leverage relaxation_complex_product_on_off here
-    w_ub = JuMP.upperbound(w)
-    cm_ub = JuMP.upperbound(cm)
-    z_ub = JuMP.upperbound(z)
+    w_ub = JuMP.upper_bound(w)
+    cm_ub = JuMP.upper_bound(cm)
+    z_ub = JuMP.upper_bound(z)
 
     @constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm*z_ub/tm^2)
     @constraint(pm.model, p_fr^2 + q_fr^2 <= w_ub*cm*z/tm^2)
@@ -750,10 +750,10 @@ function variable_multipliers(pm::GenericPowerModel{T}, n::Int=pm.cnw) where T <
     buspairs = pm.ref[:nw][n][:buspairs]
     pm.var[:nw][n][:lambda_wr] = @variable(pm.model,
         [bp in keys(pm.ref[:nw][n][:buspairs]), i=1:8], basename="$(n)_wr_lambda_$(bp)_$(i)",
-        lowerbound = 0, upperbound = 1)
+        lower_bound = 0, upper_bound = 1)
     pm.var[:nw][n][:lambda_wi] = @variable(pm.model,
         [bp in keys(pm.ref[:nw][n][:buspairs]), i=1:8], basename="$(n)_wi_lambda_$(bp)_$(i)",
-        lowerbound = 0, upperbound = 1)
+        lower_bound = 0, upper_bound = 1)
 end
 
 ""

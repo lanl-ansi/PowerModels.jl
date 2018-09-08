@@ -28,8 +28,8 @@ function variable_active_branch_series_flow(pm::GenericPowerModel, n::Int=pm.cnw
     if bounded
         pm.var[:nw][n][:p_s] = @variable(pm.model,
             [(l,i,j) in pm.ref[:nw][n][:arcs_from]], basename="$(n)_p_s",
-            lowerbound = -pm.ref[:nw][n][:branch][l]["rate_a"],
-            upperbound =  pm.ref[:nw][n][:branch][l]["rate_a"],
+            lower_bound = -pm.ref[:nw][n][:branch][l]["rate_a"],
+            upper_bound =  pm.ref[:nw][n][:branch][l]["rate_a"],
             start = getstart(pm.ref[:nw][n][:branch], l, "p_start")
         )
     else
@@ -45,8 +45,8 @@ function variable_reactive_branch_series_flow(pm::GenericPowerModel, n::Int=pm.c
     if bounded
         pm.var[:nw][n][:q_s] = @variable(pm.model,
             [(l,i,j) in pm.ref[:nw][n][:arcs_from]], basename="$(n)_q_s",
-            lowerbound = -pm.ref[:nw][n][:branch][l]["rate_a"],
-            upperbound =  pm.ref[:nw][n][:branch][l]["rate_a"],
+            lower_bound = -pm.ref[:nw][n][:branch][l]["rate_a"],
+            upper_bound =  pm.ref[:nw][n][:branch][l]["rate_a"],
             start = getstart(pm.ref[:nw][n][:branch], l, "q_start")
         )
     else
@@ -179,14 +179,14 @@ function variable_branch_series_current_magnitude_sqr(pm::GenericPowerModel, n::
     if bounded
         pm.var[:nw][n][:ccm] = @variable(pm.model,
             [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_ccm",
-            lowerbound = 0,
-            upperbound = (cmax[l])^2,
+            lower_bound = 0,
+            upper_bound = (cmax[l])^2,
             start = getstart(pm.ref[:nw][n][:branch], l, "i_start")
         )
     else
         pm.var[:nw][n][:ccm] = @variable(pm.model,
             [l in keys(pm.ref[:nw][n][:branch])], basename="$(n)_ccm",
-            lowerbound = 0,
+            lower_bound = 0,
             start = getstart(pm.ref[:nw][n][:branch], l, "i_start")
         )
     end

@@ -35,14 +35,14 @@ function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw; bounded = tru
         wi_ii = WR[w_idx,w_idx]
 
         if bounded
-            setlowerbound(wr_ii, bus["vmin"]^2)
-            setupperbound(wr_ii, bus["vmax"]^2)
+            setlower_bound(wr_ii, bus["vmin"]^2)
+            setupper_bound(wr_ii, bus["vmax"]^2)
 
             #this breaks SCS on the 3 bus exmple
-            #setlowerbound(wi_ii, 0)
-            #setupperbound(wi_ii, 0)
+            #setlower_bound(wi_ii, 0)
+            #setupper_bound(wi_ii, 0)
         else
-             setlowerbound(wr_ii, 0)
+             setlower_bound(wr_ii, 0)
         end
     end
 
@@ -52,11 +52,11 @@ function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw; bounded = tru
         wj_idx = lookup_w_index[j]
 
         if bounded
-            setupperbound(WR[wi_idx, wj_idx], wr_max[(i,j)])
-            setlowerbound(WR[wi_idx, wj_idx], wr_min[(i,j)])
+            setupper_bound(WR[wi_idx, wj_idx], wr_max[(i,j)])
+            setlower_bound(WR[wi_idx, wj_idx], wr_min[(i,j)])
 
-            setupperbound(WI[wi_idx, wj_idx], wi_max[(i,j)])
-            setlowerbound(WI[wi_idx, wj_idx], wi_min[(i,j)])
+            setupper_bound(WI[wi_idx, wj_idx], wi_max[(i,j)])
+            setlower_bound(WI[wi_idx, wj_idx], wi_min[(i,j)])
         end
     end
 

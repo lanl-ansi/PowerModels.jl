@@ -122,16 +122,28 @@ ext(pm::GenericPowerModel, n::Int, key::Symbol) = pm.ext[:nw][n][key]
 ext(pm::GenericPowerModel, n::Int, key::Symbol, idx) = pm.ext[:nw][n][key][idx]
 
 
-function optimize(pm::GenericPowerModel)
-    _, timed_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize(pm.model)
+function optimize!(pm::GenericPowerModel)
+    _, timed_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
 
-    ts = JuMP.terminationstatus(pm.model)
-    ps = JuMP.primalstatus(pm.model)
-    ds = JuMP.dualstatus(pm.model)
+    ts = JuMP.termination_status(pm.model)
+    ps = JuMP.primal_status(pm.model)
+    ds = JuMP.dual_status(pm.model)
 
-    if MOI.canget(pm.model, MOI.SolveTime())
+
+    #=
+    # prefered method, falling back on try-catch
+    if MOI.supports(pm.model, MOI.SolveTime())
         solve_time = MOI.get(pm.model, MOI.SolveTime())
     else
+        warn(LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
+        solve_time = timed_time
+    end
+    =#
+
+    solve_time = nothing
+    try
+        solve_time = MOI.get(pm.model, MOI.SolveTime())
+    catch
         warn(LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
         solve_time = timed_time
     end
@@ -186,7 +198,7 @@ function solve_generic_model(pm::GenericPowerModel, optimizer::MOI.AbstractOptim
     MOI.empty!(optimizer)
     MOIU.resetoptimizer!(pm.model, optimizer)
 
-    status, solve_time = optimize(pm)
+    status, solve_time = optimize!(pm)
 
     return build_solution(pm, status, solve_time; solution_builder = solution_builder)
 end

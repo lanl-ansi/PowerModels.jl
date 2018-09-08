@@ -34,8 +34,8 @@
         # TODO restore these at some point
         #@test MathProgBase.numlinconstr(pm.model) == 8
         #@test MathProgBase.numquadconstr(pm.model) == 12
-        @test JuMP.numnlconstr(pm.model) == 12
-        @test JuMP.numvar(pm.model) == 28
+        @test JuMP.num_nl_constraints(pm.model) == 12
+        @test JuMP.num_variables(pm.model) == 28
 
         result = solve_generic_model(pm, Ipopt.Optimizer(print_level=0))
 

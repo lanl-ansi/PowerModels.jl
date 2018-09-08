@@ -43,8 +43,8 @@ function variable_active_branch_flow(pm::GenericPowerModel{T}, n::Int=pm.cnw; bo
     if bounded
         pm.var[:nw][n][:p] = @variable(pm.model,
             [(l,i,j) in pm.ref[:nw][n][:arcs_from]], basename="$(n)_p",
-            lowerbound = -pm.ref[:nw][n][:branch][l]["rate_a"],
-            upperbound =  pm.ref[:nw][n][:branch][l]["rate_a"],
+            lower_bound = -pm.ref[:nw][n][:branch][l]["rate_a"],
+            upper_bound =  pm.ref[:nw][n][:branch][l]["rate_a"],
             start = getstart(pm.ref[:nw][n][:branch], l, "p_start")
         )
     else
@@ -64,8 +64,8 @@ end
 function variable_active_branch_flow_ne(pm::GenericPowerModel{T}, n::Int=pm.cnw) where T <: StandardDCPForm
     pm.var[:nw][n][:p_ne] = @variable(pm.model,
         [(l,i,j) in pm.ref[:nw][n][:ne_arcs_from]], basename="$(n)_p_ne",
-        lowerbound = -pm.ref[:nw][n][:ne_branch][l]["rate_a"],
-        upperbound =  pm.ref[:nw][n][:ne_branch][l]["rate_a"],
+        lower_bound = -pm.ref[:nw][n][:ne_branch][l]["rate_a"],
+        upper_bound =  pm.ref[:nw][n][:ne_branch][l]["rate_a"],
         start = getstart(pm.ref[:nw][n][:ne_branch], l, "p_start")
     )
 
@@ -154,8 +154,8 @@ end
 "`-rate_a <= p[f_idx] <= rate_a`"
 function constraint_thermal_limit_from(pm::GenericPowerModel{T}, n::Int, f_idx, rate_a) where T <: AbstractDCPForm
     p_fr = pm.var[:nw][n][:p][f_idx]
-    JuMP.lowerbound(p_fr) < -rate_a && setlowerbound(p_fr, -rate_a)
-    JuMP.upperbound(p_fr) >  rate_a && setupperbound(p_fr,  rate_a)
+    JuMP.lower_bound(p_fr) < -rate_a && setlower_bound(p_fr, -rate_a)
+    JuMP.upper_bound(p_fr) >  rate_a && setupper_bound(p_fr,  rate_a)
     pm.con[:nw][n][:sm_fr][f_idx[1]] = JuMP.LowerBoundRef(p_fr)
 end
 

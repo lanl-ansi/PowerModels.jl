@@ -146,8 +146,8 @@ function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: Abst
         sol_item["vm"] = NaN
         sol_item["va"] = NaN
         try
-            vr = JuMP.resultvalue(var(pm, :vr)[idx])
-            vi = JuMP.resultvalue(var(pm, :vi)[idx])
+            vr = JuMP.result_value(var(pm, :vr)[idx])
+            vi = JuMP.result_value(var(pm, :vi)[idx])
 
             vm = sqrt(vr^2 + vi^2)
             sol_item["vm"] = vm

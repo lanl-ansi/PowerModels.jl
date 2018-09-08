@@ -3,8 +3,8 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
     # TODO assert that the model is solved
 
     if status != :Error
-        objective = JuMP.objectivevalue(pm.model)
-        status = solver_status_dict(Symbol(typeof(pm.model.moibackend).name.module), status)
+        objective = JuMP.objective_value(pm.model)
+        status = solver_status_dict(Symbol(typeof(pm.model.moi_backend).name.module), status)
     end
 
     sol = init_solution(pm)
@@ -32,7 +32,7 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
     end
 
     solution = Dict{String,Any}(
-        "solver" => string(typeof(pm.model.moibackend)),
+        "solver" => string(typeof(pm.model.moi_backend)),
         "status" => status,
         "objective" => objective,
         "objective_lb" => guard_getobjbound(pm.model),
@@ -159,7 +159,7 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
         sol_item[param_name] = default_value(item)
         try
             variable = extract_var(var(pm, variable_symbol), idx, item)
-            sol_item[param_name] = scale(JuMP.resultvalue(variable), item)
+            sol_item[param_name] = scale(JuMP.result_value(variable), item)
         catch
         end
     end
@@ -223,7 +223,7 @@ function add_dual(
         sol_item[param_name] = default_value(item)
         try
             constraint = extract_con(con(pm, con_symbol), idx, item)
-            sol_item[param_name] = scale(JuMP.resultdual(constraint), item)
+            sol_item[param_name] = scale(JuMP.result_dual(constraint), item)
         catch
             info(LOGGER, "No constraint: $(con_symbol), $(idx)")
         end
