@@ -15,7 +15,7 @@ using Ipopt
 using Base.Test
 
 # default setup for solvers
-ipopt_solver = IpoptOptimizer(tol=1e-6, print_level=0)
+ipopt_solver = Ipopt.Optimizer(tol=1e-6, print_level=0)
 #cbc_solver = CbcSolver()
 #juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
 ##juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
