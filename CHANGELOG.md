@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.8.4
 - Added SparseSDPWRMPowerModel model (thanks to @kersulis)
 - Added Julia version upper bound
 - Improved OBBT bound update logic
