@@ -75,7 +75,7 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
     cnw = minimum([k for k in keys(ref[:nw])])
 
     pm = GenericPowerModel{T}(
-        Model(optimizer = optimizer), # model
+        Model(), # model
         data, # data
         setting, # setting
         Dict{String,Any}(), # solution
@@ -85,6 +85,10 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
         cnw,
         ext # ext
     )
+
+    if optimizer != nothing
+        MOIU.resetoptimizer!(pm.model, optimizer)
+    end
 
     return pm
 end
