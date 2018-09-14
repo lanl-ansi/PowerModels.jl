@@ -118,7 +118,8 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
         pg_sqr[n] = pm.var[:nw][n][:pg_sqr] = @variable(pm.model, 
             [i in keys(ref[:gen])], basename="$(n)_pg_sqr",
             lower_bound = ref[:gen][i]["pmin"]^2,
-            upper_bound = ref[:gen][i]["pmax"]^2
+            upper_bound = ref[:gen][i]["pmax"]^2,
+            start = 0.0
         )
         for (i, gen) in ref[:gen]
             @constraint(pm.model, norm([2*pg[n][i], pg_sqr[n][i]-1]) <= pg_sqr[n][i]+1)
@@ -127,7 +128,8 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
         dc_p_sqr[n] = pm.var[:nw][n][:dc_p_sqr] = @variable(pm.model, 
             [i in keys(ref[:dcline])], basename="$(n)_dc_p_sqr",
             lower_bound = ref[:dcline][i]["pminf"]^2,
-            upper_bound = ref[:dcline][i]["pmaxf"]^2
+            upper_bound = ref[:dcline][i]["pmaxf"]^2,
+            start = 0.0
         )
 
         for (i, dcline) in ref[:dcline]
@@ -202,7 +204,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
     dc_p_cost = Dict()
     for (n, ref) in pm.ref[:nw]
         pg_cost[n] = pm.var[:nw][n][:pg_cost] = @variable(pm.model, 
-            [i in keys(ref[:gen])], basename="$(n)_pg_cost"
+            [i in keys(ref[:gen])], basename="$(n)_pg_cost", start = 0.0
         )
 
         # pwl cost
@@ -214,7 +216,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
         end
 
         dc_p_cost[n] = pm.var[:nw][n][:dc_p_cost] = @variable(pm.model, 
-            [i in keys(ref[:dcline])], basename="$(n)_dc_p_cost"
+            [i in keys(ref[:dcline])], basename="$(n)_dc_p_cost", start = 0.0
         )
 
         # pwl cost

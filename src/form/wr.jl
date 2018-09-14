@@ -750,10 +750,10 @@ function variable_multipliers(pm::GenericPowerModel{T}, n::Int=pm.cnw) where T <
     buspairs = pm.ref[:nw][n][:buspairs]
     pm.var[:nw][n][:lambda_wr] = @variable(pm.model,
         [bp in keys(pm.ref[:nw][n][:buspairs]), i=1:8], basename="$(n)_wr_lambda_$(bp)_$(i)",
-        lower_bound = 0, upper_bound = 1)
+        lower_bound = 0, upper_bound = 1, start = 0.0)
     pm.var[:nw][n][:lambda_wi] = @variable(pm.model,
         [bp in keys(pm.ref[:nw][n][:buspairs]), i=1:8], basename="$(n)_wi_lambda_$(bp)_$(i)",
-        lower_bound = 0, upper_bound = 1)
+        lower_bound = 0, upper_bound = 1, start = 0.0)
 end
 
 ""

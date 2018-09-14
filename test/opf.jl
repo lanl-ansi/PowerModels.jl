@@ -31,13 +31,12 @@
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 18156.2; atol = 1e0)
     end
-    # broke in MOI v0.6?
-    #@testset "5-bus with pwl costs" begin
-    #    result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
+    @testset "5-bus with pwl costs" begin
+        result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 42895; atol = 1e0)
-    #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42895; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_ac_opf("../test/data/matpower/case6.m", ipopt_solver)
 
@@ -78,13 +77,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -27497.7; atol = 1e0)
     end
-    # broke in MOI v0.6?
-    #@testset "5-bus with pwl costs" begin
-    #    result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
+    @testset "5-bus with pwl costs" begin
+        result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 42895; atol = 1e0)
-    #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42895; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_opf("../test/data/matpower/case6.m", ACRPowerModel, ipopt_solver)
 
@@ -121,13 +119,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -27438.7; atol = 1e0)
     end
-    # broke in MOI v0.6?
-    #@testset "5-bus with pwl costs" begin
-    #    result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
+    @testset "5-bus with pwl costs" begin
+        result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 42895; atol = 1e0)
-    #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42895; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_opf("../test/data/matpower/case6.m", ACTPowerModel, ipopt_solver)
 
@@ -164,13 +161,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -27410.0; atol = 1e0)
     end
-    # broke in MOI v0.6?
-    #@testset "5-bus with pwl costs" begin
-    #    result = run_dc_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
+    @testset "5-bus with pwl costs" begin
+        result = run_dc_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 42565; atol = 1e0)
-    #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42565; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_dc_opf("../test/data/matpower/case6.m", ipopt_solver)
 
@@ -207,13 +203,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -32710.0; atol = 1e0)
     end
-    # broke in MOI v0.6?
-    #@testset "5-bus with pwl costs" begin
-    #    result = run_opf("../test/data/matpower/case5_pwlc.m", DCPLLPowerModel, ipopt_solver)
+    @testset "5-bus with pwl costs" begin
+        result = run_opf("../test/data/matpower/case5_pwlc.m", DCPLLPowerModel, ipopt_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 42937; atol = 1e0)
-    #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42937; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_opf("../test/data/matpower/case6.m", DCPLLPowerModel, ipopt_solver)
 
@@ -256,13 +251,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -28237.3; atol = 1e0)
     end
-    # broke in MOI v0.6?
-    #@testset "5-bus with pwl costs" begin
-    #    result = run_opf("../test/data/matpower/case5_pwlc.m", SOCWRPowerModel, ipopt_solver)
+    @testset "5-bus with pwl costs" begin
+        result = run_opf("../test/data/matpower/case5_pwlc.m", SOCWRPowerModel, ipopt_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 42895; atol = 1e0)
-    #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42895; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_opf("../test/data/matpower/case6.m", SOCWRPowerModel, ipopt_solver)
 
@@ -302,13 +296,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -27660.4; atol = 1e0)
     end
-    # broke in MOI v0.6?
-    #@testset "5-bus with pwl costs" begin
-    #    result = run_opf_bf("../test/data/matpower/case5_pwlc.m", SOCDFPowerModel, ipopt_solver)
+    @testset "5-bus with pwl costs" begin
+        result = run_opf_bf("../test/data/matpower/case5_pwlc.m", SOCDFPowerModel, ipopt_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 42895; atol = 1e0)
-    #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42895; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_opf_bf("../test/data/matpower/case6.m", SOCDFPowerModel, ipopt_solver)
 
@@ -342,13 +335,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -27659.8; atol = 1e0)
     end
-    # broke in MOI v0.6?
-    #@testset "5-bus with pwl costs" begin
-    #    result = run_opf("../test/data/matpower/case5_pwlc.m", QCWRPowerModel, ipopt_solver)
+    @testset "5-bus with pwl costs" begin
+        result = run_opf("../test/data/matpower/case5_pwlc.m", QCWRPowerModel, ipopt_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 42895; atol = 1e0)
-    #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42895; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_opf("../test/data/matpower/case6.m", QCWRPowerModel, ipopt_solver)
 
@@ -365,8 +357,7 @@ end
     end
 end
 
-#=
-# broke in MOI v0.6?
+
 @testset "test qc opf with trilinear convexhull relaxation" begin
     @testset "3-bus case" begin
         result = run_opf("../test/data/matpower/case3.m", QCWRTriPowerModel, ipopt_solver)
@@ -401,7 +392,7 @@ end
         @test isapprox(result["objective"], 76752.3; atol = 1e0)
     end
 end
-=#
+
 
 #=
 # not yet supported in MOI
