@@ -23,14 +23,14 @@ end
 function constraint_thermal_limit_from(pm::GenericPowerModel{T}, n::Int, f_idx, rate_a) where T<:AbstractConicPowerFormulation
     p_fr = pm.var[:nw][n][:p][f_idx]
     q_fr = pm.var[:nw][n][:q][f_idx]
-    @constraint(pm.model, norm([p_fr; q_fr]) <= rate_a)
+    @constraint(pm.model, [rate_a, p_fr, q_fr] in SecondOrderCone())
 end
 
 "`norm([p[t_idx]; q[t_idx]]) <= rate_a`"
 function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, t_idx, rate_a) where T<:AbstractConicPowerFormulation
     p_to = pm.var[:nw][n][:p][t_idx]
     q_to = pm.var[:nw][n][:q][t_idx]
-    @constraint(pm.model, norm([p_to; q_to]) <= rate_a)
+    @constraint(pm.model, [rate_a, p_to, q_to] in SecondOrderCone())
 end
 
 # Generic on/off thermal limit constraint

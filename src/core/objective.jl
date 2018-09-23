@@ -122,7 +122,7 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
             start = 0.0
         )
         for (i, gen) in ref[:gen]
-            @constraint(pm.model, norm([2*pg[n][i], pg_sqr[n][i]-1]) <= pg_sqr[n][i]+1)
+            @constraint(pm.model, [pg_sqr[n][i]+1, 2*pg[n][i], pg_sqr[n][i]-1] in SecondOrderCone())
         end
 
         dc_p_sqr[n] = pm.var[:nw][n][:dc_p_sqr] = @variable(pm.model, 
@@ -133,7 +133,7 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
         )
 
         for (i, dcline) in ref[:dcline]
-            @constraint(pm.model, norm([2*dc_p[n][from_idx[n][i]], dc_p_sqr[n][i]-1]) <= dc_p_sqr[n][i]+1)
+            @constraint(pm.model, [dc_p_sqr[n][i]+1, 2*dc_p[n][from_idx[n][i]], dc_p_sqr[n][i]-1] in SecondOrderCone())
         end
     end
 

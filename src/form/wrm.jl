@@ -18,14 +18,21 @@ SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SD
 function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw; bounded = true) where T <: AbstractWRMForm
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:nw][n][:buspairs])
 
-    w_index = 1:length(keys(pm.ref[:nw][n][:bus]))
+    num_buses = length(keys(pm.ref[:nw][n][:bus]))
+
+    w_index = 1:num_buses
     lookup_w_index = Dict([(bi,i) for (i,bi) in enumerate(keys(pm.ref[:nw][n][:bus]))])
 
+    wr_start = ones(num_buses, num_buses)
+    wi_start = zeros(num_buses, num_buses)
+
     WR = pm.var[:nw][n][:WR] = @variable(pm.model,
-        [1:length(keys(pm.ref[:nw][n][:bus])), 1:length(keys(pm.ref[:nw][n][:bus]))], Symmetric, basename="$(n)_WR"
+        [i=1:num_buses, j=1:num_buses], Symmetric, basename="$(n)_WR",
+        start=wr_start[i,j]
     )
     WI = pm.var[:nw][n][:WI] = @variable(pm.model,
-        [1:length(keys(pm.ref[:nw][n][:bus])), 1:length(keys(pm.ref[:nw][n][:bus]))], basename="$(n)_WI"
+        [i=1:num_buses, j=1:num_buses], basename="$(n)_WI",
+        start=wr_start[i,j]
     )
 
     # bounds on diagonal
@@ -35,14 +42,14 @@ function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw; bounded = tru
         wi_ii = WR[w_idx,w_idx]
 
         if bounded
-            setlower_bound(wr_ii, bus["vmin"]^2)
-            setupper_bound(wr_ii, bus["vmax"]^2)
+            set_lower_bound(wr_ii, bus["vmin"]^2)
+            set_upper_bound(wr_ii, bus["vmax"]^2)
 
             #this breaks SCS on the 3 bus exmple
-            #setlower_bound(wi_ii, 0)
-            #setupper_bound(wi_ii, 0)
+            #set_lower_bound(wi_ii, 0)
+            #set_upper_bound(wi_ii, 0)
         else
-             setlower_bound(wr_ii, 0)
+             set_lower_bound(wr_ii, 0)
         end
     end
 
@@ -52,11 +59,11 @@ function variable_voltage(pm::GenericPowerModel{T}, n::Int=pm.cnw; bounded = tru
         wj_idx = lookup_w_index[j]
 
         if bounded
-            setupper_bound(WR[wi_idx, wj_idx], wr_max[(i,j)])
-            setlower_bound(WR[wi_idx, wj_idx], wr_min[(i,j)])
+            set_upper_bound(WR[wi_idx, wj_idx], wr_max[(i,j)])
+            set_lower_bound(WR[wi_idx, wj_idx], wr_min[(i,j)])
 
-            setupper_bound(WI[wi_idx, wj_idx], wi_max[(i,j)])
-            setlower_bound(WI[wi_idx, wj_idx], wi_min[(i,j)])
+            set_upper_bound(WI[wi_idx, wj_idx], wi_max[(i,j)])
+            set_lower_bound(WI[wi_idx, wj_idx], wi_min[(i,j)])
         end
     end
 
@@ -84,7 +91,8 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int) where T <: Abstrac
     WR = pm.var[:nw][n][:WR]
     WI = pm.var[:nw][n][:WI]
 
-    @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
+
+    @constraint(pm.model, [WR WI; -WI WR] in PSDCone())
 
     # place holder while debugging sdp constraint
     #for (i,j) in keys(pm.ref[:nw][n][:buspairs])
