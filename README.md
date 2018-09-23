@@ -75,7 +75,7 @@ If you find PowerModels useful in your work, we kindly request that you cite the
   doi = {10.23919/PSCC.2018.8442948}
 }
 ```
-Citation of the orginal works for problem denifitions (e.g. OPF) and [power flow formulations](https://lanl-ansi.github.io/PowerModels.jl/stable/formulation-details.html) (e.g. SOC) is also encuraged when publishing works that use PowerModels.
+Citation of the orginal works for problem denifitions (e.g. OPF) and [power flow formulations](https://lanl-ansi.github.io/PowerModels.jl/stable/formulation-details.html) (e.g. SOC) is also encouraged when publishing works that use PowerModels.
 
 
 ## License
