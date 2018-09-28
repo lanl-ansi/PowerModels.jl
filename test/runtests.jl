@@ -38,7 +38,6 @@ include("common.jl")
 
     include("data.jl")
 
-    # needs FeasibilitySense in Ipopt
     include("pf.jl")
 
     include("opf.jl")
