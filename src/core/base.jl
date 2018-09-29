@@ -87,7 +87,7 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Strin
     )
 
     if optimizer != nothing
-        MOIU.resetoptimizer!(pm.model, optimizer)
+        pm.model = Model(optimizer)
     end
 
     return pm
@@ -166,7 +166,7 @@ end
 
 ""
 function run_generic_model(data::Dict{String,Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
-    pm = build_generic_model(data, model_constructor, post_method; kwargs...)
+    pm = build_generic_model(data, model_constructor, post_method; optimizer=solver, kwargs...)
 
     solution = solve_generic_model(pm, solver; solution_builder = solution_builder)
 
@@ -194,9 +194,10 @@ function build_generic_model(data::Dict{String,Any}, model_constructor, post_met
 end
 
 ""
-function solve_generic_model(pm::GenericPowerModel, optimizer::MOI.AbstractOptimizer; solution_builder = get_solution)
-    MOI.empty!(optimizer)
-    MOIU.resetoptimizer!(pm.model, optimizer)
+function solve_generic_model(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = get_solution)
+    #TODO, for now the optimizer must be specified at the time of JuMP model instantiation
+    #MOI.empty!(optimizer)
+    #MOIU.resetoptimizer!(pm.model, optimizer)
 
     status, solve_time = optimize!(pm)
 

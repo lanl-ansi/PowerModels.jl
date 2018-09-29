@@ -14,13 +14,15 @@ using SCS
 
 using Base.Test
 
+using JuMP
+
 # default setup for solvers
-ipopt_solver = Ipopt.Optimizer(tol=1e-6, print_level=0)
+ipopt_solver = with_optimizer(Ipopt.Optimizer, tol=1e-6, print_level=0)
 #cbc_solver = CbcSolver()
 #juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
 ##juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
 #pajarito_solver = PajaritoSolver(mip_solver=cbc_solver, cont_solver=ipopt_solver, log_level=0)
-#scs_solver = SCSSolver(max_iters=1000000, verbose=0)
+scs_solver = with_optimizer(SCSSolver, max_iters=1000000, verbose=0)
 
 include("common.jl")
 
