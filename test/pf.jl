@@ -251,15 +251,14 @@ end
 end
 
 
-#= 
-# not yet supported in MOI
+
 @testset "test sdp pf" begin
     #=
     #seems to be having an issue on linux (04/02/18)
     @testset "3-bus case" begin
         result = run_pf("../test/data/matpower/case3.m", SDPWRMPowerModel, scs_solver)
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
 
         @test result["solution"]["gen"]["1"]["pg"] >= 1.480
@@ -280,14 +279,14 @@ end
     @testset "5-bus asymmetric case" begin
         result = run_pf("../test/data/matpower/case5_asym.m", SDPWRMPowerModel, scs_solver)
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     =#
     @testset "6-bus case" begin
         result = run_pf("../test/data/matpower/case6.m", SDPWRMPowerModel, scs_solver)
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
         @test isapprox(result["solution"]["bus"]["1"]["vm"], 1.09999; atol = 1e-3)
         @test isapprox(result["solution"]["bus"]["4"]["vm"], 1.09999; atol = 1e-3)
@@ -295,8 +294,7 @@ end
     @testset "24-bus rts case" begin
         result = run_pf("../test/data/matpower/case24.m", SDPWRMPowerModel, scs_solver)
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
 end
-=#

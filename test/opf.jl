@@ -394,49 +394,48 @@ end
 end
 
 
-#=
-# not yet supported in MOI
+
 @testset "test sdp opf" begin
     @testset "3-bus case" begin
         result = run_opf("../test/data/matpower/case3.m", SDPWRMPowerModel, scs_solver)
 
-        @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 5851.3; atol = 1e0)
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 5852.57; atol = 1e0)
     end
     # TODO see if convergence time can be improved
     #@testset "5-bus asymmetric case" begin
     #    result = run_opf("../test/data/matpower/case5_asym.m", SDPWRMPowerModel, scs_solver)
 
-    #    @test result["status"] == :Optimal
+    #    @test result["status"] == :LocalOptimal
     #    @test isapprox(result["objective"], 16664; atol = 1e0)
     #end
     #@testset "5-bus gap case" begin
     #    result = run_opf("../test/data/matpower/case5_gap.m", SDPWRMPowerModel, scs_solver)
 
-    #    @test result["status"] == :Optimal
+    #    @test result["status"] == :LocalOptimal
     #    @test isapprox(result["objective"], TBD; atol = 1e0)
     #end
-    @testset "14-bus case" begin
-        result = run_opf("../test/data/matpower/case14.m", SDPWRMPowerModel, scs_solver)
+    # TODO: requires increased iteration limit to work with MOI
+    #@testset "14-bus case" begin
+    #    result = run_opf("../test/data/matpower/case14.m", SDPWRMPowerModel, scs_solver)
 
-        @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 8079.97; atol = 1e0)
-    end
+    #    @test result["status"] == :LocalOptimal
+    #    @test isapprox(result["objective"], 8079.97; atol = 1e0)
+    #end
     @testset "6-bus case" begin
         result = run_opf("../test/data/matpower/case6.m", SDPWRMPowerModel, scs_solver)
 
-        @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 11558.5; atol = 1e0)
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 11560.8; atol = 1e0)
     end
     # TODO replace this with smaller case, way too slow for unit testing
     #@testset "24-bus rts case" begin
     #    result = run_opf("../test/data/matpower/case24.m", SDPWRMPowerModel, scs_solver)
 
-    #    @test result["status"] == :Optimal
+    #    @test result["status"] == :LocalOptimal
     #    @test isapprox(result["objective"], 75153; atol = 1e0)
     #end
 end
-=#
 
 
 

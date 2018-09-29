@@ -148,11 +148,17 @@ function optimize!(pm::GenericPowerModel)
         solve_time = timed_time
     end
 
-    if ts == MOI.Success && ps == MOI.FeasiblePoint
-        return :LocalOptimal, solve_time
-    else
+    if ts == MOI.Success
+        #if ps == MOI.FeasiblePoint && ds == MOI.FeasiblePoint
+        #    return :Optimal, solve_time
+        #end
+        if ps == MOI.FeasiblePoint
+            return :LocalOptimal, solve_time
+        end
         return :LocalInfeasible, solve_time
     end
+
+    return :Error, solve_time
 
     # future return type
     #return ts, ps, ds, real_solve_time
