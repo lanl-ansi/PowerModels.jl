@@ -140,7 +140,7 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <:
     return @objective(pm.model, Min,
         sum(
             sum( gen["cost"][1]*pg_sqr[n][i] + gen["cost"][2]*pg[n][i] + gen["cost"][3] for (i,gen) in ref[:gen]) +
-            sum(dcline["cost"][1]*dc_p_sqr[n][i]^2 + dcline["cost"][2]*dc_p[n][from_idx[n][i]] + dcline["cost"][3] for (i,dcline) in ref[:dcline])
+            sum(dcline["cost"][1]*dc_p_sqr[n][i] + dcline["cost"][2]*dc_p[n][from_idx[n][i]] + dcline["cost"][3] for (i,dcline) in ref[:dcline])
         for (n, ref) in pm.ref[:nw])
     )
 end
