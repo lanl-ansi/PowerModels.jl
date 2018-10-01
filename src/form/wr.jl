@@ -487,7 +487,7 @@ function constraint_power_magnitude_link(pm::GenericPowerModel{T}, n::Int, f_bus
     wi = pm.var[:nw][n][:wi][(f_bus, t_bus)]
     cm = pm.var[:nw][n][:cm][(f_bus, t_bus)]
 
-    assert(g_fr == 0 && g_to == 0)
+    @assert(g_fr == 0 && g_to == 0)
     c = b_fr + b_to
 
     # TODO: Derive updated constraint from first principles
@@ -721,7 +721,7 @@ function constraint_power_magnitude_link_on_off(pm::GenericPowerModel{T}, n::Int
     wi = pm.var[:nw][n][:wi][i]
     cm = pm.var[:nw][n][:cm][i]
 
-    assert(g_fr == 0.0 && g_to == 0.0)
+    @assert(g_fr == 0.0 && g_to == 0.0)
     c = b_fr + b_to
 
     # TODO: Derive updated constraint from first principles

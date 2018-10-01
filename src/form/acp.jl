@@ -287,7 +287,7 @@ function constraint_loss_lb(pm::GenericPowerModel{T}, n::Int, f_bus, t_bus, f_id
     p_to = pm.var[:nw][n][:p][t_idx]
     q_to = pm.var[:nw][n][:q][t_idx]
 
-    assert(g_fr == 0 && g_to == 0)
+    @assert(g_fr == 0 && g_to == 0)
     c = b_fr + b_to
 
     # TODO: Derive updated constraint from first principles

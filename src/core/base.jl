@@ -368,7 +368,7 @@ function biggest_generator(gens)
             biggest_value = gen["pmax"]
         end
     end
-    assert(biggest_gen != nothing)
+    @assert(biggest_gen != nothing)
     return biggest_gen
 end
 
