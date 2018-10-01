@@ -7,6 +7,7 @@ using JuMP
 using InfrastructureModels
 using Compat
 using Memento
+using LinearAlgebra
 import Pkg
 
 using MathOptInterface
