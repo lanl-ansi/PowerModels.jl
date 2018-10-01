@@ -13,8 +13,6 @@ using Test
 #using Pajarito
 #using Juniper
 
-using Base.Test
-
 # default setup for solvers
 #ipopt_solver = IpoptOptimizer(tol=1e-6, print_level=0)
 #cbc_solver = CbcSolver()
