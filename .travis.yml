@@ -25,7 +25,8 @@ before_install:
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia -e 'using Pkg; Pkg.clone(pwd())'
-  - julia -e 'using Pkg; Pkg.test("PowerModels", coverage=true)'
+  - julia --project --color=yes -e "import Pkg; Pkg.instantiate(); Pkg.build();" #make sure the depedencies are working properly
+  - julia --check-bounds=yes --depwarn=no --color=yes --project -e "import Pkg; Pkg.test(coverage=true);"
 
 after_success:
   - julia -e  'using PowerModels; using Coverage; cd(pathof(PowerModels)); LCOV.writefile("lcov.info", process_folder(".")); run(pipeline(`curl -s https://codecov.io/bash`, `bash`))'
