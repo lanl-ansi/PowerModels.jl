@@ -10,11 +10,12 @@ using Cbc
 using Ipopt
 using SCS
 using Test
+using JuMP
 #using Pajarito
 #using Juniper
 
 # default setup for solvers
-#ipopt_solver = IpoptOptimizer(tol=1e-6, print_level=0)
+ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, print_level=0, tol=1e-6)
 #cbc_solver = CbcSolver()
 #juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
 ##juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
@@ -25,7 +26,7 @@ include("common.jl")
 
 @testset "PowerModels" begin
 
-    #include("matpower.jl")
+    include("matpower.jl")
 
     #include("pti.jl")
 
