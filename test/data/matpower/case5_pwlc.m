@@ -1,15 +1,8 @@
-% NESTA v0.6.0
-% tests non-contiguous bus ids
+% tests pwl cost functions
 
-function mpc = nesta_case5_pjm
+function mpc = case5_pwlc
 mpc.version = '2';
 mpc.baseMVA = 100.0;
-
-%% area data
-%	area	refbus
-mpc.areas = [
-	1	 4;
-];
 
 %% bus data
 %	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
@@ -51,4 +44,8 @@ mpc.branch = [
 	3	 4	 0.00297	 0.0297	 0.00674	 426	 426	 426	 0.0	 0.0	 1	 -30.0	 30.0;
 	4	 10	 0.00297	 0.0297	 0.00674	 240.0	 240.0	 240.0	 0.0	 0.0	 1	 -30.0	 30.0;
 ];
+
+mpc.dcline = [
+	1	 10	 1	 10	 10	 25.91	 -4.16	 1.1	 0.92617	 10	 900 -900 900 -900 900	 0	 0	 0	 0	 0	 0	 0	 0
+]
 

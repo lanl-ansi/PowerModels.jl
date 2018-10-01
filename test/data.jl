@@ -7,26 +7,24 @@
         output = sprint(PowerModels.summary, data)
 
         line_count = count(c -> c == '\n', output)
-        @test line_count >= 80 && line_count <= 100 
-        @test contains(output, "name: nesta_case5_pjm")
+        @test line_count >= 80 && line_count <= 100
+        @test contains(output, "name: case5")
         @test contains(output, "Table: bus")
         @test contains(output, "Table: load")
         @test contains(output, "Table: gen")
         @test contains(output, "Table: branch")
-        @test contains(output, "Table: areas")
     end
 
     @testset "5-bus summary from file location" begin
         output = sprint(PowerModels.summary, "../test/data/matpower/case5.m")
 
         line_count = count(c -> c == '\n', output)
-        @test line_count >= 80 && line_count <= 100 
-        @test contains(output, "name: nesta_case5_pjm")
+        @test line_count >= 80 && line_count <= 100
+        @test contains(output, "name: case5")
         @test contains(output, "Table: bus")
         @test contains(output, "Table: load")
         @test contains(output, "Table: gen")
         @test contains(output, "Table: branch")
-        @test contains(output, "Table: areas")
     end
 
     @testset "5-bus solution summary from dict" begin
@@ -34,7 +32,7 @@
         output = sprint(PowerModels.summary, result["solution"])
 
         line_count = count(c -> c == '\n', output)
-        @test line_count >= 20 && line_count <= 30 
+        @test line_count >= 20 && line_count <= 30
         @test contains(output, "baseMVA: 100.0")
         @test contains(output, "Table: bus")
         @test contains(output, "Table: gen")
@@ -200,6 +198,17 @@ end
     end
 
     @testset "connecected components" begin
+        data = PowerModels.parse_file("../test/data/matpower/case6.m")
+        cc = PowerModels.connected_components(data)
+
+        cc_ordered = sort(collect(cc); by=length)
+
+        @test length(cc_ordered) == 2
+        @test length(cc_ordered[1]) == 3
+        @test length(cc_ordered[2]) == 3
+    end
+
+    @testset "connecected components with propagate topology status" begin
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
         PowerModels.propagate_topology_status(data)
         cc = PowerModels.connected_components(data)
@@ -288,7 +297,90 @@ end
             end
         end
     end
+end
 
+@testset "test errors and warnings" begin
+    data = PowerModels.parse_file("../test/data/matpower/case3.m")
+
+    # check_cost_functions
+    data["gen"]["1"]["model"] = 1
+    data["gen"]["1"]["ncost"] = 1
+    data["gen"]["1"]["cost"] = [0, 1, 0]
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+
+    data["gen"]["1"]["cost"] = [0, 0]
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+
+    data["gen"]["1"]["ncost"] = 2
+    data["gen"]["1"]["cost"] = [0, 0, 0, 0]
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+
+    data["gen"]["1"]["model"] = 2
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+
+    # check_connectivity
+    data["load"]["1"]["load_bus"] = 1000
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+
+    data["load"]["1"]["load_bus"] = 1
+    data["shunt"]["1"] = Dict{String,Any}("gs"=>0, "bs"=>1, "shunt_bus"=>1000, "index"=>1, "status"=>1)
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+
+    data["shunt"]["1"]["shunt_bus"] = 1
+    data["gen"]["1"]["gen_bus"] = 1000
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+
+    data["gen"]["1"]["gen_bus"] = 1
+    data["branch"]["1"]["f_bus"] = 1000
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+
+    data["branch"]["1"]["f_bus"] = 1
+    data["branch"]["1"]["t_bus"] = 1000
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+
+    data["branch"]["1"]["t_bus"] = 3
+    data["dcline"]["1"]["f_bus"] = 1000
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+
+    data["dcline"]["1"]["f_bus"] = 1
+    data["dcline"]["1"]["t_bus"] = 1000
+    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+    data["dcline"]["1"]["t_bus"] = 2
+
+    #warnings
+    setlevel!(TESTLOG, "warn")
+
+    data["gen"]["1"]["model"] = 3
+    @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units(data))
+    @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_per_unit(data))
+    @test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.check_cost_functions(data))
+    data["gen"]["1"]["model"] = 1
+
+    data["gen"]["1"]["cost"][3] = 3000
+    @test_warn(TESTLOG, "pwl x value 3000 is outside the bounds 0.0-20.0 on generator 1", PowerModels.check_cost_functions(data))
+
+    data["dcline"]["1"]["loss0"] = -1.0
+    @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0", PowerModels.check_dcline_limits(data))
+
+    data["dcline"]["1"]["loss1"] = -1.0
+    @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1 from -1.0 to 0.0", PowerModels.check_dcline_limits(data))
+
+    @test data["dcline"]["1"]["loss0"] == 0.0
+    @test data["dcline"]["1"]["loss1"] == 0.0
+
+    data["dcline"]["1"]["loss1"] = 100.0
+    @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1 from 100.0 to 0.0", PowerModels.check_dcline_limits(data))
+
+    delete!(data["branch"]["1"], "tap")
+    @test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.check_transformer_parameters(data))
+
+    delete!(data["branch"]["1"], "shift")
+    @test_warn(TESTLOG, "branch found without shift value, setting a shift to 0.0", PowerModels.check_transformer_parameters(data))
+
+    data["branch"]["1"]["tap"] = -1.0
+    @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.check_transformer_parameters(data))
+
+    setlevel!(TESTLOG, "error")
 end
 
 
@@ -310,3 +402,36 @@ end
     end
 end
 =#
+
+
+@testset "test impedance to admittance" begin
+    branch = Dict{String, Any}()
+    branch["br_r"] = 1
+    branch["br_x"] = 2
+    g,b  = PowerModels.calc_branch_y(branch)
+    @test isapprox(g, 0.2)
+    @test isapprox(b, -0.4)
+
+    branch["br_r"] = 0
+    branch["br_x"] = 0
+    g,b  = PowerModels.calc_branch_y(branch)
+    @test isapprox(g, 0)
+    @test isapprox(b, 0)
+
+    branch["br_r"] = PowerModels.MultiConductorMatrix([1 2;3 4])
+    branch["br_x"] = PowerModels.MultiConductorMatrix([1 2;3 4])
+    g,b  = PowerModels.calc_branch_y(branch)
+
+    @test typeof(g) <: PowerModels.MultiConductorMatrix
+    @test isapprox(g.values, [-1.0 0.5; 0.75 -0.25])
+    @test isapprox(b.values, [1.0 -0.5; -0.75 0.25])
+
+    branch["br_r"] = PowerModels.MultiConductorMatrix([1 2 0;3 4 0; 0 0 0])
+    branch["br_x"] = PowerModels.MultiConductorMatrix([1 2 0;3 4 0; 0 0 0])
+    g,b  = PowerModels.calc_branch_y(branch)
+
+    @test typeof(g) <: PowerModels.MultiConductorMatrix
+    @test isapprox(g.values, [-1.0 0.5 0; 0.75 -0.25 0; 0 0 0])
+    @test isapprox(b.values, [1.0 -0.5 0; -0.75 0.25 0; 0 0 0])
+end
+

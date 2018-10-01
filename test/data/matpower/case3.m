@@ -2,7 +2,7 @@
 % tests refrence bus detection
 % tests basic ac and hvdc modeling
 % tests when gencost is present but not dclinecost
-% based on nesta_case3_lmbd from NESTA v0.6.0
+
 function mpc = case3
 mpc.version = '2';
 mpc.baseMVA = 100.0;
@@ -85,4 +85,24 @@ mpc.branch_names = {
 	'Branch 1'	123;
 	'Branch 2'	456;
 	'Branch 3'	789;
+};
+
+
+%column_names% number string 
+mpc.bus_data = {
+	 1	'FAV SPOT 02'
+	 2	'FAV PLACE 05'
+	 3	'FAV PLC 08'
+};
+
+
+%column_names% extra 
+mpc.load_data = {
+	100
+	101
+};
+
+%column_names% string number 
+mpc.component = {
+	'temp'	1000.0
 };

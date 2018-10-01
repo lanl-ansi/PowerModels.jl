@@ -247,13 +247,15 @@ data types given by `section` and saved into `data::Dict`
 
 """
 function parse_line_element!(data::Dict, elements::Array, section::AbstractString)
+    missing = []
     for (field, dtype) in get_pti_dtypes(section)
         try
             element = shift!(elements)
         catch message
             if isa(message, ArgumentError)
                 debug(LOGGER, "Have run out of elements in $section at $field")
-                break
+                push!(missing, field)
+                continue
             end
         end
 
@@ -280,6 +282,15 @@ function parse_line_element!(data::Dict, elements::Array, section::AbstractStrin
                 debug(LOGGER, "$section $field $dtype $element")
                 error(LOGGER, message)
             end
+        end
+    end
+
+    if length(missing) > 0
+        missing_str = join(missing, ", ")
+        if !(section == "SWITCHED SHUNT" && startswith(missing_str, "N")) &&
+            !(section == "MULTI-SECTION LINE" && startswith(missing_str, "DUM")) &&
+            !(section == "IMPEDANCE CORRECTION" && startswith(missing_str, "T"))
+            warn(LOGGER, "The following fields in $section are missing: $missing_str")
         end
     end
 end
@@ -313,7 +324,7 @@ indicated at the end of a line with a `'/'` character, are also extracted
 separately, and `Array{Array{String}, String}` is returned.
 """
 function get_line_elements(line::AbstractString)::Array
-    match_string = r"(-*\d*\.*\d+[eE]*[+-]*\d*)|(\'[^\']*?\')|(\"[^\"]*?\")|(\w+)|\,(\s+)?\,|(\/.*)"
+    match_string = r"(-*\d*\.*\d+[eE]*[+-]*\d*)|(\'.{12}\')|(\'[^\']*?\')|(\"[^\"]*?\")|(\w+)|\,(\s+)?\,|(\/.*)"
     matches = matchall(match_string, line)
 
     debug(LOGGER, "$line")
@@ -425,13 +436,13 @@ function parse_pti_data(data_string::String, sections::Array)
 
             elseif section == "TRANSFORMER"
                 section_data = Dict{String,Any}()
-                if length(split(data_lines[line_number + 1], ',')) == 3  && parse(Int64, split(line, ',')[3]) == 0 # two winding transformer
+                if length(get_line_elements(data_lines[line_number + 1])[1]) == 3  && parse(Int64, get_line_elements(line)[1][3]) == 0 # two winding transformer
                     temp_section = "TRANSFORMER TWO WINDING"
-                    elements = split(join(data_lines[line_number:line_number + 3], ','), ',')
+                    (elements, comment) = get_line_elements(join(data_lines[line_number:line_number + 3], ','))
                     skip_lines = 3
-                elseif length(split(data_lines[line_number + 1], ',')) == 11 && parse(Int64, split(line, ',')[3]) != 0 # three winding transformer
+                elseif length(get_line_elements(data_lines[line_number + 1])[1]) == 11 && parse(Int64, get_line_elements(line)[1][3]) != 0 # three winding transformer
                     temp_section = "TRANSFORMER THREE WINDING"
-                    elements = split(join(data_lines[line_number:line_number + 4], ','), ',')
+                    (elements, comment) = get_line_elements(join(data_lines[line_number:line_number + 4], ','))
                     skip_lines = 4
                 else
                     error(LOGGER, "Cannot detect type of Transformer")
@@ -440,7 +451,7 @@ function parse_pti_data(data_string::String, sections::Array)
                 parse_line_element!(section_data, elements, temp_section)
 
             elseif section == "VOLTAGE SOURCE CONVERTER"
-                if length(split(line, ',')) == 11
+                if length(get_line_elements(line)[1]) == 11
                     section_data = Dict{String,Any}()
                     parse_line_element!(section_data, elements, section)
                     skip_sublines = 2
@@ -471,8 +482,8 @@ function parse_pti_data(data_string::String, sections::Array)
 
             elseif section == "TWO-TERMINAL DC"
                 section_data = Dict{String,Any}()
-                if length(split(line, ',')) == 12
-                    elements = split(join(data_lines[line_number:line_number + 2], ','), ',')
+                if length(get_line_elements(line)[1]) == 12
+                    (elements, comment) = get_line_elements(join(data_lines[line_number:line_number + 2], ','))
                     skip_lines = 2
                 end
 
@@ -561,16 +572,30 @@ end
 
 
 """
-    parse_pti(filename)
+    parse_pti(filename::String)
 
-Open PTI raw file given by `filename`, passing the file contents as a string
-to the main PTI parser, returning a `Dict` of all the data parsed into the
-proper types.
+Open PTI raw file given by `filename`, returning a `Dict` of the data parsed
+into the proper types.
 """
 function parse_pti(filename::String)::Dict
-    data_string = readstring(open(filename))
+    pti_data = open(filename) do f
+        parse_pti(f)
+    end
+
+    return pti_data
+end
+
+
+"""
+    parse_pti(io::IO)
+
+Reads PTI data in `io::IO`, returning a `Dict` of the data parsed into the
+proper types.
+"""
+function parse_pti(io::IO)::Dict
+    data_string = readstring(io)
     pti_data = parse_pti_data(data_string, get_pti_sections())
-    pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"[\/\\]*(?:.*[\/\\])*(.*)\.raw", lowercase(filename)).captures[1]
+    pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"[\/\\]*(?:.*[\/\\])*(.*)\.raw", lowercase(io.name)).captures[1]
 
     return pti_data
 end

@@ -1,71 +1,4 @@
-# tools for working with PowerModels internal data dict structure
-
-""
-function calc_voltage_product_bounds(buspairs)
-    wr_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
-    wr_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
-    wi_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
-    wi_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
-
-    for (bp, buspair) in buspairs
-        i,j = bp
-
-        if buspair["angmin"] >= 0
-            wr_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*cos(buspair["angmin"])
-            wr_min[bp] = buspair["vm_fr_min"]*buspair["vm_to_min"]*cos(buspair["angmax"])
-            wi_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmax"])
-            wi_min[bp] = buspair["vm_fr_min"]*buspair["vm_to_min"]*sin(buspair["angmin"])
-        end
-        if buspair["angmax"] <= 0
-            wr_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*cos(buspair["angmax"])
-            wr_min[bp] = buspair["vm_fr_min"]*buspair["vm_to_min"]*cos(buspair["angmin"])
-            wi_max[bp] = buspair["vm_fr_min"]*buspair["vm_to_min"]*sin(buspair["angmax"])
-            wi_min[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmin"])
-        end
-        if buspair["angmin"] < 0 && buspair["angmax"] > 0
-            wr_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*1.0
-            wr_min[bp] = buspair["vm_fr_min"]*buspair["vm_to_min"]*min(cos(buspair["angmin"]), cos(buspair["angmax"]))
-            wi_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmax"])
-            wi_min[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmin"])
-        end
-    end
-
-    return wr_min, wr_max, wi_min, wi_max
-end
-
-""
-function calc_series_current_magnitude_bound(branches, buses)
-    cmax = Dict([(key, 0.0) for key in keys(branches)])
-    for (key, branch) in branches
-        bus_fr = buses[branch["f_bus"]]
-        bus_to = buses[branch["t_bus"]]
-
-        g_sh_fr = branch["g_fr"]
-        g_sh_to = branch["g_to"]
-        b_sh_fr = branch["b_fr"]
-        b_sh_to = branch["b_to"]
-        zmag_fr = abs(g_sh_fr + im*b_sh_fr)
-        zmag_to = abs(g_sh_to + im*b_sh_to)
-
-        vmax_fr = bus_fr["vmax"]
-        vmax_to = bus_fr["vmax"]
-        vmin_fr = bus_fr["vmin"]
-        vmin_to = bus_fr["vmin"]
-
-        tap_fr = branch["tap"]
-        tap_to = 1 # no transformer on to side, keeps expressions symmetric.
-        smax = branch["rate_a"]
-
-        cmax_tot_fr = smax*tap_fr/vmin_fr
-        cmax_tot_to = smax*tap_to/vmin_to
-
-        cmax_sh_fr = zmag_fr * vmax_fr
-        cmax_sh_to = zmag_to * vmax_to
-
-        cmax[key] = max(cmax_tot_fr + cmax_sh_fr, cmax_tot_to + cmax_sh_to)
-    end
-    return cmax
-end
+# tools for working with a PowerModels data dict structure
 
 
 ""
@@ -76,47 +9,66 @@ function calc_theta_delta_bounds(data::Dict{String,Any})
         append!(branches, values(data["ne_branch"]))
     end
 
-    angle_mins = [branch["angmin"] for branch in branches]
-    angle_maxs = [branch["angmax"] for branch in branches]
+    angle_min = Real[]
+    angle_max = Real[]
 
-    sort!(angle_mins)
-    sort!(angle_maxs, rev=true)
+    conductors = 1
+    if haskey(data, "conductors")
+        conductors = data["conductors"]
+    end
+    conductor_ids = 1:conductors
 
-    if length(angle_mins) > 1
-        # note that, this can occur when dclines are present
-        angle_count = min(bus_count-1, length(branches))
+    for c in conductor_ids
+        angle_mins = [branch["angmin"][c] for branch in branches]
+        angle_maxs = [branch["angmax"][c] for branch in branches]
 
-        angle_min = sum(angle_mins[1:angle_count])
-        angle_max = sum(angle_maxs[1:angle_count])
-    else
-        angle_min = angle_mins[1]
-        angle_max = angle_maxs[1]
+        sort!(angle_mins)
+        sort!(angle_maxs, rev=true)
+
+        if length(angle_mins) > 1
+            # note that, this can occur when dclines are present
+            angle_count = min(bus_count-1, length(branches))
+
+            angle_min_val = sum(angle_mins[1:angle_count])
+            angle_max_val = sum(angle_maxs[1:angle_count])
+        else
+            angle_min_val = angle_mins[1]
+            angle_max_val = angle_maxs[1]
+        end
+
+        push!(angle_min, angle_min_val)
+        push!(angle_max, angle_max_val)
     end
 
-    return angle_min, angle_max
+    if haskey(data, "conductors")
+        amin = MultiConductorVector(angle_min)
+        amax = MultiConductorVector(angle_max)
+        return amin, amax
+    else
+        return angle_min[1], angle_max[1]
+    end
 end
+
 
 ""
 function calc_branch_t(branch::Dict{String,Any})
     tap_ratio = branch["tap"]
     angle_shift = branch["shift"]
 
-    tr = tap_ratio*cos(angle_shift)
-    ti = tap_ratio*sin(angle_shift)
+    tr = tap_ratio.*cos.(angle_shift)
+    ti = tap_ratio.*sin.(angle_shift)
 
     return tr, ti
 end
 
+
 ""
 function calc_branch_y(branch::Dict{String,Any})
-    r = branch["br_r"]
-    x = branch["br_x"]
-
-    g =  r/(x^2 + r^2)
-    b = -x/(x^2 + r^2)
-
+    y = pinv(branch["br_r"] + im * branch["br_x"])
+    g, b = real(y), imag(y)
     return g, b
 end
+
 
 ""
 function check_keys(data, keys)
@@ -133,6 +85,7 @@ function print_summary(obj::Union{String, Dict{String,Any}}; kwargs...)
     summary(STDOUT, obj; kwargs...)
 end
 
+
 "prints the text summary for a data file to IO"
 function summary(io::IO, file::String; kwargs...)
     data = parse_file(file)
@@ -140,28 +93,42 @@ function summary(io::IO, file::String; kwargs...)
     return data
 end
 
+
 "prints the text summary for a data dictionary to IO"
 function summary(io::IO, data::Dict{String,Any}; kwargs...)
     InfrastructureModels.summary(io, data; kwargs...)
 end
+
 
 component_table(data::Dict{String,Any}, component::String, args...) = InfrastructureModels.component_table(data, component, args...)
 
 
 "recursively applies new_data to data, overwriting information"
 function update_data(data::Dict{String,Any}, new_data::Dict{String,Any})
+    if haskey(data, "conductors") && haskey(new_data, "conductors")
+        if data["conductors"] != new_data["conductors"]
+            error("update_data requires datasets with the same number of conductors")
+        end
+    else
+        if (haskey(data, "conductors") && !haskey(new_data, "conductors")) || (!haskey(data, "conductors") && haskey(new_data, "conductors"))
+            warn(LOGGER, "running update_data with missing onductors fields, conductors may be incorrect")
+        end
+    end
     InfrastructureModels.update_data!(data, new_data)
 end
 
 
-InfrastructureModels.ismultinetwork(data::Dict{String,Any}) = (haskey(data, "multinetwork") && data["multinetwork"] == true)
-
 ""
 function apply_func(data::Dict{String,Any}, key::String, func)
     if haskey(data, key)
-        data[key] = func(data[key])
+        if isa(data[key], MultiConductorVector)
+            data[key] = MultiConductorVector([func(v) for v in data[key]])
+        else
+            data[key] = func(data[key])
+        end
     end
 end
+
 
 "Transforms network data into per-unit"
 function make_per_unit(data::Dict{String,Any})
@@ -178,9 +145,17 @@ function make_per_unit(data::Dict{String,Any})
     end
 end
 
+
+""
 function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
-    rescale      = x -> x/mva_base
-    rescale_dual = x -> x*mva_base
+    # to be consistent with matpower's opf.flow_lim= 'I' with current magnitude
+    # limit defined in MVA at 1 p.u. voltage
+    ka_base = mva_base
+
+    rescale        = x -> x/mva_base
+    rescale_dual   = x -> x*mva_base
+    rescale_ampere = x -> x/ka_base
+
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
@@ -223,6 +198,10 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "rate_b", rescale)
         apply_func(branch, "rate_c", rescale)
 
+        apply_func(branch, "c_rating_a", rescale_ampere)
+        apply_func(branch, "c_rating_b", rescale_ampere)
+        apply_func(branch, "c_rating_c", rescale_ampere)
+
         apply_func(branch, "shift", deg2rad)
         apply_func(branch, "angmax", deg2rad)
         apply_func(branch, "angmin", deg2rad)
@@ -251,20 +230,7 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         apply_func(dcline, "qmaxf", rescale)
         apply_func(dcline, "qminf", rescale)
 
-        if "model" in keys(dcline) && "cost" in keys(dcline)
-            if dcline["model"] == 1
-                for i in 1:2:length(dcline["cost"])
-                    dcline["cost"][i] = dcline["cost"][i]/mva_base
-                end
-            elseif dcline["model"] == 2
-                degree = length(dcline["cost"])
-                for (i, item) in enumerate(dcline["cost"])
-                    dcline["cost"][i] = item*mva_base^(degree-i)
-                end
-            else
-                warn(LOGGER, "Skipping dcline cost model of type $(dcline["model"]) in per unit transformation")
-            end
-        end
+        _rescale_cost_model(dcline, mva_base)
     end
 
     if haskey(data, "gen")
@@ -278,20 +244,7 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmax", rescale)
             apply_func(gen, "qmin", rescale)
 
-            if "model" in keys(gen) && "cost" in keys(gen)
-                if gen["model"] == 1
-                    for i in 1:2:length(gen["cost"])
-                        gen["cost"][i] = gen["cost"][i]/mva_base
-                    end
-                elseif gen["model"] == 2
-                    degree = length(gen["cost"])
-                    for (i, item) in enumerate(gen["cost"])
-                        gen["cost"][i] = item*mva_base^(degree-i)
-                    end
-                else
-                    warn(LOGGER, "Skipping generator cost model of type $(gen["model"]) in per unit transformation")
-                end
-            end
+            _rescale_cost_model(gen, mva_base)
         end
     end
 
@@ -313,9 +266,16 @@ function make_mixed_units(data::Dict{String,Any})
     end
 end
 
+
+""
 function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
-    rescale      = x -> x*mva_base
-    rescale_dual = x -> x/mva_base
+    # to be consistent with matpower's opf.flow_lim= 'I' with current magnitude
+    # limit defined in MVA at 1 p.u. voltage
+    ka_base = mva_base
+
+    rescale        = x -> x*mva_base
+    rescale_dual   = x -> x/mva_base
+    rescale_ampere = x -> x*ka_base
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
@@ -359,6 +319,10 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "rate_b", rescale)
         apply_func(branch, "rate_c", rescale)
 
+        apply_func(branch, "c_rating_a", rescale_ampere)
+        apply_func(branch, "c_rating_b", rescale_ampere)
+        apply_func(branch, "c_rating_c", rescale_ampere)
+
         apply_func(branch, "shift", rad2deg)
         apply_func(branch, "angmax", rad2deg)
         apply_func(branch, "angmin", rad2deg)
@@ -387,20 +351,7 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
         apply_func(dcline, "qmaxf", rescale)
         apply_func(dcline, "qminf", rescale)
 
-        if "model" in keys(dcline) && "cost" in keys(dcline)
-            if dcline["model"] == 1
-                for i in 1:2:length(dcline["cost"])
-                    dcline["cost"][i] = dcline["cost"][i]*mva_base
-                end
-            elseif dcline["model"] == 2
-                degree = length(dcline["cost"])
-                for (i, item) in enumerate(dcline["cost"])
-                    dcline["cost"][i] = item/mva_base^(degree-i)
-                end
-            else
-                warn(LOGGER, "Skipping dcline cost model of type $(dcline["model"]) in mixed units transformation")
-            end
-        end
+        _rescale_cost_model(dcline, 1.0/mva_base)
     end
 
     if haskey(data, "gen")
@@ -414,27 +365,53 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
             apply_func(gen, "qmax", rescale)
             apply_func(gen, "qmin", rescale)
 
-            if "model" in keys(gen) && "cost" in keys(gen)
-                if gen["model"] == 1
-                    for i in 1:2:length(gen["cost"])
-                        gen["cost"][i] = gen["cost"][i]*mva_base
-                    end
-                elseif gen["model"] == 2
-                    degree = length(gen["cost"])
-                    for (i, item) in enumerate(gen["cost"])
-                        gen["cost"][i] = item/mva_base^(degree-i)
-                    end
-                else
-                    warn(LOGGER, "Skipping generator cost model of type $(gen["model"]) in mixed units transformation")
-                end
-            end
+            _rescale_cost_model(gen, 1.0/mva_base)
         end
     end
 
 end
 
 
-"checks that phase angle differences are within 90 deg., if not tightens"
+""
+function _rescale_cost_model(comp::Dict{String,Any}, scale::Real)
+    if "model" in keys(comp) && "cost" in keys(comp)
+        if comp["model"] == 1
+            for i in 1:2:length(comp["cost"])
+                comp["cost"][i] = comp["cost"][i]/scale
+            end
+        elseif comp["model"] == 2
+            degree = length(comp["cost"])
+            for (i, item) in enumerate(comp["cost"])
+                comp["cost"][i] = item*(scale^(degree-i))
+            end
+        else
+            warn(LOGGER, "Skipping cost model of type $(comp["model"]) in per unit transformation")
+        end
+    end
+end
+
+
+""
+function check_conductors(data::Dict{String,Any})
+    if InfrastructureModels.ismultinetwork(data)
+        for (i,nw_data) in data["nw"]
+            _check_conductors(nw_data)
+        end
+    else
+         _check_conductors(data)
+    end
+end
+
+
+""
+function _check_conductors(data::Dict{String,Any})
+    if haskey(data, "conductors") && data["conductors"] < 1
+        error("conductor values must be positive integers, given $(data["conductors"])")
+    end
+end
+
+
+"checks that voltage angle differences are within 90 deg., if not tightens"
 function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1.0472)
     if InfrastructureModels.ismultinetwork(data)
         error("check_voltage_angle_differences does not yet support multinetwork data")
@@ -442,26 +419,47 @@ function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1
 
     assert("per_unit" in keys(data) && data["per_unit"])
 
-    for (i, branch) in data["branch"]
-        if branch["angmin"] <= -pi/2
-            warn(LOGGER, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(rad2deg(branch["angmin"])) to -$(rad2deg(default_pad)) deg.")
-            branch["angmin"] = -default_pad
-        end
-        if branch["angmax"] >= pi/2
-            warn(LOGGER, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $(branch["index"]) from $(rad2deg(branch["angmax"])) to $(rad2deg(default_pad)) deg.")
-            branch["angmax"] = default_pad
-        end
-        if branch["angmin"] == 0.0 && branch["angmax"] == 0.0
-            warn(LOGGER, "angmin and angmax values are 0, widening these values on branch $(branch["index"]) to +/- $(rad2deg(default_pad)) deg.")
-            #branch["angmin"] = -rad2deg(default_pad)
-            #branch["angmax"] = rad2deg(default_pad)
-            branch["angmin"] = -default_pad
-            branch["angmax"] = default_pad
+    for c in 1:get(data, "conductors", 1)
+        cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
+        for (i, branch) in data["branch"]
+            angmin = branch["angmin"][c]
+            angmax = branch["angmax"][c]
+
+            if angmin <= -pi/2
+                warn(LOGGER, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $i$(cnd_str) from $(rad2deg(angmin)) to -$(rad2deg(default_pad)) deg.")
+                if haskey(data, "conductors")
+                    branch["angmin"][c] = -default_pad
+                else
+                    branch["angmin"] = -default_pad
+                end
+            end
+
+            if angmax >= pi/2
+                warn(LOGGER, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $i$(cnd_str) from $(rad2deg(angmax)) to $(rad2deg(default_pad)) deg.")
+                if haskey(data, "conductors")
+                    branch["angmax"][c] = default_pad
+                else
+                    branch["angmax"] = default_pad
+                end
+
+            end
+
+            if angmin == 0.0 && angmax == 0.0
+                warn(LOGGER, "angmin and angmax values are 0, widening these values on branch $i$(cnd_str) to +/- $(rad2deg(default_pad)) deg.")
+                if haskey(data, "conductors")
+                    branch["angmin"][c] = -default_pad
+                    branch["angmax"][c] =  default_pad
+                else
+                    branch["angmin"] = -default_pad
+                    branch["angmax"] =  default_pad
+                end
+            end
         end
     end
 end
 
-"checks that each branch has a reasonable thermal rating, if not computes one"
+
+"checks that each branch has a reasonable thermal rating-a, if not computes one"
 function check_thermal_limits(data::Dict{String,Any})
     if InfrastructureModels.ismultinetwork(data)
         error("check_thermal_limits does not yet support multinetwork data")
@@ -470,27 +468,112 @@ function check_thermal_limits(data::Dict{String,Any})
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
-    for (i, branch) in data["branch"]
-        if branch["rate_a"] <= 0.0
-            theta_max = max(abs(branch["angmin"]), abs(branch["angmax"]))
+    branches = [branch for branch in values(data["branch"])]
+    if haskey(data, "ne_branch")
+        append!(branches, values(data["ne_branch"]))
+    end
 
-            r = branch["br_r"]
-            x = branch["br_x"]
-            g =  r / (r^2 + x^2)
-            b = -x / (r^2 + x^2)
+    for branch in branches
+        if !haskey(branch, "rate_a")
+            if haskey(data, "conductors")
+                branch["rate_a"] = MultiConductorVector(0.0, data["conductors"])
+            else
+                branch["rate_a"] = 0.0
+            end
+        end
 
-            y_mag = sqrt(g^2 + b^2)
+        for c in 1:get(data, "conductors", 1)
+            cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
+            if branch["rate_a"][c] <= 0.0
+                theta_max = max(abs(branch["angmin"][c]), abs(branch["angmax"][c]))
 
-            fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"]
-            to_vmax = data["bus"][string(branch["t_bus"])]["vmax"]
-            m_vmax = max(fr_vmax, to_vmax)
+                r = branch["br_r"]
+                x = branch["br_x"]
+                z = r + im * x
+                y = pinv(z)
+                y_mag = abs.(y[c,c])
 
-            c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
+                fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"][c]
+                to_vmax = data["bus"][string(branch["t_bus"])]["vmax"][c]
+                m_vmax = max(fr_vmax, to_vmax)
 
-            new_rate = y_mag*m_vmax*c_max
+                c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
 
-            warn(LOGGER, "this code only supports positive rate_a values, changing the value on branch $(branch["index"]) from $(mva_base*branch["rate_a"]) to $(mva_base*new_rate)")
-            branch["rate_a"] = new_rate
+                new_rate = y_mag*m_vmax*c_max
+
+                if haskey(branch, "c_rating_a") && branch["c_rating_a"][c] > 0.0
+                    new_rate = min(new_rate, branch["c_rating_a"][c]*m_vmax)
+                end
+
+                warn(LOGGER, "this code only supports positive rate_a values, changing the value on branch $(branch["index"])$(cnd_str) to $(mva_base*new_rate)")
+
+                if haskey(data, "conductors")
+                    branch["rate_a"][c] = new_rate
+                else
+                    branch["rate_a"] = new_rate
+                end
+            end
+        end
+    end
+end
+
+
+"checks that each branch has a reasonable current rating-a, if not computes one"
+function check_current_limits(data::Dict{String,Any})
+    if InfrastructureModels.ismultinetwork(data)
+        error("check_current_limits does not yet support multinetwork data")
+    end
+
+    assert("per_unit" in keys(data) && data["per_unit"])
+    mva_base = data["baseMVA"]
+
+    branches = [branch for branch in values(data["branch"])]
+    if haskey(data, "ne_branch")
+        append!(branches, values(data["ne_branch"]))
+    end
+
+    for branch in branches
+
+        if !haskey(branch, "c_rating_a")
+            if haskey(data, "conductors")
+                branch["c_rating_a"] = MultiConductorVector(0.0, data["conductors"])
+            else
+                branch["c_rating_a"] = 0.0
+            end
+        end
+
+        for c in 1:get(data, "conductors", 1)
+            cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
+            if branch["c_rating_a"][c] <= 0.0
+                theta_max = max(abs(branch["angmin"][c]), abs(branch["angmax"][c]))
+
+                r = branch["br_r"]
+                x = branch["br_x"]
+                z = r + im * x
+                y = pinv(z)
+                y_mag = abs.(y[c,c])
+
+                fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"][c]
+                to_vmax = data["bus"][string(branch["t_bus"])]["vmax"][c]
+                m_vmax = max(fr_vmax, to_vmax)
+
+                new_c_rating = y_mag*sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
+
+                if haskey(branch, "rate_a") && branch["rate_a"][c] > 0.0
+                    fr_vmin = data["bus"][string(branch["f_bus"])]["vmin"][c]
+                    to_vmin = data["bus"][string(branch["t_bus"])]["vmin"][c]
+                    vm_min = min(fr_vmin, to_vmin)
+
+                    new_c_rating = min(new_c_rating, branch["rate_a"]/vm_min)
+                end
+
+                warn(LOGGER, "this code only supports positive c_rating_a values, changing the value on branch $(branch["index"])$(cnd_str) to $(mva_base*new_c_rating)")
+                if haskey(data, "conductors")
+                    branch["c_rating_a"][c] = new_c_rating
+                else
+                    branch["c_rating_a"] = new_c_rating
+                end
+            end
         end
     end
 end
@@ -512,9 +595,9 @@ function check_branch_directions(data::Dict{String,Any})
             branch_orginal = copy(branch)
             branch["f_bus"] = branch_orginal["t_bus"]
             branch["t_bus"] = branch_orginal["f_bus"]
-            branch["tap"] = 1/branch_orginal["tap"]
-            branch["br_r"] = branch_orginal["br_r"]*branch_orginal["tap"]^2
-            branch["br_x"] = branch_orginal["br_x"]*branch_orginal["tap"]^2
+            branch["tap"] = 1 ./ branch_orginal["tap"]
+            branch["br_r"] = branch_orginal["br_r"] .* branch_orginal["tap"]'.^2
+            branch["br_x"] = branch_orginal["br_x"] .* branch_orginal["tap"]'.^2
             branch["shift"] = -branch_orginal["shift"]
             branch["angmin"] = -branch_orginal["angmax"]
             branch["angmax"] = -branch_orginal["angmin"]
@@ -604,16 +687,31 @@ function check_transformer_parameters(data::Dict{String,Any})
     for (i, branch) in data["branch"]
         if !haskey(branch, "tap")
             warn(LOGGER, "branch found without tap value, setting a tap to 1.0")
-            branch["tap"] = 1.0
-        else
-            if branch["tap"] <= 0.0
-                warn(LOGGER, "branch found with non-posative tap value of $(branch["tap"]), setting a tap to 1.0")
+            if haskey(data, "conductors")
+                branch["tap"] = MultiConductorVector{Float64}(ones(data["conductors"]))
+            else
                 branch["tap"] = 1.0
+            end
+        else
+            for c in 1:get(data, "conductors", 1)
+                cnd_str = haskey(data, "conductors") ? " on conductor $(c)" : ""
+                if branch["tap"][c] <= 0.0
+                    warn(LOGGER, "branch found with non-positive tap value of $(branch["tap"][c]), setting a tap to 1.0$(cnd_str)")
+                    if haskey(data, "conductors")
+                        branch["tap"][c] = 1.0
+                    else
+                        branch["tap"] = 1.0
+                    end
+                end
             end
         end
         if !haskey(branch, "shift")
             warn(LOGGER, "branch found without shift value, setting a shift to 0.0")
-            branch["shift"] = 0.0
+            if haskey(data, "conductors")
+                branch["shift"] = MultiConductorVector{Float64}(zeros(data["conductors"]))
+            else
+                branch["shift"] = 0.0
+            end
         end
     end
 end
@@ -662,35 +760,54 @@ function check_dcline_limits(data::Dict{String,Any})
     assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
-    for (i, dcline) in data["dcline"]
-        if dcline["loss0"] < 0.0
-            new_rate = 0.0
-            warn(LOGGER, "this code only supports positive loss0 values, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
-            dcline["loss0"] = new_rate
-          end
+    for c in 1:get(data, "conductors", 1)
+        cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
+        for (i, dcline) in data["dcline"]
+            if dcline["loss0"][c] < 0.0
+                new_rate = 0.0
+                warn(LOGGER, "this code only supports positive loss0 values, changing the value on dcline $(dcline["index"])$(cnd_str) from $(mva_base*dcline["loss0"][c]) to $(mva_base*new_rate)")
+                if haskey(data, "conductors")
+                    dcline["loss0"][c] = new_rate
+                else
+                    dcline["loss0"] = new_rate
+                end
+            end
 
-        if dcline["loss0"] >= dcline["pmaxf"]*(1-dcline["loss1"] )+ dcline["pmaxt"]
-            new_rate = 0.0
-            warn(LOGGER, "this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"]) from $(mva_base*dcline["loss0"]) to $(mva_base*new_rate)")
-            dcline["loss0"] = new_rate
-          end
+            if dcline["loss0"][c] >= dcline["pmaxf"][c]*(1-dcline["loss1"][c] )+ dcline["pmaxt"][c]
+                new_rate = 0.0
+                warn(LOGGER, "this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"])$(cnd_str) from $(mva_base*dcline["loss0"][c]) to $(mva_base*new_rate)")
+                if haskey(data, "conductors")
+                    dcline["loss0"][c] = new_rate
+                else
+                    dcline["loss0"] = new_rate
+                end
+            end
 
-        if dcline["loss1"] < 0.0
-            new_rate = 0.0
-            warn(LOGGER, "this code only supports positive loss1 values, changing the value on dcline $(dcline["index"]) from $(dcline["loss1"]) to $(new_rate)")
-            dcline["loss1"] = new_rate
-        end
+            if dcline["loss1"][c] < 0.0
+                new_rate = 0.0
+                warn(LOGGER, "this code only supports positive loss1 values, changing the value on dcline $(dcline["index"])$(cnd_str) from $(dcline["loss1"][c]) to $(new_rate)")
+                if haskey(data, "conductors")
+                    dcline["loss1"][c] = new_rate
+                else
+                    dcline["loss1"] = new_rate
+                end
+            end
 
-        if dcline["loss1"] >= 1.0
-            new_rate = 0.0
-            warn(LOGGER, "this code only supports loss1 values < 1, changing the value on dcline $(dcline["index"]) from $(dcline["loss1"]) to $(new_rate)")
-            dcline["loss1"] = new_rate
-        end
+            if dcline["loss1"][c] >= 1.0
+                new_rate = 0.0
+                warn(LOGGER, "this code only supports loss1 values < 1, changing the value on dcline $(dcline["index"])$(cnd_str) from $(dcline["loss1"][c]) to $(new_rate)")
+                if haskey(data, "conductors")
+                    dcline["loss1"][c] = new_rate
+                else
+                    dcline["loss1"] = new_rate
+                end
+            end
 
-        if dcline["pmint"] <0.0 && dcline["loss1"] > 0.0
-            #new_rate = 0.0
-            warn(LOGGER, "the dc line model is not meant to be used bi-directionally when loss1 > 0, be careful interpreting the results as the dc line losses can now be negative. change loss1 to 0 to avoid this warning")
-            #dcline["loss0"] = new_rate
+            if dcline["pmint"][c] <0.0 && dcline["loss1"][c] > 0.0
+                #new_rate = 0.0
+                warn(LOGGER, "the dc line model is not meant to be used bi-directionally when loss1 > 0, be careful interpreting the results as the dc line losses can now be negative. change loss1 to 0 to avoid this warning")
+                #dcline["loss0"] = new_rate
+            end
         end
     end
 end
@@ -702,30 +819,34 @@ function check_voltage_setpoints(data::Dict{String,Any})
         error("check_voltage_setpoints does not yet support multinetwork data")
     end
 
-    for (i,gen) in data["gen"]
-        bus_id = gen["gen_bus"]
-        bus = data["bus"]["$(bus_id)"]
-        if gen["vg"] != bus["vm"]
-           warn(LOGGER, "the voltage setpoint on generator $(i) does not match the value at bus $(bus_id)")
-        end
-    end
-
-    for (i, dcline) in data["dcline"]
-        bus_fr_id = dcline["f_bus"]
-        bus_to_id = dcline["t_bus"]
-
-        bus_fr = data["bus"]["$(bus_fr_id)"]
-        bus_to = data["bus"]["$(bus_to_id)"]
-
-        if dcline["vf"] != bus_fr["vm"]
-           warn(LOGGER, "the from bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_fr_id)")
+    for c in 1:get(data, "conductors", 1)
+        cnd_str = haskey(data, "conductors") ? "conductor $(c) " : ""
+        for (i,gen) in data["gen"]
+            bus_id = gen["gen_bus"]
+            bus = data["bus"]["$(bus_id)"]
+            if gen["vg"][c] != bus["vm"][c]
+                warn(LOGGER, "the $(cnd_str)voltage setpoint on generator $(i) does not match the value at bus $(bus_id)")
+            end
         end
 
-        if dcline["vt"] != bus_to["vm"]
-           warn(LOGGER, "the to bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_to_id)")
+        for (i, dcline) in data["dcline"]
+            bus_fr_id = dcline["f_bus"]
+            bus_to_id = dcline["t_bus"]
+
+            bus_fr = data["bus"]["$(bus_fr_id)"]
+            bus_to = data["bus"]["$(bus_to_id)"]
+
+            if dcline["vf"][c] != bus_fr["vm"][c]
+                warn(LOGGER, "the $(cnd_str)from bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_fr_id)")
+            end
+
+            if dcline["vt"][c] != bus_to["vm"][c]
+                warn(LOGGER, "the $(cnd_str)to bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_to_id)")
+            end
         end
     end
 end
+
 
 
 "throws warnings if cost functions are malformed"
@@ -735,46 +856,87 @@ function check_cost_functions(data::Dict{String,Any})
     end
 
     for (i,gen) in data["gen"]
-        _check_cost_functions(i,gen)
+        _check_cost_functions(i, gen, "generator")
     end
     for (i, dcline) in data["dcline"]
-        _check_cost_functions(i,dcline)
+        _check_cost_functions(i, dcline, "dcline")
     end
 end
 
-function _check_cost_functions(id, comp)
+
+""
+function _check_cost_functions(id, comp, type_name)
+    #println(comp)
     if "model" in keys(comp) && "cost" in keys(comp)
         if comp["model"] == 1
             if length(comp["cost"]) != 2*comp["ncost"]
-                error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values")
+                error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
             end
             if length(comp["cost"]) < 4
-                error("cost includes $(comp["ncost"]) points, but at least two points are required")
+                error("cost includes $(comp["ncost"]) points, but at least two points are required on $(type_name) $(id)")
             end
             for i in 3:2:length(comp["cost"])
                 if comp["cost"][i-2] >= comp["cost"][i]
-                    error("non-increasing x values in pwl cost model")
+                    error("non-increasing x values in pwl cost model on $(type_name) $(id)")
                 end
             end
             if "pmin" in keys(comp) && "pmax" in keys(comp)
-                pmin = comp["pmin"]
-                pmax = comp["pmax"]
+                pmin = sum(comp["pmin"]) # sum supports multi-conductor case
+                pmax = sum(comp["pmax"])
                 for i in 3:2:length(comp["cost"])
                     if comp["cost"][i] < pmin || comp["cost"][i] > pmax
-                        warn(LOGGER, "pwl x value $(comp["cost"][i]) is outside the generator bounds $(pmin)-$(pmax)")
+                        warn(LOGGER, "pwl x value $(comp["cost"][i]) is outside the bounds $(pmin)-$(pmax) on $(type_name) $(id)")
                     end
                 end
             end
+            _simplify_pwl_cost(id, comp, type_name)
         elseif comp["model"] == 2
             if length(comp["cost"]) != comp["ncost"]
-                error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values")
+                error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
             end
         else
-            warn(LOGGER, "Unknown generator cost model of type $(comp["model"])")
+            warn(LOGGER, "Unknown cost model of type $(comp["model"]) on $(type_name) $(id)")
         end
     end
 end
 
+
+"checks the slope of each segment in a pwl function, simplifies the function if the slope changes is below a tolerance"
+function _simplify_pwl_cost(id, comp, type_name, tolerance = 1e-2)
+    @assert comp["model"] == 1
+
+    slopes = Float64[]
+    smpl_cost = Float64[]
+    prev_slope = nothing
+
+    x2, y2 = 0.0, 0.0
+
+    for i in 3:2:length(comp["cost"])
+        x1 = comp["cost"][i-2]
+        y1 = comp["cost"][i-1]
+        x2 = comp["cost"][i-0]
+        y2 = comp["cost"][i+1]
+
+        m = (y2 - y1)/(x2 - x1)
+
+        if prev_slope == nothing || (abs(prev_slope - m) > tolerance)
+            push!(smpl_cost, x1)
+            push!(smpl_cost, y1)
+            prev_slope = m
+        end
+
+        push!(slopes, m)
+    end
+
+    push!(smpl_cost, x2)
+    push!(smpl_cost, y2)
+
+    if length(smpl_cost) < length(comp["cost"])
+        warn(LOGGER, "simplifying pwl cost on $(type_name) $(id), $(comp["cost"]) -> $(smpl_cost)")
+        comp["cost"] = smpl_cost
+        comp["ncost"] = length(smpl_cost)/2
+    end
+end
 
 
 """
@@ -795,18 +957,20 @@ function propagate_topology_status(data::Dict{String,Any})
     end
 end
 
+
+""
 function _propagate_topology_status(data::Dict{String,Any})
     buses = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
 
     for (i,load) in data["load"]
-        if load["status"] != 0 && load["pd"] == 0.0 && load["qd"] == 0.0
+        if load["status"] != 0 && all(load["pd"] .== 0.0) && all(load["qd"] .== 0.0)
             info(LOGGER, "deactivating load $(load["index"]) due to zero pd and qd")
             load["status"] = 0
         end
     end
 
     for (i,shunt) in data["shunt"]
-        if shunt["status"] != 0 && shunt["gs"] == 0.0 && shunt["bs"] == 0.0
+        if shunt["status"] != 0 && all(shunt["gs"] .== 0.0) && all(shunt["bs"] .== 0.0)
             info(LOGGER, "deactivating shunt $(shunt["index"]) due to zero gs and bs")
             shunt["status"] = 0
         end
@@ -959,7 +1123,7 @@ function _propagate_topology_status(data::Dict{String,Any})
 
     info(LOGGER, "topology status propagation fixpoint reached in $(iteration) rounds")
 
-    check_refrence_buses(data)
+    check_reference_buses(data)
 end
 
 
@@ -976,6 +1140,8 @@ function select_largest_component(data::Dict{String,Any})
     end
 end
 
+
+""
 function _select_largest_component(data::Dict{String,Any})
     ccs = connected_components(data)
     info(LOGGER, "found $(length(ccs)) components")
@@ -992,25 +1158,26 @@ function _select_largest_component(data::Dict{String,Any})
         end
     end
 
-    check_refrence_buses(data)
+    check_reference_buses(data)
 end
 
 
 """
 checks that each connected components has a reference bus, if not, adds one
 """
-function check_refrence_buses(data::Dict{String,Any})
+function check_reference_buses(data::Dict{String,Any})
     if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
-            _check_refrence_buses(nw_data)
+            _check_reference_buses(nw_data)
         end
     else
-        _check_refrence_buses(data)
+        _check_reference_buses(data)
     end
 end
 
 
-function _check_refrence_buses(data::Dict{String,Any})
+""
+function _check_reference_buses(data::Dict{String,Any})
     bus_lookup = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
     bus_gen = bus_gen_lookup(data["gen"], data["bus"])
 
@@ -1075,6 +1242,7 @@ function bus_gen_lookup(gen_data::Dict{String,Any}, bus_data::Dict{String,Any})
     return bus_gen
 end
 
+
 "builds a lookup list of what loads are connected to a given bus"
 function bus_load_lookup(load_data::Dict{String,Any}, bus_data::Dict{String,Any})
     bus_load = Dict(bus["bus_i"] => [] for (i,bus) in bus_data)
@@ -1083,6 +1251,7 @@ function bus_load_lookup(load_data::Dict{String,Any}, bus_data::Dict{String,Any}
     end
     return bus_load
 end
+
 
 "builds a lookup list of what shunts are connected to a given bus"
 function bus_shunt_lookup(shunt_data::Dict{String,Any}, bus_data::Dict{String,Any})
@@ -1149,6 +1318,62 @@ function _dfs(i, neighbors, component_lookup, touched)
                 component_lookup[k] = new_comp
             end
             _dfs(j, neighbors, component_lookup, touched)
+        end
+    end
+end
+
+
+"Transforms single-conductor network data into multi-conductor data"
+function make_multiconductor(data::Dict{String,Any}, conductors::Int)
+    if InfrastructureModels.ismultinetwork(data)
+        for (i,nw_data) in data["nw"]
+            _make_multiconductor(nw_data, conductors)
+        end
+    else
+         _make_multiconductor(data, conductors)
+    end
+end
+
+
+"feild names that should not be multi-conductor values"
+conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
+    "br_status", "gen_bus", "load_bus", "shunt_bus", "f_bus", "t_bus",
+    "transformer", "area", "zone", "base_kv",
+    "model", "ncost", "cost", "startup", "shutdown"])
+
+conductor_matrix = Set(["br_r", "br_x"])
+
+
+""
+function _make_multiconductor(data::Dict{String,Any}, conductors::Real)
+    if haskey(data, "conductors")
+        warn(LOGGER, "skipping network that is already multiconductor")
+        return
+    end
+
+    data["conductors"] = conductors
+
+    for (key, item) in data
+        if isa(item, Dict{String,Any})
+            for (item_id, item_data) in item
+                if isa(item_data, Dict{String,Any})
+                    item_ref_data = Dict{String,Any}()
+                    for (param, value) in item_data
+                        if param in conductorless
+                            item_ref_data[param] = value
+                        else
+                            if param in conductor_matrix
+                                item_ref_data[param] = MultiConductorMatrix(value, conductors)
+                            else
+                                item_ref_data[param] = MultiConductorVector(value, conductors)
+                            end
+                        end
+                    end
+                    item[item_id] = item_ref_data
+                end
+            end
+        else
+            #root non-dict items
         end
     end
 end

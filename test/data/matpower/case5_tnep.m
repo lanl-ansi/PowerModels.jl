@@ -1,13 +1,8 @@
-% based on NESTA v0.6.0
-function mpc = case5_pjm_tnep
+% tests extra data needed for tnep problems
+
+function mpc = case5_tnep
 mpc.version = '2';
 mpc.baseMVA = 100.0;
-
-%% area data
-%	area	refbus
-mpc.areas = [
-	1	 4;
-];
 
 %% bus data
 %	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
@@ -54,7 +49,7 @@ mpc.branch = [
 mpc.ne_branch = [
 	1	 2	 0.00281	 0.0281	 0.00712	 400.0	 400.0	 400.0	 0.0	 0.0	 1	 -30.0	 30.0	 1;
 	1	 4	 0.00304	 0.0304	 0.00658	 426	 426	 426	 0.0	 0.0	 1	 -30.0	 30.0	 1;
-	1	 4	 0.00304	 0.0304	 0.00658	 0.0	 0.0	 0.0	 0.0	 0.0	 1	 -30.0	 30.0	 0;
+	1	 4	 0.00304	 0.0304	 0.00658	 1.0	 1.0	 1.0	 0.0	 0.0	 1	 -30.0	 30.0	 1;
 ];
 
 %% dcline data

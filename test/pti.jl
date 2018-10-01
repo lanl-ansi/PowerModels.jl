@@ -5,17 +5,16 @@ TESTLOG = getlogger(PowerModels)
 @testset "test .raw file parser" begin
     @testset "Check PTI exception handling" begin
         setlevel!(TESTLOG, "warn")
-        TESTLOG.propagate = false
 
         @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
         @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
-        @test_warn(TESTLOG, "Version 32 of PTI format is unsupported, parser may not function correctly.", 
+        @test_warn(TESTLOG, "Version 32 of PTI format is unsupported, parser may not function correctly.",
                    PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
         @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
         @test_warn(TESTLOG, "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))
+        @test_throws(TESTLOG, ErrorException, PowerModels.parse_file("../test/data/pti/parser_test_j.raw"))
 
         setlevel!(TESTLOG, "error")
-        TESTLOG.propagate = true
     end
 
     @testset "4-bus frankenstein file" begin
@@ -56,8 +55,42 @@ TESTLOG = getlogger(PowerModels)
         @test length(data_dict["OWNER"][1]) == 2
     end
 
-    @testset "20-bus frankenstein file" begin
+    @testset "20-bus frankenstein file (parse_file)" begin
         data_dict = PowerModels.parse_pti("../test/data/pti/frankenstein_20.raw")
+        @test isa(data_dict, Dict)
+
+        @test length(data_dict["BRANCH"]) == 2
+        for item in data_dict["BRANCH"]
+            @test length(item) == 24
+        end
+
+        @test length(data_dict["TRANSFORMER"][2]) == 83
+
+        @test length(data_dict["SWITCHED SHUNT"]) == 2
+        @test length(data_dict["SWITCHED SHUNT"][1]) == 16
+        @test length(data_dict["SWITCHED SHUNT"][2]) == 12
+    end
+
+    @testset "20-bus frankenstein file (parse_pti)" begin
+        data_dict = PowerModels.parse_pti("../test/data/pti/frankenstein_20.raw")
+        @test isa(data_dict, Dict)
+
+        @test length(data_dict["BRANCH"]) == 2
+        for item in data_dict["BRANCH"]
+            @test length(item) == 24
+        end
+
+        @test length(data_dict["TRANSFORMER"][2]) == 83
+
+        @test length(data_dict["SWITCHED SHUNT"]) == 2
+        @test length(data_dict["SWITCHED SHUNT"][1]) == 16
+        @test length(data_dict["SWITCHED SHUNT"][2]) == 12
+    end
+
+    @testset "20-bus frankenstein file (parse_pti; iostream)" begin
+        data_dict = open("../test/data/pti/frankenstein_20.raw") do f
+            PowerModels.parse_pti(f)
+        end
         @test isa(data_dict, Dict)
 
         @test length(data_dict["BRANCH"]) == 2

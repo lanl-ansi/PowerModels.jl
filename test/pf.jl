@@ -211,7 +211,7 @@ end
 
 @testset "test soc distflow pf_bf" begin
     @testset "3-bus case" begin
-        result = run_pf_bf("../test/data/matpower/case3.m", SOCDFPowerModel, ipopt_solver)
+        result = run_pf_bf("../test/data/matpower/case3.m", SOCBFPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -229,13 +229,19 @@ end
         @test isapprox(result["solution"]["dcline"]["1"]["pt"], -0.10; atol = 1e-4)
     end
     @testset "5-bus asymmetric case" begin
-        result = run_pf_bf("../test/data/matpower/case5_asym.m", SOCDFPowerModel, ipopt_solver)
+        result = run_pf_bf("../test/data/matpower/case5_asym.m", SOCBFPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+    end
+    @testset "5-bus case with hvdc line" begin
+        result = run_pf_bf("../test/data/matpower/case5_dc.m", SOCBFPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "6-bus case" begin
-        result = run_pf_bf("../test/data/matpower/case6.m", SOCDFPowerModel, ipopt_solver)
+        result = run_pf_bf("../test/data/matpower/case6.m", SOCBFPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -243,7 +249,7 @@ end
         @test isapprox(result["solution"]["bus"]["4"]["vm"], 1.09999; atol = 1e-3)
     end
     @testset "24-bus rts case" begin
-        result = run_pf_bf("../test/data/matpower/case24.m", SOCDFPowerModel, ipopt_solver)
+        result = run_pf_bf("../test/data/matpower/case24.m", SOCBFPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -253,8 +259,7 @@ end
 
 
 @testset "test sdp pf" begin
-    #=
-    #seems to be having an issue on linux (04/02/18)
+    # note: may have issues on linux (04/02/18)
     @testset "3-bus case" begin
         result = run_pf("../test/data/matpower/case3.m", SDPWRMPowerModel, scs_solver)
 
@@ -273,16 +278,13 @@ end
         @test isapprox(result["solution"]["dcline"]["1"]["pf"],  0.10; atol = 1e-4)
         @test isapprox(result["solution"]["dcline"]["1"]["pt"], -0.10; atol = 1e-4)
     end
-    =#
-    #=
-    # seems to be having an issue on os x (05/07/18)
+    # note: may have issues on os x (05/07/18)
     @testset "5-bus asymmetric case" begin
         result = run_pf("../test/data/matpower/case5_asym.m", SDPWRMPowerModel, scs_solver)
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
-    =#
     @testset "6-bus case" begin
         result = run_pf("../test/data/matpower/case6.m", SDPWRMPowerModel, scs_solver)
 

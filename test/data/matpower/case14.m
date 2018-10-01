@@ -1,3 +1,7 @@
+% Case to test no explicit branch limits
+
+% from matpower - http://www.pserc.cornell.edu/matpower/
+
 function mpc = case14
 
 %CASE14    Power flow data for IEEE 14 bus test case.

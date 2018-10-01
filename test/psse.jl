@@ -22,7 +22,7 @@ end
 
 @testset "test PSS(R)E parser" begin
     @testset "4-bus frankenstein file" begin
-        @testset "AC Model" begin
+        @testset "AC Model (parse_file)" begin
             data_pti = PowerModels.parse_file("../test/data/pti/frankenstein_00.raw")
             data_mp = PowerModels.parse_file("../test/data/matpower/frankenstein_00.m")
 
@@ -34,6 +34,37 @@ end
             @test result_pti["status"] == :LocalOptimal
             @test result_mp["status"]  == :LocalOptimal
             @test isapprox(result_mp["objective"], result_pti["objective"]; atol = 1e-5)
+        end
+
+        @testset "AC Model (parse_psse)" begin
+            data_pti = PowerModels.parse_psse("../test/data/pti/frankenstein_00.raw")
+            data_mp = PowerModels.parse_file("../test/data/matpower/frankenstein_00.m")
+
+            set_costs!(data_mp)
+
+            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
+
+            @test result_pti["status"] == :LocalOptimal
+            @test result_mp["status"]  == :LocalOptimal
+            @test isapprox(result_mp["objective"], result_pti["objective"]; atol = 1e-5)
+        end
+
+        @testset "AC Model (parse_psse; iostream)" begin
+            filename = "../test/data/pti/frankenstein_00.raw"
+            open(filename) do f
+                data_pti = PowerModels.parse_psse(f)
+                data_mp = PowerModels.parse_file("../test/data/matpower/frankenstein_00.m")
+
+                set_costs!(data_mp)
+
+                result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+                result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
+
+                @test result_pti["status"] == :LocalOptimal
+                @test result_mp["status"]  == :LocalOptimal
+                @test isapprox(result_mp["objective"], result_pti["objective"]; atol = 1e-5)
+            end
         end
 
         @testset "with two-winding transformer unit conversions" begin
@@ -179,16 +210,17 @@ end
         dummy_data = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw")
 
         setlevel!(TESTLOG, "warn")
-        TESTLOG.propagate = false
 
         @test_warn(TESTLOG, "Could not find bus 1, returning 0 for field vm",
                    PowerModels.get_bus_value(1, "vm", dummy_data))
 
-        @test_warn(getlogger(PowerModels), "PTI v33.0.0 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.",
+        @test_warn(TESTLOG, "PTI v33.0.0 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.",
+                   PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
+
+        @test_warn(TESTLOG, "The following fields in BUS are missing: NVHI, NVLO, EVHI, EVLO",
                    PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
 
         setlevel!(TESTLOG, "error")
-        TESTLOG.propagate = true
     end
 
     @testset "three-winding transformer" begin
