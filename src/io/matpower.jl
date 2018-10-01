@@ -68,7 +68,7 @@ mp_bus_columns = [
 ]
 
 mp_bus_name_columns = [
-    ("bus_name", String)
+    ("bus_name", Union{String,SubString{String}})
 ]
 
 mp_gen_columns = [
@@ -546,7 +546,7 @@ end
 
 "adds dcline costs, if gen costs exist"
 function add_dcline_costs(data::Dict{String,Any})
-    if length(data["gencost"]) > 0 && length(data["dclinecost"]) <= 0
+    if length(data["gencost"]) > 0 && length(data["dclinecost"]) <= 0 && length(data["dcline"]) > 0
         warn(LOGGER, "added zero cost function data for dclines")
         model = data["gencost"][1]["model"]
         if model == 1
@@ -557,7 +557,7 @@ function add_dcline_costs(data::Dict{String,Any})
                     "startup" => 0.0,
                     "shutdown" => 0.0,
                     "ncost" => 2,
-                    "cost" => [0.0, 0.0, 0.0, 0.0]
+                    "cost" => [dcline["pminf"], 0.0, dcline["pmaxf"], 0.0]
                 )
                 push!(data["dclinecost"], dclinecost)
             end

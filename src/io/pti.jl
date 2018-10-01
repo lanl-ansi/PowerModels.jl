@@ -370,7 +370,7 @@ function parse_pti_data(data_string::String, sections::Array)
             debug(LOGGER, "$comment")
             matches = match(match_string, comment)
 
-            if !isa(matches, Void)
+            if !isa(matches, Nothing)
                 guess_section = matches.captures[1]
             else
                 guess_section = ""
@@ -568,7 +568,7 @@ to the main PTI parser, returning a `Dict` of all the data parsed into the
 proper types.
 """
 function parse_pti(filename::String)::Dict
-    data_string = readstring(open(filename))
+    data_string = read(open(filename),String)
     pti_data = parse_pti_data(data_string, get_pti_sections())
     pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"[\/\\]*(?:.*[\/\\])*(.*)\.raw", lowercase(filename)).captures[1]
 

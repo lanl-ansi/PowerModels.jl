@@ -1,6 +1,7 @@
-julia 0.6
+julia 0.7-
 JSON 0.6.0
-JuMP 0.17
+JuMP
 InfrastructureModels 0.0.6 0.2-
 Compat 0.26.0
 Memento 0.6
+MathOptInterface 0.5
