@@ -44,6 +44,12 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
 end
 
 
+""
+function variable_bus_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractWForms
+    variable_voltage_magnitude_sqr(pm; kwargs...)
+end
+
+""
 function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, i, vm) where T <: AbstractWForms
     w = var(pm, n, c, :w, i)
 
@@ -61,8 +67,6 @@ sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[
 sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for d in bus_shunts)*w[i]
 ```
 """
-
-
 function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractWForms
     w    = var(pm, n, c, :w, i)
     pg   = var(pm, n, c, :pg)
@@ -141,6 +145,17 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
     @constraint(pm.model, wi <= tan(angmax)*wr)
     @constraint(pm.model, wi >= tan(angmin)*wr)
     cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
+end
+
+
+""
+function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b) where T <: AbstractWRForms
+    pg = var(pm, n, c, :pg)
+    qg = var(pm, n, c, :qg)
+    w = var(pm, n, c, :w)
+
+    @constraint(pm.model, sum(pg[g] for g in comp_gen_ids) >= sum(pd for (i,pd) in values(comp_pd)) + sum(gs*w[i] for (i,gs) in values(comp_gs)) + sum(g_fr*w[i]/tm^2 + g_to*w[j] for (i,j,tm,g_fr,g_to) in values(comp_branch_g)))
+    @constraint(pm.model, sum(qg[g] for g in comp_gen_ids) >= sum(qd for (i,qd) in values(comp_qd)) - sum(bs*w[i] for (i,bs) in values(comp_bs)) - sum(b_fr*w[i]/tm^2 + b_to*w[j] for (i,j,tm,b_fr,b_to) in values(comp_branch_b)))
 end
 
 

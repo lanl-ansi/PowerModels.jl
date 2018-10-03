@@ -2,6 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Improved the optimal power balance problem specification
+- Add SOCWRPowerModel support for the optimal power balance problem
 - Update tests for SCS v0.4
 
 ### v0.8.4
