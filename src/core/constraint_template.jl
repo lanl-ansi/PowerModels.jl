@@ -93,8 +93,8 @@ function constraint_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw,
     comp_gs = Dict(shunt["index"] => (shunt["shunt_bus"], shunt["gs"][cnd]) for shunt in comp_shunts)
     comp_bs = Dict(shunt["index"] => (shunt["shunt_bus"], shunt["bs"][cnd]) for shunt in comp_shunts)
 
-    comp_branch_g = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["tap"][cnd], branch["g_fr"][cnd], branch["g_to"][cnd]) for branch in comp_branches)
-    comp_branch_b = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["tap"][cnd], branch["b_fr"][cnd], branch["b_to"][cnd]) for branch in comp_branches)
+    comp_branch_g = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["br_r"][cnd], branch["br_x"][cnd], branch["tap"][cnd], branch["g_fr"][cnd], branch["g_to"][cnd]) for branch in comp_branches)
+    comp_branch_b = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["br_r"][cnd], branch["br_x"][cnd], branch["tap"][cnd], branch["b_fr"][cnd], branch["b_to"][cnd]) for branch in comp_branches)
 
     constraint_power_balance(pm, nw, cnd, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b)
 end
