@@ -63,30 +63,40 @@ end
 
 "ensures that power generation and demand are balanced"
 function constraint_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    comp_buses = ref(pm, nw, :components, i)
+    comp_bus_ids = ref(pm, nw, :components, i)
 
-    comp_gens = Set{Int64}()
-    for bus_id in comp_buses, gen_id in PowerModels.ref(pm, nw, :bus_gens, bus_id)
-        push!(comp_gens, gen_id)
+    comp_gen_ids = Set{Int64}()
+    for bus_id in comp_bus_ids, gen_id in PowerModels.ref(pm, nw, :bus_gens, bus_id)
+        push!(comp_gen_ids, gen_id)
     end
 
-    comp_loads = Set{Int64}()
-    for bus_id in comp_buses, load_id in PowerModels.ref(pm, nw, :bus_loads, bus_id)
-        push!(comp_loads, load_id)
+    comp_loads = Set()
+    for bus_id in comp_bus_ids, load_id in PowerModels.ref(pm, nw, :bus_loads, bus_id)
+        push!(comp_loads, PowerModels.ref(pm, nw, :load, load_id))
     end
 
-    comp_shunts = Set{Int64}()
-    for bus_id in comp_buses, shunt_id in PowerModels.ref(pm, nw, :bus_shunts, bus_id)
-        push!(comp_shunts, shunt_id)
+    comp_shunts = Set()
+    for bus_id in comp_bus_ids, shunt_id in PowerModels.ref(pm, nw, :bus_shunts, bus_id)
+        push!(comp_shunts, PowerModels.ref(pm, nw, :shunt, shunt_id))
     end
 
-    comp_pd = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in comp_loads)
-    comp_qd = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in comp_loads)
+    comp_branches = Set()
+    for (branch_id, branch) in PowerModels.ref(pm, nw, :branch)
+        if in(branch["f_bus"], comp_bus_ids) && in(branch["t_bus"], comp_bus_ids)
+            push!(comp_branches, branch)
+        end
+    end
 
-    comp_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in comp_shunts)
-    comp_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in comp_shunts)
+    comp_pd = Dict(load["index"] => (load["load_bus"], load["pd"][cnd]) for load in comp_loads)
+    comp_qd = Dict(load["index"] => (load["load_bus"], load["qd"][cnd]) for load in comp_loads)
 
-    constraint_power_balance(pm, nw, cnd, i, comp_gens, comp_pd, comp_qd, comp_gs, comp_bs)
+    comp_gs = Dict(shunt["index"] => (shunt["shunt_bus"], shunt["gs"][cnd]) for shunt in comp_shunts)
+    comp_bs = Dict(shunt["index"] => (shunt["shunt_bus"], shunt["bs"][cnd]) for shunt in comp_shunts)
+
+    comp_branch_g = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["tap"][cnd], branch["g_fr"][cnd], branch["g_to"][cnd]) for branch in comp_branches)
+    comp_branch_b = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["tap"][cnd], branch["b_fr"][cnd], branch["b_to"][cnd]) for branch in comp_branches)
+
+    constraint_power_balance(pm, nw, cnd, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b)
 end
 
 

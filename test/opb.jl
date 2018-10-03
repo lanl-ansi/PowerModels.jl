@@ -89,5 +89,38 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11277.9; atol = 1e0)
     end
+    @testset "24-bus case" begin
+        result = run_opb("../test/data/matpower/case24.m", DCPPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 61001.2; atol = 1e0)
+    end
 end
 
+
+@testset "test soc wr opb" begin
+    @testset "3-bus case" begin
+        result = run_opb("../test/data/matpower/case3.m", SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 5638.97; atol = 1e0)
+    end
+    @testset "5-bus with pwl costs" begin
+        result = run_opb("../test/data/matpower/case5_pwlc.m", SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42565.7; atol = 1e0)
+    end
+    @testset "6-bus case" begin
+        result = run_opb("../test/data/matpower/case6.m", SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 11277.9; atol = 1e0)
+    end
+    @testset "24-bus case" begin
+        result = run_opb("../test/data/matpower/case24.m", SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 61001.2; atol = 1e0)
+    end
+end
