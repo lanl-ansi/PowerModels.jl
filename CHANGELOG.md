@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Update tests for SCS v0.4
 
 ### v0.8.4
 - Added SparseSDPWRMPowerModel model (thanks to @kersulis)
