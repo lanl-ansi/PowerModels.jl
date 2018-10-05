@@ -158,7 +158,7 @@ function add_setpoint(
     default_value = (item) -> NaN,
     scale = (x,item,cnd) -> x,
     extract_var = (var,idx,item) -> var[idx],
-    sol_dict = get(sol, dict_name, Dict{String,Any}()), 
+    sol_dict = get(sol, dict_name, Dict{String,Any}()),
     conductorless = false
 )
 
@@ -179,7 +179,7 @@ function add_setpoint(
             sol_item[param_name] = default_value(item)
             try
                 variable = extract_var(var(pm, variable_symbol), idx, item)
-                if applicable(scale, getdual(variable), item, 1) # TODO remove on next breaking release
+                if applicable(scale, getvalue(variable), item, 1) # TODO remove on next breaking release
                     sol_item[param_name] = scale(getvalue(variable), item, 1)
                 else
                     sol_item[param_name] = scale(getvalue(variable), item)
@@ -251,6 +251,7 @@ function add_dual(
     default_value::Function = (item) -> NaN,
     scale::Function = (x,item,cnd) -> x,
     extract_con::Function = (con,idx,item) -> con[idx],
+    conductorless = false
 )
     sol_dict = get(sol, dict_name, Dict{String,Any}())
 
@@ -263,25 +264,39 @@ function add_dual(
     if length(data_dict) > 0
         sol[dict_name] = sol_dict
     end
+
     for (i,item) in data_dict
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
 
-        num_conductors = length(conductor_ids(pm))
-        cnd_idx = 1
-        sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
-        for conductor in conductor_ids(pm)
+        if conductorless
+            sol_item[param_name] = default_value(item)
             try
-                constraint = extract_con(con(pm, con_symbol, cnd=conductor), idx, item)
-                if applicable(scale, getdual(constraint), item, conductor) # TODO remove on next breaking release
-                    sol_item[param_name][cnd_idx] = scale(getdual(constraint), item, conductor)
+                constraint = extract_con(var(pm, con_symbol), idx, item)
+                if applicable(scale, getdual(constraint), item, 1) # TODO remove on next breaking release
+                    sol_item[param_name] = scale(getdual(constraint), item, 1)
                 else
-                    sol_item[param_name][cnd_idx] = scale(getdual(constraint), item)
+                    sol_item[param_name] = scale(getdual(constraint), item)
                 end
             catch
-                info(LOGGER, "No constraint: $(con_symbol), $(idx)")
             end
-            cnd_idx += 1
+        else
+            num_conductors = length(conductor_ids(pm))
+            cnd_idx = 1
+            sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
+            for conductor in conductor_ids(pm)
+                try
+                    constraint = extract_con(con(pm, con_symbol, cnd=conductor), idx, item)
+                    if applicable(scale, getdual(constraint), item, conductor) # TODO remove on next breaking release
+                        sol_item[param_name][cnd_idx] = scale(getdual(constraint), item, conductor)
+                    else
+                        sol_item[param_name][cnd_idx] = scale(getdual(constraint), item)
+                    end
+                catch
+                    info(LOGGER, "No constraint: $(con_symbol), $(idx)")
+                end
+                cnd_idx += 1
+            end
         end
 
         # remove MultiConductorValue, if it was not a ismulticonductor network
