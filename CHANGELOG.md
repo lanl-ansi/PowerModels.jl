@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.8.5
 - Improved the optimal power balance problem specification
 - Add SOCWRPowerModel support for the optimal power balance problem
 - Added conductorsless option to add_setpoint
