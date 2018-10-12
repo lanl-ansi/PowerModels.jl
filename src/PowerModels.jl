@@ -8,6 +8,7 @@ using InfrastructureModels
 using Compat
 using Memento
 using LinearAlgebra
+using SparseArrays
 import Pkg
 
 using MathOptInterface
