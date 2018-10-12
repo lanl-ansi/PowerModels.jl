@@ -146,9 +146,21 @@ function add_branch_ne_setpoint(sol, pm::GenericPowerModel)
   add_setpoint(sol, pm, "ne_branch", "built", :branch_ne; default_value = (item) -> 1)
 end
 
+
 ""
-function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variable_symbol; index_name = "index", default_value = (item) -> NaN, scale = (x,item) -> x, extract_var = (var,idx,item) -> var[idx])
-    sol_dict = get(sol, dict_name, Dict{String,Any}())
+function add_setpoint(
+    sol,
+    pm::GenericPowerModel,
+    dict_name,
+    param_name,
+    variable_symbol;
+    index_name = "index",
+    default_value = (item) -> NaN,
+    scale = (x,item,cnd) -> x,
+    extract_var = (var,idx,item) -> var[idx],
+    sol_dict = get(sol, dict_name, Dict{String,Any}()),
+    conductorless = false
+)
 
     if InfrastructureModels.ismultinetwork(pm.data)
         data_dict = pm.data["nw"]["$(pm.cnw)"][dict_name]
@@ -163,16 +175,33 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
 
-        num_conductors = length(conductor_ids(pm))
-        cnd_idx = 1
-        sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
-        for conductor in conductor_ids(pm)
+        if conductorless
+            sol_item[param_name] = default_value(item)
             try
-                variable = extract_var(var(pm, variable_symbol, cnd=conductor), idx, item)
-                sol_item[param_name][cnd_idx] = scale(getvalue(variable), item)
+                variable = extract_var(var(pm, variable_symbol), idx, item)
+                if applicable(scale, getvalue(variable), item, 1) # TODO remove on next breaking release
+                    sol_item[param_name] = scale(getvalue(variable), item, 1)
+                else
+                    sol_item[param_name] = scale(getvalue(variable), item)
+                end
             catch
             end
-            cnd_idx += 1
+        else
+            num_conductors = length(conductor_ids(pm))
+            cnd_idx = 1
+            sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
+            for conductor in conductor_ids(pm)
+                try
+                    variable = extract_var(var(pm, variable_symbol, cnd=conductor), idx, item)
+                    if applicable(scale, getvalue(variable), item, conductor) # TODO remove on next breaking release
+                        sol_item[param_name][cnd_idx] = scale(getvalue(variable), item, conductor)
+                    else
+                        sol_item[param_name][cnd_idx] = scale(getvalue(variable), item)
+                    end
+                catch
+                end
+                cnd_idx += 1
+            end
         end
 
         # remove MultiConductorValue, if it was not a ismulticonductor network
@@ -193,7 +222,7 @@ end
         con_symbol::Symbol;
         index_name::AbstractString = "index",
         default_value::Function = (item) -> NaN,
-        scale::Function = (x,item) -> x,
+        scale::Function = (x,item,cnd) -> x,
         extract_con::Function = (con,idx,item) -> con[idx],
     )
 
@@ -220,8 +249,9 @@ function add_dual(
     con_symbol::Symbol;
     index_name::AbstractString = "index",
     default_value::Function = (item) -> NaN,
-    scale::Function = (x,item) -> x,
+    scale::Function = (x,item,cnd) -> x,
     extract_con::Function = (con,idx,item) -> con[idx],
+    conductorless = false
 )
     sol_dict = get(sol, dict_name, Dict{String,Any}())
 
@@ -234,21 +264,39 @@ function add_dual(
     if length(data_dict) > 0
         sol[dict_name] = sol_dict
     end
+
     for (i,item) in data_dict
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
 
-        num_conductors = length(conductor_ids(pm))
-        cnd_idx = 1
-        sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
-        for conductor in conductor_ids(pm)
+        if conductorless
+            sol_item[param_name] = default_value(item)
             try
-                constraint = extract_con(con(pm, con_symbol, cnd=conductor), idx, item)
-                sol_item[param_name][cnd_idx] = scale(getdual(constraint), item)
+                constraint = extract_con(var(pm, con_symbol), idx, item)
+                if applicable(scale, getdual(constraint), item, 1) # TODO remove on next breaking release
+                    sol_item[param_name] = scale(getdual(constraint), item, 1)
+                else
+                    sol_item[param_name] = scale(getdual(constraint), item)
+                end
             catch
-                info(LOGGER, "No constraint: $(con_symbol), $(idx)")
             end
-            cnd_idx += 1
+        else
+            num_conductors = length(conductor_ids(pm))
+            cnd_idx = 1
+            sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
+            for conductor in conductor_ids(pm)
+                try
+                    constraint = extract_con(con(pm, con_symbol, cnd=conductor), idx, item)
+                    if applicable(scale, getdual(constraint), item, conductor) # TODO remove on next breaking release
+                        sol_item[param_name][cnd_idx] = scale(getdual(constraint), item, conductor)
+                    else
+                        sol_item[param_name][cnd_idx] = scale(getdual(constraint), item)
+                    end
+                catch
+                    info(LOGGER, "No constraint: $(con_symbol), $(idx)")
+                end
+                cnd_idx += 1
+            end
         end
 
         # remove MultiConductorValue, if it was not a ismulticonductor network

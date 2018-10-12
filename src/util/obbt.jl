@@ -238,14 +238,13 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
                 vm_reduction = (vm_ub[bus] - vm_lb[bus]) - (ub - lb)
                 vm_lb[bus] = lb 
                 vm_ub[bus] = ub 
-            elseif (vm_ub[bus] - lb >= min_bound_width)
-                vm_reduction = (vm_ub[bus] - vm_lb[bus]) - (vm_ub[bus] - lb)
-                vm_lb[bus] = lb 
-            elseif (ub - vm_lb[bus] >= min_bound_width) 
-                vm_reduction = (vm_ub[bus] - vm_lb[bus]) - (ub - vm_lb[bus])
-                vm_ub[bus] = ub
             else 
-                vm_reduction = 0.0
+                mean = (ub + lb)/2.0
+                lb = mean - (min_bound_width/2.0)
+                ub = mean + (min_bound_width/2.0)
+                vm_reduction = (vm_ub[bus] - vm_lb[bus]) - (ub - lb)
+                vm_lb[bus] = lb 
+                vm_ub[bus] = ub
             end 
             
             total_vm_reduction += (vm_reduction)
@@ -299,14 +298,13 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
                 td_reduction = (td_ub[bp] - td_lb[bp]) - (ub - lb)
                 td_lb[bp] = lb 
                 td_ub[bp] = ub 
-            elseif (td_ub[bp] - lb >= min_bound_width)
-                td_reduction = (td_ub[bp] - td_lb[bp]) - (td_ub[bp] - lb)
-                td_lb[bp] = lb 
-            elseif (ub - td_lb[bp] >= min_bound_width) 
-                td_reduction = (td_ub[bp] - td_lb[bp]) - (ub - td_lb[bp])
-                td_ub[bp] = ub
             else 
-                td_reduction = 0.0
+                mean = (lb + ub)/2.0 
+                lb = mean - (min_bound_width/2.0)
+                ub = mean + (min_bound_width/2.0)
+                td_reduction = (td_ub[bp] - td_lb[bp]) - (ub - lb)
+                td_lb[bp] = lb 
+                td_ub[bp] = ub 
             end 
 
             total_td_reduction += (td_reduction)
@@ -336,7 +334,7 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
             current_rel_gap = (upper_bound - result_relaxation["objective"])/upper_bound
             final_relaxation_objective = result_relaxation["objective"]
         else 
-            warn(LOGGER, "$model_constructor infeasible for iteration $(current_iteration+1)")
+            warn(LOGGER, "relaxation solve failed in iteration $(current_iteration+1)")
             warn(LOGGER, "using the previous iteration's gap to check relative gap stopping criteria")
         end
 

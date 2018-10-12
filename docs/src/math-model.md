@@ -5,7 +5,7 @@ As PowerModels implements a variety of power network optimization problems, the 
 
 PowerModels implements a slightly generalized version of the AC Optimal Power Flow problem from [Matpower](http://www.pserc.cornell.edu/matpower/).  These generalizations make it possible for PowerModels to more accurately capture industrial transmission network datasets.  The core generalizations are,
 
-- Support for multiple load (${S^d}_k$) and shunt ($Y^s_{k}$) components on each bus $i$
+- Support for multiple load ($S^d_k$) and shunt ($Y^s_{k}$) components on each bus $i$
 - Line charging that supports a conductance and asymmetrical values ($Y^c_{ij}, Y^c_{ji}$)
 
 
@@ -25,11 +25,11 @@ PowerModels implements a slightly generalized version of the AC Optimal Power Fl
 & S^{gl}_k, S^{gu}_k \;\; \forall k \in G \nonumber \mbox{ - generator complex power bounds}\\
 & c_{2k}, c_{1k}, c_{0k} \;\; \forall k \in G \nonumber  \mbox{ - generator cost components}\\
 & v^l_i, v^u_i \;\; \forall i \in N \nonumber \mbox{ - voltage bounds}\\
-& {S^d}_k \;\; \forall k \in L \nonumber \mbox{ - load complex power consumption}\\
+& S^d_k \;\; \forall k \in L \nonumber \mbox{ - load complex power consumption}\\
 & Y^s_{k} \;\; \forall k \in S \nonumber \mbox{ - bus shunt admittance}\\
 & Y_{ij}, Y^c_{ij}, Y^c_{ji} \;\; \forall (i,j) \in E \nonumber \mbox{ - branch pi-section parameters}\\
 & {T}_{ij} \;\; \forall (i,j) \in E \nonumber \mbox{ - branch complex transformation ratio}\\
-& {s^u}_{ij}  \;\; \forall (i,j) \in E \nonumber \mbox{ - branch apparent power limit}\\
+& s^u_{ij}  \;\; \forall (i,j) \in E \nonumber \mbox{ - branch apparent power limit}\\
 & i^u_{ij}  \;\; \forall (i,j) \in E \nonumber \mbox{ - branch current limit}\\
 & \theta^{\Delta l}_{ij}, \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \nonumber \mbox{ - branch voltage angle difference bounds}\\
 %

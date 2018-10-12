@@ -70,11 +70,16 @@ DCPPowerModel
 SDPWRMPowerModel
 ```
 
+## `SparseSDPWRMPowerModel`
+```@docs
+SparseSDPWRMPowerModel
+```
+
+
 ## `SOCWRPowerModel`
 ```@docs
 SOCWRPowerModel
 ```
-
 
 
 ## `QCWRPowerModel`

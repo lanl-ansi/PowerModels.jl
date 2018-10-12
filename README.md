@@ -22,6 +22,7 @@ This enables the definition of a wide variety of power network formulations and 
 **Core Network Formulations**
 * AC (polar and rectangular coordinates)
 * DC Approximation (polar coordinates)
+* SDP Relaxation (W-space)
 * SOC Relaxation (W-space)
 * QC Relaxation (W+L-space)
 
@@ -54,6 +55,7 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 - David Fobes (@pseudocubic) LANL, PSS(R)E v33 data support
 - Rory Finnegan (@rofinn) Invenia, Memento Logging
 - Frederik Geth (@frederikgeth) CSIRO, Branch Flow formulation
+- Jonas Kersulis (@kersulis) University of Michigan, Sparse SDP formulation
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 - Kaarthik Sundar (@kaarthiksundar) LANL, OBBT utility
@@ -61,17 +63,19 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 
 ## Citing PowerModels
 
-If you find PowerModels useful in your work, we kindly request that you cite the following [technical report](https://arxiv.org/abs/1711.01728):
+If you find PowerModels useful in your work, we kindly request that you cite the following [publication](https://ieeexplore.ieee.org/document/8442948/):
 ```
-@misc{1711.01728,
-  author = {Carleton Coffrin and Russell Bent and Kaarthik Sundar and Yeesian Ng and Miles Lubin},
-  title = {PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations},
-  year = {2017},
-  eprint = {arXiv:1711.01728},
-  url = {http://arxiv.org/abs/1711.01728}
+@inproceedings{8442948, 
+  author = {Carleton Coffrin and Russell Bent and Kaarthik Sundar and Yeesian Ng and Miles Lubin}, 
+  title = {PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations}, 
+  booktitle = {2018 Power Systems Computation Conference (PSCC)}, 
+  year = {2018},
+  month = {June},
+  pages = {1-8}, 
+  doi = {10.23919/PSCC.2018.8442948}
 }
 ```
-Citation of the orginal works for problem denifitions (e.g. OPF) and power flow formulations (e.g. SOC) is also encuraged when publishing works that use PowerModels.
+Citation of the orginal works for problem denifitions (e.g. OPF) and [power flow formulations](https://lanl-ansi.github.io/PowerModels.jl/stable/formulation-details.html) (e.g. SOC) is also encouraged when publishing works that use PowerModels.
 
 
 ## License
