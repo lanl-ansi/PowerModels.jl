@@ -524,7 +524,7 @@ function check_current_limits(data::Dict{String,Any})
         error("check_current_limits does not yet support multinetwork data")
     end
 
-    assert("per_unit" in keys(data) && data["per_unit"])
+     @assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
     branches = [branch for branch in values(data["branch"])]
@@ -583,7 +583,7 @@ function check_current_limits(data::Dict{String,Any})
         error("check_current_limits does not yet support multinetwork data")
     end
 
-    assert("per_unit" in keys(data) && data["per_unit"])
+     @assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
     branches = [branch for branch in values(data["branch"])]

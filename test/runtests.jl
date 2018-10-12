@@ -11,8 +11,7 @@ using Ipopt
 using SCS
 #using Pavito
 #using Juniper
-
-using Base.Test
+using Test
 
 using JuMP
 
@@ -43,15 +42,15 @@ include("common.jl")
 
     #include("data.jl")
 
-    include("opb.jl")
+    #include("opb.jl")
 
-    include("pf.jl")
+    #include("pf.jl")
 
     #include("opf.jl")
 
-    include("opf-var.jl")
+    #include("opf-var.jl")
 
-    include("opf-var.jl")
+    #include("opf-var.jl")
 
     # needs MI solvers
     #include("ots.jl")
@@ -61,18 +60,18 @@ include("common.jl")
 
     #include("multinetwork.jl")
 
-    include("multiconductor.jl")
+    #include("multiconductor.jl")
 
-    include("multi-nw-cnd.jl")
+    #include("multi-nw-cnd.jl")
 
-    include("util.jl")
+    #include("util.jl")
 
-    include("multiconductor.jl")
+    #include("multiconductor.jl")
 
-    include("multi-nw-cnd.jl")
+    #include("multi-nw-cnd.jl")
 
-    include("util.jl")
+    #include("util.jl")
 
-    include("docs.jl")
+    #include("docs.jl")
 
 end
