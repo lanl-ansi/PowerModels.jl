@@ -16,16 +16,10 @@ addons:
     - gfortran
 
 before_install:
-    # don't keep an old version of the code in the cache
-  - julia -e 'if "PowerModels" in keys(Pkg.installed()) Pkg.rm("PowerModels"); Pkg.rm("PowerModels") end'
-  - julia -e 'Pkg.update()' #make sure we get the latest version of METADATA
-  - julia -e 'Pkg.checkout("JuMP")' #make sure we get the latest version of METADATA
-  - julia -e 'if !("Coverage" in keys(Pkg.installed())) Pkg.add("Coverage") end'
-  - julia -e 'if !("Documenter" in keys(Pkg.installed())) Pkg.add("Documenter") end'
+ - julia --project --color=yes -e "import Pkg; Pkg.instantiate(); Pkg.build();" #make sure the depedencies are working properly
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --project --color=yes -e "import Pkg; Pkg.instantiate(); Pkg.build();" #make sure the depedencies are working properly
   - julia --check-bounds=yes --depwarn=no --color=yes --project -e "import Pkg; Pkg.test(coverage=true);"
 
 after_success:
