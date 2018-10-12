@@ -51,6 +51,8 @@ include("common.jl")
 
     include("opf-var.jl")
 
+    include("opf-var.jl")
+
     # needs MI solvers
     #include("ots.jl")
 
@@ -58,6 +60,12 @@ include("common.jl")
     #include("tnep.jl")
 
     #include("multinetwork.jl")
+
+    include("multiconductor.jl")
+
+    include("multi-nw-cnd.jl")
+
+    include("util.jl")
 
     include("multiconductor.jl")
 
