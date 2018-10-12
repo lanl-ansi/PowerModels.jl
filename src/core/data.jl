@@ -533,6 +533,65 @@ function check_current_limits(data::Dict{String,Any})
     end
 
     for branch in branches
+        if !haskey(branch, "rate_a")
+            if haskey(data, "conductors")
+                branch["rate_a"] = MultiConductorVector(0.0, data["conductors"])
+            else
+                branch["rate_a"] = 0.0
+            end
+        end
+
+        for c in 1:get(data, "conductors", 1)
+            cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
+            if branch["rate_a"][c] <= 0.0
+                theta_max = max(abs(branch["angmin"][c]), abs(branch["angmax"][c]))
+
+                r = branch["br_r"]
+                x = branch["br_x"]
+                z = r + im * x
+                y = pinv(z)
+                y_mag = abs.(y[c,c])
+
+                fr_vmax = data["bus"][string(branch["f_bus"])]["vmax"][c]
+                to_vmax = data["bus"][string(branch["t_bus"])]["vmax"][c]
+                m_vmax = max(fr_vmax, to_vmax)
+
+                c_max = sqrt(fr_vmax^2 + to_vmax^2 - 2*fr_vmax*to_vmax*cos(theta_max))
+
+                new_rate = y_mag*m_vmax*c_max
+
+                if haskey(branch, "c_rating_a") && branch["c_rating_a"][c] > 0.0
+                    new_rate = min(new_rate, branch["c_rating_a"][c]*m_vmax)
+                end
+
+                warn(LOGGER, "this code only supports positive rate_a values, changing the value on branch $(branch["index"])$(cnd_str) to $(mva_base*new_rate)")
+
+                if haskey(data, "conductors")
+                    branch["rate_a"][c] = new_rate
+                else
+                    branch["rate_a"] = new_rate
+                end
+            end
+        end
+    end
+end
+
+
+"checks that each branch has a reasonable current rating-a, if not computes one"
+function check_current_limits(data::Dict{String,Any})
+    if InfrastructureModels.ismultinetwork(data)
+        error("check_current_limits does not yet support multinetwork data")
+    end
+
+    assert("per_unit" in keys(data) && data["per_unit"])
+    mva_base = data["baseMVA"]
+
+    branches = [branch for branch in values(data["branch"])]
+    if haskey(data, "ne_branch")
+        append!(branches, values(data["ne_branch"]))
+    end
+
+    for branch in branches
 
         if !haskey(branch, "c_rating_a")
             if haskey(data, "conductors")
