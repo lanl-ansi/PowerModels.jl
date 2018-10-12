@@ -73,6 +73,13 @@ $y = g + j\cdot b$:
 - `b`: susceptance ($S$)
 
 
+### Standard Value Names
+
+- network ids:`network`, `nw`, `n`
+- conductors ids: `conductor`, `cnd`, `c`
+- phase ids: `phase`, `ph`, `h`
+
+
 ## DistFlow derivation
 
 ### For an asymmetric pi section

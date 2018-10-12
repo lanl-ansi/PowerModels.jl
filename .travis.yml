@@ -17,10 +17,11 @@ addons:
 
 before_install:
     # don't keep an old version of the code in the cache
-  - julia -e 'using Pkg; if "PowerModels" in keys(Pkg.installed()) Pkg.rm("PowerModels"); Pkg.rm("PowerModels") end'
-  - julia -e 'using Pkg; Pkg.update()' #make sure we get the latest version of METADATA
-  - julia -e 'using Pkg; if !("Coverage" in keys(Pkg.installed())) Pkg.add("Coverage") end'
-  - julia -e 'using Pkg; if !("Documenter" in keys(Pkg.installed())) Pkg.add("Documenter") end'
+  - julia -e 'if "PowerModels" in keys(Pkg.installed()) Pkg.rm("PowerModels"); Pkg.rm("PowerModels") end'
+  - julia -e 'Pkg.update()' #make sure we get the latest version of METADATA
+  - julia -e 'Pkg.checkout("JuMP")' #make sure we get the latest version of METADATA
+  - julia -e 'if !("Coverage" in keys(Pkg.installed())) Pkg.add("Coverage") end'
+  - julia -e 'if !("Documenter" in keys(Pkg.installed())) Pkg.add("Documenter") end'
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi

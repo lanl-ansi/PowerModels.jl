@@ -11,7 +11,9 @@ makedocs(
         "Manual" => [
             "Getting Started" => "quickguide.md",
             "Network Data Format" => "network-data.md",
-            "Result Data Format" => "result-data.md"
+            "Result Data Format" => "result-data.md",
+            "Mathematical Model" => "math-model.md",
+            "Utilities" => "utilities.md"
         ],
         "Library" => [
             "Network Formulations" => "formulations.md",
@@ -25,7 +27,10 @@ makedocs(
             "Relaxation Schemes" => "relaxations.md",
             "File IO" => "parser.md"
         ],
-        "Developer" => "developer.md",
+        "Developer" => [
+                "Developer" => "developer.md",
+                "Formulation Details" => "formulation-details.md"
+        ],
         "Experiment Results" => "experiment-results.md"
     ]
 )

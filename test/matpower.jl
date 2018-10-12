@@ -9,7 +9,7 @@ using JSON
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
     end
 
-    @testset "30-bus case matpower data" begin
+    @testset "30-bus case matpower data (parse_file)" begin
         data = PowerModels.parse_file("../test/data/matpower/case30.m")
         @test isa(JSON.json(data), String)
 
@@ -17,6 +17,28 @@ using JSON
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
+    end
+
+    @testset "30-bus case matpower data (parse_matpower)" begin
+        data = PowerModels.parse_matpower("../test/data/matpower/case30.m")
+        @test isa(JSON.json(data), String)
+
+        result = run_opf(data, ACPPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 204.96; atol = 1e-1)
+    end
+
+    @testset "30-bus case matpower data (parse_matpower; iostream)" begin
+        open("../test/data/matpower/case30.m") do f
+            data = PowerModels.parse_matpower(f)
+            @test isa(JSON.json(data), String)
+
+            result = run_opf(data, ACPPowerModel, ipopt_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 204.96; atol = 1e-1)
+        end
     end
 
     @testset "14-bus case file with bus names" begin
@@ -163,7 +185,7 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
 
         @test haskey(data, "ne_branch")
-        @test data["ne_branch"]["1"]["f_bus"] == 1
+        @test data["ne_branch"]["1"]["f_bus"] == 2
         @test data["ne_branch"]["1"]["construction_cost"] == 1
         @test isa(JSON.json(data), String)
     end
@@ -178,5 +200,97 @@ end
         @test haskey(data, "name")
         @test haskey(ref, :name)
         @test data["name"] == ref[:name]
+    end
+end
+
+@testset "test idempotent matpower export" begin
+
+    function test_case(filename::AbstractString, parse_file::Function)
+        temp_file = "temp.m"
+        source_data = parse_file(filename)
+
+        io = PipeBuffer()
+        PowerModels.export_matpower(io, source_data)
+        destination_data = PowerModels.parse_matpower(io)
+
+        @test InfrastructureModels.compare_dict(source_data, destination_data)
+    end
+
+    @testset "test frankenstein_00" begin
+        file = "../test/data/matpower/frankenstein_00.m"
+        test_case(file, PowerModels.parse_file)
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case14" begin
+        file = "../test/data/matpower/case14.m"
+        test_case(file, PowerModels.parse_file)
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case2" begin
+        file = "../test/data/matpower/case2.m"
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case24" begin
+        file = "../test/data/matpower/case24.m"
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case3_tnep" begin
+        file = "../test/data/matpower/case3_tnep.m"
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case30" begin
+        file = "../test/data/matpower/case30.m"
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case5 asym" begin
+        file = "../test/data/matpower/case5_asym.m"
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case5 gap" begin
+        file = "../test/data/matpower/case5_gap.m"
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    # currently not idempotent due to pwl function simplification
+    #@testset "test case5 pwlc" begin
+    #    file = "../test/data/matpower/case5_pwlc.m"
+    #    test_case(file, PowerModels.parse_matpower)
+    #end
+
+    @testset "test case5" begin
+        file = "../test/data/matpower/case5.m"
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case6" begin
+        file = "../test/data/matpower/case6.m"
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case3" begin
+        file = "../test/data/matpower/case3.m"
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case5 dc" begin
+        file = "../test/data/matpower/case5_dc.m"
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case5 tnep" begin
+        file = "../test/data/matpower/case5_tnep.m"
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case7 tplgy" begin
+        file = "../test/data/matpower/case7_tplgy.m"
+        test_case(file, PowerModels.parse_matpower)
     end
 end

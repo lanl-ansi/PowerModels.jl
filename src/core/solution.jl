@@ -3,8 +3,8 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
     # TODO assert that the model is solved
 
     if status != :Error
-        objective = JuMP.objectivevalue(pm.model)
-        status = solver_status_dict(Symbol(typeof(pm.model.moibackend).name.module), status)
+        objective = JuMP.objective_value(pm.model)
+        status = solver_status_dict(Symbol(typeof(pm.model.moi_backend).name.module), status)
     end
 
     sol = init_solution(pm)
@@ -17,6 +17,9 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
 
         for (n,nw_data) in pm.data["nw"]
             sol_nw = sol_nws[n] = Dict{String,Any}()
+            if haskey(nw_data, "conductors")
+                sol_nw["conductors"] = nw_data["conductors"]
+            end
             pm.cnw = parse(Int, n)
             solution_builder(pm, sol_nw)
             data_nws[n] = Dict(
@@ -26,13 +29,16 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
             )
         end
     else
+        if haskey(pm.data, "conductors")
+            sol["conductors"] = pm.data["conductors"]
+        end
         solution_builder(pm, sol)
         data["bus_count"] = length(pm.data["bus"])
         data["branch_count"] = length(pm.data["branch"])
     end
 
     solution = Dict{String,Any}(
-        "solver" => string(typeof(pm.model.moibackend)),
+        "solver" => string(typeof(pm.model.moi_backend)),
         "status" => status,
         "objective" => objective,
         "objective_lb" => guard_getobjbound(pm.model),
@@ -156,11 +162,22 @@ function add_setpoint(sol, pm::GenericPowerModel, dict_name, param_name, variabl
     for (i,item) in data_dict
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
-        sol_item[param_name] = default_value(item)
-        try
-            variable = extract_var(var(pm, variable_symbol), idx, item)
-            sol_item[param_name] = scale(JuMP.resultvalue(variable), item)
-        catch
+
+        num_conductors = length(conductor_ids(pm))
+        cnd_idx = 1
+        sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
+        for conductor in conductor_ids(pm)
+            try
+                variable = extract_var(var(pm, variable_symbol, cnd=conductor), idx, item)
+                sol_item[param_name][cnd_idx] = scale(JuMP.result_value(variable), item)
+            catch
+            end
+            cnd_idx += 1
+        end
+
+        # remove MultiConductorValue, if it was not a ismulticonductor network
+        if !ismulticonductor(pm)
+            sol_item[param_name] = sol_item[param_name][1]
         end
     end
 end
@@ -220,15 +237,27 @@ function add_dual(
     for (i,item) in data_dict
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
-        sol_item[param_name] = default_value(item)
-        try
-            constraint = extract_con(con(pm, con_symbol), idx, item)
-            sol_item[param_name] = scale(JuMP.resultdual(constraint), item)
-        catch
-            info(LOGGER, "No constraint: $(con_symbol), $(idx)")
+
+        num_conductors = length(conductor_ids(pm))
+        cnd_idx = 1
+        sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
+        for conductor in conductor_ids(pm)
+            try
+                constraint = extract_con(con(pm, con_symbol, cnd=conductor), idx, item)
+                sol_item[param_name][cnd_idx] = scale(JuMP.result_dual(constraint), item)
+            catch
+                info(LOGGER, "No constraint: $(con_symbol), $(idx)")
+            end
+            cnd_idx += 1
+        end
+
+        # remove MultiConductorValue, if it was not a ismulticonductor network
+        if !ismulticonductor(pm)
+            sol_item[param_name] = sol_item[param_name][1]
         end
     end
 end
+
 
 solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}(
     :Ipopt => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),

@@ -1,4 +1,5 @@
-% NESTA v0.6.0
+% tests asymetrical branch voltage angle differences
+
 function mpc = case5_asym
 mpc.version = '2';
 mpc.baseMVA = 100.0;

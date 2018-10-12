@@ -14,12 +14,12 @@ From there, different forms for ACP and DCP are possible:
 StandardACPForm <: AbstractACPForm
 APIACPForm <: AbstractACPForm
 
-StandardDCPForm <: AbstractDCPForm
+DCPlosslessForm <: AbstractDCPForm
 
 SOCWRForm <: AbstractWRForm
 QCWRForm <: AbstractWRForm
 
-SOCDFForm <: AbstractWForm
+SOCBFForm <: AbstractWForm
 ```
 
 ## Power Models
@@ -28,12 +28,12 @@ Each of these forms can be used as the type parameter for a PowerModel:
 ACPPowerModel = GenericPowerModel{StandardACPForm}
 APIACPPowerModel = GenericPowerModel{APIACPForm}
 
-DCPPowerModel = GenericPowerModel{StandardDCPForm}
+DCPPowerModel = GenericPowerModel{DCPlosslessForm}
 
 SOCWRPowerModel = GenericPowerModel{SOCWRForm}
 QCWRPowerModel = GenericPowerModel{QCWRForm}
 
-SOCDFPowerModel = GenericPowerModel{SOCDFForm}
+SOCBFPowerModel = GenericPowerModel{SOCBFForm}
 ```
 
 For details on `GenericPowerModel`, see the section on [Power Model](@ref).

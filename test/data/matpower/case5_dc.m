@@ -1,8 +1,7 @@
-% based on NESTA v0.6.0
 % tests dc line with costs
 % tests generator and dc line voltage setpoint warnings
 
-function mpc = nesta_case5_pjm
+function mpc = case5_dc
 mpc.version = '2';
 mpc.baseMVA = 100.0;
 

@@ -1,8 +1,56 @@
 PowerModels.jl Change Log
-=================
+=========================
 
 ### Staged
 - nothing
+
+### v0.8.4
+- Added SparseSDPWRMPowerModel model (thanks to @kersulis)
+- Added Julia version upper bound
+- Improved OBBT bound update logic
+
+### v0.8.3
+- Added support for current limits, issue #342
+- Added a optimal power balance problem specification
+- Added a network flow approximation formulation, NFAPowerModel
+- Added conic variant of the SOCWRPowerModel model, SOCWRConicPowerModel (thanks to @kersulis)
+- Added data simplification for piecewise linear cost functions
+- Added sim_parallel_run_time to OBBT stats
+- Made thermal limits optional in the data model
+- Fixed a bug in quadratic conic objective functions
+- Fixed a bug where dcline reactive variables entered active power only formulations
+- Expanded documentation (mathematical model, formulations, references for formulations)
+
+### v0.8.2
+- Added optimality-based bound tightening (OBBT) functionality for the QC relaxations
+- Added branch flow conic forms, e.g. AbstractBFConicForm, SOCBFConicPowerModel
+- Update MINLP solvers used in testing
+- Minor issues closed #328
+
+### v0.8.1
+- Strengthened the QCWRTri Power Flow formulation
+- Added support for implicit single conductor to buspairs data
+- Made add_setpoint more flexible when working with a mixture of data types
+- Fixed a bug in TNEP voltage variable definitions
+
+### v0.8.0
+- Added support for asymmetric line charging in all formulations
+- Added Matpower data file export function
+- Added mathematical model to documentation
+- Added parsing string data from IO objects
+- Added support for network data with multiple conductors (breaking)
+- Removed explicit series variables from branch flow model
+- Improved helper functions ref, var, con to work with multiple networks and multiple conductors
+- Minor robustness improvements to parsing PTI files
+- Minor issues closed #316
+
+### v0.7.2
+- Removed Memento depreciation warnings
+
+### v0.7.1
+- Added warning when data is missing in a PTI file
+- Minor tidying of matpower test cases
+- Relaxed variable bounds in BFM to be consistent with BIM
 
 ### v0.7.0
 - Added component_table function for building matrices from component data
@@ -77,7 +125,7 @@ PowerModels.jl Change Log
 - Made index_name an optional parameter in add_setpoint (breaking)
 - Moved check_cost_models into the objective building function
 - Fixed out of range bug in calc_theta_delta_bounds
-- Fixed bug in phase angle differences in AbstractACPForms
+- Fixed bug in voltage angle differences in AbstractACPForms
 - Fixed bugs in AbstractDCPLLForm and added OPF test
 
 ### v0.3.4
@@ -88,7 +136,7 @@ PowerModels.jl Change Log
 - Added w-theta formulation of AC-OPF
 - Added data units checks to update_data
 - Made branch flow parameter names consistent with Matpower
-- Fixed bug in constants for w-space phase angle difference constraints
+- Fixed bug in constants for w-space voltage angle difference constraints
 - Fixed bug when no reference bus was specified
 - Fixed dcline parsing bug
 
@@ -122,7 +170,7 @@ PowerModels.jl Change Log
 - Strengthened convex formulations with Lifted Nonlinear Cuts (LNCs)
 - Added ability to easily inspect the JuMP model produced by PowerModels
 - Added constraint templates to provide an abstraction layer between the network data and network constraint definitions
-- Moved system wide phase angle difference bounds to the "ref" dictionary
+- Moved system wide voltage angle difference bounds to the "ref" dictionary
 - Refactored model definitions to be based on complex numbers
 
 ### v0.2.3
