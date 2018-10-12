@@ -206,7 +206,6 @@ end
 @testset "test idempotent matpower export" begin
 
     function test_case(filename::AbstractString, parse_file::Function)
-        temp_file = "temp.m"
         source_data = parse_file(filename)
 
         io = PipeBuffer()
