@@ -9,7 +9,6 @@ setlevel!(getlogger(PowerModels), "error")
 using Cbc
 using Ipopt
 using SCS
-using Test
 #using Pavito
 #using Juniper
 using Compat
