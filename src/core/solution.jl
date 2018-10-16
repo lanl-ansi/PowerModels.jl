@@ -1,6 +1,6 @@
 ""
 function build_solution(pm::GenericPowerModel, status, solve_time; objective = NaN, solution_builder = get_solution)
-    # TODO assert that the model is solved
+    # TODO @assert that the model is solved
 
     if status != :Error
         objective = getobjectivevalue(pm.model)
@@ -215,7 +215,7 @@ end
 """
 
     function add_dual(
-        sol::Associative,
+        sol::AbstractDict,
         pm::GenericPowerModel,
         dict_name::AbstractString,
         param_name::AbstractString,
@@ -230,7 +230,7 @@ This function takes care of adding the values of dual variables to the solution 
 
 # Arguments
 
-- `sol::Associative`: The dict where the desired final details of the solution are stored;
+- `sol::AbstractDict`: The dict where the desired final details of the solution are stored;
 - `pm::GenericPowerModel`: The PowerModel which has been considered;
 - `dict_name::AbstractString`: The particular class of items for the solution (e.g. branch, bus);
 - `param_name::AbstractString`: The name associated to the dual variable;
@@ -242,7 +242,7 @@ This function takes care of adding the values of dual variables to the solution 
 
 """
 function add_dual(
-    sol::Associative,
+    sol::AbstractDict,
     pm::GenericPowerModel,
     dict_name::AbstractString,
     param_name::AbstractString,

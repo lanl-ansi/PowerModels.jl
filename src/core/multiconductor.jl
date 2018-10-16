@@ -108,19 +108,19 @@ Base.:^(a::MultiConductorMatrix, b::Complex) = MultiConductorMatrix(a.values ^ b
 Base.:^(a::MultiConductorMatrix, b::Integer) = MultiConductorMatrix(a.values ^ b)
 Base.:^(a::MultiConductorMatrix, b::AbstractFloat) = MultiConductorMatrix(a.values ^ b)
 
-Base.inv(a::MultiConductorMatrix) = MultiConductorMatrix(inv(a.values))
-Base.pinv(a::MultiConductorMatrix) = MultiConductorMatrix(pinv(a.values))
+LinearAlgebra.inv(a::MultiConductorMatrix) = MultiConductorMatrix(inv(a.values))
+LinearAlgebra.pinv(a::MultiConductorMatrix) = MultiConductorMatrix(pinv(a.values))
 
 Base.real(a::MultiConductorVector) = MultiConductorVector(real(a.values))
 Base.real(a::MultiConductorMatrix) = MultiConductorMatrix(real(a.values))
 Base.imag(a::MultiConductorVector) = MultiConductorVector(imag(a.values))
 Base.imag(a::MultiConductorMatrix) = MultiConductorMatrix(imag(a.values))
 
-Base.transpose(a::MultiConductorVector) = a.values'
-Base.transpose(a::MultiConductorMatrix) = MultiConductorMatrix(a.values')
+LinearAlgebra.transpose(a::MultiConductorVector) = a.values'
+LinearAlgebra.transpose(a::MultiConductorMatrix) = MultiConductorMatrix(a.values')
 
-Base.diag(a::MultiConductorMatrix) = MultiConductorVector(diag(a.values))
-Base.diagm(a::MultiConductorVector) = MultiConductorMatrix(diagm(a.values))
+LinearAlgebra.diag(a::MultiConductorMatrix) = MultiConductorVector(diag(a.values))
+LinearAlgebra.diagm(a::MultiConductorVector) = MultiConductorMatrix(diagm(a.values))
 
 Base.rad2deg(a::MultiConductorVector) = MultiConductorVector(map(rad2deg, a.values))
 Base.rad2deg(a::MultiConductorMatrix) = MultiConductorMatrix(map(rad2deg, a.values))

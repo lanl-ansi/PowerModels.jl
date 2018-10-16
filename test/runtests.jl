@@ -9,17 +9,25 @@ setlevel!(getlogger(PowerModels), "error")
 using Cbc
 using Ipopt
 using SCS
-using Pavito
-using Juniper
+#using Pavito
+#using Juniper
+using Compat
 
-using Base.Test
+if VERSION > v"0.7.0-"
+    using Test
+end
+
+if VERSION < v"0.7.0-"
+    using Base.Test
+end
+
 
 # default setup for solvers
 ipopt_solver = IpoptSolver(tol=1e-6, print_level=0)
 cbc_solver = CbcSolver()
-juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
+#juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
 #juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
-pavito_solver = PavitoSolver(mip_solver=cbc_solver, cont_solver=ipopt_solver, mip_solver_drives=false, log_level=0)
+#pavito_solver = PavitoSolver(mip_solver=cbc_solver, cont_solver=ipopt_solver, mip_solver_drives=false, log_level=0)
 scs_solver = SCSSolver(max_iters=500000, acceleration_lookback=1, verbose=0)
 
 include("common.jl")
@@ -34,30 +42,30 @@ include("common.jl")
 
     include("output.jl")
 
-    include("modify.jl")
+    #include("modify.jl")
 
-    include("data.jl")
+    #include("data.jl")
 
-    include("opb.jl")
+    #include("opb.jl")
 
-    include("pf.jl")
+    #include("pf.jl")
 
-    include("opf.jl")
+    #include("opf.jl")
 
-    include("opf-var.jl")
+    #include("opf-var.jl")
 
-    include("ots.jl")
+    #include("ots.jl")
 
-    include("tnep.jl")
+    #include("tnep.jl")
 
-    include("multinetwork.jl")
+    #include("multinetwork.jl")
 
-    include("multiconductor.jl")
+    #include("multiconductor.jl")
 
-    include("multi-nw-cnd.jl")
+    #include("multi-nw-cnd.jl")
 
     include("util.jl")
 
-    include("docs.jl")
+    #include("docs.jl")
 
 end

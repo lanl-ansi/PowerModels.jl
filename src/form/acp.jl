@@ -111,7 +111,6 @@ sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(p_ne
 sum(q[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts)*vm^2
 ```
 """
-
 function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACPForm
     vm   = var(pm, n, c, :vm, i)
     p    = var(pm, n, c, :p)
@@ -330,7 +329,7 @@ function constraint_loss_lb(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_b
     p_to = var(pm, n, c, :p, t_idx)
     q_to = var(pm, n, c, :q, t_idx)
 
-    assert(g_fr == 0 && g_to == 0)
+    @assert(g_fr == 0 && g_to == 0)
     c = b_fr + b_to
 
     # TODO: Derive updated constraint from first principles

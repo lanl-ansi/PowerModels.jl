@@ -443,7 +443,7 @@ end
         @test PowerModels.getmcv(a, 1, 1) == a[1,1]
 
         # diagm
-        @test all(diagm(c).values .== [0.225 0.0 0.0; 0.0 0.225 0.0; 0.0 0.0 0.225])
+        @test all(LinearAlgebra.diagm(c).values .== [0.225 0.0 0.0; 0.0 0.225 0.0; 0.0 0.0 0.225])
 
         # rad2deg/deg2rad
         angs_deg = rad2deg(angs_rad)

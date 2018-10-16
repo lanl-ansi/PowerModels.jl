@@ -66,7 +66,7 @@ mp_bus_columns = [
 ]
 
 mp_bus_name_columns = [
-    ("bus_name", String)
+    ("bus_name", Union{String,SubString{String}})
 ]
 
 mp_gen_columns = [
@@ -137,8 +137,8 @@ end
 
 ""
 function parse_matpower_file(io::IO)
-    data_string = readstring(io)
-    
+    data_string = read(io, String)
+
     return parse_matpower_string(data_string)
 end
 
@@ -553,10 +553,10 @@ function mp2pm_dcline(data::Dict{String,Any})
         dcline["pmint"] = pmint
         dcline["pmaxf"] = pmaxf
         dcline["pminf"] = pminf
-          
-        # preserve the old pmin and pmax values  
-        dcline["mp_pmin"] = pmin  
-        dcline["mp_pmax"] = pmax  
+
+        # preserve the old pmin and pmax values
+        dcline["mp_pmin"] = pmin
+        dcline["mp_pmax"] = pmax
 
         dcline["pt"] = -dcline["pt"] # matpower has opposite convention
         dcline["qf"] = -dcline["qf"] # matpower has opposite convention
@@ -604,7 +604,7 @@ function merge_generator_cost_data(data::Dict{String,Any})
     if haskey(data, "gencost")
         for (i, gencost) in enumerate(data["gencost"])
             gen = data["gen"][i]
-            assert(gen["index"] == gencost["index"])
+            @assert(gen["index"] == gencost["index"])
             delete!(gencost, "index")
 
             check_keys(gen, keys(gencost))
@@ -616,7 +616,7 @@ function merge_generator_cost_data(data::Dict{String,Any})
     if haskey(data, "dclinecost")
         for (i, dclinecost) in enumerate(data["dclinecost"])
             dcline = data["dcline"][i]
-            assert(dcline["index"] == dclinecost["index"])
+            @assert(dcline["index"] == dclinecost["index"])
             delete!(dclinecost, "index")
 
             check_keys(dcline, keys(dclinecost))
@@ -647,7 +647,7 @@ end
 "merges Matpower tables based on the table extension syntax"
 function merge_generic_data(data::Dict{String,Any})
     mp_matrix_names = [name[5:length(name)] for name in mp_data_names]
-    
+
     key_to_delete = []
     for (k,v) in data
         if isa(v, Array)
@@ -664,7 +664,7 @@ function merge_generic_data(data::Dict{String,Any})
 
                     for (i, row) in enumerate(mp_matrix)
                         merge_row = v[i]
-                        #assert(row["index"] == merge_row["index"]) # note this does not hold for the bus table
+                        #@assert(row["index"] == merge_row["index"]) # note this does not hold for the bus table
                         delete!(merge_row, "index")
                         for key in keys(merge_row)
                             if haskey(row, key)
@@ -707,10 +707,10 @@ function export_matpower(io::IO, data::Dict{String,Any})
     is_per_unit = data["per_unit"]
     #convert data to mixed unit
     if is_per_unit
-       make_mixed_units(data)  
+       make_mixed_units(data)
     end
-      
-  
+
+
     # create some useful maps and data structures
     buses = Dict{Int, Dict}()
     for (idx,bus) in data["bus"]
@@ -734,21 +734,21 @@ function export_matpower(io::IO, data::Dict{String,Any})
             ne_branches[branch["index"]] = branch
         end
     end
-                        
+
     pd = Dict{Int, Float64}()
     qd = Dict{Int, Float64}()
     gs = Dict{Int, Float64}()
     bs = Dict{Int, Float64}()
-      
+
     # collect all the loads
     for (idx,bus) in sort(data["bus"])
         pd[bus["index"]] = 0
-        qd[bus["index"]] = 0  
+        qd[bus["index"]] = 0
     end
     for (idx,load) in sort(data["load"])
         bus = buses[load["load_bus"]]
-        pd[bus["index"]] = pd[bus["index"]] + load["pd"] 
-        qd[bus["index"]] = qd[bus["index"]] + load["qd"] 
+        pd[bus["index"]] = pd[bus["index"]] + load["pd"]
+        qd[bus["index"]] = qd[bus["index"]] + load["qd"]
     end
 
     # collect all the shunts
@@ -758,13 +758,13 @@ function export_matpower(io::IO, data::Dict{String,Any})
     end
     for (idx, shunt) in data["shunt"]
         bus = buses[shunt["shunt_bus"]]
-        bs[bus["index"]] = bs[bus["index"]] + shunt["bs"] 
-        gs[bus["index"]] = gs[bus["index"]] + shunt["gs"] 
+        bs[bus["index"]] = bs[bus["index"]] + shunt["bs"]
+        gs[bus["index"]] = gs[bus["index"]] + shunt["gs"]
     end
 
     mvaBase = data["baseMVA"]
 
-    # Print the header information  
+    # Print the header information
     println(io, "%% MATPOWER Case Format : Version 2")
     println(io, "function mpc = ", data["name"]) 
     println(io, "mpc.version = '2';")
@@ -772,45 +772,45 @@ function export_matpower(io::IO, data::Dict{String,Any})
     println(io, "%%-----  Power Flow Data  -----%%")
     println(io, "%% system MVA base")
     println(io, "mpc.baseMVA = ", mvaBase, ";")
-        
+
     # Print the bus data
     println(io, "%% bus data")
     println(io, "%    bus_i    type    Pd    Qd    Gs    Bs    area    Vm    Va    baseKV    zone    Vmax    Vmin")
     println(io, "mpc.bus = [")
     for (idx,bus) in sort(buses)
-        println(io, "\t", bus["index"], 
-                    "\t", bus["bus_type"], 
-                    "\t", get_default(pd, bus["index"]),  
-                    "\t", get_default(qd, bus["index"]),  
-                    "\t", get_default(gs, bus["index"]),  
-                    "\t", get_default(bs, bus["index"]),  
-                    "\t", get_default(bus, "area"),  
-                    "\t", get_default(bus, "vm"),  
-                    "\t", get_default(bus, "va"),  
-                    "\t", get_default(bus, "base_kv"),  
-                    "\t", get_default(bus, "zone"),  
-                    "\t", get_default(bus, "vmax"),  
-                    "\t", get_default(bus, "vmin"), 
-                    "\t", get_default(bus, "lam_p", ""),    
-                    "\t", get_default(bus, "lam_q", ""),    
-                    "\t", get_default(bus, "mu_vmax", ""),    
-                    "\t", get_default(bus, "mu_vmin",""),    
-                    )
-    end  
+    println(io, "\t", bus["index"], 
+                "\t", bus["bus_type"], 
+                "\t", get_default(pd, bus["index"]),  
+                "\t", get_default(qd, bus["index"]),  
+                "\t", get_default(gs, bus["index"]),  
+                "\t", get_default(bs, bus["index"]),  
+                "\t", get_default(bus, "area"),  
+                "\t", get_default(bus, "vm"),  
+                "\t", get_default(bus, "va"),  
+                "\t", get_default(bus, "base_kv"),  
+                "\t", get_default(bus, "zone"),  
+                "\t", get_default(bus, "vmax"),  
+                "\t", get_default(bus, "vmin"), 
+                "\t", get_default(bus, "lam_p", ""),    
+                "\t", get_default(bus, "lam_q", ""),    
+                "\t", get_default(bus, "mu_vmax", ""),    
+                "\t", get_default(bus, "mu_vmin",""),    
+                )
+    end
     println(io, "];")
-    println(io)  
-    
+    println(io)
+
     # Print the bus names
     if haskey(collect(values(buses))[1], "bus_name")
         println(io, "%% bus names")
         println(io, "mpc.bus_name = {")
         for (idx,bus) in sort(buses)
-            println(io, "\t'", bus["bus_name"], "'") 
-        end    
+            println(io, "\t'", bus["bus_name"], "'")
+        end
         println(io, "};")
         println(io)
     end
-    
+
     # Print the generator data
     println(io, "%% generator data")
     println(io, "%    bus    Pg    Qg    Qmax    Qmin    Vg    mBase    status    Pmax    Pmin    Pc1    Pc2    Qc1min    Qc1max    Qc2min    Qc2max    ramp_agc    ramp_10    ramp_30    ramp_q    apf")
@@ -820,37 +820,38 @@ function export_matpower(io::IO, data::Dict{String,Any})
         if idx != gen["index"]
             warn(LOGGER, "The index of the generator does not match the matpower assigned index. Any data that uses generator indexes for reference is corrupted.");           
         end  
-        println(io, "\t", gen["gen_bus"], 
-                    "\t", get_default(gen, "pg"), 
-                    "\t", get_default(gen, "qg"), 
-                    "\t", get_default(gen, "qmax"), 
-                    "\t", get_default(gen, "qmin"), 
-                    "\t", get_default(gen, "vg"), 
-                    "\t", get_default(gen, "mbase"), 
-                    "\t", get_default(gen, "gen_status"), 
-                    "\t", get_default(gen, "pmax"), 
-                    "\t", get_default(gen, "pmin"), 
-                    "\t", get_default(gen, "pc1", ""), 
-                    "\t", get_default(gen, "pc2", ""), 
-                    "\t", get_default(gen, "qc1min", ""), 
-                    "\t", get_default(gen, "qc1max", ""), 
-                    "\t", get_default(gen, "qc2min", ""), 
-                    "\t", get_default(gen, "qc2max", ""), 
-                    "\t", get_default(gen, "ramp_agc", ""), 
-                    "\t", (haskey(gen, "ramp_10") ? gen["ramp_10"] : haskey(gen, "ramp_30") ? 0 : ""),
-                    "\t", get_default(gen, "ramp_30", ""), 
-                    "\t", get_default(gen, "ramp_q", ""),  
-                    "\t", get_default(gen, "apf", ""), 
-                    "\t", get_default(gen, "mu_pmax", ""),
-                    "\t", get_default(gen, "mu_pmin", ""), 
-                    "\t", get_default(gen, "mu_qmax", ""), 
-                    "\t", get_default(gen, "mu_qmin", ""), 
-                    )      
+    println(io, "\t", gen["gen_bus"], 
+                "\t", get_default(gen, "pg"), 
+                "\t", get_default(gen, "qg"), 
+                "\t", get_default(gen, "qmax"), 
+                "\t", get_default(gen, "qmin"), 
+                "\t", get_default(gen, "vg"), 
+                "\t", get_default(gen, "mbase"), 
+                "\t", get_default(gen, "gen_status"), 
+                "\t", get_default(gen, "pmax"), 
+                "\t", get_default(gen, "pmin"), 
+                "\t", get_default(gen, "pc1", ""), 
+                "\t", get_default(gen, "pc2", ""), 
+                "\t", get_default(gen, "qc1min", ""), 
+                "\t", get_default(gen, "qc1max", ""), 
+                "\t", get_default(gen, "qc2min", ""), 
+                "\t", get_default(gen, "qc2max", ""), 
+                "\t", get_default(gen, "ramp_agc", ""), 
+                "\t", (haskey(gen, "ramp_10") ? gen["ramp_10"] : haskey(gen, "ramp_30") ? 0 : ""),
+                "\t", get_default(gen, "ramp_30", ""), 
+                "\t", get_default(gen, "ramp_q", ""),  
+                "\t", get_default(gen, "apf", ""), 
+                "\t", get_default(gen, "mu_pmax", ""),
+                "\t", get_default(gen, "mu_pmin", ""), 
+                "\t", get_default(gen, "mu_qmax", ""), 
+                "\t", get_default(gen, "mu_qmin", ""), 
+                )      
+
         i = i+1
     end
     println(io,"];")
     println(io)
-    
+
     # Print the branch data
     println(io, "%% branch data")
     println(io, "%    fbus    tbus    r    x    b    rateA    rateB    rateC    ratio    angle    status    angmin    angmax")
@@ -858,8 +859,8 @@ function export_matpower(io::IO, data::Dict{String,Any})
     i = 1
     for (idx,branch) in sort(branches)
         if idx != branch["index"]
-            warn(LOGGER, "The index of the branch does not match the matpower assigned index. Any data that uses branch indexes for reference is corrupted.");           
-        end 
+            warn(LOGGER, "The index of the branch does not match the matpower assigned index. Any data that uses branch indexes for reference is corrupted.");
+        end
         println(io,
             "\t", get_default(branch, "f_bus"),  
             "\t", get_default(branch, "t_bus"),  
@@ -869,6 +870,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
             "\t", get_default(branch, "rate_a"), 
             "\t", get_default(branch, "rate_b"), 
             "\t", get_default(branch, "rate_c"), 
+
             "\t", (branch["transformer"] ? branch["tap"] : 0),
             "\t", (branch["transformer"] ? branch["shift"] : 0),
             "\t", get_default(branch, "br_status"),
@@ -887,7 +889,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     end
     println(io, "];")
     println(io)
-    
+
     # print the dcline data
     println(io, "%% dcline data")
     println(io, "%	fbus	tbus	status	Pf	Pt	Qf	Qt	Vf	Vt	Pmin	Pmax	QminF	QmaxF	QminT	QmaxT	loss0	loss1")
@@ -918,27 +920,27 @@ function export_matpower(io::IO, data::Dict{String,Any})
             "\t", get_default(dcline, "mu_qmint", ""),
             "\t", get_default(dcline, "mu_qmaxt", ""),
         )
-    end     
+    end
     println(io, "];")
     println(io)
-           
+
     # Print the gen cost data
     export_cost_data(io, generators, "mpc.gencost")
-        
+
     # Print the dcline cost data
     export_cost_data(io, dclines, "mpc.dclinecost")
-    
-    # ne branch is not part of the matpower specs. However, it is treated as a special case by the matpower parser 
-    # for example, br_b is converted into b_to and b_fr 
+
+    # ne branch is not part of the matpower specs. However, it is treated as a special case by the matpower parser
+    # for example, br_b is converted into b_to and b_fr
     if haskey(data, "ne_branch")
         println(io, "%column_names%	f_bus	t_bus	br_r	br_x	br_b	rate_a	rate_b	rate_c	tap	shift	br_status	angmin	angmax	construction_cost")
-        println(io, "mpc.ne_branch = [")  
+        println(io, "mpc.ne_branch = [")
         i = 1
         for (idx,branch) in sort(ne_branches)
             if idx != branch["index"]
                 warn(LOGGER, "The index of the ne_branch does not match the matpower assigned index. Any data that uses branch indexes for reference is corrupted.");
             end
-            println(io, 
+            println(io,
                 "\t", branch["f_bus"],
                 "\t", branch["t_bus"],
                 "\t", get_default(branch, "br_r"),  
@@ -959,10 +961,10 @@ function export_matpower(io::IO, data::Dict{String,Any})
         println(io, "];");
         println(io)
     end
-      
+
     # Print the extra bus data
     export_extra_data(io, data, "bus", Set(["index", "gs", "bs", "zone", "bus_i", "bus_type", "qd",  "vmax", "area", "vmin", "va", "vm", "base_kv", "pd", "bus_name", "lam_p", "lam_q", "mu_vmax", "mu_vmin"]); postfix="_data")
-        
+
     # Print the extra generator data
     export_extra_data(io, data, "gen", Set(["index", "gen_bus", "pg", "qg", "qmax", "qmin", "vg", "mbase", "gen_status", "pmax", "pmin", "pc1", "pc2", "qc1min", "qc1max", "qc2min", "qc2max", "ramp_agc", "ramp_10", "ramp_30", "ramp_q", "apf", "ncost", "model", "shutdown", "startup", "cost", "mu_pmax", "mu_pmin", "mu_qmax", "mu_qmin"]); postfix="_data")
 
@@ -973,10 +975,10 @@ function export_matpower(io::IO, data::Dict{String,Any})
     export_extra_data(io, data, "dcline", Set(["index", "mu_qmaxt", "mu_qmint", "mu_qmaxf", "mu_qminf", "mu_pmax", "mu_pmin", "loss0", "loss1", "qmint", "qmaxt", "pmin", "pmax", "qminf", "qmaxf", "f_bus", "t_bus", "br_status", "pf", "pt", "qf", "qt", "vf", "vt", "ncost", "model", "shutdown", "pmaxt", "startup", "pmint", "cost", "pminf", "pmaxf", "mp_pmax", "mp_pmin"]); postfix="_data")
 
     # Print the extra ne_branch data
-    if haskey(data, "ne_branch") 
+    if haskey(data, "ne_branch")
         export_extra_data(io, data, "ne_branch", Set(["index", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "construction_cost", "g_to", "g_fr"]); postfix="_data")
     end
-                    
+
     # print the extra load data
     export_extra_data(io, data, "load", Set(["index", "load_bus", "status", "qd", "pd"]); postfix="_data")
 
@@ -987,15 +989,15 @@ function export_matpower(io::IO, data::Dict{String,Any})
     for (key, value) in data
         if key != "bus" && key != "gen" && key != "branch" && key != "load" && key != "shunt" && key != "dcline" && key != "ne_branch" && key != "version" && key != "baseMVA" && key != "per_unit" && key != "name" && key != "source_type" && key != "source_version"
             export_extra_data(io, data, key)
-        end      
+        end
     end
-    
+
     #convert data back to per unit (if necessary)
     if is_per_unit
-       make_per_unit(data)  
+       make_per_unit(data)
     end
-    
-    
+
+
 end
 
 "Export fields of a component type"
@@ -1003,73 +1005,73 @@ function export_extra_data(io::IO, data::Dict{String,Any}, component, excluded_f
     if isa(data[component], Int) || isa(data[component], Int64) || isa(data[component], Float64)
         println(io, "mpc.", component, " = ", data[component], ";")
         println(io)
-        return       
+        return
     end
-    
+
     if isa(data[component], String) || isa(data[component], SubString{String})
         println(io, "mpc.", component, " = '", data[component], "';")
-        println(io)        
-        return       
+        println(io)
+        return
     end
-      
+
     if !isa(data[component], Dict)
-        return  
-    end 
+        return
+    end
 
     if length(data[component]) == 0
         return
     end
-       
+
     # Gather the fields
-    included_fields = []   
+    included_fields = []
     c = collect(values(data[component]))[1]
     for (key, value) in c
         if !in(key, excluded_fields)
             push!(included_fields, key)
-        end      
+        end
     end
-    
+
     if length(included_fields) == 0
         return
     end
-    
+
     # Print the header
     print(io, "%column_names% ")
     for field in included_fields
         print(io, field)
-        print(io, " ")  
+        print(io, " ")
     end
     println(io)
     println(io, "mpc.", component, postfix, " = {")
-    
+
     # sort the data
     components = Dict{Int, Dict}()
     for (idx,c) in data[component]
         components[c["index"]] = c
-    end    
-        
-    # print the data    
+    end
+
+    # print the data
     i = 1
     for (idx,c) in sort(components)
         if idx != c["index"]
-            warn(LOGGER, "The index of a component does not match the matpower assigned index. Any data that uses component indexes for reference is corrupted.");           
-        end 
-     
+            warn(LOGGER, "The index of a component does not match the matpower assigned index. Any data that uses component indexes for reference is corrupted.");
+        end
+
         for field in included_fields
             print(io,"\t")
             if isa(c[field], String)
                 print(io, "'")
-            end  
+            end
             print(io,c[field])
             if isa(c[field], String)
                 print(io, "'")
-            end              
+            end
         end
         println(io)
         i = i+1
     end
     println(io, "};")
-    println(io)    
+    println(io)
 end
 
 "Export cost data"
@@ -1095,14 +1097,14 @@ function export_cost_data(io::IO, components::Dict{Int,Dict}, prefix::String)
         println(io, "%    1    startup    shutdown    n    x1    y1    ...    xn    yn")
         println(io, "%    2    startup    shutdown    n    c(n-1)    ...    c0")
         println(io, prefix, " = [")
-                
+
         for (idx,gen) in (sort(components))
             if gen["model"] == 1
                 print(io, "\t1\t", gen["startup"], "\t", gen["shutdown"], "\t", (length(gen["cost"])/2) ),
                 for l=1:length(gen["cost"])
                     print(io, "\t", gen["cost"][l])
                 end
-            else                          
+            else
                 print(io, "\t2\t", gen["startup"], "\t", gen["shutdown"], "\t", length(gen["cost"])),
                 for l=1:length(gen["cost"])
                     print(io, "\t", gen["cost"][l])
