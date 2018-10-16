@@ -74,12 +74,12 @@ uuid = "f6369f11-7733-5829-9624-2563aa707210"
 version = "0.9.0"
 
 [[InfrastructureModels]]
-deps = ["Compat", "JuMP", "Juniper", "LinearAlgebra", "MathOptInterface", "Memento"]
-git-tree-sha1 = "0632523272468dece754de6d95fa44230dada69d"
+deps = ["Compat", "JuMP", "Juniper", "LinearAlgebra", "Memento"]
+git-tree-sha1 = "1973df1515fc528fe50ebfb0cb0fbbaffe1fb007"
 repo-rev = "master"
 repo-url = "https://github.com/lanl-ansi/InfrastructureModels.jl.git"
 uuid = "e8e45514-c753-11e8-2a1b-cd93cb9d98d1"
-version = "0.1.0"
+version = "0.0.10"
 
 [[InteractiveUtils]]
 deps = ["LinearAlgebra", "Markdown"]
