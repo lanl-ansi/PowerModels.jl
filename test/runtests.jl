@@ -50,7 +50,7 @@ include("common.jl")
 
     include("pf.jl")
 
-    #include("opf.jl")
+    include("opf.jl")
 
     include("opf-var.jl")
 
