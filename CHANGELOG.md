@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Improved the Matpower data file export function
 
 ### v0.8.5
 - Improved the optimal power balance problem specification
