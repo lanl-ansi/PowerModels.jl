@@ -34,13 +34,13 @@ include("common.jl")
 
 @testset "PowerModels" begin
 
-    #include("matpower.jl")
+    include("matpower.jl")
 
     include("pti.jl")
 
-    #include("psse.jl")
+    include("psse.jl")
 
-    #include("output.jl")
+    include("output.jl")
 
     #include("modify.jl")
 
