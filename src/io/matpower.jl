@@ -1059,11 +1059,11 @@ function export_extra_data(io::IO, data::Dict{String,Any}, component, excluded_f
 
         for field in included_fields
             print(io,"\t")
-            if isa(c[field], String)
+            if isa(c[field], Union{String,SubString})
                 print(io, "'")
             end
             print(io,c[field])
-            if isa(c[field], String)
+            if isa(c[field], Union{String,SubString})
                 print(io, "'")
             end
         end
