@@ -380,7 +380,8 @@ function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
     W = Hermitian(adj + spdiagm(diag_el, 0))
 
     F = cholfact(W)
-    L, p = sparse(F[:L]), F[:p]
+    L = sparse(F.L)
+    p = F.p
     q = invperm(p)
     Rchol = L - spdiagm(diag(L), 0)
     f_idx, t_idx, V = findnz(Rchol)
@@ -399,9 +400,9 @@ function maximal_cliques(cadj::SparseMatrixCSC, peo::Vector{Int})
     nb = size(cadj, 1)
 
     # use peo to obtain one clique for each vertex
-    cliques = Vector(nb)
+    cliques = Vector(undef, nb)
     for (i, v) in enumerate(peo)
-        Nv = find(cadj[:, v])
+        Nv = findall(cadj[:, v])
         cliques[i] = union(v, intersect(Nv, peo[i+1:end]))
     end
 
@@ -431,11 +432,11 @@ function mcs(A)
     unnumbered = collect(1:n)
 
     for i = n:-1:1
-        z = unnumbered[indmax(w[unnumbered])]
+        z = unnumbered[argmax(w[unnumbered])]
         filter!(x -> x != z, unnumbered)
         peo[i] = z
 
-        Nz = find(A[:, z])
+        Nz = findall(A[:, z])
         for y in intersect(Nz, unnumbered)
             w[y] += 1
         end
@@ -461,12 +462,12 @@ function prim(A, minweight=false)
         current_node = next_node
         filter!(node -> node != current_node, unvisited)
 
-        neighbors = intersect(find(A[:, current_node]), unvisited)
+        neighbors = intersect(findall(A[:, current_node]), unvisited)
         current_node_edges = [(current_node, i) for i in neighbors]
         append!(candidate_edges, current_node_edges)
         filter!(edge -> length(intersect(edge, unvisited)) == 1, candidate_edges)
         weights = [A[edge...] for edge in candidate_edges]
-        next_edge = minweight ? candidate_edges[indmin(weights)] : candidate_edges[indmax(weights)]
+        next_edge = minweight ? candidate_edges[indmin(weights)] : candidate_edges[argmax(weights)]
         filter!(edge -> edge != next_edge, candidate_edges)
         T[next_edge...] = minweight ? minimum(weights) : maximum(weights)
         next_node = intersect(next_edge, unvisited)[1]

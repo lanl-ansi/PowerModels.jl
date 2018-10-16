@@ -48,11 +48,11 @@ include("common.jl")
 
     include("opb.jl")
 
-    #include("pf.jl")
+    include("pf.jl")
 
     #include("opf.jl")
 
-    #include("opf-var.jl")
+    include("opf-var.jl")
 
     #include("ots.jl")
 
