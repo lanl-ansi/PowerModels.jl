@@ -9,10 +9,19 @@ setlevel!(getlogger(PowerModels), "error")
 using Cbc
 using Ipopt
 using SCS
-using Pavito
-using Juniper
+using Test
+#using Pavito
+#using Juniper
+using Compat
 
-using Base.Test
+if VERSION > v"0.7.0-"
+    using Test
+end
+
+if VERSION < v"0.7.0-"
+    using Base.Test
+end
+
 
 # default setup for solvers
 ipopt_solver = IpoptSolver(tol=1e-6, print_level=0)
@@ -28,36 +37,36 @@ include("common.jl")
 
     include("matpower.jl")
 
-    include("pti.jl")
+    #include("pti.jl")
 
-    include("psse.jl")
+    #include("psse.jl")
 
     include("output.jl")
 
-    include("modify.jl")
+    #include("modify.jl")
 
     include("data.jl")
 
-    include("opb.jl")
+    #include("opb.jl")
 
-    include("pf.jl")
+    #include("pf.jl")
 
-    include("opf.jl")
+    #include("opf.jl")
 
-    include("opf-var.jl")
+    #include("opf-var.jl")
 
-    include("ots.jl")
+    #include("ots.jl")
 
-    include("tnep.jl")
+    #include("tnep.jl")
 
-    include("multinetwork.jl")
+    #include("multinetwork.jl")
 
-    include("multiconductor.jl")
+    #include("multiconductor.jl")
 
-    include("multi-nw-cnd.jl")
+    #include("multi-nw-cnd.jl")
 
-    include("util.jl")
+    #include("util.jl")
 
-    include("docs.jl")
+    #include("docs.jl")
 
 end
