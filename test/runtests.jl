@@ -58,7 +58,7 @@ include("common.jl")
 
     #include("tnep.jl")
 
-    #include("multinetwork.jl")
+    include("multinetwork.jl")
 
     #include("multiconductor.jl")
 

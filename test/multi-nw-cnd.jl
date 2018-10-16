@@ -98,8 +98,11 @@
             case7_data = mn_mc_data["nw"]["1"]
             case14_data = mn_mc_data["nw"]["2"]
 
-            case7_active_buses = filter((i, bus) -> bus["bus_type"] != 4, case7_data["bus"])
-            case14_active_buses = filter((i, bus) -> bus["bus_type"] != 4, case14_data["bus"])
+            case7_active_buses = Dict([x for x in case7_data["bus"] if x.second["bus_type"] != 4])
+            case14_active_buses = Dict([x for x in case14_data["bus"] if x.second["bus_type"] != 4])
+
+            #case7_active_buses = filter((i, bus) -> bus["bus_type"] != 4, case7_data["bus"])
+            #case14_active_buses = filter((i, bus) -> bus["bus_type"] != 4, case14_data["bus"])
 
             @test length(case7_active_buses) == 3
             @test length(case14_active_buses) == 14
@@ -124,22 +127,22 @@
             for c in 1:mn_mc_data["conductors"]
                 @test isapprox(
                     result["solution"]["nw"]["1"]["gen"]["2"]["pg"][c],
-                    result["solution"]["nw"]["2"]["gen"]["2"]["pg"][c]; 
+                    result["solution"]["nw"]["2"]["gen"]["2"]["pg"][c];
                     atol = 1e-3
                 )
                 @test isapprox(
                     result["solution"]["nw"]["1"]["gen"]["4"]["pg"][c],
-                    result["solution"]["nw"]["2"]["gen"]["4"]["pg"][c]; 
+                    result["solution"]["nw"]["2"]["gen"]["4"]["pg"][c];
                     atol = 1e-3
                 )
                 @test isapprox(
                     result["solution"]["nw"]["2"]["gen"]["2"]["pg"][c],
-                    result["solution"]["nw"]["3"]["gen"]["2"]["pg"][c]; 
+                    result["solution"]["nw"]["3"]["gen"]["2"]["pg"][c];
                     atol = 1e-3
                 )
                 @test isapprox(
                     result["solution"]["nw"]["2"]["gen"]["4"]["pg"][c],
-                    result["solution"]["nw"]["3"]["gen"]["4"]["pg"][c]; 
+                    result["solution"]["nw"]["3"]["gen"]["4"]["pg"][c];
                     atol = 1e-3
                 )
             end

@@ -29,7 +29,7 @@ mutable struct MultiConductorMatrix{T} <: MultiConductorValue{T}
 end
 
 
-MultiConductorMatrix(value::T, conductors::Int) where T = MultiConductorMatrix(value*eye(conductors))
+MultiConductorMatrix(value::T, conductors::Int) where T = MultiConductorMatrix(value*Matrix{Float64}(I, conductors, conductors))
 Base.map(f, a::MultiConductorMatrix{T}) where T = MultiConductorMatrix{T}(map(f, a.values))
 Base.map(f, a::MultiConductorMatrix{T}, b::MultiConductorMatrix{T}) where T = MultiConductorMatrix{T}(map(f, a.values, b.values))
 conductors(mcv::MultiConductorMatrix) = size(mcv.values, 1)
