@@ -41,7 +41,7 @@ end
 
 ""
 function parse_json(io::IO)
-    data_string = readstring(io)
+    data_string = read(io, String)
     pm_data = JSON.parse(data_string)
     check_network_data(pm_data)
     return pm_data

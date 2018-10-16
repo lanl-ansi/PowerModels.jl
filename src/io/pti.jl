@@ -276,7 +276,7 @@ function parse_line_element!(data::Dict, elements::Array, section::AbstractStrin
             end
 
         catch message
-            if isa(message, ParseError)
+            if isa(message, Meta.ParseError)
                 data[field] = element
             else
                 debug(LOGGER, "$section $field $dtype $element")
@@ -593,7 +593,7 @@ Reads PTI data in `io::IO`, returning a `Dict` of the data parsed into the
 proper types.
 """
 function parse_pti(io::IO)::Dict
-    data_string = readstring(io)
+    data_string = read(io, String)
     pti_data = parse_pti_data(data_string, get_pti_sections())
     pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"[\/\\]*(?:.*[\/\\])*(.*)\.raw", lowercase(io.name)).captures[1]
 

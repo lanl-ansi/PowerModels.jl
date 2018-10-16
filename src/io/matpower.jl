@@ -137,7 +137,7 @@ end
 
 ""
 function parse_matpower_file(io::IO)
-    data_string = readstring(io)
+    data_string = read(io, String)
 
     return parse_matpower_string(data_string)
 end
