@@ -13,6 +13,7 @@ MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 MathProgBase = "fdba3010-5040-5b88-9595-932c9decdf73"
 Memento = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
 Pkg = "44cfe95a-1eb2-52ea-b672-e2afdf69b78f"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [extras]
 Cbc = "9961bab8-2fa3-5c5a-9d89-47fab24efd76"
