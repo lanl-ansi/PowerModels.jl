@@ -18,6 +18,11 @@ if VERSION < v"0.7.0-"
     import Compat: findall
     import Compat: eachmatch
     import Compat: LinearAlgebra
+
+    function eachmatch(r::Regex, s::AbstractString; overlap::Bool=false)
+        return eachmatch(r, s, overlap)
+    end
+
 end
 
 if VERSION > v"0.7.0-"
