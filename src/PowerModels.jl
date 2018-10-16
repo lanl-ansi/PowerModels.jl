@@ -16,6 +16,7 @@ if VERSION < v"0.7.0-"
     import Compat: Nothing
     import Compat: round
     import Compat: findall
+    import Compat: eachmatch
     import Compat: LinearAlgebra
 end
 
