@@ -2,6 +2,7 @@ julia 0.6
 
 Cbc
 Ipopt 0.4
-SCS
+SCS 0.4.1
 Juniper 0.2
 Pavito
+
