@@ -68,14 +68,14 @@ function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, c
         flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
 
         var(pm, nw, cnd)[:p] = @variable(pm.model,
-            [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(cnd)_p",
+            [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_p",
             lower_bound = flow_lb[l],
             upper_bound = flow_ub[l],
             start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     else
         var(pm, nw, cnd)[:p] = @variable(pm.model,
-            [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(cnd)_p",
+            [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_p",
             start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     end
@@ -89,7 +89,7 @@ end
 ""
 function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: DCPlosslessForm
     var(pm, nw, cnd)[:p_ne] = @variable(pm.model,
-        [(l,i,j) in ref(pm, nw, :ne_arcs_from)], basename="$(nw)_$(cnd)_p_ne",
+        [(l,i,j) in ref(pm, nw, :ne_arcs_from)], base_name="$(nw)_$(cnd)_p_ne",
         lower_bound = -ref(pm, nw, :ne_branch, l, "rate_a", cnd),
         upper_bound =  ref(pm, nw, :ne_branch, l, "rate_a", cnd),
         start = getval(ref(pm, nw, :ne_branch, l), "p_start", cnd)

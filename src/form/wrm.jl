@@ -86,11 +86,11 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
     wi_start = zeros(length(bus_ids), length(bus_ids))
 
     WR = var(pm, nw, cnd)[:WR] = @variable(pm.model,
-        [i=1:length(bus_ids), j=1:length(bus_ids)], Symmetric, basename="$(nw)_$(cnd)_WR",
+        [i=1:length(bus_ids), j=1:length(bus_ids)], Symmetric, base_name="$(nw)_$(cnd)_WR",
         start=wr_start[i,j]
     )
     WI = var(pm, nw, cnd)[:WI] = @variable(pm.model,
-        [i=1:length(bus_ids), j=1:length(bus_ids)], basename="$(nw)_$(cnd)_WI",
+        [i=1:length(bus_ids), j=1:length(bus_ids)], base_name="$(nw)_$(cnd)_WI",
         start=wi_start[i,j]
     )
 
@@ -234,14 +234,14 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         voltage_product_groups[gidx][:WR] =
             var(pm, nw, cnd)[:voltage_product_groups][gidx][:WR] =
             @variable(pm.model, [i=1:n, j=1:n], Symmetric,
-                basename="$(nw)_$(cnd)_$(gidx)_WR",
+                base_name="$(nw)_$(cnd)_$(gidx)_WR",
                 start=wr_start[i,j]
             )
 
         voltage_product_groups[gidx][:WI] =
             var(pm, nw, cnd)[:voltage_product_groups][gidx][:WI] =
             @variable(pm.model, [i=1:n, j=1:n],
-                basename="$(nw)_$(cnd)_$(gidx)_WI",
+                base_name="$(nw)_$(cnd)_$(gidx)_WI",
                 start=wi_start[i,j]
             )
     end

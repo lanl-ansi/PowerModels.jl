@@ -63,14 +63,14 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
 
     if bounded
         var(pm, nw, cnd)[:cm] = @variable(pm.model,
-            [i in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_cm",
+            [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_cm",
             lower_bound = 0,
             upper_bound = ub[i],
             start = getval(branch[i], "cm_start", cnd)
         )
     else
         var(pm, nw, cnd)[:cm] = @variable(pm.model,
-            [i in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_cm",
+            [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_cm",
             lower_bound = 0,
             start = getval(branch[i], "cm_start", cnd)
         )

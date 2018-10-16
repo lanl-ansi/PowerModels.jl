@@ -332,7 +332,7 @@ function variable_voltage_magnitude_sqr_from_ne(pm::GenericPowerModel{T}; nw::In
     branches = ref(pm, nw, :ne_branch)
 
     var(pm, nw, cnd)[:w_fr_ne] = @variable(pm.model,
-        [i in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_w_fr_ne",
+        [i in ids(pm, nw, :ne_branch)], base_name="$(nw)_$(cnd)_w_fr_ne",
         lower_bound = 0,
         upper_bound = (buses[branches[i]["f_bus"]]["vmax"][cnd])^2,
         start = getval(ref(pm, nw, :bus, branches[i]["f_bus"]), "w_fr_start", cnd, 1.001)
@@ -345,7 +345,7 @@ function variable_voltage_magnitude_sqr_to_ne(pm::GenericPowerModel{T}; nw::Int=
     branches = ref(pm, nw, :ne_branch)
 
     var(pm, nw, cnd)[:w_to_ne] = @variable(pm.model,
-        [i in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_w_to_ne",
+        [i in ids(pm, nw, :ne_branch)], base_name="$(nw)_$(cnd)_w_to_ne",
         lower_bound = 0,
         upper_bound = (buses[branches[i]["t_bus"]]["vmax"][cnd])^2,
         start = getval(ref(pm, nw, :bus, branches[i]["t_bus"]), "w_to_start", cnd, 1.001)
@@ -358,14 +358,14 @@ function variable_voltage_product_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, c
     bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch)])
 
     var(pm, nw, cnd)[:wr_ne] = @variable(pm.model,
-        [b in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_wr_ne",
+        [b in ids(pm, nw, :ne_branch)], base_name="$(nw)_$(cnd)_wr_ne",
         lower_bound = min(0, wr_min[bi_bp[b]]),
         upper_bound = max(0, wr_max[bi_bp[b]]),
         start = getval(ref(pm, nw, :ne_buspairs, bi_bp[b]), "wr_start", cnd, 1.0)
     )
 
     var(pm, nw, cnd)[:wi_ne] = @variable(pm.model,
-        [b in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_wi_ne",
+        [b in ids(pm, nw, :ne_branch)], base_name="$(nw)_$(cnd)_wi_ne",
         lower_bound = min(0, wi_min[bi_bp[b]]),
         upper_bound = max(0, wi_max[bi_bp[b]]),
         start = getval(ref(pm, nw, :ne_buspairs, bi_bp[b]), "wi_start", cnd)
@@ -408,7 +408,7 @@ end
 "Creates variables associated with differences in voltage angles"
 function variable_voltage_angle_difference(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T
     var(pm, nw, cnd)[:td] = @variable(pm.model,
-        [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(cnd)_td",
+        [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_td",
         lower_bound = ref(pm, nw, :buspairs, bp, "angmin", cnd),
         upper_bound = ref(pm, nw, :buspairs, bp, "angmax", cnd),
         start = getval(ref(pm, nw, :buspairs, bp), "td_start", cnd)
@@ -419,7 +419,7 @@ end
 function variable_voltage_magnitude_product(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T
     buspairs = ref(pm, nw, :buspairs)
     var(pm, nw, cnd)[:vv] = @variable(pm.model,
-        [bp in keys(buspairs)], basename="$(nw)_$(cnd)_vv",
+        [bp in keys(buspairs)], base_name="$(nw)_$(cnd)_vv",
         lower_bound = buspairs[bp]["vm_fr_min"][cnd]*buspairs[bp]["vm_to_min"][cnd],
         upper_bound = buspairs[bp]["vm_fr_max"][cnd]*buspairs[bp]["vm_to_max"][cnd],
         start = getval(buspairs[bp], "vv_start", cnd, 1.0)
@@ -449,7 +449,7 @@ function variable_cosine(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.c
     end
 
     var(pm, nw, cnd)[:cs] = @variable(pm.model,
-        [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(cnd)_cs",
+        [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_cs",
         lower_bound = cos_min[bp],
         upper_bound = cos_max[bp],
         start = getval(ref(pm, nw, :buspairs, bp), "cs_start", cnd, 1.0)
@@ -459,7 +459,7 @@ end
 ""
 function variable_sine(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     var(pm, nw, cnd)[:si] = @variable(pm.model,
-        [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(cnd)_si",
+        [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_si",
         lower_bound = sin(ref(pm, nw, :buspairs, bp, "angmin", cnd)),
         upper_bound = sin(ref(pm, nw, :buspairs, bp, "angmax", cnd)),
         start = getval(ref(pm, nw, :buspairs, bp), "si_start", cnd)
@@ -474,7 +474,7 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
         ub[bp] = ((buspair["rate_a"][cnd]*buspair["tap"][cnd])/buspair["vm_fr_min"][cnd])^2
     end
     var(pm, nw, cnd)[:cm] = @variable(pm.model,
-        [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(cnd)_cm",
+        [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_cm",
         lower_bound = 0,
         upper_bound = ub[bp],
         start = getval(buspairs[bp], "cm_start", cnd)
@@ -627,7 +627,7 @@ end
 ""
 function variable_voltage_angle_difference_on_off(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T
     var(pm, nw, cnd)[:td] = @variable(pm.model,
-        [l in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_td",
+        [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_td",
         lower_bound = min(0, ref(pm, nw, :branch, l, "angmin", cnd)),
         upper_bound = max(0, ref(pm, nw, :branch, l, "angmax", cnd)),
         start = getval(ref(pm, nw, :branch, l), "td_start", cnd)
@@ -643,7 +643,7 @@ function variable_voltage_magnitude_product_on_off(pm::GenericPowerModel{T}; nw:
     vv_max = Dict([(l, buses[branch["f_bus"]]["vmax"][cnd]*buses[branch["t_bus"]]["vmax"][cnd]) for (l, branch) in branches])
 
     var(pm, nw, cnd)[:vv] = @variable(pm.model,
-        [l in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_vv",
+        [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_vv",
         lower_bound = min(0, vv_min[l]),
         upper_bound = max(0, vv_max[l]),
         start = getval(ref(pm, nw, :branch, l), "vv_start", cnd, 1.0)
@@ -674,7 +674,7 @@ function variable_cosine_on_off(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::I
     end
 
     var(pm, nw, cnd)[:cs] = @variable(pm.model,
-        [l in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_cs",
+        [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_cs",
         lower_bound = min(0, cos_min[l]),
         upper_bound = max(0, cos_max[l]),
         start = getval(ref(pm, nw, :branch, l), "cs_start", cnd, 1.0)
@@ -684,7 +684,7 @@ end
 ""
 function variable_sine_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     var(pm, nw, cnd)[:si] = @variable(pm.model,
-        [l in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_si",
+        [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_si",
         lower_bound = min(0, sin(ref(pm, nw, :branch, l, "angmin", cnd))),
         upper_bound = max(0, sin(ref(pm, nw, :branch, l, "angmax", cnd))),
         start = getval(ref(pm, nw, :branch, l), "si_start", cnd)
@@ -704,7 +704,7 @@ function variable_current_magnitude_sqr_on_off(pm::GenericPowerModel{T}; nw::Int
     end
 
     var(pm, nw, cnd)[:cm] = @variable(pm.model,
-        [l in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_cm",
+        [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_cm",
         lower_bound = cm_min[l],
         upper_bound = cm_max[l],
         start = getval(ref(pm, nw, :branch, l), "cm_start", cnd)
@@ -847,11 +847,11 @@ end
 "creates lambda variables for convex combination model"
 function variable_multipliers(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: QCWRTriForm
     var(pm, nw, cnd)[:lambda_wr] = @variable(pm.model,
-        [bp in ids(pm, nw, :buspairs), i=1:8], basename="$(nw)_$(cnd)_lambda_wr",
+        [bp in ids(pm, nw, :buspairs), i=1:8], base_name="$(nw)_$(cnd)_lambda_wr",
         lower_bound = 0, upper_bound = 1, start = 0.0)
 
     var(pm, nw, cnd)[:lambda_wi] = @variable(pm.model,
-        [bp in ids(pm, nw, :buspairs), i=1:8], basename="$(nw)_$(cnd)_lambda_wi",
+        [bp in ids(pm, nw, :buspairs), i=1:8], base_name="$(nw)_$(cnd)_lambda_wi",
         lower_bound = 0, upper_bound = 1, start = 0.0)
 end
 
