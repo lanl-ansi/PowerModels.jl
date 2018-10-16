@@ -648,7 +648,7 @@ end
     #end
 end
 
-
+#=
 @testset "test sdp opf with constraint decomposition" begin
     @testset "3-bus case" begin
         result = run_opf("../test/data/matpower/case3.m", SparseSDPWRMPowerModel, scs_solver)
@@ -668,13 +668,15 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 8081.5; atol = 1e0)
     end
-    # multiple components are not currently supported by this form
-    #@testset "6-bus case" begin
-    #    result = run_opf("../test/data/matpower/case6.m", SparseSDPWRMPowerModel, scs_solver)
-    #
-    #    @test result["status"] == :Optimal
-    #    @test isapprox(result["objective"], 11578.8; atol = 1e0)
-    #end
+
+     multiple components are not currently supported by this form
+    @testset "6-bus case" begin
+        result = run_opf("../test/data/matpower/case6.m", SparseSDPWRMPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 11578.8; atol = 1e0)
+    end
+
     @testset "passing in decomposition" begin
         PMs = PowerModels
         data = PMs.parse_file("../test/data/matpower/case14.m")
@@ -694,5 +696,6 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 8081.5; atol = 1e0)
     end
-end
 
+end
+=#
