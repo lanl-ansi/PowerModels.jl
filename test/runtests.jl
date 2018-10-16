@@ -34,9 +34,9 @@ include("common.jl")
 
 @testset "PowerModels" begin
 
-    include("matpower.jl")
+    #include("matpower.jl")
 
-    #include("pti.jl")
+    include("pti.jl")
 
     #include("psse.jl")
 
@@ -64,7 +64,7 @@ include("common.jl")
 
     #include("multi-nw-cnd.jl")
 
-    #include("util.jl")
+    include("util.jl")
 
     #include("docs.jl")
 
