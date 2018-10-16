@@ -980,19 +980,22 @@ function _propagate_topology_status(data::Dict{String,Any})
     incident_load = bus_load_lookup(data["load"], data["bus"])
     incident_active_load = Dict()
     for (i, load_list) in incident_load
-        incident_active_load[i] = filter(load -> load["status"] != 0, load_list)
+        incident_active_load[i] = [load for load in load_list if load["status"] != 0]
+        #incident_active_load[i] = filter(load -> load["status"] != 0, load_list)
     end
 
     incident_shunt = bus_shunt_lookup(data["shunt"], data["bus"])
     incident_active_shunt = Dict()
     for (i, shunt_list) in incident_shunt
-        incident_active_shunt[i] = filter(shunt -> shunt["status"] != 0, shunt_list)
+        incident_active_shunt[i] = [shunt for shunt in shunt_list if shunt["status"] != 0]
+        #incident_active_shunt[i] = filter(shunt -> shunt["status"] != 0, shunt_list)
     end
 
     incident_gen = bus_gen_lookup(data["gen"], data["bus"])
     incident_active_gen = Dict()
     for (i, gen_list) in incident_gen
-        incident_active_gen[i] = filter(gen -> gen["gen_status"] != 0, gen_list)
+        incident_active_gen[i] = [gen for gen in gen_list if gen["gen_status"] != 0]
+        #incident_active_gen[i] = filter(gen -> gen["gen_status"] != 0, gen_list)
     end
 
     incident_branch = Dict(bus["bus_i"] => [] for (i,bus) in data["bus"])
@@ -1272,7 +1275,8 @@ function connected_components(data::Dict{String,Any})
         error("connected_components does not yet support multinetwork data")
     end
 
-    active_bus = filter((i, bus) -> bus["bus_type"] != 4, data["bus"])
+    active_bus = Dict([x for x in data["bus"] if x.second["bus_type"] != 4])
+    #active_bus = filter((i, bus) -> bus["bus_type"] != 4, data["bus"])
     active_bus_ids = Set{Int64}([bus["bus_i"] for (i,bus) in active_bus])
     #println(active_bus_ids)
 

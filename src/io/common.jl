@@ -25,10 +25,10 @@ function parse_file(file::String; import_all=false)
 end
 
 
-"Adds PowerModels version to native data structure"
-function add_powermodels_version(data::Dict{String,Any})
-    data["version"] = Pkg.installed()["PowerModels"]
-end
+#"Adds PowerModels version to native data structure"
+#function add_powermodels_version(data::Dict{String,Any})
+#    data["version"] = Pkg.installed()["PowerModels"]
+#end
 
 
 ""
@@ -50,7 +50,7 @@ end
 
 ""
 function check_network_data(data::Dict{String,Any})
-    add_powermodels_version(data)
+    #add_powermodels_version(data)
     check_conductors(data)
     make_per_unit(data)
     check_connectivity(data)
