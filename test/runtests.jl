@@ -66,6 +66,6 @@ include("common.jl")
 
     include("util.jl")
 
-    #include("docs.jl")
+    include("docs.jl")
 
 end
