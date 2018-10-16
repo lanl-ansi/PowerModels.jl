@@ -2,6 +2,8 @@ using PowerModels
 using InfrastructureModels
 using Memento
 
+using MathProgBase
+
 # Suppress warnings during testing.
 setlevel!(getlogger(InfrastructureModels), "error")
 setlevel!(getlogger(PowerModels), "error")
