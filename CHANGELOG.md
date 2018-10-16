@@ -2,7 +2,14 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Improved the Matpower data file export function
+
+### v0.8.5
+- Improved the optimal power balance problem specification
+- Add SOCWRPowerModel support for the optimal power balance problem
+- Added conductorsless option to add_setpoint
+- Added support for conductor value in add_setpoint scaling
+- Update tests for SCS v0.4
 
 ### v0.8.4
 - Added SparseSDPWRMPowerModel model (thanks to @kersulis)

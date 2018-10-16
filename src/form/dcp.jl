@@ -118,11 +118,15 @@ function constraint_reactive_gen_setpoint(pm::GenericPowerModel{T}, n::Int, c::I
 end
 
 
-""
-function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gens, comp_pd, comp_qd, comp_gs, comp_bs) where T <: DCPlosslessForm
-    pg   = var(pm, n, c, :pg)
+"do nothing, this model does not have voltage variables"
+function variable_bus_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: DCPlosslessForm
+end
 
-    @constraint(pm.model, sum(pg[g] for g in comp_gens) == sum(pd for pd in values(comp_pd)) + sum(gs for gs in values(comp_gs))*1.0^2)
+""
+function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
+    pg = var(pm, n, c, :pg)
+
+    @constraint(pm.model, sum(pg[g] for g in comp_gen_ids) == sum(pd for (i,pd) in values(comp_pd)) + sum(gs*1.0^2 for (i,gs) in values(comp_gs)))
     # omit reactive constraint
 end
 

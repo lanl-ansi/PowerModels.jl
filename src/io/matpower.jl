@@ -692,6 +692,15 @@ function export_matpower(data::Dict{String,Any})
     return sprint(export_matpower, data)
 end
 
+" Get a default value for dict entry "
+function get_default(dict, key, default=0.0)
+    if haskey(dict, key) && dict[key] != NaN
+        return dict[key]
+    end
+    return default
+end
+
+
 "Export power network data in the matpower format"
 function export_matpower(io::IO, data::Dict{String,Any})
 
@@ -757,12 +766,12 @@ function export_matpower(io::IO, data::Dict{String,Any})
 
     # Print the header information  
     println(io, "%% MATPOWER Case Format : Version 2")
+    println(io, "function mpc = ", data["name"]) 
     println(io, "mpc.version = '2';")
     println(io)
     println(io, "%%-----  Power Flow Data  -----%%")
     println(io, "%% system MVA base")
     println(io, "mpc.baseMVA = ", mvaBase, ";")
-    println(io, "function mpc = ", data["name"])
         
     # Print the bus data
     println(io, "%% bus data")
@@ -771,21 +780,21 @@ function export_matpower(io::IO, data::Dict{String,Any})
     for (idx,bus) in sort(buses)
         println(io, "\t", bus["index"], 
                     "\t", bus["bus_type"], 
-                    "\t", pd[bus["index"]], 
-                    "\t", qd[bus["index"]], 
-                    "\t", gs[bus["index"]], 
-                    "\t", bs[bus["index"]], 
-                    "\t", bus["area"], 
-                    "\t", bus["vm"], 
-                    "\t", bus["va"], 
-                    "\t", bus["base_kv"], 
-                    "\t", bus["zone"], 
-                    "\t", bus["vmax"], 
-                    "\t", bus["vmin"],
-                    "\t", (haskey(bus,"lam_p") ? bus["lam_p"] : ""),   
-                    "\t", (haskey(bus,"lam_q") ? bus["lam_q"] : ""),   
-                    "\t", (haskey(bus,"mu_vmax") ? bus["mu_vmax"] : ""),   
-                    "\t", (haskey(bus,"mu_vmin") ? bus["mu_vmin"] : ""),   
+                    "\t", get_default(pd, bus["index"]),  
+                    "\t", get_default(qd, bus["index"]),  
+                    "\t", get_default(gs, bus["index"]),  
+                    "\t", get_default(bs, bus["index"]),  
+                    "\t", get_default(bus, "area"),  
+                    "\t", get_default(bus, "vm"),  
+                    "\t", get_default(bus, "va"),  
+                    "\t", get_default(bus, "base_kv"),  
+                    "\t", get_default(bus, "zone"),  
+                    "\t", get_default(bus, "vmax"),  
+                    "\t", get_default(bus, "vmin"), 
+                    "\t", get_default(bus, "lam_p", ""),    
+                    "\t", get_default(bus, "lam_q", ""),    
+                    "\t", get_default(bus, "mu_vmax", ""),    
+                    "\t", get_default(bus, "mu_vmin",""),    
                     )
     end  
     println(io, "];")
@@ -812,30 +821,30 @@ function export_matpower(io::IO, data::Dict{String,Any})
             warn(LOGGER, "The index of the generator does not match the matpower assigned index. Any data that uses generator indexes for reference is corrupted.");           
         end  
         println(io, "\t", gen["gen_bus"], 
-                    "\t", (gen["pg"]),
-                    "\t", (gen["qg"]),
-                    "\t", (gen["qmax"]),
-                    "\t", (gen["qmin"]),
-                    "\t", gen["vg"],
-                    "\t", gen["mbase"],
-                    "\t", gen["gen_status"],
-                    "\t", (gen["pmax"]),
-                    "\t", (gen["pmin"]),
-                    "\t", (haskey(gen, "pc1") ? gen["pc1"] : ""),
-                    "\t", (haskey(gen, "pc2") ? gen["pc2"] : ""),
-                    "\t", (haskey(gen, "qc1min") ? gen["qc1min"] : ""),
-                    "\t", (haskey(gen, "qc1max") ? gen["qc1max"] : ""),
-                    "\t", (haskey(gen, "qc2min") ? gen["qc2min"] : ""),
-                    "\t", (haskey(gen, "qc2max") ? gen["qc2max"] : ""),
-                    "\t", (haskey(gen, "ramp_agc") ? gen["ramp_agc"] : ""),
+                    "\t", get_default(gen, "pg"), 
+                    "\t", get_default(gen, "qg"), 
+                    "\t", get_default(gen, "qmax"), 
+                    "\t", get_default(gen, "qmin"), 
+                    "\t", get_default(gen, "vg"), 
+                    "\t", get_default(gen, "mbase"), 
+                    "\t", get_default(gen, "gen_status"), 
+                    "\t", get_default(gen, "pmax"), 
+                    "\t", get_default(gen, "pmin"), 
+                    "\t", get_default(gen, "pc1", ""), 
+                    "\t", get_default(gen, "pc2", ""), 
+                    "\t", get_default(gen, "qc1min", ""), 
+                    "\t", get_default(gen, "qc1max", ""), 
+                    "\t", get_default(gen, "qc2min", ""), 
+                    "\t", get_default(gen, "qc2max", ""), 
+                    "\t", get_default(gen, "ramp_agc", ""), 
                     "\t", (haskey(gen, "ramp_10") ? gen["ramp_10"] : haskey(gen, "ramp_30") ? 0 : ""),
-                    "\t", (haskey(gen, "ramp_30") ? gen["ramp_30"] : ""),
-                    "\t", (haskey(gen, "ramp_q") ? gen["ramp_q"] : ""), 
-                    "\t", (haskey(gen, "apf") ? gen["apf"] : ""),
-                    "\t", (haskey(gen, "mu_pmax") ? gen["mu_pmax"] : ""),
-                    "\t", (haskey(gen, "mu_pmin") ? gen["mu_pmin"] : ""),
-                    "\t", (haskey(gen, "mu_qmax") ? gen["mu_qmax"] : ""),
-                    "\t", (haskey(gen, "mu_qmin") ? gen["mu_qmin"] : ""),
+                    "\t", get_default(gen, "ramp_30", ""), 
+                    "\t", get_default(gen, "ramp_q", ""),  
+                    "\t", get_default(gen, "apf", ""), 
+                    "\t", get_default(gen, "mu_pmax", ""),
+                    "\t", get_default(gen, "mu_pmin", ""), 
+                    "\t", get_default(gen, "mu_qmax", ""), 
+                    "\t", get_default(gen, "mu_qmin", ""), 
                     )      
         i = i+1
     end
@@ -852,27 +861,27 @@ function export_matpower(io::IO, data::Dict{String,Any})
             warn(LOGGER, "The index of the branch does not match the matpower assigned index. Any data that uses branch indexes for reference is corrupted.");           
         end 
         println(io,
-            "\t", branch["f_bus"], 
-            "\t", branch["t_bus"], 
-            "\t", branch["br_r"], 
-            "\t", branch["br_x"], 
-            "\t", (branch["b_to"] + branch["b_fr"]), 
-            "\t", (haskey(branch, "rate_a") ? branch["rate_a"] : 0),
-            "\t", (haskey(branch, "rate_b") ? branch["rate_b"] : 0),
-            "\t", (haskey(branch, "rate_c") ? branch["rate_c"] : 0),
+            "\t", get_default(branch, "f_bus"),  
+            "\t", get_default(branch, "t_bus"),  
+            "\t", get_default(branch, "br_r"),  
+            "\t", get_default(branch, "br_x"),  
+            "\t", (branch["b_to"] + branch["b_fr"]) != NaN ? (branch["b_to"] + branch["b_fr"]) : 0, 
+            "\t", get_default(branch, "rate_a"), 
+            "\t", get_default(branch, "rate_b"), 
+            "\t", get_default(branch, "rate_c"), 
             "\t", (branch["transformer"] ? branch["tap"] : 0),
             "\t", (branch["transformer"] ? branch["shift"] : 0),
-            "\t", branch["br_status"],
-            "\t", ((branch["angmin"])),
-            "\t", ((branch["angmax"])),
-            "\t", (haskey(branch, "pf") ? branch["pf"] : ""),
-            "\t", (haskey(branch, "qf") ? branch["qf"] : ""),
-            "\t", (haskey(branch, "pt") ? branch["pt"] : ""),
-            "\t", (haskey(branch, "qt") ? branch["qt"] : ""),
-            "\t", (haskey(branch, "mu_sf") ? branch["mu_sf"] : ""),
-            "\t", (haskey(branch, "mu_st") ? branch["mu_st"] : ""),
-            "\t", (haskey(branch, "mu_angmin") ? branch["mu_angmin"] : ""),
-            "\t", (haskey(branch, "mu_angmax") ? branch["mu_angmax"] : ""),
+            "\t", get_default(branch, "br_status"),
+            "\t", get_default(branch, "angmin"), 
+            "\t", get_default(branch, "angmax"), 
+            "\t", get_default(branch, "pf", ""), 
+            "\t", get_default(branch, "qf", ""), 
+            "\t", get_default(branch, "pt", ""), 
+            "\t", get_default(branch, "qt", ""), 
+            "\t", get_default(branch, "mu_sf", ""), 
+            "\t", get_default(branch, "mu_st", ""), 
+            "\t", get_default(branch, "mu_angmin", ""),
+            "\t", get_default(branch, "mu_angmax", ""),
         )
         i = i+1
     end
@@ -885,29 +894,29 @@ function export_matpower(io::IO, data::Dict{String,Any})
     println(io, "mpc.dcline = [")
     for (idx, dcline) in sort(dclines)
         println(io,
-            "\t", dcline["f_bus"],
-            "\t", dcline["t_bus"],
-            "\t", dcline["br_status"],
-            "\t", (dcline["pf"]),
-            "\t", (-dcline["pt"]), # opposite convention
-            "\t", (-dcline["qf"]), # opposite convention
-            "\t", (-dcline["qt"]), # opposite convention
-            "\t", dcline["vf"],
-            "\t", dcline["vt"],
+            "\t", get_default(dcline, "f_bus"), 
+            "\t", get_default(dcline, "t_bus"), 
+            "\t", get_default(dcline, "br_status"), 
+            "\t", get_default(dcline, "pf"), 
+            "\t", -get_default(dcline, "pt"),  # opposite convention
+            "\t", -get_default(dcline, "qf"),  # opposite convention
+            "\t", -get_default(dcline, "qt"),  # opposite convention
+            "\t", get_default(dcline, "vf"), 
+            "\t", get_default(dcline, "vt"), 
             "\t", (haskey(dcline, "mp_pmin") ? dcline["mp_pmin"] : min(dcline["pmaxt"], dcline["pmint"], dcline["pmaxf"], dcline["pminf"])),
             "\t", (haskey(dcline, "mp_pmax") ? dcline["mp_pmax"] : max(dcline["pmaxt"], dcline["pmint"], dcline["pmaxf"], dcline["pminf"])),
-            "\t", (dcline["qminf"]),
-            "\t", (dcline["qmaxf"]),
-            "\t", (dcline["qmint"]),
-            "\t", (dcline["qmaxt"]),
-            "\t", (dcline["loss0"]),
-            "\t", dcline["loss1"],
-            "\t", (haskey(dcline, "mu_pmin") ? (dcline["mu_pmin"]) : ""),
-            "\t", (haskey(dcline, "mu_pmax") ? (dcline["mu_pmax"]) : ""),
-            "\t", (haskey(dcline, "mu_qminf") ? (dcline["mu_qminf"]) : ""),
-            "\t", (haskey(dcline, "mu_qmaxf") ? (dcline["mu_qmaxf"]) : ""),
-            "\t", (haskey(dcline, "mu_qmint") ? (dcline["mu_qmint"]) : ""),
-            "\t", (haskey(dcline, "mu_qmaxt") ? (dcline["mu_qmaxt"]) : ""),
+            "\t", get_default(dcline, "qminf"), 
+            "\t", get_default(dcline, "qmaxf"), 
+            "\t", get_default(dcline, "qmint"), 
+            "\t", get_default(dcline, "qmaxt"), 
+            "\t", get_default(dcline, "loss0"), 
+            "\t", get_default(dcline, "loss1"), 
+            "\t", get_default(dcline, "mu_pmin", ""), 
+            "\t", get_default(dcline, "mu_pmax", ""), 
+            "\t", get_default(dcline, "mu_qminf", ""),
+            "\t", get_default(dcline, "mu_qmaxf", ""),
+            "\t", get_default(dcline, "mu_qmint", ""),
+            "\t", get_default(dcline, "mu_qmaxt", ""),
         )
     end     
     println(io, "];")
@@ -932,18 +941,18 @@ function export_matpower(io::IO, data::Dict{String,Any})
             println(io, 
                 "\t", branch["f_bus"],
                 "\t", branch["t_bus"],
-                "\t", branch["br_r"], 
-                "\t", branch["br_x"], 
+                "\t", get_default(branch, "br_r"),  
+                "\t", get_default(branch, "br_x"),  
                 "\t", (haskey(branch,"b_to") ? branch["b_to"] + branch["b_fr"]  : 0),
-                "\t", (haskey(branch, "rate_a") ? branch["rate_a"] : 0),
-                "\t", (haskey(branch, "rate_b") ? branch["rate_b"] : 0),
-                "\t", (haskey(branch, "rate_c") ? branch["rate_c"] : 0),
+                "\t", get_default(branch, "rate_a"),
+                "\t", get_default(branch, "rate_b"),
+                "\t", get_default(branch, "rate_c"),
                 "\t", (branch["transformer"] ? branch["tap"] : 0),
                 "\t", (branch["transformer"] ? branch["shift"] : 0),
-                "\t", branch["br_status"],
-                "\t", branch["angmin"],
-                "\t", branch["angmax"],
-                "\t", branch["construction_cost"],
+                "\t", get_default(branch, "br_status"),  
+                "\t", get_default(branch, "angmin"), 
+                "\t", get_default(branch, "angmax"), 
+                "\t", get_default(branch, "construction_cost"), 
             )
             i = i+1
         end

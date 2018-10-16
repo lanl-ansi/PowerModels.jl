@@ -12,6 +12,7 @@ end
 
 ""
 function post_opb(pm::GenericPowerModel)
+    variable_bus_voltage(pm)
     variable_generation(pm)
 
     objective_min_gen_fuel_cost(pm)
