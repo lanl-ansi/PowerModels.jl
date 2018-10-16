@@ -423,7 +423,7 @@ function biggest_generator(gens)
             biggest_value = pmax
         end
     end
-    assert(biggest_gen != nothing)
+    @assert(biggest_gen != nothing)
     return biggest_gen
 end
 
@@ -438,7 +438,7 @@ function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismultico
         bp_angmin = Dict([(bp, MultiConductorVector([-Inf for c in conductor_ids])) for bp in buspair_indexes])
         bp_angmax = Dict([(bp, MultiConductorVector([ Inf for c in conductor_ids])) for bp in buspair_indexes])
     else
-        assert(length(conductor_ids) == 1)
+        @assert(length(conductor_ids) == 1)
         bp_angmin = Dict([(bp, -Inf) for bp in buspair_indexes])
         bp_angmax = Dict([(bp,  Inf) for bp in buspair_indexes])
     end

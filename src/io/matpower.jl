@@ -604,7 +604,7 @@ function merge_generator_cost_data(data::Dict{String,Any})
     if haskey(data, "gencost")
         for (i, gencost) in enumerate(data["gencost"])
             gen = data["gen"][i]
-            assert(gen["index"] == gencost["index"])
+            @assert(gen["index"] == gencost["index"])
             delete!(gencost, "index")
 
             check_keys(gen, keys(gencost))
@@ -616,7 +616,7 @@ function merge_generator_cost_data(data::Dict{String,Any})
     if haskey(data, "dclinecost")
         for (i, dclinecost) in enumerate(data["dclinecost"])
             dcline = data["dcline"][i]
-            assert(dcline["index"] == dclinecost["index"])
+            @assert(dcline["index"] == dclinecost["index"])
             delete!(dclinecost, "index")
 
             check_keys(dcline, keys(dclinecost))
@@ -664,7 +664,7 @@ function merge_generic_data(data::Dict{String,Any})
 
                     for (i, row) in enumerate(mp_matrix)
                         merge_row = v[i]
-                        #assert(row["index"] == merge_row["index"]) # note this does not hold for the bus table
+                        #@assert(row["index"] == merge_row["index"]) # note this does not hold for the bus table
                         delete!(merge_row, "index")
                         for key in keys(merge_row)
                             if haskey(row, key)

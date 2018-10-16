@@ -417,7 +417,7 @@ function check_voltage_angle_differences(data::Dict{String,Any}, default_pad = 1
         error("check_voltage_angle_differences does not yet support multinetwork data")
     end
 
-    assert("per_unit" in keys(data) && data["per_unit"])
+    @assert("per_unit" in keys(data) && data["per_unit"])
 
     for c in 1:get(data, "conductors", 1)
         cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
@@ -465,7 +465,7 @@ function check_thermal_limits(data::Dict{String,Any})
         error("check_thermal_limits does not yet support multinetwork data")
     end
 
-    assert("per_unit" in keys(data) && data["per_unit"])
+    @assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
     branches = [branch for branch in values(data["branch"])]
@@ -524,7 +524,7 @@ function check_current_limits(data::Dict{String,Any})
         error("check_current_limits does not yet support multinetwork data")
     end
 
-    assert("per_unit" in keys(data) && data["per_unit"])
+    @assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
     branches = [branch for branch in values(data["branch"])]
@@ -630,7 +630,7 @@ function check_connectivity(data::Dict{String,Any})
     end
 
     bus_ids = Set([bus["index"] for (i,bus) in data["bus"]])
-    assert(length(bus_ids) == length(data["bus"])) # if this is not true something very bad is going on
+    @assert(length(bus_ids) == length(data["bus"])) # if this is not true something very bad is going on
 
     for (i, load) in data["load"]
         if !(load["load_bus"] in bus_ids)
@@ -682,7 +682,7 @@ function check_transformer_parameters(data::Dict{String,Any})
         error("check_transformer_parameters does not yet support multinetwork data")
     end
 
-    assert("per_unit" in keys(data) && data["per_unit"])
+    @assert("per_unit" in keys(data) && data["per_unit"])
 
     for (i, branch) in data["branch"]
         if !haskey(branch, "tap")
@@ -757,7 +757,7 @@ function check_dcline_limits(data::Dict{String,Any})
         error("check_dcline_limits does not yet support multinetwork data")
     end
 
-    assert("per_unit" in keys(data) && data["per_unit"])
+    @assert("per_unit" in keys(data) && data["per_unit"])
     mva_base = data["baseMVA"]
 
     for c in 1:get(data, "conductors", 1)

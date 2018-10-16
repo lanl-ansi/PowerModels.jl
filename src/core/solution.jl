@@ -1,6 +1,6 @@
 ""
 function build_solution(pm::GenericPowerModel, status, solve_time; objective = NaN, solution_builder = get_solution)
-    # TODO assert that the model is solved
+    # TODO @assert that the model is solved
 
     if status != :Error
         objective = getobjectivevalue(pm.model)
