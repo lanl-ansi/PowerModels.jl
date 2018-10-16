@@ -3,7 +3,7 @@ os:
   - linux
   - osx
 julia:
-  - 0.6
+  - 0.7
   - nightly
 matrix:
   allow_failures:
@@ -16,17 +16,12 @@ addons:
     - gfortran
 
 before_install:
-    # don't keep an old version of the code in the cache
-  - julia -e 'if "PowerModels" in keys(Pkg.installed()) Pkg.rm("PowerModels"); Pkg.rm("PowerModels") end'
-  - julia -e 'Pkg.update()' #make sure we get the latest version of METADATA
-  - julia -e 'if !("Coverage" in keys(Pkg.installed())) Pkg.add("Coverage") end'
-  - julia -e 'if !("Documenter" in keys(Pkg.installed())) Pkg.add("Documenter") end'
+ - julia --project --color=yes -e "import Pkg; Pkg.instantiate(); Pkg.build();" #make sure the depedencies are working properly
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'Pkg.clone(pwd())'
-  - julia -e 'Pkg.test("PowerModels", coverage=true)'
+  - julia --check-bounds=yes --depwarn=no --color=yes --project -e "import Pkg; Pkg.test(coverage=true);"
 
 after_success:
-  - julia -e  'using Coverage; cd(Pkg.dir("PowerModels")); LCOV.writefile("lcov.info", process_folder(".")); run(pipeline(`curl -s https://codecov.io/bash`, `bash`))'
-  - julia -e 'cd(Pkg.dir("PowerModels")); include(joinpath("docs", "make.jl"))'
+  - julia -e  'using PowerModels; using Coverage; cd(pathof(PowerModels)); LCOV.writefile("lcov.info", process_folder(".")); run(pipeline(`curl -s https://codecov.io/bash`, `bash`))'
+  - julia -e  'using PowerModels; cd(pathof(PowerModels)); include(joinpath("docs", "make.jl"))'
