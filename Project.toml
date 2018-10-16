@@ -4,9 +4,10 @@ version = "v0.8.4"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
-InfrastructureModels = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
+InfrastructureModels = "e8e45514-c753-11e8-2a1b-cd93cb9d98d1"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
+Juniper = "2ddba703-00a4-53a7-87a5-e8b9971dde84"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 MathProgBase = "fdba3010-5040-5b88-9595-932c9decdf73"
