@@ -23,8 +23,7 @@ ipopt_solver = with_optimizer(Ipopt.Optimizer, tol=1e-6, print_level=0)
 ##juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
 #pavito_solver = PavitoSolver(mip_solver=cbc_solver, cont_solver=ipopt_solver, mip_solver_drives=false, log_level=0)
 # TODO uncomment when https://github.com/JuliaOpt/SCS.jl/issues/113 is resolved
-#scs_solver = with_optimizer(SCS.Optimizer, max_iters=1000000, alpha=1.9, acceleration_lookback=1, verbose=0)
-scs_solver = with_optimizer(SCS.Optimizer)
+scs_solver = with_optimizer(SCS.Optimizer, max_iters=1000000, alpha=1.9, acceleration_lookback=1, verbose=0)
 
 
 include("common.jl")

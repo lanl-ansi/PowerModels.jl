@@ -377,19 +377,17 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5176.71; atol = 2e0)
     end
-    #=
-    # TODO: requires increased iteration limit to work with MOI
     @testset "5-bus transformer swap case" begin
         result = run_opf("../test/data/matpower/case5.m", SOCWRConicPowerModel, scs_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 15051.4; atol = 1e0)
+        @test isapprox(result["objective"], 10884.7; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
         result = run_opf("../test/data/matpower/case5_asym.m", SOCWRConicPowerModel, scs_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 14999.7; atol = 1e0)
+        @test isapprox(result["objective"], 10884.8; atol = 1e0)
     end
     @testset "5-bus gap case" begin
         result = run_opf("../test/data/matpower/case5_gap.m", SOCWRConicPowerModel, scs_solver)
@@ -397,13 +395,13 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], -28237.3; atol = 1e0)
     end
-    @testset "5-bus with asymmetric line charge" begin
-        result = run_opf("../test/data/pti/case5_alc.raw", SOCWRConicPowerModel, scs_solver)
+    # does not converge in SCS.jl v0.4.0 and MOI
+    #@testset "5-bus with asymmetric line charge" begin
+    #    result = run_opf("../test/data/pti/case5_alc.raw", SOCWRConicPowerModel, scs_solver)
 
-        @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 1005.27; atol = 1e0)
-    end
-    =#
+    #    @test result["status"] == :LocalOptimal
+    #    @test isapprox(result["objective"], 1005.27; atol = 1e0)
+    #end
     # does not converge in SCS.jl v0.4.0
     #@testset "5-bus with negative generators" begin
     #    result = run_opf("../test/data/matpower/case5_npg.m", SOCWRConicPowerModel, scs_solver)
@@ -486,13 +484,12 @@ end
 end
 
 @testset "test soc conic distflow opf_bf" begin
-    # TODO: requires increased iteration limit to work with MOI
-    #@testset "3-bus case" begin
-    #    result = run_opf_bf("../test/data/matpower/case3.m", SOCBFConicPowerModel, scs_solver)
+    @testset "3-bus case" begin
+        result = run_opf_bf("../test/data/matpower/case3.m", SOCBFConicPowerModel, scs_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 5746.7; atol = 1e1)
-    #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 5746.7; atol = 1e1)
+    end
     @testset "5-bus transformer swap case" begin
         result = run_opf_bf("../test/data/matpower/case5.m", SOCBFConicPowerModel, scs_solver)
 
@@ -620,13 +617,12 @@ end
     #    @test result["status"] == :LocalOptimal
     #    @test isapprox(result["objective"], TBD; atol = 1e0)
     #end
-    # does not converge in SCS.jl v0.4.0
-    #@testset "5-bus with asymmetric line charge" begin
-    #    result = run_opf("../test/data/pti/case5_alc.raw", SDPWRMPowerModel, scs_solver)
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf("../test/data/pti/case5_alc.raw", SDPWRMPowerModel, scs_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 1005.31; atol = 1e-1)
-    #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1005.31; atol = 1e-1)
+    end
     # does not converge in SCS.jl v0.4.0
     #@testset "5-bus with negative generators" begin
     #    result = run_opf("../test/data/matpower/case5_npg.m", SDPWRMPowerModel, scs_solver)
@@ -634,20 +630,18 @@ end
     #    @test result["status"] == :LocalOptimal
     #    @test isapprox(result["objective"], 7291.69; atol = 1e0) # Mosek v8 value
     #end
-    # TODO: requires increased iteration limit to work with MOI
-    #@testset "14-bus case" begin
-    #    result = run_opf("../test/data/matpower/case14.m", SDPWRMPowerModel, scs_solver)
+    @testset "14-bus case" begin
+        result = run_opf("../test/data/matpower/case14.m", SDPWRMPowerModel, scs_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 8079.97; atol = 1e0)
-    #end
-    # TODO: requires increased iteration limit to work with MOI
-    #@testset "6-bus case" begin
-    #    result = run_opf("../test/data/matpower/case6.m", SDPWRMPowerModel, scs_solver)
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 8081.51; atol = 1e0)
+    end
+    @testset "6-bus case" begin
+        result = run_opf("../test/data/matpower/case6.m", SDPWRMPowerModel, scs_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 11560.8; atol = 1e0)
-    #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 11580.8; atol = 1e0)
+    end
     # TODO replace this with smaller case, way too slow for unit testing
     #@testset "24-bus rts case" begin
     #    result = run_opf("../test/data/matpower/case24.m", SDPWRMPowerModel, scs_solver)
@@ -665,20 +659,18 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5852.35; atol = 1e0)
     end
-    # does not converge in SCS.jl v0.4.0
-    #@testset "5-bus with asymmetric line charge" begin
-    #    result = run_opf("../test/data/pti/case5_alc.raw", SparseSDPWRMPowerModel, scs_solver)
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf("../test/data/pti/case5_alc.raw", SparseSDPWRMPowerModel, scs_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 1005.31; atol = 1e-1)
-    #end
-    # does not converge in SCS.jl v0.4.0 (need long iter limit)
-    #@testset "14-bus case" begin
-    #    result = run_opf("../test/data/matpower/case14.m", SparseSDPWRMPowerModel, scs_solver)
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1005.31; atol = 1e-1)
+    end
+    @testset "14-bus case" begin
+        result = run_opf("../test/data/matpower/case14.m", SparseSDPWRMPowerModel, scs_solver)
 
-    #    @test result["status"] == :LocalOptimal
-    #    @test isapprox(result["objective"], 8081.5; atol = 1e0)
-    #end
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 8081.5; atol = 1e0)
+    end
     # multiple components are not currently supported by this form
     #@testset "6-bus case" begin
     #    result = run_opf("../test/data/matpower/case6.m", SparseSDPWRMPowerModel, scs_solver)
@@ -686,7 +678,7 @@ end
     #    @test result["status"] == :LocalOptimal
     #    @test isapprox(result["objective"], 11578.8; atol = 1e0)
     #end
-    # does not converge in SCS.jl v0.4.0 (need long iter limit)
+    # update based on MOI setting of optimizer after model building
     #@testset "passing in decomposition" begin
     #    PMs = PowerModels
     #    data = PMs.parse_file("../test/data/matpower/case14.m")
