@@ -381,7 +381,7 @@ function parse_pti_data(data_string::String, sections::Array)
             debug(LOGGER, "$comment")
             matches = match(match_string, comment)
 
-            if !isa(matches, Void)
+            if !isa(matches, Nothing)
                 guess_section = matches.captures[1]
             else
                 guess_section = ""

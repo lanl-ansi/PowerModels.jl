@@ -27,7 +27,7 @@ end
 
 "Adds PowerModels version to native data structure"
 function add_powermodels_version(data::Dict{String,Any})
-    data["version"] = Pkg.installed("PowerModels")
+    data["version"] = Pkg.installed()["PowerModels"]
 end
 
 
