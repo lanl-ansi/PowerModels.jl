@@ -19,6 +19,7 @@ end
 
 if VERSION > v"0.7.0-"
     using LinearAlgebra
+    using SparseArrays
 end
 
 
