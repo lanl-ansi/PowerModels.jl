@@ -1,12 +1,12 @@
 # PowerModels.jl
 
 Release: [![PowerModels](http://pkg.julialang.org/badges/PowerModels_0.4.svg)](http://pkg.julialang.org/?pkg=PowerModels), [![PowerModels](http://pkg.julialang.org/badges/PowerModels_0.5.svg)](http://pkg.julialang.org/?pkg=PowerModels), [![PowerModels](http://pkg.julialang.org/badges/PowerModels_0.6.svg)](http://pkg.julialang.org/?pkg=PowerModels),
-[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://lanl-ansi.github.io/PowerModels.jl/stable)
+[![](https://img.shields.io/badge/docs-stable-blue.svg)](https://lanl-ansi.github.io/PowerModels.jl/stable/)
 
 Dev:
 [![Build Status](https://travis-ci.org/lanl-ansi/PowerModels.jl.svg?branch=master)](https://travis-ci.org/lanl-ansi/PowerModels.jl)
 [![codecov](https://codecov.io/gh/lanl-ansi/PowerModels.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/lanl-ansi/PowerModels.jl)
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://lanl-ansi.github.io/PowerModels.jl/latest)
+[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://lanl-ansi.github.io/PowerModels.jl/latest/)
 
 PowerModels.jl is a Julia/JuMP package for Steady-State Power Network Optimization.
 It is designed to enable computational evaluation of emerging power network formulations and algorithms in a common platform.
