@@ -2,7 +2,7 @@
 # used by OTS models
 function check_br_status(sol)
     for (i,branch) in sol["branch"]
-        @test isapprox(branch["br_status"], 0.0, rtol=1e-6) || isapprox(branch["br_status"], 1.0, rtol=1e-6)
+        @test isapprox(branch["br_status"], 0.0, atol=1e-6, rtol=1e-6) || isapprox(branch["br_status"], 1.0, atol=1e-6, rtol=1e-6)
     end
 end
 
