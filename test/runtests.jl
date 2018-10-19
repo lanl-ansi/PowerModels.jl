@@ -15,6 +15,8 @@ using SCS
 #using Juniper
 using Compat
 
+using JuMP
+
 if VERSION > v"0.7.0-"
     using Test
 end
@@ -47,6 +49,8 @@ include("common.jl")
     include("modify.jl")
 
     include("data.jl")
+
+    include("model.jl")
 
     include("opb.jl")
 
