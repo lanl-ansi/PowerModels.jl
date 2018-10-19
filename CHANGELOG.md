@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added support for a user provided JuMP model
 - Improved the Matpower data file export function
 
 ### v0.8.5

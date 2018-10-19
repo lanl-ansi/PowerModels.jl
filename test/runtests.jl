@@ -12,6 +12,8 @@ using SCS
 using Pavito
 using Juniper
 
+using JuMP
+
 using Base.Test
 
 # default setup for solvers
@@ -37,6 +39,8 @@ include("common.jl")
     include("modify.jl")
 
     include("data.jl")
+
+    include("model.jl")
 
     include("opb.jl")
 
