@@ -75,7 +75,7 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
 end
 
 # default generic constructor
-function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver())
+function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver(), jump_model::Model = Model(solver = solver))
 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
@@ -101,7 +101,7 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Symbo
     ccnd = minimum([k for k in keys(var[:nw][cnw][:cnd])])
 
     pm = GenericPowerModel{T}(
-        Model(solver = solver), # model
+        jump_model,
         data,
         setting,
         Dict{String,Any}(), # solution
