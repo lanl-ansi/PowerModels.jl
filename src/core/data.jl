@@ -667,6 +667,12 @@ function check_connectivity(data::Dict{String,Any})
         end
     end
 
+    for (i, battery) in data["battery"]
+        if !(battery["battery_bus"] in bus_ids)
+            error(LOGGER, "bus $(battery["battery_bus"]) in battery $(i) is not defined")
+        end
+    end
+
     for (i, branch) in data["branch"]
         if !(branch["f_bus"] in bus_ids)
             error(LOGGER, "from bus $(branch["f_bus"]) in branch $(i) is not defined")
