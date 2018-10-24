@@ -125,11 +125,12 @@ mp_dcline_columns = [
 ]
 
 mp_battery_columns = [
-    ("batt_bus", Int),
-    ("eng_rating", Float64),
-    ("eff_c", Float64), ("eff_d", Float64),
+    ("battery_bus", Int),
+    ("energy", Float64),
+    ("energy_rating", Float64),
+    ("eff_charge", Float64), ("eff_discharge", Float64),
     ("inv_rating", Float64),
-    ("r", Float64), ("standby", Float64),
+    ("inv_r", Float64), ("inv_standby_loss", Float64),
     ("status", Int)
 ]
 
