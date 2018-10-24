@@ -68,3 +68,12 @@ function calc_voltage_product_bounds(buspairs, conductor::Int=1)
 
     return wr_min, wr_max, wi_min, wi_max
 end
+
+
+"computes battery bounds"
+function calc_battery_injection_bounds(batteries, conductor::Int=1)
+    injection_lb = Dict(i => -battery["inv_rating"][conductor] for (i, battery) in batteries)
+    injection_ub = Dict(i =>  battery["inv_rating"][conductor] for (i, battery) in batteries)
+
+    return injection_lb, injection_ub
+end

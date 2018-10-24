@@ -311,7 +311,75 @@ function variable_reactive_dcline_flow(pm::GenericPowerModel; nw::Int=pm.cnw, cn
 end
 
 
+
+
+"variables for modeling batteries, includes grid net injection and internal variables"
+function variable_battery(pm::GenericPowerModel; kwargs...)
+    variable_active_battery(pm; kwargs...)
+    variable_reactive_battery(pm; kwargs...)
+    variable_battery_energy(pm; kwargs...)
+    variable_battery_charge(pm; kwargs...)
+    variable_battery_discharge(pm; kwargs...)
+end
+
+""
+function variable_active_battery(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    inj_lb, inj_ub = calc_battery_injection_bounds(ref(pm, nw, :battery), cnd)
+
+    var(pm, nw, cnd)[:pb] = @variable(pm.model,
+        [i in ids(pm, nw, :battery)], basename="$(nw)_$(cnd)_pb",
+        lowerbound = inj_lb[i],
+        upperbound = inj_ub[i],
+        start = getval(ref(pm, nw, :battery, i), "pb_start", cnd)
+    )
+end
+
+""
+function variable_reactive_battery(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    inj_lb, inj_ub = calc_battery_injection_bounds(ref(pm, nw, :battery), cnd)
+
+    var(pm, nw, cnd)[:qb] = @variable(pm.model,
+        [i in ids(pm, nw, :battery)], basename="$(nw)_$(cnd)_qb",
+        lowerbound = inj_lb[i],
+        upperbound = inj_ub[i],
+        start = getval(ref(pm, nw, :battery, i), "qb_start", cnd)
+    )
+end
+
+""
+function variable_battery_energy(pm::GenericPowerModel; nw::Int=pm.cnw)
+    var(pm, nw)[:be] = @variable(pm.model,
+        [i in ids(pm, nw, :battery)], basename="$(nw)_be",
+        lowerbound = 0,
+        upperbound = ref(pm, nw, :battery, i, "energy_rating"),
+        start = getval(ref(pm, nw, :battery, i), "be_start", 1)
+    )
+end
+
+""
+function variable_battery_charge(pm::GenericPowerModel; nw::Int=pm.cnw)
+    var(pm, nw)[:bc] = @variable(pm.model,
+        [i in ids(pm, nw, :battery)], basename="$(nw)_bc",
+        lowerbound = 0,
+        upperbound = ref(pm, nw, :battery, i, "energy_rating"),
+        start = getval(ref(pm, nw, :battery, i), "bc_start", 1)
+    )
+end
+
+""
+function variable_battery_discharge(pm::GenericPowerModel; nw::Int=pm.cnw)
+    var(pm, nw)[:bd] = @variable(pm.model,
+        [i in ids(pm, nw, :battery)], basename="$(nw)_bd",
+        lowerbound = 0,
+        upperbound = ref(pm, nw, :battery, i, "energy_rating"),
+        start = getval(ref(pm, nw, :battery, i), "bd_start", 1)
+    )
+end
+
+
+
 ##################################################################
+### Network Expantion Variables
 
 "generates variables for both `active` and `reactive` `branch_flow_ne`"
 function variable_branch_flow_ne(pm::GenericPowerModel; kwargs...)

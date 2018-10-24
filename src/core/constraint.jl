@@ -105,3 +105,36 @@ end
 "do nothing, this model does not have complex voltage constraints"
 function constraint_voltage(pm::GenericPowerModel, n::Int, c::Int)
 end
+
+
+
+
+function constraint_battery_limit(pm::GenericPowerModel, n::Int, c::Int, i, inv_rating)
+    pb = var(pm, n, c, :pb, i)
+    qb = var(pm, n, c, :qb, i)
+    @constraint(pm.model, pb^2 + qb^2 <= inv_rating^2)
+end
+
+function constraint_battery_state(pm::GenericPowerModel, n::Int, i, energy, eff_charge, eff_discharge, time_passed)
+    bc = var(pm, n, :bc, i)
+    bd = var(pm, n, :bd, i)
+    be = var(pm, n, :be, i)
+    @constraint(pm.model, be - energy == time_passed*(eff_charge*bc - bd/eff_discharge))
+end
+
+function constraint_battery_complementarity(pm::GenericPowerModel, n::Int, i)
+    bc = var(pm, n, :bc, i)
+    bd = var(pm, n, :bd, i)
+    @constraint(pm.model, bc*bd == 0.0)
+end
+
+function constraint_battery_loss(pm::GenericPowerModel, n::Int, i, bus, inv_r, inv_standby_loss)
+    vm = var(pm, n, pm.ccnd, :vm, bus)
+    pb = var(pm, n, pm.ccnd, :pb, i)
+    qb = var(pm, n, pm.ccnd, :qb, i)
+    bc = var(pm, n, :bc, i)
+    bd = var(pm, n, :bd, i)
+    @NLconstraint(pm.model, pb + (bc - bd) == inv_standby_loss + inv_r*(pb^2 + qb^2)/vm^2)
+    #@constraint(pm.model, pb <= bd)
+    #@constraint(pm.model, -pb <= bc)
+end

@@ -1,7 +1,5 @@
 % used in tests of,
-% - non-contiguous bus ids
-% - tranformer orentation swapping
-% - dual values 
+% - storage modeling
 
 function mpc = case5
 mpc.version = '2';
@@ -52,6 +50,6 @@ mpc.branch = [
 %% battery data
 %	battery_bus	energy	energy_rating	eff_charge	eff_discharge	inv_rating	inv_r	inv_standby_loss status
 mpc.battery = [
-	3	 10.0	 100.0	 0.8	 0.9	 100.0	 0.1	 0.0	 1;
-	10	 10.0	 100.0	 0.9	 0.8	 100.0	 0.1	 0.0	 1;
+	3	 20.0	 100.0	 0.8	 0.9	 100.0	 0.1	 0.0	 1;
+	10	 30.0	 100.0	 0.9	 0.8	 100.0	 0.1	 0.0	 1;
 ];
