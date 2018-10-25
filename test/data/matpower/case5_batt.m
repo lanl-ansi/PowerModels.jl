@@ -47,9 +47,10 @@ mpc.branch = [
 	4	 10	 0.00297	 0.0297	 0.00674	 240.0	 240.0	 240.0	 0.0	  0.0	 1	 -30.0	 30.0;
 ];
 
-%% battery data
-%	battery_bus	energy	energy_rating	eff_charge	eff_discharge	inv_rating	inv_r	inv_standby_loss status
-mpc.battery = [
-	3	 20.0	 100.0	 0.8	 0.9	 100.0	 0.1	 0.0	 1;
-	10	 30.0	 100.0	 0.9	 0.8	 100.0	 0.1	 0.0	 1;
+%% storage data
+%   storage_bus energy(MWh) energy_rating(MWh)  charge_rating(MW)   discharge_rating(MW)    charge_efficiency(uls)  discharge_efficiency(uls)   thermal_rating(MVA) qmin(MVar)  qmax(MVar)  r(p.u.) x(p.u.) standby_loss(MW) status(uls)
+mpc.storage = [
+    3    0.0     100.0   50.0    70.0    0.8     0.9     100.0   -50.0   70.0    0.1     0.0     0.0     1;
+    10   0.0     100.0   50.0    70.0    0.9     0.8     100.0   -50.0   70.0    0.1     0.0     0.0     1;
 ];
+
