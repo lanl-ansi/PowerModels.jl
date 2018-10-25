@@ -134,7 +134,7 @@ function constraint_battery_loss(pm::GenericPowerModel, n::Int, i, bus, inv_r, i
     qb = var(pm, n, pm.ccnd, :qb, i)
     bc = var(pm, n, :bc, i)
     bd = var(pm, n, :bd, i)
-    @NLconstraint(pm.model, pb + (bc - bd) == inv_standby_loss + inv_r*(pb^2 + qb^2)/vm^2)
+    @NLconstraint(pm.model, pb + (bd - bc) == inv_standby_loss + inv_r*(pb^2 + qb^2)/vm^2)
     #@constraint(pm.model, pb <= bd)
     #@constraint(pm.model, -pb <= bc)
 end
