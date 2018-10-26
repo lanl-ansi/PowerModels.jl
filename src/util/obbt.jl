@@ -181,7 +181,7 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
     (termination == :max) && (check_termination = (max_vm_reduction > improvement_tol || max_td_reduction > improvement_tol))
 
     while check_termination
-        tic()
+        iter_start_time = time()
         total_vm_reduction = 0.0
         avg_vm_reduction = 0.0
         max_vm_reduction = 0.0
@@ -315,7 +315,7 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
 
         parallel_time_elapsed += max(max_vm_iteration_time, max_td_iteration_time)
 
-        time_elapsed += toq()
+        time_elapsed += (time() - iter_start_time)
 
         # populate the modifications, update the data, and rebuild the bound-tightening model
         modifications = create_modifications(model_bt, vm_lb, vm_ub, td_lb, td_ub)
