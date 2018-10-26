@@ -300,7 +300,7 @@ function build_ref(data::Dict{String,Any})
         ref[:load] = filter((i, load) -> load["status"] == 1 && load["load_bus"] in keys(ref[:bus]), ref[:load])
         ref[:shunt] = filter((i, shunt) -> shunt["status"] == 1 && shunt["shunt_bus"] in keys(ref[:bus]), ref[:shunt])
         ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
-        ref[:battery] = filter((i, batt) -> batt["status"] == 1 && batt["battery_bus"] in keys(ref[:bus]), ref[:battery])
+        ref[:storage] = filter((i, strg) -> strg["status"] == 1 && strg["storage_bus"] in keys(ref[:bus]), ref[:storage])
         ref[:branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
         ref[:dcline] = filter((i, dcline) -> dcline["br_status"] == 1 && dcline["f_bus"] in keys(ref[:bus]) && dcline["t_bus"] in keys(ref[:bus]), ref[:dcline])
 
@@ -352,11 +352,11 @@ function build_ref(data::Dict{String,Any})
         end
         ref[:bus_gens] = bus_gens
 
-        bus_batteries = Dict([(i, []) for (i,bus) in ref[:bus]])
-        for (i,batt) in ref[:battery]
-            push!(bus_batteries[batt["battery_bus"]], i)
+        bus_storage = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (i,strg) in ref[:storage]
+            push!(bus_storage[strg["storage_bus"]], i)
         end
-        ref[:bus_batteries] = bus_batteries
+        ref[:bus_storage] = bus_storage
 
 
         bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])

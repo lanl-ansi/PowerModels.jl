@@ -249,16 +249,16 @@ end
 
 
 
-"opf with batteries"
-function run_batt_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_batt_opf; kwargs...)
+"opf with storage"
+function run_strg_opf(file, model_constructor, solver; kwargs...)
+    return run_generic_model(file, model_constructor, solver, post_strg_opf; kwargs...)
 end
 
 ""
-function post_batt_opf(pm::GenericPowerModel)
+function post_strg_opf(pm::GenericPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
-    variable_battery(pm)
+    variable_storage(pm)
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
@@ -274,9 +274,9 @@ function post_batt_opf(pm::GenericPowerModel)
         constraint_kcl_shunt(pm, i)
     end
 
-    for i in ids(pm, :battery)
-        constraint_battery_exchange(pm, i)
-        constraint_battery_limit(pm, i)
+    for i in ids(pm, :storage)
+        constraint_storage_exchange(pm, i)
+        constraint_storage_thermal_limit(pm, i)
     end
 
     for i in ids(pm, :branch)

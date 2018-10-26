@@ -66,7 +66,7 @@ end
 function get_solution(pm::GenericPowerModel, sol::Dict{String,Any})
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
-    add_battery_setpoint(sol, pm)
+    add_storage_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
     add_dcline_flow_setpoint(sol, pm)
 
@@ -103,13 +103,13 @@ function add_generator_power_setpoint(sol, pm::GenericPowerModel)
 end
 
 ""
-function add_battery_setpoint(sol, pm::GenericPowerModel)
-    add_setpoint(sol, pm, "battery", "pb", :pb)
-    add_setpoint(sol, pm, "battery", "qb", :qb)
-    add_setpoint(sol, pm, "battery", "be", :be, conductorless=true)
+function add_storage_setpoint(sol, pm::GenericPowerModel)
+    add_setpoint(sol, pm, "storage", "ps", :ps)
+    add_setpoint(sol, pm, "storage", "qs", :qs)
+    add_setpoint(sol, pm, "storage", "se", :se, conductorless=true)
     # useful for model debugging
-    #add_setpoint(sol, pm, "battery", "bc", :bc, conductorless=true)
-    #add_setpoint(sol, pm, "battery", "bd", :bd, conductorless=true)
+    #add_setpoint(sol, pm, "storage", "sc", :sc, conductorless=true)
+    #add_setpoint(sol, pm, "storage", "sd", :sd, conductorless=true)
 end
 
 ""

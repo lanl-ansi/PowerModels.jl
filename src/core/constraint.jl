@@ -109,32 +109,37 @@ end
 
 
 
-function constraint_battery_limit(pm::GenericPowerModel, n::Int, c::Int, i, inv_rating)
-    pb = var(pm, n, c, :pb, i)
-    qb = var(pm, n, c, :qb, i)
-    @constraint(pm.model, pb^2 + qb^2 <= inv_rating^2)
+function constraint_storage_thermal_limit(pm::GenericPowerModel, n::Int, c::Int, i, rating)
+    ps = var(pm, n, c, :ps, i)
+    qs = var(pm, n, c, :qs, i)
+    @constraint(pm.model, ps^2 + qs^2 <= rating^2)
 end
 
-function constraint_battery_state(pm::GenericPowerModel, n::Int, i, energy, eff_charge, eff_discharge, time_passed)
-    bc = var(pm, n, :bc, i)
-    bd = var(pm, n, :bd, i)
-    be = var(pm, n, :be, i)
-    @constraint(pm.model, be - energy == time_passed*(eff_charge*bc - bd/eff_discharge))
-end
-
-function constraint_battery_complementarity(pm::GenericPowerModel, n::Int, i)
-    bc = var(pm, n, :bc, i)
-    bd = var(pm, n, :bd, i)
-    @constraint(pm.model, bc*bd == 0.0)
-end
-
-function constraint_battery_loss(pm::GenericPowerModel, n::Int, i, bus, inv_r, inv_standby_loss)
+function constraint_storage_current_limit(pm::GenericPowerModel, n::Int, c::Int, i, bus, rating)
     vm = var(pm, n, pm.ccnd, :vm, bus)
-    pb = var(pm, n, pm.ccnd, :pb, i)
-    qb = var(pm, n, pm.ccnd, :qb, i)
-    bc = var(pm, n, :bc, i)
-    bd = var(pm, n, :bd, i)
-    @NLconstraint(pm.model, pb + (bd - bc) == inv_standby_loss + inv_r*(pb^2 + qb^2)/vm^2)
-    #@constraint(pm.model, pb <= bd)
-    #@constraint(pm.model, -pb <= bc)
+    ps = var(pm, n, c, :ps, i)
+    qs = var(pm, n, c, :qs, i)
+    @constraint(pm.model, ps^2 + qs^2 <= rating^2*vm^2)
+end
+
+function constraint_storage_state(pm::GenericPowerModel, n::Int, i, energy, charge_eff, discharge_eff, time_passed)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+    se = var(pm, n, :se, i)
+    @constraint(pm.model, se - energy == time_passed*(charge_eff*sc - sd/discharge_eff))
+end
+
+function constraint_storage_complementarity(pm::GenericPowerModel, n::Int, i)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+    @constraint(pm.model, sc*sd == 0.0)
+end
+
+function constraint_storage_loss(pm::GenericPowerModel, n::Int, i, bus, r, x, standby_loss)
+    vm = var(pm, n, pm.ccnd, :vm, bus)
+    ps = var(pm, n, pm.ccnd, :ps, i)
+    qs = var(pm, n, pm.ccnd, :qs, i)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+    @NLconstraint(pm.model, ps + (sd - sc) == standby_loss + r*(ps^2 + qs^2)/vm^2)
 end

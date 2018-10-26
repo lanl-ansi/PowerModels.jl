@@ -117,7 +117,7 @@ function constraint_kcl_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd
     bus_gens = ref(pm, nw, :bus_gens, i)
     bus_loads = ref(pm, nw, :bus_loads, i)
     bus_shunts = ref(pm, nw, :bus_shunts, i)
-    bus_batteries = ref(pm, nw, :bus_batteries, i)
+    bus_storage = ref(pm, nw, :bus_storage, i)
 
     bus_pd = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in bus_loads)
     bus_qd = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in bus_loads)
@@ -125,7 +125,7 @@ function constraint_kcl_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd
     bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts)
     bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts)
 
-    constraint_kcl_shunt(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_batteries, bus_pd, bus_qd, bus_gs, bus_bs)
+    constraint_kcl_shunt(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
 
@@ -620,23 +620,29 @@ end
 
 
 
-### Battery Constraints ###
+### Storage Constraints ###
 
 ""
-function constraint_battery_limit(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    battery = ref(pm, nw, :battery, i)
-    constraint_battery_limit(pm, nw, cnd, i, battery["inv_rating"][cnd])
+function constraint_storage_thermal_limit(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    storage = ref(pm, nw, :storage, i)
+    constraint_storage_thermal_limit(pm, nw, cnd, i, storage["thermal_rating"][cnd])
 end
 
 ""
-function constraint_battery_exchange(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
-    battery = ref(pm, nw, :battery, i)
+function constraint_storage_current_limit(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    storage = ref(pm, nw, :storage, i)
+    constraint_storage_current_limit(pm, nw, cnd, i, storage["storage_bus"], storage["current_rating"][cnd])
+end
+
+""
+function constraint_storage_exchange(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
+    storage = ref(pm, nw, :storage, i)
 
     time_passed = 1.0 # TODO get this from the network data
 
-    constraint_battery_state(pm, nw, i, battery["energy"], battery["eff_charge"], battery["eff_discharge"], time_passed)
-    constraint_battery_complementarity(pm, nw, i)
-    constraint_battery_loss(pm, nw, i, battery["battery_bus"], battery["inv_r"], battery["inv_standby_loss"])
+    constraint_storage_state(pm, nw, i, storage["energy"], storage["charge_efficiency"], storage["discharge_efficiency"], time_passed)
+    constraint_storage_complementarity(pm, nw, i)
+    constraint_storage_loss(pm, nw, i, storage["storage_bus"], storage["r"], storage["x"], storage["standby_loss"])
 end
 
 

@@ -48,7 +48,7 @@ end
 
 mp_data_names = ["mpc.version", "mpc.baseMVA", "mpc.bus", "mpc.gen",
     "mpc.branch", "mpc.dcline", "mpc.gencost", "mpc.dclinecost",
-    "mpc.bus_name", "mpc.battery"
+    "mpc.bus_name", "mpc.storage"
 ]
 
 mp_bus_columns = [
@@ -124,13 +124,15 @@ mp_dcline_columns = [
     ("mu_qmint", Float64), ("mu_qmaxt", Float64)
 ]
 
-mp_battery_columns = [
-    ("battery_bus", Int),
-    ("energy", Float64),
-    ("energy_rating", Float64),
-    ("eff_charge", Float64), ("eff_discharge", Float64),
-    ("inv_rating", Float64),
-    ("inv_r", Float64), ("inv_standby_loss", Float64),
+mp_storage_columns = [
+    ("storage_bus", Int),
+    ("energy", Float64), ("energy_rating", Float64),
+    ("charge_rating", Float64), ("discharge_rating", Float64),
+    ("charge_efficiency", Float64), ("discharge_efficiency", Float64),
+    ("thermal_rating", Float64),
+    ("qmin", Float64), ("qmax", Float64),
+    ("r", Float64), ("x", Float64),
+    ("standby_loss", Float64),
     ("status", Int)
 ]
 
@@ -228,14 +230,14 @@ function parse_matpower_string(data_string::String)
         case["dcline"] = dclines
     end
 
-    if haskey(matlab_data, "mpc.battery")
-        batteries = []
-        for (i, battery_row) in enumerate(matlab_data["mpc.battery"])
-            battery_data = row_to_typed_dict(battery_row, mp_battery_columns)
-            battery_data["index"] = i
-            push!(batteries, battery_data)
+    if haskey(matlab_data, "mpc.storage")
+        storage = []
+        for (i, storage_row) in enumerate(matlab_data["mpc.storage"])
+            storage_data = row_to_typed_dict(storage_row, mp_storage_columns)
+            storage_data["index"] = i
+            push!(storage, storage_data)
         end
-        case["battery"] = batteries
+        case["storage"] = storage
     end
 
 
@@ -359,8 +361,8 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     if !haskey(pm_data, "dclinecost")
         pm_data["dclinecost"] = []
     end
-    if !haskey(pm_data, "battery")
-        pm_data["battery"] = []
+    if !haskey(pm_data, "storage")
+        pm_data["storage"] = []
     end
 
     # translate component models
@@ -382,7 +384,7 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     # use once available
     InfrastructureModels.arrays_to_dicts!(pm_data)
 
-    for optional in ["dcline", "load", "shunt", "battery"]
+    for optional in ["dcline", "load", "shunt", "storage"]
         if length(pm_data[optional]) == 0
             pm_data[optional] = Dict{String,Any}()
         end

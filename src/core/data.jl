@@ -195,13 +195,17 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         end
     end
 
-    if haskey(data, "battery")
-        for (i, batt) in data["battery"]
-            apply_func(batt, "energy", rescale)
-            apply_func(batt, "energy_rating", rescale)
-
-            apply_func(batt, "inv_rating", rescale)
-            apply_func(batt, "inv_standby_loss", rescale)
+    if haskey(data, "storage")
+        for (i, strg) in data["storage"]
+            apply_func(strg, "energy", rescale)
+            apply_func(strg, "energy_rating", rescale)
+            apply_func(strg, "charge_rating", rescale)
+            apply_func(strg, "discharge_rating", rescale)
+            apply_func(strg, "thermal_rating", rescale)
+            apply_func(strg, "current_rating", rescale)
+            apply_func(strg, "qmin", rescale)
+            apply_func(strg, "qmax", rescale)
+            apply_func(strg, "standby_loss", rescale)
         end
     end
 
@@ -324,13 +328,17 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
         end
     end
 
-    if haskey(data, "battery")
-        for (i, batt) in data["battery"]
-            apply_func(batt, "energy", rescale)
-            apply_func(batt, "energy_rating", rescale)
-
-            apply_func(batt, "inv_rating", rescale)
-            apply_func(batt, "inv_standby_loss", rescale)
+    if haskey(data, "storage")
+        for (i, strg) in data["storage"]
+            apply_func(strg, "energy", rescale)
+            apply_func(strg, "energy_rating", rescale)
+            apply_func(strg, "charge_rating", rescale)
+            apply_func(strg, "discharge_rating", rescale)
+            apply_func(strg, "thermal_rating", rescale)
+            apply_func(strg, "current_rating", rescale)
+            apply_func(strg, "qmin", rescale)
+            apply_func(strg, "qmax", rescale)
+            apply_func(strg, "standby_loss", rescale)
         end
     end
 
@@ -667,9 +675,9 @@ function check_connectivity(data::Dict{String,Any})
         end
     end
 
-    for (i, battery) in data["battery"]
-        if !(battery["battery_bus"] in bus_ids)
-            error(LOGGER, "bus $(battery["battery_bus"]) in battery $(i) is not defined")
+    for (i, strg) in data["storage"]
+        if !(strg["storage_bus"] in bus_ids)
+            error(LOGGER, "bus $(strg["storage_bus"]) in storage unit $(i) is not defined")
         end
     end
 
@@ -741,40 +749,65 @@ end
 
 
 """
-checks that each battery has a reasonable parameters
+checks that each storage unit has a reasonable parameters
 """
-function check_battery_parameters(data::Dict{String,Any})
+function check_storage_parameters(data::Dict{String,Any})
     if InfrastructureModels.ismultinetwork(data)
-        error("check_battery_parameters does not yet support multinetwork data")
+        error("check_storage_parameters does not yet support multinetwork data")
     end
 
-    for (i, battery) in data["battery"]
-        if battery["energy"] < 0.0
-            error(LOGGER, "battery $(battery["index"]) has non-positive energy level $(battery["energy"])")
+    for (i, strg) in data["storage"]
+        if strg["energy"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive energy level $(strg["energy"])")
         end
-        if battery["energy_rating"] < 0.0
-            error(LOGGER, "battery $(battery["index"]) has non-positive energy rating $(battery["energy_rating"])")
+        if strg["energy_rating"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive energy rating $(strg["energy_rating"])")
         end
-        if battery["inv_rating"] < 0.0
-            error(LOGGER, "battery $(battery["index"]) has non-positive inverter rating $(battery["inv_rating"])")
+        if strg["charge_rating"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive charge rating $(strg["energy_rating"])")
         end
-        if battery["inv_r"] < 0.0
-            error(LOGGER, "battery $(battery["index"]) has non-positive inverter resistance $(battery["inv_r"])")
+        if strg["discharge_rating"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive discharge rating $(strg["energy_rating"])")
         end
-        if battery["inv_standby_loss"] < 0.0
-            error(LOGGER, "battery $(battery["index"]) has non-positive inverter standby losses $(battery["inv_standby_loss"])")
+        if strg["r"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive resistance $(strg["r"])")
         end
-
-        if battery["eff_charge"] < 0.0 || battery["eff_charge"] > 1.0
-            warn(LOGGER, "battery $(battery["index"]) charge efficiency of $(battery["eff_charge"]) is out of the valid range 0.0 to 1.0)")
+        if strg["x"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive reactance $(strg["x"])")
         end
-
-        if battery["eff_discharge"] < 0.0 || battery["eff_discharge"] > 1.0
-            warn(LOGGER, "battery $(battery["index"]) discharge efficiency of $(battery["eff_discharge"]) is out of the valid range 0.0 to 1.0)")
+        if strg["standby_loss"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive standby losses $(strg["standby_loss"])")
         end
 
-        if battery["inv_standby_loss"] > 0.0 && battery["energy"] <= 0.0
-            warn(LOGGER, "battery $(battery["index"]) has inverter standby losses but zero initial energy.  This can lead to model infeasiblity.")
+        if haskey(strg, "thermal_rating") && strg["thermal_rating"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive thermal rating $(strg["thermal_rating"])")
+        end
+        if haskey(strg, "current_rating") && strg["current_rating"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive current rating $(strg["thermal_rating"])")
+        end
+
+        if strg["charge_efficiency"] < 0.0 || strg["charge_efficiency"] > 1.0
+            warn(LOGGER, "storage unit $(strg["index"]) charge efficiency of $(strg["eff_charge"]) is out of the valid range 0.0 to 1.0)")
+        end
+
+        if strg["discharge_efficiency"] < 0.0 || strg["discharge_efficiency"] > 1.0
+            warn(LOGGER, "storage unit $(strg["index"]) discharge efficiency of $(strg["eff_discharge"]) is out of the valid range 0.0 to 1.0)")
+        end
+
+
+        if strg["charge_rating"] > strg["energy_rating"]
+            warn(LOGGER, "on storage unit $(strg["index"]) reducing charge rating ($(strg["charge_rating"])) to energy rating ($(strg["energy_rating"]))")
+            strg["charge_rating"] = strg["energy_rating"]
+        end
+
+        if strg["discharge_rating"] > strg["energy_rating"]
+            warn(LOGGER, "on storage unit $(strg["index"]) reducing discharge rating ($(strg["discharge_rating"])) to energy rating ($(strg["energy_rating"]))")
+            strg["discharge_rating"] = strg["energy_rating"]
+        end
+
+
+        if strg["standby_loss"] > 0.0 && strg["energy"] <= 0.0
+            warn(LOGGER, "storage unit $(strg["index"]) has standby losses but zero initial energy.  This can lead to model infeasiblity.")
         end
     end
 end

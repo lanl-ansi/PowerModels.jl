@@ -8,11 +8,11 @@ mpc.baseMVA = 100.0;
 %% bus data
 %	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
 mpc.bus = [
-	1	 2	 0.0	 0.0	 0.0	 0.0	 1	    1.00000	    2.80377	 230.0	 1	    1.10000	    0.90000;
-	2	 1	 300.0	 98.61	 0.0	 0.0	 1	    1.08407	   -0.73465	 230.0	 1	    1.10000	    0.90000;
-	3	 2	 300.0	 98.61	 0.0	 0.0	 1	    1.00000	   -0.55972	 230.0	 1	    1.10000	    0.90000;
-	4	 3	 400.0	 131.47	 0.0	 0.0	 1	    1.00000	    0.00000	 230.0	 1	    1.10000	    0.90000;
-	10	 2	 0.0	 0.0	 0.0	 0.0	 1	    1.00000	    3.59033	 230.0	 1	    1.10000	    0.90000;
+	1	 2	 0.0	 0.0	 0.0	 0.0	 1	 1.00000	 2.80377	 230.0	 1	 1.10000	 0.90000;
+	2	 1	 300.0	 98.61	 0.0	 0.0	 1	 1.08407	 -0.73465	 230.0	 1	 1.10000	 0.90000;
+	3	 2	 300.0	 98.61	 0.0	 0.0	 1	 1.00000	 -0.55972	 230.0	 1	 1.10000	 0.90000;
+	4	 3	 400.0	 131.47	 0.0	 0.0	 1	 1.00000	 0.00000	 230.0	 1	 1.10000	 0.90000;
+	10	 2	 0.0	 0.0	 0.0	 0.0	 1	 1.00000	 3.59033	 230.0	 1	 1.10000	 0.90000;
 ];
 
 %% generator data
@@ -48,9 +48,9 @@ mpc.branch = [
 ];
 
 %% storage data
-%   storage_bus energy(MWh) energy_rating(MWh)  charge_rating(MW)   discharge_rating(MW)    charge_efficiency(uls)  discharge_efficiency(uls)   thermal_rating(MVA) qmin(MVar)  qmax(MVar)  r(p.u.) x(p.u.) standby_loss(MW) status(uls)
+%   storage_bus  energy  energy_rating charge_rating  discharge_rating  charge_efficiency  discharge_efficiency  thermal_rating  qmin  qmax  r  x  standby_loss  status
 mpc.storage = [
-    3    0.0     100.0   50.0    70.0    0.8     0.9     100.0   -50.0   70.0    0.1     0.0     0.0     1;
-    10   0.0     100.0   50.0    70.0    0.9     0.8     100.0   -50.0   70.0    0.1     0.0     0.0     1;
+	 3	 20.0	 100.0	 50.0	 70.0	 0.8	 0.9	 100.0	 -50.0	 70.0	 0.1	 0.0	 0.0	 1;
+	 10	 30.0	 100.0	 50.0	 70.0	 0.9	 0.8	 100.0	 -50.0	 70.0	 0.1	 0.0	 0.0	 1;
 ];
 
