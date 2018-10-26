@@ -207,18 +207,18 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         decomp = pm.ext[:SDconstraintDecomposition]
         groups = decomp.decomp
         lookup_index = decomp.lookup_index
-        lookup_bus_index = map(reverse, lookup_index)
+        lookup_bus_index = Dict((reverse(p) for p = pairs(lookup_index)))
     else
         cadj, lookup_index, ordering = chordal_extension(pm)
         groups = maximal_cliques(cadj)
-        lookup_bus_index = map(reverse, lookup_index)
+        lookup_bus_index = Dict((reverse(p) for p = pairs(lookup_index)))
         groups = [[lookup_bus_index[gi] for gi in g] for g in groups]
         pm.ext[:SDconstraintDecomposition] = SDconstraintDecomposition(groups, lookup_index, ordering)
     end
 
     voltage_product_groups =
         var(pm, nw, cnd)[:voltage_product_groups] =
-        Vector{Dict{Symbol, Array{JuMP.Variable, 2}}}(length(groups))
+        Vector{Dict{Symbol, Array{JuMP.Variable, 2}}}(undef, length(groups))
 
     for (gidx, group) in enumerate(groups)
         n = length(group)
@@ -326,7 +326,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T
 
     # linking constraints
     tree = prim(overlap_graph(groups))
-    overlapping_pairs = [ind2sub(tree, i) for i in find(tree)]
+    overlapping_pairs = [Tuple(CartesianIndices(tree)[i]) for i in (LinearIndices(tree))[findall(x->x!=0, tree)]]
     for (i, j) in overlapping_pairs
         gi, gj = groups[i], groups[j]
         var_i, var_j = voltage_product_groups[i], voltage_product_groups[j]
@@ -376,14 +376,16 @@ of the bus with `bus_id` in the adjacency matrix.
 function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
     adj, lookup_index = adjacency_matrix(pm, nw)
     nb = size(adj, 1)
-    diag_el = sum(adj, 1)[:]
+    diag_el = sum(adj, dims=1)[:]
     W = Hermitian(adj + spdiagm(diag_el, 0))
+    #W = Hermitian(adj + sparse(SparseArrays.spdiagm_internal(diag_el => 0)...))
 
-    F = cholfact(W)
+    F = cholesky(W)
     L = sparse(F.L)
     p = F.p
     q = invperm(p)
     Rchol = L - spdiagm(diag(L), 0)
+    #Rchol = L - sparse(SparseArrays.spdiagm_internal(diag(L) => 0)...)
     f_idx, t_idx, V = findnz(Rchol)
     cadj = sparse([f_idx;t_idx], [t_idx;f_idx], trues(2*length(f_idx)), nb, nb)
     cadj = cadj[q, q] # revert to original bus ordering (invert cholfact permutation)
@@ -402,7 +404,7 @@ function maximal_cliques(cadj::SparseMatrixCSC, peo::Vector{Int})
     # use peo to obtain one clique for each vertex
     cliques = Vector(undef, nb)
     for (i, v) in enumerate(peo)
-        Nv = findall(cadj[:, v])
+        Nv = findall(x->x!=0, cadj[:, v])
         cliques[i] = union(v, intersect(Nv, peo[i+1:end]))
     end
 
@@ -436,7 +438,7 @@ function mcs(A)
         filter!(x -> x != z, unnumbered)
         peo[i] = z
 
-        Nz = findall(A[:, z])
+        Nz = findall(x->x!=0, A[:, z])
         for y in intersect(Nz, unnumbered)
             w[y] += 1
         end
@@ -462,7 +464,7 @@ function prim(A, minweight=false)
         current_node = next_node
         filter!(node -> node != current_node, unvisited)
 
-        neighbors = intersect(findall(A[:, current_node]), unvisited)
+        neighbors = intersect(findall(x->x!=0, A[:, current_node]), unvisited)
         current_node_edges = [(current_node, i) for i in neighbors]
         append!(candidate_edges, current_node_edges)
         filter!(edge -> length(intersect(edge, unvisited)) == 1, candidate_edges)
@@ -523,8 +525,8 @@ Thus, A[idx_a] == B[idx_b].
 function overlap_indices(A::Array, B::Array, symmetric=true)
     overlap = intersect(A, B)
     symmetric && filter_flipped_pairs!(overlap)
-    idx_a = [findfirst(A, o) for o in overlap]
-    idx_b = [findfirst(B, o) for o in overlap]
+    idx_a = [something(findfirst(isequal(o), A), 0) for o in overlap]
+    idx_b = [something(findfirst(isequal(o), B), 0) for o in overlap]
     return idx_a, idx_b
 end
 

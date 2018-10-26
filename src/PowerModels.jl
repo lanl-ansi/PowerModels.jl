@@ -11,13 +11,16 @@ using Memento
 
 import Compat: @__MODULE__
 
+using Compat.LinearAlgebra
+using Compat.SparseArrays
+
 if VERSION < v"0.7.0-"
     import Compat: occursin
     import Compat: Nothing
     import Compat: round
     import Compat: findall
     import Compat: eachmatch
-    import Compat: LinearAlgebra
+    import Compat: undef
 
     function eachmatch(r::Regex, s::AbstractString; overlap::Bool=false)
         return eachmatch(r, s, overlap)
@@ -26,8 +29,6 @@ if VERSION < v"0.7.0-"
 end
 
 if VERSION > v"0.7.0-"
-    using LinearAlgebra
-    using SparseArrays
 end
 
 
