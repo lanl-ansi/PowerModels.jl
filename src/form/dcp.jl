@@ -206,7 +206,7 @@ end
 
 ""
 function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractDCPForm
-    add_setpoint(sol, pm, "bus", "vm", :vm; default_value = (item) -> 1)
+    add_setpoint_fixed(sol, pm, "bus", "vm"; default_value = (item) -> 1)
     add_setpoint(sol, pm, "bus", "va", :va)
 end
 
@@ -328,14 +328,14 @@ end
 
 ""
 function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: NFAForm
-    add_setpoint(sol, pm, "bus", "vm", :vm)
-    add_setpoint(sol, pm, "bus", "va", :va)
+    add_setpoint_fixed(sol, pm, "bus", "vm")
+    add_setpoint_fixed(sol, pm, "bus", "va")
 end
 
 ""
 function add_generator_power_setpoint(sol, pm::GenericPowerModel{T}) where T <: NFAForm
     add_setpoint(sol, pm, "gen", "pg", :pg)
-    add_setpoint(sol, pm, "gen", "qg", :qg)
+    add_setpoint_fixed(sol, pm, "gen", "qg")
 end
 
 
