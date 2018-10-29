@@ -97,7 +97,6 @@ end
 
 ""
 function add_generator_power_setpoint(sol, pm::GenericPowerModel)
-    mva_base = pm.data["baseMVA"]
     add_setpoint(sol, pm, "gen", "pg", :pg)
     add_setpoint(sol, pm, "gen", "qg", :qg)
 end
@@ -147,7 +146,56 @@ function add_branch_ne_setpoint(sol, pm::GenericPowerModel)
 end
 
 
-""
+
+"""
+adds setpoint values based on a given default_value function.
+
+this significantly improves performance in models where values are not defined
+e.g. the reactive power values in a DC power flow model
+"""
+function add_setpoint_fixed(
+    sol,
+    pm::GenericPowerModel,
+    dict_name,
+    param_name;
+    index_name = "index",
+    default_value = (item) -> NaN,
+    sol_dict = get(sol, dict_name, Dict{String,Any}()),
+    conductorless = false
+)
+
+    if InfrastructureModels.ismultinetwork(pm.data)
+        data_dict = pm.data["nw"]["$(pm.cnw)"][dict_name]
+    else
+        data_dict = pm.data[dict_name]
+    end
+
+    if length(data_dict) > 0
+        sol[dict_name] = sol_dict
+    end
+
+    for (i,item) in data_dict
+        idx = Int(item[index_name])
+        sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
+
+        if conductorless
+            sol_item[param_name] = default_value(item)
+        else
+            num_conductors = length(conductor_ids(pm))
+            cnd_idx = 1
+            sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
+        end
+
+        # remove MultiConductorValue, if it was not a ismulticonductor network
+        if !ismulticonductor(pm)
+            sol_item[param_name] = sol_item[param_name][1]
+        end
+    end
+end
+
+
+
+"adds values based on JuMP variables"
 function add_setpoint(
     sol,
     pm::GenericPowerModel,

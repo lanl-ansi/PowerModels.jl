@@ -206,7 +206,7 @@ end
 
 ""
 function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractDCPForm
-    add_setpoint(sol, pm, "bus", "vm", :vm; default_value = (item) -> 1)
+    add_setpoint_fixed(sol, pm, "bus", "vm"; default_value = (item) -> 1)
     add_setpoint(sol, pm, "bus", "va", :va)
 end
 
@@ -326,6 +326,17 @@ end
 function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: NFAForm
 end
 
+""
+function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: NFAForm
+    add_setpoint_fixed(sol, pm, "bus", "vm")
+    add_setpoint_fixed(sol, pm, "bus", "va")
+end
+
+""
+function add_generator_power_setpoint(sol, pm::GenericPowerModel{T}) where T <: NFAForm
+    add_setpoint(sol, pm, "gen", "pg", :pg)
+    add_setpoint_fixed(sol, pm, "gen", "qg")
+end
 
 
 
