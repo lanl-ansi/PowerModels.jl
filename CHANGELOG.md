@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added add_setpoint_fixed to improve solution reporting performance
 - Added support for a user provided JuMP model
 - Improved the Matpower data file export function
 

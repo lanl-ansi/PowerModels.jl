@@ -193,8 +193,12 @@ end
 ""
 function run_generic_model(data::Dict{String,Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
     pm = build_generic_model(data, model_constructor, post_method; kwargs...)
+    #pm, time, bytes_alloc, sec_in_gc = @timed build_generic_model(data, model_constructor, post_method; kwargs...)
+    #println("model build time: $(time)")
 
     solution = solve_generic_model(pm, solver; solution_builder = solution_builder)
+    #solution, time, bytes_alloc, sec_in_gc = @timed solve_generic_model(pm, solver; solution_builder = solution_builder)
+    #println("solution time: $(time)")
 
     return solution
 end
@@ -229,7 +233,11 @@ function solve_generic_model(pm::GenericPowerModel, solver; solution_builder = g
 
     status, solve_time = solve(pm)
 
-    return build_solution(pm, status, solve_time; solution_builder = solution_builder)
+    solution = build_solution(pm, status, solve_time; solution_builder = solution_builder)
+    #solution, time, bytes_alloc, sec_in_gc = @timed build_solution(pm, status, solve_time; solution_builder = solution_builder)
+    #println("build_solution time: $(time)")
+
+    return solution
 end
 
 """
