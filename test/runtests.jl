@@ -27,7 +27,6 @@ scs_solver = SCSSolver(max_iters=500000, acceleration_lookback=1, verbose=0)
 include("common.jl")
 
 @testset "PowerModels" begin
-
     include("matpower.jl")
 
     include("pti.jl")

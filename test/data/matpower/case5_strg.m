@@ -47,6 +47,9 @@ mpc.branch = [
 	4	 10	 0.00297	 0.0297	 0.00674	 240.0	 240.0	 240.0	 0.0	  0.0	 1	 -30.0	 30.0;
 ];
 
+
+mpc.time_elapsed = 1.0
+
 %% storage data
 %   storage_bus  energy  energy_rating charge_rating  discharge_rating  charge_efficiency  discharge_efficiency  thermal_rating  qmin  qmax  r  x  standby_loss  status
 mpc.storage = [

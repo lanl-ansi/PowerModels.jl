@@ -662,11 +662,34 @@ end
 function constraint_storage_exchange(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
     storage = ref(pm, nw, :storage, i)
 
-    time_passed = 1.0 # TODO get this from the network data
-
-    constraint_storage_state(pm, nw, i, storage["energy"], storage["charge_efficiency"], storage["discharge_efficiency"], time_passed)
     constraint_storage_complementarity(pm, nw, i)
     constraint_storage_loss(pm, nw, i, storage["storage_bus"], storage["r"], storage["x"], storage["standby_loss"])
 end
 
+""
+function constraint_storage_state(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
+    storage = ref(pm, nw, :storage, i)
 
+    if haskey(pm.data, "time_elapsed")
+        time_elapsed = pm.data["time_elapsed"]
+    else
+        warn("network data should specify time_elapsed, using 1.0 as a default")
+        time_elapsed = 1.0
+    end
+
+    constraint_storage_state_initial(pm, nw, i, storage["energy"], storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
+end
+
+""
+function constraint_storage_state(pm::GenericPowerModel, i::Int, nw_1::Int, nw_2::Int)
+    storage = ref(pm, nw_2, :storage, i)
+
+    if haskey(pm.data, "time_elapsed")
+        time_elapsed = pm.data["time_elapsed"]
+    else
+        warn("network data should specify time_elapsed, using 1.0 as a default")
+        time_elapsed = 1.0
+    end
+
+    constraint_storage_state(pm, nw_1, nw_2, i, storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
+end

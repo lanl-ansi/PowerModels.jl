@@ -252,6 +252,39 @@ TESTLOG = getlogger(PowerModels)
     end
 
 
+    @testset "opf with storage case" begin
+        mn_data = build_mn_data("../test/data/matpower/case5_strg.m", replicates=5)
+
+        @testset "test ac polar opf" begin
+            result = PowerModels.run_mn_strg_opf(mn_data, PowerModels.ACPPowerModel, ipopt_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 90569.1; atol = 1e0)
+
+            for (n, network) in result["solution"]["nw"]
+                @test isapprox(network["storage"]["1"]["ps"], -0.0358444; atol = 1e-3)
+                @test isapprox(network["storage"]["1"]["qs"], -0.0071736; atol = 1e-3)
+
+                @test isapprox(network["storage"]["2"]["ps"], -0.0477215; atol = 1e-3)
+                @test isapprox(network["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+            end
+        end
+
+        @testset "test dc polar opf" begin
+            result = PowerModels.run_mn_strg_opf(mn_data, PowerModels.DCPPowerModel, ipopt_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 87289.1; atol = 1e0)
+
+            for (n, network) in result["solution"]["nw"]
+                @test isapprox(network["storage"]["1"]["ps"], -0.0358713; atol = 1e-3)
+                @test isapprox(network["storage"]["2"]["ps"], -0.0477715; atol = 1e-3)
+            end
+        end
+
+    end
+
+
     @testset "test solution feedback" begin
         mn_data = build_mn_data("../test/data/matpower/case5_asym.m")
 
