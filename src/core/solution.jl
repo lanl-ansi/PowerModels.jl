@@ -97,7 +97,6 @@ end
 
 ""
 function add_generator_power_setpoint(sol, pm::GenericPowerModel)
-    mva_base = pm.data["baseMVA"]
     add_setpoint(sol, pm, "gen", "pg", :pg)
     add_setpoint(sol, pm, "gen", "qg", :qg)
 end
