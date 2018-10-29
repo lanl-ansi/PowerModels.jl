@@ -47,7 +47,7 @@ mpc.branch = [
 	4	 10	 0.00297	 0.0297	 0.00674	 240.0	 240.0	 240.0	 0.0	  0.0	 1	 -30.0	 30.0;
 ];
 
-
+% hours
 mpc.time_elapsed = 1.0
 
 %% storage data
