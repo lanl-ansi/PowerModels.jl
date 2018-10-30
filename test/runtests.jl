@@ -16,6 +16,7 @@ using Juniper
 using Compat
 
 using JuMP
+using JSON
 
 using Compat.LinearAlgebra
 using Compat.Test
@@ -66,9 +67,9 @@ include("common.jl")
 
     include("multinetwork.jl")
 
-    #include("multiconductor.jl")
+    include("multiconductor.jl")
 
-    #include("multi-nw-cnd.jl")
+    include("multi-nw-cnd.jl")
 
     include("util.jl")
 

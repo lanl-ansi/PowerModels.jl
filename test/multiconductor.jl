@@ -385,8 +385,8 @@ end
         angs_rad = mp_data["branch"]["1"]["angmin"]
 
         # Transpose
-        @test all((a').values == (a).values)
-        @test all(c' == RowVector([0.225, 0.225, 0.225]))
+        @test all(a' .== a)
+        @test all(c' == LinearAlgebra.Adjoint([0.225, 0.225, 0.225]))
 
         # Basic Math (Matrices)
         x = a + b
@@ -441,7 +441,7 @@ end
         @test PowerModels.getmcv(a, 1, 1) == a[1,1]
 
         # diagm
-        @test all(LinearAlgebra.diagm(c).values .== [0.225 0.0 0.0; 0.0 0.225 0.0; 0.0 0.0 0.225])
+        @test all(LinearAlgebra.diagm(0 => c).values .== [0.225 0.0 0.0; 0.0 0.225 0.0; 0.0 0.0 0.225])
 
         # rad2deg/deg2rad
         angs_deg = rad2deg(angs_rad)
@@ -458,12 +458,12 @@ end
         @test isa(deg2rad(a), PowerModels.MultiConductorMatrix)
 
         setlevel!(TESTLOG, "warn")
-        @test_nowarn show(DevNull, a)
+        @test_nowarn show(devnull, a)
 
         @test_nowarn a[1, 1] = 9.0
         @test a[1,1] == 9.0
 
-        @test_nowarn PowerModels.summary(DevNull, mp_data)
+        @test_nowarn PowerModels.summary(devnull, mp_data)
         setlevel!(TESTLOG, "error")
     end
 end

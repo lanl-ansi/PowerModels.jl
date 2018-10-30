@@ -14,6 +14,9 @@ Base.map(f, a::MultiConductorVector{T}) where T = MultiConductorVector{T}(map(f,
 Base.map(f, a::MultiConductorVector{T}, b::MultiConductorVector{T}) where T = MultiConductorVector{T}(map(f, a.values, b.values))
 conductors(mcv::MultiConductorVector) = length(mcv.values)
 
+MultiConductorVector(value::Array{T,2}) where T = MultiConductorMatrix{T}(value)
+
+
 ""
 function Base.setindex!(mcv::MultiConductorVector{T}, v::T, i::Int) where T
     mcv.values[i] = v
@@ -61,13 +64,11 @@ Base.BroadcastStyle(::Type{<:MultiConductorVector}) = Broadcast.ArrayStyle{Multi
 Base.BroadcastStyle(::Type{<:MultiConductorMatrix}) = Broadcast.ArrayStyle{MultiConductorMatrix}()
 
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorVector}}, ::Type{ElType}) where ElType
-    # Scan the inputs for the ArrayAndChar:
     A = find_mcv(bc)
-    # Use the char field of A to create the output
-    MultiConductorVector(similar(Array{ElType}, axes(bc)))
+    return MultiConductorVector(similar(Array{ElType}, axes(bc)))
 end
 
-"`A = find_aac(As)` returns the first ArrayAndChar among the arguments."
+"`A = find_mcv(As)` returns the first MultiConductorVector among the arguments."
 find_mcv(bc::Base.Broadcast.Broadcasted) = find_mcv(bc.args)
 find_mcv(args::Tuple) = find_mcv(find_mcv(args[1]), Base.tail(args))
 find_mcv(x) = x
@@ -76,13 +77,11 @@ find_mcv(::Any, rest) = find_mcv(rest)
 
 
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorMatrix}}, ::Type{ElType}) where ElType
-    # Scan the inputs for the ArrayAndChar:
     A = find_mcm(bc)
-    # Use the char field of A to create the output
-    MultiConductorMatrix(similar(Array{ElType}, axes(bc)))
+    return MultiConductorMatrix(similar(Array{ElType}, axes(bc)))
 end
 
-"`A = find_aac(As)` returns the first ArrayAndChar among the arguments."
+"`A = find_mcm(As)` returns the first MultiConductorMatrix among the arguments."
 find_mcm(bc::Base.Broadcast.Broadcasted) = find_mcm(bc.args)
 find_mcm(args::Tuple) = find_mcm(find_mcm(args[1]), Base.tail(args))
 find_mcm(x) = x
@@ -115,8 +114,8 @@ Base.:/(a::MultiConductorVector, b::Number) = MultiConductorVector(/(a.values, b
 Base.:/(a::Union{Array,Number}, b::MultiConductorVector) = MultiConductorVector(Base.broadcast(/, a, b.values))
 Base.:/(a::MultiConductorVector, b::MultiConductorVector) = MultiConductorVector(Base.broadcast(/, a.values, b.values))
 
-Base.:*(a::MultiConductorVector, b::LinearAlgebra.RowVector) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
-Base.:*(a::LinearAlgebra.RowVector, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
+Base.:*(a::MultiConductorVector, b::LinearAlgebra.Adjoint) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
+Base.:*(a::LinearAlgebra.Adjoint, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
 
 # Matrices
 Base.:+(a::MultiConductorMatrix) = MultiConductorMatrix(+(a.values))
@@ -140,7 +139,7 @@ Base.:/(a::Union{Array,Number}, b::MultiConductorMatrix) = MultiConductorMatrix(
 Base.:/(a::MultiConductorMatrix, b::MultiConductorMatrix) = MultiConductorMatrix(/(a.values, b.values))
 
 Base.:*(a::MultiConductorMatrix, b::MultiConductorVector) = MultiConductorVector(*(a.values, b.values))
-Base.:/(a::MultiConductorMatrix, b::LinearAlgebra.RowVector) = MultiConductorVector(squeeze(/(a.values, b), 2))
+Base.:/(a::MultiConductorMatrix, b::LinearAlgebra.Adjoint) = MultiConductorVector(squeeze(/(a.values, b), 2))
 
 Base.:^(a::MultiConductorVector, b::Complex) = MultiConductorVector(Base.broadcast(^, a.values, b))
 Base.:^(a::MultiConductorVector, b::Integer) = MultiConductorVector(Base.broadcast(^, a.values, b))
@@ -162,7 +161,7 @@ LinearAlgebra.transpose(a::MultiConductorVector) = MultiConductorVector(a.values
 LinearAlgebra.transpose(a::MultiConductorMatrix) = MultiConductorMatrix(a.values')
 
 LinearAlgebra.diag(a::MultiConductorMatrix) = MultiConductorVector(diag(a.values))
-LinearAlgebra.diagm(a::MultiConductorVector) = MultiConductorMatrix(diagm(a.values))
+LinearAlgebra.diagm(p::Pair{<:Integer, MultiConductorVector{S}}) where S = MultiConductorMatrix(diagm(p.first => p.second.values))
 
 Base.rad2deg(a::MultiConductorVector) = MultiConductorVector(map(rad2deg, a.values))
 Base.rad2deg(a::MultiConductorMatrix) = MultiConductorMatrix(map(rad2deg, a.values))
