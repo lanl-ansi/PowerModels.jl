@@ -1,6 +1,5 @@
 export MultiConductorValue, MultiConductorVector, MultiConductorMatrix, conductors
 
-
 "a data structure for working with multiconductor datasets"
 abstract type MultiConductorValue{T,N} <: AbstractArray{T,N} end
 
@@ -10,17 +9,16 @@ mutable struct MultiConductorVector{T} <: MultiConductorValue{T,1}
     values::Vector{T}
 end
 
-
 MultiConductorVector(value::T, conductors::Int) where T = MultiConductorVector([value for i in 1:conductors])
 Base.map(f, a::MultiConductorVector{T}) where T = MultiConductorVector{T}(map(f, a.values))
 Base.map(f, a::MultiConductorVector{T}, b::MultiConductorVector{T}) where T = MultiConductorVector{T}(map(f, a.values, b.values))
 conductors(mcv::MultiConductorVector) = length(mcv.values)
 
-
 ""
 function Base.setindex!(mcv::MultiConductorVector{T}, v::T, i::Int) where T
     mcv.values[i] = v
 end
+
 
 
 ""
@@ -34,17 +32,18 @@ Base.map(f, a::MultiConductorMatrix{T}) where T = MultiConductorMatrix{T}(map(f,
 Base.map(f, a::MultiConductorMatrix{T}, b::MultiConductorMatrix{T}) where T = MultiConductorMatrix{T}(map(f, a.values, b.values))
 conductors(mcv::MultiConductorMatrix) = size(mcv.values, 1)
 
-
 ""
 function Base.setindex!(mcv::MultiConductorMatrix{T}, v::T, i::Int, j::Int) where T
     mcv.values[i,j] = v
 end
 
 
+
+
 # start, next, done can be dropped with Julia v0.6
-Base.start(mcv::MultiConductorValue) = start(mcv.values)
-Base.next(mcv::MultiConductorValue, state) = next(mcv.values, state)
-Base.done(mcv::MultiConductorValue, state) = done(mcv.values, state)
+start(mcv::MultiConductorValue) = start(mcv.values)
+next(mcv::MultiConductorValue, state) = next(mcv.values, state)
+done(mcv::MultiConductorValue, state) = done(mcv.values, state)
 
 Base.iterate(mcv::MultiConductorValue, kwargs...) = iterate(mcv.values, kwargs...)
 
@@ -91,8 +90,8 @@ find_mcm(a::MultiConductorMatrix, rest) = a
 find_mcm(::Any, rest) = find_mcm(rest)
 
 
-Base.axes(a::MultiConductorValue) = Base.axes(a.values)
-Base.axes(a::MultiConductorValue, dim) = Base.axes(a.values, dim)
+#Base.axes(a::MultiConductorValue) = Base.axes(a.values)
+#Base.axes(a::MultiConductorValue, dim) = Base.axes(a.values, dim)
 
 
 # Vectors
@@ -116,8 +115,8 @@ Base.:/(a::MultiConductorVector, b::Number) = MultiConductorVector(/(a.values, b
 Base.:/(a::Union{Array,Number}, b::MultiConductorVector) = MultiConductorVector(Base.broadcast(/, a, b.values))
 Base.:/(a::MultiConductorVector, b::MultiConductorVector) = MultiConductorVector(Base.broadcast(/, a.values, b.values))
 
-Base.:*(a::MultiConductorVector, b::RowVector) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
-Base.:*(a::RowVector, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
+Base.:*(a::MultiConductorVector, b::LinearAlgebra.RowVector) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
+Base.:*(a::LinearAlgebra.RowVector, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
 
 # Matrices
 Base.:+(a::MultiConductorMatrix) = MultiConductorMatrix(+(a.values))
@@ -130,8 +129,10 @@ Base.:-(a::MultiConductorMatrix, b::Union{Array,Number}) = MultiConductorMatrix(
 Base.:-(a::Union{Array,Number}, b::MultiConductorMatrix) = MultiConductorMatrix(-(a, b.values))
 Base.:-(a::MultiConductorMatrix, b::MultiConductorMatrix) = MultiConductorMatrix(-(a.values, b.values))
 
-Base.:*(a::MultiConductorMatrix, b::Union{Array,Number}) = MultiConductorMatrix(*(a.values, b))
-Base.:*(a::Union{Array,Number}, b::MultiConductorMatrix) = MultiConductorMatrix(*(a, b.values))
+Base.:*(a::MultiConductorMatrix, b::Number) = MultiConductorMatrix(*(a.values, b))
+Base.:*(a::Number, b::MultiConductorMatrix) = MultiConductorMatrix(*(a, b.values))
+Base.:*(a::MultiConductorMatrix, b::Array) = MultiConductorMatrix(*(a.values, b))
+Base.:*(a::Array, b::MultiConductorMatrix) = MultiConductorMatrix(*(a, b.values))
 Base.:*(a::MultiConductorMatrix, b::MultiConductorMatrix) = MultiConductorMatrix(*(a.values, b.values))
 
 Base.:/(a::MultiConductorMatrix, b::Union{Array,Number}) = MultiConductorMatrix(/(a.values, b))
@@ -139,7 +140,7 @@ Base.:/(a::Union{Array,Number}, b::MultiConductorMatrix) = MultiConductorMatrix(
 Base.:/(a::MultiConductorMatrix, b::MultiConductorMatrix) = MultiConductorMatrix(/(a.values, b.values))
 
 Base.:*(a::MultiConductorMatrix, b::MultiConductorVector) = MultiConductorVector(*(a.values, b.values))
-Base.:/(a::MultiConductorMatrix, b::RowVector) = MultiConductorVector(squeeze(/(a.values, b), 2))
+Base.:/(a::MultiConductorMatrix, b::LinearAlgebra.RowVector) = MultiConductorVector(squeeze(/(a.values, b), 2))
 
 Base.:^(a::MultiConductorVector, b::Complex) = MultiConductorVector(Base.broadcast(^, a.values, b))
 Base.:^(a::MultiConductorVector, b::Integer) = MultiConductorVector(Base.broadcast(^, a.values, b))
@@ -168,6 +169,9 @@ Base.rad2deg(a::MultiConductorMatrix) = MultiConductorMatrix(map(rad2deg, a.valu
 
 Base.deg2rad(a::MultiConductorVector) = MultiConductorVector(map(deg2rad, a.values))
 Base.deg2rad(a::MultiConductorMatrix) = MultiConductorMatrix(map(deg2rad, a.values))
+
+
+
 
 JSON.lower(mcv::MultiConductorValue) = mcv.values
 
