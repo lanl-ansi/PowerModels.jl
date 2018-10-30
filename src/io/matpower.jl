@@ -311,6 +311,7 @@ function parse_matpower_string(data_string::String)
 end
 
 
+""
 function mp_cost_data(cost_row)
     cost_data = Dict{String,Any}(
         "model" => InfrastructureModels.check_type(Int, cost_row[1]),

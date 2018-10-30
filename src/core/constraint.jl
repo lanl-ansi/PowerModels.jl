@@ -122,19 +122,19 @@ function constraint_storage_current_limit(pm::GenericPowerModel, n::Int, c::Int,
     @constraint(pm.model, ps^2 + qs^2 <= rating^2*vm^2)
 end
 
-function constraint_storage_state_initial(pm::GenericPowerModel, n::Int, i::Int, energy, charge_eff, discharge_eff, time_passed)
+function constraint_storage_state_initial(pm::GenericPowerModel, n::Int, i::Int, energy, charge_eff, discharge_eff, time_elapsed)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
     se = var(pm, n, :se, i)
-    @constraint(pm.model, se - energy == time_passed*(charge_eff*sc - sd/discharge_eff))
+    @constraint(pm.model, se - energy == time_elapsed*(charge_eff*sc - sd/discharge_eff))
 end
 
-function constraint_storage_state(pm::GenericPowerModel, n_1::Int, n_2::Int, i::Int, charge_eff, discharge_eff, time_passed)
+function constraint_storage_state(pm::GenericPowerModel, n_1::Int, n_2::Int, i::Int, charge_eff, discharge_eff, time_elapsed)
     sc_2 = var(pm, n_2, :sc, i)
     sd_2 = var(pm, n_2, :sd, i)
     se_2 = var(pm, n_2, :se, i)
     se_1 = var(pm, n_1, :se, i)
-    @constraint(pm.model, se_2 - se_1 == time_passed*(charge_eff*sc_2 - sd_2/discharge_eff))
+    @constraint(pm.model, se_2 - se_1 == time_elapsed*(charge_eff*sc_2 - sd_2/discharge_eff))
 end
 
 function constraint_storage_complementarity(pm::GenericPowerModel, n::Int, i)
