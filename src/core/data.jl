@@ -786,26 +786,17 @@ function check_storage_parameters(data::Dict{String,Any})
             error(LOGGER, "storage unit $(strg["index"]) has a non-positive current rating $(strg["thermal_rating"])")
         end
 
-        if strg["charge_efficiency"] < 0.0 || strg["charge_efficiency"] > 1.0
-            warn(LOGGER, "storage unit $(strg["index"]) charge efficiency of $(strg["eff_charge"]) is out of the valid range 0.0 to 1.0)")
+
+        if strg["charge_efficiency"] <= 0.0 || strg["charge_efficiency"] > 1.0
+            warn(LOGGER, "storage unit $(strg["index"]) charge efficiency of $(strg["eff_charge"]) is out of the valid range (0.0. 1.0]")
         end
 
-        if strg["discharge_efficiency"] < 0.0 || strg["discharge_efficiency"] > 1.0
-            warn(LOGGER, "storage unit $(strg["index"]) discharge efficiency of $(strg["eff_discharge"]) is out of the valid range 0.0 to 1.0)")
+        if strg["discharge_efficiency"] <= 0.0 || strg["discharge_efficiency"] > 1.0
+            warn(LOGGER, "storage unit $(strg["index"]) discharge efficiency of $(strg["eff_discharge"]) is out of the valid range (0.0. 1.0]")
         end
 
         if !isapprox(strg["x"], 0.0, atol=1e-6, rtol=1e-6)
             warn(LOGGER, "storage unit $(strg["index"]) has a non-zero reactance $(strg["x"]), which is currently ignored")
-        end
-
-        if strg["charge_rating"] > strg["energy_rating"]
-            warn(LOGGER, "on storage unit $(strg["index"]) reducing charge rating ($(strg["charge_rating"])) to energy rating ($(strg["energy_rating"]))")
-            strg["charge_rating"] = strg["energy_rating"]
-        end
-
-        if strg["discharge_rating"] > strg["energy_rating"]
-            warn(LOGGER, "on storage unit $(strg["index"]) reducing discharge rating ($(strg["discharge_rating"])) to energy rating ($(strg["energy_rating"]))")
-            strg["discharge_rating"] = strg["energy_rating"]
         end
 
 
