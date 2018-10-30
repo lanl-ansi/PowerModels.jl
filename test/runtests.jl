@@ -17,12 +17,13 @@ using Compat
 
 using JuMP
 
+using Compat.LinearAlgebra
+using Compat.Test
+
 if VERSION > v"0.7.0-"
-    using Test
 end
 
 if VERSION < v"0.7.0-"
-    using Base.Test
 end
 
 
@@ -37,7 +38,6 @@ scs_solver = SCSSolver(max_iters=500000, acceleration_lookback=1, verbose=0)
 include("common.jl")
 
 @testset "PowerModels" begin
-
     include("matpower.jl")
 
     include("pti.jl")
@@ -60,9 +60,9 @@ include("common.jl")
 
     include("opf-var.jl")
 
-    #include("ots.jl")
+    include("ots.jl")
 
-    #include("tnep.jl")
+    include("tnep.jl")
 
     include("multinetwork.jl")
 
@@ -73,5 +73,4 @@ include("common.jl")
     include("util.jl")
 
     include("docs.jl")
-
 end

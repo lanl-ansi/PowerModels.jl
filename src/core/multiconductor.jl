@@ -2,11 +2,11 @@ export MultiConductorValue, MultiConductorVector, MultiConductorMatrix, conducto
 
 
 "a data structure for working with multiconductor datasets"
-abstract type MultiConductorValue{T} end
+abstract type MultiConductorValue{T,N} <: AbstractArray{T,N} end
 
 
 "a data structure for working with multiconductor datasets"
-mutable struct MultiConductorVector{T} <: MultiConductorValue{T}
+mutable struct MultiConductorVector{T} <: MultiConductorValue{T,1}
     values::Vector{T}
 end
 
@@ -24,7 +24,7 @@ end
 
 
 ""
-mutable struct MultiConductorMatrix{T} <: MultiConductorValue{T}
+mutable struct MultiConductorMatrix{T} <: MultiConductorValue{T,2}
     values::Matrix{T}
 end
 
@@ -41,9 +41,12 @@ function Base.setindex!(mcv::MultiConductorMatrix{T}, v::T, i::Int, j::Int) wher
 end
 
 
+# start, next, done can be dropped with Julia v0.6
 Base.start(mcv::MultiConductorValue) = start(mcv.values)
 Base.next(mcv::MultiConductorValue, state) = next(mcv.values, state)
 Base.done(mcv::MultiConductorValue, state) = done(mcv.values, state)
+
+Base.iterate(mcv::MultiConductorValue, kwargs...) = iterate(mcv.values, kwargs...)
 
 Base.length(mcv::MultiConductorValue) = length(mcv.values)
 Base.size(mcv::MultiConductorValue, a...) = size(mcv.values, a...)
@@ -54,6 +57,43 @@ Base.show(io::IO, mcv::MultiConductorValue) = Base.show(io, mcv.values)
 Base.broadcast(f::Any, a::Any, b::MultiConductorValue) = broadcast(f, a, b.values)
 Base.broadcast(f::Any, a::MultiConductorValue, b::Any) = broadcast(f, a.values, b)
 Base.broadcast(f::Any, a::MultiConductorValue, b::MultiConductorValue) = broadcast(f, a.values, b.values)
+
+Base.BroadcastStyle(::Type{<:MultiConductorVector}) = Broadcast.ArrayStyle{MultiConductorVector}()
+Base.BroadcastStyle(::Type{<:MultiConductorMatrix}) = Broadcast.ArrayStyle{MultiConductorMatrix}()
+
+function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorVector}}, ::Type{ElType}) where ElType
+    # Scan the inputs for the ArrayAndChar:
+    A = find_mcv(bc)
+    # Use the char field of A to create the output
+    MultiConductorVector(similar(Array{ElType}, axes(bc)))
+end
+
+"`A = find_aac(As)` returns the first ArrayAndChar among the arguments."
+find_mcv(bc::Base.Broadcast.Broadcasted) = find_mcv(bc.args)
+find_mcv(args::Tuple) = find_mcv(find_mcv(args[1]), Base.tail(args))
+find_mcv(x) = x
+find_mcv(a::MultiConductorVector, rest) = a
+find_mcv(::Any, rest) = find_mcv(rest)
+
+
+function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorMatrix}}, ::Type{ElType}) where ElType
+    # Scan the inputs for the ArrayAndChar:
+    A = find_mcm(bc)
+    # Use the char field of A to create the output
+    MultiConductorMatrix(similar(Array{ElType}, axes(bc)))
+end
+
+"`A = find_aac(As)` returns the first ArrayAndChar among the arguments."
+find_mcm(bc::Base.Broadcast.Broadcasted) = find_mcm(bc.args)
+find_mcm(args::Tuple) = find_mcm(find_mcm(args[1]), Base.tail(args))
+find_mcm(x) = x
+find_mcm(a::MultiConductorMatrix, rest) = a
+find_mcm(::Any, rest) = find_mcm(rest)
+
+
+Base.axes(a::MultiConductorValue) = Base.axes(a.values)
+Base.axes(a::MultiConductorValue, dim) = Base.axes(a.values, dim)
+
 
 # Vectors
 Base.:+(a::MultiConductorVector) = MultiConductorVector(+(a.values))
@@ -108,6 +148,7 @@ Base.:^(a::MultiConductorMatrix, b::Complex) = MultiConductorMatrix(a.values ^ b
 Base.:^(a::MultiConductorMatrix, b::Integer) = MultiConductorMatrix(a.values ^ b)
 Base.:^(a::MultiConductorMatrix, b::AbstractFloat) = MultiConductorMatrix(a.values ^ b)
 
+
 LinearAlgebra.inv(a::MultiConductorMatrix) = MultiConductorMatrix(inv(a.values))
 LinearAlgebra.pinv(a::MultiConductorMatrix) = MultiConductorMatrix(pinv(a.values))
 
@@ -116,7 +157,7 @@ Base.real(a::MultiConductorMatrix) = MultiConductorMatrix(real(a.values))
 Base.imag(a::MultiConductorVector) = MultiConductorVector(imag(a.values))
 Base.imag(a::MultiConductorMatrix) = MultiConductorMatrix(imag(a.values))
 
-LinearAlgebra.transpose(a::MultiConductorVector) = a.values'
+LinearAlgebra.transpose(a::MultiConductorVector) = MultiConductorVector(a.values')
 LinearAlgebra.transpose(a::MultiConductorMatrix) = MultiConductorMatrix(a.values')
 
 LinearAlgebra.diag(a::MultiConductorMatrix) = MultiConductorVector(diag(a.values))

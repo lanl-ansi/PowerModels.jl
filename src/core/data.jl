@@ -55,8 +55,8 @@ function calc_branch_t(branch::Dict{String,Any})
     tap_ratio = branch["tap"]
     angle_shift = branch["shift"]
 
-    tr = tap_ratio.*cos.(angle_shift)
-    ti = tap_ratio.*sin.(angle_shift)
+    tr = tap_ratio .* cos.(angle_shift)
+    ti = tap_ratio .* sin.(angle_shift)
 
     return tr, ti
 end
