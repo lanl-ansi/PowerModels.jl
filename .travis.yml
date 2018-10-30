@@ -6,52 +6,11 @@ julia:
   - 0.6
   - 0.7
   - 1.0
-  - nightly
-matrix:
-  allow_failures:
-    - julia: 1.0
-    - julia: nightly
 cache:
  directories:
    - /home/travis/.julia
 addons:
   apt_packages:
     - gfortran
-
-
-before_install:
-- |
-    if [[ "$TRAVIS_JULIA_VERSION" == "0.6" ]]; then
-      julia -e 'if "PowerModels" in keys(Pkg.installed()) Pkg.rm("PowerModels"); Pkg.rm("PowerModels") end'
-      julia -e 'Pkg.update()'
-      julia -e 'if !("Coverage" in keys(Pkg.installed())) Pkg.add("Coverage") end'
-      julia -e 'if !("Documenter" in keys(Pkg.installed())) Pkg.add("Documenter") end'
-    else
-      julia -e 'using Pkg; Pkg.update()'
-    fi
-
-
-
-script:
-- if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-- |
-    if [[ "$TRAVIS_JULIA_VERSION" == "0.6" ]]; then
-      julia -e "Pkg.clone(pwd())"
-      julia -e 'Pkg.test("PowerModels", coverage=true)'
-    else
-      julia --project --color=yes -e "import Pkg; Pkg.instantiate(); Pkg.build();" #make sure the depedencies are working properly
-      julia --check-bounds=yes --depwarn=no --color=yes --project -e "import Pkg; Pkg.test(coverage=true);";
-    fi
-
-
 after_success:
-- |
-    if [[ "$TRAVIS_JULIA_VERSION" == "0.6" ]]; then
-      julia -e  'using Coverage; cd(Pkg.dir("PowerModels")); LCOV.writefile("lcov.info", process_folder(".")); run(pipeline(`curl -s https://codecov.io/bash`, `bash`))'
-      julia -e 'cd(Pkg.dir("PowerModels")); include(joinpath("docs", "make.jl"))'
-    else
-      julia -e  'using Coverage; import PowerModels; joinpath(dirname(pathof(PowerModels)); LCOV.writefile("lcov.info", process_folder(".")); run(pipeline(`curl -s https://codecov.io/bash`, `bash`))'
-      julia -e 'import PowerModels; joinpath(dirname(pathof(PowerModels)); include(joinpath("docs", "make.jl"))';
-    fi
-
-
+  - julia -e '(VERSION >= v"0.7" && using Pkg); Pkg.add("Coverage"); cd(Pkg.dir("PowerModels")); using Coverage; Codecov.submit(process_folder())'
