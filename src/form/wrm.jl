@@ -377,15 +377,14 @@ function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
     adj, lookup_index = adjacency_matrix(pm, nw)
     nb = size(adj, 1)
     diag_el = sum(adj, dims=1)[:]
-    W = Hermitian(adj + spdiagm(diag_el, 0))
-    #W = Hermitian(adj + sparse(SparseArrays.spdiagm_internal(diag_el => 0)...))
+    W = Hermitian(adj + sparse(SparseArrays.spdiagm_internal(0 => diag_el)...))
 
     F = cholesky(W)
     L = sparse(F.L)
     p = F.p
     q = invperm(p)
-    Rchol = L - spdiagm(diag(L), 0)
-    #Rchol = L - sparse(SparseArrays.spdiagm_internal(diag(L) => 0)...)
+
+    Rchol = L - sparse(SparseArrays.spdiagm_internal(0 => diag(L))...)
     f_idx, t_idx, V = findnz(Rchol)
     cadj = sparse([f_idx;t_idx], [t_idx;f_idx], trues(2*length(f_idx)), nb, nb)
     cadj = cadj[q, q] # revert to original bus ordering (invert cholfact permutation)
