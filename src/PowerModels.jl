@@ -45,7 +45,7 @@ if VERSION < v"0.7.0-"
 end
 
 if VERSION > v"0.7.0-"
-    PowerModels.pm_sum = Base.sum
+    pm_sum = sum
 
     function spdiagm(m, i::Int)
         return sparse(SparseArrays.spdiagm_internal(i => m)...)
