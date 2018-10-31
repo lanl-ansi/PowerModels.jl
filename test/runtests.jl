@@ -20,11 +20,10 @@ using JSON
 
 using Compat.LinearAlgebra
 using Compat.Test
-
-if VERSION > v"0.7.0-"
-end
+import Compat: pairs
 
 if VERSION < v"0.7.0-"
+    LinearAlgebra = Compat.LinearAlgebra
 end
 
 

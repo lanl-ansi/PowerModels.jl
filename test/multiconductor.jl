@@ -386,7 +386,7 @@ end
 
         # Transpose
         @test all(a' .== a)
-        @test all(c' == LinearAlgebra.Adjoint([0.225, 0.225, 0.225]))
+        @test all(c' .== [0.225, 0.225, 0.225]')
 
         # Basic Math (Matrices)
         x = a + b

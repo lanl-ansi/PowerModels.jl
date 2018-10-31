@@ -21,14 +21,39 @@ if VERSION < v"0.7.0-"
     import Compat: findall
     import Compat: eachmatch
     import Compat: undef
+    import Compat: pairs
+
+    LinearAlgebra = Compat.LinearAlgebra
+
+    mutable struct CholeskyResult
+        L::Any
+        p::Any
+    end
+
+    function cholesky(args...)
+        v = cholfact(args...)
+        return CholeskyResult(v[:L], v[:p])
+    end
 
     function eachmatch(r::Regex, s::AbstractString; overlap::Bool=false)
         return eachmatch(r, s, overlap)
     end
 
+    function pm_sum(v; dims::Int=0)
+        return sum(v, dims)
+    end
 end
 
 if VERSION > v"0.7.0-"
+    PowerModels.pm_sum = Base.sum
+
+    function spdiagm(m, i::Int)
+        return sparse(SparseArrays.spdiagm_internal(i => m)...)
+    end
+
+    function ind2sub(x, i)
+        return Tuple(CartesianIndices(x)[i])
+    end
 end
 
 

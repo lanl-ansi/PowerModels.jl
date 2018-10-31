@@ -326,7 +326,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T
 
     # linking constraints
     tree = prim(overlap_graph(groups))
-    overlapping_pairs = [Tuple(CartesianIndices(tree)[i]) for i in (LinearIndices(tree))[findall(x->x!=0, tree)]]
+    overlapping_pairs = [ind2sub(tree, i) for i in (LinearIndices(tree))[findall(x->x!=0, tree)]]
     for (i, j) in overlapping_pairs
         gi, gj = groups[i], groups[j]
         var_i, var_j = voltage_product_groups[i], voltage_product_groups[j]
@@ -376,15 +376,15 @@ of the bus with `bus_id` in the adjacency matrix.
 function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
     adj, lookup_index = adjacency_matrix(pm, nw)
     nb = size(adj, 1)
-    diag_el = sum(adj, dims=1)[:]
-    W = Hermitian(adj + sparse(SparseArrays.spdiagm_internal(0 => diag_el)...))
+    diag_el = PowerModels.pm_sum(adj, dims=1)[:]
+    W = Hermitian(adj + spdiagm(diag_el, 0))
 
     F = cholesky(W)
     L = sparse(F.L)
     p = F.p
     q = invperm(p)
 
-    Rchol = L - sparse(SparseArrays.spdiagm_internal(0 => diag(L))...)
+    Rchol = L - spdiagm(diag(L), 0)
     f_idx, t_idx, V = findnz(Rchol)
     cadj = sparse([f_idx;t_idx], [t_idx;f_idx], trues(2*length(f_idx)), nb, nb)
     cadj = cadj[q, q] # revert to original bus ordering (invert cholfact permutation)

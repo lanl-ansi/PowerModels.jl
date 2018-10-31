@@ -1,7 +1,11 @@
 export MultiConductorValue, MultiConductorVector, MultiConductorMatrix, conductors
 
-"a data structure for working with multiconductor datasets"
-abstract type MultiConductorValue{T,N} <: AbstractArray{T,N} end
+# "a data structure for working with multiconductor datasets"
+if VERSION < v"0.7.0-"
+    abstract type MultiConductorValue{T,N} end
+else
+    abstract type MultiConductorValue{T,N} <: AbstractArray{T,N} end
+end
 
 
 "a data structure for working with multiconductor datasets"
@@ -43,12 +47,13 @@ end
 
 
 
-# start, next, done can be dropped with Julia v0.6
-start(mcv::MultiConductorValue) = start(mcv.values)
-next(mcv::MultiConductorValue, state) = next(mcv.values, state)
-done(mcv::MultiConductorValue, state) = done(mcv.values, state)
-
-Base.iterate(mcv::MultiConductorValue, kwargs...) = iterate(mcv.values, kwargs...)
+if VERSION < v"0.7.0-"
+    Base.start(mcv::MultiConductorValue) = start(mcv.values)
+    Base.next(mcv::MultiConductorValue, state) = next(mcv.values, state)
+    Base.done(mcv::MultiConductorValue, state) = done(mcv.values, state)
+else
+    iterate(mcv::MultiConductorValue, kwargs...) = iterate(mcv.values, kwargs...)
+end
 
 Base.length(mcv::MultiConductorValue) = length(mcv.values)
 Base.size(mcv::MultiConductorValue, a...) = size(mcv.values, a...)
@@ -60,37 +65,36 @@ Base.broadcast(f::Any, a::Any, b::MultiConductorValue) = broadcast(f, a, b.value
 Base.broadcast(f::Any, a::MultiConductorValue, b::Any) = broadcast(f, a.values, b)
 Base.broadcast(f::Any, a::MultiConductorValue, b::MultiConductorValue) = broadcast(f, a.values, b.values)
 
-Base.BroadcastStyle(::Type{<:MultiConductorVector}) = Broadcast.ArrayStyle{MultiConductorVector}()
-Base.BroadcastStyle(::Type{<:MultiConductorMatrix}) = Broadcast.ArrayStyle{MultiConductorMatrix}()
+# Broadcast implementation for Julia v0.7
+if VERSION > v"0.7.0-"
+    Base.BroadcastStyle(::Type{<:MultiConductorVector}) = Broadcast.ArrayStyle{MultiConductorVector}()
+    Base.BroadcastStyle(::Type{<:MultiConductorMatrix}) = Broadcast.ArrayStyle{MultiConductorMatrix}()
 
-function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorVector}}, ::Type{ElType}) where ElType
-    A = find_mcv(bc)
-    return MultiConductorVector(similar(Array{ElType}, axes(bc)))
+    function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorVector}}, ::Type{ElType}) where ElType
+        A = find_mcv(bc)
+        return MultiConductorVector(similar(Array{ElType}, axes(bc)))
+    end
+
+    "`A = find_mcv(As)` returns the first MultiConductorVector among the arguments."
+    find_mcv(bc::Base.Broadcast.Broadcasted) = find_mcv(bc.args)
+    find_mcv(args::Tuple) = find_mcv(find_mcv(args[1]), Base.tail(args))
+    find_mcv(x) = x
+    find_mcv(a::MultiConductorVector, rest) = a
+    find_mcv(::Any, rest) = find_mcv(rest)
+
+
+    function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorMatrix}}, ::Type{ElType}) where ElType
+        A = find_mcm(bc)
+        return MultiConductorMatrix(similar(Array{ElType}, axes(bc)))
+    end
+
+    "`A = find_mcm(As)` returns the first MultiConductorMatrix among the arguments."
+    find_mcm(bc::Base.Broadcast.Broadcasted) = find_mcm(bc.args)
+    find_mcm(args::Tuple) = find_mcm(find_mcm(args[1]), Base.tail(args))
+    find_mcm(x) = x
+    find_mcm(a::MultiConductorMatrix, rest) = a
+    find_mcm(::Any, rest) = find_mcm(rest)
 end
-
-"`A = find_mcv(As)` returns the first MultiConductorVector among the arguments."
-find_mcv(bc::Base.Broadcast.Broadcasted) = find_mcv(bc.args)
-find_mcv(args::Tuple) = find_mcv(find_mcv(args[1]), Base.tail(args))
-find_mcv(x) = x
-find_mcv(a::MultiConductorVector, rest) = a
-find_mcv(::Any, rest) = find_mcv(rest)
-
-
-function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorMatrix}}, ::Type{ElType}) where ElType
-    A = find_mcm(bc)
-    return MultiConductorMatrix(similar(Array{ElType}, axes(bc)))
-end
-
-"`A = find_mcm(As)` returns the first MultiConductorMatrix among the arguments."
-find_mcm(bc::Base.Broadcast.Broadcasted) = find_mcm(bc.args)
-find_mcm(args::Tuple) = find_mcm(find_mcm(args[1]), Base.tail(args))
-find_mcm(x) = x
-find_mcm(a::MultiConductorMatrix, rest) = a
-find_mcm(::Any, rest) = find_mcm(rest)
-
-
-#Base.axes(a::MultiConductorValue) = Base.axes(a.values)
-#Base.axes(a::MultiConductorValue, dim) = Base.axes(a.values, dim)
 
 
 # Vectors
@@ -114,8 +118,13 @@ Base.:/(a::MultiConductorVector, b::Number) = MultiConductorVector(/(a.values, b
 Base.:/(a::Union{Array,Number}, b::MultiConductorVector) = MultiConductorVector(Base.broadcast(/, a, b.values))
 Base.:/(a::MultiConductorVector, b::MultiConductorVector) = MultiConductorVector(Base.broadcast(/, a.values, b.values))
 
-Base.:*(a::MultiConductorVector, b::LinearAlgebra.Adjoint) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
-Base.:*(a::LinearAlgebra.Adjoint, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
+if VERSION < v"0.7.0-"
+    Base.:*(a::MultiConductorVector, b::RowVector) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
+    Base.:*(a::RowVector, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
+else
+    Base.:*(a::MultiConductorVector, b::LinearAlgebra.Adjoint) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
+    Base.:*(a::LinearAlgebra.Adjoint, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
+end
 
 # Matrices
 Base.:+(a::MultiConductorMatrix) = MultiConductorMatrix(+(a.values))
@@ -139,7 +148,13 @@ Base.:/(a::Union{Array,Number}, b::MultiConductorMatrix) = MultiConductorMatrix(
 Base.:/(a::MultiConductorMatrix, b::MultiConductorMatrix) = MultiConductorMatrix(/(a.values, b.values))
 
 Base.:*(a::MultiConductorMatrix, b::MultiConductorVector) = MultiConductorVector(*(a.values, b.values))
-Base.:/(a::MultiConductorMatrix, b::LinearAlgebra.Adjoint) = MultiConductorVector(squeeze(/(a.values, b), 2))
+
+if VERSION < v"0.7.0-"
+    Base.:/(a::MultiConductorMatrix, b::RowVector) = MultiConductorVector(squeeze(/(a.values, b), 2))
+else
+    Base.:/(a::MultiConductorMatrix, b::LinearAlgebra.Adjoint) = MultiConductorVector(squeeze(/(a.values, b), 2))
+end
+
 
 Base.:^(a::MultiConductorVector, b::Complex) = MultiConductorVector(Base.broadcast(^, a.values, b))
 Base.:^(a::MultiConductorVector, b::Integer) = MultiConductorVector(Base.broadcast(^, a.values, b))
@@ -157,7 +172,7 @@ Base.real(a::MultiConductorMatrix) = MultiConductorMatrix(real(a.values))
 Base.imag(a::MultiConductorVector) = MultiConductorVector(imag(a.values))
 Base.imag(a::MultiConductorMatrix) = MultiConductorMatrix(imag(a.values))
 
-LinearAlgebra.transpose(a::MultiConductorVector) = MultiConductorVector(a.values')
+LinearAlgebra.transpose(a::MultiConductorVector) = a.values'
 LinearAlgebra.transpose(a::MultiConductorMatrix) = MultiConductorMatrix(a.values')
 
 LinearAlgebra.diag(a::MultiConductorMatrix) = MultiConductorVector(diag(a.values))
