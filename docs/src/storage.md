@@ -28,6 +28,8 @@ The data for the generic storage model is as follows,
 ```
 All of these quantities should be positive except for `qmin`, which can be negative.  The `efficiency` parameters are unit-less scalars in the range of 1.0 and 0.0.  By default, all of these quantities are used in per unit inside PowerModels.  The units indicated here are only used by PowerModels' mixed-unit representation and the extended Matpower network format.
 
+Note that the optional `thermal_rating` and `current_rating` parameters are applied at the point of coupling to the network while the other ratings are internal to the storage device.
+
 In addition to these component parameters, PowerModels also requires a global parameter `time_elapsed` (in hours) to specify how active power is converted into units of energy as the storage device is charged or discharged.
 
 PowerModels' storage components can be added to Matpower data files as follows,
