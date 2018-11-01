@@ -178,6 +178,10 @@ LinearAlgebra.transpose(a::MultiConductorMatrix) = MultiConductorMatrix(a.values
 LinearAlgebra.diag(a::MultiConductorMatrix) = MultiConductorVector(diag(a.values))
 LinearAlgebra.diagm(p::Pair{<:Integer, MultiConductorVector{S}}) where S = MultiConductorMatrix(diagm(p.first => p.second.values))
 
+if VERSION <= v"0.7.0-"
+    LinearAlgebra.diagm(a::MultiConductorVector{S}) where S = LinearAlgebra.diagm(0 => a)
+end
+
 Base.rad2deg(a::MultiConductorVector) = MultiConductorVector(map(rad2deg, a.values))
 Base.rad2deg(a::MultiConductorMatrix) = MultiConductorMatrix(map(rad2deg, a.values))
 
