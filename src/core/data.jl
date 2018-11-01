@@ -675,9 +675,11 @@ function check_connectivity(data::Dict{String,Any})
         end
     end
 
-    for (i, strg) in data["storage"]
-        if !(strg["storage_bus"] in bus_ids)
-            error(LOGGER, "bus $(strg["storage_bus"]) in storage unit $(i) is not defined")
+    if haskey(data, "storage")
+        for (i, strg) in data["storage"]
+            if !(strg["storage_bus"] in bus_ids)
+                error(LOGGER, "bus $(strg["storage_bus"]) in storage unit $(i) is not defined")
+            end
         end
     end
 
@@ -754,6 +756,10 @@ checks that each storage unit has a reasonable parameters
 function check_storage_parameters(data::Dict{String,Any})
     if InfrastructureModels.ismultinetwork(data)
         error("check_storage_parameters does not yet support multinetwork data")
+    end
+
+    if !haskey(data, "storage")
+        return
     end
 
     for (i, strg) in data["storage"]
@@ -1427,8 +1433,9 @@ end
 
 "feild names that should not be multi-conductor values"
 conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
-    "br_status", "gen_bus", "load_bus", "shunt_bus", "f_bus", "t_bus",
-    "transformer", "area", "zone", "base_kv",
+    "br_status", "gen_bus", "load_bus", "shunt_bus", "storage_bus", "f_bus", "t_bus",
+    "transformer", "area", "zone", "base_kv", "energy", "energy_rating", "charge_rating",
+    "discharge_rating", "charge_efficiency", "discharge_efficiency", "standby_loss",
     "model", "ncost", "cost", "startup", "shutdown"])
 
 conductor_matrix = Set(["br_r", "br_x"])

@@ -362,9 +362,9 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     if !haskey(pm_data, "dclinecost")
         pm_data["dclinecost"] = []
     end
-    if !haskey(pm_data, "storage")
-        pm_data["storage"] = []
-    end
+    #if !haskey(pm_data, "storage")
+    #    pm_data["storage"] = []
+    #end
 
     # translate component models
     mp2pm_branch(pm_data)
@@ -385,7 +385,7 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     # use once available
     InfrastructureModels.arrays_to_dicts!(pm_data)
 
-    for optional in ["dcline", "load", "shunt", "storage"]
+    for optional in ["dcline", "load", "shunt"]
         if length(pm_data[optional]) == 0
             pm_data[optional] = Dict{String,Any}()
         end

@@ -299,6 +299,10 @@ function build_ref(data::Dict{String,Any})
             ref[:conductor_ids] = 1:ref[:conductors]
         end
 
+        if !haskey(ref, :storage)
+            ref[:storage] = Dict{Int,Any}()
+        end
+
         # add connected components
         component_sets = PowerModels.connected_components(nw_data)
         ref[:components] = Dict(i => c for (i,c) in enumerate(sort(collect(component_sets); by=length)))
