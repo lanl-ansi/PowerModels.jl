@@ -66,6 +66,7 @@ end
 function get_solution(pm::GenericPowerModel, sol::Dict{String,Any})
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
+    add_storage_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
     add_dcline_flow_setpoint(sol, pm)
 
@@ -99,6 +100,16 @@ end
 function add_generator_power_setpoint(sol, pm::GenericPowerModel)
     add_setpoint(sol, pm, "gen", "pg", :pg)
     add_setpoint(sol, pm, "gen", "qg", :qg)
+end
+
+""
+function add_storage_setpoint(sol, pm::GenericPowerModel)
+    add_setpoint(sol, pm, "storage", "ps", :ps)
+    add_setpoint(sol, pm, "storage", "qs", :qs)
+    add_setpoint(sol, pm, "storage", "se", :se, conductorless=true)
+    # useful for model debugging
+    #add_setpoint(sol, pm, "storage", "sc", :sc, conductorless=true)
+    #add_setpoint(sol, pm, "storage", "sd", :sd, conductorless=true)
 end
 
 ""
@@ -226,7 +237,7 @@ function add_setpoint(
         if conductorless
             sol_item[param_name] = default_value(item)
             try
-                variable = extract_var(var(pm, variable_symbol), idx, item)
+                variable = extract_var(var(pm, pm.cnw, variable_symbol), idx, item)
                 if applicable(scale, getvalue(variable), item, 1) # TODO remove on next breaking release
                     sol_item[param_name] = scale(getvalue(variable), item, 1)
                 else
@@ -320,7 +331,7 @@ function add_dual(
         if conductorless
             sol_item[param_name] = default_value(item)
             try
-                constraint = extract_con(var(pm, con_symbol), idx, item)
+                constraint = extract_con(var(pm, pm.cnw, con_symbol), idx, item)
                 if applicable(scale, getdual(constraint), item, 1) # TODO remove on next breaking release
                     sol_item[param_name] = scale(getdual(constraint), item, 1)
                 else

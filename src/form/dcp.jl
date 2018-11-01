@@ -50,6 +50,10 @@ function variable_reactive_generation(pm::GenericPowerModel{T}; kwargs...) where
 end
 
 "dc models ignore reactive power flows"
+function variable_reactive_storage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
+end
+
+"dc models ignore reactive power flows"
 function variable_reactive_branch_flow(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
 end
 
@@ -141,6 +145,16 @@ function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_a
     # omit reactive constraint
 end
 
+""
+function constraint_kcl_shunt_storage(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
+    p = var(pm, n, c, :p)
+    pg = var(pm, n, c, :pg)
+    ps = var(pm, n, c, :ps)
+    p_dc = var(pm, n, c, :p_dc)
+    
+    con(pm, n, c, :kcl_p)[i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(ps[s] for s in bus_storage) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
+    # omit reactive constraint
+end
 
 ""
 function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
@@ -204,11 +218,45 @@ function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_id
     getupperbound(p_fr) >  c_rating_a && setupperbound(p_fr,  c_rating_a)
 end
 
+
+""
+function constraint_storage_thermal_limit(pm::GenericPowerModel{T}, n::Int, c::Int, i, rating) where T <: AbstractDCPForm
+    ps = var(pm, n, c, :ps, i)
+
+    getlowerbound(ps) < -rating && setlowerbound(ps, -rating)
+    getupperbound(ps) >  rating && setupperbound(ps,  rating)
+end
+
+""
+function constraint_storage_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus, rating) where T <: AbstractDCPForm
+    ps = var(pm, n, c, :ps, i)
+
+    getlowerbound(ps) < -rating && setlowerbound(ps, -rating)
+    getupperbound(ps) >  rating && setupperbound(ps,  rating)
+end
+
+""
+function constraint_storage_loss(pm::GenericPowerModel{T}, n::Int, i, bus, r, x, standby_loss) where T <: AbstractDCPForm
+    ps = var(pm, n, pm.ccnd, :ps, i)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+    @constraint(pm.model, ps + (sd - sc) == standby_loss + r*ps^2)
+end
+
+
 ""
 function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractDCPForm
     add_setpoint_fixed(sol, pm, "bus", "vm"; default_value = (item) -> 1)
     add_setpoint(sol, pm, "bus", "va", :va)
 end
+
+""
+function add_storage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractDCPForm
+    add_setpoint(sol, pm, "storage", "ps", :ps)
+    add_setpoint_fixed(sol, pm, "storage", "qs")
+    add_setpoint(sol, pm, "storage", "se", :se, conductorless=true)
+end
+
 
 ""
 function variable_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm

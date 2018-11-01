@@ -68,3 +68,29 @@ function calc_voltage_product_bounds(buspairs, conductor::Int=1)
 
     return wr_min, wr_max, wi_min, wi_max
 end
+
+
+"computes storage bounds"
+function calc_storage_injection_bounds(storage, buses, conductor::Int=1)
+    injection_lb = Dict() 
+    injection_ub = Dict()
+
+    for (i, strg) in storage
+        injection_lb[i] = -Inf
+        injection_ub[i] = Inf
+
+        if haskey(strg, "thermal_rating")
+            injection_lb[i] = max(injection_lb[i], -strg["thermal_rating"][conductor])
+            injection_ub[i] = min(injection_ub[i],  strg["thermal_rating"][conductor])
+        end
+
+        if haskey(strg, "current_rating")
+            vmin = buses[strg["storage_bus"]]["vmin"][conductor]
+
+            injection_lb[i] = max(injection_lb[i], -strg["current_rating"][conductor]/vmin)
+            injection_ub[i] = min(injection_ub[i],  strg["current_rating"][conductor]/vmin)
+        end
+    end
+
+    return injection_lb, injection_ub
+end
