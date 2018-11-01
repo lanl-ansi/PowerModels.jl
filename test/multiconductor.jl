@@ -442,6 +442,9 @@ end
 
         # diagm
         @test all(LinearAlgebra.diagm(0 => c).values .== [0.225 0.0 0.0; 0.0 0.225 0.0; 0.0 0.0 0.225])
+        if VERSION <= v"0.7.0-"
+            @test all(LinearAlgebra.diagm(c).values .== [0.225 0.0 0.0; 0.0 0.225 0.0; 0.0 0.0 0.225])
+        end
 
         # rad2deg/deg2rad
         angs_deg = rad2deg(angs_rad)
