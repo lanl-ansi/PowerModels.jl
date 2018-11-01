@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.8.6
 - Add support for a generic storage component
 - Added add_setpoint_fixed to improve solution reporting performance
 - Added support for a user provided JuMP model
