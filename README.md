@@ -51,6 +51,7 @@ Community-driven development and enhancement of PowerModels are welcome and enco
 This code has been developed as part of the Advanced Network Science Initiative at Los Alamos National Laboratory.
 The primary developer is Carleton Coffrin(@ccoffrin) with support from the following contributors,
 - Russell Bent (@rb004f) LANL, Matpower export, TNEP problem specification
+- Jose Daniel Lara (@jd-lara) Berkeley, Julia v1.0 compatibility
 - Hakan Ergun (@hakanergun) KU Leuven, HVDC lines
 - David Fobes (@pseudocubic) LANL, PSS(R)E v33 data support
 - Rory Finnegan (@rofinn) Invenia, Memento Logging
