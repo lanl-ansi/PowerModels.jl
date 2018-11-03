@@ -127,7 +127,7 @@ Parses PSS(R)E-style Branch data into a PowerModels-style Dict. "source_id" is
 given by `["I", "J", "CKT"]` in PSS(R)E Branch specification.
 """
 function psse2pm_branch!(pm_data::Dict, pti_data::Dict, import_all::Bool)
-    
+
 
     pm_data["branch"] = []
     if haskey(pti_data, "BRANCH")
@@ -708,7 +708,7 @@ function parse_psse(pti_data::Dict; import_all=false)::Dict
             #println("updating $(k)")
             dict = Dict{String,Any}()
             for item in v
-                assert("index" in keys(item))
+                @assert("index" in keys(item))
                 dict[string(item["index"])] = item
             end
             pm_data[k] = dict

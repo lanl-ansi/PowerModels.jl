@@ -668,31 +668,35 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 8081.5; atol = 1e0)
     end
+
     # multiple components are not currently supported by this form
-    #@testset "6-bus case" begin
-    #    result = run_opf("../test/data/matpower/case6.m", SparseSDPWRMPowerModel, scs_solver)
-    #
-    #    @test result["status"] == :Optimal
-    #    @test isapprox(result["objective"], 11578.8; atol = 1e0)
-    #end
+    #=
+    @testset "6-bus case" begin
+        result = run_opf("../test/data/matpower/case6.m", SparseSDPWRMPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 11578.8; atol = 1e0)
+    end
+    =#
+
     @testset "passing in decomposition" begin
-        PMs = PowerModels
-        data = PMs.parse_file("../test/data/matpower/case14.m")
+        data = PowerModels.parse_file("../test/data/matpower/case14.m")
         pm = GenericPowerModel(data, SparseSDPWRMForm)
 
-        cadj, lookup_index, sigma = PMs.chordal_extension(pm)
-        cliques = PMs.maximal_cliques(cadj)
-        lookup_bus_index = map(reverse, lookup_index)
+        cadj, lookup_index, sigma = PowerModels.chordal_extension(pm)
+        cliques = PowerModels.maximal_cliques(cadj)
+        lookup_bus_index = Dict((reverse(p) for p = pairs(lookup_index)))
         groups = [[lookup_bus_index[gi] for gi in g] for g in cliques]
-        @test PMs.problem_size(groups) == 344
+        @test PowerModels.problem_size(groups) == 344
 
-        pm.ext[:SDconstraintDecomposition] = PMs.SDconstraintDecomposition(groups, lookup_index, sigma)
+        pm.ext[:SDconstraintDecomposition] = PowerModels.SDconstraintDecomposition(groups, lookup_index, sigma)
 
-        PMs.post_opf(pm)
-        result = solve_generic_model(pm, scs_solver; solution_builder=PMs.get_solution)
+        PowerModels.post_opf(pm)
+        result = solve_generic_model(pm, scs_solver; solution_builder=PowerModels.get_solution)
 
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 8081.5; atol = 1e0)
     end
+
 end
 

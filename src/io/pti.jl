@@ -250,7 +250,7 @@ function parse_line_element!(data::Dict, elements::Array, section::AbstractStrin
     missing = []
     for (field, dtype) in get_pti_dtypes(section)
         try
-            element = shift!(elements)
+            element = popfirst!(elements)
         catch message
             if isa(message, ArgumentError)
                 debug(LOGGER, "Have run out of elements in $section at $field")
@@ -276,7 +276,7 @@ function parse_line_element!(data::Dict, elements::Array, section::AbstractStrin
             end
 
         catch message
-            if isa(message, ParseError)
+            if isa(message, Meta.ParseError)
                 data[field] = element
             else
                 debug(LOGGER, "$section $field $dtype $element")
@@ -325,7 +325,8 @@ separately, and `Array{Array{String}, String}` is returned.
 """
 function get_line_elements(line::AbstractString)::Array
     match_string = r"(-*\d*\.*\d+[eE]*[+-]*\d*)|(\'.{12}\')|(\'[^\']*?\')|(\"[^\"]*?\")|(\w+)|\,(\s+)?\,|(\/.*)"
-    matches = matchall(match_string, line)
+    matches = collect((m.match for m = eachmatch(match_string, line, overlap=false)))
+    #matches = matchall(match_string, line)
 
     debug(LOGGER, "$line")
     debug(LOGGER, "$matches")
@@ -361,7 +362,7 @@ function parse_pti_data(data_string::String, sections::Array)
 
     pti_data = Dict{String,Array{Dict}}()
 
-    section = shift!(sections)
+    section = popfirst!(sections)
     section_data = Dict{String,Any}()
 
     for (line_number, line) in enumerate(data_lines)
@@ -374,33 +375,33 @@ function parse_pti_data(data_string::String, sections::Array)
 
         elseif length(elements) != 0 && elements[1] == "0" && line_number != 1
             if line_number == 4
-                section = shift!(sections)
+                section = popfirst!(sections)
             end
 
             match_string = r"\s*END OF ([\w\s-]+) DATA(?:, BEGIN ([\w\s-]+) DATA)?"
             debug(LOGGER, "$comment")
             matches = match(match_string, comment)
 
-            if !isa(matches, Void)
+            if !isa(matches, Nothing)
                 guess_section = matches.captures[1]
             else
                 guess_section = ""
             end
 
             if guess_section == section && length(sections) > 0
-                section = shift!(sections)
+                section = popfirst!(sections)
                 continue
             else
                 info(LOGGER, "At line $line_number, unexpected section: expected: $section, comment specified: $(guess_section)")
                 if !isempty(sections)
-                    section = shift!(sections)
+                    section = popfirst!(sections)
                 end
 
                 continue
             end
         else
             if line_number == 4
-                section = shift!(sections)
+                section = popfirst!(sections)
                 section_data = Dict{String,Any}()
             end
 
@@ -464,7 +465,7 @@ function parse_pti_data(data_string::String, sections::Array)
                     subsection_data = Dict{String,Any}()
 
                     for (field, dtype) in get_pti_dtypes("$section SUBLINES")
-                        element = shift!(elements)
+                        element = popfirst!(elements)
                         subsection_data[field] = parse(dtype, element)
                     end
 
@@ -515,7 +516,7 @@ function parse_pti_data(data_string::String, sections::Array)
                     subsection_data = Dict{String,Any}()
 
                     for (field, dtype) in get_pti_dtypes("$section $subsection")
-                        element = shift!(elements)
+                        element = popfirst!(elements)
                         if startswith(element, "'") && endswith(element, "'")
                             subsection_data[field] = element[2:end-1]
                         else
@@ -593,7 +594,7 @@ Reads PTI data in `io::IO`, returning a `Dict` of the data parsed into the
 proper types.
 """
 function parse_pti(io::IO)::Dict
-    data_string = readstring(io)
+    data_string = read(io, String)
     pti_data = parse_pti_data(data_string, get_pti_sections())
     pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"[\/\\]*(?:.*[\/\\])*(.*)\.raw", lowercase(io.name)).captures[1]
 

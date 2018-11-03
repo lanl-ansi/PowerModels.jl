@@ -8,11 +8,11 @@
 
         line_count = count(c -> c == '\n', output)
         @test line_count >= 80 && line_count <= 100
-        @test contains(output, "name: case5")
-        @test contains(output, "Table: bus")
-        @test contains(output, "Table: load")
-        @test contains(output, "Table: gen")
-        @test contains(output, "Table: branch")
+        @test occursin("name: case5", output)
+        @test occursin("Table: bus", output)
+        @test occursin("Table: load", output)
+        @test occursin("Table: gen", output)
+        @test occursin("Table: branch", output)
     end
 
     @testset "5-bus summary from file location" begin
@@ -20,11 +20,11 @@
 
         line_count = count(c -> c == '\n', output)
         @test line_count >= 80 && line_count <= 100
-        @test contains(output, "name: case5")
-        @test contains(output, "Table: bus")
-        @test contains(output, "Table: load")
-        @test contains(output, "Table: gen")
-        @test contains(output, "Table: branch")
+        @test occursin("name: case5", output)
+        @test occursin("Table: bus", output)
+        @test occursin("Table: load", output)
+        @test occursin("Table: gen", output)
+        @test occursin("Table: branch", output)
     end
 
     @testset "5-bus solution summary from dict" begin
@@ -33,9 +33,9 @@
 
         line_count = count(c -> c == '\n', output)
         @test line_count >= 20 && line_count <= 30
-        @test contains(output, "baseMVA: 100.0")
-        @test contains(output, "Table: bus")
-        @test contains(output, "Table: gen")
+        @test occursin("baseMVA: 100.0", output)
+        @test occursin("Table: bus", output)
+        @test occursin("Table: gen", output)
     end
 
 end

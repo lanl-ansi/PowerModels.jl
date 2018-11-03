@@ -4,29 +4,15 @@ os:
   - osx
 julia:
   - 0.6
-  - nightly
-matrix:
-  allow_failures:
-    - julia: nightly
+  - 0.7
+  - 1.0
 cache:
  directories:
    - /home/travis/.julia
 addons:
   apt_packages:
     - gfortran
-
 before_install:
-    # don't keep an old version of the code in the cache
-  - julia -e 'if "PowerModels" in keys(Pkg.installed()) Pkg.rm("PowerModels"); Pkg.rm("PowerModels") end'
-  - julia -e 'Pkg.update()' #make sure we get the latest version of METADATA
-  - julia -e 'if !("Coverage" in keys(Pkg.installed())) Pkg.add("Coverage") end'
-  - julia -e 'if !("Documenter" in keys(Pkg.installed())) Pkg.add("Documenter") end'
-
-script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia -e 'Pkg.clone(pwd())'
-  - julia -e 'Pkg.test("PowerModels", coverage=true)'
-
+  - julia -e '(VERSION >= v"0.7" && using Pkg); Pkg.update()'
 after_success:
-  - julia -e  'using Coverage; cd(Pkg.dir("PowerModels")); LCOV.writefile("lcov.info", process_folder(".")); run(pipeline(`curl -s https://codecov.io/bash`, `bash`))'
-  - julia -e 'cd(Pkg.dir("PowerModels")); include(joinpath("docs", "make.jl"))'
+  - julia -e '(VERSION >= v"0.7" && using Pkg); Pkg.add("Coverage"); cd(Pkg.dir("PowerModels")); using Coverage; Codecov.submit(process_folder())'

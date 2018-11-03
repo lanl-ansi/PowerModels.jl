@@ -2,6 +2,8 @@ using PowerModels
 using InfrastructureModels
 using Memento
 
+using MathProgBase
+
 # Suppress warnings during testing.
 setlevel!(getlogger(InfrastructureModels), "error")
 setlevel!(getlogger(PowerModels), "error")
@@ -11,10 +13,19 @@ using Ipopt
 using SCS
 using Pavito
 using Juniper
+using Compat
 
 using JuMP
+using JSON
 
-using Base.Test
+using Compat.LinearAlgebra
+using Compat.Test
+import Compat: pairs
+
+if VERSION < v"0.7.0-"
+    LinearAlgebra = Compat.LinearAlgebra
+end
+
 
 # default setup for solvers
 ipopt_solver = IpoptSolver(tol=1e-6, print_level=0)
@@ -62,5 +73,4 @@ include("common.jl")
     include("util.jl")
 
     include("docs.jl")
-
 end
