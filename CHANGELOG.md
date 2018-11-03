@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Add support for Julia v0.7 and v1.0
 
 ### v0.8.6
 - Add support for a generic storage component
