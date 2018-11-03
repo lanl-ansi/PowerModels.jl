@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.8.7
 - Add support for Julia v0.7 and v1.0
 
 ### v0.8.6
