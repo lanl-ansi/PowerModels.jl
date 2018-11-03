@@ -16,4 +16,12 @@ before_install:
   - julia -e '(VERSION >= v"0.7" && using Pkg); Pkg.update()'
 after_success:
   - julia -e '(VERSION >= v"0.7" && using Pkg); Pkg.add("Coverage"); cd(Pkg.dir("PowerModels")); using Coverage; Codecov.submit(process_folder())'
-  - julia -e 'if VERSION >= v"0.7" using Pkg; Pkg.add("Documenter"); import PowerModels; include(joinpath(dirname(pathof(PowerModels)), "..", "docs", "make.jl")) end'
+jobs:
+  include:
+    - stage: "Documentation"
+      julia: 1.0
+      os: linux
+      script:
+        - julia --project=docs/ -e 'using Pkg; Pkg.instantiate(); Pkg.develop(PackageSpec(path=pwd()))'
+        - julia --project=docs/ docs/make.jl
+      after_success: skip
