@@ -209,8 +209,12 @@ end
 ""
 function run_generic_model(data::Dict{String,Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
     pm = build_generic_model(data, model_constructor, post_method; kwargs...)
+    #pm, time, bytes_alloc, sec_in_gc = @timed build_generic_model(data, model_constructor, post_method; kwargs...)
+    #println("model build time: $(time)")
 
     solution = solve_generic_model(pm, solver; solution_builder = solution_builder)
+    #solution, time, bytes_alloc, sec_in_gc = @timed solve_generic_model(pm, solver; solution_builder = solution_builder)
+    #println("solution time: $(time)")
 
     return solution
 end
@@ -245,7 +249,11 @@ function solve_generic_model(pm::GenericPowerModel, solver; solution_builder = g
 
     status, solve_time = solve(pm)
 
-    return build_solution(pm, status, solve_time; solution_builder = solution_builder)
+    solution = build_solution(pm, status, solve_time; solution_builder = solution_builder)
+    #solution, time, bytes_alloc, sec_in_gc = @timed build_solution(pm, status, solve_time; solution_builder = solution_builder)
+    #println("build_solution time: $(time)")
+
+    return solution
 end
 
 """
@@ -307,6 +315,10 @@ function build_ref(data::Dict{String,Any})
             ref[:conductor_ids] = 1:ref[:conductors]
         end
 
+        if !haskey(ref, :storage)
+            ref[:storage] = Dict{Int,Any}()
+        end
+
         # add connected components
         component_sets = PowerModels.connected_components(nw_data)
         ref[:components] = Dict(i => c for (i,c) in enumerate(sort(collect(component_sets); by=length)))
@@ -320,10 +332,13 @@ function build_ref(data::Dict{String,Any})
         #ref[:shunt] = filter((i, shunt) -> shunt["status"] == 1 && shunt["shunt_bus"] in keys(ref[:bus]), ref[:shunt])
         ref[:gen] = Dict([x for x in ref[:gen] if (x.second["gen_status"] == 1 && x.second["gen_bus"] in keys(ref[:bus]))])
         #ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
+        ref[:storage] = Dict([x for x in ref[:storage] if (x.second["status"] == 1 && x.second["storage_bus"] in keys(ref[:bus]))])
+        #ref[:storage] = filter((i, strg) -> strg["status"] == 1 && strg["storage_bus"] in keys(ref[:bus]), ref[:storage])
         ref[:branch] = Dict([x for x in ref[:branch] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus]))])
         #ref[:branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
         ref[:dcline] = Dict([x for x in ref[:dcline] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus]))])
         #ref[:dcline] = filter((i, dcline) -> dcline["br_status"] == 1 && dcline["f_bus"] in keys(ref[:bus]) && dcline["t_bus"] in keys(ref[:bus]), ref[:dcline])
+
 
         ref[:arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:branch]]
         ref[:arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:branch]]
@@ -354,11 +369,6 @@ function build_ref(data::Dict{String,Any})
             )
         end
 
-        bus_gens = Dict([(i, []) for (i,bus) in ref[:bus]])
-        for (i,gen) in ref[:gen]
-            push!(bus_gens[gen["gen_bus"]], i)
-        end
-        ref[:bus_gens] = bus_gens
 
         bus_loads = Dict([(i, []) for (i,bus) in ref[:bus]])
         for (i, load) in ref[:load]
@@ -371,6 +381,19 @@ function build_ref(data::Dict{String,Any})
             push!(bus_shunts[shunt["shunt_bus"]], i)
         end
         ref[:bus_shunts] = bus_shunts
+
+        bus_gens = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (i,gen) in ref[:gen]
+            push!(bus_gens[gen["gen_bus"]], i)
+        end
+        ref[:bus_gens] = bus_gens
+
+        bus_storage = Dict([(i, []) for (i,bus) in ref[:bus]])
+        for (i,strg) in ref[:storage]
+            push!(bus_storage[strg["storage_bus"]], i)
+        end
+        ref[:bus_storage] = bus_storage
+
 
         bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
         for (l,i,j) in ref[:arcs]

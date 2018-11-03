@@ -180,13 +180,39 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         end
     end
 
+    if haskey(data, "gen")
+        for (i, gen) in data["gen"]
+            apply_func(gen, "pg", rescale)
+            apply_func(gen, "qg", rescale)
+
+            apply_func(gen, "pmax", rescale)
+            apply_func(gen, "pmin", rescale)
+
+            apply_func(gen, "qmax", rescale)
+            apply_func(gen, "qmin", rescale)
+
+            _rescale_cost_model(gen, mva_base)
+        end
+    end
+
+    if haskey(data, "storage")
+        for (i, strg) in data["storage"]
+            apply_func(strg, "energy", rescale)
+            apply_func(strg, "energy_rating", rescale)
+            apply_func(strg, "charge_rating", rescale)
+            apply_func(strg, "discharge_rating", rescale)
+            apply_func(strg, "thermal_rating", rescale)
+            apply_func(strg, "current_rating", rescale)
+            apply_func(strg, "qmin", rescale)
+            apply_func(strg, "qmax", rescale)
+            apply_func(strg, "standby_loss", rescale)
+        end
+    end
+
+
     branches = []
     if haskey(data, "branch")
         append!(branches, values(data["branch"]))
-    end
-    dclines =[]
-    if haskey(data, "dcline")
-        append!(dclines, values(data["dcline"]))
     end
 
     if haskey(data, "ne_branch")
@@ -215,36 +241,23 @@ function _make_per_unit(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "mu_sm_to", rescale_dual)
     end
 
-    for dcline in dclines
-        apply_func(dcline, "loss0", rescale)
-        apply_func(dcline, "pf", rescale)
-        apply_func(dcline, "pt", rescale)
-        apply_func(dcline, "qf", rescale)
-        apply_func(dcline, "qt", rescale)
-        apply_func(dcline, "pmaxt", rescale)
-        apply_func(dcline, "pmint", rescale)
-        apply_func(dcline, "pmaxf", rescale)
-        apply_func(dcline, "pminf", rescale)
-        apply_func(dcline, "qmaxt", rescale)
-        apply_func(dcline, "qmint", rescale)
-        apply_func(dcline, "qmaxf", rescale)
-        apply_func(dcline, "qminf", rescale)
+    if haskey(data, "dcline")
+        for (i, dcline) in data["dcline"]
+            apply_func(dcline, "loss0", rescale)
+            apply_func(dcline, "pf", rescale)
+            apply_func(dcline, "pt", rescale)
+            apply_func(dcline, "qf", rescale)
+            apply_func(dcline, "qt", rescale)
+            apply_func(dcline, "pmaxt", rescale)
+            apply_func(dcline, "pmint", rescale)
+            apply_func(dcline, "pmaxf", rescale)
+            apply_func(dcline, "pminf", rescale)
+            apply_func(dcline, "qmaxt", rescale)
+            apply_func(dcline, "qmint", rescale)
+            apply_func(dcline, "qmaxf", rescale)
+            apply_func(dcline, "qminf", rescale)
 
-        _rescale_cost_model(dcline, mva_base)
-    end
-
-    if haskey(data, "gen")
-        for (i, gen) in data["gen"]
-            apply_func(gen, "pg", rescale)
-            apply_func(gen, "qg", rescale)
-
-            apply_func(gen, "pmax", rescale)
-            apply_func(gen, "pmin", rescale)
-
-            apply_func(gen, "qmax", rescale)
-            apply_func(gen, "qmin", rescale)
-
-            _rescale_cost_model(gen, mva_base)
+            _rescale_cost_model(dcline, mva_base)
         end
     end
 
@@ -300,14 +313,39 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
         end
     end
 
+    if haskey(data, "gen")
+        for (i, gen) in data["gen"]
+            apply_func(gen, "pg", rescale)
+            apply_func(gen, "qg", rescale)
+
+            apply_func(gen, "pmax", rescale)
+            apply_func(gen, "pmin", rescale)
+
+            apply_func(gen, "qmax", rescale)
+            apply_func(gen, "qmin", rescale)
+
+            _rescale_cost_model(gen, 1.0/mva_base)
+        end
+    end
+
+    if haskey(data, "storage")
+        for (i, strg) in data["storage"]
+            apply_func(strg, "energy", rescale)
+            apply_func(strg, "energy_rating", rescale)
+            apply_func(strg, "charge_rating", rescale)
+            apply_func(strg, "discharge_rating", rescale)
+            apply_func(strg, "thermal_rating", rescale)
+            apply_func(strg, "current_rating", rescale)
+            apply_func(strg, "qmin", rescale)
+            apply_func(strg, "qmax", rescale)
+            apply_func(strg, "standby_loss", rescale)
+        end
+    end
+
+
     branches = []
     if haskey(data, "branch")
         append!(branches, values(data["branch"]))
-    end
-
-    dclines =[]
-    if haskey(data, "dcline")
-        append!(dclines, values(data["dcline"]))
     end
 
     if haskey(data, "ne_branch")
@@ -336,36 +374,23 @@ function _make_mixed_units(data::Dict{String,Any}, mva_base::Real)
         apply_func(branch, "mu_sm_to", rescale_dual)
     end
 
-    for dcline in dclines
-        apply_func(dcline, "loss0", rescale)
-        apply_func(dcline, "pf", rescale)
-        apply_func(dcline, "pt", rescale)
-        apply_func(dcline, "qf", rescale)
-        apply_func(dcline, "qt", rescale)
-        apply_func(dcline, "pmaxt", rescale)
-        apply_func(dcline, "pmint", rescale)
-        apply_func(dcline, "pmaxf", rescale)
-        apply_func(dcline, "pminf", rescale)
-        apply_func(dcline, "qmaxt", rescale)
-        apply_func(dcline, "qmint", rescale)
-        apply_func(dcline, "qmaxf", rescale)
-        apply_func(dcline, "qminf", rescale)
+    if haskey(data, "dcline")
+        for (i,dcline) in data["dcline"]
+            apply_func(dcline, "loss0", rescale)
+            apply_func(dcline, "pf", rescale)
+            apply_func(dcline, "pt", rescale)
+            apply_func(dcline, "qf", rescale)
+            apply_func(dcline, "qt", rescale)
+            apply_func(dcline, "pmaxt", rescale)
+            apply_func(dcline, "pmint", rescale)
+            apply_func(dcline, "pmaxf", rescale)
+            apply_func(dcline, "pminf", rescale)
+            apply_func(dcline, "qmaxt", rescale)
+            apply_func(dcline, "qmint", rescale)
+            apply_func(dcline, "qmaxf", rescale)
+            apply_func(dcline, "qminf", rescale)
 
-        _rescale_cost_model(dcline, 1.0/mva_base)
-    end
-
-    if haskey(data, "gen")
-        for (i, gen) in data["gen"]
-            apply_func(gen, "pg", rescale)
-            apply_func(gen, "qg", rescale)
-
-            apply_func(gen, "pmax", rescale)
-            apply_func(gen, "pmin", rescale)
-
-            apply_func(gen, "qmax", rescale)
-            apply_func(gen, "qmin", rescale)
-
-            _rescale_cost_model(gen, 1.0/mva_base)
+            _rescale_cost_model(dcline, 1.0/mva_base)
         end
     end
 
@@ -650,6 +675,14 @@ function check_connectivity(data::Dict{String,Any})
         end
     end
 
+    if haskey(data, "storage")
+        for (i, strg) in data["storage"]
+            if !(strg["storage_bus"] in bus_ids)
+                error(LOGGER, "bus $(strg["storage_bus"]) in storage unit $(i) is not defined")
+            end
+        end
+    end
+
     for (i, branch) in data["branch"]
         if !(branch["f_bus"] in bus_ids)
             error(LOGGER, "from bus $(branch["f_bus"]) in branch $(i) is not defined")
@@ -712,6 +745,69 @@ function check_transformer_parameters(data::Dict{String,Any})
             else
                 branch["shift"] = 0.0
             end
+        end
+    end
+end
+
+
+"""
+checks that each storage unit has a reasonable parameters
+"""
+function check_storage_parameters(data::Dict{String,Any})
+    if InfrastructureModels.ismultinetwork(data)
+        error("check_storage_parameters does not yet support multinetwork data")
+    end
+
+    if !haskey(data, "storage")
+        return
+    end
+
+    for (i, strg) in data["storage"]
+        if strg["energy"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive energy level $(strg["energy"])")
+        end
+        if strg["energy_rating"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive energy rating $(strg["energy_rating"])")
+        end
+        if strg["charge_rating"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive charge rating $(strg["energy_rating"])")
+        end
+        if strg["discharge_rating"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive discharge rating $(strg["energy_rating"])")
+        end
+        if strg["r"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive resistance $(strg["r"])")
+        end
+        if strg["x"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive reactance $(strg["x"])")
+        end
+        if strg["standby_loss"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive standby losses $(strg["standby_loss"])")
+        end
+
+        if haskey(strg, "thermal_rating") && strg["thermal_rating"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive thermal rating $(strg["thermal_rating"])")
+        end
+        if haskey(strg, "current_rating") && strg["current_rating"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive current rating $(strg["thermal_rating"])")
+        end
+
+
+        if strg["charge_efficiency"] <= 0.0 || strg["charge_efficiency"] > 1.0
+            warn(LOGGER, "storage unit $(strg["index"]) charge efficiency of $(strg["eff_charge"]) is out of the valid range (0.0. 1.0]")
+        end
+
+        if strg["discharge_efficiency"] <= 0.0 || strg["discharge_efficiency"] > 1.0
+            warn(LOGGER, "storage unit $(strg["index"]) discharge efficiency of $(strg["eff_discharge"]) is out of the valid range (0.0. 1.0]")
+        end
+
+        if !isapprox(strg["x"], 0.0, atol=1e-6, rtol=1e-6)
+            warn(LOGGER, "storage unit $(strg["index"]) has a non-zero reactance $(strg["x"]), which is currently ignored")
+        end
+
+
+        if strg["standby_loss"] > 0.0 && strg["energy"] <= 0.0
+            warn(LOGGER, "storage unit $(strg["index"]) has standby losses but zero initial energy.  This can lead to model infeasiblity.")
         end
     end
 end
@@ -1341,8 +1437,9 @@ end
 
 "feild names that should not be multi-conductor values"
 conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
-    "br_status", "gen_bus", "load_bus", "shunt_bus", "f_bus", "t_bus",
-    "transformer", "area", "zone", "base_kv",
+    "br_status", "gen_bus", "load_bus", "shunt_bus", "storage_bus", "f_bus", "t_bus",
+    "transformer", "area", "zone", "base_kv", "energy", "energy_rating", "charge_rating",
+    "discharge_rating", "charge_efficiency", "discharge_efficiency", "standby_loss",
     "model", "ncost", "cost", "startup", "shutdown"])
 
 conductor_matrix = Set(["br_r", "br_x"])

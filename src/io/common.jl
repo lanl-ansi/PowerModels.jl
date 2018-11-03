@@ -63,6 +63,7 @@ function check_network_data(data::Dict{String,Any})
     check_dcline_limits(data)
     check_voltage_setpoints(data)
     check_cost_functions(data)
+    check_storage_parameters(data)
 end
 
 

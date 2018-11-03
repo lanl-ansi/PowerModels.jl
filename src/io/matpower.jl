@@ -48,7 +48,7 @@ end
 
 mp_data_names = ["mpc.version", "mpc.baseMVA", "mpc.bus", "mpc.gen",
     "mpc.branch", "mpc.dcline", "mpc.gencost", "mpc.dclinecost",
-    "mpc.bus_name"
+    "mpc.bus_name", "mpc.storage"
 ]
 
 mp_bus_columns = [
@@ -122,6 +122,18 @@ mp_dcline_columns = [
     ("mu_pmin", Float64), ("mu_pmax", Float64),
     ("mu_qminf", Float64), ("mu_qmaxf", Float64),
     ("mu_qmint", Float64), ("mu_qmaxt", Float64)
+]
+
+mp_storage_columns = [
+    ("storage_bus", Int),
+    ("energy", Float64), ("energy_rating", Float64),
+    ("charge_rating", Float64), ("discharge_rating", Float64),
+    ("charge_efficiency", Float64), ("discharge_efficiency", Float64),
+    ("thermal_rating", Float64),
+    ("qmin", Float64), ("qmax", Float64),
+    ("r", Float64), ("x", Float64),
+    ("standby_loss", Float64),
+    ("status", Int)
 ]
 
 
@@ -218,6 +230,16 @@ function parse_matpower_string(data_string::String)
         case["dcline"] = dclines
     end
 
+    if haskey(matlab_data, "mpc.storage")
+        storage = []
+        for (i, storage_row) in enumerate(matlab_data["mpc.storage"])
+            storage_data = row_to_typed_dict(storage_row, mp_storage_columns)
+            storage_data["index"] = i
+            push!(storage, storage_data)
+        end
+        case["storage"] = storage
+    end
+
 
     if haskey(matlab_data, "mpc.bus_name")
         bus_names = []
@@ -289,6 +311,7 @@ function parse_matpower_string(data_string::String)
 end
 
 
+""
 function mp_cost_data(cost_row)
     cost_data = Dict{String,Any}(
         "model" => InfrastructureModels.check_type(Int, cost_row[1]),
@@ -339,6 +362,9 @@ function matpower_to_powermodels(mp_data::Dict{String,Any})
     if !haskey(pm_data, "dclinecost")
         pm_data["dclinecost"] = []
     end
+    #if !haskey(pm_data, "storage")
+    #    pm_data["storage"] = []
+    #end
 
     # translate component models
     mp2pm_branch(pm_data)

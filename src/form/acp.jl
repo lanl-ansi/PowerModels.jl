@@ -105,6 +105,23 @@ function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, 
 end
 
 
+""
+function constraint_kcl_shunt_storage(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACPForm
+    vm = var(pm, n, c, :vm, i)
+    p = var(pm, n, c, :p)
+    q = var(pm, n, c, :q)
+    pg = var(pm, n, c, :pg)
+    qg = var(pm, n, c, :qg)
+    ps = var(pm, n, c, :ps)
+    qs = var(pm, n, c, :qs)
+    p_dc = var(pm, n, c, :p_dc)
+    q_dc = var(pm, n, c, :q_dc)
+
+    con(pm, n, c, :kcl_p)[i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(ps[s] for s in bus_storage) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*vm^2)
+    con(pm, n, c, :kcl_q)[i] = @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qs[s] for s in bus_storage) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*vm^2)
+end
+
+
 """
 ```
 sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(p_ne[a] for a in bus_arcs_ne) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*vm^2

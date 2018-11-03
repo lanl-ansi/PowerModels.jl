@@ -10,7 +10,6 @@ PowerModels implements a slightly generalized version of the AC Optimal Power Fl
 
 
 ```math
-
 \begin{align}
 %
 \mbox{sets:} & \nonumber \\
@@ -41,7 +40,6 @@ PowerModels implements a slightly generalized version of the AC Optimal Power Fl
 A complete mathematical model is as follows,
 
 ```math
-
 \begin{align}
 %
 \mbox{variables: } &  \\

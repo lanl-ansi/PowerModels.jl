@@ -127,6 +127,31 @@ function constraint_kcl_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd
     constraint_kcl_shunt(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
+""
+function constraint_kcl_shunt_storage(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    if !haskey(con(pm, nw, cnd), :kcl_p)
+        con(pm, nw, cnd)[:kcl_p] = Dict{Int,ConstraintRef}()
+    end
+    if !haskey(con(pm, nw, cnd), :kcl_q)
+        con(pm, nw, cnd)[:kcl_q] = Dict{Int,ConstraintRef}()
+    end
+
+    bus = ref(pm, nw, :bus, i)
+    bus_arcs = ref(pm, nw, :bus_arcs, i)
+    bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
+    bus_gens = ref(pm, nw, :bus_gens, i)
+    bus_loads = ref(pm, nw, :bus_loads, i)
+    bus_shunts = ref(pm, nw, :bus_shunts, i)
+    bus_storage = ref(pm, nw, :bus_storage, i)
+
+    bus_pd = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in bus_loads)
+    bus_qd = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in bus_loads)
+
+    bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts)
+    bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts)
+
+    constraint_kcl_shunt_storage(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+end
 
 ""
 function constraint_kcl_shunt_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
@@ -616,3 +641,55 @@ function constraint_branch_current(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw
     constraint_branch_current(pm, nw, cnd, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm)
 end
 
+
+
+
+### Storage Constraints ###
+
+""
+function constraint_storage_thermal_limit(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    storage = ref(pm, nw, :storage, i)
+    constraint_storage_thermal_limit(pm, nw, cnd, i, storage["thermal_rating"][cnd])
+end
+
+""
+function constraint_storage_current_limit(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    storage = ref(pm, nw, :storage, i)
+    constraint_storage_current_limit(pm, nw, cnd, i, storage["storage_bus"], storage["current_rating"][cnd])
+end
+
+""
+function constraint_storage_exchange(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
+    storage = ref(pm, nw, :storage, i)
+
+    constraint_storage_complementarity(pm, nw, i)
+    constraint_storage_loss(pm, nw, i, storage["storage_bus"], storage["r"], storage["x"], storage["standby_loss"])
+end
+
+""
+function constraint_storage_state(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
+    storage = ref(pm, nw, :storage, i)
+
+    if haskey(pm.data, "time_elapsed")
+        time_elapsed = pm.data["time_elapsed"]
+    else
+        warn("network data should specify time_elapsed, using 1.0 as a default")
+        time_elapsed = 1.0
+    end
+
+    constraint_storage_state_initial(pm, nw, i, storage["energy"], storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
+end
+
+""
+function constraint_storage_state(pm::GenericPowerModel, i::Int, nw_1::Int, nw_2::Int)
+    storage = ref(pm, nw_2, :storage, i)
+
+    if haskey(pm.data, "time_elapsed")
+        time_elapsed = pm.data["time_elapsed"]
+    else
+        warn("network data should specify time_elapsed, using 1.0 as a default")
+        time_elapsed = 1.0
+    end
+
+    constraint_storage_state(pm, nw_1, nw_2, i, storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
+end
