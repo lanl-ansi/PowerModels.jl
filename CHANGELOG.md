@@ -2,10 +2,10 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Improved storage component data validation checks
 
 ### v0.8.7
-- Add support for Julia v0.7 and v1.0
+- Add support for Julia v0.7 and v1.0 (thanks to @jd-lara)
 
 ### v0.8.6
 - Add support for a generic storage component

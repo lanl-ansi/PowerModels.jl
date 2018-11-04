@@ -793,12 +793,18 @@ function check_storage_parameters(data::Dict{String,Any})
         end
 
 
+        if strg["charge_efficiency"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive charge efficiency of $(strg["charge_efficiency"])")
+        end
         if strg["charge_efficiency"] <= 0.0 || strg["charge_efficiency"] > 1.0
-            warn(LOGGER, "storage unit $(strg["index"]) charge efficiency of $(strg["eff_charge"]) is out of the valid range (0.0. 1.0]")
+            warn(LOGGER, "storage unit $(strg["index"]) charge efficiency of $(strg["charge_efficiency"]) is out of the valid range (0.0. 1.0]")
         end
 
+        if strg["discharge_efficiency"] < 0.0
+            error(LOGGER, "storage unit $(strg["index"]) has a non-positive discharge efficiency of $(strg["discharge_efficiency"])")
+        end
         if strg["discharge_efficiency"] <= 0.0 || strg["discharge_efficiency"] > 1.0
-            warn(LOGGER, "storage unit $(strg["index"]) discharge efficiency of $(strg["eff_discharge"]) is out of the valid range (0.0. 1.0]")
+            warn(LOGGER, "storage unit $(strg["index"]) discharge efficiency of $(strg["discharge_efficiency"]) is out of the valid range (0.0. 1.0]")
         end
 
         if !isapprox(strg["x"], 0.0, atol=1e-6, rtol=1e-6)
