@@ -6,29 +6,17 @@ PowerModels data structure. All fields from PTI files will be imported if
 `import_all` is true (Default: false).
 """
 function parse_file(file::String; import_all=false)
-    try
-        if endswith(file, ".m")
-            pm_data = PowerModels.parse_matpower(file)
-        elseif endswith(lowercase(file), ".raw")
-            info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
-            pm_data = PowerModels.parse_psse(file; import_all=import_all)
-        else
-            pm_data = parse_json(file)
-        end
-
-        return pm_data
-    catch e
-        if isa(e, UnicodeError)
-            error(LOGGER, "UnicodeError: PowerModels can only load UTF-8 or ASCII encoded files, re-encode \"$file\" to supported encoding")
-        end
+    if endswith(file, ".m")
+        pm_data = PowerModels.parse_matpower(file)
+    elseif endswith(lowercase(file), ".raw")
+        info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
+        pm_data = PowerModels.parse_psse(file; import_all=import_all)
+    else
+        pm_data = parse_json(file)
     end
+
+    return pm_data
 end
-
-
-#"Adds PowerModels version to native data structure"
-#function add_powermodels_version(data::Dict{String,Any})
-#    data["version"] = Pkg.installed()["PowerModels"]
-#end
 
 
 ""
@@ -50,7 +38,6 @@ end
 
 ""
 function check_network_data(data::Dict{String,Any})
-    #add_powermodels_version(data)
     check_conductors(data)
     make_per_unit(data)
     check_connectivity(data)
