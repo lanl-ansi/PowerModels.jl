@@ -356,3 +356,75 @@ function post_mn_strg_opf(pm::GenericPowerModel)
 
     objective_min_fuel_cost(pm)
 end
+
+
+""
+function run_mn_mc_strg_opf(file, model_constructor, solver; kwargs...)
+    return run_generic_model(file, model_constructor, solver, post_mn_mc_strg_opf; multinetwork=true, multiconductor=true, kwargs...)
+end
+
+"warning: this model is not realistic or physically reasonable, it is only for test coverage"
+function post_mn_mc_strg_opf(pm::GenericPowerModel)
+    for (n, network) in nws(pm)
+        variable_storage_energy(pm, nw=n)
+        variable_storage_charge(pm, nw=n)
+        variable_storage_discharge(pm, nw=n)
+
+        for c in conductor_ids(pm, nw=n)
+            variable_voltage(pm, nw=n, cnd=c)
+            variable_generation(pm, nw=n, cnd=c)
+            variable_active_storage(pm, nw=n, cnd=c)
+            variable_reactive_storage(pm, nw=n, cnd=c)
+            variable_branch_flow(pm, nw=n, cnd=c)
+            variable_dcline_flow(pm, nw=n, cnd=c)
+
+            constraint_voltage(pm, nw=n, cnd=c)
+
+            for i in ids(pm, :ref_buses, nw=n)
+                constraint_theta_ref(pm, i, nw=n, cnd=c)
+            end
+
+            for i in ids(pm, :bus, nw=n)
+                constraint_kcl_shunt_storage(pm, i, nw=n, cnd=c)
+            end
+
+            for i in ids(pm, :storage, nw=n)
+                constraint_storage_thermal_limit(pm, i, nw=n, cnd=c)
+            end
+
+            for i in ids(pm, :branch, nw=n)
+                constraint_ohms_yt_from(pm, i, nw=n, cnd=c)
+                constraint_ohms_yt_to(pm, i, nw=n, cnd=c)
+
+                constraint_voltage_angle_difference(pm, i, nw=n, cnd=c)
+
+                constraint_thermal_limit_from(pm, i, nw=n, cnd=c)
+                constraint_thermal_limit_to(pm, i, nw=n, cnd=c)
+            end
+
+            for i in ids(pm, :dcline, nw=n)
+                constraint_dcline(pm, i, nw=n, cnd=c)
+            end
+        end
+
+        for i in ids(pm, :storage, nw=n)
+            constraint_storage_exchange(pm, i, nw=n)
+        end
+    end
+
+    network_ids = sort(collect(nw_ids(pm)))
+
+    n_1 = network_ids[1]
+    for i in ids(pm, :storage, nw=n_1)
+        constraint_storage_state(pm, i, nw=n_1)
+    end
+
+    for n_2 in network_ids[2:end]
+        for i in ids(pm, :storage, nw=n_2)
+            constraint_storage_state(pm, i, n_1, n_2)
+        end
+        n_1 = n_2
+    end
+
+    objective_min_fuel_cost(pm)
+end
