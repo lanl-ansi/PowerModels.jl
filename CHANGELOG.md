@@ -2,6 +2,10 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.8.8
+- Added PowerModels specific replicate function
 - Improved storage component data validation checks
 
 ### v0.8.7

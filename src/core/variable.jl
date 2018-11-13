@@ -340,8 +340,8 @@ function variable_reactive_storage(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::I
 
     var(pm, nw, cnd)[:qs] = @variable(pm.model,
         [i in ids(pm, nw, :storage)], basename="$(nw)_$(cnd)_qs",
-        lowerbound = max(inj_lb[i], ref(pm, nw, :storage, i, "qmin")),
-        upperbound = min(inj_ub[i], ref(pm, nw, :storage, i, "qmax")),
+        lowerbound = max(inj_lb[i], ref(pm, nw, :storage, i, "qmin", cnd)),
+        upperbound = min(inj_ub[i], ref(pm, nw, :storage, i, "qmax", cnd)),
         start = getval(ref(pm, nw, :storage, i), "qs_start", cnd)
     )
 end
