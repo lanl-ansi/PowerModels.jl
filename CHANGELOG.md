@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Minor improvement to dictionary comprehensions
 
 ### v0.8.8
 - Added PowerModels specific replicate function
