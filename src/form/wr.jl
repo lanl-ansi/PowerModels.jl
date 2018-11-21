@@ -157,7 +157,7 @@ function constraint_voltage_ne(pm::GenericPowerModel{T}, n::Int, c::Int) where T
     branches = ref(pm, n, :ne_branch)
 
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, n, :ne_buspairs))
-    bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in branches])
+    bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in branches)
 
     w  = var(pm, n, c, :w)
     wr = var(pm, n, c, :wr_ne)
@@ -247,7 +247,7 @@ end
 function constraint_voltage_product_on_off(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, n, :buspairs), c)
 
-    bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, n, :branch)])
+    bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, n, :branch))
 
     wr = var(pm, n, c, :wr)
     wi = var(pm, n, c, :wi)
@@ -355,7 +355,7 @@ end
 ""
 function variable_voltage_product_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: AbstractWRForm
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :ne_buspairs), cnd)
-    bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch)])
+    bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
 
     var(pm, nw, cnd)[:wr_ne] = @variable(pm.model,
         [b in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_wr_ne",
@@ -428,8 +428,8 @@ end
 
 ""
 function variable_cosine(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T
-    cos_min = Dict([(bp, -Inf) for bp in ids(pm, nw, :buspairs)])
-    cos_max = Dict([(bp,  Inf) for bp in ids(pm, nw, :buspairs)])
+    cos_min = Dict((bp, -Inf) for bp in ids(pm, nw, :buspairs))
+    cos_max = Dict((bp,  Inf) for bp in ids(pm, nw, :buspairs))
 
     for (bp, buspair) in ref(pm, nw, :buspairs)
         angmin = buspair["angmin"][cnd]
@@ -639,8 +639,8 @@ function variable_voltage_magnitude_product_on_off(pm::GenericPowerModel{T}; nw:
     branches = ref(pm, nw, :branch)
     buses = ref(pm, nw, :bus)
 
-    vv_min = Dict([(l, buses[branch["f_bus"]]["vmin"][cnd]*buses[branch["t_bus"]]["vmin"][cnd]) for (l, branch) in branches])
-    vv_max = Dict([(l, buses[branch["f_bus"]]["vmax"][cnd]*buses[branch["t_bus"]]["vmax"][cnd]) for (l, branch) in branches])
+    vv_min = Dict((l, buses[branch["f_bus"]]["vmin"][cnd]*buses[branch["t_bus"]]["vmin"][cnd]) for (l, branch) in branches)
+    vv_max = Dict((l, buses[branch["f_bus"]]["vmax"][cnd]*buses[branch["t_bus"]]["vmax"][cnd]) for (l, branch) in branches)
 
     var(pm, nw, cnd)[:vv] = @variable(pm.model,
         [l in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_vv",
@@ -653,8 +653,8 @@ end
 
 ""
 function variable_cosine_on_off(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T
-    cos_min = Dict([(l, -Inf) for l in ids(pm, nw, :branch)])
-    cos_max = Dict([(l,  Inf) for l in ids(pm, nw, :branch)])
+    cos_min = Dict((l, -Inf) for l in ids(pm, nw, :branch))
+    cos_max = Dict((l,  Inf) for l in ids(pm, nw, :branch))
 
     for (l, branch) in ref(pm, nw, :branch)
         angmin = branch["angmin"][cnd]
@@ -694,7 +694,7 @@ end
 
 ""
 function variable_current_magnitude_sqr_on_off(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T
-    cm_min = Dict([(l, 0) for l in ids(pm, nw, :branch)])
+    cm_min = Dict((l, 0) for l in ids(pm, nw, :branch))
 
     branches = ref(pm, nw, :branch)
     cm_max = Dict()

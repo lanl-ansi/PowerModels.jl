@@ -1,5 +1,3 @@
-isdefined(Base, :__precompile__) && __precompile__()
-
 module PowerModels
 
 using JSON
@@ -9,12 +7,12 @@ using JuMP
 using Compat
 using Memento
 
-import Compat: @__MODULE__
-
 using Compat.LinearAlgebra
 using Compat.SparseArrays
 
 if VERSION < v"0.7.0-"
+    import Compat: @__MODULE__
+
     import Compat: occursin
     import Compat: Nothing
     import Compat: round
