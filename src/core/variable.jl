@@ -166,7 +166,7 @@ end
 ""
 function variable_voltage_product_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
-    bi_bp = Dict([(i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :branch)])
+    bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :branch))
 
     var(pm, nw, cnd)[:wr] = @variable(pm.model,
         [b in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_wr",

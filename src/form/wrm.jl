@@ -81,7 +81,7 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
     bus_ids = ids(pm, nw, :bus)
 
     w_index = 1:length(bus_ids)
-    lookup_w_index = Dict([(bi,i) for (i,bi) in enumerate(bus_ids)])
+    lookup_w_index = Dict((bi,i) for (i,bi) in enumerate(bus_ids))
 
     WR = var(pm, nw, cnd)[:WR] = @variable(pm.model,
         [1:length(bus_ids), 1:length(bus_ids)], Symmetric, basename="$(nw)_$(cnd)_WR"
@@ -356,7 +356,7 @@ function adjacency_matrix(pm::GenericPowerModel, nw::Int=pm.cnw)
     nb = length(bus_ids)
     nl = length(buspairs)
 
-    lookup_index = Dict([(bi, i) for (i, bi) in enumerate(bus_ids)])
+    lookup_index = Dict((bi, i) for (i, bi) in enumerate(bus_ids))
     f = [lookup_index[bp[1]] for bp in keys(buspairs)]
     t = [lookup_index[bp[2]] for bp in keys(buspairs)]
 

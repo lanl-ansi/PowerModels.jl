@@ -32,14 +32,14 @@ end
 
 ""
 function calc_voltage_product_bounds(buspairs, conductor::Int=1)
-    wr_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
-    wr_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
-    wi_min = Dict([(bp, -Inf) for bp in keys(buspairs)])
-    wi_max = Dict([(bp,  Inf) for bp in keys(buspairs)])
+    wr_min = Dict((bp, -Inf) for bp in keys(buspairs))
+    wr_max = Dict((bp,  Inf) for bp in keys(buspairs))
+    wi_min = Dict((bp, -Inf) for bp in keys(buspairs))
+    wi_max = Dict((bp,  Inf) for bp in keys(buspairs))
 
     buspairs_conductor = Dict()
     for (bp, buspair) in buspairs
-        buspairs_conductor[bp] = Dict([(k, getmcv(v, conductor)) for (k,v) in buspair])
+        buspairs_conductor[bp] = Dict((k, getmcv(v, conductor)) for (k,v) in buspair)
     end
 
     for (bp, buspair) in buspairs_conductor

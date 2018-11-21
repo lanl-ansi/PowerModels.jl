@@ -86,7 +86,7 @@ function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, c
 
     # this explicit type erasure is necessary
     p_expr = Dict{Any,Any}([((l,i,j), var(pm, nw, cnd, :p, (l,i,j))) for (l,i,j) in ref(pm, nw, :arcs_from)])
-    p_expr = merge(p_expr, Dict([((l,j,i), -1.0*var(pm, nw, cnd, :p, (l,i,j))) for (l,i,j) in ref(pm, nw, :arcs_from)]))
+    p_expr = merge(p_expr, Dict(((l,j,i), -1.0*var(pm, nw, cnd, :p, (l,i,j))) for (l,i,j) in ref(pm, nw, :arcs_from)))
     var(pm, nw, cnd)[:p] = p_expr
 end
 
@@ -101,7 +101,7 @@ function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw
 
     # this explicit type erasure is necessary
     p_ne_expr = Dict{Any,Any}([((l,i,j), 1.0*var(pm, nw, cnd, :p_ne, (l,i,j))) for (l,i,j) in ref(pm, nw, :ne_arcs_from)])
-    p_ne_expr = merge(p_ne_expr, Dict([((l,j,i), -1.0*var(pm, nw, cnd, :p_ne, (l,i,j))) for (l,i,j) in ref(pm, nw, :ne_arcs_from)]))
+    p_ne_expr = merge(p_ne_expr, Dict(((l,j,i), -1.0*var(pm, nw, cnd, :p_ne, (l,i,j))) for (l,i,j) in ref(pm, nw, :ne_arcs_from)))
     var(pm, nw, cnd)[:p_ne] = p_ne_expr
 end
 

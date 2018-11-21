@@ -832,7 +832,7 @@ function check_bus_types(data::Dict{String,Any})
         error("check_bus_types does not yet support multinetwork data")
     end
 
-    bus_gens = Dict([(i, []) for (i,bus) in data["bus"]])
+    bus_gens = Dict((i, []) for (i,bus) in data["bus"])
 
     for (i,gen) in data["gen"]
         #println(gen)
@@ -1384,7 +1384,7 @@ function connected_components(data::Dict{String,Any})
         error("connected_components does not yet support multinetwork data")
     end
 
-    active_bus = Dict([x for x in data["bus"] if x.second["bus_type"] != 4])
+    active_bus = Dict(x for x in data["bus"] if x.second["bus_type"] != 4)
     #active_bus = filter((i, bus) -> bus["bus_type"] != 4, data["bus"])
     active_bus_ids = Set{Int64}([bus["bus_i"] for (i,bus) in active_bus])
     #println(active_bus_ids)

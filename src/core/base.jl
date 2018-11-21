@@ -324,20 +324,13 @@ function build_ref(data::Dict{String,Any})
         ref[:components] = Dict(i => c for (i,c) in enumerate(sort(collect(component_sets); by=length)))
 
         # filter turned off stuff
-        ref[:bus] = Dict([x for x in ref[:bus] if x.second["bus_type"] != 4])
-        #ref[:bus] = filter((i, bus) -> bus["bus_type"] != 4, ref[:bus])
-        ref[:load] = Dict([x for x in ref[:load] if (x.second["status"] == 1 && x.second["load_bus"] in keys(ref[:bus]))])
-        #ref[:load] = filter((i, load) -> load["status"] == 1 && load["load_bus"] in keys(ref[:bus]), ref[:load])
-        ref[:shunt] = Dict([x for x in ref[:shunt] if (x.second["status"] == 1 && x.second["shunt_bus"] in keys(ref[:bus]))])
-        #ref[:shunt] = filter((i, shunt) -> shunt["status"] == 1 && shunt["shunt_bus"] in keys(ref[:bus]), ref[:shunt])
-        ref[:gen] = Dict([x for x in ref[:gen] if (x.second["gen_status"] == 1 && x.second["gen_bus"] in keys(ref[:bus]))])
-        #ref[:gen] = filter((i, gen) -> gen["gen_status"] == 1 && gen["gen_bus"] in keys(ref[:bus]), ref[:gen])
-        ref[:storage] = Dict([x for x in ref[:storage] if (x.second["status"] == 1 && x.second["storage_bus"] in keys(ref[:bus]))])
-        #ref[:storage] = filter((i, strg) -> strg["status"] == 1 && strg["storage_bus"] in keys(ref[:bus]), ref[:storage])
-        ref[:branch] = Dict([x for x in ref[:branch] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus]))])
-        #ref[:branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:branch])
-        ref[:dcline] = Dict([x for x in ref[:dcline] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus]))])
-        #ref[:dcline] = filter((i, dcline) -> dcline["br_status"] == 1 && dcline["f_bus"] in keys(ref[:bus]) && dcline["t_bus"] in keys(ref[:bus]), ref[:dcline])
+        ref[:bus] = Dict(x for x in ref[:bus] if x.second["bus_type"] != 4)
+        ref[:load] = Dict(x for x in ref[:load] if (x.second["status"] == 1 && x.second["load_bus"] in keys(ref[:bus])))
+        ref[:shunt] = Dict(x for x in ref[:shunt] if (x.second["status"] == 1 && x.second["shunt_bus"] in keys(ref[:bus])))
+        ref[:gen] = Dict(x for x in ref[:gen] if (x.second["gen_status"] == 1 && x.second["gen_bus"] in keys(ref[:bus])))
+        ref[:storage] = Dict(x for x in ref[:storage] if (x.second["status"] == 1 && x.second["storage_bus"] in keys(ref[:bus])))
+        ref[:branch] = Dict(x for x in ref[:branch] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus])))
+        ref[:dcline] = Dict(x for x in ref[:dcline] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus])))
 
 
         ref[:arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:branch]]
@@ -370,38 +363,38 @@ function build_ref(data::Dict{String,Any})
         end
 
 
-        bus_loads = Dict([(i, []) for (i,bus) in ref[:bus]])
+        bus_loads = Dict((i, []) for (i,bus) in ref[:bus])
         for (i, load) in ref[:load]
             push!(bus_loads[load["load_bus"]], i)
         end
         ref[:bus_loads] = bus_loads
 
-        bus_shunts = Dict([(i, []) for (i,bus) in ref[:bus]])
+        bus_shunts = Dict((i, []) for (i,bus) in ref[:bus])
         for (i,shunt) in ref[:shunt]
             push!(bus_shunts[shunt["shunt_bus"]], i)
         end
         ref[:bus_shunts] = bus_shunts
 
-        bus_gens = Dict([(i, []) for (i,bus) in ref[:bus]])
+        bus_gens = Dict((i, []) for (i,bus) in ref[:bus])
         for (i,gen) in ref[:gen]
             push!(bus_gens[gen["gen_bus"]], i)
         end
         ref[:bus_gens] = bus_gens
 
-        bus_storage = Dict([(i, []) for (i,bus) in ref[:bus]])
+        bus_storage = Dict((i, []) for (i,bus) in ref[:bus])
         for (i,strg) in ref[:storage]
             push!(bus_storage[strg["storage_bus"]], i)
         end
         ref[:bus_storage] = bus_storage
 
 
-        bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
+        bus_arcs = Dict((i, []) for (i,bus) in ref[:bus])
         for (l,i,j) in ref[:arcs]
             push!(bus_arcs[i], (l,i,j))
         end
         ref[:bus_arcs] = bus_arcs
 
-        bus_arcs_dc = Dict([(i, []) for (i,bus) in ref[:bus]])
+        bus_arcs_dc = Dict((i, []) for (i,bus) in ref[:bus])
         for (l,i,j) in ref[:arcs_dc]
             push!(bus_arcs_dc[i], (l,i,j))
         end
@@ -436,14 +429,13 @@ function build_ref(data::Dict{String,Any})
         ref[:off_angmax] = off_angmax
 
         if haskey(ref, :ne_branch)
-            ref[:ne_branch] = Dict([x for x in ref[:ne_branch] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus]))])
-            #ref[:ne_branch] = filter((i, branch) -> branch["br_status"] == 1 && branch["f_bus"] in keys(ref[:bus]) && branch["t_bus"] in keys(ref[:bus]), ref[:ne_branch])
+            ref[:ne_branch] = Dict(x for x in ref[:ne_branch] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus])))
 
             ref[:ne_arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:ne_branch]]
             ref[:ne_arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:ne_branch]]
             ref[:ne_arcs] = [ref[:ne_arcs_from]; ref[:ne_arcs_to]]
 
-            ne_bus_arcs = Dict([(i, []) for (i,bus) in ref[:bus]])
+            ne_bus_arcs = Dict((i, []) for (i,bus) in ref[:bus])
             for (l,i,j) in ref[:ne_arcs]
                 push!(ne_bus_arcs[i], (l,i,j))
             end
@@ -478,15 +470,15 @@ end
 function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismulticondcutor)
     buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
 
-    bp_branch = Dict([(bp, typemax(Int64)) for bp in buspair_indexes])
+    bp_branch = Dict((bp, typemax(Int64)) for bp in buspair_indexes)
 
     if ismulticondcutor
-        bp_angmin = Dict([(bp, MultiConductorVector([-Inf for c in conductor_ids])) for bp in buspair_indexes])
-        bp_angmax = Dict([(bp, MultiConductorVector([ Inf for c in conductor_ids])) for bp in buspair_indexes])
+        bp_angmin = Dict((bp, MultiConductorVector([-Inf for c in conductor_ids])) for bp in buspair_indexes)
+        bp_angmax = Dict((bp, MultiConductorVector([ Inf for c in conductor_ids])) for bp in buspair_indexes)
     else
         @assert(length(conductor_ids) == 1)
-        bp_angmin = Dict([(bp, -Inf) for bp in buspair_indexes])
-        bp_angmax = Dict([(bp,  Inf) for bp in buspair_indexes])
+        bp_angmin = Dict((bp, -Inf) for bp in buspair_indexes)
+        bp_angmax = Dict((bp,  Inf) for bp in buspair_indexes)
     end
 
     for (l,branch) in branches
@@ -506,7 +498,7 @@ function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismultico
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end
 
-    buspairs = Dict([((i,j), Dict{String,Any}(
+    buspairs = Dict(((i,j), Dict{String,Any}(
         "branch"=>bp_branch[(i,j)],
         "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],
@@ -515,7 +507,7 @@ function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismultico
         "vm_fr_max"=>buses[i]["vmax"],
         "vm_to_min"=>buses[j]["vmin"],
         "vm_to_max"=>buses[j]["vmax"]
-        )) for (i,j) in buspair_indexes]
+        )) for (i,j) in buspair_indexes
     )
 
     # add optional parameters
