@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Minor improvement to dictionary comprehensions
+- Minor bug fix to line charging in check_branch_directions
 
 ### v0.8.8
 - Added PowerModels specific replicate function
