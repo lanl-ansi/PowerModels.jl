@@ -263,10 +263,11 @@ end
     #    test_case(file, PowerModels.parse_matpower)
     #end
 
-    @testset "test case5" begin
-        file = "../test/data/matpower/case5.m"
-        test_case(file, PowerModels.parse_matpower)
-    end
+    # line reversal, with line charging is not invertable
+    #@testset "test case5" begin
+    #    file = "../test/data/matpower/case5.m"
+    #    test_case(file, PowerModels.parse_matpower)
+    #end
 
     @testset "test case6" begin
         file = "../test/data/matpower/case6.m"

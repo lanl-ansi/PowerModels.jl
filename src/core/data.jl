@@ -627,6 +627,10 @@ function check_branch_directions(data::Dict{String,Any})
             branch_orginal = copy(branch)
             branch["f_bus"] = branch_orginal["t_bus"]
             branch["t_bus"] = branch_orginal["f_bus"]
+            branch["g_to"] = branch_orginal["g_fr"] .* branch_orginal["tap"]'.^2
+            branch["b_to"] = branch_orginal["b_fr"] .* branch_orginal["tap"]'.^2
+            branch["g_fr"] = branch_orginal["g_to"] ./ branch_orginal["tap"]'.^2
+            branch["b_fr"] = branch_orginal["b_to"] ./ branch_orginal["tap"]'.^2
             branch["tap"] = 1 ./ branch_orginal["tap"]
             branch["br_r"] = branch_orginal["br_r"] .* branch_orginal["tap"]'.^2
             branch["br_x"] = branch_orginal["br_x"] .* branch_orginal["tap"]'.^2
