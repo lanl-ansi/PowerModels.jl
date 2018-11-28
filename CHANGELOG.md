@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Fixed the interoperation of ncost in Matpower data (thanks to @lthurner)
 - Minor improvement to dictionary comprehensions
 - Minor bug fix to line charging in check_branch_directions
 
