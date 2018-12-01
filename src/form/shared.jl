@@ -20,7 +20,7 @@
 
 AbstractWRForms = Union{AbstractACTForm, AbstractWRForm, AbstractWRConicForm, AbstractWRMForm}
 AbstractWForms = Union{AbstractWRForms, AbstractBFForm}
-AbstractPForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm}
+AbstractPForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm, AbstractLPACForm}
 
 "`t[ref_bus] == 0`"
 function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) where T <: AbstractPForms

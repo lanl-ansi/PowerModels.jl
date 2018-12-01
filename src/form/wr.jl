@@ -426,45 +426,6 @@ function variable_voltage_magnitude_product(pm::GenericPowerModel{T}; nw::Int=pm
     )
 end
 
-""
-function variable_cosine(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T
-    cos_min = Dict((bp, -Inf) for bp in ids(pm, nw, :buspairs))
-    cos_max = Dict((bp,  Inf) for bp in ids(pm, nw, :buspairs))
-
-    for (bp, buspair) in ref(pm, nw, :buspairs)
-        angmin = buspair["angmin"][cnd]
-        angmax = buspair["angmax"][cnd]
-        if angmin >= 0
-            cos_max[bp] = cos(angmin)
-            cos_min[bp] = cos(angmax)
-        end
-        if angmax <= 0
-            cos_max[bp] = cos(angmax)
-            cos_min[bp] = cos(angmin)
-        end
-        if angmin < 0 && angmax > 0
-            cos_max[bp] = 1.0
-            cos_min[bp] = min(cos(angmin), cos(angmax))
-        end
-    end
-
-    var(pm, nw, cnd)[:cs] = @variable(pm.model,
-        [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(cnd)_cs",
-        lowerbound = cos_min[bp],
-        upperbound = cos_max[bp],
-        start = getval(ref(pm, nw, :buspairs, bp), "cs_start", cnd, 1.0)
-    )
-end
-
-""
-function variable_sine(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    var(pm, nw, cnd)[:si] = @variable(pm.model,
-        [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(cnd)_si",
-        lowerbound = sin(ref(pm, nw, :buspairs, bp, "angmin", cnd)),
-        upperbound = sin(ref(pm, nw, :buspairs, bp, "angmax", cnd)),
-        start = getval(ref(pm, nw, :buspairs, bp), "si_start", cnd)
-    )
-end
 
 ""
 function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T
