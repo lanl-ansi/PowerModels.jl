@@ -72,6 +72,21 @@ end
 
 ""
 function calc_max_cost_index(data::Dict{String,Any})
+    if InfrastructureModels.ismultinetwork(data)
+        max_index = 0
+        for (i,nw_data) in data["nw"]
+            nw_max_index = _calc_max_cost_index(nw_data)
+            max_index = max(max_index, nw_max_index)
+        end
+        return max_index
+    else
+        return _calc_max_cost_index(data)
+    end
+end
+
+
+""
+function _calc_max_cost_index(data::Dict{String,Any})
     max_index = 0
 
     for (i,gen) in data["gen"]
