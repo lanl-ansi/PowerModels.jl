@@ -444,67 +444,42 @@ end
 "ensures all polynomial costs functions have at least three terms"
 function standardize_cost_terms(data::Dict{String,Any})
     if haskey(data, "gencost")
-        for gencost in data["gencost"]
-            if gencost["model"] == 2
-                if length(gencost["cost"]) > 3
-                    max_nonzero_index = 1
-                    for i in 1:length(gencost["cost"])
-                        max_nonzero_index = i
-                        if gencost["cost"][i] != 0.0
-                            break
-                        end
-                    end
+        _standardize_cost_terms(data["gencost"], "generator")
+    end
+    if haskey(data, "dclinecost")
+        _standardize_cost_terms(data["dclinecost"], "dcline")
+    end
+end
 
-                    if max_nonzero_index > 1
-                        warn(LOGGER, "removing $(max_nonzero_index-1) zeros from generator cost model ($(gencost["index"]))")
-                        #println(gencost["cost"])
-                        gencost["cost"] = gencost["cost"][max_nonzero_index:length(gencost["cost"])]
-                        #println(gencost["cost"])
-                        gencost["ncost"] = length(gencost["cost"])
+"ensures all polynomial costs functions have at least three terms"
+function _standardize_cost_terms(cost_data::Array, cost_comp_name::String)
+    for cost in cost_data
+        if cost["model"] == 2
+            if length(cost["cost"]) > 3
+                max_nonzero_index = 1
+                for i in 1:length(cost["cost"])
+                    max_nonzero_index = i
+                    if cost["cost"][i] != 0.0
+                        break
                     end
                 end
 
-                if length(gencost["cost"]) < 3
-                    #println("std gen cost: ",gencost["cost"])
-                    cost_3 = append!(vec(fill(0.0, (1,3 - length(gencost["cost"])))), gencost["cost"])
-                    gencost["cost"] = cost_3
-                    gencost["ncost"] = 3
-                    #println("   ",gencost["cost"])
-                    warn(LOGGER, "added zeros to make generator cost ($(gencost["index"])) a quadratic function: $(cost_3)")
+                if max_nonzero_index > 1
+                    warn(LOGGER, "removing $(max_nonzero_index-1) zeros from $(cost_comp_name) cost model ($(cost["index"]))")
+                    #println(cost["cost"])
+                    cost["cost"] = cost["cost"][max_nonzero_index:length(cost["cost"])]
+                    #println(cost["cost"])
+                    cost["ncost"] = length(cost["cost"])
                 end
             end
-        end
-    end
 
-    if haskey(data, "dclinecost")
-        for dclinecost in data["dclinecost"]
-            if dclinecost["model"] == 2
-                if length(dclinecost["cost"]) > 3
-                    max_nonzero_index = 1
-                    for i in 1:length(dclinecost["cost"])
-                        max_nonzero_index = i
-                        if dclinecost["cost"][i] != 0.0
-                            break
-                        end
-                    end
-
-                    if max_nonzero_index > 1
-                        warn(LOGGER, "removing $(max_nonzero_index-1) zeros from dcline cost model ($(dclinecost["index"]))")
-                        #println(dclinecost["cost"])
-                        dclinecost["cost"] = dclinecost["cost"][max_nonzero_index:length(dclinecost["cost"])]
-                        #println(dclinecost["cost"])
-                        dclinecost["ncost"] = length(dclinecost["cost"])
-                    end
-                end
-
-                if length(dclinecost["cost"]) < 3
-                    #println("std gen cost: ",dclinecost["cost"])
-                    cost_3 = append!(vec(fill(0.0, (1,3 - length(dclinecost["cost"])))), dclinecost["cost"])
-                    dclinecost["cost"] = cost_3
-                    dclinecost["ncost"] = 3
-                    #println("   ",dclinecost["cost"])
-                    warn(LOGGER, "added zeros to make dcline cost ($(dclinecost["index"])) a quadratic function: $(cost_3)")
-                end
+            if length(cost["cost"]) < 3
+                #println("std gen cost: ", cost["cost"])
+                cost_3 = append!(vec(fill(0.0, (1,3 - length(cost["cost"])))), cost["cost"])
+                cost["cost"] = cost_3
+                cost["ncost"] = 3
+                #println("   ", cost["cost"])
+                warn(LOGGER, "added zeros to make $(cost_comp_name) cost ($(cost["index"])) a quadratic function: $(cost_3)")
             end
         end
     end
