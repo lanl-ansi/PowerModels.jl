@@ -3,6 +3,7 @@
 % - tranformer orentation swapping
 % - dual values
 % - clipping cost functions using ncost
+% - linear objective function
 
 function mpc = case5
 mpc.version = '2';

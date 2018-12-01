@@ -443,19 +443,11 @@ end
 
 "ensures all polynomial costs functions have at least three terms"
 function standardize_cost_terms(data::Dict{String,Any})
-    if haskey(data, "gencost")
-        _standardize_cost_terms(data["gencost"], "generator")
-    end
-    if haskey(data, "dclinecost")
-        _standardize_cost_terms(data["dclinecost"], "dcline")
-    end
-end
+    comp_max_order = 1
 
-"ensures all polynomial costs functions have at least three terms"
-function _standardize_cost_terms(cost_data::Array, cost_comp_name::String)
-    for cost in cost_data
-        if cost["model"] == 2
-            if length(cost["cost"]) > 3
+    if haskey(data, "gencost")
+        for cost in data["gencost"]
+            if cost["model"] == 2
                 max_nonzero_index = 1
                 for i in 1:length(cost["cost"])
                     max_nonzero_index = i
@@ -464,23 +456,55 @@ function _standardize_cost_terms(cost_data::Array, cost_comp_name::String)
                     end
                 end
 
-                if max_nonzero_index > 1
-                    warn(LOGGER, "removing $(max_nonzero_index-1) zeros from $(cost_comp_name) cost model ($(cost["index"]))")
-                    #println(cost["cost"])
-                    cost["cost"] = cost["cost"][max_nonzero_index:length(cost["cost"])]
-                    #println(cost["cost"])
-                    cost["ncost"] = length(cost["cost"])
-                end
-            end
+                max_oder = length(cost["cost"]) - max_nonzero_index + 1
 
-            if length(cost["cost"]) < 3
-                #println("std gen cost: ", cost["cost"])
-                cost_3 = append!(vec(fill(0.0, (1,3 - length(cost["cost"])))), cost["cost"])
-                cost["cost"] = cost_3
-                cost["ncost"] = 3
-                #println("   ", cost["cost"])
-                warn(LOGGER, "added zeros to make $(cost_comp_name) cost ($(cost["index"])) a quadratic function: $(cost_3)")
+                comp_max_order = max(comp_max_order, max_oder)
             end
+        end
+    end
+
+    if haskey(data, "dclinecost")
+        for cost in data["dclinecost"]
+            if cost["model"] == 2
+                max_nonzero_index = 1
+                for i in 1:length(cost["cost"])
+                    max_nonzero_index = i
+                    if cost["cost"][i] != 0.0
+                        break
+                    end
+                end
+
+                max_oder = length(cost["cost"]) - max_nonzero_index + 1
+
+                comp_max_order = max(comp_max_order, max_oder)
+            end
+        end
+    end
+
+    if haskey(data, "gencost")
+        _standardize_cost_terms(data["gencost"], comp_max_order, "generator")
+    end
+    if haskey(data, "dclinecost")
+        _standardize_cost_terms(data["dclinecost"], comp_max_order, "dcline")
+    end
+end
+
+
+"ensures all polynomial costs functions have at exactly comp_order terms"
+function _standardize_cost_terms(cost_data::Array, comp_order::Int, cost_comp_name::String)
+    for cost in cost_data
+        if cost["model"] == 2 && length(cost["cost"]) != comp_order
+            std_cost = [0.0 for i in 1:comp_order]
+            current_cost = reverse(cost["cost"])
+            #println("gen cost: $(cost["cost"])")
+            for i in 1:min(comp_order, length(current_cost))
+                std_cost[i] = current_cost[i]
+            end
+            cost["cost"] = reverse(std_cost)
+            cost["ncost"] = comp_order
+            #println("std gen cost: $(cost["cost"])")
+
+            warn(LOGGER, "Updated $(cost_comp_name) cost ($(cost["index"])) to a function of order $(comp_order): $(std_cost)")
         end
     end
 end

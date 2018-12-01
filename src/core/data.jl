@@ -2,6 +2,26 @@
 
 
 ""
+function calc_branch_t(branch::Dict{String,Any})
+    tap_ratio = branch["tap"]
+    angle_shift = branch["shift"]
+
+    tr = tap_ratio .* cos.(angle_shift)
+    ti = tap_ratio .* sin.(angle_shift)
+
+    return tr, ti
+end
+
+
+""
+function calc_branch_y(branch::Dict{String,Any})
+    y = pinv(branch["br_r"] + im * branch["br_x"])
+    g, b = real(y), imag(y)
+    return g, b
+end
+
+
+""
 function calc_theta_delta_bounds(data::Dict{String,Any})
     bus_count = length(data["bus"])
     branches = [branch for branch in values(data["branch"])]
@@ -51,22 +71,34 @@ end
 
 
 ""
-function calc_branch_t(branch::Dict{String,Any})
-    tap_ratio = branch["tap"]
-    angle_shift = branch["shift"]
+function calc_max_cost_index(data::Dict{String,Any})
+    max_index = 0
 
-    tr = tap_ratio .* cos.(angle_shift)
-    ti = tap_ratio .* sin.(angle_shift)
+    for (i,gen) in data["gen"]
+        if haskey(gen, "model")
+            if gen["model"] == 2
+                if haskey(gen, "cost")
+                    max_index = max(max_index, length(gen["cost"]))
+                end
+            else
+                warn(LOGGER, "skipping cost generator $(i) cost model in calc_cost_order, only model 2 is supported.")
+            end
+        end
+    end
 
-    return tr, ti
-end
+    for (i,dcline) in data["dcline"]
+        if haskey(dcline, "model")
+            if dcline["model"] == 2
+                if haskey(dcline, "cost")
+                    max_index = max(max_index, length(dcline["cost"]))
+                end
+            else
+                warn(LOGGER, "skipping cost dcline $(i) cost model in calc_cost_order, only model 2 is supported.")
+            end
+        end
+    end
 
-
-""
-function calc_branch_y(branch::Dict{String,Any})
-    y = pinv(branch["br_r"] + im * branch["br_x"])
-    g, b = real(y), imag(y)
-    return g, b
+    return max_index
 end
 
 

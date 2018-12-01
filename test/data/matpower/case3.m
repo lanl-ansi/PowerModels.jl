@@ -2,6 +2,7 @@
 % tests refrence bus detection
 % tests basic ac and hvdc modeling
 % tests when gencost is present but not dclinecost
+% quadratic objective function
 
 function mpc = case3
 mpc.version = '2';

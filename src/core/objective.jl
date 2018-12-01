@@ -100,7 +100,38 @@ end
 ""
 function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
     check_polynomial_cost_models(pm)
+    order = calc_max_cost_index(pm.data)-1
 
+    if order == 1
+        return _objective_min_polynomial_fuel_cost_linear(pm)
+    elseif order == 2
+        return _objective_min_polynomial_fuel_cost_quadratic(pm)
+    else 
+        error("cost model order of $(order) is not supported")
+    end
+end
+
+
+""
+function _objective_min_polynomial_fuel_cost_linear(pm::GenericPowerModel)
+    from_idx = Dict()
+    for (n, nw_ref) in nws(pm)
+        from_idx[n] = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
+    end
+
+    return @objective(pm.model, Min,
+        sum(
+            sum(   gen["cost"][1]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))+
+                   gen["cost"][2] for (i,gen) in nw_ref[:gen]) +
+            sum(   dcline["cost"][1]*sum( var(pm, n, c, :p_dc, from_idx[n][i]) for c in conductor_ids(pm, n)) +
+                   dcline["cost"][2] for (i,dcline) in nw_ref[:dcline])
+        for (n, nw_ref) in nws(pm))
+    )
+end
+
+
+""
+function _objective_min_polynomial_fuel_cost_quadratic(pm::GenericPowerModel)
     from_idx = Dict()
     for (n, nw_ref) in nws(pm)
         from_idx[n] = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
@@ -122,7 +153,33 @@ end
 ""
 function objective_min_gen_polynomial_fuel_cost(pm::GenericPowerModel)
     check_polynomial_cost_models(pm)
+    order = calc_max_cost_index(pm.data)-1
 
+    if order == 1
+        return _objective_min_gen_polynomial_fuel_cost_linear(pm)
+    elseif order == 2
+        return _objective_min_gen_polynomial_fuel_cost_quadratic(pm)
+    else 
+        error("cost model order of $(order) is not supported")
+    end
+end
+
+
+""
+function _objective_min_gen_polynomial_fuel_cost_linear(pm::GenericPowerModel)
+    return @objective(pm.model, Min,
+        sum(
+            sum(
+                gen["cost"][1]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))+
+                gen["cost"][2]
+            for (i,gen) in nw_ref[:gen])
+        for (n, nw_ref) in nws(pm))
+    )
+end
+
+
+""
+function _objective_min_gen_polynomial_fuel_cost_quadratic(pm::GenericPowerModel)
     return @objective(pm.model, Min,
         sum(
             sum(
@@ -135,10 +192,8 @@ function objective_min_gen_polynomial_fuel_cost(pm::GenericPowerModel)
 end
 
 
-""
-function objective_min_polynomial_fuel_cost(pm::GenericPowerModel{T}) where T <: AbstractConicForms
-    check_polynomial_cost_models(pm)
-
+"Adds lifted variables to turn a quadatic objective into a linear one; needed for conic solvers that only support linear objectives"
+function _objective_min_polynomial_fuel_cost_quadratic(pm::GenericPowerModel{T}) where T <: AbstractConicForms
     from_idx = Dict()
     for (n, nw_ref) in nws(pm)
         from_idx[n] = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
