@@ -1099,6 +1099,93 @@ function _simplify_pwl_cost(id, comp, type_name, tolerance = 1e-2)
 end
 
 
+
+
+"ensures all polynomial costs functions have the same number of terms"
+function standardize_cost_terms(data::Dict{String,Any})
+    comp_max_order = 1
+
+    if InfrastructureModels.ismultinetwork(data)
+        networks = data["nw"]
+    else
+        networks = [("0", data)]
+    end
+
+    for (i, network) in networks
+        if haskey(network, "gen")
+            for (i, gen) in network["gen"]
+                if haskey(gen, "model") && gen["model"] == 2
+                    max_nonzero_index = 1
+                    for i in 1:length(gen["cost"])
+                        max_nonzero_index = i
+                        if gen["cost"][i] != 0.0
+                            break
+                        end
+                    end
+
+                    max_oder = length(gen["cost"]) - max_nonzero_index + 1
+
+                    comp_max_order = max(comp_max_order, max_oder)
+                end
+            end
+        end
+
+        if haskey(network, "dclinecost")
+            if haskey(network, "dcline")
+                for (i, dcline) in network["dcline"]
+                    if haskey(dcline, "model") && dcline["model"] == 2
+                        max_nonzero_index = 1
+                        for i in 1:length(dcline["cost"])
+                            max_nonzero_index = i
+                            if dcline["cost"][i] != 0.0
+                                break
+                            end
+                        end
+
+                        max_oder = length(dcline["cost"]) - max_nonzero_index + 1
+
+                        comp_max_order = max(comp_max_order, max_oder)
+                    end
+                end
+            end
+        end
+
+    end
+
+    for (i, network) in networks
+        if haskey(network, "gen")
+            _standardize_cost_terms(network["gen"], comp_max_order, "generator")
+        end
+        if haskey(network, "dcline")
+            _standardize_cost_terms(network["dcline"], comp_max_order, "dcline")
+        end
+    end
+end
+
+
+"ensures all polynomial costs functions have at exactly comp_order terms"
+function _standardize_cost_terms(components::Dict{String,Any}, comp_order::Int, cost_comp_name::String)
+    for (i, comp) in components
+        if haskey(comp, "model") && comp["model"] == 2 && length(comp["cost"]) != comp_order
+            std_cost = [0.0 for i in 1:comp_order]
+            current_cost = reverse(comp["cost"])
+            #println("gen cost: $(comp["cost"])")
+            for i in 1:min(comp_order, length(current_cost))
+                std_cost[i] = current_cost[i]
+            end
+            comp["cost"] = reverse(std_cost)
+            comp["ncost"] = comp_order
+            #println("std gen cost: $(comp["cost"])")
+
+            warn(LOGGER, "Updated $(cost_comp_name) cost ($(comp["index"])) to a function of order $(comp_order): $(comp["cost"])")
+        end
+    end
+end
+
+
+
+
+
 """
 finds active network buses and branches that are not necessary for the
 computation and sets their status to off.
