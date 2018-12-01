@@ -1,7 +1,9 @@
 % used in tests of,
 % - non-contiguous bus ids
 % - tranformer orentation swapping
-% - dual values 
+% - dual values
+% - clipping cost functions using ncost
+% - linear objective function
 
 function mpc = case5
 mpc.version = '2';

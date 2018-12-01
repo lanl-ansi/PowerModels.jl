@@ -61,6 +61,12 @@ end
         @test result["status"] == :Optimal
         @test isapprox(result["objective"], 14991.2; atol = 1e0)
     end
+    @testset "5-bus case, MIP solver" begin
+        result = run_ots("../test/data/matpower/case5.m", DCPPowerModel, cbc_solver)
+
+        @test result["status"] == :Optimal
+        @test isapprox(result["objective"], 14991.3; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_ots("../test/data/matpower/case6.m", DCPPowerModel, pavito_solver)
 

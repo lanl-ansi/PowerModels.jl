@@ -2,6 +2,26 @@
 
 
 ""
+function calc_branch_t(branch::Dict{String,Any})
+    tap_ratio = branch["tap"]
+    angle_shift = branch["shift"]
+
+    tr = tap_ratio .* cos.(angle_shift)
+    ti = tap_ratio .* sin.(angle_shift)
+
+    return tr, ti
+end
+
+
+""
+function calc_branch_y(branch::Dict{String,Any})
+    y = pinv(branch["br_r"] + im * branch["br_x"])
+    g, b = real(y), imag(y)
+    return g, b
+end
+
+
+""
 function calc_theta_delta_bounds(data::Dict{String,Any})
     bus_count = length(data["bus"])
     branches = [branch for branch in values(data["branch"])]
@@ -51,22 +71,49 @@ end
 
 
 ""
-function calc_branch_t(branch::Dict{String,Any})
-    tap_ratio = branch["tap"]
-    angle_shift = branch["shift"]
-
-    tr = tap_ratio .* cos.(angle_shift)
-    ti = tap_ratio .* sin.(angle_shift)
-
-    return tr, ti
+function calc_max_cost_index(data::Dict{String,Any})
+    if InfrastructureModels.ismultinetwork(data)
+        max_index = 0
+        for (i,nw_data) in data["nw"]
+            nw_max_index = _calc_max_cost_index(nw_data)
+            max_index = max(max_index, nw_max_index)
+        end
+        return max_index
+    else
+        return _calc_max_cost_index(data)
+    end
 end
 
 
 ""
-function calc_branch_y(branch::Dict{String,Any})
-    y = pinv(branch["br_r"] + im * branch["br_x"])
-    g, b = real(y), imag(y)
-    return g, b
+function _calc_max_cost_index(data::Dict{String,Any})
+    max_index = 0
+
+    for (i,gen) in data["gen"]
+        if haskey(gen, "model")
+            if gen["model"] == 2
+                if haskey(gen, "cost")
+                    max_index = max(max_index, length(gen["cost"]))
+                end
+            else
+                warn(LOGGER, "skipping cost generator $(i) cost model in calc_cost_order, only model 2 is supported.")
+            end
+        end
+    end
+
+    for (i,dcline) in data["dcline"]
+        if haskey(dcline, "model")
+            if dcline["model"] == 2
+                if haskey(dcline, "cost")
+                    max_index = max(max_index, length(dcline["cost"]))
+                end
+            else
+                warn(LOGGER, "skipping cost dcline $(i) cost model in calc_cost_order, only model 2 is supported.")
+            end
+        end
+    end
+
+    return max_index
 end
 
 
@@ -1050,6 +1097,93 @@ function _simplify_pwl_cost(id, comp, type_name, tolerance = 1e-2)
         comp["ncost"] = length(smpl_cost)/2
     end
 end
+
+
+
+
+"ensures all polynomial costs functions have the same number of terms"
+function standardize_cost_terms(data::Dict{String,Any})
+    comp_max_order = 1
+
+    if InfrastructureModels.ismultinetwork(data)
+        networks = data["nw"]
+    else
+        networks = [("0", data)]
+    end
+
+    for (i, network) in networks
+        if haskey(network, "gen")
+            for (i, gen) in network["gen"]
+                if haskey(gen, "model") && gen["model"] == 2
+                    max_nonzero_index = 1
+                    for i in 1:length(gen["cost"])
+                        max_nonzero_index = i
+                        if gen["cost"][i] != 0.0
+                            break
+                        end
+                    end
+
+                    max_oder = length(gen["cost"]) - max_nonzero_index + 1
+
+                    comp_max_order = max(comp_max_order, max_oder)
+                end
+            end
+        end
+
+        if haskey(network, "dclinecost")
+            if haskey(network, "dcline")
+                for (i, dcline) in network["dcline"]
+                    if haskey(dcline, "model") && dcline["model"] == 2
+                        max_nonzero_index = 1
+                        for i in 1:length(dcline["cost"])
+                            max_nonzero_index = i
+                            if dcline["cost"][i] != 0.0
+                                break
+                            end
+                        end
+
+                        max_oder = length(dcline["cost"]) - max_nonzero_index + 1
+
+                        comp_max_order = max(comp_max_order, max_oder)
+                    end
+                end
+            end
+        end
+
+    end
+
+    for (i, network) in networks
+        if haskey(network, "gen")
+            _standardize_cost_terms(network["gen"], comp_max_order, "generator")
+        end
+        if haskey(network, "dcline")
+            _standardize_cost_terms(network["dcline"], comp_max_order, "dcline")
+        end
+    end
+end
+
+
+"ensures all polynomial costs functions have at exactly comp_order terms"
+function _standardize_cost_terms(components::Dict{String,Any}, comp_order::Int, cost_comp_name::String)
+    for (i, comp) in components
+        if haskey(comp, "model") && comp["model"] == 2 && length(comp["cost"]) != comp_order
+            std_cost = [0.0 for i in 1:comp_order]
+            current_cost = reverse(comp["cost"])
+            #println("gen cost: $(comp["cost"])")
+            for i in 1:min(comp_order, length(current_cost))
+                std_cost[i] = current_cost[i]
+            end
+            comp["cost"] = reverse(std_cost)
+            comp["ncost"] = comp_order
+            #println("std gen cost: $(comp["cost"])")
+
+            warn(LOGGER, "Updated $(cost_comp_name) cost ($(comp["index"])) to a function of order $(comp_order): $(comp["cost"])")
+        end
+    end
+end
+
+
+
 
 
 """

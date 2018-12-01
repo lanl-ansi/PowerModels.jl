@@ -29,6 +29,8 @@ function build_mn_data(base_data_1, base_data_2)
     delete!(data_2, "baseMVA")
     mn_data["nw"]["2"] = data_2
 
+    PowerModels.standardize_cost_terms(mn_data)
+
     return mn_data
 end
 
@@ -81,6 +83,8 @@ function build_mn_mc_data(base_data_1, base_data_2; conductors_1::Int=3, conduct
     delete!(mp_data_2, "per_unit")
     delete!(mp_data_2, "baseMVA")
     mn_data["nw"]["2"] = mp_data_2
+
+    PowerModels.standardize_cost_terms(mn_data)
 
     return mn_data
 end
