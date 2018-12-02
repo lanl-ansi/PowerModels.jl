@@ -319,6 +319,79 @@ end
 end
 
 
+@testset "test lpac-c opf" begin
+    @testset "3-bus case" begin
+        result = run_opf("../test/data/matpower/case3.m", LPACCPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 5908.98; atol = 1e0)
+    end
+    @testset "5-bus tranformer swap case" begin
+        result = run_opf("../test/data/matpower/case5.m", LPACCPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 18288.1; atol = 1e0)
+    end
+    @testset "5-bus asymmetric case" begin
+        result = run_opf("../test/data/matpower/case5_asym.m", LPACCPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 17645.6; atol = 1e0)
+    end
+    @testset "5-bus gap case" begin
+        result = run_opf("../test/data/matpower/case5_gap.m", LPACCPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], -27554.5; atol = 1e0)
+    end
+    @testset "5-bus with dcline costs" begin
+        result = run_opf("../test/data/matpower/case5_dc.m", LPACCPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 18253.0; atol = 1e0)
+    end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf("../test/data/pti/case5_alc.raw", LPACCPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1004.58; atol = 1e0)
+    end
+    @testset "5-bus with negative generators" begin
+        result = run_opf("../test/data/matpower/case5_npg.m", LPACCPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 8937.9; atol = 1e0)
+    end
+    @testset "5-bus with only current limit data" begin
+        result = run_opf("../test/data/matpower/case5_clm.m", LPACCPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 17007.4; atol = 1e0)
+    end
+    @testset "5-bus with pwl costs" begin
+        result = run_opf("../test/data/matpower/case5_pwlc.m", LPACCPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 42853.4; atol = 1e0)
+    end
+    @testset "6-bus case" begin
+        result = run_opf("../test/data/matpower/case6.m", LPACCPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 11615.1; atol = 1e0)
+        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
+    end
+    # TODO uderstand why this is infeasible
+    #@testset "24-bus rts case" begin
+    #    result = run_opf("../test/data/matpower/case24.m", LPACCPowerModel, ipopt_solver)
+
+    #    @test result["status"] == :LocalOptimal
+    #    @test isapprox(result["objective"], 79805; atol = 1e0)
+    #end
+end
+
+
 @testset "test soc (BIM) opf" begin
     @testset "3-bus case" begin
         result = run_opf("../test/data/matpower/case3.m", SOCWRPowerModel, ipopt_solver)

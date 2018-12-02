@@ -59,9 +59,15 @@ ACRPowerModel
 ACTPowerModel
 ```
 
+
 ## `DCPPowerModel`
 ```@docs
 DCPPowerModel
+```
+
+## `LPACCPowerModel`
+```@docs
+LPACCPowerModel
 ```
 
 

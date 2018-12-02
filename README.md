@@ -22,6 +22,7 @@ This enables the definition of a wide variety of power network formulations and 
 **Core Network Formulations**
 * AC (polar and rectangular coordinates)
 * DC Approximation (polar coordinates)
+* LPAC Approximation (polar coordinates)
 * SDP Relaxation (W-space)
 * SOC Relaxation (W-space)
 * QC Relaxation (W+L-space)
