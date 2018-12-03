@@ -1,34 +1,5 @@
 ### rectangular form of the non-convex AC equations
 
-export
-    ACRPowerModel, StandardACRForm
-
-""
-abstract type AbstractACRForm <: AbstractPowerFormulation end
-
-""
-abstract type StandardACRForm <: AbstractACRForm end
-
-"""
-AC power flow formulation with rectangular bus voltage variables.
-
-```
-@techreport{Cain2012,
-  author = {Cain, Mary B and {O' Neill}, Richard P and Castillo, Anya},
-  pages = {1--36},
-  title = {{History of optimal power flow and formulations}},
-  url = {https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-formulation-testing.pdf}
-  year = {2012}
-}
-```
-"""
-const ACRPowerModel = GenericPowerModel{StandardACRForm}
-
-"default rectangular AC constructor"
-ACRPowerModel(data::Dict{String,Any}; kwargs...) =
-    GenericPowerModel(data, StandardACRForm; kwargs...)
-
-
 ""
 function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACRForm
     variable_voltage_real(pm; kwargs...)

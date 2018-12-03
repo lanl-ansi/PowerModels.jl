@@ -1,39 +1,5 @@
-export
-    DCPPowerModel, DCPlosslessForm,
-    NFAPowerModel, NFAForm,
-    DCPLLPowerModel, StandardDCPLLForm
+### simple active power only approximations (e.g. DC Power Flow)
 
-""
-abstract type AbstractDCPForm <: AbstractPowerFormulation end
-
-"active power only formulations where p[(i,j)] = -p[(j,i)]"
-abstract type DCPlosslessForm <: AbstractDCPForm end
-
-const StandardDCPForm = DCPlosslessForm
-
-"""
-Linearized 'DC' power flow formulation with polar voltage variables.
-
-```
-@ARTICLE{4956966,
-  author={B. Stott and J. Jardim and O. Alsac},
-  journal={IEEE Transactions on Power Systems},
-  title={DC Power Flow Revisited},
-  year={2009},
-  month={Aug},
-  volume={24},
-  number={3},
-  pages={1290-1300},
-  doi={10.1109/TPWRS.2009.2021235},
-  ISSN={0885-8950}
-}
-```
-"""
-const DCPPowerModel = GenericPowerModel{DCPlosslessForm}
-
-"default DC constructor"
-DCPPowerModel(data::Dict{String,Any}; kwargs...) =
-    GenericPowerModel(data, DCPlosslessForm; kwargs...)
 
 ""
 function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
@@ -348,17 +314,8 @@ end
 
 
 
+######## Network Flow Approximation ########
 
-abstract type NFAForm <: DCPlosslessForm end
-
-"""
-The an active power only network flow approximation, also known as the transportation model.
-"""
-const NFAPowerModel = GenericPowerModel{NFAForm}
-
-"default DC constructor"
-NFAPowerModel(data::Dict{String,Any}; kwargs...) =
-    GenericPowerModel(data, NFAForm; kwargs...)
 
 "nothing to do, no voltage angle variables"
 function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: NFAForm
@@ -390,17 +347,8 @@ end
 
 
 
-""
-abstract type AbstractDCPLLForm <: AbstractDCPForm end
 
-""
-abstract type StandardDCPLLForm <: AbstractDCPLLForm end
-
-""
-const DCPLLPowerModel = GenericPowerModel{StandardDCPLLForm}
-
-"default DC constructor"
-DCPLLPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, StandardDCPLLForm; kwargs...)
+######## DC with Line Losses ########
 
 
 "`sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)== sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*1.0^2`"

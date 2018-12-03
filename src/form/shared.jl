@@ -9,18 +9,6 @@
 # The types defined in this file should not be exported because they exist
 # only to prevent code replication
 #
-# Note that Union types are discouraged in Julia,
-# https://docs.julialang.org/en/release-0.6/manual/style-guide/#Avoid-strange-type-Unions-1
-# and should be used with discretion.
-#
-# If you are about to add a union type,
-# first double check if a different type hierarchy can resolve the issue
-# instead.
-#
-
-AbstractWRForms = Union{AbstractACTForm, AbstractWRForm, AbstractWRConicForm, AbstractWRMForm}
-AbstractWForms = Union{AbstractWRForms, AbstractBFForm}
-AbstractPForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm, AbstractLPACForm}
 
 "`t[ref_bus] == 0`"
 function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) where T <: AbstractPForms
