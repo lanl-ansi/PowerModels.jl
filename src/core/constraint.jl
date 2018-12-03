@@ -86,7 +86,7 @@ Creates Line Flow constraint for DC Lines (Matpower Formulation)
 p_fr + p_to == loss0 + p_fr * loss1
 ```
 """
-function constraint_dcline(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, loss0, loss1) where T
+function constraint_dcline(pm::GenericPowerModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
     p_fr = var(pm, n, c, :p_dc, f_idx)
     p_to = var(pm, n, c, :p_dc, t_idx)
 
