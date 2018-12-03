@@ -1,9 +1,5 @@
-export
-    SDPWRMPowerModel, SDPWRMForm,
-    SparseSDPWRMPowerModel, SparseSDPWRMForm
+### sdp relaxations in the rectangular W-space
 
-""
-abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
 
 ""
 function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractWRMForm
@@ -22,48 +18,6 @@ function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_id
     @constraint(pm.model, norm([2*p_to; 2*q_to; w_to*c_rating_a^2-1]) <= w_to*c_rating_a^2+1)
 end
 
-
-
-
-""
-abstract type SDPWRMForm <: AbstractWRMForm end
-
-"""
-Semi-definite relaxation of AC OPF
-
-Originally proposed by:
-```
-@article{BAI2008383,
-  author = "Xiaoqing Bai and Hua Wei and Katsuki Fujisawa and Yong Wang",
-  title = "Semidefinite programming for optimal power flow problems",
-  journal = "International Journal of Electrical Power & Energy Systems",
-  volume = "30",
-  number = "6",
-  pages = "383 - 392",
-  year = "2008",
-  issn = "0142-0615",
-  doi = "https://doi.org/10.1016/j.ijepes.2007.12.003",
-  url = "http://www.sciencedirect.com/science/article/pii/S0142061507001378",
-}
-```
-First paper to use "W" variables in the BIM of AC OPF:
-```
-@INPROCEEDINGS{6345272,
-  author={S. Sojoudi and J. Lavaei},
-  title={Physics of power networks makes hard optimization problems easy to solve},
-  booktitle={2012 IEEE Power and Energy Society General Meeting},
-  year={2012},
-  month={July},
-  pages={1-8},
-  doi={10.1109/PESGM.2012.6345272},
-  ISSN={1932-5517}
-}
-```
-"""
-const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
-
-""
-SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPWRMForm; kwargs...)
 
 
 ""
@@ -142,47 +96,8 @@ end
 
 
 
+###### Sparse SDP Relaxations ######
 
-abstract type SparseSDPWRMForm <: SDPWRMForm end
-
-"""
-Sparsity-exploiting semidefinite relaxation of AC OPF
-
-Proposed in:
-```
-@article{doi:10.1137/S1052623400366218,
-  author = {Fukuda, M. and Kojima, M. and Murota, K. and Nakata, K.},
-  title = {Exploiting Sparsity in Semidefinite Programming via Matrix Completion I: General Framework},
-  journal = {SIAM Journal on Optimization},
-  volume = {11},
-  number = {3},
-  pages = {647-674},
-  year = {2001},
-  doi = {10.1137/S1052623400366218},
-  URL = {https://doi.org/10.1137/S1052623400366218},
-  eprint = {https://doi.org/10.1137/S1052623400366218}
-}
-```
-Original application to OPF by:
-```
-@ARTICLE{6064917,
-  author={R. A. Jabr},
-  title={Exploiting Sparsity in SDP Relaxations of the OPF Problem},
-  journal={IEEE Transactions on Power Systems},
-  volume={27},
-  number={2},
-  pages={1138-1139},
-  year={2012},
-  month={May},
-  doi={10.1109/TPWRS.2011.2170772},
-  ISSN={0885-8950}
-}
-```
-"""
-const SparseSDPWRMPowerModel = GenericPowerModel{SparseSDPWRMForm}
-
-""
-SparseSDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SparseSDPWRMForm; kwargs...)
 
 struct SDconstraintDecomposition
     "Each sub-vector consists of bus IDs corresponding to a clique grouping"

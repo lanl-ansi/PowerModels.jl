@@ -1,53 +1,5 @@
-export
-    SOCWRPowerModel, SOCWRForm,
-    QCWRPowerModel, QCWRForm,
-    SOCWRConicPowerModel, SOCWRConicForm,
-    QCWRTriPowerModel, QCWRTriForm
+### quadratic relaxations in the rectangular W-space (e.g. SOC and QC relaxations)
 
-""
-abstract type AbstractWRForm <: AbstractPowerFormulation end
-
-""
-abstract type AbstractWRConicForm <: AbstractConicPowerFormulation end
-
-""
-abstract type SOCWRConicForm <: AbstractWRConicForm end
-
-""
-abstract type SOCWRForm <: AbstractWRForm end
-
-"""
-Second-order cone relaxation of bus injection model of AC OPF.
-
-The implementation casts this as a convex quadratically constrained problem.
-```
-@article{1664986,
-  author={R. A. Jabr},
-  title={Radial distribution load flow using conic programming},
-  journal={IEEE Transactions on Power Systems},
-  year={2006},
-  month={Aug},
-  volume={21},
-  number={3},
-  pages={1458-1459},
-  doi={10.1109/TPWRS.2006.879234},
-  ISSN={0885-8950}
-}
-```
-"""
-const SOCWRPowerModel = GenericPowerModel{SOCWRForm}
-
-"""
-Second-order cone relaxation of bus injection model of AC OPF.
-
-This implementation casts the problem as a convex conic problem.
-"""
-const SOCWRConicPowerModel = GenericPowerModel{SOCWRConicForm}
-
-"default SOC constructor"
-SOCWRPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCWRForm; kwargs...)
-
-SOCWRConicPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCWRConicForm; kwargs...)
 
 ""
 function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractWRForm
@@ -374,35 +326,7 @@ end
 
 
 
-
-
-""
-abstract type QCWRForm <: AbstractWRForm end
-
-"""
-"Quadratic-Convex" relaxation of AC OPF
-```
-@Article{Hijazi2017,
-  author="Hijazi, Hassan and Coffrin, Carleton and Hentenryck, Pascal Van",
-  title="Convex quadratic relaxations for mixed-integer nonlinear programs in power systems",
-  journal="Mathematical Programming Computation",
-  year="2017",
-  month="Sep",
-  volume="9",
-  number="3",
-  pages="321--367",
-  issn="1867-2957",
-  doi="10.1007/s12532-016-0112-z",
-  url="https://doi.org/10.1007/s12532-016-0112-z"
-}
-```
-"""
-const QCWRPowerModel = GenericPowerModel{QCWRForm}
-
-"default QC constructor"
-function QCWRPowerModel(data::Dict{String,Any}; kwargs...)
-    return GenericPowerModel(data, QCWRForm; kwargs...)
-end
+###### QC Relaxations ######
 
 
 "Creates variables associated with differences in voltage angles"
@@ -772,33 +696,7 @@ function constraint_power_magnitude_link_on_off(pm::GenericPowerModel{T}, n::Int
 end
 
 
-""
-abstract type QCWRTriForm <: QCWRForm end
 
-"""
-"Quadratic-Convex" relaxation of AC OPF with convex hull of triple product
-```
-@Article{Hijazi2017,
-  author="Hijazi, Hassan and Coffrin, Carleton and Hentenryck, Pascal Van",
-  title="Convex quadratic relaxations for mixed-integer nonlinear programs in power systems",
-  journal="Mathematical Programming Computation",
-  year="2017",
-  month="Sep",
-  volume="9",
-  number="3",
-  pages="321--367",
-  issn="1867-2957",
-  doi="10.1007/s12532-016-0112-z",
-  url="https://doi.org/10.1007/s12532-016-0112-z"
-}
-```
-"""
-const QCWRTriPowerModel = GenericPowerModel{QCWRTriForm}
-
-"default QC trilinear model constructor"
-function QCWRTriPowerModel(data::Dict{String,Any}; kwargs...)
-    return GenericPowerModel(data, QCWRTriForm; kwargs...)
-end
 
 ""
 function variable_voltage_magnitude_product(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: QCWRTriForm
