@@ -9,7 +9,7 @@ function parse_file(file::String; import_all=false)
     if endswith(file, ".m")
         pm_data = PowerModels.parse_matpower(file)
     elseif endswith(lowercase(file), ".raw")
-        info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
+        @info "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines"
         pm_data = PowerModels.parse_psse(file; import_all=import_all)
     else
         pm_data = parse_json(file)

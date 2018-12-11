@@ -1,21 +1,32 @@
 # Test cases for PTI RAW file parser
 
-TESTLOG = getlogger(PowerModels)
+if VERSION < v"0.7.0-"
+    TESTLOG = getlogger(PowerModels)
+end
 
 @testset "test .raw file parser" begin
     @testset "Check PTI exception handling" begin
-        setlevel!(TESTLOG, "warn")
+        if VERSION < v"0.7.0-"
+            Memento.setlevel!(TESTLOG, "warn")
 
-        @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
-        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
-        @test_warn(TESTLOG, "Version 32 of PTI format is unsupported, parser may not function correctly.",
-                   PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
-        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
-        @test_warn(TESTLOG, "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))
-        #Test not replicable in Julia7
-        #@test_throws(TESTLOG, ErrorException, PowerModels.parse_file("../test/data/pti/parser_test_j.raw"))
+            @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
+            Memento.Test.@test_warn(TESTLOG, "Version 32 of PTI format is unsupported, parser may not function correctly.",
+                       PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
+            Memento.Test.@test_warn(TESTLOG, "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))
 
-        setlevel!(TESTLOG, "error")
+            Memento.setlevel!(TESTLOG, "error")
+        else
+            @test_throws ErrorException PowerModels.parse_pti("../test/data/pti/parser_test_d.raw")
+            @test_throws ErrorException PowerModels.parse_pti("../test/data/pti/parser_test_b.raw")
+
+            Logging.disable_logging(Logging.Info)
+            @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
+            @test_logs (:warn, "Version 32 of PTI format is unsupported, parser may not function correctly.") PowerModels.parse_pti("../test/data/pti/parser_test_c.raw")
+            @test_logs (:warn, "GNE DEVICE parsing is not supported.") PowerModels.parse_pti("../test/data/pti/parser_test_h.raw")
+            Logging.disable_logging(Logging.Warn)
+        end
     end
 
     @testset "4-bus frankenstein file" begin
@@ -159,7 +170,11 @@ TESTLOG = getlogger(PowerModels)
     end
 
     @testset "0-bus case file" begin
-        @test_throws(TESTLOG, ArgumentError, PowerModels.parse_pti("../test/data/pti/case0.raw"))
+        if VERSION < v"0.7.0-"
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/case0.raw"))
+        else
+            @test_throws ErrorException PowerModels.parse_pti("../test/data/pti/case0.raw")
+        end
     end
 
     @testset "73-bus case file" begin

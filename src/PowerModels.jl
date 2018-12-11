@@ -5,14 +5,13 @@ using InfrastructureModels
 using MathProgBase
 using JuMP
 using Compat
-using Memento
 
 using Compat.LinearAlgebra
 using Compat.SparseArrays
 
-if VERSION < v"0.7.0-"
-    import Compat: @__MODULE__
+import Compat: @__MODULE__
 
+if VERSION < v"0.7.0-"
     import Compat: occursin
     import Compat: Nothing
     import Compat: round
@@ -40,6 +39,28 @@ if VERSION < v"0.7.0-"
     function pm_sum(v; dims::Int=0)
         return sum(v, dims)
     end
+
+    using Memento
+    # Create our module level logger (this will get precompiled)
+    const LOGGER = getlogger(@__MODULE__)
+
+    # Register the module level logger at runtime so that folks can access the logger via `getlogger(PowerModels)`
+    # NOTE: If this line is not included then the precompiled `PowerModels.LOGGER` won't be registered at runtime.
+    __init__() = Memento.register(LOGGER)
+
+    macro warn(message)
+        :(Memento.warn(LOGGER, $(esc(message))))
+    end
+
+    macro debug(message)
+        :(Memento.debug(LOGGER, $(esc(message))))
+    end
+
+    macro info(message)
+        :(Memento.info(LOGGER, $(esc(message))))
+    end
+else
+    using Logging
 end
 
 if VERSION > v"0.7.0-"
@@ -53,14 +74,6 @@ if VERSION > v"0.7.0-"
         return Tuple(CartesianIndices(x)[i])
     end
 end
-
-
-# Create our module level logger (this will get precompiled)
-const LOGGER = getlogger(@__MODULE__)
-
-# Register the module level logger at runtime so that folks can access the logger via `getlogger(PowerModels)`
-# NOTE: If this line is not included then the precompiled `PowerModels.LOGGER` won't be registered at runtime.
-__init__() = Memento.register(LOGGER)
 
 include("io/matpower.jl")
 include("io/common.jl")

@@ -1,6 +1,8 @@
 using JuMP
 PMs = PowerModels
-TESTLOG = getlogger(PowerModels)
+if VERSION < v"0.7.0-"
+    TESTLOG = Memento.getlogger(PowerModels)
+end
 
 @testset "test multinetwork" begin
 
@@ -326,25 +328,47 @@ TESTLOG = getlogger(PowerModels)
     @testset "test errors and warnings" begin
         mn_data = build_mn_data("../test/data/matpower/case5.m")
 
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_angle_differences(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_thermal_limits(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_branch_directions(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_branch_loops(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_transformer_parameters(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_bus_types(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_dcline_limits(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_setpoints(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.connected_components(mn_data))
+        if VERSION < v"0.7.0-"
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_angle_differences(mn_data))
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_thermal_limits(mn_data))
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_branch_directions(mn_data))
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_branch_loops(mn_data))
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(mn_data))
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_transformer_parameters(mn_data))
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_bus_types(mn_data))
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_dcline_limits(mn_data))
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_setpoints(mn_data))
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mn_data))
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.connected_components(mn_data))
 
-        setlevel!(TESTLOG, "warn")
-        @test_nowarn PowerModels.check_reference_buses(mn_data)
-        @test_nowarn PowerModels.make_multiconductor(mn_data, 3)
-        @test_nowarn PowerModels.check_conductors(mn_data)
-        setlevel!(TESTLOG, "error")
+            setlevel!(TESTLOG, "warn")
+            @test_nowarn PowerModels.check_reference_buses(mn_data)
+            @test_nowarn PowerModels.make_multiconductor(mn_data, 3)
+            @test_nowarn PowerModels.check_conductors(mn_data)
+            setlevel!(TESTLOG, "error")
 
-        @test_throws(TESTLOG, ErrorException, PowerModels.run_ac_opf(mn_data, ipopt_solver))
+            Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.run_ac_opf(mn_data, ipopt_solver))
+        else
+            @test_throws ErrorException PowerModels.check_voltage_angle_differences(mn_data)
+            @test_throws ErrorException PowerModels.check_thermal_limits(mn_data)
+            @test_throws ErrorException PowerModels.check_branch_directions(mn_data)
+            @test_throws ErrorException PowerModels.check_branch_loops(mn_data)
+            @test_throws ErrorException PowerModels.check_connectivity(mn_data)
+            @test_throws ErrorException PowerModels.check_transformer_parameters(mn_data)
+            @test_throws ErrorException PowerModels.check_bus_types(mn_data)
+            @test_throws ErrorException PowerModels.check_dcline_limits(mn_data)
+            @test_throws ErrorException PowerModels.check_voltage_setpoints(mn_data)
+            @test_throws ErrorException PowerModels.check_cost_functions(mn_data)
+            @test_throws ErrorException PowerModels.connected_components(mn_data)
+
+            Logging.disable_logging(Logging.Info)
+            @test_nowarn PowerModels.check_reference_buses(mn_data)
+            @test_nowarn PowerModels.make_multiconductor(mn_data, 3)
+            @test_nowarn PowerModels.check_conductors(mn_data)
+            disable_logging(Logging.Warn)
+
+            @test_throws ErrorException PowerModels.run_ac_opf(mn_data, ipopt_solver)
+        end
     end
 
 end

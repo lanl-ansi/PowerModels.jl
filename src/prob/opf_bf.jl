@@ -7,7 +7,7 @@ end
 
 ""
 function run_opf_bf(file, model_constructor, solver; kwargs...)
-    error(LOGGER, "The problem type opf_bf at the moment only supports subtypes of AbstractBFForm")
+    throw(error("The problem type opf_bf at the moment only supports subtypes of AbstractBFForm"))
 end
 
 ""

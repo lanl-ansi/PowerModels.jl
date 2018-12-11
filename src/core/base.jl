@@ -178,7 +178,7 @@ function JuMP.solve(pm::GenericPowerModel)
     try
         solve_time = getsolvetime(pm.model)
     catch
-        warn(LOGGER, "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
+        @warn "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value."
     end
 
     return status, solve_time
@@ -215,11 +215,11 @@ function build_generic_model(data::Dict{String,Any}, model_constructor, post_met
     pm = model_constructor(data; kwargs...)
 
     if !multinetwork && ismultinetwork(pm)
-        error(LOGGER, "attempted to build a single-network model with multi-network data")
+        throw(error("attempted to build a single-network model with multi-network data"))
     end
 
     if !multiconductor && ismulticonductor(pm)
-        error(LOGGER, "attempted to build a single-conductor model with multi-conductor data")
+        throw(error("attempted to build a single-conductor model with multi-conductor data"))
     end
 
     post_method(pm)
@@ -397,11 +397,11 @@ function build_ref(data::Dict{String,Any})
             gen_bus = big_gen["gen_bus"]
             ref_bus = ref_buses[gen_bus] = ref[:bus][gen_bus]
             ref_bus["bus_type"] = 3
-            warn(LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
+            @warn "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])"
         end
 
         if length(ref_buses) > 1
-            warn(LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
+            @warn "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component"
         end
 
         ref[:ref_buses] = ref_buses

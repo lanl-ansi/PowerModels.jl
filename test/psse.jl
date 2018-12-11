@@ -1,6 +1,8 @@
 # Tests for data conversion from PSS(R)E to PowerModels data structure
 
-TESTLOG = getlogger(PowerModels)
+if VERSION < v"0.7.0-"
+    TESTLOG = Memento.getlogger(PowerModels)
+end
 
 function set_costs!(data::Dict)
     for (n, gen) in data["gen"]
@@ -209,18 +211,31 @@ end
     @testset "exception handling" begin
         dummy_data = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw")
 
-        setlevel!(TESTLOG, "warn")
+        if VERSION < v"0.7.0-"
+            setlevel!(TESTLOG, "warn")
 
-        @test_warn(TESTLOG, "Could not find bus 1, returning 0 for field vm",
-                   PowerModels.get_bus_value(1, "vm", dummy_data))
+            Memento.Test.@test_warn(TESTLOG, "Could not find bus 1, returning 0 for field vm",
+                       PowerModels.get_bus_value(1, "vm", dummy_data))
 
-        @test_warn(TESTLOG, "PTI v33.0.0 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.",
-                   PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
+            Memento.Test.@test_warn(TESTLOG, "PTI v33.0.0 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.",
+                       PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
 
-        @test_warn(TESTLOG, "The following fields in BUS are missing: NVHI, NVLO, EVHI, EVLO",
-                   PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
+            Memento.Test.@test_warn(TESTLOG, "The following fields in BUS are missing: NVHI, NVLO, EVHI, EVLO",
+                       PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
 
-        setlevel!(TESTLOG, "error")
+            setlevel!(TESTLOG, "error")
+        else
+            Logging.disable_logging(Logging.Info)
+            @test_logs (:warn, "Could not find bus 1, returning 0 for field vm") PowerModels.get_bus_value(1, "vm", dummy_data)
+            @test_logs((:warn, "The following fields in BUS are missing: NVHI, NVLO, EVHI, EVLO"),
+                       (:warn, "The following fields in BUS are missing: NVHI, NVLO, EVHI, EVLO"),
+                       (:warn, "PTI v33.0.0 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed."),
+                       (:warn, "PTI v33.0.0 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed."),
+                       (:warn, "no active generators found at bus 1005, updating to bus type from 2 to 1"),
+                       (:warn, "no active generators found at bus 1002, updating to bus type from 2 to 1"),
+                       PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
+            Logging.disable_logging(Logging.Warn)
+        end
     end
 
     @testset "three-winding transformer" begin

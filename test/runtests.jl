@@ -5,8 +5,6 @@ using Memento
 using MathProgBase
 
 # Suppress warnings during testing.
-setlevel!(getlogger(InfrastructureModels), "error")
-setlevel!(getlogger(PowerModels), "error")
 
 using Cbc
 using Ipopt
@@ -24,6 +22,17 @@ import Compat: pairs
 
 if VERSION < v"0.7.0-"
     LinearAlgebra = Compat.LinearAlgebra
+    Memento.setlevel!(getlogger(InfrastructureModels), "error")
+    Memento.setlevel!(getlogger(PowerModels), "error")
+
+    TESTLOG = Memento.getlogger(PowerModels)
+
+    macro test_logs(exs...)
+    end
+else
+    using Test
+    using Logging
+    Logging.disable_logging(Logging.Warn)
 end
 
 

@@ -1,4 +1,7 @@
 # Tests of data checking and transformation code
+if VERSION < v"0.7.0-"
+    TESTLOG = getlogger(PowerModels)
+end
 
 @testset "test data summary" begin
 
@@ -302,85 +305,169 @@ end
 @testset "test errors and warnings" begin
     data = PowerModels.parse_file("../test/data/matpower/case3.m")
 
-    # check_cost_functions
-    data["gen"]["1"]["model"] = 1
-    data["gen"]["1"]["ncost"] = 1
-    data["gen"]["1"]["cost"] = [0, 1, 0]
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+    if VERSION < v"0.7.0-"
+        # check_cost_functions
+        data["gen"]["1"]["model"] = 1
+        data["gen"]["1"]["ncost"] = 1
+        data["gen"]["1"]["cost"] = [0, 1, 0]
+        Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
 
-    data["gen"]["1"]["cost"] = [0, 0]
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+        data["gen"]["1"]["cost"] = [0, 0]
+        Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
 
-    data["gen"]["1"]["ncost"] = 2
-    data["gen"]["1"]["cost"] = [0, 0, 0, 0]
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+        data["gen"]["1"]["ncost"] = 2
+        data["gen"]["1"]["cost"] = [0, 0, 0, 0]
+        Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
 
-    data["gen"]["1"]["model"] = 2
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+        data["gen"]["1"]["model"] = 2
+        Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
 
-    # check_connectivity
-    data["load"]["1"]["load_bus"] = 1000
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+        # check_connectivity
+        data["load"]["1"]["load_bus"] = 1000
+        Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
 
-    data["load"]["1"]["load_bus"] = 1
-    data["shunt"]["1"] = Dict{String,Any}("gs"=>0, "bs"=>1, "shunt_bus"=>1000, "index"=>1, "status"=>1)
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+        data["load"]["1"]["load_bus"] = 1
+        data["shunt"]["1"] = Dict{String,Any}("gs"=>0, "bs"=>1, "shunt_bus"=>1000, "index"=>1, "status"=>1)
+        Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
 
-    data["shunt"]["1"]["shunt_bus"] = 1
-    data["gen"]["1"]["gen_bus"] = 1000
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+        data["shunt"]["1"]["shunt_bus"] = 1
+        data["gen"]["1"]["gen_bus"] = 1000
+        Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
 
-    data["gen"]["1"]["gen_bus"] = 1
-    data["branch"]["1"]["f_bus"] = 1000
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+        data["gen"]["1"]["gen_bus"] = 1
+        data["branch"]["1"]["f_bus"] = 1000
+        Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
 
-    data["branch"]["1"]["f_bus"] = 1
-    data["branch"]["1"]["t_bus"] = 1000
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+        data["branch"]["1"]["f_bus"] = 1
+        data["branch"]["1"]["t_bus"] = 1000
+        Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
 
-    data["branch"]["1"]["t_bus"] = 3
-    data["dcline"]["1"]["f_bus"] = 1000
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+        data["branch"]["1"]["t_bus"] = 3
+        data["dcline"]["1"]["f_bus"] = 1000
+        Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
 
-    data["dcline"]["1"]["f_bus"] = 1
-    data["dcline"]["1"]["t_bus"] = 1000
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
-    data["dcline"]["1"]["t_bus"] = 2
+        data["dcline"]["1"]["f_bus"] = 1
+        data["dcline"]["1"]["t_bus"] = 1000
+        Memento.Test.@test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+        data["dcline"]["1"]["t_bus"] = 2
 
-    #warnings
-    setlevel!(TESTLOG, "warn")
+        #warnings
+        setlevel!(TESTLOG, "warn")
 
-    data["gen"]["1"]["model"] = 3
-    @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units(data))
-    @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_per_unit(data))
-    @test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.check_cost_functions(data))
-    data["gen"]["1"]["model"] = 1
+        data["gen"]["1"]["model"] = 3
+        Memento.Test.@test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units(data))
+        Memento.Test.@test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_per_unit(data))
+        Memento.Test.@test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.check_cost_functions(data))
+        data["gen"]["1"]["model"] = 1
 
-    data["gen"]["1"]["cost"][3] = 3000
-    @test_warn(TESTLOG, "pwl x value 3000 is outside the bounds 0.0-20.0 on generator 1", PowerModels.check_cost_functions(data))
+        data["gen"]["1"]["cost"][3] = 3000
+        Memento.Test.@test_warn(TESTLOG, "pwl x value 3000 is outside the bounds 0.0-20.0 on generator 1", PowerModels.check_cost_functions(data))
 
-    data["dcline"]["1"]["loss0"] = -1.0
-    @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0", PowerModels.check_dcline_limits(data))
+        data["dcline"]["1"]["loss0"] = -1.0
+        Memento.Test.@test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0", PowerModels.check_dcline_limits(data))
 
-    data["dcline"]["1"]["loss1"] = -1.0
-    @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1 from -1.0 to 0.0", PowerModels.check_dcline_limits(data))
+        data["dcline"]["1"]["loss1"] = -1.0
+        Memento.Test.@test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1 from -1.0 to 0.0", PowerModels.check_dcline_limits(data))
 
-    @test data["dcline"]["1"]["loss0"] == 0.0
-    @test data["dcline"]["1"]["loss1"] == 0.0
+        @test data["dcline"]["1"]["loss0"] == 0.0
+        @test data["dcline"]["1"]["loss1"] == 0.0
 
-    data["dcline"]["1"]["loss1"] = 100.0
-    @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1 from 100.0 to 0.0", PowerModels.check_dcline_limits(data))
+        data["dcline"]["1"]["loss1"] = 100.0
+        Memento.Test.@test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1 from 100.0 to 0.0", PowerModels.check_dcline_limits(data))
 
-    delete!(data["branch"]["1"], "tap")
-    @test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.check_transformer_parameters(data))
+        delete!(data["branch"]["1"], "tap")
+        Memento.Test.@test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.check_transformer_parameters(data))
 
-    delete!(data["branch"]["1"], "shift")
-    @test_warn(TESTLOG, "branch found without shift value, setting a shift to 0.0", PowerModels.check_transformer_parameters(data))
+        delete!(data["branch"]["1"], "shift")
+        Memento.Test.@test_warn(TESTLOG, "branch found without shift value, setting a shift to 0.0", PowerModels.check_transformer_parameters(data))
 
-    data["branch"]["1"]["tap"] = -1.0
-    @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.check_transformer_parameters(data))
+        data["branch"]["1"]["tap"] = -1.0
+        Memento.Test.@test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.check_transformer_parameters(data))
 
-    setlevel!(TESTLOG, "error")
+        setlevel!(TESTLOG, "error")
+    else
+        # check_cost_functions
+        data["gen"]["1"]["model"] = 1
+        data["gen"]["1"]["ncost"] = 1
+        data["gen"]["1"]["cost"] = [0, 1, 0]
+        @test_throws ErrorException PowerModels.check_cost_functions(data)
+
+        data["gen"]["1"]["cost"] = [0, 0]
+        @test_throws ErrorException PowerModels.check_cost_functions(data)
+
+        data["gen"]["1"]["ncost"] = 2
+        data["gen"]["1"]["cost"] = [0, 0, 0, 0]
+        @test_throws ErrorException PowerModels.check_cost_functions(data)
+
+        data["gen"]["1"]["model"] = 2
+        @test_throws ErrorException PowerModels.check_cost_functions(data)
+
+        # check_connectivity
+        data["load"]["1"]["load_bus"] = 1000
+        @test_throws ErrorException PowerModels.check_connectivity(data)
+
+        data["load"]["1"]["load_bus"] = 1
+        data["shunt"]["1"] = Dict{String,Any}("gs"=>0, "bs"=>1, "shunt_bus"=>1000, "index"=>1, "status"=>1)
+        @test_throws ErrorException PowerModels.check_connectivity(data)
+
+        data["shunt"]["1"]["shunt_bus"] = 1
+        data["gen"]["1"]["gen_bus"] = 1000
+        @test_throws ErrorException PowerModels.check_connectivity(data)
+
+        data["gen"]["1"]["gen_bus"] = 1
+        data["branch"]["1"]["f_bus"] = 1000
+        @test_throws ErrorException PowerModels.check_connectivity(data)
+
+        data["branch"]["1"]["f_bus"] = 1
+        data["branch"]["1"]["t_bus"] = 1000
+        @test_throws ErrorException PowerModels.check_connectivity(data)
+
+        data["branch"]["1"]["t_bus"] = 3
+        data["dcline"]["1"]["f_bus"] = 1000
+        @test_throws ErrorException PowerModels.check_connectivity(data)
+
+        data["dcline"]["1"]["f_bus"] = 1
+        data["dcline"]["1"]["t_bus"] = 1000
+        @test_throws ErrorException PowerModels.check_connectivity(data)
+        data["dcline"]["1"]["t_bus"] = 2
+
+        #warnings
+        Logging.disable_logging(Logging.Debug)
+
+        data["gen"]["1"]["model"] = 3
+        @test_logs (:warn, "Skipping cost model of type 3 in per unit transformation") PowerModels.make_mixed_units(data)
+        @test_logs (:warn, "Skipping cost model of type 3 in per unit transformation") PowerModels.make_per_unit(data)
+        @test_logs (:warn, "Unknown cost model of type 3 on generator 1") PowerModels.check_cost_functions(data)
+        data["gen"]["1"]["model"] = 1
+
+        data["gen"]["1"]["cost"][3] = 3000
+        @test_logs (:warn, "pwl x value 3000 is outside the bounds 0.0-20.0 on generator 1") PowerModels.check_cost_functions(data)
+
+        data["dcline"]["1"]["loss0"] = -1.0
+        @test_logs (:warn, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0") PowerModels.check_dcline_limits(data)
+
+        data["dcline"]["1"]["loss1"] = -1.0
+        @test_logs (:warn, "this code only supports positive loss1 values, changing the value on dcline 1 from -1.0 to 0.0") PowerModels.check_dcline_limits(data)
+
+        @test data["dcline"]["1"]["loss0"] == 0.0
+        @test data["dcline"]["1"]["loss1"] == 0.0
+
+        data["dcline"]["1"]["loss1"] = 100.0
+        @test_logs((:warn, "this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline 1 from 0.0 to 0.0"),
+                        (:warn, "this code only supports loss1 values < 1, changing the value on dcline 1 from 100.0 to 0.0"),
+                        PowerModels.check_dcline_limits(data))
+
+        delete!(data["branch"]["1"], "tap")
+        @test_logs (:warn, "branch found without tap value, setting a tap to 1.0") PowerModels.check_transformer_parameters(data)
+
+        delete!(data["branch"]["1"], "shift")
+        @test_logs (:warn, "branch found without shift value, setting a shift to 0.0") PowerModels.check_transformer_parameters(data)
+
+        data["branch"]["1"]["tap"] = -1.0
+        @test_logs (:warn, "branch found with non-positive tap value of -1.0, setting a tap to 1.0") PowerModels.check_transformer_parameters(data)
+
+        Logging.disable_logging(Logging.Warn)
+    end
 end
 
 

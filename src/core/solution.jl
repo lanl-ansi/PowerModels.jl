@@ -354,7 +354,7 @@ function add_dual(
                         sol_item[param_name][cnd_idx] = scale(getdual(constraint), item)
                     end
                 catch
-                    info(LOGGER, "No constraint: $(con_symbol), $(idx)")
+                    @info "No constraint: $(con_symbol), $(idx)"
                 end
                 cnd_idx += 1
             end

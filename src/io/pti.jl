@@ -253,7 +253,7 @@ function parse_line_element!(data::Dict, elements::Array, section::AbstractStrin
             element = popfirst!(elements)
         catch message
             if isa(message, ArgumentError)
-                debug(LOGGER, "Have run out of elements in $section at $field")
+                @debug "Have run out of elements in $section at $field"
                 push!(missing, field)
                 continue
             end
@@ -279,8 +279,8 @@ function parse_line_element!(data::Dict, elements::Array, section::AbstractStrin
             if isa(message, Meta.ParseError)
                 data[field] = element
             else
-                debug(LOGGER, "$section $field $dtype $element")
-                error(LOGGER, message)
+                @debug "$section $field $dtype $element"
+                throw(error(message))
             end
         end
     end
@@ -288,9 +288,9 @@ function parse_line_element!(data::Dict, elements::Array, section::AbstractStrin
     if length(missing) > 0
         missing_str = join(missing, ", ")
         if !(section == "SWITCHED SHUNT" && startswith(missing_str, "N")) &&
-            !(section == "MULTI-SECTION LINE" && startswith(missing_str, "DUM")) &&
-            !(section == "IMPEDANCE CORRECTION" && startswith(missing_str, "T"))
-            warn(LOGGER, "The following fields in $section are missing: $missing_str")
+           !(section == "MULTI-SECTION LINE" && startswith(missing_str, "DUM")) &&
+           !(section == "IMPEDANCE CORRECTION" && startswith(missing_str, "T"))
+            @warn "The following fields in $section are missing: $missing_str"
         end
     end
 end
@@ -309,7 +309,7 @@ function add_section_data!(pti_data::Dict, section_data::Dict, section::Abstract
         if isa(message, KeyError)
             pti_data[section] = [deepcopy(section_data)]
         else
-            error(LOGGER, message)
+            throw(error(message))
         end
     end
 end
@@ -328,8 +328,8 @@ function get_line_elements(line::AbstractString)::Array
     matches = collect((m.match for m = eachmatch(match_string, line, overlap=false)))
     #matches = matchall(match_string, line)
 
-    debug(LOGGER, "$line")
-    debug(LOGGER, "$matches")
+    @debug "$line"
+    @debug "$matches"
 
     elements = []
     comment = ""
@@ -366,7 +366,7 @@ function parse_pti_data(data_string::String, sections::Array)
     section_data = Dict{String,Any}()
 
     for (line_number, line) in enumerate(data_lines)
-        debug(LOGGER, "$line_number: $line")
+        @debug "$line_number: $line"
 
         (elements, comment) = get_line_elements(line)
 
@@ -379,7 +379,7 @@ function parse_pti_data(data_string::String, sections::Array)
             end
 
             match_string = r"\s*END OF ([\w\s-]+) DATA(?:, BEGIN ([\w\s-]+) DATA)?"
-            debug(LOGGER, "$comment")
+            @debug "$comment"
             matches = match(match_string, comment)
 
             if !isa(matches, Nothing)
@@ -392,7 +392,7 @@ function parse_pti_data(data_string::String, sections::Array)
                 section = popfirst!(sections)
                 continue
             else
-                info(LOGGER, "At line $line_number, unexpected section: expected: $section, comment specified: $(guess_section)")
+                @info "At line $line_number, unexpected section: expected: $section, comment specified: $(guess_section)"
                 if !isempty(sections)
                     section = popfirst!(sections)
                 end
@@ -410,7 +410,8 @@ function parse_pti_data(data_string::String, sections::Array)
                 continue
             end
 
-            debug(LOGGER, join(["Section:", section], " "))
+            debug_message = join(["Section:", section], " ")
+            @debug "$debug_message"
             if !(section in ["CASE IDENTIFICATION","TRANSFORMER","VOLTAGE SOURCE CONVERTER","MULTI-TERMINAL DC","TWO-TERMINAL DC","GNE DEVICE"])
                 section_data = Dict{String,Any}()
                 parse_line_element!(section_data, elements, section)
@@ -420,11 +421,11 @@ function parse_pti_data(data_string::String, sections::Array)
                     parse_line_element!(section_data, elements, section)
                     try
                         if section_data["REV"] < 33
-                            warn(LOGGER, "Version $(section_data["REV"]) of PTI format is unsupported, parser may not function correctly.")
+                            @warn "Version $(section_data["REV"]) of PTI format is unsupported, parser may not function correctly."
                         end
                     catch message
                         if isa(message, KeyError)
-                            error(LOGGER, "This file is unrecognized and cannot be parsed")
+                            throw(error("This file is unrecognized and cannot be parsed"))
                         end
                     end
                 else
@@ -446,7 +447,7 @@ function parse_pti_data(data_string::String, sections::Array)
                     (elements, comment) = get_line_elements(join(data_lines[line_number:line_number + 4], ','))
                     skip_lines = 4
                 else
-                    error(LOGGER, "Cannot detect type of Transformer")
+                    throw(error("Cannot detect type of Transformer"))
                 end
 
                 parse_line_element!(section_data, elements, temp_section)
@@ -476,7 +477,7 @@ function parse_pti_data(data_string::String, sections::Array)
                             section_data["CONVERTER BUSES"] = [deepcopy(subsection_data)]
                             continue
                         else
-                            error(LOGGER, message)
+                            throw(error(message))
                         end
                     end
                 end
@@ -536,7 +537,7 @@ function parse_pti_data(data_string::String, sections::Array)
                                 continue
                             end
                         else
-                            error(LOGGER, message)
+                            throw(error(message))
                         end
                     end
 
@@ -559,11 +560,11 @@ function parse_pti_data(data_string::String, sections::Array)
 
             elseif section == "GNE DEVICE"
                 # TODO: handle multiple lines of GNE Device
-                warn(LOGGER, "GNE DEVICE parsing is not supported.")
+                @warn "GNE DEVICE parsing is not supported."
             end
         end
         if subsection != ""
-            debug(LOGGER, "appending data")
+            @debug "appending data"
         end
         add_section_data!(pti_data, section_data, section)
     end
