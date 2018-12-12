@@ -279,8 +279,7 @@ function parse_line_element!(data::Dict, elements::Array, section::AbstractStrin
             if isa(message, Meta.ParseError)
                 data[field] = element
             else
-                debug(LOGGER, "$section $field $dtype $element")
-                error(LOGGER, message)
+                error("value '$element' for $field in section $section is not of type $dtype.")
             end
         end
     end
@@ -392,7 +391,11 @@ function parse_pti_data(data_string::String, sections::Array)
                 section = popfirst!(sections)
                 continue
             else
-                info(LOGGER, "At line $line_number, unexpected section: expected: $section, comment specified: $(guess_section)")
+                if length(elements) > 1
+                    warn(LOGGER, "At line $line_number, new section started with '0', but additional non-comment data is present. Pattern '^\\s*0\\s*[/]*.*' is reserved for section start/end.")
+                elseif length(comment) > 0
+                    info(LOGGER, "At line $line_number, unexpected section: expected: $section, comment specified: $(guess_section)")
+                end
                 if !isempty(sections)
                     section = popfirst!(sections)
                 end
@@ -413,11 +416,19 @@ function parse_pti_data(data_string::String, sections::Array)
             debug(LOGGER, join(["Section:", section], " "))
             if !(section in ["CASE IDENTIFICATION","TRANSFORMER","VOLTAGE SOURCE CONVERTER","MULTI-TERMINAL DC","TWO-TERMINAL DC","GNE DEVICE"])
                 section_data = Dict{String,Any}()
-                parse_line_element!(section_data, elements, section)
+                try
+                    parse_line_element!(section_data, elements, section)
+                catch message
+                    throw(error(LOGGER, "Parsing failed at line $line_number: $(message.msg)"))
+                end
 
             elseif section == "CASE IDENTIFICATION"
                 if line_number == 1
-                    parse_line_element!(section_data, elements, section)
+                    try
+                        parse_line_element!(section_data, elements, section)
+                    catch message
+                        throw(error(LOGGER, "Parsing failed at line $line_number: $(message.msg)"))
+                    end
                     try
                         if section_data["REV"] < 33
                             warn(LOGGER, "Version $(section_data["REV"]) of PTI format is unsupported, parser may not function correctly.")
@@ -449,12 +460,20 @@ function parse_pti_data(data_string::String, sections::Array)
                     error(LOGGER, "Cannot detect type of Transformer")
                 end
 
-                parse_line_element!(section_data, elements, temp_section)
+                try
+                    parse_line_element!(section_data, elements, temp_section)
+                catch message
+                    throw(error(LOGGER, "Parsing failed at line $line_number: $(message.msg)"))
+                end
 
             elseif section == "VOLTAGE SOURCE CONVERTER"
                 if length(get_line_elements(line)[1]) == 11
                     section_data = Dict{String,Any}()
-                    parse_line_element!(section_data, elements, section)
+                    try
+                        parse_line_element!(section_data, elements, section)
+                    catch message
+                        throw(error(LOGGER, "Parsing failed at line $line_number: $(message.msg)"))
+                    end
                     skip_sublines = 2
                     continue
 
@@ -488,12 +507,20 @@ function parse_pti_data(data_string::String, sections::Array)
                     skip_lines = 2
                 end
 
-                parse_line_element!(section_data, elements, section)
+                try
+                    parse_line_element!(section_data, elements, section)
+                catch message
+                    throw(error(LOGGER, "Parsing failed at line $line_number: $(message.msg)"))
+                end
 
             elseif section == "MULTI-TERMINAL DC"
                 if skip_sublines == 0
                     section_data = Dict{String,Any}()
-                    parse_line_element!(section_data, elements, section)
+                    try
+                        parse_line_element!(section_data, elements, section)
+                    catch message
+                        throw(error(LOGGER, "Parsing failed at line $line_number: $(message.msg)"))
+                    end
 
                     if section_data["NCONV"] > 0
                         skip_sublines = section_data["NCONV"]

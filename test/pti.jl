@@ -10,10 +10,10 @@ TESTLOG = getlogger(PowerModels)
         @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
         @test_warn(TESTLOG, "Version 32 of PTI format is unsupported, parser may not function correctly.",
                    PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
+        @test_warn(TESTLOG, "At line 4, new section started with '0', but additional non-comment data is present. Pattern '^\\s*0\\s*[/]*.*' is reserved for section start/end.",
+                    PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
         @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
         @test_warn(TESTLOG, "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))
-        #Test not replicable in Julia7
-        #@test_throws(TESTLOG, ErrorException, PowerModels.parse_file("../test/data/pti/parser_test_j.raw"))
 
         setlevel!(TESTLOG, "error")
     end
@@ -159,7 +159,7 @@ TESTLOG = getlogger(PowerModels)
     end
 
     @testset "0-bus case file" begin
-        @test_throws(TESTLOG, ArgumentError, PowerModels.parse_pti("../test/data/pti/case0.raw"))
+        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/case0.raw"))
     end
 
     @testset "73-bus case file" begin
