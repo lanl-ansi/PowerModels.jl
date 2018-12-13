@@ -6,31 +6,9 @@ function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: Abstra
     variable_voltage_angle(pm; kwargs...)
 end
 
-
 "nothing to add, there are no voltage variables on branches"
 function variable_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
 end
-
-"dc models ignore reactive power flows"
-function variable_reactive_generation(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
-end
-
-"dc models ignore reactive power flows"
-function variable_reactive_storage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
-end
-
-"dc models ignore reactive power flows"
-function variable_reactive_branch_flow(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
-end
-
-"dc models ignore reactive power flows"
-function variable_reactive_branch_flow_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
-end
-
-"dc models ignore reactive power flows"
-function variable_reactive_dcline_flow(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
-end
-
 
 ""
 function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: DCPlosslessForm
@@ -81,10 +59,6 @@ end
 
 "do nothing, this model does not have voltage variables"
 function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, i, vm) where T <: AbstractDCPForm
-end
-
-"do nothing, this model does not have reactive variables"
-function constraint_reactive_gen_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, i, qg) where T <: AbstractDCPForm
 end
 
 
@@ -216,15 +190,6 @@ function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: Abst
     add_setpoint(sol, pm, "bus", "va", :va)
 end
 
-""
-function add_storage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractDCPForm
-    if haskey(pm.data, "storage") || (InfrastructureModels.ismultinetwork(pm.data) && haskey(pm.data["nw"]["$(pm.cnw)"], "storage"))
-        add_setpoint(sol, pm, "storage", "ps", :ps)
-        add_setpoint_fixed(sol, pm, "storage", "qs")
-        add_setpoint(sol, pm, "storage", "se", :se, conductorless=true)
-    end
-end
-
 
 ""
 function variable_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
@@ -338,13 +303,6 @@ function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: NFAF
     add_setpoint_fixed(sol, pm, "bus", "vm")
     add_setpoint_fixed(sol, pm, "bus", "va")
 end
-
-""
-function add_generator_power_setpoint(sol, pm::GenericPowerModel{T}) where T <: NFAForm
-    add_setpoint(sol, pm, "gen", "pg", :pg)
-    add_setpoint_fixed(sol, pm, "gen", "qg")
-end
-
 
 
 
