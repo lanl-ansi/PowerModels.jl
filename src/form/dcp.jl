@@ -75,6 +75,11 @@ function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, c
 end
 
 
+"nothing to do this model is symetric"
+function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t_idx, rate_a) where T <: DCPlosslessForm
+end
+
+
 ""
 function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
     pg   = var(pm, n, c, :pg)
@@ -140,49 +145,6 @@ end
 function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
 end
 
-"`-rate_a <= p[f_idx] <= rate_a`"
-function constraint_thermal_limit_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, rate_a) where T <: AbstractDCPForm
-    p_fr = con(pm, n, c, :sm_fr)[f_idx[1]] = var(pm, n, c, :p, f_idx)
-    getlowerbound(p_fr) < -rate_a && setlowerbound(p_fr, -rate_a)
-    getupperbound(p_fr) >  rate_a && setupperbound(p_fr,  rate_a)
-end
-
-"Do nothing, this model is symmetric"
-function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t_idx, rate_a) where T <: AbstractDCPForm
-end
-
-function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractDCPForm
-    p_fr = var(pm, n, c, :p, f_idx)
-
-    getlowerbound(p_fr) < -c_rating_a && setlowerbound(p_fr, -c_rating_a)
-    getupperbound(p_fr) >  c_rating_a && setupperbound(p_fr,  c_rating_a)
-end
-
-
-""
-function constraint_storage_thermal_limit(pm::GenericPowerModel{T}, n::Int, c::Int, i, rating) where T <: AbstractDCPForm
-    ps = var(pm, n, c, :ps, i)
-
-    getlowerbound(ps) < -rating && setlowerbound(ps, -rating)
-    getupperbound(ps) >  rating && setupperbound(ps,  rating)
-end
-
-""
-function constraint_storage_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus, rating) where T <: AbstractDCPForm
-    ps = var(pm, n, c, :ps, i)
-
-    getlowerbound(ps) < -rating && setlowerbound(ps, -rating)
-    getupperbound(ps) >  rating && setupperbound(ps,  rating)
-end
-
-""
-function constraint_storage_loss(pm::GenericPowerModel{T}, n::Int, i, bus, r, x, standby_loss) where T <: AbstractDCPForm
-    ps = var(pm, n, pm.ccnd, :ps, i)
-    sc = var(pm, n, :sc, i)
-    sd = var(pm, n, :sd, i)
-    @constraint(pm.model, ps + (sd - sc) == standby_loss + r*ps^2)
-end
-
 
 ""
 function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractDCPForm
@@ -212,45 +174,16 @@ function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, c::Int
 end
 
 "Do nothing, this model is symmetric"
-function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: AbstractDCPForm
+function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: DCPlosslessForm
 end
 
-"""
-Generic on/off thermal limit constraint
 
-```
--rate_a*branch_z[i] <= p[f_idx] <=  rate_a*branch_z[i]
-```
-"""
-function constraint_thermal_limit_from_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_idx, rate_a) where T <: AbstractDCPForm
-    p_fr = var(pm, n, c, :p, f_idx)
-    z = var(pm, n, c, :branch_z, i)
-
-    @constraint(pm.model, p_fr <=  rate_a*z)
-    @constraint(pm.model, p_fr >= -rate_a*z)
-end
-
-"""
-Generic on/off thermal limit constraint
-
-```
--rate_a*branch_ne[i] <= p_ne[f_idx] <=  rate_a*branch_ne[i]
-```
-"""
-function constraint_thermal_limit_from_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_idx, rate_a) where T <: AbstractDCPForm
-    p_fr = var(pm, n, c, :p_ne, f_idx)
-    z = var(pm, n, c, :branch_ne, i)
-
-    @constraint(pm.model, p_fr <=  rate_a*z)
-    @constraint(pm.model, p_fr >= -rate_a*z)
+"nothing to do, from handles both sides"
+function constraint_thermal_limit_to_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, t_idx, rate_a) where T <: DCPlosslessForm
 end
 
 "nothing to do, from handles both sides"
-function constraint_thermal_limit_to_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, t_idx, rate_a) where T <: AbstractDCPForm
-end
-
-"nothing to do, from handles both sides"
-function constraint_thermal_limit_to_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, t_idx, rate_a) where T <: AbstractDCPForm
+function constraint_thermal_limit_to_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, t_idx, rate_a) where T <: DCPlosslessForm
 end
 
 "`angmin*branch_z[i] + vad_min*(1-branch_z[i]) <= t[f_bus] - t[t_bus] <= angmax*branch_z[i] + vad_max*(1-branch_z[i])`"
@@ -399,14 +332,4 @@ function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, f
     t_m = max(abs(vad_min),abs(vad_max))
     @constraint(pm.model, p_fr + p_to >= r*( (-b*(va_fr - va_to))^2 - (-b*(t_m))^2*(1-z) ) )
     @constraint(pm.model, p_fr + p_to >= 0)
-end
-
-
-"`-rate_a*branch_z[i] <= p[t_idx] <= rate_a*branch_z[i]`"
-function constraint_thermal_limit_to_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, t_idx, rate_a) where T <: AbstractDCPLLForm
-    p_to = var(pm, n, c, :p, t_idx)
-    z = var(pm, n, c, :branch_z, i)
-
-    @constraint(pm.model, p_to <=  rate_a*z)
-    @constraint(pm.model, p_to >= -rate_a*z)
 end
