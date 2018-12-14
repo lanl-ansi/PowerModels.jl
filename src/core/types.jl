@@ -152,7 +152,6 @@ abstract type AbstractDCPForm <: AbstractPowerFormulation end
 "active power only formulations where p[(i,j)] = -p[(j,i)]"
 abstract type DCPlosslessForm <: AbstractDCPForm end
 
-const StandardDCPForm = DCPlosslessForm
 
 """
 Linearized 'DC' power flow formulation with polar voltage variables.
