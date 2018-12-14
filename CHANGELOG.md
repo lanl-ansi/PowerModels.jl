@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Added LPAC cold-start approximation
 - Improved support for linear cost functions (breaking)
 - Reorgnized power formulation types into core/types.jl
+- Minor revision of top-level storage constraints (#413)
 - Minor improvement to dictionary comprehensions
 - Fixed the interpretation of ncost in Matpower data (thanks to @lthurner)
 - Minor bug fix to line charging in check_branch_directions

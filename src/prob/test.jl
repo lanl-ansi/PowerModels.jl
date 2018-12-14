@@ -276,7 +276,8 @@ function post_strg_opf(pm::GenericPowerModel)
 
     for i in ids(pm, :storage)
         constraint_storage_state(pm, i)
-        constraint_storage_exchange(pm, i)
+        constraint_storage_complementarity(pm, i)
+        constraint_storage_loss(pm, i)
         constraint_storage_thermal_limit(pm, i)
     end
 
@@ -321,7 +322,8 @@ function post_mn_strg_opf(pm::GenericPowerModel)
         end
 
         for i in ids(pm, :storage, nw=n)
-            constraint_storage_exchange(pm, i, nw=n)
+            constraint_storage_complementarity(pm, i, nw=n)
+            constraint_storage_loss(pm, i, nw=n)
             constraint_storage_thermal_limit(pm, i, nw=n)
         end
 
@@ -408,7 +410,8 @@ function post_mn_mc_strg_opf(pm::GenericPowerModel)
         end
 
         for i in ids(pm, :storage, nw=n)
-            constraint_storage_exchange(pm, i, nw=n)
+            constraint_storage_complementarity(pm, i, nw=n)
+            constraint_storage_loss(pm, i, nw=n)
         end
     end
 
