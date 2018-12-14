@@ -1106,7 +1106,7 @@ function standardize_cost_terms(data::Dict{String,Any}; order=1)
     end
 
     for (i, network) in networks
-        if haskey(network, "gen") && isa(network["gen"], Dict)
+        if haskey(network, "gen")
             for (i, gen) in network["gen"]
                 if haskey(gen, "model") && gen["model"] == 2
                     max_nonzero_index = 1
@@ -1125,7 +1125,7 @@ function standardize_cost_terms(data::Dict{String,Any}; order=1)
         end
 
         if haskey(network, "dclinecost")
-            if haskey(network, "dcline") && isa(network["dcline"], Dict)
+            if haskey(network, "dcline")
                 for (i, dcline) in network["dcline"]
                     if haskey(dcline, "model") && dcline["model"] == 2
                         max_nonzero_index = 1
@@ -1153,10 +1153,10 @@ function standardize_cost_terms(data::Dict{String,Any}; order=1)
     end
 
     for (i, network) in networks
-        if haskey(network, "gen") && isa(network["gen"], Dict)
+        if haskey(network, "gen")
             _standardize_cost_terms(network["gen"], comp_max_order, "generator")
         end
-        if haskey(network, "dcline") && isa(network["dcline"], Dict)
+        if haskey(network, "dcline")
             _standardize_cost_terms(network["dcline"], comp_max_order, "dcline")
         end
     end
