@@ -240,11 +240,7 @@ function add_setpoint(
             sol_item[param_name] = default_value(item)
             try
                 variable = extract_var(var(pm, pm.cnw, variable_symbol), idx, item)
-                if applicable(scale, getvalue(variable), item, 1) # TODO remove on next breaking release
-                    sol_item[param_name] = scale(getvalue(variable), item, 1)
-                else
-                    sol_item[param_name] = scale(getvalue(variable), item)
-                end
+                sol_item[param_name] = scale(getvalue(variable), item, 1)
             catch
             end
         else
@@ -254,11 +250,7 @@ function add_setpoint(
             for conductor in conductor_ids(pm)
                 try
                     variable = extract_var(var(pm, variable_symbol, cnd=conductor), idx, item)
-                    if applicable(scale, getvalue(variable), item, conductor) # TODO remove on next breaking release
-                        sol_item[param_name][cnd_idx] = scale(getvalue(variable), item, conductor)
-                    else
-                        sol_item[param_name][cnd_idx] = scale(getvalue(variable), item)
-                    end
+                    sol_item[param_name][cnd_idx] = scale(getvalue(variable), item, conductor)
                 catch
                 end
                 cnd_idx += 1
@@ -334,11 +326,7 @@ function add_dual(
             sol_item[param_name] = default_value(item)
             try
                 constraint = extract_con(var(pm, pm.cnw, con_symbol), idx, item)
-                if applicable(scale, getdual(constraint), item, 1) # TODO remove on next breaking release
-                    sol_item[param_name] = scale(getdual(constraint), item, 1)
-                else
-                    sol_item[param_name] = scale(getdual(constraint), item)
-                end
+                sol_item[param_name] = scale(getdual(constraint), item, 1)
             catch
             end
         else
@@ -348,11 +336,7 @@ function add_dual(
             for conductor in conductor_ids(pm)
                 try
                     constraint = extract_con(con(pm, con_symbol, cnd=conductor), idx, item)
-                    if applicable(scale, getdual(constraint), item, conductor) # TODO remove on next breaking release
-                        sol_item[param_name][cnd_idx] = scale(getdual(constraint), item, conductor)
-                    else
-                        sol_item[param_name][cnd_idx] = scale(getdual(constraint), item)
-                    end
+                    sol_item[param_name][cnd_idx] = scale(getdual(constraint), item, conductor)
                 catch
                     info(LOGGER, "No constraint: $(con_symbol), $(idx)")
                 end
