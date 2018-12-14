@@ -733,11 +733,9 @@ function check_connectivity(data::Dict{String,Any})
         end
     end
 
-    if haskey(data, "storage")
-        for (i, strg) in data["storage"]
-            if !(strg["storage_bus"] in bus_ids)
-                error(LOGGER, "bus $(strg["storage_bus"]) in storage unit $(i) is not defined")
-            end
+    for (i, strg) in data["storage"]
+        if !(strg["storage_bus"] in bus_ids)
+            error(LOGGER, "bus $(strg["storage_bus"]) in storage unit $(i) is not defined")
         end
     end
 
@@ -814,10 +812,6 @@ checks that each storage unit has a reasonable parameters
 function check_storage_parameters(data::Dict{String,Any})
     if InfrastructureModels.ismultinetwork(data)
         error("check_storage_parameters does not yet support multinetwork data")
-    end
-
-    if !haskey(data, "storage")
-        return
     end
 
     for (i, strg) in data["storage"]
