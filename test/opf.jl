@@ -41,13 +41,13 @@
         result = run_ac_opf("../test/data/matpower/case5_npg.m", ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 9003.35; atol = 1e0)
+        @test isapprox(result["objective"], 8190.09; atol = 1e0)
     end
     @testset "5-bus with only current limit data" begin
         result = run_ac_opf("../test/data/matpower/case5_clm.m", ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 16987.4; atol = 1e0)
+        @test isapprox(result["objective"], 16513.6; atol = 1e0)
     end
     @testset "5-bus with pwl costs" begin
         result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
@@ -360,13 +360,13 @@ end
         result = run_opf("../test/data/matpower/case5_npg.m", LPACCPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 8937.9; atol = 1e0)
+        @test isapprox(result["objective"], 8082.54; atol = 1e0)
     end
     @testset "5-bus with only current limit data" begin
         result = run_opf("../test/data/matpower/case5_clm.m", LPACCPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 17007.4; atol = 1e0)
+        @test isapprox(result["objective"], 16559.3; atol = 1e0)
     end
     @testset "5-bus with pwl costs" begin
         result = run_opf("../test/data/matpower/case5_pwlc.m", LPACCPowerModel, ipopt_solver)
@@ -427,7 +427,7 @@ end
         result = run_opf("../test/data/matpower/case5_npg.m", SOCWRPowerModel, ipopt_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 3613.72; atol = 1e0)
+        @test isapprox(result["objective"], 3603.91; atol = 1e0)
     end
     @testset "5-bus with pwl costs" begin
         result = run_opf("../test/data/matpower/case5_pwlc.m", SOCWRPowerModel, ipopt_solver)
@@ -585,7 +585,7 @@ end
         result = run_opf_bf("../test/data/matpower/case5_npg.m", SOCBFConicPowerModel, scs_solver)
 
         @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 3610.49; atol = 1e1)
+        @test isapprox(result["objective"], 3593.0; atol = 1e1)
     end
 end
 

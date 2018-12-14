@@ -228,14 +228,14 @@
             result = PowerModels.run_mn_mc_strg_opf(mn_mc_data, PowerModels.ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 139647; atol = 1e2)
+            @test isapprox(result["objective"], 1.35456e5; atol = 1e2)
         end
 
         @testset "dc 5-bus storage case" begin
             result = PowerModels.run_mn_mc_opf(mn_mc_data, PowerModels.DCPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 158518; atol = 1e2)
+            @test isapprox(result["objective"], 1.58593e5; atol = 1e2)
         end
 
         #=
@@ -252,7 +252,7 @@
             result = PowerModels.run_mn_mc_opf(mn_mc_data, PowerModels.NFAPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 133289; atol = 1e2)
+            @test isapprox(result["objective"], 1.33302e5; atol = 1e2)
         end
     end
 
