@@ -28,6 +28,9 @@ export
 
 ##### Top Level Abstract Types #####
 
+"active power only models"
+abstract type AbstractActivePowerFormulation <: AbstractPowerFormulation end
+
 "variants that target conic solvers"
 abstract type AbstractConicPowerFormulation <: AbstractPowerFormulation end
 
@@ -147,7 +150,7 @@ ACTPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, Stand
 
 
 ""
-abstract type AbstractDCPForm <: AbstractPowerFormulation end
+abstract type AbstractDCPForm <: AbstractActivePowerFormulation end
 
 "active power only formulations where p[(i,j)] = -p[(j,i)]"
 abstract type DCPlosslessForm <: AbstractDCPForm end
@@ -176,6 +179,7 @@ const DCPPowerModel = GenericPowerModel{DCPlosslessForm}
 
 "default DC constructor"
 DCPPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, DCPlosslessForm; kwargs...)
+
 
 
 abstract type NFAForm <: DCPlosslessForm end
