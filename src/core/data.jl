@@ -1102,7 +1102,7 @@ end
 
 
 "ensures all polynomial costs functions have the same number of terms"
-function standardize_cost_terms(data::Dict{String,Any})
+function standardize_cost_terms(data::Dict{String,Any}; order=1)
     comp_max_order = 1
 
     if InfrastructureModels.ismultinetwork(data)
@@ -1150,6 +1150,12 @@ function standardize_cost_terms(data::Dict{String,Any})
             end
         end
 
+    end
+
+    if comp_max_order <= order+1
+        comp_max_order = order+1
+    else
+        warn(LOGGER, "a standard cost order of $(order) was requested but the given data requires an order of at least $(comp_max_order-1)")
     end
 
     for (i, network) in networks

@@ -3,7 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Added LPAC cold-start approximation
-- Improved support for linear cost functions
+- Improved support for linear cost functions (breaking)
 - Reorgnized power formulation types into core/types.jl
 - Minor improvement to dictionary comprehensions
 - Fixed the interpretation of ncost in Matpower data (thanks to @lthurner)
