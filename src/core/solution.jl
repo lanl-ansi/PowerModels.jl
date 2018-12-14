@@ -104,14 +104,12 @@ end
 
 ""
 function add_storage_setpoint(sol, pm::GenericPowerModel)
-    if haskey(pm.data, "storage") || (InfrastructureModels.ismultinetwork(pm.data) && haskey(pm.data["nw"]["$(pm.cnw)"], "storage"))
-        add_setpoint(sol, pm, "storage", "ps", :ps)
-        add_setpoint(sol, pm, "storage", "qs", :qs)
-        add_setpoint(sol, pm, "storage", "se", :se, conductorless=true)
-        # useful for model debugging
-        #add_setpoint(sol, pm, "storage", "sc", :sc, conductorless=true)
-        #add_setpoint(sol, pm, "storage", "sd", :sd, conductorless=true)
-    end
+    add_setpoint(sol, pm, "storage", "ps", :ps)
+    add_setpoint(sol, pm, "storage", "qs", :qs)
+    add_setpoint(sol, pm, "storage", "se", :se, conductorless=true)
+    # useful for model debugging
+    #add_setpoint(sol, pm, "storage", "sc", :sc, conductorless=true)
+    #add_setpoint(sol, pm, "storage", "sd", :sd, conductorless=true)
 end
 
 ""

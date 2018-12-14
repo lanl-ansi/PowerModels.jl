@@ -694,7 +694,7 @@ function parse_psse(pti_data::Dict; import_all=false)::Dict
     psse2pm_branch!(pm_data, pti_data, import_all)
     psse2pm_transformer!(pm_data, pti_data, import_all)
     psse2pm_dcline!(pm_data, pti_data, import_all)
-    #psse2pm_storage!(pm_data, pti_data, import_all)
+    psse2pm_storage!(pm_data, pti_data, import_all)
 
     import_remaining!(pm_data, pti_data, import_all; exclude=[
         "CASE IDENTIFICATION", "BUS", "LOAD", "FIXED SHUNT",

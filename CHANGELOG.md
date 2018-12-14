@@ -9,6 +9,7 @@ PowerModels.jl Change Log
 - Fixed the interpretation of ncost in Matpower data (thanks to @lthurner)
 - Minor bug fix to line charging in check_branch_directions
 - Minor improvement to error messaging during pti parsing
+- Minor breaking changes #363, #391, #408
 
 ### v0.8.8
 - Added PowerModels specific replicate function
