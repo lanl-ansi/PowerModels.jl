@@ -181,6 +181,7 @@ const DCPPowerModel = GenericPowerModel{DCPlosslessForm}
 DCPPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, DCPlosslessForm; kwargs...)
 
 
+
 abstract type NFAForm <: DCPlosslessForm end
 
 """
