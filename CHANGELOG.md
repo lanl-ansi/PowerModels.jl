@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.9.0
 - Added LPAC cold-start approximation
 - Improved support for linear cost functions (breaking)
 - Reorgnized power formulation types into core/types.jl
