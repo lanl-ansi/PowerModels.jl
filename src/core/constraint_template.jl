@@ -659,10 +659,14 @@ function constraint_storage_current_limit(pm::GenericPowerModel, i::Int; nw::Int
 end
 
 ""
-function constraint_storage_exchange(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_storage_complementarity(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    constraint_storage_complementarity(pm, nw, i)
+end
+
+""
+function constraint_storage_loss(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     storage = ref(pm, nw, :storage, i)
 
-    constraint_storage_complementarity(pm, nw, i)
     constraint_storage_loss(pm, nw, i, storage["storage_bus"], storage["r"][cnd], storage["x"][cnd], storage["standby_loss"])
 end
 

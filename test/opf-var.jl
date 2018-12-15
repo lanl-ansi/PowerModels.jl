@@ -156,12 +156,12 @@ end
             result = PowerModels.run_strg_opf("../test/data/matpower/case5_strg.m", PowerModels.ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 17506.6; atol = 1e0)
+            @test isapprox(result["objective"], 17039.7; atol = 1e0)
 
             @test isapprox(result["solution"]["storage"]["1"]["se"],  0.0; atol = 1e0)
-            @test isapprox(result["solution"]["storage"]["1"]["ps"], -0.176372; atol = 1e-2)
+            @test isapprox(result["solution"]["storage"]["1"]["ps"], -0.176572; atol = 1e-2)
             @test isapprox(result["solution"]["storage"]["2"]["se"],  0.0; atol = 1e0)
-            @test isapprox(result["solution"]["storage"]["2"]["ps"], -0.233346; atol = 1e-2)
+            @test isapprox(result["solution"]["storage"]["2"]["ps"], -0.233351; atol = 1e-2)
         end
     end
 
@@ -170,12 +170,12 @@ end
             result = PowerModels.run_strg_opf("../test/data/matpower/case5_strg.m", PowerModels.DCPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 16848.1; atol = 1e0)
+            @test isapprox(result["objective"], 16855.6; atol = 1e0)
 
             @test isapprox(result["solution"]["storage"]["1"]["se"],  0.0; atol = 1e0)
-            @test isapprox(result["solution"]["storage"]["1"]["ps"], -0.176872; atol = 1e-2)
+            @test isapprox(result["solution"]["storage"]["1"]["ps"], -0.176871; atol = 1e-2)
             @test isapprox(result["solution"]["storage"]["2"]["se"],  0.0; atol = 1e0)
-            @test isapprox(result["solution"]["storage"]["2"]["ps"], -0.234501; atol = 1e-2)
+            @test isapprox(result["solution"]["storage"]["2"]["ps"], -0.2345009; atol = 1e-2)
         end
     end
 
@@ -184,10 +184,10 @@ end
             result = PowerModels.run_strg_opf("../test/data/matpower/case5_strg.m", PowerModels.DCPLLPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
-            @test isapprox(result["objective"], 17041.9; atol = 1e0)
+            @test isapprox(result["objective"], 17048.4; atol = 1e0)
 
             @test isapprox(result["solution"]["storage"]["1"]["se"],  0.0; atol = 1e0)
-            @test isapprox(result["solution"]["storage"]["1"]["ps"], -0.176872; atol = 1e-2)
+            @test isapprox(result["solution"]["storage"]["1"]["ps"], -0.176871; atol = 1e-2)
             @test isapprox(result["solution"]["storage"]["2"]["se"],  0.0; atol = 1e0)
             @test isapprox(result["solution"]["storage"]["2"]["ps"], -0.234501; atol = 1e-2)
         end
