@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Added LPAC cold-start approximation
 - Improved support for linear cost functions (breaking)
 - Reorgnized power formulation types into core/types.jl
+- Added an abstract type for all active power only models
 - Minor revision of case5_clm, case5_npg and case5_strg test cases (breaking)
 - Minor revision of top-level storage constraints (#413)
 - Minor improvement to dictionary comprehensions
