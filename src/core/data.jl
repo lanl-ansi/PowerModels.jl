@@ -127,9 +127,9 @@ function check_keys(data, keys)
 end
 
 
-"prints the text summary for a data file or dictionary to STDOUT"
+"prints the text summary for a data file or dictionary to stdout"
 function print_summary(obj::Union{String, Dict{String,Any}}; kwargs...)
-    summary(STDOUT, obj; kwargs...)
+    summary(stdout, obj; kwargs...)
 end
 
 

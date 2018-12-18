@@ -20,6 +20,7 @@ if VERSION < v"0.7.0-"
     import Compat: eachmatch
     import Compat: undef
     import Compat: pairs
+    import Compat: stdout
 
     LinearAlgebra = Compat.LinearAlgebra
 
