@@ -4,6 +4,9 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.9.1
+- Fixed print_summary in Julia v1.0
+
 ### v0.9.0
 - Added LPAC cold-start approximation
 - Improved support for linear cost functions (breaking)
