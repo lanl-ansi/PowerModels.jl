@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Added silence() function to supress info and warn messages
 
 ### v0.9.1
 - Fixed print_summary in Julia v1.0
