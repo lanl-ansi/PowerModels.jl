@@ -674,7 +674,7 @@ Converts PSS(R)E-style data parsed from a PTI raw file, passed by `pti_data`
 into a format suitable for use internally in PowerModels. Imports all remaining
 data from the PTI file if `import_all` is true (Default: false).
 """
-function parse_psse(pti_data::Dict; import_all=false)::Dict
+function parse_psse(pti_data::Dict; import_all=false, validate=true)::Dict
     pm_data = Dict{String,Any}()
 
     rev = pop!(pti_data["CASE IDENTIFICATION"][1], "REV")
@@ -715,16 +715,18 @@ function parse_psse(pti_data::Dict; import_all=false)::Dict
         end
     end
 
-    check_network_data(pm_data)
+    if validate
+        check_network_data(pm_data)
+    end
 
     return pm_data
 end
 
 
 "Parses directly from file"
-function parse_psse(filename::String; import_all=false)::Dict
+function parse_psse(filename::String; kwargs...)::Dict
     pm_data = open(filename) do f
-        parse_psse(f; import_all=import_all)
+        parse_psse(f; kwargs...)
     end
 
     return pm_data
@@ -732,8 +734,8 @@ end
 
 
 "Parses directly from iostream"
-function parse_psse(io::IO; import_all=false)::Dict
+function parse_psse(io::IO; kwargs...)::Dict
     pti_data = parse_pti(io)
 
-    return parse_psse(pti_data; import_all=import_all)
+    return parse_psse(pti_data; kwargs...)
 end
