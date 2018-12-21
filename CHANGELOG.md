@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Added tracking of modifications in check_network_data
 - Added validate option to parse_file
 - Added silence() function to suppress info and warn messages
+- Improved support for storage units in summary function
 
 ### v0.9.1
 - Fixed print_summary in Julia v1.0

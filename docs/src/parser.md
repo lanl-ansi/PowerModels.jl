@@ -25,8 +25,6 @@ We also provide the following (internal) helper methods:
 parse_matpower_file
 parse_matpower_string
 matpower_to_powermodels
-row_to_typed_dict
-row_to_dict
 mp_cost_data
 split_loads_shunts
 standardize_cost_terms
