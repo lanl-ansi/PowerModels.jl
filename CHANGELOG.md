@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.9.2
 - Added tracking of modifications in check_network_data
 - Added validate option to parse_file
 - Added silence() function to suppress info and warn messages
