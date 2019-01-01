@@ -136,14 +136,60 @@ end
 "prints the text summary for a data file to IO"
 function summary(io::IO, file::String; kwargs...)
     data = parse_file(file)
-    InfrastructureModels.summary(io, data; kwargs...)
+    summary(io, data; kwargs...)
     return data
 end
 
 
+pm_component_types_order = Dict(
+    "bus" => 1.0, "load" => 2.0, "shunt" => 3.0, "gen" => 4.0, "storage" => 5.0,
+    "branch" => 6.0, "dcline" => 7.0
+)
+
+pm_component_parameter_order = Dict(
+    "bus_i" => 1.0, "load_bus" => 2.0, "shunt_bus" => 3.0, "gen_bus" => 4.0,
+    "storage_bus" => 5.0, "f_bus" => 6.0, "t_bus" => 7.0,
+
+    "bus_name" => 9.1, "base_kv" => 9.2, "bus_type" => 9.3,
+
+    "vm" => 10.0, "va" => 11.0,
+    "pd" => 20.0, "qd" => 21.0,
+    "gs" => 30.0, "bs" => 31.0,
+    "pg" => 40.0, "qg" => 41.0, "vg" => 42.0, "mbase" => 43.0,
+    "energy" => 44.0,
+    "br_r" => 50.0, "br_x" => 51.0, "g_fr" => 52.0, "b_fr" => 53.0,
+    "g_to" => 54.0, "b_to" => 55.0, "tap" => 56.0, "shift" => 57.0,
+    "vf" => 58.1, "pf" => 58.2, "qf" => 58.3,
+    "vt" => 58.4, "pt" => 58.5, "qt" => 58.6,
+    "loss0" => 58.7, "loss1" => 59.8,
+
+    "vmin" => 60.0, "vmax" => 61.0,
+    "pmin" => 62.0, "pmax" => 63.0,
+    "qmin" => 64.0, "qmax" => 65.0,
+    "rate_a" => 66.0, "rate_b" => 67.0, "rate_c" => 68.0,
+    "pminf" => 69.0, "pmaxf" => 70.0, "qminf" => 71.0, "qmaxf" => 72.0,
+    "pmint" => 73.0, "pmaxt" => 74.0, "qmint" => 75.0, "qmaxt" => 76.0,
+    "energy_rating" => 77.01, "charge_rating" => 77.02,
+    "discharge_rating" => 77.03, "charge_efficiency" => 77.04,
+    "discharge_efficiency" => 77.05, "thermal_rating" => 77.06,
+    "qmin" => 77.07, "qmax" => 77.08, "qmin" => 77.09, "qmax" => 77.10,
+    "r" => 77.11, "x" => 77.12, "standby_loss" => 77.13,
+
+    "status" => 80.0, "gen_status" => 81.0, "br_status" => 82.0,
+
+    "model" => 90.0, "ncost" => 91.0, "cost" => 92.0, "startup" => 93.0, "shutdown" => 94.0
+)
+
+pm_component_status_parameters = Set(["status", "gen_status", "br_status"])
+
+
 "prints the text summary for a data dictionary to IO"
 function summary(io::IO, data::Dict{String,Any}; kwargs...)
-    InfrastructureModels.summary(io, data; kwargs...)
+    InfrastructureModels.summary(io, data; 
+        component_types_order = pm_component_types_order,
+        component_parameter_order = pm_component_parameter_order,
+        component_status_parameters = pm_component_status_parameters,
+        kwargs...)
 end
 
 
