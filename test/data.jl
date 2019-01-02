@@ -7,7 +7,7 @@
         output = sprint(PowerModels.summary, data)
 
         line_count = count(c -> c == '\n', output)
-        @test line_count >= 80 && line_count <= 100
+        @test line_count >= 70 && line_count <= 90
         @test occursin("name: case5", output)
         @test occursin("Table: bus", output)
         @test occursin("Table: load", output)
@@ -19,7 +19,7 @@
         output = sprint(PowerModels.summary, "../test/data/matpower/case5.m")
 
         line_count = count(c -> c == '\n', output)
-        @test line_count >= 80 && line_count <= 100
+        @test line_count >= 70 && line_count <= 90
         @test occursin("name: case5", output)
         @test occursin("Table: bus", output)
         @test occursin("Table: load", output)
