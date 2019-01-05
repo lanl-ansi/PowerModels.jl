@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Updated default cost function linear when loading PSSE data
 - Cleaned up generator data in Matpower files
 
 ### v0.9.2

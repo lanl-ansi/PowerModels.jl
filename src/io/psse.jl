@@ -211,8 +211,8 @@ function psse2pm_generator!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["model"] = 2
             sub_data["startup"] = 0.0
             sub_data["shutdown"] = 0.0
-            sub_data["ncost"] = 3
-            sub_data["cost"] = [0.0, 1.0, 0.0]
+            sub_data["ncost"] = 2
+            sub_data["cost"] = [1.0, 0.0]
 
             sub_data["source_id"] = [sub_data["gen_bus"], pop!(gen, "ID")]
             sub_data["index"] = length(pm_data["gen"]) + 1
