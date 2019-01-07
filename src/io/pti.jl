@@ -259,13 +259,9 @@ function parse_line_element!(data::Dict, elements::Array, section::AbstractStrin
             end
         end
 
-        if endswith(element, '\r')
-            element = element[1:end-1]
-        end
-
         if startswith(element, "'") && endswith(element, "'")
             dtype = String
-            element = element[2:end - 1]
+            element = chop(reverse(chop(reverse(element))))
         end
 
         try
@@ -308,7 +304,7 @@ function add_section_data!(pti_data::Dict, section_data::Dict, section::Abstract
         if isa(message, KeyError)
             pti_data[section] = [deepcopy(section_data)]
         else
-            error(LOGGER, message)
+            error(LOGGER, sprint(showerror, message))
         end
     end
 end
@@ -353,8 +349,8 @@ Parse a PTI raw file into a `Dict`, given the `data_string` of the file and a
 list of the `sections` in the PTI file (typically given by default by
 `get_pti_sections()`.
 """
-function parse_pti_data(data_string::String, sections::Array)
-    data_lines = split(data_string, '\n')
+function parse_pti_data(data_io::IO, sections::Array)
+    data_lines = readlines(data_io)
     skip_lines = 0
     skip_sublines = 0
     subsection = ""
@@ -369,10 +365,10 @@ function parse_pti_data(data_string::String, sections::Array)
 
         (elements, comment) = get_line_elements(line)
 
-        if length(elements) != 0 && elements[1] == "Q"
+        if length(elements) != 0 && elements[1] == "Q" && line_number > 3
             break
 
-        elseif length(elements) != 0 && elements[1] == "0" && line_number != 1
+        elseif length(elements) != 0 && elements[1] == "0" && line_number > 3
             if line_number == 4
                 section = popfirst!(sections)
             end
@@ -419,7 +415,7 @@ function parse_pti_data(data_string::String, sections::Array)
                 try
                     parse_line_element!(section_data, elements, section)
                 catch message
-                    throw(error(LOGGER, "Parsing failed at line $line_number: $(message.msg)"))
+                    throw(error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                 end
 
             elseif section == "CASE IDENTIFICATION"
@@ -427,7 +423,7 @@ function parse_pti_data(data_string::String, sections::Array)
                     try
                         parse_line_element!(section_data, elements, section)
                     catch message
-                        throw(error(LOGGER, "Parsing failed at line $line_number: $(message.msg)"))
+                        throw(error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                     end
                     try
                         if section_data["REV"] < 33
@@ -463,7 +459,7 @@ function parse_pti_data(data_string::String, sections::Array)
                 try
                     parse_line_element!(section_data, elements, temp_section)
                 catch message
-                    throw(error(LOGGER, "Parsing failed at line $line_number: $(message.msg)"))
+                    throw(error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                 end
 
             elseif section == "VOLTAGE SOURCE CONVERTER"
@@ -472,7 +468,7 @@ function parse_pti_data(data_string::String, sections::Array)
                     try
                         parse_line_element!(section_data, elements, section)
                     catch message
-                        throw(error(LOGGER, "Parsing failed at line $line_number: $(message.msg)"))
+                        throw(error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                     end
                     skip_sublines = 2
                     continue
@@ -510,7 +506,7 @@ function parse_pti_data(data_string::String, sections::Array)
                 try
                     parse_line_element!(section_data, elements, section)
                 catch message
-                    throw(error(LOGGER, "Parsing failed at line $line_number: $(message.msg)"))
+                    throw(error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                 end
 
             elseif section == "MULTI-TERMINAL DC"
@@ -519,7 +515,7 @@ function parse_pti_data(data_string::String, sections::Array)
                     try
                         parse_line_element!(section_data, elements, section)
                     catch message
-                        throw(error(LOGGER, "Parsing failed at line $line_number: $(message.msg)"))
+                        throw(error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                     end
 
                     if section_data["NCONV"] > 0
@@ -563,7 +559,7 @@ function parse_pti_data(data_string::String, sections::Array)
                                 continue
                             end
                         else
-                            error(LOGGER, message)
+                            error(LOGGER, sprint(showerror, message))
                         end
                     end
 
@@ -621,9 +617,8 @@ Reads PTI data in `io::IO`, returning a `Dict` of the data parsed into the
 proper types.
 """
 function parse_pti(io::IO)::Dict
-    data_string = read(io, String)
-    pti_data = parse_pti_data(data_string, get_pti_sections())
-    pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"[\/\\]*(?:.*[\/\\])*(.*)\.raw", lowercase(io.name)).captures[1]
+    pti_data = parse_pti_data(io, get_pti_sections())
+    pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"^\<file\s[\/\\]*(?:.*[\/\\])*(.*)\.raw\>$", lowercase(io.name)).captures[1]
 
     return pti_data
 end

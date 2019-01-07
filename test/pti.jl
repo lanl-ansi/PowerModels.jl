@@ -200,4 +200,11 @@ TESTLOG = getlogger(PowerModels)
             @test length(item) == 12
         end
     end
+
+    @testset "reserved characters in comments" begin
+        pti = PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
+        @test pti["CASE IDENTIFICATION"][1]["Comment_Line_1"] == "0"
+        @test pti["CASE IDENTIFICATION"][1]["Comment_Line_2"] == "Q"
+        @test length(pti["BUS"]) == 2
+    end
 end
