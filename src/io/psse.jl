@@ -191,21 +191,10 @@ function psse2pm_generator!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["qg"] = pop!(gen, "QG")
             sub_data["vg"] = pop!(gen, "VS")
             sub_data["mbase"] = pop!(gen, "MBASE")
-            sub_data["ramp_agc"] = 0.0
-            sub_data["ramp_q"] = 0.0
-            sub_data["ramp_10"] = 0.0
-            sub_data["ramp_30"] = 0.0
             sub_data["pmin"] = pop!(gen, "PB")
             sub_data["pmax"] = pop!(gen, "PT")
-            sub_data["apf"] = 0.0
             sub_data["qmin"] = pop!(gen, "QB")
             sub_data["qmax"] = pop!(gen, "QT")
-            sub_data["pc1"] = 0.0
-            sub_data["pc2"] = 0.0
-            sub_data["qc1min"] = 0.0
-            sub_data["qc1max"] = 0.0
-            sub_data["qc2min"] = 0.0
-            sub_data["qc2max"] = 0.0
 
             # Default Cost functions
             sub_data["model"] = 2
