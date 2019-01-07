@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Cleaned up generator data in Matpower files
+- Fix source_id in PSS(R)E PTI parse of buses to be only bus id
 
 ### v0.9.2
 - Added tracking of modifications in check_network_data
