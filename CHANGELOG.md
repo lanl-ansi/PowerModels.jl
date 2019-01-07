@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Cleaned up generator data in Matpower files
+- Cleaned up generator data in PSS(R)E PTI file parse
 
 ### v0.9.2
 - Added tracking of modifications in check_network_data
