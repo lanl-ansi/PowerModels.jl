@@ -2,7 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Updated default cost function linear when loading PSSE data
 - Cleaned up generator data in Matpower files
+- Cleaned up generator data in PSS(R)E PTI file parse
 - Fix source_id in PSS(R)E PTI parse of buses to be only bus id
 
 ### v0.9.2
