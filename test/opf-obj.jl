@@ -54,10 +54,21 @@ end
     data["gen"]["1"]["cost"] = [1.0, 1.0, 1400.0, 1.0]
     data["gen"]["4"]["cost"] = [1.0]
     data["gen"]["5"]["cost"] = []
-    result = run_ac_opf(data, ipopt_solver)
 
-    @test result["status"] == :LocalOptimal
-    @test isapprox(result["objective"], 5458.52; atol = 1e0)
+    @testset "opf objective" begin
+        result = run_ac_opf(data, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 5458.52; atol = 1e0)
+    end
+
+    @testset "opb objective" begin
+        result = run_opb(data, SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 2962.22; atol = 1e0)
+    end
+
 end
 
 

@@ -349,7 +349,7 @@ function _objective_min_gen_polynomial_fuel_cost_nl(pm::GenericPowerModel)
                 gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2)
             elseif length(cost_rev) >= 4
                 cost_rev_nl = cost_rev[4:end]
-                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[2]*pg^2 + sum( v*pg^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
+                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2 + sum( v*pg^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
             else
                 gen_cost[(n,i)] = @NLexpression(pm.model, 0.0)
             end
