@@ -87,6 +87,16 @@ function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
 end
 
 
+function _objective_min_polynomial_fuel_cost_quadratic(pm::GenericPowerModel)
+    warn(LOGGER, "call to depreciated function _objective_min_polynomial_fuel_cost_quadratic")
+    _objective_min_polynomial_fuel_cost_linquad(pm)
+end
+
+function _objective_min_polynomial_fuel_cost_linear(pm::GenericPowerModel)
+    warn(LOGGER, "call to depreciated function _objective_min_polynomial_fuel_cost_linear")
+    _objective_min_polynomial_fuel_cost_linquad(pm)
+end
+
 ""
 function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel)
     gen_cost = Dict()
@@ -284,6 +294,16 @@ function objective_min_gen_polynomial_fuel_cost(pm::GenericPowerModel)
     else
         return _objective_min_gen_polynomial_fuel_cost_nl(pm)
     end
+end
+
+function _objective_min_gen_polynomial_fuel_cost_quadratic(pm::GenericPowerModel)
+    warn(LOGGER, "call to depreciated function _objective_min_gen_polynomial_fuel_cost_quadratic")
+    _objective_min_gen_polynomial_fuel_cost_linquad(pm)
+end
+
+function _objective_min_gen_polynomial_fuel_cost_linear(pm::GenericPowerModel)
+    warn(LOGGER, "call to depreciated function _objective_min_gen_polynomial_fuel_cost_linear")
+    _objective_min_gen_polynomial_fuel_cost_linquad(pm)
 end
 
 ""
