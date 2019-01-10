@@ -636,13 +636,15 @@ end
 
 "Export power network data in the matpower format"
 function export_matpower(io::IO, data::Dict{String,Any})
+    data = deepcopy(data)
 
-    is_per_unit = data["per_unit"]
     #convert data to mixed unit
-    if is_per_unit
+    if data["per_unit"]
        make_mixed_units(data)
     end
 
+    # make all costs have the name number of items (to prepare for table export)
+    standardize_cost_terms(data)
 
     # create some useful maps and data structures
     buses = Dict{Int, Dict}()
@@ -924,13 +926,6 @@ function export_matpower(io::IO, data::Dict{String,Any})
             export_extra_data(io, data, key)
         end
     end
-
-    #convert data back to per unit (if necessary)
-    if is_per_unit
-       make_per_unit(data)
-    end
-
-
 end
 
 "Export fields of a component type"

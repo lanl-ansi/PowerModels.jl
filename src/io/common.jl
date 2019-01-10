@@ -70,8 +70,7 @@ function check_network_data(data::Dict{String,Any})
     mod_gen[:cost_pwl] = gen
     mod_dcline[:cost_pwl] = dcline
 
-    # TODO support for multi-network changes
-    standardize_cost_terms(data)
+    simplify_cost_terms(data)
 
     return Dict(
         "bus" => mod_bus,
