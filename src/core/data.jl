@@ -1201,10 +1201,65 @@ function _simplify_pwl_cost(id, comp, type_name, tolerance = 1e-2)
 end
 
 
+"trims zeros from higher order cost terms"
+function simplify_cost_terms(data::Dict{String,Any})
+    if InfrastructureModels.ismultinetwork(data)
+        networks = data["nw"]
+    else
+        networks = [("0", data)]
+    end
+
+    modified_gen = Set{Int}()
+    modified_dcline = Set{Int}()
+
+    for (i, network) in networks
+        if haskey(network, "gen")
+            for (i, gen) in network["gen"]
+                if haskey(gen, "model") && gen["model"] == 2
+                    ncost = length(gen["cost"])
+                    for j in 1:ncost
+                        if gen["cost"][1] == 0.0
+                            gen["cost"] = gen["cost"][2:end]
+                        else
+                            break
+                        end
+                    end
+                    if length(gen["cost"]) != ncost
+                        gen["ncost"] = length(gen["cost"])
+                        info(LOGGER, "removing $(ncost - gen["ncost"]) cost terms from generator $(i): $(gen["cost"])")
+                        push!(modified_gen, gen["index"])
+                    end
+                end
+            end
+        end
+
+        if haskey(network, "dcline")
+            for (i, dcline) in network["dcline"]
+                if haskey(dcline, "model") && dcline["model"] == 2
+                    ncost = length(dcline["cost"])
+                    for j in 1:ncost
+                        if dcline["cost"][1] == 0.0
+                            dcline["cost"] = dcline["cost"][2:end]
+                        else
+                            break
+                        end
+                    end
+                    if length(dcline["cost"]) != ncost
+                        dcline["ncost"] = length(dcline["cost"])
+                        info(LOGGER, "removing $(ncost - dcline["ncost"]) cost terms from dcline $(i): $(dcline["cost"])")
+                        push!(modified_dcline, dcline["index"])
+                    end
+                end
+            end
+        end
+    end
+
+    return (modified_gen, modified_dcline)
+end
 
 
 "ensures all polynomial costs functions have the same number of terms"
-function standardize_cost_terms(data::Dict{String,Any}; order=1)
+function standardize_cost_terms(data::Dict{String,Any}; order=-1)
     comp_max_order = 1
 
     if InfrastructureModels.ismultinetwork(data)
@@ -1232,22 +1287,20 @@ function standardize_cost_terms(data::Dict{String,Any}; order=1)
             end
         end
 
-        if haskey(network, "dclinecost")
-            if haskey(network, "dcline")
-                for (i, dcline) in network["dcline"]
-                    if haskey(dcline, "model") && dcline["model"] == 2
-                        max_nonzero_index = 1
-                        for i in 1:length(dcline["cost"])
-                            max_nonzero_index = i
-                            if dcline["cost"][i] != 0.0
-                                break
-                            end
+        if haskey(network, "dcline")
+            for (i, dcline) in network["dcline"]
+                if haskey(dcline, "model") && dcline["model"] == 2
+                    max_nonzero_index = 1
+                    for i in 1:length(dcline["cost"])
+                        max_nonzero_index = i
+                        if dcline["cost"][i] != 0.0
+                            break
                         end
-
-                        max_oder = length(dcline["cost"]) - max_nonzero_index + 1
-
-                        comp_max_order = max(comp_max_order, max_oder)
                     end
+
+                    max_oder = length(dcline["cost"]) - max_nonzero_index + 1
+
+                    comp_max_order = max(comp_max_order, max_oder)
                 end
             end
         end
@@ -1257,7 +1310,9 @@ function standardize_cost_terms(data::Dict{String,Any}; order=1)
     if comp_max_order <= order+1
         comp_max_order = order+1
     else
-        warn(LOGGER, "a standard cost order of $(order) was requested but the given data requires an order of at least $(comp_max_order-1)")
+        if order != -1 # if not the default
+            warn(LOGGER, "a standard cost order of $(order) was requested but the given data requires an order of at least $(comp_max_order-1)")
+        end
     end
 
     for (i, network) in networks

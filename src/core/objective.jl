@@ -3,6 +3,7 @@
 # This will hopefully make everything more compositional
 ################################################################################
 
+
 """
 Checks that all cost models are present and of the same type
 """
@@ -44,7 +45,6 @@ end
 
 
 
-
 ""
 function objective_min_fuel_cost(pm::GenericPowerModel)
     model = check_cost_models(pm)
@@ -75,199 +75,294 @@ function objective_min_gen_fuel_cost(pm::GenericPowerModel)
 end
 
 
-"""
-Checks that all cost models are polynomials, quadratic or less
-"""
-function check_polynomial_cost_models(pm::GenericPowerModel)
-    for (n, nw_ref) in nws(pm)
-        for (i,gen) in nw_ref[:gen]
-            @assert gen["model"] == 2
-            if length(gen["cost"]) > 3
-                error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(gen["cost"])) on generator $(i)")
-            end
-        end
-        for (i,dcline) in nw_ref[:dcline]
-            @assert dcline["model"] == 2
-            if length(dcline["cost"]) > 3
-                error("only cost models of degree 3 or less are supported at this time, given cost model of degree $(length(dcline["cost"])) on dcline $(i)")
-            end
-        end
-    end
-end
-
-
-
 ""
 function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
-    check_polynomial_cost_models(pm)
     order = calc_max_cost_index(pm.data)-1
 
-    if order == 1
-        return _objective_min_polynomial_fuel_cost_linear(pm)
-    elseif order == 2
-        return _objective_min_polynomial_fuel_cost_quadratic(pm)
-    else 
-        error("cost model order of $(order) is not supported")
+    if order <= 2
+        return _objective_min_polynomial_fuel_cost_linquad(pm)
+    else
+        return _objective_min_polynomial_fuel_cost_nl(pm)
     end
 end
 
 
-""
-function _objective_min_polynomial_fuel_cost_linear(pm::GenericPowerModel)
-    from_idx = Dict()
-    for (n, nw_ref) in nws(pm)
-        from_idx[n] = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
-    end
-
-    return @objective(pm.model, Min,
-        sum(
-            sum(   gen["cost"][1]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))+
-                   gen["cost"][2] for (i,gen) in nw_ref[:gen]) +
-            sum(   dcline["cost"][1]*sum( var(pm, n, c, :p_dc, from_idx[n][i]) for c in conductor_ids(pm, n)) +
-                   dcline["cost"][2] for (i,dcline) in nw_ref[:dcline])
-        for (n, nw_ref) in nws(pm))
-    )
-end
-
-
-""
 function _objective_min_polynomial_fuel_cost_quadratic(pm::GenericPowerModel)
-    from_idx = Dict()
+    warn(LOGGER, "call to depreciated function _objective_min_polynomial_fuel_cost_quadratic")
+    _objective_min_polynomial_fuel_cost_linquad(pm)
+end
+
+function _objective_min_polynomial_fuel_cost_linear(pm::GenericPowerModel)
+    warn(LOGGER, "call to depreciated function _objective_min_polynomial_fuel_cost_linear")
+    _objective_min_polynomial_fuel_cost_linquad(pm)
+end
+
+""
+function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel)
+    gen_cost = Dict()
+    dcline_cost = Dict()
+
     for (n, nw_ref) in nws(pm)
-        from_idx[n] = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
+        for (i,gen) in nw_ref[:gen]
+            pg = sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n) )
+
+            if length(gen["cost"]) == 1
+                gen_cost[(n,i)] = gen["cost"][1]
+            elseif length(gen["cost"]) == 2
+                gen_cost[(n,i)] = gen["cost"][1]*pg + gen["cost"][2]
+            elseif length(gen["cost"]) == 3
+                gen_cost[(n,i)] = gen["cost"][1]*pg^2 + gen["cost"][2]*pg + gen["cost"][3]
+            else
+                gen_cost[(n,i)] = 0.0
+            end
+        end
+
+        from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
+        for (i,dcline) in nw_ref[:dcline]
+            p_dc = sum( var(pm, n, c, :p_dc, from_idx[i]) for c in conductor_ids(pm, n) )
+            
+            if length(dcline["cost"]) == 1
+                dcline_cost[(n,i)] = dcline["cost"][1]
+            elseif length(dcline["cost"]) == 2
+                dcline_cost[(n,i)] = dcline["cost"][1]*p_dc + dcline["cost"][2]
+            elseif length(dcline["cost"]) == 3
+                dcline_cost[(n,i)] = dcline["cost"][1]*p_dc^2 + dcline["cost"][2]*p_dc + dcline["cost"][3]
+            else
+                dcline_cost[(n,i)] = 0.0
+            end
+        end
     end
 
     return @objective(pm.model, Min,
         sum(
-            sum(   gen["cost"][1]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))^2 +
-                   gen["cost"][2]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))+
-                   gen["cost"][3] for (i,gen) in nw_ref[:gen]) +
-            sum(   dcline["cost"][1]*sum( var(pm, n, c, :p_dc, from_idx[n][i]) for c in conductor_ids(pm, n))^2 +
-                   dcline["cost"][2]*sum( var(pm, n, c, :p_dc, from_idx[n][i]) for c in conductor_ids(pm, n)) +
-                   dcline["cost"][3] for (i,dcline) in nw_ref[:dcline])
-        for (n, nw_ref) in nws(pm))
-    )
-end
-
-
-""
-function objective_min_gen_polynomial_fuel_cost(pm::GenericPowerModel)
-    check_polynomial_cost_models(pm)
-    order = calc_max_cost_index(pm.data)-1
-
-    if order == 1
-        return _objective_min_gen_polynomial_fuel_cost_linear(pm)
-    elseif order == 2
-        return _objective_min_gen_polynomial_fuel_cost_quadratic(pm)
-    else 
-        error("cost model order of $(order) is not supported")
-    end
-end
-
-
-""
-function _objective_min_gen_polynomial_fuel_cost_linear(pm::GenericPowerModel)
-    return @objective(pm.model, Min,
-        sum(
-            sum(
-                gen["cost"][1]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))+
-                gen["cost"][2]
-            for (i,gen) in nw_ref[:gen])
-        for (n, nw_ref) in nws(pm))
-    )
-end
-
-
-""
-function _objective_min_gen_polynomial_fuel_cost_quadratic(pm::GenericPowerModel)
-    return @objective(pm.model, Min,
-        sum(
-            sum(
-                gen["cost"][1]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))^2 +
-                gen["cost"][2]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))+
-                gen["cost"][3]
-            for (i,gen) in nw_ref[:gen])
+            sum(    gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] ) +
+            sum( dcline_cost[(n,i)] for (i,dcline) in nw_ref[:dcline] )
         for (n, nw_ref) in nws(pm))
     )
 end
 
 
 "Adds lifted variables to turn a quadatic objective into a linear one; needed for conic solvers that only support linear objectives"
-function _objective_min_polynomial_fuel_cost_quadratic(pm::GenericPowerModel{T}) where T <: AbstractConicForms
-    from_idx = Dict()
-    for (n, nw_ref) in nws(pm)
-        from_idx[n] = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
-    end
+function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel{T}) where T <: AbstractConicForms
+    gen_cost = Dict()
+    dcline_cost = Dict()
 
-    pg_sqr = Dict()
-    dc_p_sqr = Dict()
     for (n, nw_ref) in nws(pm)
-        for c in conductor_ids(pm, n)
-            pg_sqr_ub = Dict{Int,Real}()
-            pg_sqr_lb = Dict{Int,Real}()
-            for (i, gen) in ref(pm, n, :gen)
-                pmin = gen["pmin"][c]
-                pmax = gen["pmax"][c]
 
-                pg_sqr_ub[i] = max(pmin^2, pmax^2)
-                pg_sqr_lb[i] = 0.0
+        var(pm, n)[:pg_sqr] = Dict()
+        for (i,gen) in nw_ref[:gen]
+            pg = sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n) )
+
+            if length(gen["cost"]) == 1
+                gen_cost[(n,i)] = gen["cost"][1]
+            elseif length(gen["cost"]) == 2
+                gen_cost[(n,i)] = gen["cost"][1]*pg + gen["cost"][2]
+            elseif length(gen["cost"]) == 3
+                pmin = sum(gen["pmin"][c] for c in conductor_ids(pm, n))
+                pmax = sum(gen["pmax"][c] for c in conductor_ids(pm, n))
+
+                pg_sqr_ub = max(pmin^2, pmax^2)
+                pg_sqr_lb = 0.0
                 if pmin > 0.0
-                    pg_sqr_lb[i] = pmin^2
+                    pg_sqr_lb = pmin^2
                 end
                 if pmax < 0.0
-                    pg_sqr_lb[i] = pmax^2
+                    pg_sqr_lb = pmax^2
                 end
+
+                pg_sqr = var(pm, n, :pg_sqr)[i] = @variable(pm.model,
+                    basename="$(n)_pg_sqr_$(i)",
+                    lowerbound = pg_sqr_lb,
+                    upperbound = pg_sqr_ub
+                )
+                @constraint(pm.model, norm([2*pg, pg_sqr-1]) <= pg_sqr+1)
+
+                gen_cost[(n,i)] = gen["cost"][1]*pg_sqr + gen["cost"][2]*pg + gen["cost"][3]
+            else
+                gen_cost[(n,i)] = 0.0
             end
+        end
 
-            pg_sqr = var(pm, n, c)[:pg_sqr] = @variable(pm.model,
-                [i in ids(pm, n, :gen)], basename="$(n)_$(c)_pg_sqr",
-                lowerbound = pg_sqr_lb[i],
-                upperbound = pg_sqr_ub[i]
-            )
-            for (i, gen) in nw_ref[:gen]
-                @constraint(pm.model, norm([2*var(pm, n, c, :pg, i), pg_sqr[i]-1]) <= pg_sqr[i]+1)
-            end
+        from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
 
+        var(pm, n)[:p_dc_sqr] = Dict()
+        for (i,dcline) in nw_ref[:dcline]
+            p_dc = sum( var(pm, n, c, :p_dc, from_idx[i]) for c in conductor_ids(pm, n) )
 
-            dc_p_sqr_ub = Dict{Int,Real}()
-            dc_p_sqr_lb = Dict{Int,Real}()
-            for (i, dcline) in ref(pm, n, :dcline)
-                pmin = dcline["pminf"][c]
-                pmax = dcline["pmaxf"][c]
+            if length(dcline["cost"]) == 1
+                dcline_cost[(n,i)] = dcline["cost"][1]
+            elseif length(dcline["cost"]) == 2
+                dcline_cost[(n,i)] = dcline["cost"][1]*p_dc + dcline["cost"][2]
+            elseif length(dcline["cost"]) == 3
+                pmin = sum(dcline["pminf"][c] for c in conductor_ids(pm, n))
+                pmax = sum(dcline["pmaxf"][c] for c in conductor_ids(pm, n))
 
-                dc_p_sqr_ub[i] = max(pmin^2, pmax^2)
-                dc_p_sqr_lb[i] = 0.0
+                p_dc_sqr_ub = max(pmin^2, pmax^2)
+                p_dc_sqr_lb = 0.0
                 if pmin > 0.0
-                    dc_p_sqr_lb[i] = pmin^2
+                    p_dc_sqr_lb = pmin^2
                 end
                 if pmax < 0.0
-                    dc_p_sqr_lb[i] = pmax^2
+                    p_dc_sqr_lb = pmax^2
                 end
-            end
 
-            dc_p_sqr = var(pm, n, c)[:p_dc_sqr] = @variable(pm.model,
-                [i in ids(pm, n, :dcline)], basename="$(n)_$(c)_dc_p_sqr",
-                lowerbound = dc_p_sqr_lb[i],
-                upperbound = dc_p_sqr_ub[i]
-            )
+                p_dc_sqr = var(pm, n, :p_dc_sqr)[i] = @variable(pm.model,
+                    basename="$(n)_p_dc_sqr_$(i)",
+                    lowerbound = p_dc_sqr_lb,
+                    upperbound = p_dc_sqr_ub
+                )
+                @constraint(pm.model, norm([2*p_dc, p_dc_sqr-1]) <= p_dc_sqr+1)
 
-            for (i, dcline) in nw_ref[:dcline]
-                @constraint(pm.model, norm([2*var(pm, n, c, :p_dc)[from_idx[n][i]], dc_p_sqr[i]-1]) <= dc_p_sqr[i]+1)
+                dcline_cost[(n,i)] = dcline["cost"][1]*p_dc_sqr + dcline["cost"][2]*p_dc + dcline["cost"][3]
+            else
+                dcline_cost[(n,i)] = 0.0
             end
         end
     end
 
     return @objective(pm.model, Min,
         sum(
-            sum( gen["cost"][1]*sum( var(pm, n, c, :pg_sqr, i) for c in conductor_ids(pm, n)) +
-                 gen["cost"][2]*sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) +
-                 gen["cost"][3] for (i,gen) in nw_ref[:gen]) +
-            sum( dcline["cost"][1]*sum( var(pm, n, c, :p_dc_sqr, i) for c in conductor_ids(pm, n)) +
-                 dcline["cost"][2]*sum( var(pm, n, c, :p_dc, from_idx[n][i])  for c in conductor_ids(pm, n)) +
-                 dcline["cost"][3] for (i,dcline) in nw_ref[:dcline])
+            sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] ) +
+            sum( dcline_cost[(n,i)] for (i,dcline) in nw_ref[:dcline] )
         for (n, nw_ref) in nws(pm))
     )
 end
+
+
+""
+function _objective_min_polynomial_fuel_cost_nl(pm::GenericPowerModel)
+    gen_cost = Dict()
+    dcline_cost = Dict()
+
+    for (n, nw_ref) in nws(pm)
+        for (i,gen) in nw_ref[:gen]
+            pg = sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))
+
+            cost_rev = reverse(gen["cost"])
+            if length(cost_rev) == 1
+                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1])
+            elseif length(cost_rev) == 2
+                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg)
+            elseif length(cost_rev) == 3
+                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2)
+            elseif length(cost_rev) >= 4
+                cost_rev_nl = cost_rev[4:end]
+                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[2]*pg^2 + sum( v*pg^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
+            else
+                gen_cost[(n,i)] = @NLexpression(pm.model, 0.0)
+            end
+        end
+
+        from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
+
+        for (i,dcline) in nw_ref[:dcline]
+            p_dc = sum( var(pm, n, c, :p_dc, from_idx[i]) for c in conductor_ids(pm, n))
+
+            cost_rev = reverse(dcline["cost"])
+            if length(cost_rev) == 1
+                dcline_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1])
+            elseif length(cost_rev) == 2
+                dcline_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc)
+            elseif length(cost_rev) == 3
+                dcline_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc + cost_rev[3]*p_dc^2)
+            elseif length(cost_rev) >= 4
+                cost_rev_nl = cost_rev[4:end]
+                dcline_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc + cost_rev[2]*p_dc^2 + sum( v*p_dc^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
+            else
+                dcline_cost[(n,i)] = @NLexpression(pm.model, 0.0)
+            end
+        end
+    end
+
+    return @NLobjective(pm.model, Min,
+        sum(
+            sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen]) +
+            sum( dcline_cost[(n,i)] for (i,dcline) in nw_ref[:dcline])
+        for (n, nw_ref) in nws(pm))
+    )
+end
+
+
+
+
+""
+function objective_min_gen_polynomial_fuel_cost(pm::GenericPowerModel)
+    order = calc_max_cost_index(pm.data)-1
+
+    if order <= 2
+        return _objective_min_gen_polynomial_fuel_cost_linquad(pm)
+    else
+        return _objective_min_gen_polynomial_fuel_cost_nl(pm)
+    end
+end
+
+function _objective_min_gen_polynomial_fuel_cost_quadratic(pm::GenericPowerModel)
+    warn(LOGGER, "call to depreciated function _objective_min_gen_polynomial_fuel_cost_quadratic")
+    _objective_min_gen_polynomial_fuel_cost_linquad(pm)
+end
+
+function _objective_min_gen_polynomial_fuel_cost_linear(pm::GenericPowerModel)
+    warn(LOGGER, "call to depreciated function _objective_min_gen_polynomial_fuel_cost_linear")
+    _objective_min_gen_polynomial_fuel_cost_linquad(pm)
+end
+
+""
+function _objective_min_gen_polynomial_fuel_cost_linquad(pm::GenericPowerModel)
+    gen_cost = Dict()
+    for (n, nw_ref) in nws(pm)
+        for (i,gen) in nw_ref[:gen]
+            pg = sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n) )
+
+            if length(gen["cost"]) == 1
+                gen_cost[(n,i)] = gen["cost"][1]
+            elseif length(gen["cost"]) == 2
+                gen_cost[(n,i)] = gen["cost"][1]*pg + gen["cost"][2]
+            elseif length(gen["cost"]) == 3
+                gen_cost[(n,i)] = gen["cost"][1]*pg^2 + gen["cost"][2]*pg + gen["cost"][3]
+            else
+                gen_cost[(n,i)] = 0.0
+            end
+        end
+    end
+
+    return @objective(pm.model, Min,
+        sum(
+            sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] )
+        for (n, nw_ref) in nws(pm))
+    )
+end
+
+
+""
+function _objective_min_gen_polynomial_fuel_cost_nl(pm::GenericPowerModel)
+    gen_cost = Dict()
+    for (n, nw_ref) in nws(pm)
+        for (i,gen) in nw_ref[:gen]
+            pg = sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))
+
+            cost_rev = reverse(gen["cost"])
+            if length(cost_rev) == 1
+                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1])
+            elseif length(cost_rev) == 2
+                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg)
+            elseif length(cost_rev) == 3
+                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2)
+            elseif length(cost_rev) >= 4
+                cost_rev_nl = cost_rev[4:end]
+                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2 + sum( v*pg^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
+            else
+                gen_cost[(n,i)] = @NLexpression(pm.model, 0.0)
+            end
+        end
+    end
+
+    return @NLobjective(pm.model, Min,
+        sum(
+            sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] )
+        for (n, nw_ref) in nws(pm))
+    )
+end
+
 
 
 """

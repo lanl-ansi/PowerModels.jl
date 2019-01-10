@@ -61,6 +61,8 @@ include("common.jl")
 
     include("opf-var.jl")
 
+    include("opf-obj.jl")
+
     include("ots.jl")
 
     include("tnep.jl")

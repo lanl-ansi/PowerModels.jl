@@ -31,7 +31,12 @@ function constraint_obj_bound(pm::GenericPowerModel, bound)
         error("Only cost models of type 2 is supported at this time, given cost model type $(model)")
     end
 
-    PowerModels.check_polynomial_cost_models(pm)
+    cost_index = PowerModels.calc_max_cost_index(pm.data)
+    if cost_index > 3
+        error("Only quadratic generator cost models are supported at this time, given cost model of order $(cost_index-1)")
+    end
+
+    PowerModels.standardize_cost_terms(pm.data, order=2)
 
     from_idx = Dict(arc[1] => arc for arc in ref(pm, :arcs_from_dc))
 
