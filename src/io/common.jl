@@ -81,3 +81,17 @@ function check_network_data(data::Dict{String,Any})
 end
 
 
+
+function row_to_typed_dict(row_data, columns)
+    warn(LOGGER, "call to depreciated function PowerModels.row_to_typed_dict, use InfrastructureModels.row_to_typed_dict")
+    return InfrastructureModels.row_to_typed_dict(row_data, columns)
+end
+
+function row_to_dict(row_data, columns)
+    warn(LOGGER, "call to depreciated function PowerModels.row_to_dict, use InfrastructureModels.row_to_dict")
+    return InfrastructureModels.row_to_dict(row_data, columns)
+end
+
+
+
+
