@@ -2,6 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added support for heterogeneous generator cost functions
+- Improved support for polynomial generator cost functions
 - Updated default cost function linear when loading PSSE data
 - Cleaned up generator data in Matpower files
 - Cleaned up generator data in PSS(R)E PTI file parse
