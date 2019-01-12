@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.9.3
 - Added support for heterogeneous cost functions
 - Added automatic simplification of cost functions
 - Improved support for polynomial cost functions
