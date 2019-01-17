@@ -24,6 +24,7 @@ PowerModels.jl Change Log
 - Added opf model with unit commitment (#475)
 - Fixed multiconductor support for ACR formulation
 - Removed support for Julia versions < 1.0
+- Update syntax to be compatible with JuMP v0.19 / MathOptInterface
 
 ### v0.9.4
 - Added all error messages to memento log

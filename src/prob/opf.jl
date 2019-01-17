@@ -1,18 +1,18 @@
 export run_opf, run_ac_opf, run_dc_opf
 
 ""
-function run_ac_opf(file, solver; kwargs...)
-    return run_opf(file, ACPPowerModel, solver; kwargs...)
+function run_ac_opf(file, optimizer; kwargs...)
+    return run_opf(file, ACPPowerModel, optimizer; kwargs...)
 end
 
 ""
-function run_dc_opf(file, solver; kwargs...)
-    return run_opf(file, DCPPowerModel, solver; kwargs...)
+function run_dc_opf(file, optimizer; kwargs...)
+    return run_opf(file, DCPPowerModel, optimizer; kwargs...)
 end
 
 ""
-function run_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_opf; kwargs...)
+function run_opf(file, model_constructor, optimizer; kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_opf; kwargs...)
 end
 
 ""

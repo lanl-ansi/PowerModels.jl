@@ -5,10 +5,10 @@ function cut_complex_product_and_angle_difference(m, wf, wt, wr, wi, angmin, ang
     @assert angmax >= -pi/2 && angmax <= pi/2
     @assert angmin < angmax
 
-    vfub = sqrt(JuMP.getupperbound(wf))
-    vflb = sqrt(JuMP.getlowerbound(wf))
-    vtub = sqrt(JuMP.getupperbound(wt))
-    vtlb = sqrt(JuMP.getlowerbound(wt))
+    vfub = sqrt(JuMP.upper_bound(wf))
+    vflb = sqrt(JuMP.lower_bound(wf))
+    vtub = sqrt(JuMP.upper_bound(wt))
+    vtlb = sqrt(JuMP.lower_bound(wt))
     tdub = angmax
     tdlb = angmin
 
@@ -25,8 +25,8 @@ end
 
 "general relaxation of a sine term, in -pi/2 to pi/2"
 function relaxation_sin(m, x, y)
-    ub = JuMP.getupperbound(x)
-    lb = JuMP.getlowerbound(x)
+    ub = JuMP.upper_bound(x)
+    lb = JuMP.lower_bound(x)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))
@@ -48,8 +48,8 @@ end
 
 "general relaxation of a cosine term, in -pi/2 to pi/2"
 function relaxation_cos(m, x, y)
-    ub = JuMP.getupperbound(x)
-    lb = JuMP.getlowerbound(x)
+    ub = JuMP.upper_bound(x)
+    lb = JuMP.lower_bound(x)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))
@@ -61,8 +61,8 @@ end
 
 "general relaxation of a sine term, in -pi/2 to pi/2"
 function relaxation_sin_on_off(m, x, y, z, M_x)
-    ub = JuMP.getupperbound(x)
-    lb = JuMP.getlowerbound(x)
+    ub = JuMP.upper_bound(x)
+    lb = JuMP.lower_bound(x)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))
@@ -83,8 +83,8 @@ end
 
 "general relaxation of a cosine term, in -pi/2 to pi/2"
 function relaxation_cos_on_off(m, x, y, z, M_x)
-    ub = JuMP.getupperbound(x)
-    lb = JuMP.getlowerbound(x)
+    ub = JuMP.upper_bound(x)
+    lb = JuMP.lower_bound(x)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))

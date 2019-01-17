@@ -5,8 +5,8 @@
 export run_tnep
 
 ""
-function run_tnep(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_tnep; solution_builder = get_tnep_solution, kwargs...)
+function run_tnep(file, model_constructor, optimizer; kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_tnep; solution_builder = get_tnep_solution, kwargs...)
 end
 
 "the general form of the tnep optimization model"

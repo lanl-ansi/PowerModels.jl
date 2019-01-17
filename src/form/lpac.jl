@@ -11,15 +11,15 @@ end
 function variable_voltage_magnitude(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: AbstractLPACForm
     if bounded
         var(pm, nw, cnd)[:phi] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :bus)], basename="$(nw)_$(cnd)_phi",
-            lowerbound = ref(pm, nw, :bus, i, "vmin", cnd) - 1.0,
-            upperbound = ref(pm, nw, :bus, i, "vmax", cnd) - 1.0,
+            [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_phi",
+            lower_bound = ref(pm, nw, :bus, i, "vmin", cnd) - 1.0,
+            upper_bound = ref(pm, nw, :bus, i, "vmax", cnd) - 1.0,
             start = getval(ref(pm, nw, :bus, i), "phi_start", cnd)
         )
     else
         var(pm, nw, cnd)[:vm] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :bus)], basename="$(nw)_$(cnd)_vm",
-            lowerbound = -1.0,
+            [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_vm",
+            lower_bound = -1.0,
             start = getval(ref(pm, nw, :bus, i), "phi_start", cnd)
         )
     end
