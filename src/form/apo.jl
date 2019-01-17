@@ -38,24 +38,26 @@ end
 
 "`-rate_a <= p[f_idx] <= rate_a`"
 function constraint_thermal_limit_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, rate_a) where T <: AbstractActivePowerFormulation
-    p_fr = con(pm, n, c, :sm_fr)[f_idx[1]] = var(pm, n, c, :p, f_idx)
-    JuMP.getlowerbound(p_fr) < -rate_a && JuMP.setlowerbound(p_fr, -rate_a)
-    JuMP.getupperbound(p_fr) >  rate_a && JuMP.setupperbound(p_fr,  rate_a)
+    p_fr = var(pm, n, c, :p, f_idx)
+    con(pm, n, c, :sm_fr)[f_idx[1]] = JuMP.LowerBoundRef(p_fr)
+    JuMP.lower_bound(p_fr) < -rate_a && JuMP.set_lower_bound(p_fr, -rate_a)
+    JuMP.upper_bound(p_fr) >  rate_a && JuMP.set_upper_bound(p_fr,  rate_a)
 end
 
 ""
 function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t_idx, rate_a) where T <: AbstractActivePowerFormulation
-    p_to = con(pm, n, c, :sm_to)[t_idx[1]] = var(pm, n, c, :p, t_idx)
-    JuMP.getlowerbound(p_to) < -rate_a && JuMP.setlowerbound(p_to, -rate_a)
-    JuMP.getupperbound(p_to) >  rate_a && JuMP.setupperbound(p_to,  rate_a)
+    p_to = var(pm, n, c, :p, t_idx)
+    con(pm, n, c, :sm_to)[t_idx[1]] = JuMP.LowerBoundRef(p_to)
+    JuMP.lower_bound(p_to) < -rate_a && JuMP.set_lower_bound(p_to, -rate_a)
+    JuMP.upper_bound(p_to) >  rate_a && JuMP.set_upper_bound(p_to,  rate_a)
 end
 
 ""
 function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractActivePowerFormulation
     p_fr = var(pm, n, c, :p, f_idx)
 
-    JuMP.getlowerbound(p_fr) < -c_rating_a && JuMP.setlowerbound(p_fr, -c_rating_a)
-    JuMP.getupperbound(p_fr) >  c_rating_a && JuMP.setupperbound(p_fr,  c_rating_a)
+    JuMP.lower_bound(p_fr) < -c_rating_a && JuMP.set_lower_bound(p_fr, -c_rating_a)
+    JuMP.upper_bound(p_fr) >  c_rating_a && JuMP.set_upper_bound(p_fr,  c_rating_a)
 end
 
 
@@ -103,16 +105,16 @@ end
 function constraint_storage_thermal_limit(pm::GenericPowerModel{T}, n::Int, c::Int, i, rating) where T <: AbstractActivePowerFormulation
     ps = var(pm, n, c, :ps, i)
 
-    JuMP.getlowerbound(ps) < -rating && JuMP.setlowerbound(ps, -rating)
-    JuMP.getupperbound(ps) >  rating && JuMP.setupperbound(ps,  rating)
+    JuMP.lower_bound(ps) < -rating && JuMP.set_lower_bound(ps, -rating)
+    JuMP.upper_bound(ps) >  rating && JuMP.set_upper_bound(ps,  rating)
 end
 
 ""
 function constraint_storage_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus, rating) where T <: AbstractActivePowerFormulation
     ps = var(pm, n, c, :ps, i)
 
-    JuMP.getlowerbound(ps) < -rating && JuMP.setlowerbound(ps, -rating)
-    JuMP.getupperbound(ps) >  rating && JuMP.setupperbound(ps,  rating)
+    JuMP.lower_bound(ps) < -rating && JuMP.set_lower_bound(ps, -rating)
+    JuMP.upper_bound(ps) >  rating && JuMP.set_upper_bound(ps,  rating)
 end
 
 ""
