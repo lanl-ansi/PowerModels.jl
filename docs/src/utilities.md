@@ -1,6 +1,6 @@
 # PowerModels Utility Functions
 
-This section provides an overview of the some of the utility functions that are implemented as a part of the PowerModels julia package. 
+This section provides an overview of the some of the utility functions that are implemented as a part of the PowerModels julia package.
 
 ## Optimization-Based Bound-Tightening for the AC Optimal Power Flow Problem
 

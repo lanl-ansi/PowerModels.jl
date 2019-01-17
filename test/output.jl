@@ -3,7 +3,7 @@
     @testset "24-bus rts case" begin
         result = run_opf("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver)
 
-        @test haskey(result, "solver") == true
+        @test haskey(result, "optimizer") == true
         @test haskey(result, "status") == true
         @test haskey(result, "objective") == true
         @test haskey(result, "objective_lb") == true
@@ -24,7 +24,7 @@ end
     @testset "24-bus rts case ac opf" begin
         result = run_opf("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
 
-        @test haskey(result, "solver") == true
+        @test haskey(result, "optimizer") == true
         @test haskey(result, "status") == true
         @test haskey(result, "objective") == true
         @test haskey(result, "objective_lb") == true

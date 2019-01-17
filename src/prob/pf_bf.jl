@@ -1,11 +1,11 @@
 export run_pf_bf, run_ac_pf_bf, run_dc_pf_bf
 
 ""
-function run_pf_bf(file, model_constructor, solver; kwargs...)
+function run_pf_bf(file, model_constructor, optimizer; kwargs...)
     if model_constructor != SOCBFPowerModel
         Memento.error(LOGGER, "The problem type pf_bf at the moment only supports the SOCBFForm formulation")
     end
-    return run_generic_model(file, model_constructor, solver, post_pf_bf; kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_pf_bf; kwargs...)
 end
 
 ""
