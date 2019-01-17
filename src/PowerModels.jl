@@ -2,11 +2,14 @@ module PowerModels
 
 import LinearAlgebra, SparseArrays
 
-import JSON
 import InfrastructureModels
-import MathProgBase
+import JSON
 import JuMP
 import Memento
+
+import MathOptInterface
+const MOI = MathOptInterface
+const MOIU = MathOptInterface.Utilities
 
 # Create our module level logger (this will get precompiled)
 const LOGGER = Memento.getlogger(@__MODULE__)

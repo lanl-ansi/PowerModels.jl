@@ -7,8 +7,8 @@
 
 
 "opf using current limits instead of thermal limits, tests constraint_current_limit"
-function run_cl_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_cl_opf; kwargs...)
+function run_cl_opf(file, model_constructor, optimizer; kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_cl_opf; kwargs...)
 end
 
 ""
@@ -46,8 +46,8 @@ end
 
 
 ""
-function run_mn_opb(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_mn_opb; multinetwork=true, kwargs...)
+function run_mn_opb(file, model_constructor, optimizer; kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_mn_opb; multinetwork=true, kwargs...)
 end
 
 ""
@@ -65,8 +65,8 @@ end
 
 
 ""
-function run_mn_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_mn_opf; multinetwork=true, kwargs...)
+function run_mn_opf(file, model_constructor, optimizer; kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_mn_opf; multinetwork=true, kwargs...)
 end
 
 ""
@@ -106,8 +106,8 @@ function post_mn_opf(pm::GenericPowerModel)
 end
 
 ""
-function run_mn_pf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_mn_pf; multinetwork=true, kwargs...)
+function run_mn_pf(file, model_constructor, optimizer; kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_mn_pf; multinetwork=true, kwargs...)
 end
 
 ""
@@ -163,8 +163,8 @@ end
 
 
 ""
-function run_mc_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_mc_opf; multiconductor=true, kwargs...)
+function run_mc_opf(file, model_constructor, optimizer; kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_mc_opf; multiconductor=true, kwargs...)
 end
 
 ""
@@ -206,8 +206,8 @@ end
 
 
 ""
-function run_mn_mc_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_mn_mc_opf; multinetwork=true, multiconductor=true, kwargs...)
+function run_mn_mc_opf(file, model_constructor, optimizer; kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_mn_mc_opf; multinetwork=true, multiconductor=true, kwargs...)
 end
 
 ""
@@ -251,8 +251,8 @@ end
 
 
 "opf with storage"
-function run_strg_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_strg_opf; kwargs...)
+function run_strg_opf(file, model_constructor, optimizer; kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_strg_opf; kwargs...)
 end
 
 ""
@@ -299,8 +299,8 @@ end
 
 
 "multi-network opf with storage"
-function run_mn_strg_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_mn_strg_opf; multinetwork=true, kwargs...)
+function run_mn_strg_opf(file, model_constructor, optimizer; kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_mn_strg_opf; multinetwork=true, kwargs...)
 end
 
 ""
@@ -362,8 +362,8 @@ end
 
 
 ""
-function run_mn_mc_strg_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_mn_mc_strg_opf; multinetwork=true, multiconductor=true, kwargs...)
+function run_mn_mc_strg_opf(file, model_constructor, optimizer; kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_mn_mc_strg_opf; multinetwork=true, multiconductor=true, kwargs...)
 end
 
 "warning: this model is not realistic or physically reasonable, it is only for test coverage"

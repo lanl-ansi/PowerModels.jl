@@ -393,7 +393,7 @@ end
         @test haskey(pm.ext, :some_data)
         @test pm.ext[:some_data] == "bloop"
 
-        result = solve_generic_model(pm, Ipopt.IpoptSolver(print_level=0))
+        result = solve_generic_model(pm, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5907; atol = 1e0)

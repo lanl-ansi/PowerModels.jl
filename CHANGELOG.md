@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Removed support for Julia versions < 1.0
+- Update syntax to be compatible with JuMP v0.19 / MathOptInterface
 
 ### v0.9.4
 - Added all error messages to memento log
