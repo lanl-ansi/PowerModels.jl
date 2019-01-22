@@ -561,7 +561,7 @@ function _calc_branch_flow_ac(data::Dict{String,<:Any})
             b_fr = branch["b_fr"]
             g_to = branch["g_to"]
             b_to = branch["b_to"]
-            
+
             tm = branch["tap"]
 
             vm_fr = vm[f_bus]

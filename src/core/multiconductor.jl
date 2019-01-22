@@ -110,7 +110,10 @@ Base.:/(a::MultiConductorVector, b::MultiConductorVector) = MultiConductorVector
 
 Base.:*(a::MultiConductorVector, b::LinearAlgebra.Adjoint) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
 Base.:*(a::LinearAlgebra.Adjoint, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
+<<<<<<< HEAD
 
+=======
+>>>>>>> REF: Remove support for Julia < v1.0
 
 # Matrices
 Base.:+(a::MultiConductorMatrix) = MultiConductorMatrix(+(a.values))

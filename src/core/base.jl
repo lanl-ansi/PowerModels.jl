@@ -164,11 +164,11 @@ con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) =
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
-function setsolver(pm::GenericPowerModel, solver)
+function setsolver(pm::PMs.GenericPowerModel, solver)
     JuMP.setsolver(pm.model, solver)
 end
 
-function JuMP.solve(pm::GenericPowerModel)
+function JuMP.solve(pm::PMs.GenericPowerModel)
     status, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.solve(pm.model)
 
     try
