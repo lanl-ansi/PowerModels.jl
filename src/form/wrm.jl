@@ -1,5 +1,6 @@
 ### sdp relaxations in the rectangular W-space
-
+import LinearAlgebra: Hermitian, cholesky, Symmetric, diag
+import SparseArrays: SparseMatrixCSC, sparse, spdiagm, findnz, spzeros, nonzeros
 
 ""
 function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractWRMForm
@@ -11,11 +12,11 @@ function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_id
 
     p_fr = var(pm, n, c, :p, f_idx)
     q_fr = var(pm, n, c, :q, f_idx)
-    @constraint(pm.model, norm([2*p_fr; 2*q_fr; w_fr*c_rating_a^2-1]) <= w_fr*c_rating_a^2+1)
+    JuMP.@constraint(pm.model, JuMP.norm([2*p_fr; 2*q_fr; w_fr*c_rating_a^2-1]) <= w_fr*c_rating_a^2+1)
 
     p_to = var(pm, n, c, :p, t_idx)
     q_to = var(pm, n, c, :q, t_idx)
-    @constraint(pm.model, norm([2*p_to; 2*q_to; w_to*c_rating_a^2-1]) <= w_to*c_rating_a^2+1)
+    JuMP.@constraint(pm.model, JuMP.norm([2*p_to; 2*q_to; w_to*c_rating_a^2-1]) <= w_to*c_rating_a^2+1)
 end
 
 
@@ -25,7 +26,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T
     WR = var(pm, nw, cnd)[:WR]
     WI = var(pm, nw, cnd)[:WI]
 
-    @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
+    JuMP.@SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
 end
 
 
@@ -37,10 +38,10 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
     w_index = 1:length(bus_ids)
     lookup_w_index = Dict((bi,i) for (i,bi) in enumerate(bus_ids))
 
-    WR = var(pm, nw, cnd)[:WR] = @variable(pm.model,
+    WR = var(pm, nw, cnd)[:WR] = JuMP.@variable(pm.model,
         [1:length(bus_ids), 1:length(bus_ids)], Symmetric, basename="$(nw)_$(cnd)_WR"
     )
-    WI = var(pm, nw, cnd)[:WI] = @variable(pm.model,
+    WI = var(pm, nw, cnd)[:WI] = JuMP.@variable(pm.model,
         [1:length(bus_ids), 1:length(bus_ids)], basename="$(nw)_$(cnd)_WI"
     )
 
@@ -51,14 +52,14 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         wi_ii = WR[w_idx,w_idx]
 
         if bounded
-            setlowerbound(wr_ii, (bus["vmin"][cnd])^2)
-            setupperbound(wr_ii, (bus["vmax"][cnd])^2)
+            JuMP.setlowerbound(wr_ii, (bus["vmin"][cnd])^2)
+            JuMP.setupperbound(wr_ii, (bus["vmax"][cnd])^2)
 
             #this breaks SCS on the 3 bus exmple
-            #setlowerbound(wi_ii, 0)
-            #setupperbound(wi_ii, 0)
+            #JuMP.setlowerbound(wi_ii, 0)
+            #JuMP.setupperbound(wi_ii, 0)
         else
-             setlowerbound(wr_ii, 0)
+             JuMP.setlowerbound(wr_ii, 0)
         end
     end
 
@@ -68,11 +69,11 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         wj_idx = lookup_w_index[j]
 
         if bounded
-            setupperbound(WR[wi_idx, wj_idx], wr_max[(i,j)])
-            setlowerbound(WR[wi_idx, wj_idx], wr_min[(i,j)])
+            JuMP.setupperbound(WR[wi_idx, wj_idx], wr_max[(i,j)])
+            JuMP.setlowerbound(WR[wi_idx, wj_idx], wr_min[(i,j)])
 
-            setupperbound(WI[wi_idx, wj_idx], wi_max[(i,j)])
-            setlowerbound(WI[wi_idx, wj_idx], wi_min[(i,j)])
+            JuMP.setupperbound(WI[wi_idx, wj_idx], wi_max[(i,j)])
+            JuMP.setlowerbound(WI[wi_idx, wj_idx], wi_min[(i,j)])
         end
     end
 
@@ -140,12 +141,12 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         voltage_product_groups[gidx] = Dict()
         voltage_product_groups[gidx][:WR] =
             var(pm, nw, cnd)[:voltage_product_groups][gidx][:WR] =
-            @variable(pm.model, [1:n, 1:n], Symmetric,
+            JuMP.@variable(pm.model, [1:n, 1:n], Symmetric,
                 basename="$(nw)_$(cnd)_$(gidx)_WR")
 
         voltage_product_groups[gidx][:WI] =
             var(pm, nw, cnd)[:voltage_product_groups][gidx][:WI] =
-            @variable(pm.model, [1:n, 1:n],
+            JuMP.@variable(pm.model, [1:n, 1:n],
                 basename="$(nw)_$(cnd)_$(gidx)_WI")
     end
 
@@ -170,10 +171,10 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
             wr_ii = WR[group_idx, group_idx]
 
             if bounded
-                setupperbound(wr_ii, (bus["vmax"][cnd])^2)
-                setlowerbound(wr_ii, (bus["vmin"][cnd])^2)
+                JuMP.setupperbound(wr_ii, (bus["vmax"][cnd])^2)
+                JuMP.setlowerbound(wr_ii, (bus["vmin"][cnd])^2)
             else
-                setlowerbound(wr_ii, 0)
+                JuMP.setlowerbound(wr_ii, 0)
             end
 
             # for non-semidefinite constraints
@@ -189,11 +190,11 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
             i_bus, j_bus = group[i], group[j]
             if (i_bus, j_bus) in ids(pm, nw, :buspairs)
                 if bounded
-                    setupperbound(WR[i, j], wr_max[i_bus, j_bus])
-                    setlowerbound(WR[i, j], wr_min[i_bus, j_bus])
+                    JuMP.setupperbound(WR[i, j], wr_max[i_bus, j_bus])
+                    JuMP.setlowerbound(WR[i, j], wr_min[i_bus, j_bus])
 
-                    setupperbound(WI[i, j], wi_max[i_bus, j_bus])
-                    setlowerbound(WI[i, j], wi_min[i_bus, j_bus])
+                    JuMP.setupperbound(WI[i, j], wi_max[i_bus, j_bus])
+                    JuMP.setlowerbound(WI[i, j], wi_min[i_bus, j_bus])
                 end
 
                 # for non-semidefinite constraints
@@ -232,16 +233,16 @@ function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T
             wi_ji = WI[2, 1]
 
             # standard SOC form (Mosek doesn't like rotated form)
-            @constraint(pm.model, (wr_ii + wr_jj) >= norm([(wr_ii - wr_jj); 2*wr_ij; 2*wi_ij]))
-            @constraint(pm.model, wi_ij == -wi_ji)
+            JuMP.@constraint(pm.model, (wr_ii + wr_jj) >= JuMP.norm([(wr_ii - wr_jj); 2*wr_ij; 2*wi_ij]))
+            JuMP.@constraint(pm.model, wi_ij == -wi_ji)
         else
-            @SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
+            JuMP.@SDconstraint(pm.model, [WR WI; -WI WR] >= 0)
         end
     end
 
     # linking constraints
     tree = prim(overlap_graph(groups))
-    overlapping_pairs = [ind2sub(tree, i) for i in (LinearIndices(tree))[findall(x->x!=0, tree)]]
+    overlapping_pairs = [Tuple(CartesianIndices(tree)[i]) for i in (LinearIndices(tree))[findall(x->x!=0, tree)]]
     for (i, j) in overlapping_pairs
         gi, gj = groups[i], groups[j]
         var_i, var_j = voltage_product_groups[i], voltage_product_groups[j]
@@ -250,8 +251,8 @@ function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T
         overlap_i, overlap_j = overlap_indices(Gi, Gj)
         indices = zip(overlap_i, overlap_j)
         for (idx_i, idx_j) in indices
-            @constraint(pm.model, var_i[:WR][idx_i] == var_j[:WR][idx_j])
-            @constraint(pm.model, var_i[:WI][idx_i] == var_j[:WI][idx_j])
+            JuMP.@constraint(pm.model, var_i[:WR][idx_i] == var_j[:WR][idx_j])
+            JuMP.@constraint(pm.model, var_i[:WI][idx_i] == var_j[:WI][idx_j])
         end
     end
 end
@@ -291,15 +292,15 @@ of the bus with `bus_id` in the adjacency matrix.
 function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
     adj, lookup_index = adjacency_matrix(pm, nw)
     nb = size(adj, 1)
-    diag_el = PowerModels.pm_sum(adj, dims=1)[:]
-    W = Hermitian(adj + spdiagm(diag_el, 0))
+    diag_el = sum(adj, dims=1)[:]
+    W = Hermitian(adj + spdiagm(0 => diag_el))
 
     F = cholesky(W)
     L = sparse(F.L)
     p = F.p
     q = invperm(p)
 
-    Rchol = L - spdiagm(diag(L), 0)
+    Rchol = L - spdiagm(0 => diag(L))
     f_idx, t_idx, V = findnz(Rchol)
     cadj = sparse([f_idx;t_idx], [t_idx;f_idx], trues(2*length(f_idx)), nb, nb)
     cadj = cadj[q, q] # revert to original bus ordering (invert cholfact permutation)
