@@ -9,7 +9,7 @@ function parse_file(file::String; import_all=false, validate=true)
     if endswith(file, ".m")
         pm_data = PowerModels.parse_matpower(file, validate=validate)
     elseif endswith(lowercase(file), ".raw")
-        info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
+        Memento.info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
         pm_data = PowerModels.parse_psse(file; import_all=import_all, validate=validate)
     else
         pm_data = parse_json(file, validate=validate)
@@ -83,12 +83,12 @@ end
 
 
 function row_to_typed_dict(row_data, columns)
-    warn(LOGGER, "call to depreciated function PowerModels.row_to_typed_dict, use InfrastructureModels.row_to_typed_dict")
+    Memento.warn(LOGGER, "call to depreciated function PowerModels.row_to_typed_dict, use InfrastructureModels.row_to_typed_dict")
     return InfrastructureModels.row_to_typed_dict(row_data, columns)
 end
 
 function row_to_dict(row_data, columns)
-    warn(LOGGER, "call to depreciated function PowerModels.row_to_dict, use InfrastructureModels.row_to_dict")
+    Memento.warn(LOGGER, "call to depreciated function PowerModels.row_to_dict, use InfrastructureModels.row_to_dict")
     return InfrastructureModels.row_to_dict(row_data, columns)
 end
 

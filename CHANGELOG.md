@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Removed support for Julia versions < 1.0
 
 ### v0.9.4
 - Added all error messages to memento log

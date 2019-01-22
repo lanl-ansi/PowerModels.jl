@@ -12,7 +12,7 @@
 
 "`t[ref_bus] == 0`"
 function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) where T <: AbstractPForms
-    @constraint(pm.model, var(pm, n, c, :va)[i] == 0)
+    JuMP.@constraint(pm.model, var(pm, n, c, :va)[i] == 0)
 end
 
 """
@@ -27,8 +27,8 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
 
-    @constraint(pm.model, va_fr - va_to <= angmax)
-    @constraint(pm.model, va_fr - va_to >= angmin)
+    JuMP.@constraint(pm.model, va_fr - va_to <= angmax)
+    JuMP.@constraint(pm.model, va_fr - va_to >= angmin)
 end
 
 
@@ -41,7 +41,7 @@ end
 function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, i, vm) where T <: AbstractWForms
     w = var(pm, n, c, :w, i)
 
-    @constraint(pm.model, w == vm^2)
+    JuMP.@constraint(pm.model, w == vm^2)
 end
 
 "Do nothing, no way to represent this in these variables"
@@ -64,8 +64,8 @@ function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_a
     p_dc = var(pm, n, c, :p_dc)
     q_dc = var(pm, n, c, :q_dc)
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*w)
-    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*w)
+    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*w)
+    JuMP.@constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*w)
 end
 
 
@@ -86,8 +86,8 @@ function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bu
     p_dc = var(pm, n, c, :p_dc)
     q_dc = var(pm, n, c, :q_dc)
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*w)
-    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*w)
+    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*w)
+    JuMP.@constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*w)
 end
 
 
@@ -101,8 +101,8 @@ function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus
     wr   = var(pm, n, c, :wr, (f_bus, t_bus))
     wi   = var(pm, n, c, :wi, (f_bus, t_bus))
 
-    @constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi )
-    @constraint(pm.model, q_fr == -(b+b_fr)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi )
+    JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi )
+    JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi )
 end
 
 
@@ -116,8 +116,8 @@ function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, 
     wr   = var(pm, n, c, :wr, (f_bus, t_bus))
     wi   = var(pm, n, c, :wi, (f_bus, t_bus))
 
-    @constraint(pm.model, p_to ==  (g+g_to)*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi )
-    @constraint(pm.model, q_to == -(b+b_to)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
+    JuMP.@constraint(pm.model, p_to ==  (g+g_to)*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi )
+    JuMP.@constraint(pm.model, q_to == -(b+b_to)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
 end
 
 
@@ -130,8 +130,8 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
     wr   = var(pm, n, c, :wr, (f_bus, t_bus))
     wi   = var(pm, n, c, :wi, (f_bus, t_bus))
 
-    @constraint(pm.model, wi <= tan(angmax)*wr)
-    @constraint(pm.model, wi >= tan(angmin)*wr)
+    JuMP.@constraint(pm.model, wi <= tan(angmax)*wr)
+    JuMP.@constraint(pm.model, wi >= tan(angmin)*wr)
     cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 end
 
@@ -146,8 +146,8 @@ function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, c
     qg = var(pm, n, c, :qg)
     w = var(pm, n, c, :w)
 
-    @constraint(pm.model, sum(pg[g] for g in comp_gen_ids) >= sum(pd for (i,pd) in values(comp_pd)) + sum(gs*w[i] for (i,gs) in values(comp_gs)) + sum(g_fr*w[i]/tm^2 + g_to*w[j] for (i,j,r,x,tm,g_fr,g_to) in values(comp_branch_g)))
-    @constraint(pm.model, sum(qg[g] for g in comp_gen_ids) >= sum(qd for (i,qd) in values(comp_qd)) - sum(bs*w[i] for (i,bs) in values(comp_bs)) - sum(b_fr*w[i]/tm^2 + b_to*w[j] for (i,j,r,x,tm,b_fr,b_to) in values(comp_branch_b)))
+    JuMP.@constraint(pm.model, sum(pg[g] for g in comp_gen_ids) >= sum(pd for (i,pd) in values(comp_pd)) + sum(gs*w[i] for (i,gs) in values(comp_gs)) + sum(g_fr*w[i]/tm^2 + g_to*w[j] for (i,j,r,x,tm,g_fr,g_to) in values(comp_branch_g)))
+    JuMP.@constraint(pm.model, sum(qg[g] for g in comp_gen_ids) >= sum(qd for (i,qd) in values(comp_qd)) - sum(bs*w[i] for (i,bs) in values(comp_bs)) - sum(b_fr*w[i]/tm^2 + b_to*w[j] for (i,j,r,x,tm,b_fr,b_to) in values(comp_branch_b)))
 end
 
 
@@ -161,11 +161,11 @@ function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_id
 
     p_fr = var(pm, n, c, :p, f_idx)
     q_fr = var(pm, n, c, :q, f_idx)
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= w_fr*c_rating_a^2)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w_fr*c_rating_a^2)
 
     p_to = var(pm, n, c, :p, t_idx)
     q_to = var(pm, n, c, :q, t_idx)
-    @constraint(pm.model, p_to^2 + q_to^2 <= w_to*c_rating_a^2)
+    JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= w_to*c_rating_a^2)
 end
 
 

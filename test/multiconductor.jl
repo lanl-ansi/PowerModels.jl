@@ -1,4 +1,4 @@
-TESTLOG = getlogger(PowerModels)
+TESTLOG = Memento.getlogger(PowerModels)
 
 "an example of building a multi-phase model in an extention package"
 function post_tp_opf(pm::PowerModels.GenericPowerModel)
@@ -255,7 +255,7 @@ end
         mp_data_3p["gen"]["1"]["model"] = 2
         @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
 
-        setlevel!(TESTLOG, "info")
+        Memento.setlevel!(TESTLOG, "info")
 
         mp_data_3p["gen"]["1"]["model"] = 3
         @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units(mp_data_3p))
@@ -337,7 +337,7 @@ end
         @test_warn(TESTLOG, "the conductor 2 to bus voltage setpoint on dc line 1 does not match the value at bus 2", PowerModels.check_voltage_setpoints(mp_data_3p))
 
 
-        setlevel!(TESTLOG, "error")
+        Memento.setlevel!(TESTLOG, "error")
 
         @test_throws(TESTLOG, ErrorException, PowerModels.run_ac_opf(mp_data_3p, ipopt_solver))
 
@@ -442,9 +442,6 @@ end
 
         # diagm
         @test all(LinearAlgebra.diagm(0 => c).values .== [0.225 0.0 0.0; 0.0 0.225 0.0; 0.0 0.0 0.225])
-        if VERSION <= v"0.7.0-"
-            @test all(LinearAlgebra.diagm(c).values .== [0.225 0.0 0.0; 0.0 0.225 0.0; 0.0 0.0 0.225])
-        end
 
         # rad2deg/deg2rad
         angs_deg = rad2deg(angs_rad)
@@ -460,13 +457,13 @@ end
         @test isa(rad2deg(a), PowerModels.MultiConductorMatrix)
         @test isa(deg2rad(a), PowerModels.MultiConductorMatrix)
 
-        setlevel!(TESTLOG, "warn")
+        Memento.setlevel!(TESTLOG, "warn")
         @test_nowarn show(devnull, a)
 
         @test_nowarn a[1, 1] = 9.0
         @test a[1,1] == 9.0
 
         @test_nowarn PowerModels.summary(devnull, mp_data)
-        setlevel!(TESTLOG, "error")
+        Memento.setlevel!(TESTLOG, "error")
     end
 end
