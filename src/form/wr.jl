@@ -50,8 +50,8 @@ function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i,
     wr   = var(pm, n, c,   :wr_ne, i)
     wi   = var(pm, n, c,   :wi_ne, i)
 
-    @constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi )
-    @constraint(pm.model, q_fr == -(b+b_fr)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi )
+    JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi )
+    JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi )
 end
 
 """
@@ -69,8 +69,8 @@ function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, f
     wr   = var(pm, n, c,   :wr_ne, i)
     wi   = var(pm, n, c,   :wi_ne, i)
 
-    @constraint(pm.model, p_to ==  (g+g_to)*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi )
-    @constraint(pm.model, q_to == -(b+b_to)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
+    JuMP.@constraint(pm.model, p_to ==  (g+g_to)*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi )
+    JuMP.@constraint(pm.model, q_to == -(b+b_to)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
 end
 
 ""
@@ -120,16 +120,16 @@ function constraint_voltage_ne(pm::GenericPowerModel{T}, n::Int, c::Int) where T
     w_to = var(pm, n, c, :w_to_ne)
 
     for (l,i,j) in ref(pm, n, :ne_arcs_from)
-        @constraint(pm.model, w_fr[l] <= z[l]*buses[branches[l]["f_bus"]]["vmax"]^2)
-        @constraint(pm.model, w_fr[l] >= z[l]*buses[branches[l]["f_bus"]]["vmin"]^2)
+        JuMP.@constraint(pm.model, w_fr[l] <= z[l]*buses[branches[l]["f_bus"]]["vmax"]^2)
+        JuMP.@constraint(pm.model, w_fr[l] >= z[l]*buses[branches[l]["f_bus"]]["vmin"]^2)
 
-        @constraint(pm.model, wr[l] <= z[l]*wr_max[bi_bp[l]])
-        @constraint(pm.model, wr[l] >= z[l]*wr_min[bi_bp[l]])
-        @constraint(pm.model, wi[l] <= z[l]*wi_max[bi_bp[l]])
-        @constraint(pm.model, wi[l] >= z[l]*wi_min[bi_bp[l]])
+        JuMP.@constraint(pm.model, wr[l] <= z[l]*wr_max[bi_bp[l]])
+        JuMP.@constraint(pm.model, wr[l] >= z[l]*wr_min[bi_bp[l]])
+        JuMP.@constraint(pm.model, wi[l] <= z[l]*wi_max[bi_bp[l]])
+        JuMP.@constraint(pm.model, wi[l] >= z[l]*wi_min[bi_bp[l]])
 
-        @constraint(pm.model, w_to[l] <= z[l]*buses[branches[l]["t_bus"]]["vmax"]^2)
-        @constraint(pm.model, w_to[l] >= z[l]*buses[branches[l]["t_bus"]]["vmin"]^2)
+        JuMP.@constraint(pm.model, w_to[l] <= z[l]*buses[branches[l]["t_bus"]]["vmax"]^2)
+        JuMP.@constraint(pm.model, w_to[l] >= z[l]*buses[branches[l]["t_bus"]]["vmin"]^2)
 
         InfrastructureModels.relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
         InfrastructureModels.relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
@@ -147,8 +147,8 @@ function constraint_voltage_magnitude_from_on_off(pm::GenericPowerModel{T}, n::I
     z = var(pm, n, c, :branch_z)
 
     for (i, branch) in ref(pm, n, :branch)
-        @constraint(pm.model, vm_fr[i] <= z[i]*buses[branch["f_bus"]]["vmax"])
-        @constraint(pm.model, vm_fr[i] >= z[i]*buses[branch["f_bus"]]["vmin"])
+        JuMP.@constraint(pm.model, vm_fr[i] <= z[i]*buses[branch["f_bus"]]["vmax"])
+        JuMP.@constraint(pm.model, vm_fr[i] >= z[i]*buses[branch["f_bus"]]["vmin"])
     end
 end
 
@@ -161,8 +161,8 @@ function constraint_voltage_magnitude_to_on_off(pm::GenericPowerModel{T}, n::Int
     z = var(pm, n, c, :branch_z)
 
     for (i, branch) in ref(pm, n, :branch)
-        @constraint(pm.model, vm_to[i] <= z[i]*buses[branch["t_bus"]]["vmax"])
-        @constraint(pm.model, vm_to[i] >= z[i]*buses[branch["t_bus"]]["vmin"])
+        JuMP.@constraint(pm.model, vm_to[i] <= z[i]*buses[branch["t_bus"]]["vmax"])
+        JuMP.@constraint(pm.model, vm_to[i] >= z[i]*buses[branch["t_bus"]]["vmin"])
     end
 end
 
@@ -176,8 +176,8 @@ function constraint_voltage_magnitude_sqr_from_on_off(pm::GenericPowerModel{T}, 
     z = var(pm, n, c, :branch_z)
 
     for (i, branch) in ref(pm, n, :branch)
-        @constraint(pm.model, w_fr[i] <= z[i]*buses[branch["f_bus"]]["vmax"]^2)
-        @constraint(pm.model, w_fr[i] >= z[i]*buses[branch["f_bus"]]["vmin"]^2)
+        JuMP.@constraint(pm.model, w_fr[i] <= z[i]*buses[branch["f_bus"]]["vmax"]^2)
+        JuMP.@constraint(pm.model, w_fr[i] >= z[i]*buses[branch["f_bus"]]["vmin"]^2)
     end
 end
 
@@ -190,8 +190,8 @@ function constraint_voltage_magnitude_sqr_to_on_off(pm::GenericPowerModel{T}, n:
     z = var(pm, n, c, :branch_z)
 
     for (i, branch) in ref(pm, n, :branch)
-        @constraint(pm.model, w_to[i] <= z[i]*buses[branch["t_bus"]]["vmax"]^2)
-        @constraint(pm.model, w_to[i] >= z[i]*buses[branch["t_bus"]]["vmin"]^2)
+        JuMP.@constraint(pm.model, w_to[i] <= z[i]*buses[branch["t_bus"]]["vmax"]^2)
+        JuMP.@constraint(pm.model, w_to[i] >= z[i]*buses[branch["t_bus"]]["vmin"]^2)
     end
 end
 
@@ -206,10 +206,10 @@ function constraint_voltage_product_on_off(pm::GenericPowerModel{T}, n::Int, c::
     z  = var(pm, n, c, :branch_z)
 
     for b in ids(pm, n, :branch)
-        @constraint(pm.model, wr[b] <= z[b]*wr_max[bi_bp[b]])
-        @constraint(pm.model, wr[b] >= z[b]*wr_min[bi_bp[b]])
-        @constraint(pm.model, wi[b] <= z[b]*wi_max[bi_bp[b]])
-        @constraint(pm.model, wi[b] >= z[b]*wi_min[bi_bp[b]])
+        JuMP.@constraint(pm.model, wr[b] <= z[b]*wr_max[bi_bp[b]])
+        JuMP.@constraint(pm.model, wr[b] >= z[b]*wr_min[bi_bp[b]])
+        JuMP.@constraint(pm.model, wi[b] <= z[b]*wi_max[bi_bp[b]])
+        JuMP.@constraint(pm.model, wi[b] >= z[b]*wi_min[bi_bp[b]])
     end
 end
 
@@ -228,8 +228,8 @@ function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, c::Int
     wr   = var(pm, n, c, :wr, i)
     wi   = var(pm, n, c, :wi, i)
 
-    @constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi )
-    @constraint(pm.model, q_fr == -(b+b_fr)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi )
+    JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi )
+    JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi )
 end
 
 """
@@ -247,8 +247,8 @@ function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, 
     wr = var(pm, n, c, :wr, i)
     wi = var(pm, n, c, :wi, i)
 
-    @constraint(pm.model, p_to ==  (g+g_to)*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi )
-    @constraint(pm.model, q_to == -(b+b_to)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
+    JuMP.@constraint(pm.model, p_to ==  (g+g_to)*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi )
+    JuMP.@constraint(pm.model, q_to == -(b+b_to)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
 end
 
 "`angmin*wr[i] <= wi[i] <= angmax*wr[i]`"
@@ -257,8 +257,8 @@ function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n:
     wr = var(pm, n, c, :wr, i)
     wi = var(pm, n, c, :wi, i)
 
-    @constraint(pm.model, wi <= tan(angmax)*wr)
-    @constraint(pm.model, wi >= tan(angmin)*wr)
+    JuMP.@constraint(pm.model, wi <= tan(angmax)*wr)
+    JuMP.@constraint(pm.model, wi >= tan(angmin)*wr)
 end
 
 "`angmin*wr_ne[i] <= wi_ne[i] <= angmax*wr_ne[i]`"
@@ -267,8 +267,8 @@ function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int
     wr = var(pm, n, c, :wr_ne, i)
     wi = var(pm, n, c, :wi_ne, i)
 
-    @constraint(pm.model, wi <= tan(angmax)*wr)
-    @constraint(pm.model, wi >= tan(angmin)*wr)
+    JuMP.@constraint(pm.model, wi <= tan(angmax)*wr)
+    JuMP.@constraint(pm.model, wi >= tan(angmin)*wr)
 end
 
 ""
@@ -283,7 +283,7 @@ function variable_voltage_magnitude_sqr_from_ne(pm::GenericPowerModel{T}; nw::In
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
 
-    var(pm, nw, cnd)[:w_fr_ne] = @variable(pm.model,
+    var(pm, nw, cnd)[:w_fr_ne] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_w_fr_ne",
         lowerbound = 0,
         upperbound = (buses[branches[i]["f_bus"]]["vmax"][cnd])^2,
@@ -296,7 +296,7 @@ function variable_voltage_magnitude_sqr_to_ne(pm::GenericPowerModel{T}; nw::Int=
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
 
-    var(pm, nw, cnd)[:w_to_ne] = @variable(pm.model,
+    var(pm, nw, cnd)[:w_to_ne] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_w_to_ne",
         lowerbound = 0,
         upperbound = (buses[branches[i]["t_bus"]]["vmax"][cnd])^2,
@@ -309,14 +309,14 @@ function variable_voltage_product_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, c
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :ne_buspairs), cnd)
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
 
-    var(pm, nw, cnd)[:wr_ne] = @variable(pm.model,
+    var(pm, nw, cnd)[:wr_ne] = JuMP.@variable(pm.model,
         [b in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_wr_ne",
         lowerbound = min(0, wr_min[bi_bp[b]]),
         upperbound = max(0, wr_max[bi_bp[b]]),
         start = getval(ref(pm, nw, :ne_buspairs, bi_bp[b]), "wr_start", cnd, 1.0)
     )
 
-    var(pm, nw, cnd)[:wi_ne] = @variable(pm.model,
+    var(pm, nw, cnd)[:wi_ne] = JuMP.@variable(pm.model,
         [b in ids(pm, nw, :ne_branch)], basename="$(nw)_$(cnd)_wi_ne",
         lowerbound = min(0, wi_min[bi_bp[b]]),
         upperbound = max(0, wi_max[bi_bp[b]]),
@@ -331,7 +331,7 @@ end
 
 "Creates variables associated with differences in voltage angles"
 function variable_voltage_angle_difference(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T
-    var(pm, nw, cnd)[:td] = @variable(pm.model,
+    var(pm, nw, cnd)[:td] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(cnd)_td",
         lowerbound = ref(pm, nw, :buspairs, bp, "angmin", cnd),
         upperbound = ref(pm, nw, :buspairs, bp, "angmax", cnd),
@@ -342,7 +342,7 @@ end
 "Creates the voltage magnitude product variables"
 function variable_voltage_magnitude_product(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T
     buspairs = ref(pm, nw, :buspairs)
-    var(pm, nw, cnd)[:vv] = @variable(pm.model,
+    var(pm, nw, cnd)[:vv] = JuMP.@variable(pm.model,
         [bp in keys(buspairs)], basename="$(nw)_$(cnd)_vv",
         lowerbound = buspairs[bp]["vm_fr_min"][cnd]*buspairs[bp]["vm_to_min"][cnd],
         upperbound = buspairs[bp]["vm_fr_max"][cnd]*buspairs[bp]["vm_to_max"][cnd],
@@ -358,7 +358,7 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
     for (bp, buspair) in buspairs
         ub[bp] = ((buspair["rate_a"][cnd]*buspair["tap"][cnd])/buspair["vm_fr_min"][cnd])^2
     end
-    var(pm, nw, cnd)[:cm] = @variable(pm.model,
+    var(pm, nw, cnd)[:cm] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], basename="$(nw)_$(cnd)_cm",
         lowerbound = 0,
         upperbound = ub[bp],
@@ -401,7 +401,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <:
 
     for bp in ids(pm, n, :buspairs)
         i,j = bp
-        @constraint(pm.model, t[i] - t[j] == td[bp])
+        JuMP.@constraint(pm.model, t[i] - t[j] == td[bp])
 
         relaxation_sin(pm.model, td[bp], si[bp])
         relaxation_cos(pm.model, td[bp], cs[bp])
@@ -433,7 +433,7 @@ function constraint_power_magnitude_sqr(pm::GenericPowerModel{T}, n::Int, c::Int
     q_fr = var(pm, n, c, :q, arc_from)
     cm   = var(pm, n, c, :cm, (f_bus, t_bus))
 
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= w_i/tm^2*cm)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w_i/tm^2*cm)
 end
 
 "`cm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
@@ -448,12 +448,12 @@ function constraint_power_magnitude_link(pm::GenericPowerModel{T}, n::Int, c::In
 
     ym_sh_sqr = g_fr^2 + b_fr^2
 
-    @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - ym_sh_sqr*(w_fr/tm^2) + 2*(g_fr*p_fr - b_fr*q_fr))
+    JuMP.@constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - ym_sh_sqr*(w_fr/tm^2) + 2*(g_fr*p_fr - b_fr*q_fr))
 end
 
 "`t[ref_bus] == 0`"
 function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) where T <: QCWRForm
-    @constraint(pm.model, var(pm, n, c, :va)[i] == 0)
+    JuMP.@constraint(pm.model, var(pm, n, c, :va)[i] == 0)
 end
 
 ""
@@ -462,12 +462,12 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
 
     td = var(pm, n, c, :td, (f_bus, t_bus))
 
-    if getlowerbound(td) < angmin
-        setlowerbound(td, angmin)
+    if JuMP.getlowerbound(td) < angmin
+        JuMP.setlowerbound(td, angmin)
     end
 
-    if getupperbound(td) > angmax
-        setupperbound(td, angmax)
+    if JuMP.getupperbound(td) > angmax
+        JuMP.setupperbound(td, angmax)
     end
 
     w_fr = var(pm, n, c, :w, f_bus)
@@ -475,8 +475,8 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
     wr   = var(pm, n, c, :wr, (f_bus, t_bus))
     wi   = var(pm, n, c, :wi, (f_bus, t_bus))
 
-    @constraint(pm.model, wi <= tan(angmax)*wr)
-    @constraint(pm.model, wi >= tan(angmin)*wr)
+    JuMP.@constraint(pm.model, wi <= tan(angmax)*wr)
+    JuMP.@constraint(pm.model, wi >= tan(angmin)*wr)
 
     cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 end
@@ -511,7 +511,7 @@ end
 
 ""
 function variable_voltage_angle_difference_on_off(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T
-    var(pm, nw, cnd)[:td] = @variable(pm.model,
+    var(pm, nw, cnd)[:td] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_td",
         lowerbound = min(0, ref(pm, nw, :branch, l, "angmin", cnd)),
         upperbound = max(0, ref(pm, nw, :branch, l, "angmax", cnd)),
@@ -527,7 +527,7 @@ function variable_voltage_magnitude_product_on_off(pm::GenericPowerModel{T}; nw:
     vv_min = Dict((l, buses[branch["f_bus"]]["vmin"][cnd]*buses[branch["t_bus"]]["vmin"][cnd]) for (l, branch) in branches)
     vv_max = Dict((l, buses[branch["f_bus"]]["vmax"][cnd]*buses[branch["t_bus"]]["vmax"][cnd]) for (l, branch) in branches)
 
-    var(pm, nw, cnd)[:vv] = @variable(pm.model,
+    var(pm, nw, cnd)[:vv] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_vv",
         lowerbound = min(0, vv_min[l]),
         upperbound = max(0, vv_max[l]),
@@ -558,7 +558,7 @@ function variable_cosine_on_off(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::I
         end
     end
 
-    var(pm, nw, cnd)[:cs] = @variable(pm.model,
+    var(pm, nw, cnd)[:cs] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_cs",
         lowerbound = min(0, cos_min[l]),
         upperbound = max(0, cos_max[l]),
@@ -568,7 +568,7 @@ end
 
 ""
 function variable_sine_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    var(pm, nw, cnd)[:si] = @variable(pm.model,
+    var(pm, nw, cnd)[:si] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_si",
         lowerbound = min(0, sin(ref(pm, nw, :branch, l, "angmin", cnd))),
         upperbound = max(0, sin(ref(pm, nw, :branch, l, "angmax", cnd))),
@@ -588,7 +588,7 @@ function variable_current_magnitude_sqr_on_off(pm::GenericPowerModel{T}; nw::Int
         cm_max[l] = ((branch["rate_a"][cnd]*branch["tap"][cnd])/vm_fr_min)^2
     end
 
-    var(pm, nw, cnd)[:cm] = @variable(pm.model,
+    var(pm, nw, cnd)[:cm] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_cm",
         lowerbound = cm_min[l],
         upperbound = cm_max[l],
@@ -636,8 +636,8 @@ function constraint_voltage_on_off(pm::GenericPowerModel{T}, n::Int, c::Int) whe
         i = branch["f_bus"]
         j = branch["t_bus"]
 
-        @constraint(pm.model, t[i] - t[j] >= td[l] + td_lb*(1-z[l]))
-        @constraint(pm.model, t[i] - t[j] <= td[l] + td_ub*(1-z[l]))
+        JuMP.@constraint(pm.model, t[i] - t[j] >= td[l] + td_lb*(1-z[l]))
+        JuMP.@constraint(pm.model, t[i] - t[j] <= td[l] + td_ub*(1-z[l]))
 
         relaxation_sin_on_off(pm.model, td[l], si[l], z[l], td_max)
         relaxation_cos_on_off(pm.model, td[l], cs[l], z[l], td_max)
@@ -671,13 +671,13 @@ function constraint_power_magnitude_sqr_on_off(pm::GenericPowerModel{T}, n::Int,
     z    = var(pm, n, c, :branch_z, i)
 
     # TODO see if there is a way to leverage relaxation_complex_product_on_off here
-    w_ub = getupperbound(w)
-    cm_ub = getupperbound(cm)
-    z_ub = getupperbound(z)
+    w_ub = JuMP.getupperbound(w)
+    cm_ub = JuMP.getupperbound(cm)
+    z_ub = JuMP.getupperbound(z)
 
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm*z_ub/tm^2)
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= w_ub*cm*z/tm^2)
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm_ub*z/tm^2)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm*z_ub/tm^2)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w_ub*cm*z/tm^2)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm_ub*z/tm^2)
 end
 
 "`cm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
@@ -692,7 +692,7 @@ function constraint_power_magnitude_link_on_off(pm::GenericPowerModel{T}, n::Int
 
     ym_sh_sqr = g_fr^2 + b_fr^2
 
-    @constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - ym_sh_sqr*(w_fr/tm^2) + 2*(g_fr*p_fr - b_fr*q_fr))
+    JuMP.@constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - ym_sh_sqr*(w_fr/tm^2) + 2*(g_fr*p_fr - b_fr*q_fr))
 end
 
 
@@ -705,11 +705,11 @@ end
 
 "creates lambda variables for convex combination model"
 function variable_multipliers(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: QCWRTriForm
-    var(pm, nw, cnd)[:lambda_wr] = @variable(pm.model,
+    var(pm, nw, cnd)[:lambda_wr] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs), i=1:8], basename="$(nw)_$(cnd)_lambda",
         lowerbound = 0, upperbound = 1)
 
-    var(pm, nw, cnd)[:lambda_wi] = @variable(pm.model,
+    var(pm, nw, cnd)[:lambda_wi] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs), i=1:8], basename="$(nw)_$(cnd)_lambda",
         lowerbound = 0, upperbound = 1)
 end
@@ -732,10 +732,10 @@ end
 
 "qc lambda formulation based relaxation tightening"
 function relaxation_tighten_vv(m, x, y, lambda_a, lambda_b)
-    x_ub = getupperbound(x)
-    x_lb = getlowerbound(x)
-    y_ub = getupperbound(y)
-    y_lb = getlowerbound(y)
+    x_ub = JuMP.getupperbound(x)
+    x_lb = JuMP.getlowerbound(x)
+    y_ub = JuMP.getupperbound(y)
+    y_lb = JuMP.getlowerbound(y)
 
     @assert length(lambda_a) == 8
     @assert length(lambda_b) == 8
@@ -749,7 +749,7 @@ function relaxation_tighten_vv(m, x, y, lambda_a, lambda_b)
            x_ub * y_ub
            x_ub * y_ub]
 
-    @constraint(m, sum(lambda_a[i]*val[i] - lambda_b[i]*val[i] for i in 1:8) == 0)
+    JuMP.@constraint(m, sum(lambda_a[i]*val[i] - lambda_b[i]*val[i] for i in 1:8) == 0)
 
 end
 
@@ -774,7 +774,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <:
 
     for bp in ids(pm, n, :buspairs)
         i,j = bp
-        @constraint(pm.model, t[i] - t[j] == td[bp])
+        JuMP.@constraint(pm.model, t[i] - t[j] == td[bp])
 
         relaxation_sin(pm.model, td[bp], si[bp])
         relaxation_cos(pm.model, td[bp], cs[bp])

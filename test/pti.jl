@@ -1,10 +1,10 @@
 # Test cases for PTI RAW file parser
 
-TESTLOG = getlogger(PowerModels)
+TESTLOG = Memento.getlogger(PowerModels)
 
 @testset "test .raw file parser" begin
     @testset "Check PTI exception handling" begin
-        setlevel!(TESTLOG, "warn")
+        Memento.setlevel!(TESTLOG, "warn")
 
         @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
         # @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
@@ -16,7 +16,7 @@ TESTLOG = getlogger(PowerModels)
         @test_warn(TESTLOG, "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))
         @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_j.raw"))
 
-        setlevel!(TESTLOG, "error")
+        Memento.setlevel!(TESTLOG, "error")
     end
 
     @testset "4-bus frankenstein file" begin
