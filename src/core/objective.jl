@@ -17,11 +17,11 @@ function check_cost_models(pm::GenericPowerModel)
                     model = gen["model"]
                 else
                     if gen["model"] != model
-                        error("cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
+                        error(LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
                     end
                 end
             else
-                error("no cost given for generator $(i)")
+                error(LOGGER, "no cost given for generator $(i)")
             end
         end
 
@@ -31,11 +31,11 @@ function check_cost_models(pm::GenericPowerModel)
                     model = dcline["model"]
                 else
                     if dcline["model"] != model
-                        error("cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
+                        error(LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
                     end
                 end
             else
-                error("no cost given for dcline $(i)")
+                error(LOGGER, "no cost given for dcline $(i)")
             end
         end
     end
@@ -54,7 +54,7 @@ function objective_min_fuel_cost(pm::GenericPowerModel)
     elseif model == 2
         return objective_min_polynomial_fuel_cost(pm)
     else
-        error("Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
+        error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
 
 end
@@ -69,7 +69,7 @@ function objective_min_gen_fuel_cost(pm::GenericPowerModel)
     elseif model == 2
         return objective_min_gen_polynomial_fuel_cost(pm)
     else
-        error("Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
+        error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
 
 end
@@ -403,7 +403,7 @@ function get_lines(data)
         lines[i] = line_data
         for i in 2:length(line_data)
             if line_data[i-1]["slope"] > line_data[i]["slope"]
-                error("non-convex pwl function found in points $(comp["cost"])\nlines: $(line_data)")
+                error(LOGGER, "non-convex pwl function found in points $(comp["cost"])\nlines: $(line_data)")
             end
         end
     end

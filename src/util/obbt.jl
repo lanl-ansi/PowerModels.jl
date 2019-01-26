@@ -28,12 +28,12 @@ end
 function constraint_obj_bound(pm::GenericPowerModel, bound)
     model = PowerModels.check_cost_models(pm)
     if model != 2
-        error("Only cost models of type 2 is supported at this time, given cost model type $(model)")
+        error(LOGGER, "Only cost models of type 2 is supported at this time, given cost model type $(model)")
     end
 
     cost_index = PowerModels.calc_max_cost_index(pm.data)
     if cost_index > 3
-        error("Only quadratic generator cost models are supported at this time, given cost model of order $(cost_index-1)")
+        error(LOGGER, "Only quadratic generator cost models are supported at this time, given cost model of order $(cost_index-1)")
     end
 
     PowerModels.standardize_cost_terms(pm.data, order=2)

@@ -275,7 +275,7 @@ function parse_line_element!(data::Dict, elements::Array, section::AbstractStrin
             if isa(message, Meta.ParseError)
                 data[field] = element
             else
-                error("value '$element' for $field in section $section is not of type $dtype.")
+                error(LOGGER, "value '$element' for $field in section $section is not of type $dtype.")
             end
         end
     end
