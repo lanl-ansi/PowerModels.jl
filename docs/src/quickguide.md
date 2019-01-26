@@ -99,7 +99,7 @@ loss_dc =  Dict(name => data["pt"]+data["pf"] for (name, data) in result["soluti
 
 
 ## Inspecting the Formulation
-The following example demonstrates how to break a `run_opf` call into seperate model building and solving steps.  This allows inspection of the JuMP model created by PowerModels for the AC-OPF problem,
+The following example demonstrates how to break a `run_opf` call into separate model building and solving steps.  This allows inspection of the JuMP model created by PowerModels for the AC-OPF problem,
 
 ```julia
 pm = build_generic_model("case3.m", ACPPowerModel, PowerModels.post_opf)
