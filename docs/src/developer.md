@@ -83,7 +83,7 @@ $y = g + j\cdot b$:
 ## DistFlow derivation
 
 ### For an asymmetric pi section
-Following notation of [^1], but recognizing it derives the SOC BFM without shunts. In a pi-section, part of the total current $ I_{lij}$ at the from side flows through the series impedance, $I ^{s}_{lij}$, part of it flows through the from side shunt admittance $ I^{sh}_{lij}$. Vice versa for the to-side. Indicated by superscripts 's' (series) and 'sh' (shunt).
+Following notation of [^1], but recognizing it derives the SOC BFM without shunts. In a pi-section, part of the total current $I_{lij}$ at the from side flows through the series impedance, $I^{s}_{lij}$, part of it flows through the from side shunt admittance $I^{sh}_{lij}$. Vice versa for the to-side. Indicated by superscripts 's' (series) and 'sh' (shunt).
 - Ohm's law: $U^{mag}_{j} \angle \theta_{j} = U^{mag}_{i}\angle \theta_{i}  - z^{s}_{lij} \cdot I^{s}_{lij}$ $\forall lij$
 - KCL at shunts: $ I_{lij} = I^{s}_{lij} + I^{sh}_{lij}$, $ I_{lji} = I^{s}_{lji} + I^{sh}_{lji} $
 - Observing: $I^{s}_{lij} = - I^{s}_{lji}$, $ \vert I^{s}_{lij} \vert = \vert I^{s}_{lji} \vert $
