@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Added all error messages to memento log
+- Fixed minor typos in docs
 
 ### v0.9.3
 - Added support for heterogeneous cost functions
@@ -11,8 +12,8 @@ PowerModels.jl Change Log
 - Updated default cost function to linear when loading PSSE data
 - Cleaned up generator data in Matpower files
 - Cleaned up generator data in PSS(R)E PTI file parse
-- Fix source_id in PSS(R)E PTI parse of buses to be only bus id
-- Fix small PSS(R)E PTI parser errors (unicode handling, reserved characters in comments, error message handling)
+- Fixed source_id in PSS(R)E PTI parse of buses to be only bus id
+- Fixed small PSS(R)E PTI parser errors (unicode handling, reserved characters in comments, error message handling)
 
 ### v0.9.2
 - Added tracking of modifications in check_network_data
