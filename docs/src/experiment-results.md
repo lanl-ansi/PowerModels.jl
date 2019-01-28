@@ -1,9 +1,5 @@
 # PowerModels Experiment Results
-This section presents results of running PowerModel.jl on 
-collections of established power network test cases from 
-[NESTA](https://arxiv.org/abs/1411.0359). This provides validation of the 
-PowerModel.jl as well as a results baseline for these test cases.
-All models were solved using [IPOPT](https://link.springer.com/article/10.1007/s10107-004-0559-y).
+This section presents results of running PowerModel.jl on collections of established power network test cases from [NESTA](https://arxiv.org/abs/1411.0359). This provides validation of the PowerModel.jl as well as a results baseline for these test cases. All models were solved using [IPOPT](https://link.springer.com/article/10.1007/s10107-004-0559-y).
 
 
 ## Experiment Design
@@ -13,19 +9,12 @@ result_ac  = run_opf(case, ACPPowerModel, IpoptSolver(tol=1e-6))
 result_soc = run_opf(case, SOCWRPowerModel, IpoptSolver(tol=1e-6))
 result_qc  = run_opf(case, QCWRPowerModel, IpoptSolver(tol=1e-6))
 ```
-for each case in the NESTA archive.
-If the value of `result["status"]` is `:LocalOptimal` then the
-values of `result["objective"]` and `result["solve_time"]` are reported,
-otherwise an `err.` or `--` is displayed.  A value of `n.d.` indicates that no data was available.
-  The optimality gap is defined as,
+for each `case` in the NESTA archive. If the value of `result["status"]` is `:LocalOptimal` then the values of `result["objective"]` and `result["solve_time"]` are reported, otherwise an `err.` or `--` is displayed. A value of `n.d.` indicates that no data was available. The optimality gap is defined as,
 ```
 soc_gap = 100*(result_ac["objective"] - result_soc["objective"])/result_ac["objective"]
 ```
 
-It is important to note that the `result["solve_time"]`
-value in this experiment does not include Julia's JIT time, about 2-5 seconds.
-The results were computed using the [HSL](http://www.hsl.rl.ac.uk/ipopt/) ma57 solver in IPOPT.
-The default linear solver provided with Ipopt.jl will increase the runtime by 2-6x.
+It is important to note that the `result["solve_time"]` value in this experiment does not include Julia's JIT time, about 2-5 seconds. The results were computed using the [HSL](http://www.hsl.rl.ac.uk/ipopt/) ma57 solver in IPOPT. The default linear solver provided with Ipopt.jl will increase the runtime by 2-6x.
 
 
 ## Software Versions
