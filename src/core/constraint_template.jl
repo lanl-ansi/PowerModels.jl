@@ -247,36 +247,6 @@ function constraint_ohms_y_to(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd
 end
 
 
-### DC LINES ###
-
-""
-function constraint_dcline(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    dcline = ref(pm, nw, :dcline, i)
-    f_bus = dcline["f_bus"]
-    t_bus = dcline["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-    loss0 = dcline["loss0"][cnd]
-    loss1 = dcline["loss1"][cnd]
-
-    constraint_dcline(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
-end
-
-
-function constraint_active_dcline_setpoint(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    dcline = ref(pm, nw, :dcline, i)
-    f_bus = dcline["f_bus"]
-    t_bus = dcline["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-    pf = dcline["pf"][cnd]
-    pt = dcline["pt"][cnd]
-
-    constraint_active_dcline_setpoint(pm, nw, cnd, f_idx, t_idx, pf, pt)
-end
-
-
-
 ### Branch - On/Off Ohm's Law Constraints ###
 
 ""
@@ -696,4 +666,33 @@ function constraint_storage_state(pm::GenericPowerModel, i::Int, nw_1::Int, nw_2
     end
 
     constraint_storage_state(pm, nw_1, nw_2, i, storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
+end
+
+
+### DC LINES ###
+
+""
+function constraint_dcline(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    dcline = ref(pm, nw, :dcline, i)
+    f_bus = dcline["f_bus"]
+    t_bus = dcline["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+    loss0 = dcline["loss0"][cnd]
+    loss1 = dcline["loss1"][cnd]
+
+    constraint_dcline(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
+end
+
+
+function constraint_active_dcline_setpoint(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    dcline = ref(pm, nw, :dcline, i)
+    f_bus = dcline["f_bus"]
+    t_bus = dcline["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+    pf = dcline["pf"][cnd]
+    pt = dcline["pt"][cnd]
+
+    constraint_active_dcline_setpoint(pm, nw, cnd, f_idx, t_idx, pf, pt)
 end
