@@ -5,7 +5,7 @@ In addition to the standard transmission network components (e.g. bus, load, gen
 
 ## Storage Data Model
 
-The data for the generic storage model is as follows,
+The list of columns for the generic storage model can be found at `PowerModels.mp_storage_columns` and is as follows,
 ```json
 {
   "index":<int>,
