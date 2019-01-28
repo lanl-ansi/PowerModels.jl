@@ -18,22 +18,24 @@ variable_dcline_flow(pm)
 
 ### Constraints
 ```julia
-constraint_theta_ref(pm)
 constraint_voltage(pm)
-for (i,bus) in pm.ref[:bus]
-    constraint_kcl_shunt(pm, bus)
+for i in ids(pm, :ref_buses)
+    constraint_theta_ref(pm, i)
 end
-for (i,branch) in pm.ref[:branch]
-    constraint_ohms_yt_from(pm, branch)
-    constraint_ohms_yt_to(pm, branch)
-
-    constraint_voltage_angle_difference(pm, branch)
-
-    constraint_thermal_limit_from(pm, branch)
-    constraint_thermal_limit_to(pm, branch)
+for i in ids(pm, :bus)
+    constraint_kcl_shunt(pm, i)
 end
-for (i,dcline) in pm.ref[:dcline]
-    constraint_dcline(pm, dcline)
+for i in ids(pm, :branch)
+    constraint_ohms_yt_from(pm, i)
+    constraint_ohms_yt_to(pm, i)
+
+    constraint_voltage_angle_difference(pm, i)
+
+    constraint_thermal_limit_from(pm, i)
+    constraint_thermal_limit_to(pm, i)
+end
+for i in ids(pm, :dcline)
+    constraint_dcline(pm, i)
 end
 ```
 
@@ -56,23 +58,25 @@ variable_dcline_flow(pm)
 
 ### Constraints
 ```julia
-constraint_theta_ref(pm)
 constraint_voltage(pm)
-for (i,bus) in pm.ref[:bus]
-    constraint_kcl_shunt(pm, bus)
+for i in ids(pm, :ref_buses)
+    constraint_theta_ref(pm, i)
 end
-for (i,branch) in pm.ref[:branch]
-    constraint_flow_losses(pm, branch)
-    constraint_voltage_magnitude_difference(pm, branch)
-    constraint_branch_current(pm, branch)
-
-    constraint_voltage_angle_difference(pm, branch)
-
-    constraint_thermal_limit_from(pm, branch)
-    constraint_thermal_limit_to(pm, branch)
+for i in ids(pm, :bus)
+    constraint_kcl_shunt(pm, i)
 end
-for (i,dcline) in pm.ref[:dcline]
-    constraint_dcline(pm, dcline)
+for i in ids(pm, :branch)
+    constraint_flow_losses(pm, i)
+    constraint_voltage_magnitude_difference(pm, i)
+    constraint_branch_current(pm, i)
+
+    constraint_voltage_angle_difference(pm, i)
+
+    constraint_thermal_limit_from(pm, i)
+    constraint_thermal_limit_to(pm, i)
+end
+for i in ids(pm, :dcline)
+    constraint_dcline(pm, i)
 end
 ```
 
@@ -103,22 +107,24 @@ objective_min_fuel_cost(pm)
 ### Constraints
 
 ```julia
-constraint_theta_ref(pm)
 constraint_voltage_on_off(pm)
-for (i,bus) in pm.ref[:bus]
-    constraint_kcl_shunt(pm, bus)
+for i in ids(pm, :ref_buses)
+    constraint_theta_ref(pm, i)
 end
-for (i,branch) in pm.ref[:branch]
-    constraint_ohms_yt_from_on_off(pm, branch)
-    constraint_ohms_yt_to_on_off(pm, branch)
-
-    constraint_voltage_angle_difference_on_off(pm, branch)
-
-    constraint_thermal_limit_from_on_off(pm, branch)
-    constraint_thermal_limit_to_on_off(pm, branch)
+for i in ids(pm, :bus)
+    constraint_kcl_shunt(pm, i)
 end
-for (i,dcline) in pm.ref[:dcline]
-    constraint_dcline(pm, dcline)
+for i in ids(pm, :branch)
+    constraint_ohms_yt_from_on_off(pm, i)
+    constraint_ohms_yt_to_on_off(pm, i)
+
+    constraint_voltage_angle_difference_on_off(pm, i)
+
+    constraint_thermal_limit_from_on_off(pm, i)
+    constraint_thermal_limit_to_on_off(pm, i)
+end
+for i in ids(pm, :dcline)
+    constraint_dcline(pm, i)
 end
 ```
 
@@ -137,35 +143,42 @@ variable_dcline_flow(pm, bounded = false)
 
 ### Constraints
 ```julia
-constraint_theta_ref(pm)
-constraint_voltage_magnitude_setpoint(pm, pm.ref[:bus][pm.ref[:ref_bus]])
 constraint_voltage(pm)
-
-
-for (i,bus) in pm.ref[:bus]
-    constraint_kcl_shunt(pm, bus)
-
+for (i,bus) in ref(pm, :ref_buses)
+    @assert bus["bus_type"] == 3
+    constraint_theta_ref(pm, i)
+    constraint_voltage_magnitude_setpoint(pm, i)
+end
+for (i,bus) in ref(pm, :bus)
+    constraint_kcl_shunt(pm, i)
     # PV Bus Constraints
-    if length(pm.ref[:bus_gens][i]) > 0 && i != pm.ref[:ref_bus]
+    if length(ref(pm, :bus_gens, i)) > 0 && !(i in ids(pm,:ref_buses))
         # this assumes inactive generators are filtered out of bus_gens
         @assert bus["bus_type"] == 2
-
-        constraint_voltage_magnitude_setpoint(pm, bus)
-        for j in pm.ref[:bus_gens][i]
-            constraint_active_gen_setpoint(pm, pm.ref[:gen][j])
+        constraint_voltage_magnitude_setpoint(pm, i)
+        for j in ref(pm, :bus_gens, i)
+            constraint_active_gen_setpoint(pm, j)
         end
     end
 end
-
-for (i,branch) in pm.ref[:branch]
-    constraint_ohms_yt_from(pm, branch)
-    constraint_ohms_yt_to(pm, branch)
+for i in ids(pm, :branch)
+    constraint_ohms_yt_from(pm, i)
+    constraint_ohms_yt_to(pm, i)
 end
-for (i,dcline) in pm.ref[:dcline]
-    constraint_active_dcline_setpoint(pm, dcline)
+for (i,dcline) in ref(pm, :dcline)
+    constraint_active_dcline_setpoint(pm, i)
+
+    f_bus = ref(pm, :bus)[dcline["f_bus"]]
+    if f_bus["bus_type"] == 1
+        constraint_voltage_magnitude_setpoint(pm, f_bus["index"])
+    end
+
+    t_bus = ref(pm, :bus)[dcline["t_bus"]]
+    if t_bus["bus_type"] == 1
+        constraint_voltage_magnitude_setpoint(pm, t_bus["index"])
+    end
 end
 ```
-
 
 ## Power Flow (PF) using the Branch Flow Model
 
@@ -177,39 +190,45 @@ variable_voltage(pm, bounded = false)
 variable_active_generation(pm, bounded = false)
 variable_reactive_generation(pm, bounded = false)
 variable_branch_flow(pm, bounded = false)
-constraint_branch_current(pm, bounded = false)
 variable_branch_current(pm, bounded = false)
+variable_dcline_flow(pm, bounded = false)
 ```
 
 ### Constraints
 ```julia
-constraint_theta_ref(pm)
-constraint_voltage_magnitude_setpoint(pm, pm.ref[:bus][pm.ref[:ref_bus]])
-constraint_voltage(pm)
-
-
-for (i,bus) in pm.ref[:bus]
-    constraint_kcl_shunt(pm, bus)
-
-    # PV Bus Constraints
-    if length(pm.ref[:bus_gens][i]) > 0 && i != pm.ref[:ref_bus]
+for (i,bus) in ref(pm, :ref_buses)
+    @assert bus["bus_type"] == 3
+    constraint_theta_ref(pm, i)
+    constraint_voltage_magnitude_setpoint(pm, i)
+end
+for (i,bus) in ref(pm, :bus)
+    constraint_kcl_shunt(pm, i)
+    if length(ref(pm, :bus_gens, i)) > 0 && !(i in ids(pm,:ref_buses))
         # this assumes inactive generators are filtered out of bus_gens
         @assert bus["bus_type"] == 2
-
-        constraint_voltage_magnitude_setpoint(pm, bus)
-        for j in pm.ref[:bus_gens][i]
-            constraint_active_gen_setpoint(pm, pm.ref[:gen][j])
+        constraint_voltage_magnitude_setpoint(pm, i)
+        for j in ref(pm, :bus_gens, i)
+            constraint_active_gen_setpoint(pm, j)
         end
     end
 end
-
-for (i,branch) in pm.ref[:branch]
-    constraint_flow_losses(pm, branch)
-    constraint_voltage_magnitude_difference(pm, branch)
-    constraint_branch_current(pm, branch)
+for i in ids(pm, :branch)
+    constraint_flow_losses(pm, i)
+    constraint_voltage_magnitude_difference(pm, i)
+    constraint_branch_current(pm, i)
 end
-for (i,dcline) in pm.ref[:dcline]
-    constraint_active_dcline_setpoint(pm, dcline)
+for (i,dcline) in ref(pm, :dcline)
+    constraint_active_dcline_setpoint(pm, i)
+
+    f_bus = ref(pm, :bus)[dcline["f_bus"]]
+    if f_bus["bus_type"] == 1
+        constraint_voltage_magnitude_setpoint(pm, f_bus["index"])
+    end
+
+    t_bus = ref(pm, :bus)[dcline["t_bus"]]
+    if t_bus["bus_type"] == 1
+        constraint_voltage_magnitude_setpoint(pm, t_bus["index"])
+    end
 end
 ```
 
@@ -234,34 +253,33 @@ variable_branch_flow_ne(pm)
 
 ### Constraints
 ```julia
-constraint_theta_ref(pm)
 constraint_voltage(pm)
 constraint_voltage_ne(pm)
-
-for (i,bus) in pm.ref[:bus]
-    constraint_kcl_shunt_ne(pm, bus)
+for i in ids(pm, :ref_buses)
+    constraint_theta_ref(pm, i)
 end
-
-for (i,branch) in pm.ref[:branch]
-    constraint_ohms_yt_from(pm, branch)
-    constraint_ohms_yt_to(pm, branch)
-
-    constraint_voltage_angle_difference(pm, branch)
-
-    constraint_thermal_limit_from(pm, branch)
-    constraint_thermal_limit_to(pm, branch)
+for i in ids(pm, :bus)
+    constraint_kcl_shunt_ne(pm, i)
 end
+for i in ids(pm, :branch)
+    constraint_ohms_yt_from(pm, i)
+    constraint_ohms_yt_to(pm, i)
 
-for (i,branch) in pm.ref[:ne_branch]
-    constraint_ohms_yt_from_ne(pm, branch)
-    constraint_ohms_yt_to_ne(pm, branch)
+    constraint_voltage_angle_difference(pm, i)
 
-    constraint_voltage_angle_difference_ne(pm, branch)
-
-    constraint_thermal_limit_from_ne(pm, branch)
-    constraint_thermal_limit_to_ne(pm, branch)
+    constraint_thermal_limit_from(pm, i)
+    constraint_thermal_limit_to(pm, i)
 end
-for (i,dcline) in pm.ref[:dcline]
-    constraint_dcline(pm, dcline)
+for i in ids(pm, :ne_branch)
+    constraint_ohms_yt_from_ne(pm, i)
+    constraint_ohms_yt_to_ne(pm, i)
+
+    constraint_voltage_angle_difference_ne(pm, i)
+
+    constraint_thermal_limit_from_ne(pm, i)
+    constraint_thermal_limit_to_ne(pm, i)
+end
+for i in ids(pm, :dcline)
+    constraint_dcline(pm, i)
 end
 ```
