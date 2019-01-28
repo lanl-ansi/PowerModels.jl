@@ -117,6 +117,7 @@ constraint_storage_thermal_limit
 constraint_storage_current_limit
 constraint_storage_complementarity
 constraint_storage_loss
+constraint_storage_state_initial
 constraint_storage_state
 ```
 
