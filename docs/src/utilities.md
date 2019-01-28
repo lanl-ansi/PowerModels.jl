@@ -7,9 +7,12 @@ This section provides an overview of the some of the utility functions that are 
 To improve the quality of the convex relaxations available in PowerModels and also to obtain tightened bounds on the voltage-magnitude and phase-angle difference variables, an optimization-based bound-tightening algorithm is made available as a function in PowerModels. The implementation of this function can be found in `src/util/obbt.jl`. The algorithm iteratively tightens the bounds on the voltage magnitude and phase-angle difference variables. The function can be invoked on any convex relaxation which explicitly has these variables. By default, the function uses the QC relaxation for performing bound-tightening. Interested readers are refered to the paper "Strengthening Convex Relaxations with Bound Tightening for Power Network Optimization" for an overview of the algorithm. The function can be invoked as follows:
 
 ```julia
-data, stats = run_obbt_opf("case3.m", IpoptSolver());
-# data is a dictionary that contains the parsed network data with tightened bounds
-# stats is a dictionary that contains some useful information output by algorithm
+data, stats = run_obbt_opf("matpower/case3.m", IpoptSolver())
+```
+`data` is a dictionary that contains the parsed network data with tightened bounds. See [The Network Data Dictionary](@ref) for details. 
+`stats` is a dictionary that contains some useful information output by algorithm. It looks roughly like
+
+```
 Dict{String,Any} with 19 entries:
   "initial_relaxation_objective" => 5817.91
   "vm_range_init"                => 0.6
@@ -31,7 +34,7 @@ Dict{String,Any} with 19 entries:
   "td_range_final"               => 1.3085
 ```
 
-The optional keyword arguments are self-explantory and can also be found in the function's implementation. The keyword arguments with their defaults are as follows:
+The keyword arguments with their defaults are as follows:
 
 ```
 model_constructor = QCWRTriPowerModel,
@@ -53,5 +56,5 @@ termination = :avg,
 5. `upper_bound_constraint` is a boolean option that can be used to add an additional constraint to reduce the search space of each of the bound-tightening solves. This option cannot be set to true without specifying an upper bound. 
 6. `rel_gap_tol` is a tolerance that is used to terminate the algorithm when the objective value of the relaxation is close to the upper bound specified using the `upper_bound` keyword. 
 7. `min_bound_width`, as the name suggests is the variable domain, beyond which point, bound-tightening is not performed for that variable.
-8. The bound-tightening algorithm terminates if the improvement in the average or maximum bound improvement, specified using either the `termination = :avg` or the `termination =:max` option, is less than `improvement_tol`. 
-9. Finally, `precision` is used to round the tightened bounds to that many decimal digits. 
+8. The bound-tightening algorithm terminates if the improvement in the average or maximum bound improvement, specified using either the `termination = :avg` or the `termination = :max` option, is less than `improvement_tol`.
+9. Finally, `precision` is used to round the tightened bounds to that many decimal digits.
