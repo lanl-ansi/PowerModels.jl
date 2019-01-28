@@ -90,24 +90,3 @@ constraint_loss_lb
 ```@docs
 constraint_dcline
 ```
-
-## Commonly Used Constraints
-The following methods generally assume that the model contains `p` and `q` values for branches line flows and bus flow conservation.
-
-### Generic thermal limit constraint
-
-```julia
-constraint_thermal_limit_from(pm::GenericPowerModel, f_idx, rate_a)
-constraint_thermal_limit_to(pm::GenericPowerModel, t_idx, rate_a)
-```
-
-### Generic on/off thermal limit constraint
-
-```julia
-constraint_thermal_limit_from_on_off(pm::GenericPowerModel, i, f_idx, rate_a)
-constraint_thermal_limit_to_on_off(pm::GenericPowerModel, i, t_idx, rate_a)
-constraint_thermal_limit_from_ne(pm::GenericPowerModel, i, f_idx, rate_a)
-constraint_thermal_limit_to_ne(pm::GenericPowerModel, i, t_idx, rate_a)
-constraint_active_gen_setpoint(pm::GenericPowerModel, i, pg)
-constraint_reactive_gen_setpoint(pm::GenericPowerModel, i, qg)
-```
