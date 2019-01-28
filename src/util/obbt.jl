@@ -97,6 +97,31 @@ The function can be invoked as follows:
 data, stats = run_obbt_opf("matpower/case3.m", IpoptSolver(), kwargs...)
 ```
 
+`data` contains the parsed network data with tightened bounds. `stats` contains
+information output from the bounds-tightening algorithm. It looks roughly like
+
+```
+Dict{String,Any} with 19 entries:
+  "initial_relaxation_objective" => 5817.91
+  "vm_range_init"                => 0.6
+  "final_relaxation_objective"   => 5901.96
+  "avg_vm_range_init"            => 0.2
+  "final_rel_gap_from_ub"        => NaN
+  "run_time"                     => 0.832232
+  "model_constructor"            => PowerModels.GenericPowerModel{...}
+  "avg_td_range_final"           => 0.436166
+  "initial_rel_gap_from_ub"      => Inf
+  "sim_parallel_run_time"        => 1.13342
+  "upper_bound"                  => Inf
+  "vm_range_final"               => 0.6
+  "vad_sign_determined"          => 2
+  "avg_td_range_init"            => 1.0472
+  "avg_vm_range_final"           => 0.2
+  "iteration_count"              => 5
+  "td_range_init"                => 3.14159
+  "td_range_final"               => 1.3085
+```
+
 # Keyword Arguments
 * `model_constructor`: relaxation to use for performing bound-tightening.
     Currently, it supports any relaxation that has explicit voltage magnitude
