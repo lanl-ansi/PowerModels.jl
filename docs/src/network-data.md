@@ -11,10 +11,14 @@ The network data dictionary structure is roughly as follows:
 ```json
 {
 "name":<string>,
-"version":"2",
 "baseMVA":<float>,
 "source_type":<string>,
-"source_version":<string>,
+"source_version":{
+    "major":<int>,
+    "minor":<int>,
+    "patch":<int>,
+    ...
+},
 "bus":{
     "1":{
         "index":<int>,
