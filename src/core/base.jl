@@ -19,8 +19,11 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
     data::Dict{String,Any}
     setting::Dict{String,Any}
     solution::Dict{String,Any}
-    var::Dict{Symbol,Any} # model variable lookup
     ref::Dict{Symbol,Any} # reference data
+    var::Dict{Symbol,Any} # JuMP variables
+    con::Dict{Symbol,Any} # JuMP constraint references
+    cnw::Int              # current network index value
+    ccnd::Int             # current conductor index value
     ext::Dict{Symbol,Any} # user extentions
 end
 ```
@@ -45,11 +48,11 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     setting::Dict{String,Any}
     solution::Dict{String,Any}
 
-    ref::Dict{Symbol,Any} # data reference data
-    var::Dict{Symbol,Any} # JuMP variables
-    con::Dict{Symbol,Any} # JuMP constraint references
-    cnw::Int # current network index value
-    ccnd::Int # current conductor index value
+    ref::Dict{Symbol,Any}
+    var::Dict{Symbol,Any}
+    con::Dict{Symbol,Any}
+    cnw::Int
+    ccnd::Int
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
