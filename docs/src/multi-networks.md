@@ -32,9 +32,7 @@ Observe that the structure of `network_data3` is different from that of `network
 To build a PowerModel from a multinetwork data dictionary (see [Building PowerModels from Network Data Dictionaries](@ref)), we supply `multinetwork=true` during the call to `build_generic_model` and replace `post_opf` with `post_mn_opf`,
 ```@example powermodels
 pm3 = PowerModels.build_generic_model(network_data3, ACPPowerModel, PowerModels.post_mn_opf, multinetwork=true)
-```
-We can verify that it corresponds to a multinetwork:
-```@example powermodels
+
 PowerModels.ismultinetwork(pm3)
 ```
 
