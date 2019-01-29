@@ -98,7 +98,7 @@ loss_dc =  Dict(name => data["pt"]+data["pf"] for (name, data) in result["soluti
 ```
 
 
-## Inspecting the Formulation
+## Building PowerModels from Network Data Dictionaries
 The following example demonstrates how to break a `run_opf` call into separate model building and solving steps.  This allows inspection of the JuMP model created by PowerModels for the AC-OPF problem,
 
 ```julia
