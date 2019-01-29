@@ -5,7 +5,13 @@ In addition to the standard transmission network components (e.g. bus, load, gen
 
 ## Storage Data Model
 
-The data for the generic storage model is as follows,
+When parsing a matpower file with storage information, 
+```julia
+data = PowerModels.parse_file("matpower/case5_strg.m")
+```
+the storage information can be retrieved via the `"storage"` keyword in the `data` dictionary. They will be correspondingly rendered when `PowerModels.print_summary(data)` or `PowerModels.component_table(data, "storage", <columns>)` is called.
+
+The list of columns for the generic storage model can be found at `PowerModels.mp_storage_columns` and is roughly as follows,
 ```json
 {
   "index":<int>,

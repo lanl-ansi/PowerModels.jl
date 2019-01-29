@@ -7,7 +7,15 @@ CurrentModule = PowerModels
 ## Constraint Templates
 Constraint templates help simplify data wrangling across multiple Power Flow formulations by providing an abstraction layer between the network data and network constraint definitions. The constraint template's job is to extract the required parameters from a given network data structure and pass the data as named arguments to the Power Flow formulations.
 
-These templates should be defined over `GenericPowerModel` and should not refer to model variables. For more details, see the files: `core/constraint_template.jl` and `core/constraint.jl`.
+These templates should be defined over `GenericPowerModel` and should not refer to model variables. For more details, see the files: `core/constraint_template.jl` and `core/constraint.jl` (`core/constraint_template.jl` provides higher level APIs, and pulls out index information from the data dictionaries, before calling out to methods defined in `core/constraint.jl`).
+
+## Voltage Constraints
+
+```@docs
+constraint_voltage
+constraint_voltage_on_off
+constraint_voltage_ne
+```
 
 ## Generator Constraints
 
@@ -25,10 +33,17 @@ constraint_theta_ref
 constraint_voltage_magnitude_setpoint
 ```
 
+### Power Balance Constraints
+
+```@docs
+constraint_power_balance
+```
+
 ### KCL Constraints
 
 ```@docs
 constraint_kcl_shunt
+constraint_kcl_shunt_storage
 constraint_kcl_shunt_ne
 ```
 
@@ -56,7 +71,9 @@ constraint_ohms_yt_to_ne
 
 ```@docs
 constraint_power_magnitude_sqr
+constraint_power_magnitude_sqr_on_off
 constraint_power_magnitude_link
+constraint_power_magnitude_link_on_off
 ```
 
 ### Thermal Limit Constraints
@@ -68,6 +85,12 @@ constraint_thermal_limit_from_on_off
 constraint_thermal_limit_to_on_off
 constraint_thermal_limit_from_ne
 constraint_thermal_limit_to_ne
+```
+
+### Current Limit Constraints
+
+```@docs
+constraint_current_limit
 ```
 
 ### Phase Angle Difference Constraints
@@ -82,32 +105,25 @@ constraint_voltage_angle_difference_ne
 
 ```@docs
 constraint_loss_lb
+constraint_flow_losses
+constraint_voltage_magnitude_difference
+constraint_branch_current
+```
+
+### Storage Constraints
+
+```@docs
+constraint_storage_thermal_limit
+constraint_storage_current_limit
+constraint_storage_complementarity
+constraint_storage_loss
+constraint_storage_state_initial
+constraint_storage_state
 ```
 
 ## DC Line Constraints
-### Network Flow Constraints
 
 ```@docs
 constraint_dcline
-```
-
-## Commonly Used Constraints
-The following methods generally assume that the model contains `p` and `q` values for branches line flows and bus flow conservation.
-
-### Generic thermal limit constraint
-
-```julia
-constraint_thermal_limit_from(pm::GenericPowerModel, f_idx, rate_a)
-constraint_thermal_limit_to(pm::GenericPowerModel, t_idx, rate_a)
-```
-
-### Generic on/off thermal limit constraint
-
-```julia
-constraint_thermal_limit_from_on_off(pm::GenericPowerModel, i, f_idx, rate_a)
-constraint_thermal_limit_to_on_off(pm::GenericPowerModel, i, t_idx, rate_a)
-constraint_thermal_limit_from_ne(pm::GenericPowerModel, i, f_idx, rate_a)
-constraint_thermal_limit_to_ne(pm::GenericPowerModel, i, t_idx, rate_a)
-constraint_active_gen_setpoint(pm::GenericPowerModel, i, pg)
-constraint_reactive_gen_setpoint(pm::GenericPowerModel, i, qg)
+constraint_active_dcline_setpoint
 ```

@@ -110,6 +110,7 @@ function run_mn_pf(file, model_constructor, solver; kwargs...)
     return run_generic_model(file, model_constructor, solver, post_mn_pf; multinetwork=true, kwargs...)
 end
 
+""
 function post_mn_pf(pm::GenericPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n, bounded = false)

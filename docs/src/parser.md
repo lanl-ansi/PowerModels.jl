@@ -21,19 +21,11 @@ parse_matpower
 
 We also provide the following (internal) helper methods:
 
-```@docs
-parse_matpower_file
-parse_matpower_string
-matpower_to_powermodels
-mp_cost_data
-split_loads_shunts
-standardize_cost_terms
-merge_generator_cost_data
-merge_bus_name_data
-merge_generic_data
-mp2pm_branch
-mp2pm_dcline
-add_dcline_costs
+```@autodocs
+Modules = [PowerModels]
+Pages   = ["io/matpower.jl"]
+Order   = [:function]
+Private  = true
 ```
 
 ## PTI Data Files (PSS/E)
@@ -48,28 +40,22 @@ The following method is the main exported method for parsing PSS(R)E v33
 specified PTI data files:
 
 ```@docs
+parse_pti
 parse_psse
 ```
 
 The following internal helper methods are also provided:
 
-```@docs
-parse_pti
-parse_pti_data
-get_line_elements
-add_section_data!
-parse_line_element!
-get_pti_dtypes
-get_pti_sections
-psse2pm_dcline!
-psse2pm_transformer!
-psse2pm_shunt!
-psse2pm_load!
-psse2pm_bus!
-psse2pm_generator!
-psse2pm_branch!
-import_remaining!
-create_starbus_from_transformer
-find_max_bus_id
-init_bus!
+```@autodocs
+Modules = [PowerModels]
+Pages   = ["io/psse.jl"]
+Order   = [:function]
+Private  = true
+```
+
+```@autodocs
+Modules = [PowerModels]
+Pages   = ["io/pti.jl"]
+Order   = [:function]
+Private  = true
 ```

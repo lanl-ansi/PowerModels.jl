@@ -42,63 +42,42 @@ Nevertheless, in the literature, a simplified bus model is often used:
 - Only a single (aggregated) bus shunt per bus is supported
 
 
+## Exact Non-Convex Models
 
-
-## `ACPPowerModel`
 ```@docs
 ACPPowerModel
-```
-
-## `ACRPowerModel`
-```@docs
 ACRPowerModel
-```
-
-## `ACTPowerModel`
-```@docs
 ACTPowerModel
 ```
 
+## Linear Approximations
 
-## `DCPPowerModel`
 ```@docs
 DCPPowerModel
+NFAPowerModel
 ```
 
-## `LPACCPowerModel`
+## Quadratic Approximation
+
 ```@docs
+DCPLLPowerModel
 LPACCPowerModel
 ```
 
+## Quadratic Relaxations
 
-## `SDPWRMPowerModel`
-```@docs
-SDPWRMPowerModel
-```
-
-## `SparseSDPWRMPowerModel`
-```@docs
-SparseSDPWRMPowerModel
-```
-
-
-## `SOCWRPowerModel`
 ```@docs
 SOCWRPowerModel
-```
-
-
-## `QCWRPowerModel`
-```@docs
+SOCWRConicPowerModel
 QCWRPowerModel
-```
-## `QCWRTriPowerModel`
-```@docs
 QCWRTriPowerModel
+SOCBFPowerModel
+SOCBFConicPowerModel
 ```
 
+## SDP Relaxation
 
-## `SOCBFPowerModel`
 ```@docs
-SOCBFPowerModel
+SDPWRMPowerModel
+SparseSDPWRMPowerModel
 ```

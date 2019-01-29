@@ -247,36 +247,6 @@ function constraint_ohms_y_to(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd
 end
 
 
-### DC LINES ###
-
-""
-function constraint_dcline(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    dcline = ref(pm, nw, :dcline, i)
-    f_bus = dcline["f_bus"]
-    t_bus = dcline["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-    loss0 = dcline["loss0"][cnd]
-    loss1 = dcline["loss1"][cnd]
-
-    constraint_dcline(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
-end
-
-
-function constraint_active_dcline_setpoint(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    dcline = ref(pm, nw, :dcline, i)
-    f_bus = dcline["f_bus"]
-    t_bus = dcline["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-    pf = dcline["pf"][cnd]
-    pt = dcline["pt"][cnd]
-
-    constraint_active_dcline_setpoint(pm, nw, cnd, f_idx, t_idx, pf, pt)
-end
-
-
-
 ### Branch - On/Off Ohm's Law Constraints ###
 
 ""
@@ -591,7 +561,7 @@ function constraint_loss_lb(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::
     constraint_loss_lb(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, g_fr, b_fr, g_to, b_to, tr)
 end
 
-
+""
 function constraint_flow_losses(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
@@ -610,7 +580,7 @@ function constraint_flow_losses(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, c
     constraint_flow_losses(pm::GenericPowerModel, nw, cnd, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
 end
 
-
+""
 function constraint_voltage_magnitude_difference(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
@@ -627,7 +597,7 @@ function constraint_voltage_magnitude_difference(pm::GenericPowerModel, i::Int; 
     constraint_voltage_magnitude_difference(pm, nw, cnd, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm)
 end
 
-
+""
 function constraint_branch_current(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
@@ -696,4 +666,33 @@ function constraint_storage_state(pm::GenericPowerModel, i::Int, nw_1::Int, nw_2
     end
 
     constraint_storage_state(pm, nw_1, nw_2, i, storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
+end
+
+
+### DC LINES ###
+
+""
+function constraint_dcline(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    dcline = ref(pm, nw, :dcline, i)
+    f_bus = dcline["f_bus"]
+    t_bus = dcline["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+    loss0 = dcline["loss0"][cnd]
+    loss1 = dcline["loss1"][cnd]
+
+    constraint_dcline(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
+end
+
+""
+function constraint_active_dcline_setpoint(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    dcline = ref(pm, nw, :dcline, i)
+    f_bus = dcline["f_bus"]
+    t_bus = dcline["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+    pf = dcline["pf"][cnd]
+    pt = dcline["pt"][cnd]
+
+    constraint_active_dcline_setpoint(pm, nw, cnd, f_idx, t_idx, pf, pt)
 end

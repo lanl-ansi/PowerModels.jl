@@ -19,8 +19,11 @@ type GenericPowerModel{T<:AbstractPowerFormulation}
     data::Dict{String,Any}
     setting::Dict{String,Any}
     solution::Dict{String,Any}
-    var::Dict{Symbol,Any} # model variable lookup
     ref::Dict{Symbol,Any} # reference data
+    var::Dict{Symbol,Any} # JuMP variables
+    con::Dict{Symbol,Any} # JuMP constraint references
+    cnw::Int              # current network index value
+    ccnd::Int             # current conductor index value
     ext::Dict{Symbol,Any} # user extentions
 end
 ```
@@ -45,11 +48,11 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     setting::Dict{String,Any}
     solution::Dict{String,Any}
 
-    ref::Dict{Symbol,Any} # data reference data
-    var::Dict{Symbol,Any} # JuMP variables
-    con::Dict{Symbol,Any} # JuMP constraint references
-    cnw::Int # current network index value
-    ccnd::Int # current conductor index value
+    ref::Dict{Symbol,Any}
+    var::Dict{Symbol,Any}
+    con::Dict{Symbol,Any}
+    cnw::Int
+    ccnd::Int
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -58,7 +61,7 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     ext::Dict{Symbol,Any}
 end
 
-# default generic constructor
+"Default generic constructor."
 function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver(), jump_model::Model = Model(solver = solver))
 
     # TODO is may be a good place to check component connectivity validity
@@ -101,20 +104,28 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Symbo
 end
 
 ### Helper functions for working with multinetworks and multiconductors
+""
 ismultinetwork(pm::GenericPowerModel) = (length(pm.ref[:nw]) > 1)
+
+""
 nw_ids(pm::GenericPowerModel) = keys(pm.ref[:nw])
+
+""
 nws(pm::GenericPowerModel) = pm.ref[:nw]
 
+""
 ismulticonductor(pm::GenericPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :conductors)
 ismulticonductor(pm::GenericPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :conductors)
+
+""
 conductor_ids(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw][:conductor_ids]
 conductor_ids(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:conductor_ids]
 
-
+""
 ids(pm::GenericPowerModel, nw::Int, key::Symbol) = keys(pm.ref[:nw][nw][key])
 ids(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = keys(pm.ref[:nw][nw][key])
 
-
+""
 ref(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
 ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
@@ -153,7 +164,7 @@ if VERSION > v"0.7.0-"
     var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 end
 
-
+""
 con(pm::GenericPowerModel, nw::Int) = pm.con[:nw][nw]
 con(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.con[:nw][nw][key]
 con(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.con[:nw][nw][key][idx]
