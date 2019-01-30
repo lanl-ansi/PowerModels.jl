@@ -2,8 +2,6 @@ using PowerModels
 import InfrastructureModels
 import Memento
 
-import MathProgBase
-
 # Suppress warnings during testing.
 Memento.setlevel!(Memento.getlogger(InfrastructureModels), "error")
 Memento.setlevel!(Memento.getlogger(PowerModels), "error")

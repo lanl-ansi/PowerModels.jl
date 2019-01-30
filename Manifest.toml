@@ -29,9 +29,15 @@ version = "0.2.0"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
+<<<<<<< HEAD
 git-tree-sha1 = "84aa74986c5b9b898b0d1acaf3258741ee64754f"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
 version = "2.1.0"
+=======
+git-tree-sha1 = "f7712cd25c80a86d617c1abd23454714d4a546cc"
+uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
+version = "1.5.0"
+>>>>>>> FIX: remove `using MathProgBase` from tests
 
 [[DataStructures]]
 deps = ["InteractiveUtils", "OrderedCollections", "Random", "Serialization", "Test"]
@@ -55,9 +61,15 @@ version = "0.0.4"
 
 [[DiffRules]]
 deps = ["Random", "Test"]
+<<<<<<< HEAD
 git-tree-sha1 = "dc0869fb2f5b23466b32ea799bd82c76480167f7"
 uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
 version = "0.0.10"
+=======
+git-tree-sha1 = "09d69da75967ec48a8b1ad0897ec9144ee052bf9"
+uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
+version = "0.0.8"
+>>>>>>> FIX: remove `using MathProgBase` from tests
 
 [[Distributed]]
 deps = ["Random", "Serialization", "Sockets"]
@@ -71,6 +83,7 @@ version = "0.9.1"
 
 [[ForwardDiff]]
 deps = ["CommonSubexpressions", "DiffResults", "DiffRules", "InteractiveUtils", "LinearAlgebra", "NaNMath", "Random", "SparseArrays", "SpecialFunctions", "StaticArrays", "Test"]
+<<<<<<< HEAD
 git-tree-sha1 = "4c4d727f1b7e0092134fabfab6396b8945c1ea5b"
 uuid = "f6369f11-7733-5829-9624-2563aa707210"
 version = "0.10.3"
@@ -78,6 +91,17 @@ version = "0.10.3"
 [[InfrastructureModels]]
 deps = ["JuMP", "Memento"]
 git-tree-sha1 = "c3dcbfd5a20ea423f8db1a800f17392b3dd1877d"
+=======
+git-tree-sha1 = "e393bd3b9102659fb24fe88caedec41f2bc2e7de"
+uuid = "f6369f11-7733-5829-9624-2563aa707210"
+version = "0.10.2"
+
+[[InfrastructureModels]]
+deps = ["Compat", "JuMP", "LinearAlgebra", "MathOptInterface", "Memento"]
+git-tree-sha1 = "59af02491dd377300a45a1e5591220ccc7e7c2f2"
+repo-rev = "moi-2"
+repo-url = "https://github.com/lanl-ansi/InfrastructureModels.jl.git"
+>>>>>>> FIX: remove `using MathProgBase` from tests
 uuid = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
 version = "0.0.15"
 
@@ -92,8 +116,15 @@ uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.20.0"
 
 [[JuMP]]
+<<<<<<< HEAD
 deps = ["Calculus", "Compat", "ForwardDiff", "Libdl", "MathProgBase", "Pkg", "ReverseDiffSparse", "Serialization"]
 git-tree-sha1 = "3bd8e52f7aeb2736a8e1b0d8ae8d01c2c85fea24"
+=======
+deps = ["Calculus", "DataStructures", "ForwardDiff", "LinearAlgebra", "MathOptInterface", "NaNMath", "Random", "SparseArrays", "Statistics", "Test"]
+git-tree-sha1 = "67a054b8aa451198dcaeff279614125833d4a3e4"
+repo-rev = "7c115a2dcc8d92bdb6422dc4ed0919b7842e30fb"
+repo-url = "https://github.com/JuliaOpt/JuMP.jl.git"
+>>>>>>> FIX: remove `using MathProgBase` from tests
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
 version = "0.18.5"
 
@@ -114,11 +145,19 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
+<<<<<<< HEAD
 [[MathProgBase]]
 deps = ["Compat"]
 git-tree-sha1 = "3bf2e534e635df810e5f4b4f1a8b6de9004a0d53"
 uuid = "fdba3010-5040-5b88-9595-932c9decdf73"
 version = "0.7.7"
+=======
+[[MathOptInterface]]
+deps = ["Compat", "Unicode"]
+git-tree-sha1 = "6f3df4b5346485b299ae5d2b313ecb428bb46bb9"
+uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+version = "0.8.1"
+>>>>>>> FIX: remove `using MathProgBase` from tests
 
 [[Memento]]
 deps = ["Compat", "JSON", "Nullables", "Syslogs", "TimeZones"]
