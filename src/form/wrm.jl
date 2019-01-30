@@ -38,8 +38,10 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
     w_index = 1:length(bus_ids)
     lookup_w_index = Dict((bi,i) for (i,bi) in enumerate(bus_ids))
 
+    WR_start = zeros(length(bus_ids), length(bus_ids)) + I
+
     WR = var(pm, nw, cnd)[:WR] = JuMP.@variable(pm.model,
-        [1:length(bus_ids), 1:length(bus_ids)], Symmetric, base_name="$(nw)_$(cnd)_WR", start=1.0
+        [i=1:length(bus_ids), j=1:length(bus_ids)], Symmetric, base_name="$(nw)_$(cnd)_WR", start=WR_start[i,j]
     )
     WI = var(pm, nw, cnd)[:WI] = JuMP.@variable(pm.model,
         [1:length(bus_ids), 1:length(bus_ids)], base_name="$(nw)_$(cnd)_WI", start=0.0
@@ -138,11 +140,12 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
 
     for (gidx, group) in enumerate(groups)
         n = length(group)
+        wr_start = zeros(n, n) + I
         voltage_product_groups[gidx] = Dict()
         voltage_product_groups[gidx][:WR] =
             var(pm, nw, cnd)[:voltage_product_groups][gidx][:WR] =
-            JuMP.@variable(pm.model, [1:n, 1:n], Symmetric,
-                base_name="$(nw)_$(cnd)_$(gidx)_WR", start=1.0)
+            JuMP.@variable(pm.model, [i=1:n, j=1:n], Symmetric,
+                base_name="$(nw)_$(cnd)_$(gidx)_WR", start=wr_start[i,j])
 
         voltage_product_groups[gidx][:WI] =
             var(pm, nw, cnd)[:voltage_product_groups][gidx][:WI] =
