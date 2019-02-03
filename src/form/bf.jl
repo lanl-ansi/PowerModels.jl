@@ -93,7 +93,7 @@ function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, 
     cm = var(pm, n, c, :cm, i)
 
     # convex constraint linking p, q, w and ccm
-    JuMP.@constraint(pm.model, [w_fr/tm^2 + cm, 2*p_fr, 2*q_fr, w_fr/tm^2 - cm] in JuMP.SecondOrderCone())
+    JuMP.@constraint(pm.model, [w_fr/tm^2, cm/2, p_fr, q_fr] in JuMP.RotatedSecondOrderCone())
 end
 
 
