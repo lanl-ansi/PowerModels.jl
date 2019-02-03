@@ -176,7 +176,7 @@ function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel{T}) w
                     upper_bound = pg_sqr_ub,
                     start = 0.0
                 )
-                JuMP.@constraint(pm.model, [pg_sqr+1, 2*pg, pg_sqr-1] in JuMP.SecondOrderCone())
+                JuMP.@constraint(pm.model, [0.5, pg_sqr, pg] in JuMP.RotatedSecondOrderCone())
 
                 gen_cost[(n,i)] = gen["cost"][1]*pg_sqr + gen["cost"][2]*pg + gen["cost"][3]
             else
@@ -213,7 +213,7 @@ function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel{T}) w
                     upper_bound = p_dc_sqr_ub,
                     start = 0.0
                 )
-                JuMP.@constraint(pm.model, [p_dc_sqr+1, 2*p_dc, p_dc_sqr-1] in JuMP.SecondOrderCone())
+                JuMP.@constraint(pm.model, [0.5, p_dc_sqr, p_dc] in JuMP.RotatedSecondOrderCone())
 
                 dcline_cost[(n,i)] = dcline["cost"][1]*p_dc_sqr + dcline["cost"][2]*p_dc + dcline["cost"][3]
             else
