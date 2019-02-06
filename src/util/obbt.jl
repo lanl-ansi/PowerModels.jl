@@ -304,8 +304,16 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
                 vm_ub[bus] = ub
             else
                 mean = (ub + lb)/2.0
-                lb = mean - (min_bound_width/2.0)
-                ub = mean + (min_bound_width/2.0)
+                if (mean - min_bound_width/2.0 < vm_lb[bus])
+                    lb = vm_lb[bus]
+                    ub = vm_lb[bus] + min_bound_width
+                elseif (mean + min_bound_width/2.0 > vm_ub[bus])
+                    ub = vm_ub[bus]
+                    lb = vm_ub[bus] - min_bound_width 
+                else 
+                    lb = mean - (min_bound_width/2.0)
+                    ub = mean + (min_bound_width/2.0)
+                end 
                 vm_reduction = (vm_ub[bus] - vm_lb[bus]) - (ub - lb)
                 vm_lb[bus] = lb
                 vm_ub[bus] = ub
@@ -364,8 +372,16 @@ function run_obbt_opf(data::Dict{String,Any}, solver;
                 td_ub[bp] = ub
             else
                 mean = (lb + ub)/2.0
-                lb = mean - (min_bound_width/2.0)
-                ub = mean + (min_bound_width/2.0)
+                if (mean - min_bound_width/2.0 < td_lb[bp])
+                    lb = td_lb[bp]
+                    ub = td_lb[bp] + min_bound_width
+                elseif (mean + min_bound_width/2.0 > td_ub[bp])
+                    ub = td_ub[bp]
+                    lb = td_ub[bp] - min_bound_width 
+                else 
+                    lb = mean - (min_bound_width/2.0)
+                    ub = mean + (min_bound_width/2.0)
+                end 
                 td_reduction = (td_ub[bp] - td_lb[bp]) - (ub - lb)
                 td_lb[bp] = lb
                 td_ub[bp] = ub

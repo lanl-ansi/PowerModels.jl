@@ -4,6 +4,7 @@ PowerModels.jl Change Log
 ### Staged
 - Added all error messages to memento log
 - Fixed minor typos in docs
+- Added a corner tolerance fix for OBBT 
 
 ### v0.9.3
 - Added support for heterogeneous cost functions
