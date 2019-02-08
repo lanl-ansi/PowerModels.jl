@@ -54,7 +54,7 @@ end
             model_constructor=QCWRPowerModel,
             upper_bound = upper_bound,
             upper_bound_constraint = true);
-        @test isapprox(stats["final_relaxation_objective"], 978.74; atol=1e0)
+        @test isapprox(stats["final_relaxation_objective"], 982.216; atol=1e0)
         @test isapprox(stats["final_rel_gap_from_ub"], 0.0; atol=1e-2)
         @test stats["iteration_count"] == 4
     end
