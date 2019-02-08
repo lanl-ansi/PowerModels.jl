@@ -234,15 +234,8 @@ function psse2pm_bus!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["base_kv"] = pop!(bus, "BASKV")
             sub_data["zone"] = pop!(bus, "ZONE")
             sub_data["name"] = pop!(bus, "NAME")
-
-            if haskey(bus, "NVHI") && haskey(bus, "NVLO")
-                sub_data["vmax"] = pop!(bus, "NVHI")
-                sub_data["vmin"] = pop!(bus, "NVLO")
-            else
-                warn(LOGGER, "PTI v$(pm_data["source_version"]) does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.")
-                sub_data["vmax"] = 1.1
-                sub_data["vmin"] = 0.9
-            end
+            sub_data["vmax"] = pop!(bus, "NVHI")
+            sub_data["vmin"] = pop!(bus, "NVLO")
 
             sub_data["source_id"] = ["$(bus["I"])"]
             sub_data["index"] = pop!(bus, "I")

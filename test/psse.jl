@@ -214,9 +214,6 @@ end
         @test_warn(TESTLOG, "Could not find bus 1, returning 0 for field vm",
                    PowerModels.get_bus_value(1, "vm", dummy_data))
 
-        @test_warn(TESTLOG, "PTI v33.0.0 does not contain vmin and vmax values, defaults of 0.9 and 1.1, respectively, assumed.",
-                   PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
-
         @test_warn(TESTLOG, "The following fields in BUS are missing: NVHI, NVLO, EVHI, EVLO",
                    PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
 
@@ -350,7 +347,7 @@ end
         @testset "30-bus case" begin
             data = PowerModels.parse_file("../test/data/pti/case30.raw"; import_all=true)
 
-            for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [15, 14, 14, 34, 29])
+            for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [15, 15, 28, 34, 29])
                 for item in values(data[key])
                     if key == "branch" && item["transformer"]
                         @test length(item) == 42
