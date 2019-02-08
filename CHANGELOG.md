@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Droped lower bounds on voltage variables
 - Added all error messages to memento log
 - Fixed minor typos in docs
 - Added a corner tolerance fix for OBBT 
