@@ -34,7 +34,7 @@ This enables the definition of a wide variety of power network formulations and 
 
 ## Documentation
 
-The package [documentation](https://lanl-ansi.github.io/PowerModels.jl/stable/) includes a variety of useful information including a [quick-start guide](https://lanl-ansi.github.io/PowerModels.jl/stable/quickguide.html), [network model specification](https://lanl-ansi.github.io/PowerModels.jl/stable/network-data.html), and [baseline results](https://lanl-ansi.github.io/PowerModels.jl/stable/experiment-results.html).
+The package [documentation](https://lanl-ansi.github.io/PowerModels.jl/stable/) includes a variety of useful information including a [quick-start guide](https://lanl-ansi.github.io/PowerModels.jl/stable/quickguide/), [network model specification](https://lanl-ansi.github.io/PowerModels.jl/stable/network-data/), and [baseline results](https://lanl-ansi.github.io/PowerModels.jl/stable/experiment-results/).
 
 Additionally, these presentations provide a brief introduction to various aspects of PowerModels,
 - [Network Model Update, v0.6](https://youtu.be/j7r4onyiNRQ)
@@ -77,7 +77,7 @@ If you find PowerModels useful in your work, we kindly request that you cite the
   doi = {10.23919/PSCC.2018.8442948}
 }
 ```
-Citation of the orginal works for problem denifitions (e.g. OPF) and [power flow formulations](https://lanl-ansi.github.io/PowerModels.jl/stable/formulation-details.html) (e.g. SOC) is also encouraged when publishing works that use PowerModels.
+Citation of the orginal works for problem denifitions (e.g. OPF) and [power flow formulations](https://lanl-ansi.github.io/PowerModels.jl/stable/formulation-details/) (e.g. SOC) is also encouraged when publishing works that use PowerModels.
 
 
 ## License
