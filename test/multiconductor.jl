@@ -4,6 +4,7 @@ TESTLOG = getlogger(PowerModels)
 function post_tp_opf(pm::PowerModels.GenericPowerModel)
     for c in PowerModels.conductor_ids(pm)
         PowerModels.variable_voltage(pm, cnd=c)
+        PowerModels.variable_shunt(pm, cnd=c)
         PowerModels.variable_generation(pm, cnd=c)
         PowerModels.variable_branch_flow(pm, cnd=c)
         PowerModels.variable_dcline_flow(pm, cnd=c)
@@ -356,8 +357,8 @@ end
         @test length(var(pm, pm.cnw)) == 1
 
         @test length(var(pm, pm.cnw, :cnd)) == 3
-        @test length(var(pm, pm.cnw, :cnd, 1)) == 8
-        @test length(var(pm)) == 8
+        @test length(var(pm, pm.cnw, :cnd, 1)) == 9
+        @test length(var(pm)) == 9
         @test haskey(var(pm, pm.cnw, :cnd, 1), :vm)
         @test var(pm, :vm, 1) == var(pm, pm.cnw, pm.ccnd, :vm, 1)
 

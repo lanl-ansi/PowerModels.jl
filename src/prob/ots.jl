@@ -15,6 +15,7 @@ end
 function post_ots(pm::GenericPowerModel)
     variable_branch_indicator(pm)
     variable_voltage_on_off(pm)
+    variable_shunt(pm)
     variable_generation(pm)
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
@@ -50,6 +51,7 @@ end
 function get_ots_solution(pm::GenericPowerModel, sol::Dict{String,Any})
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
+    add_shunt_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
     add_branch_status_setpoint(sol, pm)
 end

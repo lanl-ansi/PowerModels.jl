@@ -202,6 +202,7 @@ end
 
     function post_opf_var(pm::GenericPowerModel)
         PMs.variable_voltage(pm)
+        PMs.variable_shunt(pm)
         PMs.variable_generation(pm)
         PMs.variable_branch_flow(pm)
         PMs.variable_dcline_flow(pm)

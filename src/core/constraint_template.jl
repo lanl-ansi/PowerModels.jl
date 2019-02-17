@@ -45,6 +45,17 @@ function constraint_reactive_gen_setpoint(pm::GenericPowerModel, i::Int; nw::Int
 end
 
 
+### Shunt Constraints ###
+
+""
+function constraint_shunt_setpoint(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    shunt = ref(pm, nw, :shunt, i)
+    if haskey(shunt, "dispatchable") && shunt["dispatchable"]
+        constraint_shunt_setpoint(pm, nw, cnd, shunt["index"])
+    end
+end
+
+
 ### Bus - Setpoint Constraints ###
 
 ""

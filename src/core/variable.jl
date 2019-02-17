@@ -279,13 +279,20 @@ end
 
 
 ""
-function variable_shunt(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    var(pm, nw, cnd)[:fs] = @variable(pm.model,
-        [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_fs",
-        lowerbound = 0.0,
-        upperbound = 1.0,
-        start = getval(ref(pm, nw, :shunt_var, i), "fs_start", cnd, 0.5)
-    )
+function variable_shunt(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    if bounded
+        var(pm, nw, cnd)[:fs] = @variable(pm.model,
+            [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_fs",
+            lowerbound = 0.0,
+            upperbound = 1.0,
+            start = getval(ref(pm, nw, :shunt_var, i), "fs_start", cnd, 0.5)
+        )
+    else
+        var(pm, nw, cnd)[:fs] = @variable(pm.model,
+            [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_fs",
+            start = getval(ref(pm, nw, :shunt_var, i), "fs_start", cnd, 1.0)
+        )
+    end
 end
 
 

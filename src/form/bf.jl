@@ -25,6 +25,35 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
     end
 end
 
+
+""
+function variable_shunt(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: AbstractBFForm
+    if bounded
+        var(pm, nw, cnd)[:fs] = @variable(pm.model,
+            [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_fs",
+            lowerbound = 0.0,
+            upperbound = 1.0,
+            start = getval(ref(pm, nw, :shunt_var, i), "fs_start", cnd, 0.5)
+        )
+        var(pm, nw, cnd)[:wfs] = @variable(pm.model,
+            [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_wfs",
+            lowerbound = 0,
+            upperbound = ref(pm, nw, :bus)[ref(pm, nw, :shunt, i)["shunt_bus"]]["vmax"]^2,
+            start = getval(ref(pm, nw, :shunt_var, i), "wfs_start", cnd, 0.5)
+        )
+    else
+        var(pm, nw, cnd)[:fs] = @variable(pm.model,
+            [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_fs",
+            start = getval(ref(pm, nw, :shunt_var, i), "fs_start", cnd, 1.0)
+        )
+        var(pm, nw, cnd)[:wfs] = @variable(pm.model,
+            [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_wfs",
+            start = getval(ref(pm, nw, :shunt_var, i), "wfs_start", cnd, 1.0)
+        )
+    end
+end
+
+
 ""
 function variable_branch_current(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractBFForm
     variable_current_magnitude_sqr(pm; kwargs...)

@@ -45,7 +45,7 @@ function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) 
 end
 
 
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACRForm
+function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var) where T <: AbstractACRForm
     vr = var(pm, n, c, :vr, i)
     vi = var(pm, n, c, :vi, i)
     p  = var(pm, n, c, :p)
@@ -55,8 +55,8 @@ function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_a
     p_dc = var(pm, n, c, :p_dc)
     q_dc = var(pm, n, c, :q_dc)
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*(vr^2 + vi^2))
-    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*(vr^2 + vi^2))
+    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs_const))*(vr^2 + vi^2) - sum(gs*fs[s]*(vr^2 + vi^2) for (s,gs) in bus_gs_var))
+    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs_const))*(vr^2 + vi^2) + sum(bs*fs[s]*(vr^2 + vi^2) for (s,bs) in bus_bs_var))
 end
 
 

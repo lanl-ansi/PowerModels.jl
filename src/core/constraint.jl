@@ -79,6 +79,14 @@ function constraint_reactive_gen_setpoint(pm::GenericPowerModel, n::Int, c::Int,
     @constraint(pm.model, qg_var == qg)
 end
 
+
+""
+function constraint_shunt_setpoint(pm::GenericPowerModel, n::Int, c::Int, i)
+    fs = var(pm, n, c, :fs, i)
+    @constraint(pm.model, fs == 1.0)
+end
+
+
 """
 Creates Line Flow constraint for DC Lines (Matpower Formulation)
 

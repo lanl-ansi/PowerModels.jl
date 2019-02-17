@@ -13,6 +13,7 @@ end
 ""
 function post_opf_bf(pm::GenericPowerModel)
     variable_voltage(pm)
+    variable_shunt(pm)
     variable_generation(pm)
     variable_branch_flow(pm)
     variable_branch_current(pm)

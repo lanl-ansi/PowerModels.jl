@@ -18,6 +18,7 @@ end
 ""
 function post_pf(pm::GenericPowerModel)
     variable_voltage(pm, bounded = false)
+    variable_shunt(pm, bounded = false)
     variable_generation(pm, bounded = false)
     variable_branch_flow(pm, bounded = false)
     variable_dcline_flow(pm, bounded = false)
@@ -43,6 +44,10 @@ function post_pf(pm::GenericPowerModel)
                 constraint_active_gen_setpoint(pm, j)
             end
         end
+    end
+
+    for (i,shunt) in ref(pm, :shunt)
+        constraint_shunt_setpoint(pm, i)
     end
 
     for i in ids(pm, :branch)
