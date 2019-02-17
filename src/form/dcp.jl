@@ -192,10 +192,11 @@ function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw
 end
 
 ""
-function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
+function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
+    fs = var(pm, n, c, :fs)
     pg = var(pm, n, c, :pg)
 
-    @constraint(pm.model, sum(pg[g] for g in comp_gen_ids) == sum(pd for (i,pd) in values(comp_pd)) + sum(gs*1.0^2 for (i,gs) in values(comp_gs)))
+    @constraint(pm.model, sum(pg[g] for g in comp_gen_ids) == sum(pd for (i,pd) in values(comp_pd)) + sum(gs*1.0^2 for (i,gs) in values(comp_gs_const)) + sum(gs*fs[s]*1.0^2 for (s,(i,gs)) in comp_gs_var))
     # omit reactive constraint
 end
 

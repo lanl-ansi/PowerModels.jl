@@ -86,9 +86,14 @@ function constraint_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw,
         push!(comp_loads, PowerModels.ref(pm, nw, :load, load_id))
     end
 
-    comp_shunts = Set()
-    for bus_id in comp_bus_ids, shunt_id in PowerModels.ref(pm, nw, :bus_shunts, bus_id)
-        push!(comp_shunts, PowerModels.ref(pm, nw, :shunt, shunt_id))
+    comp_shunts_const = Set()
+    for bus_id in comp_bus_ids, shunt_id in PowerModels.ref(pm, nw, :bus_shunts_const, bus_id)
+        push!(comp_shunts_const, PowerModels.ref(pm, nw, :shunt, shunt_id))
+    end
+
+    comp_shunts_var = Set()
+    for bus_id in comp_bus_ids, shunt_id in PowerModels.ref(pm, nw, :bus_shunts_var, bus_id)
+        push!(comp_shunts_var, PowerModels.ref(pm, nw, :shunt, shunt_id))
     end
 
     comp_branches = Set()
@@ -101,13 +106,16 @@ function constraint_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw,
     comp_pd = Dict(load["index"] => (load["load_bus"], load["pd"][cnd]) for load in comp_loads)
     comp_qd = Dict(load["index"] => (load["load_bus"], load["qd"][cnd]) for load in comp_loads)
 
-    comp_gs = Dict(shunt["index"] => (shunt["shunt_bus"], shunt["gs"][cnd]) for shunt in comp_shunts)
-    comp_bs = Dict(shunt["index"] => (shunt["shunt_bus"], shunt["bs"][cnd]) for shunt in comp_shunts)
+    comp_gs_const = Dict(shunt["index"] => (shunt["shunt_bus"], shunt["gs"][cnd]) for shunt in comp_shunts_const)
+    comp_bs_const = Dict(shunt["index"] => (shunt["shunt_bus"], shunt["bs"][cnd]) for shunt in comp_shunts_const)
+
+    comp_gs_var = Dict(shunt["index"] => (shunt["shunt_bus"], shunt["gs"][cnd]) for shunt in comp_shunts_var)
+    comp_bs_var = Dict(shunt["index"] => (shunt["shunt_bus"], shunt["bs"][cnd]) for shunt in comp_shunts_var)
 
     comp_branch_g = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["br_r"][cnd], branch["br_x"][cnd], branch["tap"][cnd], branch["g_fr"][cnd], branch["g_to"][cnd]) for branch in comp_branches)
     comp_branch_b = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["br_r"][cnd], branch["br_x"][cnd], branch["tap"][cnd], branch["b_fr"][cnd], branch["b_to"][cnd]) for branch in comp_branches)
 
-    constraint_power_balance(pm, nw, cnd, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b)
+    constraint_power_balance(pm, nw, cnd, i, comp_gen_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b)
 end
 
 

@@ -54,6 +54,7 @@ end
 ""
 function post_mn_opb(pm::GenericPowerModel)
     for (n, network) in nws(pm)
+        variable_shunt(pm, nw=n)
         variable_generation(pm, nw=n)
 
         for i in ids(pm, :components, nw=n)

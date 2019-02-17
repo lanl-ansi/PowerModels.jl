@@ -1,3 +1,5 @@
+case5_shnt = PowerModels.parse_file("../test/data/matpower/case5_shnt.m")
+case5_shnt["shunt"]["2"]["dispatchable"] = true
 
 function build_mn_data(base_data; replicates::Int=2)
     mp_data = PowerModels.parse_file(base_data)
