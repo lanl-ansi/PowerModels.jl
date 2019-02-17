@@ -19,6 +19,6 @@ function post_opb(pm::GenericPowerModel)
     objective_min_gen_fuel_cost(pm)
 
     for i in ids(pm, :components)
-        constraint_power_balance(pm, i)
+        constraint_network_power_balance(pm, i)
     end
 end

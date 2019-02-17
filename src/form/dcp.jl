@@ -192,7 +192,7 @@ function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw
 end
 
 ""
-function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
+function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
     fs = var(pm, n, c, :fs)
     pg = var(pm, n, c, :pg)
 

@@ -58,7 +58,7 @@ function post_mn_opb(pm::GenericPowerModel)
         variable_generation(pm, nw=n)
 
         for i in ids(pm, :components, nw=n)
-            constraint_power_balance(pm, i, nw=n)
+            constraint_network_power_balance(pm, i, nw=n)
         end
     end
 

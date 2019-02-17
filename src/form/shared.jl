@@ -173,7 +173,7 @@ end
 
 
 ""
-function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b) where T <: AbstractWRForms
+function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b) where T <: AbstractWRForms
     for (i,(i,j,r,x,tm,g_fr,g_to)) in comp_branch_g
         @assert(r >= 0 && x >= 0) # requirement for the relaxation property
     end
