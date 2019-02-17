@@ -279,6 +279,18 @@ end
 
 
 ""
+function variable_shunt(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    var(pm, nw, cnd)[:fs] = @variable(pm.model,
+        [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_fs",
+        lowerbound = 0.0,
+        upperbound = 1.0,
+        start = getval(ref(pm, nw, :shunt_var, i), "fs_start", cnd, 0.5)
+    )
+end
+
+
+
+""
 function variable_branch_flow(pm::GenericPowerModel; kwargs...)
     variable_active_branch_flow(pm; kwargs...)
     variable_reactive_branch_flow(pm; kwargs...)

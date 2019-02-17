@@ -317,7 +317,11 @@ function build_ref(data::Dict{String,Any})
         # filter turned off stuff
         ref[:bus] = Dict(x for x in ref[:bus] if x.second["bus_type"] != 4)
         ref[:load] = Dict(x for x in ref[:load] if (x.second["status"] == 1 && x.second["load_bus"] in keys(ref[:bus])))
+
         ref[:shunt] = Dict(x for x in ref[:shunt] if (x.second["status"] == 1 && x.second["shunt_bus"] in keys(ref[:bus])))
+        ref[:shunt_const] = Dict(x for x in ref[:shunt] if (!haskey(x.second, "dispatchable") || !x.second["dispatchable"]))
+        ref[:shunt_var] = Dict(x for x in ref[:shunt] if (haskey(x.second, "dispatchable") && x.second["dispatchable"]))
+
         ref[:gen] = Dict(x for x in ref[:gen] if (x.second["gen_status"] == 1 && x.second["gen_bus"] in keys(ref[:bus])))
         ref[:storage] = Dict(x for x in ref[:storage] if (x.second["status"] == 1 && x.second["storage_bus"] in keys(ref[:bus])))
         ref[:branch] = Dict(x for x in ref[:branch] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus])))
@@ -360,11 +364,25 @@ function build_ref(data::Dict{String,Any})
         end
         ref[:bus_loads] = bus_loads
 
+
         bus_shunts = Dict((i, []) for (i,bus) in ref[:bus])
         for (i,shunt) in ref[:shunt]
             push!(bus_shunts[shunt["shunt_bus"]], i)
         end
         ref[:bus_shunts] = bus_shunts
+
+        bus_shunts_const = Dict((i, []) for (i,bus) in ref[:bus])
+        for (i,shunt) in ref[:shunt_const]
+            push!(bus_shunts_const[shunt["shunt_bus"]], i)
+        end
+        ref[:bus_shunts_const] = bus_shunts_const
+
+        bus_shunts_var = Dict((i, []) for (i,bus) in ref[:bus])
+        for (i,shunt) in ref[:shunt_var]
+            push!(bus_shunts_var[shunt["shunt_bus"]], i)
+        end
+        ref[:bus_shunts_var] = bus_shunts_var
+
 
         bus_gens = Dict((i, []) for (i,bus) in ref[:bus])
         for (i,gen) in ref[:gen]

@@ -116,15 +116,20 @@ function constraint_kcl_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd
     bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
     bus_gens = ref(pm, nw, :bus_gens, i)
     bus_loads = ref(pm, nw, :bus_loads, i)
-    bus_shunts = ref(pm, nw, :bus_shunts, i)
+    bus_shunts_const = ref(pm, nw, :bus_shunts_const, i)
+    bus_shunts_var = ref(pm, nw, :bus_shunts_var, i)
 
     bus_pd = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in bus_loads)
     bus_qd = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in bus_loads)
 
-    bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts)
-    bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts)
+    bus_gs_const = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts_const)
+    bus_bs_const = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts_const)
 
-    constraint_kcl_shunt(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
+    bus_gs_var = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts_var)
+    bus_bs_var = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts_var)
+
+
+    constraint_kcl_shunt(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var)
 end
 
 ""

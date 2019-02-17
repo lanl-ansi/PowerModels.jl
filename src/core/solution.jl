@@ -65,6 +65,7 @@ end
 ""
 function get_solution(pm::GenericPowerModel, sol::Dict{String,Any})
     add_bus_voltage_setpoint(sol, pm)
+    add_shunt_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_storage_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
@@ -100,6 +101,12 @@ end
 function add_generator_power_setpoint(sol, pm::GenericPowerModel)
     add_setpoint(sol, pm, "gen", "pg", :pg)
     add_setpoint(sol, pm, "gen", "qg", :qg)
+end
+
+""
+function add_shunt_setpoint(sol, pm::GenericPowerModel)
+    add_setpoint(sol, pm, "shunt", "gs", :fs; scale = (x,item,i) -> x*item["gs"][i], dispatchable_check = true)
+    add_setpoint(sol, pm, "shunt", "bs", :fs; scale = (x,item,i) -> x*item["bs"][i], dispatchable_check = true)
 end
 
 ""
@@ -218,7 +225,8 @@ function add_setpoint(
     scale = (x,item,cnd) -> x,
     extract_var = (var,idx,item) -> var[idx],
     sol_dict = get(sol, dict_name, Dict{String,Any}()),
-    conductorless = false
+    conductorless = false,
+    dispatchable_check = false
 )
 
     if InfrastructureModels.ismultinetwork(pm.data)
@@ -231,6 +239,10 @@ function add_setpoint(
         sol[dict_name] = sol_dict
     end
     for (i,item) in data_dict
+        if dispatchable_check && (!haskey(item, "dispatchable") || !item["dispatchable"])
+            continue
+        end
+
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
 
