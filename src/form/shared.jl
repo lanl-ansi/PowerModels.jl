@@ -37,6 +37,25 @@ function variable_bus_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: Ab
     variable_voltage_magnitude_sqr(pm; kwargs...)
 end
 
+
+""
+function variable_shunt(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: AbstractWRForms
+    var(pm, nw, cnd)[:fs] = @variable(pm.model,
+        [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_fs",
+        lowerbound = 0.0,
+        upperbound = 1.0,
+        start = getval(ref(pm, nw, :shunt_var, i), "fs_start", cnd, 0.5)
+    )
+    var(pm, nw, cnd)[:wfs] = @variable(pm.model,
+        [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_wfs",
+        lowerbound = 0,
+        upperbound = ref(pm, nw, :bus)[ref(pm, nw, :shunt, i)["shunt_bus"]]["vmax"]^2,
+        start = getval(ref(pm, nw, :shunt_var, i), "wfs_start", cnd, 0.5)
+    )
+end
+
+
+
 ""
 function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, i, vm) where T <: AbstractWForms
     w = var(pm, n, c, :w, i)
@@ -55,17 +74,23 @@ sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[
 sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for d in bus_shunts)*w[i]
 ```
 """
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractWForms
+function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var) where T <: AbstractWForms
     w    = var(pm, n, c, :w, i)
     pg   = var(pm, n, c, :pg)
     qg   = var(pm, n, c, :qg)
+    fs = var(pm, n, c, :fs)
+    wfs = var(pm, n, c, :wfs)
     p    = var(pm, n, c, :p)
     q    = var(pm, n, c, :q)
     p_dc = var(pm, n, c, :p_dc)
     q_dc = var(pm, n, c, :q_dc)
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*w)
-    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*w)
+    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs_const))*w - sum(gs*wfs[s] for (s,gs) in bus_gs_var))
+    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs_const))*w + sum(bs*wfs[s] for (s,bs) in bus_bs_var))
+
+    for s in keys(bus_bs_var)
+        InfrastructureModels.relaxation_product(pm.model, w, fs[s], wfs[s])
+    end
 end
 
 

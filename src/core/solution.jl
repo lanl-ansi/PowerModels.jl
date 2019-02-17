@@ -179,7 +179,8 @@ function add_setpoint_fixed(
     index_name = "index",
     default_value = (item) -> NaN,
     sol_dict = get(sol, dict_name, Dict{String,Any}()),
-    conductorless = false
+    conductorless = false,
+    dispatchable_check = false
 )
 
     if InfrastructureModels.ismultinetwork(pm.data)
@@ -193,6 +194,10 @@ function add_setpoint_fixed(
     end
 
     for (i,item) in data_dict
+        if dispatchable_check && (!haskey(item, "dispatchable") || !item["dispatchable"])
+            continue
+        end
+
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
 

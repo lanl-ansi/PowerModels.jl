@@ -124,9 +124,16 @@ function add_generator_power_setpoint(sol, pm::GenericPowerModel{T}) where T <: 
 end
 
 ""
+function add_shunt_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractActivePowerFormulation
+    add_setpoint(sol, pm, "shunt", "gs", :fs; scale = (x,item,i) -> x*item["gs"][i], dispatchable_check = true)
+    add_setpoint_fixed(sol, pm, "shunt", "bs"; dispatchable_check = true)
+end
+
+""
 function add_storage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractActivePowerFormulation
     add_setpoint(sol, pm, "storage", "ps", :ps)
     add_setpoint_fixed(sol, pm, "storage", "qs")
     add_setpoint(sol, pm, "storage", "se", :se, conductorless=true)
 end
+
 

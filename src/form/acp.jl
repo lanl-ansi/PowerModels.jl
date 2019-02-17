@@ -51,11 +51,11 @@ sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[
 """
 function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var) where T <: AbstractACPForm
     vm = var(pm, n, c, :vm, i)
-    p = var(pm, n, c, :p)
-    q = var(pm, n, c, :q)
     pg = var(pm, n, c, :pg)
     qg = var(pm, n, c, :qg)
     fs = var(pm, n, c, :fs)
+    p = var(pm, n, c, :p)
+    q = var(pm, n, c, :q)
     p_dc = var(pm, n, c, :p_dc)
     q_dc = var(pm, n, c, :q_dc)
 
@@ -73,12 +73,12 @@ end
 ""
 function constraint_kcl_shunt_storage(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACPForm
     vm = var(pm, n, c, :vm, i)
-    p = var(pm, n, c, :p)
-    q = var(pm, n, c, :q)
     pg = var(pm, n, c, :pg)
     qg = var(pm, n, c, :qg)
     ps = var(pm, n, c, :ps)
     qs = var(pm, n, c, :qs)
+    p = var(pm, n, c, :p)
+    q = var(pm, n, c, :q)
     p_dc = var(pm, n, c, :p_dc)
     q_dc = var(pm, n, c, :q_dc)
 
