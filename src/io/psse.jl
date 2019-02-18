@@ -306,8 +306,6 @@ function psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     end
 
     if haskey(pti_data, "SWITCHED SHUNT")
-        info(LOGGER, "Switched shunt converted to fixed shunt, with default value gs=0.0")
-
         for shunt in pti_data["SWITCHED SHUNT"]
             sub_data = Dict{String,Any}()
 
@@ -318,6 +316,23 @@ function psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
             sub_data["source_id"] = [sub_data["shunt_bus"], pop!(shunt, "SWREM")]
             sub_data["index"] = length(pm_data["shunt"]) + 1
+
+            mode = shunt["MODSW"]
+            if mode != 0
+                sub_data["dispatchable"] = true
+
+                pairs = [("N1","B1"), ("N2","B2"), ("N3","B3"), ("N4","B4"), ("N5","B5"), ("N6","B6"), ("N7","B7"), ("N8","B8")]
+
+                if all(shunt[p[2]] <= 0.0 for p in pairs) || all(shunt[p[2]] >= 0.0 for p in pairs)
+                    sub_data["bs"] = sum(shunt[p[1]]*shunt[p[2]] for p in pairs)
+                else
+                    warn(LOGGER, "Switched shunt $(sub_data["source_id"]) has susceptance values with mixed signs and will be ignored")
+                end
+
+                if mode != 2
+                    warn(LOGGER, "Switched shunt $(sub_data["source_id"]) converted to continuous control, given control mode $(mode)")
+                end
+            end
 
             import_remaining!(sub_data, shunt, import_all)
 

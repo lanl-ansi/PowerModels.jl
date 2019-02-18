@@ -177,6 +177,7 @@ end
             data_mp = PowerModels.parse_file("../test/data/matpower/case24.m")
 
             set_costs!(data_mp)
+            data_mp["shunt"]["1"]["dispatchable"] = true
 
             result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
             result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
