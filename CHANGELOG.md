@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Added support for dispatchable shunts and loads
+- Added support for dispatchable shunts and loads (breaking)
+- Changed kcl constraint names to power_balance (breaking)
 - Dropped lower bounds on voltage variables
 - Added all error messages to memento log
 - Fixed minor typos in docs
