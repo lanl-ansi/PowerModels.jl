@@ -62,6 +62,14 @@
         @test isapprox(result["solution"]["shunt"]["2"]["gs"], 0.0; atol = 1e-6)
         @test isapprox(result["solution"]["shunt"]["2"]["bs"], 0.0; atol = 1e-6)
     end
+    @testset "5-bus dispatchable load" begin
+        result = run_ac_opf(case5_dld, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 9267.4; atol = 1e0)
+        @test isapprox(result["solution"]["load"]["2"]["pd"], 0.0; atol = 1e-6)
+        @test isapprox(result["solution"]["load"]["2"]["qd"], 0.0; atol = 1e-6)
+    end
     @testset "6-bus case" begin
         result = run_ac_opf("../test/data/matpower/case6.m", ipopt_solver)
 
@@ -113,6 +121,22 @@ end
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 42895; atol = 1e0)
+    end
+    @testset "5-bus dispatchable shunt" begin
+        result = run_opf(case5_shnt, ACRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 17811.5; atol = 1e0)
+        @test isapprox(result["solution"]["shunt"]["2"]["gs"], 0.0; atol = 1e-6)
+        @test isapprox(result["solution"]["shunt"]["2"]["bs"], 0.0; atol = 1e-6)
+    end
+    @testset "5-bus dispatchable load" begin
+        result = run_opf(case5_dld, ACRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 9267.4; atol = 1e0)
+        @test isapprox(result["solution"]["load"]["2"]["pd"], 0.0; atol = 1e-6)
+        @test isapprox(result["solution"]["load"]["2"]["qd"], 0.0; atol = 1e-6)
     end
     @testset "6-bus case" begin
         result = run_opf("../test/data/matpower/case6.m", ACRPowerModel, ipopt_solver)
@@ -222,6 +246,13 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 17620.8; atol = 1e0)
         @test isapprox(result["solution"]["shunt"]["2"]["gs"], 0.0; atol = 1e-6)
+    end
+    @testset "5-bus dispatchable load" begin
+        result = run_dc_opf(case5_dld, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 8613.22; atol = 1e0)
+        @test isapprox(result["solution"]["load"]["2"]["pd"], 0.0; atol = 1e-6)
     end
     @testset "6-bus case" begin
         result = run_dc_opf("../test/data/matpower/case6.m", ipopt_solver)
@@ -396,6 +427,14 @@ end
         @test isapprox(result["solution"]["shunt"]["2"]["gs"], 0.0; atol = 1e-6)
         @test isapprox(result["solution"]["shunt"]["2"]["bs"], 0.0; atol = 1e-6)
     end
+    @testset "5-bus dispatchable load" begin
+        result = run_opf(case5_dld, LPACCPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 9288.08; atol = 1e0)
+        @test isapprox(result["solution"]["load"]["2"]["pd"], 0.0; atol = 1e-6)
+        @test isapprox(result["solution"]["load"]["2"]["qd"], 0.0; atol = 1e-6)
+    end
     @testset "6-bus case" begin
         result = run_opf("../test/data/matpower/case6.m", LPACCPowerModel, ipopt_solver)
 
@@ -464,6 +503,14 @@ end
         @test isapprox(result["objective"], 15025.0; atol = 1e0)
         @test isapprox(result["solution"]["shunt"]["2"]["gs"], 0.0, atol=1e-6)
         @test isapprox(result["solution"]["shunt"]["2"]["bs"], 0.0, atol=1e-6)
+    end
+    @testset "5-bus dispatchable load" begin
+        result = run_opf(case5_dld, SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 7560.12; atol = 1e0)
+        @test isapprox(result["solution"]["load"]["2"]["pd"], 0.0; atol = 1e-6)
+        @test isapprox(result["solution"]["load"]["2"]["qd"], 0.0; atol = 1e-6)
     end
     @testset "6-bus case" begin
         result = run_opf("../test/data/matpower/case6.m", SOCWRPowerModel, ipopt_solver)

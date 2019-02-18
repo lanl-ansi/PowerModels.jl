@@ -356,8 +356,8 @@ end
         @test length(var(pm, pm.cnw)) == 1
 
         @test length(var(pm, pm.cnw, :cnd)) == 3
-        @test length(var(pm, pm.cnw, :cnd, 1)) == 12
-        @test length(var(pm)) == 12
+        @test length(var(pm, pm.cnw, :cnd, 1)) == 13
+        @test length(var(pm)) == 13
         @test haskey(var(pm, pm.cnw, :cnd, 1), :vm)
         @test var(pm, :vm, 1) == var(pm, pm.cnw, pm.ccnd, :vm, 1)
 

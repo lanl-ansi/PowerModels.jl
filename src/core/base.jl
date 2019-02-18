@@ -107,6 +107,9 @@ end
 function _init_vars()
     vars = Dict{Symbol,Any}()
 
+    # load variables
+    vars[:fl] = Dict()
+
     # shunt variables
     vars[:fs] = Dict()
     vars[:wfs] = Dict()
@@ -336,7 +339,10 @@ function build_ref(data::Dict{String,Any})
 
         # filter turned off stuff
         ref[:bus] = Dict(x for x in ref[:bus] if x.second["bus_type"] != 4)
+
         ref[:load] = Dict(x for x in ref[:load] if (x.second["status"] == 1 && x.second["load_bus"] in keys(ref[:bus])))
+        ref[:load_const] = Dict(x for x in ref[:load] if (!haskey(x.second, "dispatchable") || !x.second["dispatchable"]))
+        ref[:load_var] = Dict(x for x in ref[:load] if (haskey(x.second, "dispatchable") && x.second["dispatchable"]))
 
         ref[:shunt] = Dict(x for x in ref[:shunt] if (x.second["status"] == 1 && x.second["shunt_bus"] in keys(ref[:bus])))
         ref[:shunt_const] = Dict(x for x in ref[:shunt] if (!haskey(x.second, "dispatchable") || !x.second["dispatchable"]))
@@ -383,6 +389,18 @@ function build_ref(data::Dict{String,Any})
             push!(bus_loads[load["load_bus"]], i)
         end
         ref[:bus_loads] = bus_loads
+
+        bus_loads_const = Dict((i, []) for (i,bus) in ref[:bus])
+        for (i,load) in ref[:load_const]
+            push!(bus_loads_const[load["load_bus"]], i)
+        end
+        ref[:bus_loads_const] = bus_loads_const
+
+        bus_loads_var = Dict((i, []) for (i,bus) in ref[:bus])
+        for (i,load) in ref[:load_var]
+            push!(bus_loads_var[load["load_bus"]], i)
+        end
+        ref[:bus_loads_var] = bus_loads_var
 
 
         bus_shunts = Dict((i, []) for (i,bus) in ref[:bus])

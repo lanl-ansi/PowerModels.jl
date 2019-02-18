@@ -31,14 +31,24 @@ end
 
 
 ""
-function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var) where T <: AbstractDCPForm
+function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd_const, bus_qd_const, bus_pd_var, bus_qd_var, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var) where T <: AbstractDCPForm
     pg   = var(pm, n, c, :pg)
     ps = var(pm, n, c, :ps)
     fs = var(pm, n, c, :fs)
+    fl = var(pm, n, c, :fl)
     p    = var(pm, n, c, :p)
     p_dc = var(pm, n, c, :p_dc)
 
-    con(pm, n, c, :kcl_p)[i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(ps[s] for s in bus_storage) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs_const))*1.0^2 - sum(gs*fs[s]*1.0^2 for (s,gs) in bus_gs_var))
+    con(pm, n, c, :kcl_p)[i] = @constraint(pm.model,
+        sum(p[a] for a in bus_arcs)
+        + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) ==
+        sum(pg[g] for g in bus_gens)
+        - sum(ps[s] for s in bus_storage)
+        - sum(pd for (l,pd) in bus_pd_const)
+        - sum(pd*fl[l] for (l,pd) in bus_pd_var)
+        - sum(gs for gs in values(bus_gs_const))*1.0^2
+        - sum(gs*fs[s]*1.0^2 for (s,gs) in bus_gs_var)
+    )
     # omit reactive constraint
 end
 
@@ -183,12 +193,20 @@ function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw
 end
 
 ""
-function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_storage_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
+function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_storage_ids, comp_pd_const, comp_qd_const, comp_pd_var, comp_qd_var, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
     fs = var(pm, n, c, :fs)
+    fl = var(pm, n, c, :fl)
     ps = var(pm, n, c, :ps)
     pg = var(pm, n, c, :pg)
 
-    @constraint(pm.model, sum(pg[g] for g in comp_gen_ids) == sum(ps[s] for s in comp_storage_ids) + sum(pd for (i,pd) in values(comp_pd)) + sum(gs*1.0^2 for (i,gs) in values(comp_gs_const)) + sum(gs*fs[s]*1.0^2 for (s,(i,gs)) in comp_gs_var))
+    @constraint(pm.model,
+        sum(pg[g] for g in comp_gen_ids) == 
+        sum(ps[s] for s in comp_storage_ids)
+        + sum(pd for (i,pd) in values(comp_pd_const))
+        + sum(pd*fl[l] for (l,(i,pd)) in comp_pd_var)
+        + sum(gs*1.0^2 for (i,gs) in values(comp_gs_const))
+        + sum(gs*fs[s]*1.0^2 for (s,(i,gs)) in comp_gs_var)
+    )
     # omit reactive constraint
 end
 

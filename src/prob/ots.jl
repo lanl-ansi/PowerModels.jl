@@ -18,6 +18,7 @@ function post_ots(pm::GenericPowerModel)
     variable_shunt(pm)
     variable_generation(pm)
     variable_storage(pm)
+    variable_load(pm)
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
 

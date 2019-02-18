@@ -39,20 +39,39 @@ end
 
 
 ""
-function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var) where T <: AbstractLPACForm
+function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd_const, bus_qd_const, bus_pd_var, bus_qd_var, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var) where T <: AbstractLPACForm
     phi  = var(pm, n, c, :phi, i)
     pg   = var(pm, n, c, :pg)
     qg   = var(pm, n, c, :qg)
     ps = var(pm, n, c, :ps)
     qs = var(pm, n, c, :qs)
     fs = var(pm, n, c, :fs)
+    fl = var(pm, n, c, :fl)
     p    = var(pm, n, c, :p)
     q    = var(pm, n, c, :q)
     p_dc = var(pm, n, c, :p_dc)
     q_dc = var(pm, n, c, :q_dc)
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(ps[s] for s in bus_storage) - sum(gs for gs in values(bus_gs_const))*(1.0 + 2*phi) - sum(gs*fs[s] for (s,gs) in bus_gs_var))
-    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) - sum(qs[s] for s in bus_storage) + sum(bs for bs in values(bus_bs_const))*(1.0 + 2*phi) + sum(bs*fs[s] for (s,bs) in bus_bs_var))
+    @constraint(pm.model,
+        sum(p[a] for a in bus_arcs)
+        + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) ==
+        sum(pg[g] for g in bus_gens)
+        - sum(pd for (l,pd) in bus_pd_const)
+        - sum(pd*fl[l] for (l,pd) in bus_pd_var)
+        - sum(ps[s] for s in bus_storage)
+        - sum(gs for gs in values(bus_gs_const))*(1.0 + 2*phi)
+        - sum(gs*fs[s] for (s,gs) in bus_gs_var)
+    )
+    @constraint(pm.model,
+        sum(q[a] for a in bus_arcs)
+        + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) ==
+        sum(qg[g] for g in bus_gens)
+        - sum(qd for (l,qd) in bus_qd_const)
+        - sum(qd*fl[l] for (l,qd) in bus_qd_var)
+        - sum(qs[s] for s in bus_storage)
+        + sum(bs for bs in values(bus_bs_const))*(1.0 + 2*phi)
+        + sum(bs*fs[s] for (s,bs) in bus_bs_var)
+    )
 end
 
 

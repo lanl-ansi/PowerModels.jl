@@ -277,6 +277,23 @@ function variable_reactive_generation(pm::GenericPowerModel; nw::Int=pm.cnw, cnd
 end
 
 
+""
+function variable_load(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    if bounded
+        var(pm, nw, cnd)[:fl] = @variable(pm.model,
+            [i in ids(pm, nw, :load_var)], basename="$(nw)_$(cnd)_fl",
+            lowerbound = 0.0,
+            upperbound = 1.0,
+            start = getval(ref(pm, nw, :load_var, i), "fl_start", cnd, 0.5)
+        )
+    else
+        var(pm, nw, cnd)[:fl] = @variable(pm.model,
+            [i in ids(pm, nw, :load_var)], basename="$(nw)_$(cnd)_fl",
+            start = getval(ref(pm, nw, :load_var, i), "fl_start", cnd, 1.0)
+        )
+    end
+end
+
 
 ""
 function variable_shunt(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)

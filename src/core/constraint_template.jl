@@ -86,9 +86,14 @@ function constraint_network_power_balance(pm::GenericPowerModel, i::Int; nw::Int
         push!(comp_storage_ids, storage_id)
     end
 
-    comp_loads = Set()
-    for bus_id in comp_bus_ids, load_id in PowerModels.ref(pm, nw, :bus_loads, bus_id)
-        push!(comp_loads, PowerModels.ref(pm, nw, :load, load_id))
+    comp_loads_const = Set()
+    for bus_id in comp_bus_ids, load_id in PowerModels.ref(pm, nw, :bus_loads_const, bus_id)
+        push!(comp_loads_const, PowerModels.ref(pm, nw, :load, load_id))
+    end
+
+    comp_loads_var = Set()
+    for bus_id in comp_bus_ids, load_id in PowerModels.ref(pm, nw, :bus_loads_var, bus_id)
+        push!(comp_loads_var, PowerModels.ref(pm, nw, :load, load_id))
     end
 
     comp_shunts_const = Set()
@@ -108,8 +113,11 @@ function constraint_network_power_balance(pm::GenericPowerModel, i::Int; nw::Int
         end
     end
 
-    comp_pd = Dict(load["index"] => (load["load_bus"], load["pd"][cnd]) for load in comp_loads)
-    comp_qd = Dict(load["index"] => (load["load_bus"], load["qd"][cnd]) for load in comp_loads)
+    comp_pd_const = Dict(load["index"] => (load["load_bus"], load["pd"][cnd]) for load in comp_loads_const)
+    comp_qd_const = Dict(load["index"] => (load["load_bus"], load["qd"][cnd]) for load in comp_loads_const)
+
+    comp_pd_var = Dict(load["index"] => (load["load_bus"], load["pd"][cnd]) for load in comp_loads_var)
+    comp_qd_var = Dict(load["index"] => (load["load_bus"], load["qd"][cnd]) for load in comp_loads_var)
 
     comp_gs_const = Dict(shunt["index"] => (shunt["shunt_bus"], shunt["gs"][cnd]) for shunt in comp_shunts_const)
     comp_bs_const = Dict(shunt["index"] => (shunt["shunt_bus"], shunt["bs"][cnd]) for shunt in comp_shunts_const)
@@ -120,7 +128,7 @@ function constraint_network_power_balance(pm::GenericPowerModel, i::Int; nw::Int
     comp_branch_g = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["br_r"][cnd], branch["br_x"][cnd], branch["tap"][cnd], branch["g_fr"][cnd], branch["g_to"][cnd]) for branch in comp_branches)
     comp_branch_b = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["br_r"][cnd], branch["br_x"][cnd], branch["tap"][cnd], branch["b_fr"][cnd], branch["b_to"][cnd]) for branch in comp_branches)
 
-    constraint_network_power_balance(pm, nw, cnd, i, comp_gen_ids, comp_storage_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b)
+    constraint_network_power_balance(pm, nw, cnd, i, comp_gen_ids, comp_storage_ids, comp_pd_const, comp_qd_const, comp_pd_var, comp_qd_var, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b)
 end
 
 
@@ -139,13 +147,17 @@ function constraint_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw,
     bus_arcs = ref(pm, nw, :bus_arcs, i)
     bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
     bus_gens = ref(pm, nw, :bus_gens, i)
-    bus_loads = ref(pm, nw, :bus_loads, i)
+    bus_loads_const = ref(pm, nw, :bus_loads_const, i)
+    bus_loads_var = ref(pm, nw, :bus_loads_var, i)
     bus_shunts_const = ref(pm, nw, :bus_shunts_const, i)
     bus_shunts_var = ref(pm, nw, :bus_shunts_var, i)
     bus_storage = ref(pm, nw, :bus_storage, i)
 
-    bus_pd = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in bus_loads)
-    bus_qd = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in bus_loads)
+    bus_pd_const = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in bus_loads_const)
+    bus_qd_const = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in bus_loads_const)
+
+    bus_pd_var = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in bus_loads_var)
+    bus_qd_var = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in bus_loads_var)
 
     bus_gs_const = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts_const)
     bus_bs_const = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts_const)
@@ -153,7 +165,7 @@ function constraint_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw,
     bus_gs_var = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts_var)
     bus_bs_var = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts_var)
 
-    constraint_power_balance(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var)
+    constraint_power_balance(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd_const, bus_qd_const, bus_pd_var, bus_qd_var, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var)
 end
 
 

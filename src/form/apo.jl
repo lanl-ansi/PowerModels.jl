@@ -130,6 +130,12 @@ function add_shunt_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractAc
 end
 
 ""
+function add_load_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractActivePowerFormulation
+    add_setpoint(sol, pm, "load", "pd", :fl; scale = (x,item,i) -> x*item["pd"][i], dispatchable_check = true)
+    add_setpoint_fixed(sol, pm, "load", "qd"; dispatchable_check = true)
+end
+
+""
 function add_storage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractActivePowerFormulation
     add_setpoint(sol, pm, "storage", "ps", :ps)
     add_setpoint_fixed(sol, pm, "storage", "qs")

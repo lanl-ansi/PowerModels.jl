@@ -62,6 +62,13 @@
         @test isapprox(result["objective"], 14810.4; atol = 1e0)
         @test isapprox(result["solution"]["shunt"]["2"]["gs"], 0.0; atol = 1e-6)
     end
+    @testset "5-bus dispatchable load" begin
+        result = run_opb(case5_dld, NFAPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 7460.0; atol = 1e0)
+        @test isapprox(result["solution"]["load"]["2"]["pd"], 0.0; atol = 1e-6)
+    end
     @testset "6-bus case" begin
         result = run_opb("../test/data/matpower/case6.m", NFAPowerModel, ipopt_solver)
 
@@ -96,6 +103,13 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 14810.4; atol = 1e0)
         @test isapprox(result["solution"]["shunt"]["2"]["gs"], 0.0; atol = 1e-6)
+    end
+    @testset "5-bus dispatchable load" begin
+        result = run_opb(case5_dld, DCPPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 7460.0; atol = 1e0)
+        @test isapprox(result["solution"]["load"]["2"]["pd"], 0.0; atol = 1e-6)
     end
     @testset "6-bus case" begin
         result = run_opb("../test/data/matpower/case6.m", DCPPowerModel, ipopt_solver)
@@ -138,6 +152,14 @@ end
         @test isapprox(result["objective"], 14810.4; atol = 1e0)
         @test isapprox(result["solution"]["shunt"]["2"]["gs"], 0.0; atol = 1e-6)
         @test isapprox(result["solution"]["shunt"]["2"]["bs"], 0.0; atol = 1e-6)
+    end
+    @testset "5-bus dispatchable load" begin
+        result = run_opb(case5_dld, SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 7460.0; atol = 1e0)
+        @test isapprox(result["solution"]["load"]["2"]["pd"], 0.0; atol = 1e-6)
+        @test isapprox(result["solution"]["load"]["2"]["qd"], 0.0; atol = 1e-6)
     end
     @testset "24-bus case" begin
         result = run_opb("../test/data/matpower/case24.m", SOCWRPowerModel, ipopt_solver)

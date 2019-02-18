@@ -66,6 +66,7 @@ end
 function get_solution(pm::GenericPowerModel, sol::Dict{String,Any})
     add_bus_voltage_setpoint(sol, pm)
     add_shunt_setpoint(sol, pm)
+    add_load_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_storage_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
@@ -107,6 +108,12 @@ end
 function add_shunt_setpoint(sol, pm::GenericPowerModel)
     add_setpoint(sol, pm, "shunt", "gs", :fs; scale = (x,item,i) -> x*item["gs"][i], dispatchable_check = true)
     add_setpoint(sol, pm, "shunt", "bs", :fs; scale = (x,item,i) -> x*item["bs"][i], dispatchable_check = true)
+end
+
+""
+function add_load_setpoint(sol, pm::GenericPowerModel)
+    add_setpoint(sol, pm, "load", "pd", :fl; scale = (x,item,i) -> x*item["pd"][i], dispatchable_check = true)
+    add_setpoint(sol, pm, "load", "qd", :fl; scale = (x,item,i) -> x*item["qd"][i], dispatchable_check = true)
 end
 
 ""
