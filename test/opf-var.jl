@@ -216,7 +216,7 @@ end
 
     @testset "test ac polar opf" begin
         @testset "5-bus case" begin
-            result = PowerModels.run_strg_opf("../test/data/matpower/case5_strg.m", PowerModels.ACPPowerModel, ipopt_solver)
+            result = PowerModels.run_opf("../test/data/matpower/case5_strg.m", PowerModels.ACPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 17039.7; atol = 1e0)
@@ -230,7 +230,7 @@ end
 
     @testset "test dc opf" begin
         @testset "5-bus case" begin
-            result = PowerModels.run_strg_opf("../test/data/matpower/case5_strg.m", PowerModels.DCPPowerModel, ipopt_solver)
+            result = PowerModels.run_opf("../test/data/matpower/case5_strg.m", PowerModels.DCPPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 16855.6; atol = 1e0)
@@ -244,7 +244,7 @@ end
 
     @testset "test dc+ll opf" begin
         @testset "5-bus case" begin
-            result = PowerModels.run_strg_opf("../test/data/matpower/case5_strg.m", PowerModels.DCPLLPowerModel, ipopt_solver)
+            result = PowerModels.run_opf("../test/data/matpower/case5_strg.m", PowerModels.DCPLLPowerModel, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 17048.4; atol = 1e0)

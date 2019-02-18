@@ -20,6 +20,7 @@ function post_opf(pm::GenericPowerModel)
     variable_voltage(pm)
     variable_shunt(pm)
     variable_generation(pm)
+    variable_storage(pm)
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
@@ -33,6 +34,13 @@ function post_opf(pm::GenericPowerModel)
 
     for i in ids(pm, :bus)
         constraint_power_balance(pm, i)
+    end
+
+    for i in ids(pm, :storage)
+        constraint_storage_state(pm, i)
+        constraint_storage_complementarity(pm, i)
+        constraint_storage_loss(pm, i)
+        constraint_storage_thermal_limit(pm, i)
     end
 
     for i in ids(pm, :branch)

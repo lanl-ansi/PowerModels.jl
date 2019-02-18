@@ -17,6 +17,7 @@ function post_ots(pm::GenericPowerModel)
     variable_voltage_on_off(pm)
     variable_shunt(pm)
     variable_generation(pm)
+    variable_storage(pm)
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
@@ -30,6 +31,13 @@ function post_ots(pm::GenericPowerModel)
 
     for i in ids(pm, :bus)
         constraint_power_balance(pm, i)
+    end
+
+    for i in ids(pm, :storage)
+        constraint_storage_state(pm, i)
+        constraint_storage_complementarity(pm, i)
+        constraint_storage_loss(pm, i)
+        constraint_storage_thermal_limit(pm, i)
     end
 
     for i in ids(pm, :branch)
@@ -52,6 +60,7 @@ function get_ots_solution(pm::GenericPowerModel, sol::Dict{String,Any})
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_shunt_setpoint(sol, pm)
+    add_storage_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)
     add_branch_status_setpoint(sol, pm)
 end
