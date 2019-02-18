@@ -24,7 +24,7 @@ function post_pf_bf(pm::GenericPowerModel)
     end
 
     for (i,bus) in ref(pm, :bus)
-        constraint_kcl_shunt(pm, i)
+        constraint_power_balance(pm, i)
 
         # PV Bus Constraints
         if length(ref(pm, :bus_gens, i)) > 0 && !(i in ids(pm,:ref_buses))

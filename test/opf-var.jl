@@ -11,6 +11,69 @@ function build_current_data(base_data)
 end
 
 
+@testset "test simple opf model" begin
+
+    @testset "ac polar opf" begin
+        result = PowerModels.run_smpl_opf("../test/data/matpower/case5.m", ACPPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 18269.1; atol = 1e0)
+    end
+
+    @testset "ac rect opf" begin
+        result = PowerModels.run_smpl_opf("../test/data/matpower/case5.m", ACRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 18269.1; atol = 1e0)
+    end
+
+    @testset "ac tan opf" begin
+        result = PowerModels.run_smpl_opf("../test/data/matpower/case5.m", ACTPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 18269.1; atol = 1e0)
+    end
+
+    @testset "dc opf" begin
+        result = PowerModels.run_smpl_opf("../test/data/matpower/case5.m", DCPPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 17613.2; atol = 1e0)
+    end
+
+    @testset "dc opf" begin
+        result = PowerModels.run_smpl_opf("../test/data/matpower/case5.m", DCPLLPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 17807.0; atol = 1e0)
+    end
+
+    @testset "lpac opf" begin
+        result = PowerModels.run_smpl_opf("../test/data/matpower/case5.m", LPACCPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 18288.1; atol = 1e0)
+    end
+
+    @testset "soc (BIM) opf" begin
+        result = PowerModels.run_smpl_opf("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 15051.4; atol = 1e0)
+    end
+
+    # test is successful as long as model building does not crash
+    @testset "sdp opf" begin
+        result = PowerModels.run_smpl_opf("../test/data/matpower/case14.m", SDPWRMPowerModel, scs_solver)
+
+        @test result["status"] == :Optimal
+        #@test isapprox(result["objective"], 8081.52; atol = 1e0)
+    end
+
+end
+
+
+
 @testset "test current limit opf" begin
 
     @testset "test ac polar opf" begin
@@ -202,7 +265,6 @@ end
 
     function post_opf_var(pm::GenericPowerModel)
         PMs.variable_voltage(pm)
-        PMs.variable_shunt(pm)
         PMs.variable_generation(pm)
         PMs.variable_branch_flow(pm)
         PMs.variable_dcline_flow(pm)
@@ -216,7 +278,7 @@ end
         end
 
         for i in ids(pm,:bus)
-            PMs.constraint_kcl_shunt(pm, i)
+            PMs.constraint_power_balance(pm, i)
         end
 
         for i in ids(pm,:branch)

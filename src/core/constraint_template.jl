@@ -72,13 +72,18 @@ end
 
 ### Power Balance Constraints ###
 
-"ensures that power generation and demand are balanced"
+"ensures that active and reactive power generation and demand are balanced across a connected network"
 function constraint_network_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     comp_bus_ids = ref(pm, nw, :components, i)
 
     comp_gen_ids = Set{Int64}()
     for bus_id in comp_bus_ids, gen_id in PowerModels.ref(pm, nw, :bus_gens, bus_id)
         push!(comp_gen_ids, gen_id)
+    end
+
+    comp_storage_ids = Set{Int64}()
+    for bus_id in comp_bus_ids, storage_id in PowerModels.ref(pm, nw, :bus_storage, bus_id)
+        push!(comp_storage_ids, storage_id)
     end
 
     comp_loads = Set()
@@ -115,14 +120,14 @@ function constraint_network_power_balance(pm::GenericPowerModel, i::Int; nw::Int
     comp_branch_g = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["br_r"][cnd], branch["br_x"][cnd], branch["tap"][cnd], branch["g_fr"][cnd], branch["g_to"][cnd]) for branch in comp_branches)
     comp_branch_b = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["br_r"][cnd], branch["br_x"][cnd], branch["tap"][cnd], branch["b_fr"][cnd], branch["b_to"][cnd]) for branch in comp_branches)
 
-    constraint_network_power_balance(pm, nw, cnd, i, comp_gen_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b)
+    constraint_network_power_balance(pm, nw, cnd, i, comp_gen_ids, comp_storage_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b)
 end
 
 
-### Bus - KCL Constraints ###
+### Bus - Power Balance Constraints ###
 
-""
-function constraint_kcl_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+"balances active and reactive power at a bus"
+function constraint_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     if !haskey(con(pm, nw, cnd), :kcl_p)
         con(pm, nw, cnd)[:kcl_p] = Dict{Int,ConstraintRef}()
     end
@@ -137,6 +142,7 @@ function constraint_kcl_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd
     bus_loads = ref(pm, nw, :bus_loads, i)
     bus_shunts_const = ref(pm, nw, :bus_shunts_const, i)
     bus_shunts_var = ref(pm, nw, :bus_shunts_var, i)
+    bus_storage = ref(pm, nw, :bus_storage, i)
 
     bus_pd = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in bus_loads)
     bus_qd = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in bus_loads)
@@ -147,38 +153,12 @@ function constraint_kcl_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd
     bus_gs_var = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts_var)
     bus_bs_var = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts_var)
 
-
-    constraint_kcl_shunt(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var)
+    constraint_power_balance(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var)
 end
 
-""
-function constraint_kcl_shunt_storage(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    if !haskey(con(pm, nw, cnd), :kcl_p)
-        con(pm, nw, cnd)[:kcl_p] = Dict{Int,ConstraintRef}()
-    end
-    if !haskey(con(pm, nw, cnd), :kcl_q)
-        con(pm, nw, cnd)[:kcl_q] = Dict{Int,ConstraintRef}()
-    end
 
-    bus = ref(pm, nw, :bus, i)
-    bus_arcs = ref(pm, nw, :bus_arcs, i)
-    bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
-    bus_gens = ref(pm, nw, :bus_gens, i)
-    bus_loads = ref(pm, nw, :bus_loads, i)
-    bus_shunts = ref(pm, nw, :bus_shunts, i)
-    bus_storage = ref(pm, nw, :bus_storage, i)
-
-    bus_pd = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in bus_loads)
-    bus_qd = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in bus_loads)
-
-    bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts)
-    bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts)
-
-    constraint_kcl_shunt_storage(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
-end
-
-""
-function constraint_kcl_shunt_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+"balances active and reactive power at a bus with network expansion variables"
+function constraint_power_balance_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     bus = ref(pm, nw, :bus, i)
     bus_arcs = ref(pm, nw, :bus_arcs, i)
     bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
@@ -193,7 +173,7 @@ function constraint_kcl_shunt_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, 
     bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts)
     bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts)
 
-    constraint_kcl_shunt_ne(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
+    constraint_power_balance_ne(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
 

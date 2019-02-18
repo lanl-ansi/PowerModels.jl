@@ -85,10 +85,12 @@ sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[
 sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for d in bus_shunts)*w[i]
 ```
 """
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var) where T <: AbstractWForms
+function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var) where T <: AbstractWForms
     w    = var(pm, n, c, :w, i)
     pg   = var(pm, n, c, :pg)
     qg   = var(pm, n, c, :qg)
+    ps = var(pm, n, c, :ps)
+    qs = var(pm, n, c, :qs)
     fs = var(pm, n, c, :fs)
     wfs = var(pm, n, c, :wfs)
     p    = var(pm, n, c, :p)
@@ -96,8 +98,8 @@ function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_a
     p_dc = var(pm, n, c, :p_dc)
     q_dc = var(pm, n, c, :q_dc)
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs_const))*w - sum(gs*wfs[s] for (s,gs) in bus_gs_var))
-    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs_const))*w + sum(bs*wfs[s] for (s,bs) in bus_bs_var))
+    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(ps[s] for s in bus_storage) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs_const))*w - sum(gs*wfs[s] for (s,gs) in bus_gs_var))
+    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qs[s] for s in bus_storage) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs_const))*w + sum(bs*wfs[s] for (s,bs) in bus_bs_var))
 
     for s in keys(bus_bs_var)
         InfrastructureModels.relaxation_product(pm.model, w, fs[s], wfs[s])
@@ -111,7 +113,7 @@ sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc]
 sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts)*w[i]
 ```
 """
-function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractWRForms
+function constraint_power_balance_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractWRForms
     w    = var(pm, n, c, :w, i)
     pg   = var(pm, n, c, :pg)
     qg   = var(pm, n, c, :qg)
@@ -173,7 +175,7 @@ end
 
 
 ""
-function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b) where T <: AbstractWRForms
+function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_storage_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b) where T <: AbstractWRForms
     for (i,(i,j,r,x,tm,g_fr,g_to)) in comp_branch_g
         @assert(r >= 0 && x >= 0) # requirement for the relaxation property
     end
@@ -181,10 +183,12 @@ function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::I
     wfs = var(pm, n, c, :fs)
     pg = var(pm, n, c, :pg)
     qg = var(pm, n, c, :qg)
+    ps = var(pm, n, c, :ps)
+    qs = var(pm, n, c, :ps)
     w = var(pm, n, c, :w)
 
-    @constraint(pm.model, sum(pg[g] for g in comp_gen_ids) >= sum(pd for (i,pd) in values(comp_pd)) + sum(gs*w[i] for (i,gs) in values(comp_gs_const)) + sum(gs*wfs[s] for (s,(i,gs)) in comp_gs_var) + sum(g_fr*w[i]/tm^2 + g_to*w[j] for (i,j,r,x,tm,g_fr,g_to) in values(comp_branch_g)))
-    @constraint(pm.model, sum(qg[g] for g in comp_gen_ids) >= sum(qd for (i,qd) in values(comp_qd)) - sum(bs*w[i] for (i,bs) in values(comp_bs_const)) - sum(bs*wfs[s] for (s,(i,bs)) in comp_bs_var) - sum(b_fr*w[i]/tm^2 + b_to*w[j] for (i,j,r,x,tm,b_fr,b_to) in values(comp_branch_b)))
+    @constraint(pm.model, sum(pg[g] for g in comp_gen_ids) >= sum(ps[s] for s in comp_storage_ids) + sum(pd for (i,pd) in values(comp_pd)) + sum(gs*w[i] for (i,gs) in values(comp_gs_const)) + sum(gs*wfs[s] for (s,(i,gs)) in comp_gs_var) + sum(g_fr*w[i]/tm^2 + g_to*w[j] for (i,j,r,x,tm,g_fr,g_to) in values(comp_branch_g)))
+    @constraint(pm.model, sum(qg[g] for g in comp_gen_ids) >= sum(qs[s] for s in comp_storage_ids) + sum(qd for (i,qd) in values(comp_qd)) - sum(bs*w[i] for (i,bs) in values(comp_bs_const)) - sum(bs*wfs[s] for (s,(i,bs)) in comp_bs_var) - sum(b_fr*w[i]/tm^2 + b_to*w[j] for (i,j,r,x,tm,b_fr,b_to) in values(comp_branch_b)))
 end
 
 
@@ -203,6 +207,17 @@ function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_id
     p_to = var(pm, n, c, :p, t_idx)
     q_to = var(pm, n, c, :q, t_idx)
     @constraint(pm.model, p_to^2 + q_to^2 <= w_to*c_rating_a^2)
+end
+
+
+""
+function constraint_storage_loss(pm::GenericPowerModel{T}, n::Int, i, bus, r, x, standby_loss) where T <: AbstractWForms
+    w = var(pm, n, pm.ccnd, :w, bus)
+    ps = var(pm, n, pm.ccnd, :ps, i)
+    qs = var(pm, n, pm.ccnd, :qs, i)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+    @NLconstraint(pm.model, ps + (sd - sc) == standby_loss + r*(ps^2 + qs^2)/w)
 end
 
 

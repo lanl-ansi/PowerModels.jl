@@ -4,7 +4,6 @@ TESTLOG = getlogger(PowerModels)
 function post_tp_opf(pm::PowerModels.GenericPowerModel)
     for c in PowerModels.conductor_ids(pm)
         PowerModels.variable_voltage(pm, cnd=c)
-        PowerModels.variable_shunt(pm, cnd=c)
         PowerModels.variable_generation(pm, cnd=c)
         PowerModels.variable_branch_flow(pm, cnd=c)
         PowerModels.variable_dcline_flow(pm, cnd=c)
@@ -18,7 +17,7 @@ function post_tp_opf(pm::PowerModels.GenericPowerModel)
         end
 
         for i in ids(pm, :bus)
-            PowerModels.constraint_kcl_shunt(pm, i, cnd=c)
+            PowerModels.constraint_power_balance(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
@@ -30,10 +29,10 @@ function post_tp_opf(pm::PowerModels.GenericPowerModel)
             PowerModels.constraint_thermal_limit_from(pm, i, cnd=c)
             PowerModels.constraint_thermal_limit_to(pm, i, cnd=c)
         end
+    end
 
-        for i in ids(pm, :dcline)
-            PowerModels.constraint_dcline(pm, i, cnd=c)
-        end
+    for i in ids(pm, :dcline)
+        PowerModels.constraint_dcline(pm, i)
     end
 
     PowerModels.objective_min_fuel_cost(pm)
@@ -357,8 +356,8 @@ end
         @test length(var(pm, pm.cnw)) == 1
 
         @test length(var(pm, pm.cnw, :cnd)) == 3
-        @test length(var(pm, pm.cnw, :cnd, 1)) == 9
-        @test length(var(pm)) == 9
+        @test length(var(pm, pm.cnw, :cnd, 1)) == 12
+        @test length(var(pm)) == 12
         @test haskey(var(pm, pm.cnw, :cnd, 1), :vm)
         @test var(pm, :vm, 1) == var(pm, pm.cnw, pm.ccnd, :vm, 1)
 

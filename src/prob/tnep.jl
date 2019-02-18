@@ -29,7 +29,7 @@ function post_tnep(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_kcl_shunt_ne(pm, i)
+        constraint_power_balance_ne(pm, i)
     end
 
     for i in ids(pm, :branch)

@@ -79,7 +79,7 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Symbo
         nw_con[:cnd] = Dict{Int,Any}()
 
         for cnd_id in nw[:conductor_ids]
-            nw_var[:cnd][cnd_id] = Dict{Symbol,Any}()
+            nw_var[:cnd][cnd_id] = _init_vars()
             nw_con[:cnd][cnd_id] = Dict{Symbol,Any}()
         end
     end
@@ -102,6 +102,26 @@ function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Symbo
 
     return pm
 end
+
+"adds empty dicts for optional varibales"
+function _init_vars()
+    vars = Dict{Symbol,Any}()
+
+    # shunt variables
+    vars[:fs] = Dict()
+    vars[:wfs] = Dict()
+
+    # storage variables
+    vars[:ps] = Dict()
+    vars[:qs] = Dict()
+
+    # dcline variables
+    vars[:p_dc] = Dict()
+    vars[:q_dc] = Dict()
+
+    return vars
+end
+
 
 ### Helper functions for working with multinetworks and multiconductors
 ""

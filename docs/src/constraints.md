@@ -36,15 +36,9 @@ constraint_voltage_magnitude_setpoint
 ### Power Balance Constraints
 
 ```@docs
+constraint_power_balance
+constraint_power_balance_ne
 constraint_network_power_balance
-```
-
-### KCL Constraints
-
-```@docs
-constraint_kcl_shunt
-constraint_kcl_shunt_storage
-constraint_kcl_shunt_ne
 ```
 
 ## Branch Constraints

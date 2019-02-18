@@ -31,29 +31,20 @@ end
 
 
 ""
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var) where T <: AbstractDCPForm
+function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs_const, bus_bs_const, bus_gs_var, bus_bs_var) where T <: AbstractDCPForm
     pg   = var(pm, n, c, :pg)
+    ps = var(pm, n, c, :ps)
     fs = var(pm, n, c, :fs)
     p    = var(pm, n, c, :p)
     p_dc = var(pm, n, c, :p_dc)
 
-    con(pm, n, c, :kcl_p)[i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs_const))*1.0^2 - sum(gs*fs[s]*1.0^2 for (s,gs) in bus_gs_var))
+    con(pm, n, c, :kcl_p)[i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(ps[s] for s in bus_storage) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs_const))*1.0^2 - sum(gs*fs[s]*1.0^2 for (s,gs) in bus_gs_var))
     # omit reactive constraint
 end
 
-""
-function constraint_kcl_shunt_storage(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
-    p = var(pm, n, c, :p)
-    pg = var(pm, n, c, :pg)
-    ps = var(pm, n, c, :ps)
-    p_dc = var(pm, n, c, :p_dc)
-    
-    con(pm, n, c, :kcl_p)[i] = @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(ps[s] for s in bus_storage) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
-    # omit reactive constraint
-end
 
 ""
-function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
+function constraint_power_balance_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
     pg   = var(pm, n, c, :pg)
     p    = var(pm, n, c, :p)
     p_ne = var(pm, n, c, :p_ne)
@@ -192,11 +183,12 @@ function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw
 end
 
 ""
-function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
+function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_storage_ids, comp_pd, comp_qd, comp_gs_const, comp_bs_const, comp_gs_var, comp_bs_var, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
     fs = var(pm, n, c, :fs)
+    ps = var(pm, n, c, :ps)
     pg = var(pm, n, c, :pg)
 
-    @constraint(pm.model, sum(pg[g] for g in comp_gen_ids) == sum(pd for (i,pd) in values(comp_pd)) + sum(gs*1.0^2 for (i,gs) in values(comp_gs_const)) + sum(gs*fs[s]*1.0^2 for (s,(i,gs)) in comp_gs_var))
+    @constraint(pm.model, sum(pg[g] for g in comp_gen_ids) == sum(ps[s] for s in comp_storage_ids) + sum(pd for (i,pd) in values(comp_pd)) + sum(gs*1.0^2 for (i,gs) in values(comp_gs_const)) + sum(gs*fs[s]*1.0^2 for (s,(i,gs)) in comp_gs_var))
     # omit reactive constraint
 end
 
