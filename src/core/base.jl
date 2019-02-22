@@ -16,15 +16,15 @@ abstract type AbstractPowerFormulation end
 ```
 type GenericPowerModel{T<:AbstractPowerFormulation}
     model::JuMP.Model
-    data::Dict{String,Any}
-    setting::Dict{String,Any}
-    solution::Dict{String,Any}
-    ref::Dict{Symbol,Any} # reference data
-    var::Dict{Symbol,Any} # JuMP variables
-    con::Dict{Symbol,Any} # JuMP constraint references
+    data::Dict{String,<:Any}
+    setting::Dict{String,<:Any}
+    solution::Dict{String,<:Any}
+    ref::Dict{Symbol,<:Any} # reference data
+    var::Dict{Symbol,<:Any} # JuMP variables
+    con::Dict{Symbol,<:Any} # JuMP constraint references
     cnw::Int              # current network index value
     ccnd::Int             # current conductor index value
-    ext::Dict{Symbol,Any} # user extentions
+    ext::Dict{Symbol,<:Any} # user extentions
 end
 ```
 where
@@ -44,13 +44,13 @@ Methods on `GenericPowerModel` for defining variables and adding constraints sho
 mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     model::Model
 
-    data::Dict{String,Any}
-    setting::Dict{String,Any}
-    solution::Dict{String,Any}
+    data::Dict{String,<:Any}
+    setting::Dict{String,<:Any}
+    solution::Dict{String,<:Any}
 
-    ref::Dict{Symbol,Any}
-    var::Dict{Symbol,Any}
-    con::Dict{Symbol,Any}
+    ref::Dict{Symbol,<:Any}
+    var::Dict{Symbol,<:Any}
+    con::Dict{Symbol,<:Any}
     cnw::Int
     ccnd::Int
 
@@ -58,11 +58,11 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     # Extensions should define a type to hold information particular to
     # their functionality, and store an instance of the type in this
     # dictionary keyed on an extension-specific symbol
-    ext::Dict{Symbol,Any}
+    ext::Dict{Symbol,<:Any}
 end
 
 "Default generic constructor."
-function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver(), jump_model::Model = Model(solver = solver))
+function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver(), jump_model::Model = Model(solver = solver))
 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
@@ -202,7 +202,7 @@ function run_generic_model(file::String, model_constructor, solver, post_method;
 end
 
 ""
-function run_generic_model(data::Dict{String,Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
+function run_generic_model(data::Dict{String,<:Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
     pm = build_generic_model(data, model_constructor, post_method; kwargs...)
     #pm, time, bytes_alloc, sec_in_gc = @timed build_generic_model(data, model_constructor, post_method; kwargs...)
     #println("model build time: $(time)")
@@ -221,7 +221,7 @@ function build_generic_model(file::String,  model_constructor, post_method; kwar
 end
 
 ""
-function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; multinetwork=false, multiconductor=false, kwargs...)
+function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_method; multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
     pm = model_constructor(data; kwargs...)
 
@@ -280,7 +280,7 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 
 * `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`.
 """
-function build_ref(data::Dict{String,Any})
+function build_ref(data::Dict{String,<:Any})
     refs = Dict{Symbol,Any}()
 
     nws = refs[:nw] = Dict{Int,Any}()
@@ -288,7 +288,7 @@ function build_ref(data::Dict{String,Any})
     if InfrastructureModels.ismultinetwork(data)
         nws_data = data["nw"]
     else
-        nws_data = Dict{String,Any}("0" => data)
+        nws_data = Dict("0" => data)
     end
 
     for (n, nw_data) in nws_data
@@ -335,7 +335,7 @@ function build_ref(data::Dict{String,Any})
         # maps dc line from and to parameters to arcs
         arcs_dc_param = ref[:arcs_dc_param] = Dict()
         for (l,i,j) in ref[:arcs_from_dc]
-            arcs_dc_param[(l,i,j)] = Dict{String,Any}(
+            arcs_dc_param[(l,i,j)] = Dict(
                 "pmin" => ref[:dcline][l]["pminf"],
                 "pmax" => ref[:dcline][l]["pmaxf"],
                 "pref" => ref[:dcline][l]["pf"],
@@ -343,7 +343,7 @@ function build_ref(data::Dict{String,Any})
                 "qmax" => ref[:dcline][l]["qmaxf"],
                 "qref" => ref[:dcline][l]["qf"]
             )
-            arcs_dc_param[(l,j,i)] = Dict{String,Any}(
+            arcs_dc_param[(l,j,i)] = Dict(
                 "pmin" => ref[:dcline][l]["pmint"],
                 "pmax" => ref[:dcline][l]["pmaxt"],
                 "pref" => ref[:dcline][l]["pt"],
@@ -489,7 +489,7 @@ function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismultico
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end
 
-    buspairs = Dict(((i,j), Dict{String,Any}(
+    buspairs = Dict(((i,j), Dict(
         "branch"=>bp_branch[(i,j)],
         "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],

@@ -67,7 +67,7 @@ function create_modifications(pm::GenericPowerModel,
 
     for bus in ids(pm, :bus)
         index = string(ref(pm, :bus, bus, "index"))
-        modifications["bus"][index] = Dict{String,Any}( "vmin" => vm_lb[bus], "vmax" => vm_ub[bus] )
+        modifications["bus"][index] = Dict("vmin" => vm_lb[bus], "vmax" => vm_ub[bus])
     end
 
     for branch in ids(pm, :branch)
@@ -75,7 +75,7 @@ function create_modifications(pm::GenericPowerModel,
         f_bus = ref(pm, :branch, branch, "f_bus")
         t_bus = ref(pm, :branch, branch, "t_bus")
         bp = (f_bus, t_bus)
-        modifications["branch"][index] = Dict{String,Any}( "angmin" => td_lb[bp], "angmax" => td_ub[bp] )
+        modifications["branch"][index] = Dict("angmin" => td_lb[bp], "angmax" => td_ub[bp])
     end
 
     return modifications
@@ -148,7 +148,7 @@ function run_obbt_opf(file::String, solver; kwargs...)
     return run_obbt_opf(data, solver; kwargs...)
 end
 
-function run_obbt_opf(data::Dict{String,Any}, solver;
+function run_obbt_opf(data::Dict{String,<:Any}, solver;
     model_constructor = QCWRTriPowerModel,
     max_iter = 100,
     time_limit = 3600.0,

@@ -11,7 +11,7 @@ function build_mn_data(base_data_1, base_data_2)
     @assert data_1["per_unit"] == data_2["per_unit"]
     @assert data_1["baseMVA"] == data_2["baseMVA"]
 
-    mn_data = Dict{String,Any}(
+    mn_data = Dict(
         "name" => "$(data_1["name"]) + $(data_2["name"])",
         "multinetwork" => true,
         "per_unit" => data_1["per_unit"],
@@ -66,7 +66,7 @@ function build_mn_mc_data(base_data_1, base_data_2; conductors_1::Int=3, conduct
         PowerModels.make_multiconductor(mp_data_2, conductors_2)
     end
 
-    mn_data = Dict{String,Any}(
+    mn_data = Dict(
         "name" => "$(mp_data_1["name"]) + $(mp_data_2["name"])",
         "multinetwork" => true,
         "per_unit" => mp_data_1["per_unit"],

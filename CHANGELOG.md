@@ -2,13 +2,14 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Updated dict types to Dict{String,<:Any}
 - Droped lower bounds on voltage variables
 - Added all error messages to memento log
-- Fixed minor typos in docs
 - Added a corner tolerance fix for OBBT
 - Added ability to parse default values in PTI files
+- Fixed minor typos in docs
 - Fixed bug in parsing of PTI transformers (#459)
-- Refactor PTI parsing function names with `_` to indicate internal use only
+- Refactored PTI parsing function names with `_` to indicate internal use only
 
 ### v0.9.3
 - Added support for heterogeneous cost functions

@@ -323,7 +323,7 @@ end
     @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
 
     data["load"]["1"]["load_bus"] = 1
-    data["shunt"]["1"] = Dict{String,Any}("gs"=>0, "bs"=>1, "shunt_bus"=>1000, "index"=>1, "status"=>1)
+    data["shunt"]["1"] = Dict("gs"=>0, "bs"=>1, "shunt_bus"=>1000, "index"=>1, "status"=>1)
     @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
 
     data["shunt"]["1"]["shunt_bus"] = 1

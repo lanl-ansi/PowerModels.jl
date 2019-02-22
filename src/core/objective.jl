@@ -380,7 +380,7 @@ function slope_intercepts(points::Array{T,1}) where T <: Real
         m = (y2 - y1)/(x2 - x1)
         b = y1 - m * x1
 
-        line = Dict{String,Any}(
+        line = Dict(
             "slope" => m,
             "intercept" => b
         )
