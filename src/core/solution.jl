@@ -37,7 +37,7 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
         data["branch_count"] = length(pm.data["branch"])
     end
 
-    solution = Dict{String,Any}(
+    solution = Dict(
         "solver" => string(typeof(pm.model.solver)),
         "status" => status,
         "objective" => objective,
@@ -63,7 +63,7 @@ function init_solution(pm::GenericPowerModel)
 end
 
 ""
-function get_solution(pm::GenericPowerModel, sol::Dict{String,Any})
+function get_solution(pm::GenericPowerModel, sol::Dict{String,<:Any})
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_storage_setpoint(sol, pm)

@@ -4,7 +4,7 @@
 ################################################################################
 
 
-function getval(comp::Dict{String,Any}, key::String, conductor::Int, default=0.0)
+function getval(comp::Dict{String,<:Any}, key::String, conductor::Int, default=0.0)
     if haskey(comp, key)
         vals = comp[key]
         return getmcv(vals, conductor)
