@@ -291,7 +291,7 @@ function mp_cost_data(cost_row)
     elseif model == 2
        nr_parameters = ncost
     end
-    cost_data = Dict{String,Any}(
+    cost_data = Dict(
         "model" => InfrastructureModels.check_type(Int, cost_row[1]),
         "startup" => InfrastructureModels.check_type(Float64, cost_row[2]),
         "shutdown" => InfrastructureModels.check_type(Float64, cost_row[3]),
