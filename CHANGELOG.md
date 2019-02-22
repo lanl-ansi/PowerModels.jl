@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Updated dict types to Dict{String,<:Any}
+- Updated dict types to Dict{String,<:Any} (#466)
 - Droped lower bounds on voltage variables
 - Added all error messages to memento log
 - Added a corner tolerance fix for OBBT
