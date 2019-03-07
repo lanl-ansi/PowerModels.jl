@@ -456,9 +456,9 @@ function _parse_line_element!(data::Dict, elements::Array, section::AbstractStri
             end
         end
 
-        if startswith(element, "'") && endswith(element, "'")
+        if startswith(strip(element), "'") && endswith(strip(element), "'")
             dtype = String
-            element = chop(reverse(chop(reverse(element))))
+            element = chop(reverse(chop(reverse(strip(element)))))
         end
 
         try
@@ -519,12 +519,16 @@ Comments, typically indicated at the end of a line with a `'/'` character,
 are also extracted separately, and `Array{Array{String}, String}` is returned.
 """
 function _get_line_elements(line::AbstractString)::Array
-    comment_split = r"(?!\B\"[^\"]*)[\/](?![^\"]*\"\B)"
+    if length(collect(eachmatch(r"'", line))) % 2 == 1
+        throw(error(LOGGER, "There are an uneven number of single-quotes in \"{line}\", the line cannot be parsed."))
+    end
+
+    comment_split = r"(?!\B[\'][^\']*)[\/](?![^\']*[\']\B)"
     line_comment = split(line, comment_split, limit=2)
     line = strip(line_comment[1])
     comment = length(line_comment) > 1 ? strip(line_comment[2]) : ""
 
-    split_string = r"(?!\B\"[^\"]*),(?![^\"]*\"\B)"
+    split_string = r",(?=(?:[^']*'[^']*')*[^']*$)"
     elements = split(line, split_string)
 
     Memento.debug(LOGGER, "$line")

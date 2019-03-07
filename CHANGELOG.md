@@ -10,6 +10,8 @@ PowerModels.jl Change Log
 - Fixed minor typos in docs
 - Fixed bug in parsing of PTI transformers (#459)
 - Refactored PTI parsing function names with `_` to indicate internal use only
+- Fixed bug in PTI parsing handling commas or comment characters inside of quotations
+- Fixed bug in PTI parsing where quotation marks were not being properly stripped from String-type data
 
 ### v0.9.3
 - Added support for heterogeneous cost functions
