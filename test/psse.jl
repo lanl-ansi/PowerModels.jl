@@ -209,6 +209,8 @@ end
     @testset "exception handling" begin
         dummy_data = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw")
 
+        @test dummy_data["gen"]["1"]["source_id"] == [1001, "1 "]
+
         setlevel!(TESTLOG, "warn")
 
         @test_warn(TESTLOG, "Could not find bus 1, returning 0 for field vm",
