@@ -529,7 +529,7 @@ function _get_line_elements(line::AbstractString)::Array
     comment = length(line_comment) > 1 ? strip(line_comment[2]) : ""
 
     split_string = r",(?=(?:[^']*'[^']*')*[^']*$)"
-    elements = split(line, split_string)
+    elements = [strip(element) for element in split(line, split_string)]
 
     Memento.debug(LOGGER, "$line")
     Memento.debug(LOGGER, "$comment")
