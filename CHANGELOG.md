@@ -9,6 +9,7 @@ PowerModels.jl Change Log
 - Refactored PTI parsing function names with `_` to indicate internal use only
 - Fixed minor typos in docs
 - Fixed a minor bound tolerance bug in OBBT
+- Fixed minor error in conic bfm models (#469)
 - Fixed bug in parsing of PTI transformers (#459)
 - Fixed bug in PTI parsing handling commas or comment characters inside of quotations
 - Fixed bug in PTI parsing where quotation marks were not being properly stripped from String-type data
