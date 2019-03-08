@@ -2,14 +2,14 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added all error messages to memento log
+- Added ability to parse default values in PTI files
 - Updated dict types to Dict{String,<:Any} (#466)
 - Droped lower bounds on voltage variables
-- Added all error messages to memento log
-- Added a corner tolerance fix for OBBT
-- Added ability to parse default values in PTI files
-- Fixed minor typos in docs
-- Fixed bug in parsing of PTI transformers (#459)
 - Refactored PTI parsing function names with `_` to indicate internal use only
+- Fixed minor typos in docs
+- Fixed a minor bound tolerance bug in OBBT
+- Fixed bug in parsing of PTI transformers (#459)
 - Fixed bug in PTI parsing handling commas or comment characters inside of quotations
 - Fixed bug in PTI parsing where quotation marks were not being properly stripped from String-type data
 
