@@ -1,3 +1,5 @@
+# This file is machine-generated - editing it directly is not advised
+
 [[Base64]]
 uuid = "2a0f44e3-6c83-55bd-87e4-b1978d98bd5f"
 
@@ -27,9 +29,15 @@ version = "0.2.0"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
+<<<<<<< HEAD
 git-tree-sha1 = "84aa74986c5b9b898b0d1acaf3258741ee64754f"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
 version = "2.1.0"
+=======
+git-tree-sha1 = "195a3ffcb8b0762684b6821de18f83a16455c6ea"
+uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
+version = "2.0.0"
+>>>>>>> FIX: cleanup rebase
 
 [[DataStructures]]
 deps = ["InteractiveUtils", "OrderedCollections", "Random", "Serialization", "Test"]
@@ -58,7 +66,7 @@ uuid = "b552c78f-8df3-52c6-915a-8e097449b14b"
 version = "0.0.10"
 
 [[Distributed]]
-deps = ["LinearAlgebra", "Random", "Serialization", "Sockets"]
+deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[EzXML]]
@@ -77,10 +85,14 @@ version = "0.10.3"
 deps = ["JuMP", "Memento"]
 git-tree-sha1 = "c3dcbfd5a20ea423f8db1a800f17392b3dd1877d"
 uuid = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
+<<<<<<< HEAD
 version = "0.0.15"
+=======
+version = "0.0.14"
+>>>>>>> FIX: cleanup rebase
 
 [[InteractiveUtils]]
-deps = ["LinearAlgebra", "Markdown"]
+deps = ["Markdown"]
 uuid = "b77e0a4c-d291-57a0-90e8-8db25a27a240"
 
 [[JSON]]
@@ -90,8 +102,13 @@ uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.20.0"
 
 [[JuMP]]
+<<<<<<< HEAD
 deps = ["Calculus", "Compat", "ForwardDiff", "Libdl", "MathProgBase", "Pkg", "ReverseDiffSparse", "Serialization"]
 git-tree-sha1 = "3bd8e52f7aeb2736a8e1b0d8ae8d01c2c85fea24"
+=======
+deps = ["Calculus", "DataStructures", "ForwardDiff", "LinearAlgebra", "MathOptInterface", "NaNMath", "Random", "SparseArrays", "Statistics", "Test"]
+git-tree-sha1 = "db9f08540c1a23269acbae5d520c79f4722899f4"
+>>>>>>> FIX: cleanup rebase
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
 version = "0.18.5"
 
@@ -112,17 +129,25 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
+<<<<<<< HEAD
 [[MathProgBase]]
 deps = ["Compat"]
 git-tree-sha1 = "3bf2e534e635df810e5f4b4f1a8b6de9004a0d53"
 uuid = "fdba3010-5040-5b88-9595-932c9decdf73"
 version = "0.7.7"
+=======
+[[MathOptInterface]]
+deps = ["Compat", "Unicode"]
+git-tree-sha1 = "ed9457bdd246a3302d791c5e8f0aad3c3de2e121"
+uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+version = "0.8.3"
+>>>>>>> FIX: cleanup rebase
 
 [[Memento]]
-deps = ["Compat", "JSON", "Nullables", "Syslogs", "TimeZones"]
-git-tree-sha1 = "c4ade3575bcc2c180cfa14cf8b3b63eebca51629"
+deps = ["Dates", "Distributed", "JSON", "Sockets", "Syslogs", "Test", "TimeZones", "UUIDs"]
+git-tree-sha1 = "56c5ac9c3e89634ab5f1e736a9c3ef075b3e5850"
 uuid = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
-version = "0.10.0"
+version = "0.11.0"
 
 [[Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
@@ -229,7 +254,7 @@ uuid = "30578b45-9adc-5946-b283-645ec420af67"
 version = "0.4.0"
 
 [[UUIDs]]
-deps = ["Random"]
+deps = ["Random", "SHA"]
 uuid = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [[Unicode]]

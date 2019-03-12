@@ -32,7 +32,7 @@ function variable_voltage_magnitude(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::
         )
     else
         var(pm, nw, cnd)[:vm] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :bus)], basename="$(nw)_$(cnd)_vm",
+            [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_vm",
             start = getval(ref(pm, nw, :bus, i), "vm_start", cnd, 1.0)
         )
     end
@@ -43,14 +43,14 @@ end
 function variable_voltage_real(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool = true)
     if bounded
         var(pm, nw, cnd)[:vr] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :bus)], basename="$(nw)_$(cnd)_vr",
-            lowerbound = -ref(pm, nw, :bus, i, "vmax", cnd),
-            upperbound =  ref(pm, nw, :bus, i, "vmax", cnd),
+            [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_vr",
+            lower_bound = -ref(pm, nw, :bus, i, "vmax", cnd),
+            upper_bound =  ref(pm, nw, :bus, i, "vmax", cnd),
             start = getval(ref(pm, nw, :bus, i), "vr_start", cnd, 1.0)
         )
     else
         var(pm, nw, cnd)[:vr] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :bus)], basename="$(nw)_$(cnd)_vr",
+            [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_vr",
             start = getval(ref(pm, nw, :bus, i), "vr_start", cnd, 1.0)
         )
     end
@@ -60,14 +60,14 @@ end
 function variable_voltage_imaginary(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool = true)
     if bounded
         var(pm, nw, cnd)[:vi] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :bus)], basename="$(nw)_$(cnd)_vi",
-            lowerbound = -ref(pm, nw, :bus, i, "vmax", cnd),
-            upperbound =  ref(pm, nw, :bus, i, "vmax", cnd),
+            [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_vi",
+            lower_bound = -ref(pm, nw, :bus, i, "vmax", cnd),
+            upper_bound =  ref(pm, nw, :bus, i, "vmax", cnd),
             start = getval(ref(pm, nw, :bus, i), "vi_start", cnd)
         )
     else
         var(pm, nw, cnd)[:vi] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :bus)], basename="$(nw)_$(cnd)_vi",
+            [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_vi",
             start = getval(ref(pm, nw, :bus, i), "vi_start", cnd)
         )
     end
@@ -113,8 +113,8 @@ function variable_voltage_magnitude_sqr(pm::GenericPowerModel; nw::Int=pm.cnw, c
         )
     else
         var(pm, nw, cnd)[:w] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :bus)], basename="$(nw)_$(cnd)_w",
-            lowerbound = 0.0,
+            [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_w",
+            lower_bound = 0.0,
             start = getval(ref(pm, nw, :bus, i), "w_start", cnd, 1.001)
         )
     end
