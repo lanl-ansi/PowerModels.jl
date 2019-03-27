@@ -279,19 +279,19 @@ end
 
 function variable_generation_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, relax=false)
     if !relax
-        var(pm, nw, cnd)[:z_gen] = @variable(pm.model,
-            [i in ids(pm, nw, :gen)], basename="$(nw)_$(cnd)_z_gen",
+        var(pm, nw)[:z_gen] = @variable(pm.model,
+            [i in ids(pm, nw, :gen)], basename="$(nw)_z_gen",
             lowerbound = 0,
             upperbound = 1,
-            category = :Int, 
-            start = getval(ref(pm, nw, :gen, i), "z_gen_start", cnd, 1.0)
+            category = :Int,
+            start = getval(ref(pm, nw, :gen, i), "z_gen_start", 1, 1.0)
         )
     else
-        var(pm, nw, cnd)[:z_gen] = @variable(pm.model,
-            [i in ids(pm, nw, :gen)], basename="$(nw)_$(cnd)_z_gen",
+        var(pm, nw)[:z_gen] = @variable(pm.model,
+            [i in ids(pm, nw, :gen)], basename="$(nw)_z_gen",
             lowerbound = 0,
             upperbound = 1,
-            start = getval(ref(pm, nw, :gen, i), "z_gen_start", cnd, 1.0)
+            start = getval(ref(pm, nw, :gen, i), "z_gen_start", 1, 1.0)
         )
     end
 end

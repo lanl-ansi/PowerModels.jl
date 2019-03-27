@@ -29,7 +29,7 @@ end
 "on/off constraint for generators"
 function constraint_generation_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, pmin, pmax, qmin, qmax) where T <: AbstractActivePowerFormulation
     pg = var(pm, n, c, :pg, i)
-    z = var(pm, n, c, :z_gen, i)
+    z = var(pm, n, :z_gen, i)
 
     @constraint(pm.model, pg <= pmax*z)
     @constraint(pm.model, pg >= pmin*z)

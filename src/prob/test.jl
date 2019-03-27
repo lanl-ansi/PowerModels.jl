@@ -91,6 +91,57 @@ function post_uc_opf(pm::GenericPowerModel)
     end
 end
 
+
+""
+function run_uc_mc_opf(file, model_constructor, solver; kwargs...)
+    return run_generic_model(file, model_constructor, solver, post_uc_mc_opf; solution_builder = get_uc_solution, multiconductor=true, kwargs...)
+end
+
+""
+function post_uc_mc_opf(pm::GenericPowerModel)
+    variable_generation_indicator(pm)
+
+    for c in conductor_ids(pm)
+        variable_voltage(pm, cnd=c)
+        variable_voltage(pm, cnd=c)
+
+        variable_generation_on_off(pm, cnd=c)
+
+        variable_branch_flow(pm, cnd=c)
+        variable_dcline_flow(pm, cnd=c)
+
+        constraint_voltage(pm, cnd=c)
+
+        for i in ids(pm, :ref_buses)
+            constraint_theta_ref(pm, i, cnd=c)
+        end
+
+        for i in ids(pm, :gen)
+            constraint_generation_on_off(pm, i, cnd=c)
+        end
+
+        for i in ids(pm, :bus)
+            constraint_kcl_shunt(pm, i, cnd=c)
+        end
+
+        for i in ids(pm, :branch)
+            constraint_ohms_yt_from(pm, i, cnd=c)
+            constraint_ohms_yt_to(pm, i, cnd=c)
+
+            constraint_voltage_angle_difference(pm, i, cnd=c)
+
+            constraint_thermal_limit_from(pm, i, cnd=c)
+            constraint_thermal_limit_to(pm, i, cnd=c)
+        end
+
+        for i in ids(pm, :dcline)
+            constraint_dcline(pm, i, cnd=c)
+        end
+    end
+
+    objective_min_fuel_cost(pm)
+end
+
 ""
 function get_uc_solution(pm::GenericPowerModel, sol::Dict{String,<:Any})
     add_bus_voltage_setpoint(sol, pm)

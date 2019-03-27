@@ -83,7 +83,7 @@ end
 function constraint_generation_on_off(pm::GenericPowerModel, n::Int, c::Int, i::Int, pmin, pmax, qmin, qmax)
     pg = var(pm, n, c, :pg, i)
     qg = var(pm, n, c, :qg, i)
-    z = var(pm, n, c, :z_gen, i)
+    z = var(pm, n, :z_gen, i)
 
     @constraint(pm.model, pg <= pmax*z)
     @constraint(pm.model, pg >= pmin*z)
