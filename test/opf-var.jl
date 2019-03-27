@@ -149,12 +149,12 @@ end
 end
 
 
-@testset "test unit committment opf" begin
+@testset "test unit commitment opf" begin
 
     @testset "test ac opf" begin
         @testset "5-bus uc case" begin
             # work around possible bug in Juniper strong branching
-            result = PowerModels.run_uc_opf("../test/data/matpower/case5_uc.m", ACPPowerModel, JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), branch_strategy=:MostInfeasible))
+            result = PowerModels.run_uc_opf("../test/data/matpower/case5_uc.m", ACPPowerModel, JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), branch_strategy=:MostInfeasible, log_levels=[]))
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 18270.0; atol = 1e0)
