@@ -79,6 +79,19 @@ function constraint_reactive_gen_setpoint(pm::GenericPowerModel, n::Int, c::Int,
     @constraint(pm.model, qg_var == qg)
 end
 
+"on/off constraint for generators"
+function constraint_generation_on_off(pm::GenericPowerModel, n::Int, c::Int, i::Int, pmin, pmax, qmin, qmax)
+    pg = var(pm, n, c, :pg, i)
+    qg = var(pm, n, c, :qg, i)
+    z = var(pm, n, :z_gen, i)
+
+    @constraint(pm.model, pg <= pmax*z)
+    @constraint(pm.model, pg >= pmin*z)
+    @constraint(pm.model, qg <= qmax*z)
+    @constraint(pm.model, qg >= qmin*z)
+end
+
+
 """
 Creates Line Flow constraint for DC Lines (Matpower Formulation)
 

@@ -181,6 +181,28 @@ end
     end
 
 
+    @testset "test multi-conductor uc opf variants" begin
+        mp_data = build_mc_data("../test/data/matpower/case5_uc.m")
+
+        @testset "ac 5-bus case" begin
+            result = PowerModels.run_uc_mc_opf(mp_data, ACPPowerModel, juniper_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 54810.0; atol = 1e-1)
+            @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0, atol=1e-6)
+        end
+
+        @testset "dc 5-bus case" begin
+            result = PowerModels.run_uc_mc_opf(mp_data, DCPPowerModel, cbc_solver)
+
+            @test result["status"] == :Optimal
+            @test isapprox(result["objective"], 52839.6; atol = 1e-1)
+            @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0)
+        end
+
+    end
+
+
     @testset "dual variable case" begin
 
         @testset "test dc polar opf" begin
