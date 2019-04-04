@@ -152,7 +152,7 @@ function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: Abst
             try
                 vr = getvalue(var(pm, :vr, cnd=c)[idx])
                 vi = getvalue(var(pm, :vi, cnd=c)[idx])
-                println(vr)
+                
                 vm = sqrt(vr^2 + vi^2)
 
                 sol_item["vm"][c] = vm
@@ -160,12 +160,12 @@ function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: Abst
             catch
             end
         end
-    end
 
-    # remove MultiConductorValue, if it was not a ismulticonductor network
-    if !ismulticonductor(pm)
-        sol_item["vm"] = sol_item["vm"][1]
-        sol_item["va"] = sol_item["va"][1]
+        # remove MultiConductorValue, if it was not a ismulticonductor network
+        if !ismulticonductor(pm)
+            sol_item["vm"] = sol_item["vm"][1]
+            sol_item["va"] = sol_item["va"][1]
+        end
     end
 end
 
