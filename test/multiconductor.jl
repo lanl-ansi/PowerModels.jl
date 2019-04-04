@@ -113,6 +113,39 @@ end
             end
         end
 
+        @testset "3-bus 3-conductor case with theta_ref=pi" begin
+            mp_data = build_mc_data("../test/data/matpower/case3.m", conductors=3)
+            pm = PowerModels.build_generic_model(mp_data, ACRPowerModel, PowerModels.post_mc_opf, multiconductor=true)
+            # the current implementation does not allow for setting theta to any value but zero
+            # we need theta ∈ (π/2, 3*π/2) to test atan2 however
+            # however, we can set theta=pi because constraint_theta_ref does not constrain vr>=0
+            # this allows us to test for theta=pi by adding the constraint
+            # vr<=0 at the reference bus
+            # because of convergence issues, we need to give a better starting point
+            # the default is (vr=1, vi=0),
+            # whilst the solution will now be close to (vr=-1, vi=0)
+            for i in ids(pm, :bus)
+                # update starting point from (vr=1, vi=0) to (vr=-1, vi=0)
+                setvalue(var(pm, :vr, i, cnd=1), -1)
+                if i in ids(pm, :ref_buses)
+                    # set theta of conductor 1 at reference bus to pi
+                    @constraint(pm.model, var(pm, :vr, i, cnd=1)<=0)
+                end
+            end
+            result = PowerModels.solve_generic_model(pm, ipopt_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 47267.9; atol = 1e-1)
+            @test isapprox(result["solution"]["gen"]["1"]["pg"][1], 1.58067; atol = 1e-3)
+            # the first conductor should now have a va in the third kwadrant,
+            # not the first, if atan(y,x) works correctly
+            @test isapprox(result["solution"]["bus"]["2"]["va"][1], -3.0149; atol = 1e-3)
+            for c in 2:mp_data["conductors"]
+                @test isapprox(result["solution"]["gen"]["1"]["pg"][c], 1.58067; atol = 1e-3)
+                @test isapprox(result["solution"]["bus"]["2"]["va"][c], 0.12669; atol = 1e-3)
+            end
+        end
+
         @testset "5-bus 5-conductor case" begin
             mp_data = build_mc_data("../test/data/matpower/case5.m", conductors=5)
 
