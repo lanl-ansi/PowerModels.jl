@@ -152,7 +152,7 @@ function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: Abst
             try
                 vr = getvalue(var(pm, :vr, cnd=c)[idx])
                 vi = getvalue(var(pm, :vi, cnd=c)[idx])
-                
+
                 vm = sqrt(vr^2 + vi^2)
 
                 sol_item["vm"][c] = vm
@@ -166,20 +166,5 @@ function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: Abst
             sol_item["vm"] = sol_item["vm"][1]
             sol_item["va"] = sol_item["va"][1]
         end
-    end
-end
-
-"Calculates the angle in the range ]-π, π]. Returns NaN for (0, 0)"
-function atan2(xi, xr)
-    if xr==0
-        if xi > 0
-            return pi/2
-        elseif xi < 0
-            return -pi/2
-        else
-            return NaN
-        end
-    else
-        return atan(xi/xr) + Int(xr<=0)*(Int(xi>=0) - Int(xi<0))*pi
     end
 end

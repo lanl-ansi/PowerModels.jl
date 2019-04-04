@@ -9,10 +9,10 @@
         @test isnan(stats["final_rel_gap_from_ub"])
         @test stats["iteration_count"] == 5
 
-        data, stats = run_obbt_opf("../test/data/matpower/case3.m", ipopt_solver,
+        data, stats = run_obbt_opf("../test/data/matpower/case3.m", ipopt_solver, 
             model_constructor = QCWRTriPowerModel,
-            upper_bound = upper_bound,
-            upper_bound_constraint = true,
+            upper_bound = upper_bound, 
+            upper_bound_constraint = true, 
             rel_gap_tol = 1e-3);
         @test isapprox(stats["final_rel_gap_from_ub"], 0; atol=1e0)
         @test stats["iteration_count"] == 2
@@ -31,10 +31,10 @@ end
         @test isnan(stats["final_rel_gap_from_ub"])
         @test stats["iteration_count"] == 5
 
-        data, stats = run_obbt_opf("../test/data/matpower/case3.m", ipopt_solver,
+        data, stats = run_obbt_opf("../test/data/matpower/case3.m", ipopt_solver, 
             model_constructor = QCWRPowerModel,
-            upper_bound = upper_bound,
-            upper_bound_constraint = true,
+            upper_bound = upper_bound, 
+            upper_bound_constraint = true, 
             rel_gap_tol = 1e-3);
         @test isapprox(stats["final_rel_gap_from_ub"], 0; atol=1e0)
         @test stats["iteration_count"] == 2
@@ -58,16 +58,4 @@ end
         @test isapprox(stats["final_rel_gap_from_ub"], 0.0; atol=1e-2)
         @test stats["iteration_count"] == 4
     end
-end
-
-@testset "atan2" begin
-    # check all kwadrants and all boundaries
-    @test PowerModels.atan2(0,1)==0
-    @test PowerModels.atan2(1,1)==45/180*pi
-    @test PowerModels.atan2(1,0)==pi/2
-    @test PowerModels.atan2(1,-1)==(45+90)/180*pi
-    @test PowerModels.atan2(0,-1)≈pi
-    @test PowerModels.atan2(-1,-1)==-(45+90)/180*pi
-    @test PowerModels.atan2(-1,0)==-pi/2
-    @test PowerModels.atan2(-1,1)==-45/180*pi
 end
