@@ -156,7 +156,7 @@ function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: Abst
                 vm = sqrt(vr^2 + vi^2)
 
                 sol_item["vm"][c] = vm
-                sol_item["va"][c] = atan2(vi, vr)
+                sol_item["va"][c] = atan(vi, vr)
             catch
             end
         end
