@@ -13,8 +13,8 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <:
     vi = var(pm, n, c, :vi)
 
     for (i,bus) in ref(pm, n, :bus)
-        @constraint(pm.model, bus["vmin"]^2 <= (vr[i]^2 + vi[i]^2))
-        @constraint(pm.model, bus["vmax"]^2 >= (vr[i]^2 + vi[i]^2))
+        @constraint(pm.model, bus["vmin"][c]^2 <= (vr[i]^2 + vi[i]^2))
+        @constraint(pm.model, bus["vmax"][c]^2 >= (vr[i]^2 + vi[i]^2))
     end
 
     # does not seem to improve convergence
