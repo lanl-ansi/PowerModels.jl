@@ -143,26 +143,43 @@ function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: Abst
     for (i,item) in bus_dict
         idx = Int(item["bus_i"])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
-        sol_item["vm"] = NaN
-        sol_item["va"] = NaN
-        try
-            vr = getvalue(var(pm, :vr)[idx])
-            vi = getvalue(var(pm, :vi)[idx])
 
-            vm = sqrt(vr^2 + vi^2)
-            sol_item["vm"] = vm
+        num_conductors = length(conductor_ids(pm))
+        cnd_idx = 1
+        sol_item["vm"] = MultiConductorVector{Real}([NaN for i in 1:num_conductors])
+        sol_item["va"] = MultiConductorVector{Real}([NaN for i in 1:num_conductors])
+        for c in conductor_ids(pm)
+            try
+                vr = getvalue(var(pm, :vr, cnd=c)[idx])
+                vi = getvalue(var(pm, :vi, cnd=c)[idx])
+                println(vr)
+                vm = sqrt(vr^2 + vi^2)
 
-            if vr == 0.0
-                if vi >= 0
-                    va = pi/2
-                else
-                    va = 3*pi/2
-                end
-            else
-                va = atan(vi/vr)
+                sol_item["vm"][c] = vm
+                sol_item["va"][c] = atan2(vi, vr)
+            catch
             end
-            sol_item["va"] = va
-        catch
         end
+    end
+
+    # remove MultiConductorValue, if it was not a ismulticonductor network
+    if !ismulticonductor(pm)
+        sol_item["vm"] = sol_item["vm"][1]
+        sol_item["va"] = sol_item["va"][1]
+    end
+end
+
+"Calculates the angle in the range ]-π, π]. Returns NaN for (0, 0)"
+function atan2(xi, xr)
+    if xr==0
+        if xi > 0
+            return pi/2
+        elseif xi < 0
+            return -pi/2
+        else
+            return NaN
+        end
+    else
+        return atan(xi/xr) + Int(xr<=0)*(Int(xi>=0) - Int(xi<0))*pi
     end
 end
