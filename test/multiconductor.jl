@@ -113,6 +113,20 @@ end
             end
         end
 
+        @testset "3-bus 3-conductor case with theta_ref=pi" begin
+            mp_data = build_mc_data("../test/data/matpower/case3.m", conductors=3)
+            pm = PowerModels.build_generic_model(mp_data, ACRPowerModel, PowerModels.post_mc_opf, multiconductor=true)
+            result = PowerModels.solve_generic_model(pm, ipopt_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 47267.9; atol = 1e-1)
+
+            for c in 1:mp_data["conductors"]
+                @test isapprox(result["solution"]["gen"]["1"]["pg"][c], 1.58067; atol = 1e-3)
+                @test isapprox(result["solution"]["bus"]["2"]["va"][c], 0.12669; atol = 1e-3)
+            end
+        end
+
         @testset "5-bus 5-conductor case" begin
             mp_data = build_mc_data("../test/data/matpower/case5.m", conductors=5)
 
