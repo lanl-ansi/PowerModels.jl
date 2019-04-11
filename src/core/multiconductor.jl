@@ -77,6 +77,7 @@ if VERSION > v"0.7.0-"
 
     "`A = find_mcv(As)` returns the first MultiConductorVector among the arguments."
     find_mcv(bc::Base.Broadcast.Broadcasted) = find_mcv(bc.args)
+    find_mcv(args::Base.Broadcast.Extruded) = find_mcv(args.x)
     find_mcv(args::Tuple) = find_mcv(find_mcv(args[1]), Base.tail(args))
     find_mcv(x) = x
     find_mcv(a::MultiConductorVector, rest) = a
@@ -90,6 +91,7 @@ if VERSION > v"0.7.0-"
 
     "`A = find_mcm(As)` returns the first MultiConductorMatrix among the arguments."
     find_mcm(bc::Base.Broadcast.Broadcasted) = find_mcm(bc.args)
+    find_mcm(args::Base.Broadcast.Extruded) = find_mcm(args.x)
     find_mcm(args::Tuple) = find_mcm(find_mcm(args[1]), Base.tail(args))
     find_mcm(x) = x
     find_mcm(a::MultiConductorMatrix, rest) = a
@@ -121,6 +123,7 @@ Base.:/(a::MultiConductorVector, b::MultiConductorVector) = MultiConductorVector
 if VERSION < v"0.7.0-"
     Base.:*(a::MultiConductorVector, b::RowVector) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
     Base.:*(a::RowVector, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
+    Base.norm(a::MultiConductorVector, p::Real=2) = Base.norm(a.values, p)
 else
     Base.:*(a::MultiConductorVector, b::LinearAlgebra.Adjoint) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
     Base.:*(a::LinearAlgebra.Adjoint, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
