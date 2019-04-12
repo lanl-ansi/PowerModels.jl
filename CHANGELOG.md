@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Added Base.norm for multiconductorvectors
+- Minor fix to multiconductor broadcasting
 
 ### v0.9.5
 - Added generator on/off constraints

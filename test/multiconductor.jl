@@ -504,5 +504,21 @@ end
 
         @test_nowarn PowerModels.summary(devnull, mp_data)
         setlevel!(TESTLOG, "error")
+
+        # Test Julia v0.7+ broadcasting edge-case
+        if VERSION > v"0.7.0-"
+            v = ones(Real, 3)
+            mcv = PowerModels.MultiConductorVector(v)
+            @test all(floor.(mcv) .+ mcv .== PowerModels.MultiConductorVector(floor.(v) .+ v))
+
+            m = LinearAlgebra.diagm(0 => v)
+            mcm = PowerModels.MultiConductorMatrix(m)
+            @test all(floor.(mcm) .+ mcm .== PowerModels.MultiConductorMatrix(floor.(m) .+ m))
+        end
+
+        # Test norm for Julia v0.6 backwards compatibility
+        if VERSION <= v"0.7.0-"
+            @test norm(e, Inf) == norm(e.values, Inf)
+        end
     end
 end
