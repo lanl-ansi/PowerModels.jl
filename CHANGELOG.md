@@ -2,8 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Fixed multiconductor broadcasting in Julia > v0.7.0-
-- Added Base.norm for multiconductorvectors for Julia < v0.7.0-
+- Added Base.norm for multiconductorvectors
+- Minor fix to multiconductor broadcasting
 
 ### v0.9.5
 - Added generator on/off constraints
