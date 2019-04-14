@@ -37,7 +37,7 @@ end
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
 
@@ -46,7 +46,7 @@ end
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 1; atol = 1e-2)
     end
 end
@@ -58,7 +58,7 @@ end
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
 
@@ -67,7 +67,7 @@ end
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 1; atol = 1e-2)
     end
 end
@@ -81,7 +81,7 @@ end
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
     =#
@@ -91,7 +91,7 @@ end
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 1; atol = 1e-2)
     end
 end
@@ -102,7 +102,7 @@ end
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
 
@@ -111,7 +111,7 @@ end
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 1; atol = 1e-2)
     end
 end
@@ -123,7 +123,7 @@ end
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
 
         branches = result["solution"]["branch"]

@@ -28,7 +28,6 @@ scs_solver = JuMP.with_optimizer(SCS.Optimizer, max_iters=500000, acceleration_l
 include("common.jl")
 
 @testset "PowerModels" begin
-    #=
     include("matpower.jl")
 
     include("pti.jl")
@@ -52,11 +51,11 @@ include("common.jl")
     include("opf-var.jl")
 
     include("opf-obj.jl")
-    =#
-    include("ots.jl")  # MOI not yet supported
 
-    include("tnep.jl")  # MOI not yet supported
-    #=
+    include("ots.jl")
+
+    include("tnep.jl")
+
     include("multinetwork.jl")
 
     include("multiconductor.jl")
@@ -66,5 +65,4 @@ include("common.jl")
     include("util.jl")
 
     include("docs.jl")
-    =#
 end

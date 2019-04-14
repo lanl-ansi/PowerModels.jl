@@ -55,7 +55,7 @@ end
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5782.0; atol = 1e0)
     end
     @testset "5-bus case" begin
@@ -63,7 +63,7 @@ end
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 14991.2; atol = 1e0)
     end
     @testset "5-bus case, MIP solver" begin
@@ -77,7 +77,7 @@ end
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11391.8; atol = 1e0)
     end
 end
@@ -89,7 +89,7 @@ end
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5885.2; atol = 1e0)
     end
     @testset "5-bus case" begin
@@ -97,7 +97,7 @@ end
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 15275.2; atol = 1e0)
     end
     @testset "6-bus case" begin
@@ -105,7 +105,7 @@ end
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11574.3; atol = 1e0)
     end
 end
@@ -117,7 +117,7 @@ end
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5746.7; atol = 1e0)
     end
     @testset "5-bus case" begin
@@ -125,21 +125,21 @@ end
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 15051.4; atol = 1e0)
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 15009.96; atol = 1e0)
     end
     @testset "5-bus with asymmetric line charge" begin
         result = run_ots("../test/data/pti/case5_alc.raw", SOCWRPowerModel, juniper_solver)
 
-        @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 1004.8; atol = 1e0)
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1002.51; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_ots("../test/data/matpower/case6.m", SOCWRPowerModel, juniper_solver)
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11472.3; atol = 1e0)
     end
 end
@@ -151,7 +151,7 @@ end
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5746.7; atol = 1e0)
     end
     @testset "5-bus case" begin
@@ -159,29 +159,29 @@ end
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 15051.4; atol = 1e0)
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 15009.96; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
         result = run_ots("../test/data/matpower/case5_asym.m", QCWRPowerModel, juniper_solver)
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 14999.7; atol = 1e0)
     end
     @testset "5-bus with asymmetric line charge" begin
         result = run_ots("../test/data/pti/case5_alc.raw", QCWRPowerModel, juniper_solver)
 
-        @test result["status"] == :Optimal
-        @test isapprox(result["objective"], 1003.97; atol = 1e0)
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 1002.51; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_ots("../test/data/matpower/case6.m", QCWRPowerModel, juniper_solver)
 
         check_br_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 11472.3; atol = 1e0)
     end
 end
