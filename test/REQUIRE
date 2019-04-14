@@ -3,3 +3,4 @@ julia 1.0
 Cbc 0.4
 Ipopt 0.4
 SCS 0.4.1
+Juniper v0.2.5
