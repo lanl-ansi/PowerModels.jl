@@ -29,9 +29,9 @@ version = "0.2.0"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
-git-tree-sha1 = "195a3ffcb8b0762684b6821de18f83a16455c6ea"
+git-tree-sha1 = "84aa74986c5b9b898b0d1acaf3258741ee64754f"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "2.0.0"
+version = "2.1.0"
 
 [[DataStructures]]
 deps = ["InteractiveUtils", "OrderedCollections", "Random", "Serialization", "Test"]
@@ -77,7 +77,7 @@ version = "0.10.3"
 
 [[InfrastructureModels]]
 deps = ["Compat", "JuMP", "LinearAlgebra", "MathOptInterface", "Memento"]
-git-tree-sha1 = "a68a801be71d47ac0304195d8c55e68b930a7aac"
+git-tree-sha1 = "6c2e563c687ee36e62f6561a2e7c6c6e1fc67761"
 repo-rev = "moi-2"
 repo-url = "https://github.com/lanl-ansi/InfrastructureModels.jl.git"
 uuid = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
@@ -99,6 +99,14 @@ git-tree-sha1 = "db9f08540c1a23269acbae5d520c79f4722899f4"
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
 version = "0.19.0"
 
+[[Juniper]]
+deps = ["Distributed", "JSON", "JuMP", "LinearAlgebra", "Logging", "MathOptInterface", "Random", "Statistics", "Test"]
+git-tree-sha1 = "a7e65ce40b7b1b8cf98ca91e64298e3810c1a5a3"
+repo-rev = "moi-wrapper"
+repo-url = "https://github.com/lanl-ansi/Juniper.jl.git"
+uuid = "2ddba703-00a4-53a7-87a5-e8b9971dde84"
+version = "0.2.5+"
+
 [[LibGit2]]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 
@@ -118,15 +126,15 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[MathOptInterface]]
 deps = ["Compat", "Unicode"]
-git-tree-sha1 = "ed9457bdd246a3302d791c5e8f0aad3c3de2e121"
+git-tree-sha1 = "5d3de69c9220610d0336ab45d3eb8b6ac7a7c807"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-version = "0.8.3"
+version = "0.8.4"
 
 [[Memento]]
-deps = ["Dates", "Distributed", "JSON", "Sockets", "Syslogs", "Test", "TimeZones", "UUIDs"]
-git-tree-sha1 = "56c5ac9c3e89634ab5f1e736a9c3ef075b3e5850"
+deps = ["Dates", "Distributed", "JSON", "Serialization", "Sockets", "Syslogs", "Test", "TimeZones", "UUIDs"]
+git-tree-sha1 = "090463b13da88689e5eae6468a6f531a21392175"
 uuid = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
-version = "0.11.0"
+version = "0.12.1"
 
 [[Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
@@ -151,9 +159,9 @@ version = "0.0.8"
 
 [[OrderedCollections]]
 deps = ["Random", "Serialization", "Test"]
-git-tree-sha1 = "85619a3f3e17bb4761fe1b1fd47f0e979f964d5b"
+git-tree-sha1 = "c4c13474d23c60d20a67b217f1d7f22a40edf8f1"
 uuid = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
-version = "1.0.2"
+version = "1.1.0"
 
 [[Pkg]]
 deps = ["Dates", "LibGit2", "Markdown", "Printf", "REPL", "Random", "SHA", "UUIDs"]
@@ -215,10 +223,10 @@ deps = ["Distributed", "InteractiveUtils", "Logging", "Random"]
 uuid = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [[TimeZones]]
-deps = ["Compat", "EzXML", "Mocking", "Nullables"]
-git-tree-sha1 = "5437144a2bbb5b661783ad34b0d19d5696845b25"
+deps = ["Dates", "EzXML", "Mocking", "Printf", "Serialization", "Test", "Unicode"]
+git-tree-sha1 = "fdf5d2136d16498cb67d648cedd33b83c599e0c5"
 uuid = "f269a46b-ccf7-5d73-abea-4c690281aa53"
-version = "0.8.5"
+version = "0.9.0"
 
 [[URIParser]]
 deps = ["Test", "Unicode"]
