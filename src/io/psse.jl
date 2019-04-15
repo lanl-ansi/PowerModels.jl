@@ -663,7 +663,7 @@ function parse_psse(pti_data::Dict; import_all=false, validate=true)::Dict
 
     pm_data["per_unit"] = false
     pm_data["source_type"] = "pti"
-    pm_data["source_version"] = VersionNumber("$rev")
+    pm_data["source_version"] = "$rev"
     pm_data["baseMVA"] = pop!(pti_data["CASE IDENTIFICATION"][1], "SBASE")
     pm_data["name"] = pop!(pti_data["CASE IDENTIFICATION"][1], "NAME")
 

@@ -41,6 +41,24 @@ end
 
 @testset "test multi-conductor" begin
 
+    @testset "json parser" begin
+        mc_data = build_mc_data("../test/data/pti/parser_test_defaults.raw")
+        mc_json_string = JSON.json(mc_data)
+        @test mc_data == PowerModels.parse_json(mc_json_string)
+
+        mc_json_file = PowerModels.parse_file("../test/data/json/parser_test_defaults_multiconductor.json")
+        @test mc_data == mc_json_file
+
+        mc_strg_data = build_mc_data("../test/data/matpower/case5_strg.m")
+        mc_strg_json_string = JSON.json(mc_strg_data)
+        @test mc_strg_data == PowerModels.parse_json(mc_strg_json_string)
+
+        # test that non-multiconductor json still parses
+        pti_data = PowerModels.parse_file("../test/data/pti/parser_test_defaults.raw")
+        pti_json_file = PowerModels.parse_file("../test/data/json/parser_test_defaults.json")
+        @test pti_data == pti_json_file
+    end
+
     @testset "idempotent unit transformation" begin
         @testset "5-bus replicate case" begin
             mp_data = build_mc_data("../test/data/matpower/case5_dc.m")

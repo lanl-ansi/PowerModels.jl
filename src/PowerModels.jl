@@ -75,6 +75,7 @@ include("io/matpower.jl")
 include("io/common.jl")
 include("io/pti.jl")
 include("io/psse.jl")
+include("io/json.jl")
 
 include("core/data.jl")
 include("core/ref.jl")

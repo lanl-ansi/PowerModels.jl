@@ -6,34 +6,23 @@ PowerModels data structure. All fields from PTI files will be imported if
 `import_all` is true (Default: false).
 """
 function parse_file(file::String; import_all=false, validate=true)
-    if endswith(file, ".m")
-        pm_data = PowerModels.parse_matpower(file, validate=validate)
-    elseif endswith(lowercase(file), ".raw")
+    pm_data = open(file) do io
+        pm_data = parse_file(io; import_all=import_all, validate=validate)
+    end
+
+    return pm_data
+end
+
+
+"Parses the iostream from a file"
+function parse_file(io::IO; import_all=false, validate=true)
+    if endswith(strip(lowercase(io.name), '>'), ".m")
+        pm_data = PowerModels.parse_matpower(io, validate=validate)
+    elseif endswith(strip(lowercase(io.name), '>'), ".raw")
         info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
-        pm_data = PowerModels.parse_psse(file; import_all=import_all, validate=validate)
+        pm_data = PowerModels.parse_psse(io; import_all=import_all, validate=validate)
     else
-        pm_data = parse_json(file, validate=validate)
-    end
-
-    return pm_data
-end
-
-
-""
-function parse_json(file_string::String; kwargs...)
-    open(file_string) do f
-        pm_data = parse_json(f, kwargs...)
-    end
-    return pm_data
-end
-
-
-""
-function parse_json(io::IO; validate=true)
-    data_string = read(io, String)
-    pm_data = JSON.parse(data_string)
-    if validate
-        check_network_data(pm_data)
+        pm_data = PowerModels.parse_json(io; validate=validate)
     end
     return pm_data
 end
