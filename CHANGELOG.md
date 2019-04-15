@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Improved starting point of piecewise linear cost function variables
 - Added Base.norm for multiconductorvectors
 - Minor fix to multiconductor broadcasting
 

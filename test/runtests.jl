@@ -29,6 +29,10 @@ end
 
 # default setup for solvers
 ipopt_solver = IpoptSolver(tol=1e-6, print_level=0)
+ipopt_ws_solver = IpoptSolver(tol=1e-6, mu_init=1e-4, print_level=0)
+#ipopt_solver = IpoptSolver(tol=1e-6)
+#ipopt_ws_solver = IpoptSolver(tol=1e-6, mu_init=1e-4)
+
 cbc_solver = CbcSolver()
 juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
 #juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
@@ -38,7 +42,6 @@ scs_solver = SCSSolver(max_iters=500000, acceleration_lookback=1, verbose=0)
 include("common.jl")
 
 @testset "PowerModels" begin
-
     include("matpower.jl")
 
     include("pti.jl")
@@ -75,6 +78,8 @@ include("common.jl")
 
     include("util.jl")
 
-    include("docs.jl")
+    include("warmstart.jl")
+
+    #include("docs.jl")
 
 end
