@@ -42,21 +42,46 @@ end
 @testset "test multi-conductor" begin
 
     @testset "json parser" begin
+        mcv_fields = Dict("bus" => ["vm", "va", "vmin", "vmax"],
+                          "load" => ["pd", "qd"],
+                          "shunt" => ["gs", "bs"],
+                          "branch" => ["g_fr", "g_to", "b_fr", "b_to", "rate_a", "rate_b", "rate_c", "tap", "shift", "angmin", "angmax", "br_r", "br_x"],
+                          "gen" => ["pg", "qg", "qmin", "qmax", "pmin", "pmax", "vg", "apf", "ramp_q", "ramp_10", "ramp_30", "ramp_agc", "pc1", "pc2", "qc1min", "qc1max", "qc2min", "qc2max"],
+                          "storage" => ["thermal_rating", "current_rating", "qmin", "qmax", "r", "x"])
+
         mc_data = build_mc_data("../test/data/pti/parser_test_defaults.raw")
-        mc_json_string = JSON.json(mc_data)
-        @test mc_data == PowerModels.parse_json(mc_json_string)
+        mc_json_string = PowerModels.parse_json(JSON.json(mc_data))
+        if VERSION > v"0.7.0-"
+            @test mc_data == mc_json_string
+        end
 
         mc_json_file = PowerModels.parse_file("../test/data/json/parser_test_defaults_multiconductor.json")
-        @test mc_data == mc_json_file
+        if VERSION > v"0.7.0-"
+            @test mc_data == mc_json_file
+        end
 
         mc_strg_data = build_mc_data("../test/data/matpower/case5_strg.m")
-        mc_strg_json_string = JSON.json(mc_strg_data)
-        @test mc_strg_data == PowerModels.parse_json(mc_strg_json_string)
+        mc_strg_json_string = PowerModels.parse_json(JSON.json(mc_strg_data))
+        if VERSION > v"0.7.0-"
+            @test mc_strg_data == mc_strg_json_string
+        end
 
-        # test that non-multiconductor json still parses
+        for comp in ["bus", "gen", "load", "shunt", "branch", "storage"]
+            for data in [mc_json_string, mc_json_file, mc_strg_json_string]
+                for (k, v) in get(data, comp, Dict())
+                    if k in mcv_fields[comp]
+                        @test isa(v, MultiConductorVector)
+                    end
+                end
+            end
+        end
+
+        # test that non-multiconductor json still parses, pti_json_file will result in error if fails
         pti_data = PowerModels.parse_file("../test/data/pti/parser_test_defaults.raw")
         pti_json_file = PowerModels.parse_file("../test/data/json/parser_test_defaults.json")
-        @test pti_data == pti_json_file
+        if VERSION > v"0.7.0-"
+            @test pti_data == pti_json_file
+        end
     end
 
     @testset "idempotent unit transformation" begin
