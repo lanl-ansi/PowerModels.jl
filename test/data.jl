@@ -519,7 +519,7 @@ end
         end
     end
 
-     @testset "5-bus balance from flow" begin
+     @testset "5-bus balance from flow ac" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         data["branch"]["4"]["br_status"] = 0
         result = run_opf(data, ACPPowerModel, ipopt_solver)
@@ -533,6 +533,23 @@ end
         for (i,bus) in balance["bus"]
             @test isapprox(bus["p_delta"], 0.0; atol=1e-6)
             @test isapprox(bus["q_delta"], 0.0; atol=1e-6)
+        end
+    end
+
+     @testset "5-bus balance from flow dc" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
+        data["branch"]["4"]["br_status"] = 0
+        result = run_opf(data, DCPPowerModel, ipopt_solver)
+        PowerModels.update_data(data, result["solution"])
+
+        flows = PowerModels.calc_branch_flow_dc(data)
+        PowerModels.update_data(data, flows)
+
+        balance = PowerModels.calc_power_balance(data)
+
+        for (i,bus) in balance["bus"]
+            @test isapprox(bus["p_delta"], 0.0; atol=1e-6)
+            @test isnan(bus["q_delta"])
         end
     end
 
