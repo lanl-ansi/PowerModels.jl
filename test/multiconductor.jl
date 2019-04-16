@@ -60,12 +60,16 @@ end
         mc_json_file = PowerModels.parse_file(io)
         if VERSION > v"0.7.0-"
             @test mc_data == mc_json_file
+        else
+            @test InfrastructureModels.compare_dict(mc_data, mc_json_file)
         end
 
         mc_strg_data = build_mc_data("../test/data/matpower/case5_strg.m")
         mc_strg_json_string = PowerModels.parse_json(JSON.json(mc_strg_data))
         if VERSION > v"0.7.0-"
             @test mc_strg_data == mc_strg_json_string
+        else
+            @test InfrastructureModels.compare_dict(mc_strg_data, mc_strg_json_string)
         end
 
         for comp in ["bus", "gen", "load", "shunt", "branch", "storage"]
@@ -85,6 +89,8 @@ end
         pti_json_file = PowerModels.parse_file(io)
         if VERSION > v"0.7.0-"
             @test pti_data == pti_json_file
+        else
+            @test InfrastructureModels.compare_dict(pti_data, pti_json_file)
         end
     end
 
