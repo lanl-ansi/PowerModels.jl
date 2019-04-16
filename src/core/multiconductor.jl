@@ -191,11 +191,15 @@ Base.rad2deg(a::MultiConductorMatrix) = MultiConductorMatrix(map(rad2deg, a.valu
 Base.deg2rad(a::MultiConductorVector) = MultiConductorVector(map(deg2rad, a.values))
 Base.deg2rad(a::MultiConductorMatrix) = MultiConductorMatrix(map(deg2rad, a.values))
 
-
-
-
-JSON.lower(mcv::MultiConductorValue) = mcv.values
-
+JSON.lower(mcv::PowerModels.MultiConductorValue) = Dict("values"=>mcv.values, "type"=>string(typeof(mcv)))
+function JSON.show_json(io::JSON.StructuralContext, s::JSON.CommonSerialization, p::PowerModels.MultiConductorValue)
+    a = Dict("values"=>p.values, "type"=>string(typeof(p)))
+    JSON.begin_object(io)
+    for kv in a
+        JSON.show_pair(io, s, kv)
+    end
+    JSON.end_object(io)
+end
 
 "converts a MultiConductorValue value to a string in summary"
 function InfrastructureModels._value2string(mcv::MultiConductorValue, float_precision::Int)

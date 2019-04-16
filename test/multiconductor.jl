@@ -55,7 +55,9 @@ end
             @test mc_data == mc_json_string
         end
 
-        mc_json_file = PowerModels.parse_file("../test/data/json/parser_test_defaults_multiconductor.json")
+        io = PipeBuffer()
+        JSON.print(io, mc_data)
+        mc_json_file = PowerModels.parse_file(io)
         if VERSION > v"0.7.0-"
             @test mc_data == mc_json_file
         end
@@ -78,7 +80,9 @@ end
 
         # test that non-multiconductor json still parses, pti_json_file will result in error if fails
         pti_data = PowerModels.parse_file("../test/data/pti/parser_test_defaults.raw")
-        pti_json_file = PowerModels.parse_file("../test/data/json/parser_test_defaults.json")
+        io = PipeBuffer()
+        JSON.print(io, pti_data)
+        pti_json_file = PowerModels.parse_file(io)
         if VERSION > v"0.7.0-"
             @test pti_data == pti_json_file
         end
@@ -514,8 +518,8 @@ end
         @test PowerModels.conductors(c) == 3
         @test PowerModels.conductors(a) == 3
         @test all(size(a) == (3,3))
-        @test isa(JSON.lower(a), Array)
-        @test all(JSON.lower(a) == a.values)
+        @test isa(JSON.lower(a), Dict)
+        @test all(JSON.lower(a)["values"] == a.values)
         @test !isapprox(d, e)
         @test PowerModels.getmcv(a, 1, 1) == a[1,1]
 

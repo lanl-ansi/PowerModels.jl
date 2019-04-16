@@ -7,23 +7,25 @@ PowerModels data structure. All fields from PTI files will be imported if
 """
 function parse_file(file::String; import_all=false, validate=true)
     pm_data = open(file) do io
-        pm_data = parse_file(io; import_all=import_all, validate=validate)
+        pm_data = parse_file(io; import_all=import_all, validate=validate, filetype=split(lowercase(file), '.')[end])
     end
-
     return pm_data
 end
 
 
 "Parses the iostream from a file"
-function parse_file(io::IO; import_all=false, validate=true)
-    if endswith(strip(lowercase(io.name), '>'), ".m")
+function parse_file(io::IO; import_all=false, validate=true, filetype="json")
+    if filetype == "m"
         pm_data = PowerModels.parse_matpower(io, validate=validate)
-    elseif endswith(strip(lowercase(io.name), '>'), ".raw")
+    elseif filetype == "raw"
         info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
         pm_data = PowerModels.parse_psse(io; import_all=import_all, validate=validate)
-    else
+    elseif filetype == "json"
         pm_data = PowerModels.parse_json(io; validate=validate)
+    else
+        error(LOGGER, "Unrecognized filetype")
     end
+
     return pm_data
 end
 

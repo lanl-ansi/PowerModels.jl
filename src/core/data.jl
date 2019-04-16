@@ -1755,7 +1755,7 @@ conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
     "br_status", "gen_bus", "load_bus", "shunt_bus", "storage_bus", "f_bus", "t_bus",
     "transformer", "area", "zone", "base_kv", "energy", "energy_rating", "charge_rating",
     "discharge_rating", "charge_efficiency", "discharge_efficiency", "standby_loss",
-    "model", "ncost", "cost", "startup", "shutdown"])
+    "model", "ncost", "cost", "startup", "shutdown", "name", "source_id", "active_phases"])
 
 conductor_matrix = Set(["br_r", "br_x"])
 

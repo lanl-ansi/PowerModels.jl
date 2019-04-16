@@ -75,7 +75,6 @@ include("io/matpower.jl")
 include("io/common.jl")
 include("io/pti.jl")
 include("io/psse.jl")
-include("io/json.jl")
 
 include("core/data.jl")
 include("core/ref.jl")
@@ -88,6 +87,8 @@ include("core/relaxation_scheme.jl")
 include("core/objective.jl")
 include("core/solution.jl")
 include("core/multiconductor.jl")
+
+include("io/json.jl")
 
 include("form/acp.jl")
 include("form/acr.jl")
