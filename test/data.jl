@@ -438,6 +438,7 @@ end
 @testset "test branch flow computations" begin
      @testset "5-bus ac polar flow" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        data["branch"]["4"]["br_status"] = 0
         result = run_opf(data, ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
         PowerModels.update_data(data, result["solution"])
 
@@ -446,13 +447,14 @@ end
         for (i,branch) in data["branch"]
             branch_flow = ac_flows["branch"][i]
             for k in ["pf","pt","qf","qt"]
-                @test isapprox(branch[k], branch_flow[k]; atol=1e-6)
+                @test (isnan(branch[k]) && isnan(branch_flow[k])) || isapprox(branch[k], branch_flow[k]; atol=1e-6)
             end
         end
     end
 
     @testset "5-bus ac rect flow" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        data["branch"]["4"]["br_status"] = 0
         result = run_opf(data, ACRPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
         PowerModels.update_data(data, result["solution"])
 
@@ -461,13 +463,14 @@ end
         for (i,branch) in data["branch"]
             branch_flow = ac_flows["branch"][i]
             for k in ["pf","pt","qf","qt"]
-                @test isapprox(branch[k], branch_flow[k]; atol=1e-6)
+                @test (isnan(branch[k]) && isnan(branch_flow[k])) || isapprox(branch[k], branch_flow[k]; atol=1e-6)
             end
         end
     end
 
     @testset "5-bus dc flow" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        data["branch"]["4"]["br_status"] = 0
         result = run_opf(data, DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
         PowerModels.update_data(data, result["solution"])
 
@@ -476,7 +479,7 @@ end
         for (i,branch) in data["branch"]
             branch_flow = dc_flows["branch"][i]
             for k in ["pf","pt"]
-                @test isapprox(branch[k], branch_flow[k]; atol=1e-6)
+                @test (isnan(branch[k]) && isnan(branch_flow[k])) || isapprox(branch[k], branch_flow[k]; atol=1e-6)
             end
         end
     end

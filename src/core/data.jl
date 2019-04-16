@@ -550,28 +550,36 @@ function _calc_branch_flow_ac(data::Dict{String,<:Any})
 
     flows = Dict{String,Any}()
     for (i,branch) in data["branch"]
-        f_bus = branch["f_bus"]
-        t_bus = branch["t_bus"]
+        if branch["br_status"] != 0
+            f_bus = branch["f_bus"]
+            t_bus = branch["t_bus"]
 
-        g, b = calc_branch_y(branch)
-        tr, ti = calc_branch_t(branch)
-        g_fr = branch["g_fr"]
-        b_fr = branch["b_fr"]
-        g_to = branch["g_to"]
-        b_to = branch["b_to"]
-        
-        tm = branch["tap"]
+            g, b = calc_branch_y(branch)
+            tr, ti = calc_branch_t(branch)
+            g_fr = branch["g_fr"]
+            b_fr = branch["b_fr"]
+            g_to = branch["g_to"]
+            b_to = branch["b_to"]
+            
+            tm = branch["tap"]
 
-        vm_fr = vm[f_bus]
-        vm_to = vm[t_bus]
-        va_fr = va[f_bus]
-        va_to = va[t_bus]
+            vm_fr = vm[f_bus]
+            vm_to = vm[t_bus]
+            va_fr = va[f_bus]
+            va_to = va[t_bus]
 
-        p_fr =  (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))
-        q_fr = -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))
+            p_fr =  (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))
+            q_fr = -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))
 
-        p_to =  (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))
-        q_to = -(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))
+            p_to =  (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))
+            q_to = -(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))
+        else
+            p_fr = NaN
+            q_fr = NaN
+
+            p_to = NaN
+            q_to = NaN
+        end
 
         flows[i] = Dict(
             "pf" => p_fr,
@@ -617,12 +625,16 @@ function _calc_branch_flow_dc(data::Dict{String,<:Any})
 
     flows = Dict{String,Any}()
     for (i,branch) in data["branch"]
-        f_bus = branch["f_bus"]
-        t_bus = branch["t_bus"]
+        if branch["br_status"] != 0
+            f_bus = branch["f_bus"]
+            t_bus = branch["t_bus"]
 
-        g, b = calc_branch_y(branch)
+            g, b = calc_branch_y(branch)
 
-        p_fr = -b*(va[f_bus] - va[t_bus])
+            p_fr = -b*(va[f_bus] - va[t_bus])
+        else
+            p_fr = NaN
+        end
 
         flows[i] = Dict(
             "pf" =>  p_fr,
