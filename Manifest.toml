@@ -29,15 +29,12 @@ version = "0.2.0"
 
 [[Compat]]
 deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", "LibGit2", "Libdl", "LinearAlgebra", "Markdown", "Mmap", "Pkg", "Printf", "REPL", "Random", "Serialization", "SharedArrays", "Sockets", "SparseArrays", "Statistics", "Test", "UUIDs", "Unicode"]
-<<<<<<< HEAD
 git-tree-sha1 = "84aa74986c5b9b898b0d1acaf3258741ee64754f"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
 version = "2.1.0"
-=======
-git-tree-sha1 = "195a3ffcb8b0762684b6821de18f83a16455c6ea"
+git-tree-sha1 = "84aa74986c5b9b898b0d1acaf3258741ee64754f"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "2.0.0"
->>>>>>> FIX: cleanup rebase
+version = "2.1.0"
 
 [[DataStructures]]
 deps = ["InteractiveUtils", "OrderedCollections", "Random", "Serialization", "Test"]
@@ -85,11 +82,7 @@ version = "0.10.3"
 deps = ["JuMP", "Memento"]
 git-tree-sha1 = "c3dcbfd5a20ea423f8db1a800f17392b3dd1877d"
 uuid = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
-<<<<<<< HEAD
 version = "0.0.15"
-=======
-version = "0.0.14"
->>>>>>> FIX: cleanup rebase
 
 [[InteractiveUtils]]
 deps = ["Markdown"]
@@ -102,15 +95,17 @@ uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.20.0"
 
 [[JuMP]]
-<<<<<<< HEAD
 deps = ["Calculus", "Compat", "ForwardDiff", "Libdl", "MathProgBase", "Pkg", "ReverseDiffSparse", "Serialization"]
 git-tree-sha1 = "3bd8e52f7aeb2736a8e1b0d8ae8d01c2c85fea24"
-=======
-deps = ["Calculus", "DataStructures", "ForwardDiff", "LinearAlgebra", "MathOptInterface", "NaNMath", "Random", "SparseArrays", "Statistics", "Test"]
-git-tree-sha1 = "db9f08540c1a23269acbae5d520c79f4722899f4"
->>>>>>> FIX: cleanup rebase
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
 version = "0.18.5"
+
+[[Juniper]]
+deps = ["Distributed", "JSON", "JuMP", "LinearAlgebra", "Logging", "MathOptInterface", "Random", "Statistics", "Test"]
+repo-rev = "master"
+repo-url = "https://github.com/lanl-ansi/Juniper.jl.git"
+uuid = "2ddba703-00a4-53a7-87a5-e8b9971dde84"
+version = "0.2.6+"
 
 [[LibGit2]]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
@@ -129,19 +124,11 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
-<<<<<<< HEAD
 [[MathProgBase]]
 deps = ["Compat"]
 git-tree-sha1 = "3bf2e534e635df810e5f4b4f1a8b6de9004a0d53"
 uuid = "fdba3010-5040-5b88-9595-932c9decdf73"
 version = "0.7.7"
-=======
-[[MathOptInterface]]
-deps = ["Compat", "Unicode"]
-git-tree-sha1 = "ed9457bdd246a3302d791c5e8f0aad3c3de2e121"
-uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-version = "0.8.3"
->>>>>>> FIX: cleanup rebase
 
 [[Memento]]
 deps = ["Dates", "Distributed", "JSON", "Sockets", "Syslogs", "Test", "TimeZones", "UUIDs"]

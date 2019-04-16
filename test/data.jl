@@ -1,6 +1,6 @@
 # Tests of data checking and transformation code
 
-TESTLOG =  Memento.getlogger(PowerModels)
+TESTLOG = Memento.getlogger(PowerModels)
 
 @testset "test data summary" begin
 
@@ -485,7 +485,7 @@ end
         end
     end
 
-end 
+end
 
 
 

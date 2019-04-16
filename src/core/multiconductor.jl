@@ -1,5 +1,4 @@
-import LinearAlgebra: I, diagm
-
+using LinearAlgebra: I
 
 export MultiConductorValue, MultiConductorVector, MultiConductorMatrix, conductors
 
@@ -58,7 +57,6 @@ Base.broadcast(f::Any, a::MultiConductorValue, b::MultiConductorValue) = broadca
 Base.BroadcastStyle(::Type{<:MultiConductorVector}) = Broadcast.ArrayStyle{MultiConductorVector}()
 Base.BroadcastStyle(::Type{<:MultiConductorMatrix}) = Broadcast.ArrayStyle{MultiConductorMatrix}()
 
-
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorVector}}, ::Type{ElType}) where ElType
     A = find_mcv(bc)
     return MultiConductorVector(similar(Array{ElType}, axes(bc)))
@@ -110,10 +108,6 @@ Base.:/(a::MultiConductorVector, b::MultiConductorVector) = MultiConductorVector
 
 Base.:*(a::MultiConductorVector, b::LinearAlgebra.Adjoint) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
 Base.:*(a::LinearAlgebra.Adjoint, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
-<<<<<<< HEAD
-
-=======
->>>>>>> REF: Remove support for Julia < v1.0
 
 # Matrices
 Base.:+(a::MultiConductorMatrix) = MultiConductorMatrix(+(a.values))
@@ -147,7 +141,6 @@ Base.:^(a::MultiConductorMatrix, b::Complex) = MultiConductorMatrix(a.values ^ b
 Base.:^(a::MultiConductorMatrix, b::Integer) = MultiConductorMatrix(a.values ^ b)
 Base.:^(a::MultiConductorMatrix, b::AbstractFloat) = MultiConductorMatrix(a.values ^ b)
 
-
 LinearAlgebra.inv(a::MultiConductorMatrix) = MultiConductorMatrix(inv(a.values))
 LinearAlgebra.pinv(a::MultiConductorMatrix) = MultiConductorMatrix(pinv(a.values))
 
@@ -159,8 +152,8 @@ Base.imag(a::MultiConductorMatrix) = MultiConductorMatrix(imag(a.values))
 LinearAlgebra.transpose(a::MultiConductorVector) = a.values'
 LinearAlgebra.transpose(a::MultiConductorMatrix) = MultiConductorMatrix(a.values')
 
-LinearAlgebra.diag(a::MultiConductorMatrix) = MultiConductorVector(diag(a.values))
-LinearAlgebra.diagm(p::Pair{<:Integer, MultiConductorVector{S}}) where S = MultiConductorMatrix(diagm(p.first => p.second.values))
+LinearAlgebra.diag(a::MultiConductorMatrix) = MultiConductorVector(LinearAlgebra.diag(a.values))
+LinearAlgebra.diagm(p::Pair{<:Integer, MultiConductorVector{S}}) where S = MultiConductorMatrix(LinearAlgebra.diagm(p.first => p.second.values))
 
 Base.rad2deg(a::MultiConductorVector) = MultiConductorVector(map(rad2deg, a.values))
 Base.rad2deg(a::MultiConductorMatrix) = MultiConductorMatrix(map(rad2deg, a.values))
