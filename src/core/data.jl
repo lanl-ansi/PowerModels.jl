@@ -650,6 +650,140 @@ end
 
 
 
+"assumes a vaild solution is included in the data and computes the power balance at each bus"
+function calc_power_balance(data::Dict{String,<:Any})
+    @assert("per_unit" in keys(data) && data["per_unit"]) # may not be strictly required
+    @assert(!haskey(data, "conductors"))
+
+    if InfrastructureModels.ismultinetwork(data)
+        nws = Dict{String,Any}()
+        for (i,nw_data) in data["nw"]
+            nws[i] = _calc_power_balance(nw_data)
+        end
+        return Dict{String,Any}(
+            "nw" => nws,
+            "per_unit" => data["per_unit"],
+            "baseMVA" => data["baseMVA"]
+        )
+    else
+        flows = _calc_power_balance(data)
+        flows["per_unit"] = data["per_unit"]
+        flows["baseMVA"] = data["baseMVA"]
+        return flows
+    end
+end
+
+
+"helper function for calc_power_balance"
+function _calc_power_balance(data::Dict{String,<:Any})
+    bus_values = Dict(bus["index"] => Dict{String,Float64}() for (i,bus) in data["bus"])
+    for (i,bus) in data["bus"]
+        bvals = bus_values[bus["index"]]
+        bvals["vm"] = bus["vm"]
+
+        bvals["pd"] = 0.0
+        bvals["qd"] = 0.0
+
+        bvals["gs"] = 0.0
+        bvals["bs"] = 0.0
+
+        bvals["ps"] = 0.0
+        bvals["qs"] = 0.0
+
+        bvals["pg"] = 0.0
+        bvals["qg"] = 0.0
+
+        bvals["p"] = 0.0
+        bvals["q"] = 0.0
+
+        bvals["p_dc"] = 0.0
+        bvals["q_dc"] = 0.0
+    end
+
+    for (i,load) in data["load"]
+        if load["status"] != 0
+            bvals = bus_values[load["load_bus"]]
+            bvals["pd"] += load["pd"]
+            bvals["qd"] += load["qd"]
+        end
+    end
+
+    for (i,shunt) in data["shunt"]
+        if shunt["status"] != 0
+            bvals = bus_values[shunt["shunt_bus"]]
+            bvals["gs"] += shunt["gs"]
+            bvals["bs"] += shunt["bs"]
+        end
+    end
+
+    for (i,storage) in data["storage"]
+        if storage["status"] != 0
+            bvals = bus_values[storage["storage_bus"]]
+            if haskey(storage, "ps")
+                bvals["ps"] += storage["ps"]
+            end
+            if haskey(storage, "qs")
+                bvals["qs"] += storage["qs"]
+            end
+        end
+    end
+
+    for (i,gen) in data["gen"]
+        if gen["gen_status"] != 0
+            bvals = bus_values[gen["gen_bus"]]
+            bvals["pg"] += gen["pg"]
+            bvals["qg"] += gen["qg"]
+        end
+    end
+
+    for (i,branch) in data["branch"]
+        if branch["br_status"] != 0
+            bus_fr = branch["f_bus"]
+            bvals_fr = bus_values[bus_fr]
+            bvals_fr["p"] += branch["pf"]
+            bvals_fr["q"] += branch["qf"]
+
+            bus_to = branch["t_bus"]
+            bvals_to = bus_values[bus_to]
+            bvals_to["p"] += branch["pt"]
+            bvals_to["q"] += branch["qt"]
+        end
+    end
+
+    for (i,dcline) in data["dcline"]
+        if dcline["br_status"] != 0
+            bus_fr = dcline["f_bus"]
+            bvals_fr = bus_values[bus_fr]
+            bvals_fr["p_dc"] += dcline["pf"]
+            bvals_fr["q_dc"] += dcline["qf"]
+
+            bus_to = dcline["t_bus"]
+            bvals_to = bus_values[bus_to]
+            bvals_to["p_dc"] += dcline["pt"]
+            bvals_to["q_dc"] += dcline["qt"]
+        end
+    end
+
+    deltas = Dict{String,Any}()
+    for (i,bus) in data["bus"]
+        if bus["bus_type"] != 4
+            bvals = bus_values[bus["index"]]
+            p_delta = bvals["p"] + bvals["p_dc"] - bvals["pg"] + bvals["ps"] + bvals["pd"] + bvals["gs"]*(bvals["vm"]^2)
+            q_delta = bvals["q"] + bvals["q_dc"] - bvals["qg"] + bvals["qs"] + bvals["qd"] - bvals["bs"]*(bvals["vm"]^2)
+        else
+            p_delta = NaN
+            q_delta = NaN
+        end
+
+        deltas[i] = Dict(
+            "p_delta" => p_delta,
+            "q_delta" => q_delta,
+        )
+    end
+
+    return Dict{String,Any}("bus" => deltas)
+end
+
 
 
 
