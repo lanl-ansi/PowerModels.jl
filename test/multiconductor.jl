@@ -536,7 +536,7 @@ end
         @test a[1,1] == 9.0
 
         @test_nowarn PowerModels.summary(devnull, mp_data)
-        setlevel!(TESTLOG, "error")
+        Memento.setlevel!(TESTLOG, "error")
 
         # Test Julia v0.7+ broadcasting edge-case
         v = ones(Real, 3)
@@ -546,6 +546,5 @@ end
         m = LinearAlgebra.diagm(0 => v)
         mcm = PowerModels.MultiConductorMatrix(m)
         @test all(floor.(mcm) .+ mcm .== PowerModels.MultiConductorMatrix(floor.(m) .+ m))
-        end
     end
 end
