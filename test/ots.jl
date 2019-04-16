@@ -174,7 +174,7 @@ end
         result = run_ots("../test/data/pti/case5_alc.raw", QCWRPowerModel, juniper_solver)
 
         @test result["status"] == :LocalOptimal
-        @test isapprox(result["objective"], 1003.97; atol = 1e0)
+        @test isapprox(result["objective"], 1003.97; atol = 5e0)
     end
     @testset "6-bus case" begin
         result = run_ots("../test/data/matpower/case6.m", QCWRPowerModel, juniper_solver)
