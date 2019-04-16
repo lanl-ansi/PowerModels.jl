@@ -85,10 +85,10 @@ function constraint_generation_on_off(pm::GenericPowerModel, n::Int, c::Int, i::
     qg = var(pm, n, c, :qg, i)
     z = var(pm, n, :z_gen, i)
 
-    @constraint(pm.model, pg <= pmax*z)
-    @constraint(pm.model, pg >= pmin*z)
-    @constraint(pm.model, qg <= qmax*z)
-    @constraint(pm.model, qg >= qmin*z)
+    JuMP.@constraint(pm.model, pg <= pmax*z)
+    JuMP.@constraint(pm.model, pg >= pmin*z)
+    JuMP.@constraint(pm.model, qg <= qmax*z)
+    JuMP.@constraint(pm.model, qg >= qmin*z)
 end
 
 
