@@ -2,6 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added calc_power_balance function for computing bus balance from the data model
+- Added calc_branch_flow functions for computing flows from the data model
 - Improved starting point of piecewise linear cost function variables
 - Added Base.norm for multiconductorvectors
 - Minor fix to multiconductor broadcasting
