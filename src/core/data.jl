@@ -128,7 +128,7 @@ end
 
 
 "prints the text summary for a data file or dictionary to stdout"
-function print_summary(obj::Union{String, Dict{String,Any}}; kwargs...)
+function print_summary(obj::Union{String, Dict{String,<:Any}}; kwargs...)
     summary(stdout, obj; kwargs...)
 end
 
@@ -516,6 +516,134 @@ function _rescale_cost_model(comp::Dict{String,<:Any}, scale::Real)
 end
 
 
+
+
+
+"assumes a vaild ac solution is included in the data and computes the branch flow values"
+function calc_branch_flow_ac(data::Dict{String,<:Any})
+    @assert("per_unit" in keys(data) && data["per_unit"])
+    @assert(!haskey(data, "conductors"))
+
+    if InfrastructureModels.ismultinetwork(data)
+        nws = Dict{String,Any}()
+        for (i,nw_data) in data["nw"]
+            nws[i] = _calc_branch_flow_ac(nw_data)
+        end
+        return Dict{String,Any}(
+            "nw" => nws,
+            "per_unit" => data["per_unit"],
+            "baseMVA" => data["baseMVA"]
+        )
+    else
+        flows = _calc_branch_flow_ac(data)
+        flows["per_unit"] = data["per_unit"]
+        flows["baseMVA"] = data["baseMVA"]
+        return flows
+    end
+end
+
+
+"helper function for calc_branch_flow_ac"
+function _calc_branch_flow_ac(data::Dict{String,<:Any})
+    vm = Dict(bus["index"] => bus["vm"] for (i,bus) in data["bus"])
+    va = Dict(bus["index"] => bus["va"] for (i,bus) in data["bus"])
+
+    flows = Dict{String,Any}()
+    for (i,branch) in data["branch"]
+        f_bus = branch["f_bus"]
+        t_bus = branch["t_bus"]
+
+        g, b = calc_branch_y(branch)
+        tr, ti = calc_branch_t(branch)
+        g_fr = branch["g_fr"]
+        b_fr = branch["b_fr"]
+        g_to = branch["g_to"]
+        b_to = branch["b_to"]
+        
+        tm = branch["tap"]
+
+        vm_fr = vm[f_bus]
+        vm_to = vm[t_bus]
+        va_fr = va[f_bus]
+        va_to = va[t_bus]
+
+        p_fr =  (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))
+        q_fr = -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))
+
+        p_to =  (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))
+        q_to = -(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))
+
+        flows[i] = Dict(
+            "pf" => p_fr,
+            "qf" => q_fr,
+            "pt" => p_to,
+            "qt" => q_to
+        )
+    end
+
+    return Dict{String,Any}("branch" => flows)
+end
+
+
+
+"assumes a vaild dc solution is included in the data and computes the branch flow values"
+function calc_branch_flow_dc(data::Dict{String,<:Any})
+    @assert("per_unit" in keys(data) && data["per_unit"])
+    @assert(!haskey(data, "conductors"))
+
+    if InfrastructureModels.ismultinetwork(data)
+        nws = Dict{String,Any}()
+        for (i,nw_data) in data["nw"]
+            nws[i] = _calc_branch_flow_dc(nw_data)
+        end
+        return Dict{String,Any}(
+            "nw" => nws,
+            "per_unit" => data["per_unit"],
+            "baseMVA" => data["baseMVA"]
+        )
+    else
+        flows = _calc_branch_flow_dc(data)
+        flows["per_unit"] = data["per_unit"]
+        flows["baseMVA"] = data["baseMVA"]
+        return flows
+    end
+end
+
+
+"helper function for calc_branch_flow_dc"
+function _calc_branch_flow_dc(data::Dict{String,<:Any})
+    vm = Dict(bus["index"] => bus["vm"] for (i,bus) in data["bus"])
+    va = Dict(bus["index"] => bus["va"] for (i,bus) in data["bus"])
+
+    flows = Dict{String,Any}()
+    for (i,branch) in data["branch"]
+        f_bus = branch["f_bus"]
+        t_bus = branch["t_bus"]
+
+        g, b = calc_branch_y(branch)
+
+        p_fr = -b*(va[f_bus] - va[t_bus])
+
+        flows[i] = Dict(
+            "pf" =>  p_fr,
+            "qf" =>  NaN,
+            "pt" => -p_fr,
+            "qt" =>  NaN
+        )
+    end
+
+    return Dict{String,Any}("branch" => flows)
+end
+
+
+
+
+
+
+
+
+
+
 ""
 function check_conductors(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
@@ -523,7 +651,7 @@ function check_conductors(data::Dict{String,<:Any})
             _check_conductors(nw_data)
         end
     else
-         _check_conductors(data)
+        _check_conductors(data)
     end
 end
 

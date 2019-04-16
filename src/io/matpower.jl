@@ -327,7 +327,7 @@ end
 """
 Converts a Matpower dict into a PowerModels dict
 """
-function matpower_to_powermodels(mp_data::Dict{String,Any})
+function matpower_to_powermodels(mp_data::Dict{String,<:Any})
     pm_data = deepcopy(mp_data)
 
     # required default values
@@ -929,7 +929,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
 end
 
 "Export fields of a component type"
-function export_extra_data(io::IO, data::Dict{String,Any}, component, excluded_fields=Set(["index"]); postfix="")
+function export_extra_data(io::IO, data::Dict{String,<:Any}, component, excluded_fields=Set(["index"]); postfix="")
     if isa(data[component], Int) || isa(data[component], Int64) || isa(data[component], Float64)
         println(io, "mpc.", component, " = ", data[component], ";")
         println(io)
