@@ -1404,6 +1404,9 @@ function _check_cost_function(id, comp, type_name)
             if length(comp["cost"]) < 4
                 error(LOGGER, "cost includes $(comp["ncost"]) points, but at least two points are required on $(type_name) $(id)")
             end
+
+            modified = _remove_pwl_cost_duplicates(id, comp, type_name)
+
             for i in 3:2:length(comp["cost"])
                 if comp["cost"][i-2] >= comp["cost"][i]
                     error(LOGGER, "non-increasing x values in pwl cost model on $(type_name) $(id)")
@@ -1418,7 +1421,7 @@ function _check_cost_function(id, comp, type_name)
                     end
                 end
             end
-            modified = _simplify_pwl_cost(id, comp, type_name)
+            modified |= _simplify_pwl_cost(id, comp, type_name)
         elseif comp["model"] == 2
             if length(comp["cost"]) != comp["ncost"]
                 error(LOGGER, "ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
@@ -1429,6 +1432,32 @@ function _check_cost_function(id, comp, type_name)
     end
 
     return modified
+end
+
+
+"checks that each point in the a pwl function is unqiue, simplifies the function if duplicates appear"
+function _remove_pwl_cost_duplicates(id, comp, type_name, tolerance = 1e-2)
+    @assert comp["model"] == 1
+
+    unique_costs = Float64[comp["cost"][1], comp["cost"][2]]
+    for i in 3:2:length(comp["cost"])
+        x1 = unique_costs[end-1]
+        y1 = unique_costs[end]
+        x2 = comp["cost"][i+0]
+        y2 = comp["cost"][i+1]
+        if !(isapprox(x1, x2) && isapprox(y1, y2))
+            push!(unique_costs, x2)
+            push!(unique_costs, y2)
+        end
+    end
+
+    if length(unique_costs) < length(comp["cost"])
+        warn(LOGGER, "removing duplicate points from pwl cost on $(type_name) $(id), $(comp["cost"]) -> $(unique_costs)")
+        comp["cost"] = unique_costs
+        comp["ncost"] = length(unique_costs)/2
+        return true
+    end
+    return false
 end
 
 
