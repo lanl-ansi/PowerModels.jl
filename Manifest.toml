@@ -77,7 +77,7 @@ version = "0.10.3"
 
 [[InfrastructureModels]]
 deps = ["Compat", "JuMP", "LinearAlgebra", "MathOptInterface", "Memento"]
-git-tree-sha1 = "a68a801be71d47ac0304195d8c55e68b930a7aac"
+git-tree-sha1 = "15ee7f928d73784ee686fbd39a780832c8670dc2"
 repo-rev = "moi-2"
 repo-url = "https://github.com/lanl-ansi/InfrastructureModels.jl.git"
 uuid = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
@@ -99,13 +99,6 @@ git-tree-sha1 = "db9f08540c1a23269acbae5d520c79f4722899f4"
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
 version = "0.19.0"
 
-[[Juniper]]
-deps = ["Distributed", "JSON", "JuMP", "LinearAlgebra", "Logging", "MathOptInterface", "Random", "Statistics", "Test"]
-repo-rev = "master"
-repo-url = "https://github.com/lanl-ansi/Juniper.jl.git"
-uuid = "2ddba703-00a4-53a7-87a5-e8b9971dde84"
-version = "0.2.6+"
-
 [[LibGit2]]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 
@@ -125,15 +118,15 @@ uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
 [[MathOptInterface]]
 deps = ["Compat", "Unicode"]
-git-tree-sha1 = "ed9457bdd246a3302d791c5e8f0aad3c3de2e121"
+git-tree-sha1 = "5d3de69c9220610d0336ab45d3eb8b6ac7a7c807"
 uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
-version = "0.8.3"
+version = "0.8.4"
 
 [[Memento]]
-deps = ["Dates", "Distributed", "JSON", "Sockets", "Syslogs", "Test", "TimeZones", "UUIDs"]
-git-tree-sha1 = "56c5ac9c3e89634ab5f1e736a9c3ef075b3e5850"
+deps = ["Dates", "Distributed", "JSON", "Serialization", "Sockets", "Syslogs", "Test", "TimeZones", "UUIDs"]
+git-tree-sha1 = "090463b13da88689e5eae6468a6f531a21392175"
 uuid = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
-version = "0.11.0"
+version = "0.12.1"
 
 [[Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
