@@ -117,7 +117,7 @@ git-tree-sha1 = "64a96efe9c73ab993f74a35b5495b413b5ad7c78"
 repo-rev = "master"
 repo-url = "https://github.com/lanl-ansi/Juniper.jl.git"
 uuid = "75be3022-610a-11e9-35a7-e955f4898f51"
-version = "0.2.6+"
+version = "0.4.0"
 
 [[LibGit2]]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
