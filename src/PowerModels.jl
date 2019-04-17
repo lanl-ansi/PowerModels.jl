@@ -88,6 +88,8 @@ include("core/objective.jl")
 include("core/solution.jl")
 include("core/multiconductor.jl")
 
+include("io/json.jl")
+
 include("form/acp.jl")
 include("form/acr.jl")
 include("form/act.jl")

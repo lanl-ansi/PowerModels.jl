@@ -185,7 +185,7 @@ pm_component_status_parameters = Set(["status", "gen_status", "br_status"])
 
 "prints the text summary for a data dictionary to IO"
 function summary(io::IO, data::Dict{String,<:Any}; kwargs...)
-    InfrastructureModels.summary(io, data; 
+    InfrastructureModels.summary(io, data;
         component_types_order = pm_component_types_order,
         component_parameter_order = pm_component_parameter_order,
         component_status_parameters = pm_component_status_parameters,
@@ -1179,23 +1179,27 @@ function check_storage_parameters(data::Dict{String,<:Any})
         if strg["discharge_rating"] < 0.0
             error(LOGGER, "storage unit $(strg["index"]) has a non-positive discharge rating $(strg["energy_rating"])")
         end
-        if strg["r"] < 0.0
-            error(LOGGER, "storage unit $(strg["index"]) has a non-positive resistance $(strg["r"])")
-        end
-        if strg["x"] < 0.0
-            error(LOGGER, "storage unit $(strg["index"]) has a non-positive reactance $(strg["x"])")
-        end
         if strg["standby_loss"] < 0.0
             error(LOGGER, "storage unit $(strg["index"]) has a non-positive standby losses $(strg["standby_loss"])")
         end
 
-        if haskey(strg, "thermal_rating") && strg["thermal_rating"] < 0.0
-            error(LOGGER, "storage unit $(strg["index"]) has a non-positive thermal rating $(strg["thermal_rating"])")
+        for c in 1:get(data, "conductors", 1)
+            if strg["r"][c] < 0.0
+                error(LOGGER, "storage unit $(strg["index"]) has a non-positive resistance $(strg["r"][c])")
+            end
+            if strg["x"][c] < 0.0
+                error(LOGGER, "storage unit $(strg["index"]) has a non-positive reactance $(strg["x"][c])")
+            end
+            if haskey(strg, "thermal_rating") && strg["thermal_rating"][c] < 0.0
+                error(LOGGER, "storage unit $(strg["index"]) has a non-positive thermal rating $(strg["thermal_rating"][c])")
+            end
+            if haskey(strg, "current_rating") && strg["current_rating"][c] < 0.0
+                error(LOGGER, "storage unit $(strg["index"]) has a non-positive current rating $(strg["thermal_rating"][c])")
+            end
+            if !isapprox(strg["x"][c], 0.0, atol=1e-6, rtol=1e-6)
+                warn(LOGGER, "storage unit $(strg["index"]) has a non-zero reactance $(strg["x"][c]), which is currently ignored")
+            end
         end
-        if haskey(strg, "current_rating") && strg["current_rating"] < 0.0
-            error(LOGGER, "storage unit $(strg["index"]) has a non-positive current rating $(strg["thermal_rating"])")
-        end
-
 
         if strg["charge_efficiency"] < 0.0
             error(LOGGER, "storage unit $(strg["index"]) has a non-positive charge efficiency of $(strg["charge_efficiency"])")
@@ -1203,19 +1207,12 @@ function check_storage_parameters(data::Dict{String,<:Any})
         if strg["charge_efficiency"] <= 0.0 || strg["charge_efficiency"] > 1.0
             warn(LOGGER, "storage unit $(strg["index"]) charge efficiency of $(strg["charge_efficiency"]) is out of the valid range (0.0. 1.0]")
         end
-
         if strg["discharge_efficiency"] < 0.0
             error(LOGGER, "storage unit $(strg["index"]) has a non-positive discharge efficiency of $(strg["discharge_efficiency"])")
         end
         if strg["discharge_efficiency"] <= 0.0 || strg["discharge_efficiency"] > 1.0
             warn(LOGGER, "storage unit $(strg["index"]) discharge efficiency of $(strg["discharge_efficiency"]) is out of the valid range (0.0. 1.0]")
         end
-
-        if !isapprox(strg["x"], 0.0, atol=1e-6, rtol=1e-6)
-            warn(LOGGER, "storage unit $(strg["index"]) has a non-zero reactance $(strg["x"]), which is currently ignored")
-        end
-
-
         if strg["standby_loss"] > 0.0 && strg["energy"] <= 0.0
             warn(LOGGER, "storage unit $(strg["index"]) has standby losses but zero initial energy.  This can lead to model infeasiblity.")
         end
@@ -2032,7 +2029,7 @@ conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
     "br_status", "gen_bus", "load_bus", "shunt_bus", "storage_bus", "f_bus", "t_bus",
     "transformer", "area", "zone", "base_kv", "energy", "energy_rating", "charge_rating",
     "discharge_rating", "charge_efficiency", "discharge_efficiency", "standby_loss",
-    "model", "ncost", "cost", "startup", "shutdown"])
+    "model", "ncost", "cost", "startup", "shutdown", "name", "source_id", "active_phases"])
 
 conductor_matrix = Set(["br_r", "br_x"])
 

@@ -7,6 +7,7 @@ PowerModels.jl Change Log
 - Improved starting point of piecewise linear cost function variables
 - Added Base.norm for multiconductorvectors
 - Minor fix to multiconductor broadcasting
+- Added JSON parser for Multi-Conductor networks
 
 ### v0.9.5
 - Added generator on/off constraints
