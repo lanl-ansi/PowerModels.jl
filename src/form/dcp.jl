@@ -156,22 +156,27 @@ function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, c
     if bounded
         flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
 
-        var(pm, nw, cnd)[:p] = @variable(pm.model,
+        p = var(pm, nw, cnd)[:p] = @variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(cnd)_p",
             lowerbound = flow_lb[l],
             upperbound = flow_ub[l],
-            start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     else
-        var(pm, nw, cnd)[:p] = @variable(pm.model,
+        p = var(pm, nw, cnd)[:p] = @variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(cnd)_p",
-            start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     end
 
+    for (l,branch) in ref(pm, nw, :branch)
+        if haskey(branch, "pf_start")
+            f_idx = (l, branch["f_bus"], branch["t_bus"])
+            JuMP.setvalue(p[f_idx], branch["pf_start"])
+        end
+    end
+
     # this explicit type erasure is necessary
-    p_expr = Dict{Any,Any}([((l,i,j), var(pm, nw, cnd, :p, (l,i,j))) for (l,i,j) in ref(pm, nw, :arcs_from)])
-    p_expr = merge(p_expr, Dict(((l,j,i), -1.0*var(pm, nw, cnd, :p, (l,i,j))) for (l,i,j) in ref(pm, nw, :arcs_from)))
+    p_expr = Dict{Any,Any}( ((l,i,j), p[(l,i,j)]) for (l,i,j) in ref(pm, nw, :arcs_from) )
+    p_expr = merge(p_expr, Dict( ((l,j,i), -1.0*p[(l,i,j)]) for (l,i,j) in ref(pm, nw, :arcs_from)))
     var(pm, nw, cnd)[:p] = p_expr
 end
 

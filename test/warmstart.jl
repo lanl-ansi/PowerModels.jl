@@ -15,13 +15,12 @@ function set_ac_start!(data)
         gen["qg_start"] = gen["qg"]
     end
 
-    #=
-    # TBD this should be improved
     for (i,branch) in data["branch"]
-        branch["p_start"] = branch["pf"]
-        branch["q_start"] = branch["qf"]
+        branch["pf_start"] = branch["pf"]
+        branch["qf_start"] = branch["qf"]
+        branch["pt_start"] = branch["pt"]
+        branch["qt_start"] = branch["qt"]
     end
-    =#
 end
 
 function set_dc_start!(data)
@@ -34,7 +33,7 @@ function set_dc_start!(data)
     end
 
     for (i,branch) in data["branch"]
-        branch["p_start"] = branch["pf"]
+        branch["pf_start"] = branch["pf"]
     end
 end
 
@@ -45,10 +44,12 @@ end
 
         PowerModels.update_data(data, result["solution"])
 
+        # 14 iterations
         result = run_dc_opf(data, ipopt_solver);
 
         set_dc_start!(data)
 
+        # 6 iterations
         result = run_dc_opf(data, ipopt_ws_solver);
     end
 
@@ -58,17 +59,47 @@ end
 
         PowerModels.update_data(data, result["solution"])
 
+        # 35 iterations
         result = run_dc_opf(data, ipopt_solver);
 
         set_dc_start!(data)
 
+        # 6 iterations
         result = run_dc_opf(data, ipopt_ws_solver);
     end
 end
 
 
 @testset "ac warm starts" begin
-    #TODO this will require better handling of line flow starts
+    @testset "5 bus case" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        result = run_ac_opf(data, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)));
+
+        PowerModels.update_data(data, result["solution"])
+
+        # 22 iterations
+        result = run_ac_opf(data, ipopt_solver);
+
+        set_ac_start!(data)
+
+        # 19 iterations
+        result = run_ac_opf(data, ipopt_ws_solver);
+    end
+
+    @testset "5 bus pwl case" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
+        result = run_ac_opf(data, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)));
+
+        PowerModels.update_data(data, result["solution"])
+
+        # 40 iterations
+        result = run_ac_opf(data, ipopt_solver);
+
+        set_ac_start!(data)
+
+        # 12 iterations
+        result = run_ac_opf(data, ipopt_ws_solver);
+    end
 end
 
 
