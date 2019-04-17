@@ -314,7 +314,7 @@ end
     @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
 
     data["gen"]["1"]["ncost"] = 2
-    data["gen"]["1"]["cost"] = [0, 0, 0, 0]
+    data["gen"]["1"]["cost"] = [0, 1, 0, 2]
     @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
 
     data["gen"]["1"]["model"] = 2
