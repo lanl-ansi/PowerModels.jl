@@ -321,7 +321,7 @@ end
         @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
 
         mp_data_3p["gen"]["1"]["ncost"] = 2
-        mp_data_3p["gen"]["1"]["cost"] = [0.0, 0.0, 0.0, 0.0]
+        mp_data_3p["gen"]["1"]["cost"] = [0.0, 1.0, 0.0, 2.0]
         @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
 
         mp_data_3p["gen"]["1"]["model"] = 2
