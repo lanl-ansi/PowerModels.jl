@@ -18,6 +18,9 @@ addons:
 before_install:
   - julia -e 'using Pkg; Pkg.rm("PowerModels"); Pkg.rm("PowerModels")'
   - julia -e 'using Pkg; Pkg.update()'
+script:
+  - julia --project --color=yes -e "import Pkg; Pkg.build(); Pkg.instantiate()"
+  - julia --check-bounds=yes --depwarn=no --inline=no --color=yes --project -e "import Pkg; Pkg.test(coverage=true);"
 after_success:
   - julia -e 'using Pkg; Pkg.add("Coverage"); cd(Pkg.dir("PowerModels")); using Coverage; Codecov.submit(process_folder())'
 jobs:
