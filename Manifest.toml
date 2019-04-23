@@ -79,8 +79,10 @@ uuid = "f6369f11-7733-5829-9624-2563aa707210"
 version = "0.10.3"
 
 [[InfrastructureModels]]
-deps = ["JuMP", "Memento"]
-git-tree-sha1 = "c3dcbfd5a20ea423f8db1a800f17392b3dd1877d"
+deps = ["Compat", "JuMP", "LinearAlgebra", "MathOptInterface", "Memento"]
+git-tree-sha1 = "15ee7f928d73784ee686fbd39a780832c8670dc2"
+repo-rev = "moi-2"
+repo-url = "https://github.com/lanl-ansi/InfrastructureModels.jl.git"
 uuid = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
 version = "0.0.15"
 
@@ -100,13 +102,6 @@ git-tree-sha1 = "3bd8e52f7aeb2736a8e1b0d8ae8d01c2c85fea24"
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
 version = "0.18.5"
 
-[[Juniper]]
-deps = ["Distributed", "JSON", "JuMP", "LinearAlgebra", "Logging", "MathOptInterface", "Random", "Statistics", "Test"]
-repo-rev = "master"
-repo-url = "https://github.com/lanl-ansi/Juniper.jl.git"
-uuid = "2ddba703-00a4-53a7-87a5-e8b9971dde84"
-version = "0.2.6+"
-
 [[LibGit2]]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
 
@@ -124,17 +119,17 @@ uuid = "56ddb016-857b-54e1-b83d-db4d58db5568"
 deps = ["Base64"]
 uuid = "d6f4376e-aef5-505a-96c1-9c027394607a"
 
-[[MathProgBase]]
-deps = ["Compat"]
-git-tree-sha1 = "3bf2e534e635df810e5f4b4f1a8b6de9004a0d53"
-uuid = "fdba3010-5040-5b88-9595-932c9decdf73"
-version = "0.7.7"
+[[MathOptInterface]]
+deps = ["Compat", "Unicode"]
+git-tree-sha1 = "5d3de69c9220610d0336ab45d3eb8b6ac7a7c807"
+uuid = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
+version = "0.8.4"
 
 [[Memento]]
-deps = ["Dates", "Distributed", "JSON", "Sockets", "Syslogs", "Test", "TimeZones", "UUIDs"]
-git-tree-sha1 = "56c5ac9c3e89634ab5f1e736a9c3ef075b3e5850"
+deps = ["Dates", "Distributed", "JSON", "Serialization", "Sockets", "Syslogs", "Test", "TimeZones", "UUIDs"]
+git-tree-sha1 = "090463b13da88689e5eae6468a6f531a21392175"
 uuid = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
-version = "0.11.0"
+version = "0.12.1"
 
 [[Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
