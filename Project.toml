@@ -1,6 +1,6 @@
 name = "PowerModels"
 uuid = "c36e90e8-916a-50a6-bd94-075b64ef4655"
-version = "0.9.5"
+version = "0.10.0"
 
 [deps]
 InfrastructureModels = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
@@ -10,6 +10,13 @@ LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 Memento = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[compat]
+InfrastructureModels = "^0.1"
+JuMP = "^0.19"
+MathOptInterface = "^0.8"
+Memento = ">= 0.11"
+julia = "^1"
 
 [extras]
 Cbc = "9961bab8-2fa3-5c5a-9d89-47fab24efd76"
