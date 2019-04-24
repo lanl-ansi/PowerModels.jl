@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Update to JuMP v0.19/MathOptInterface
 
 ### v0.9.7
 - Minor fix solve method scope

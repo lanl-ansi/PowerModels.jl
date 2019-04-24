@@ -520,7 +520,7 @@ are also extracted separately, and `Array{Array{String}, String}` is returned.
 """
 function _get_line_elements(line::AbstractString)::Array
     if length(collect(eachmatch(r"'", line))) % 2 == 1
-        throw(error(LOGGER, "There are an uneven number of single-quotes in \"{line}\", the line cannot be parsed."))
+        throw(Memento.error(LOGGER, "There are an uneven number of single-quotes in \"{line}\", the line cannot be parsed."))
     end
 
     comment_split = r"(?!\B[\'][^\']*)[\/](?![^\']*[\']\B)"
