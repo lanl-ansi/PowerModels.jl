@@ -363,7 +363,7 @@ end
         mp_data_3p["load"]["1"]["pd"] = mp_data_3p["load"]["1"]["qd"] = [0, 0, 0]
         mp_data_3p["shunt"]["1"] = Dict("gs"=>[0,0,0], "bs"=>[0,0,0], "status"=>1, "shunt_bus"=>1, "index"=>1)
 
-        Memento.Test.@test_log(TESTLOG, "info", "deactivating load 1 due to zero pd and qd", PowerModels.propagate_topology_status(mp_data_3p))
+        Memento.TestUtils.@test_log(TESTLOG, "info", "deactivating load 1 due to zero pd and qd", PowerModels.propagate_topology_status(mp_data_3p))
         @test mp_data_3p["load"]["1"]["status"] == 0
         @test mp_data_3p["shunt"]["1"]["status"] == 0
 

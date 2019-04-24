@@ -10,6 +10,8 @@ PowerModels.jl Change Log
 - Added Base.norm for multiconductorvectors
 - Minor improvement to piecewise linear cost function pre-processing
 - Minor fix to multiconductor broadcasting
+- Update to JuMP v0.19/MathOptInterface
+- Drop support for Julia < v1.0
 
 ### v0.9.5
 - Added generator on/off constraints

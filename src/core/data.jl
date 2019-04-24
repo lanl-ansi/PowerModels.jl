@@ -122,7 +122,7 @@ end
 function check_keys(data, keys)
     for key in keys
         if haskey(data, key)
-            error(LOGGER, "attempting to overwrite value of $(key) in PowerModels data,\n$(data)")
+            Memento.error(LOGGER, "attempting to overwrite value of $(key) in PowerModels data,\n$(data)")
         end
     end
 end
@@ -201,7 +201,7 @@ component_table(data::Dict{String,<:Any}, component::String, args...) = Infrastr
 function update_data(data::Dict{String,<:Any}, new_data::Dict{String,<:Any})
     if haskey(data, "conductors") && haskey(new_data, "conductors")
         if data["conductors"] != new_data["conductors"]
-            error(LOGGER, "update_data requires datasets with the same number of conductors")
+            Memento.error(LOGGER, "update_data requires datasets with the same number of conductors")
         end
     else
         if (haskey(data, "conductors") && !haskey(new_data, "conductors")) || (!haskey(data, "conductors") && haskey(new_data, "conductors"))
@@ -806,7 +806,7 @@ end
 ""
 function _check_conductors(data::Dict{String,<:Any})
     if haskey(data, "conductors") && data["conductors"] < 1
-        error(LOGGER, "conductor values must be positive integers, given $(data["conductors"])")
+        Memento.error(LOGGER, "conductor values must be positive integers, given $(data["conductors"])")
     end
 end
 
@@ -814,7 +814,7 @@ end
 "checks that voltage angle differences are within 90 deg., if not tightens"
 function check_voltage_angle_differences(data::Dict{String,<:Any}, default_pad = 1.0472)
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "check_voltage_angle_differences does not yet support multinetwork data")
+        Memento.error(LOGGER, "check_voltage_angle_differences does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -869,7 +869,7 @@ end
 "checks that each branch has a reasonable thermal rating-a, if not computes one"
 function check_thermal_limits(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "check_thermal_limits does not yet support multinetwork data")
+        Memento.error(LOGGER, "check_thermal_limits does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -934,7 +934,7 @@ end
 "checks that each branch has a reasonable current rating-a, if not computes one"
 function check_current_limits(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "check_current_limits does not yet support multinetwork data")
+        Memento.error(LOGGER, "check_current_limits does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -1001,7 +1001,7 @@ end
 "checks that all parallel branches have the same orientation"
 function check_branch_directions(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "check_branch_directions does not yet support multinetwork data")
+        Memento.error(LOGGER, "check_branch_directions does not yet support multinetwork data")
     end
 
     modified = Set{Int}()
@@ -1041,7 +1041,7 @@ end
 "checks that all branches connect two distinct buses"
 function check_branch_loops(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "check_branch_loops does not yet support multinetwork data")
+        Memento.error(LOGGER, "check_branch_loops does not yet support multinetwork data")
     end
 
     for (i, branch) in data["branch"]
@@ -1055,7 +1055,7 @@ end
 "checks that all buses are unique and other components link to valid buses"
 function check_connectivity(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "check_connectivity does not yet support multinetwork data")
+        Memento.error(LOGGER, "check_connectivity does not yet support multinetwork data")
     end
 
     bus_ids = Set([bus["index"] for (i,bus) in data["bus"]])
@@ -1114,7 +1114,7 @@ this is important because setting tap == 0.0 leads to NaN computations, which ar
 """
 function check_transformer_parameters(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "check_transformer_parameters does not yet support multinetwork data")
+        Memento.error(LOGGER, "check_transformer_parameters does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -1164,7 +1164,7 @@ checks that each storage unit has a reasonable parameters
 """
 function check_storage_parameters(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "check_storage_parameters does not yet support multinetwork data")
+        Memento.error(LOGGER, "check_storage_parameters does not yet support multinetwork data")
     end
 
     for (i, strg) in data["storage"]
@@ -1225,7 +1225,7 @@ end
 "checks bus types are consistent with generator connections, if not, fixes them"
 function check_bus_types(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "check_bus_types does not yet support multinetwork data")
+        Memento.error(LOGGER, "check_bus_types does not yet support multinetwork data")
     end
 
     modified = Set{Int}()
@@ -1265,7 +1265,7 @@ end
 "checks that parameters for dc lines are reasonable"
 function check_dcline_limits(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "check_dcline_limits does not yet support multinetwork data")
+        Memento.error(LOGGER, "check_dcline_limits does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -1335,7 +1335,7 @@ end
 "throws warnings if generator and dc line voltage setpoints are not consistent with the bus voltage setpoint"
 function check_voltage_setpoints(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "check_voltage_setpoints does not yet support multinetwork data")
+        Memento.error(LOGGER, "check_voltage_setpoints does not yet support multinetwork data")
     end
 
     for c in 1:get(data, "conductors", 1)
@@ -1371,7 +1371,7 @@ end
 "throws warnings if cost functions are malformed"
 function check_cost_functions(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "check_cost_functions does not yet support multinetwork data")
+        Memento.error(LOGGER, "check_cost_functions does not yet support multinetwork data")
     end
 
     modified_gen = Set{Int}()
@@ -1400,17 +1400,17 @@ function _check_cost_function(id, comp, type_name)
     if "model" in keys(comp) && "cost" in keys(comp)
         if comp["model"] == 1
             if length(comp["cost"]) != 2*comp["ncost"]
-                error(LOGGER, "ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
+                Memento.error(LOGGER, "ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
             end
             if length(comp["cost"]) < 4
-                error(LOGGER, "cost includes $(comp["ncost"]) points, but at least two points are required on $(type_name) $(id)")
+                Memento.error(LOGGER, "cost includes $(comp["ncost"]) points, but at least two points are required on $(type_name) $(id)")
             end
 
             modified = _remove_pwl_cost_duplicates(id, comp, type_name)
 
             for i in 3:2:length(comp["cost"])
                 if comp["cost"][i-2] >= comp["cost"][i]
-                    error(LOGGER, "non-increasing x values in pwl cost model on $(type_name) $(id)")
+                    Memento.error(LOGGER, "non-increasing x values in pwl cost model on $(type_name) $(id)")
                 end
             end
             if "pmin" in keys(comp) && "pmax" in keys(comp)
@@ -1425,7 +1425,7 @@ function _check_cost_function(id, comp, type_name)
             modified |= _simplify_pwl_cost(id, comp, type_name)
         elseif comp["model"] == 2
             if length(comp["cost"]) != comp["ncost"]
-                error(LOGGER, "ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
+                Memento.error(LOGGER, "ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
             end
         else
             Memento.warn(LOGGER, "Unknown cost model of type $(comp["model"]) on $(type_name) $(id)")
@@ -1453,7 +1453,7 @@ function _remove_pwl_cost_duplicates(id, comp, type_name, tolerance = 1e-2)
     end
 
     if length(unique_costs) < length(comp["cost"])
-        warn(LOGGER, "removing duplicate points from pwl cost on $(type_name) $(id), $(comp["cost"]) -> $(unique_costs)")
+        Memento.warn(LOGGER, "removing duplicate points from pwl cost on $(type_name) $(id), $(comp["cost"]) -> $(unique_costs)")
         comp["cost"] = unique_costs
         comp["ncost"] = length(unique_costs)/2
         return true
@@ -1987,7 +1987,7 @@ returns a set of sets of bus ids, each set is a connected component
 """
 function connected_components(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        error(LOGGER, "connected_components does not yet support multinetwork data")
+        Memento.error(LOGGER, "connected_components does not yet support multinetwork data")
     end
 
     active_bus = Dict(x for x in data["bus"] if x.second["bus_type"] != 4)
