@@ -149,6 +149,33 @@ end
 end
 
 
+@testset "test unit commitment opf" begin
+
+    @testset "test ac opf" begin
+        @testset "5-bus uc case" begin
+            # work around possible bug in Juniper strong branching
+            result = PowerModels.run_uc_opf("../test/data/matpower/case5_uc.m", ACPPowerModel, JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), branch_strategy=:MostInfeasible, log_levels=[]))
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 18270.0; atol = 1e0)
+            @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0, atol=1e-6)
+        end
+    end
+
+    @testset "test dc opf" begin
+        @testset "5-bus uc case" begin
+            result = PowerModels.run_uc_opf("../test/data/matpower/case5_uc.m", DCPPowerModel, cbc_solver)
+
+            @test result["status"] == :Optimal
+            @test isapprox(result["objective"], 17613.2; atol = 1e0)
+            @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0)
+        end
+    end
+
+end
+
+
+
 @testset "test storage opf" begin
 
     @testset "test ac polar opf" begin

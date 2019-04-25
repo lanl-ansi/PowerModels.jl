@@ -13,12 +13,7 @@ The network data dictionary structure is roughly as follows:
 "name":<string>,
 "baseMVA":<float>,
 "source_type":<string>,
-"source_version":{
-    "major":<int>,
-    "minor":<int>,
-    "patch":<int>,
-    ...
-},
+"source_version":<string>,
 "bus":{
     "1":{
         "index":<int>,

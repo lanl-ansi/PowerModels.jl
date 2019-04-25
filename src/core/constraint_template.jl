@@ -44,6 +44,12 @@ function constraint_reactive_gen_setpoint(pm::GenericPowerModel, i::Int; nw::Int
     constraint_reactive_gen_setpoint(pm, nw, cnd, gen["index"], gen["qg"][cnd])
 end
 
+function constraint_generation_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    gen = ref(pm, nw, :gen, i)
+
+    constraint_generation_on_off(pm, nw, cnd, i, gen["pmin"][cnd], gen["pmax"][cnd], gen["qmin"][cnd], gen["qmax"][cnd])
+end
+
 
 ### Bus - Setpoint Constraints ###
 

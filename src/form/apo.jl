@@ -26,6 +26,15 @@ function constraint_reactive_gen_setpoint(pm::GenericPowerModel{T}, n::Int, c::I
 end
 
 
+"on/off constraint for generators"
+function constraint_generation_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, pmin, pmax, qmin, qmax) where T <: AbstractActivePowerFormulation
+    pg = var(pm, n, c, :pg, i)
+    z = var(pm, n, :z_gen, i)
+
+    @constraint(pm.model, pg <= pmax*z)
+    @constraint(pm.model, pg >= pmin*z)
+end
+
 
 "`-rate_a <= p[f_idx] <= rate_a`"
 function constraint_thermal_limit_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, rate_a) where T <: AbstractActivePowerFormulation

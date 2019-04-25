@@ -277,6 +277,50 @@ function variable_reactive_generation(pm::GenericPowerModel; nw::Int=pm.cnw, cnd
 end
 
 
+function variable_generation_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, relax=false)
+    if !relax
+        var(pm, nw)[:z_gen] = @variable(pm.model,
+            [i in ids(pm, nw, :gen)], basename="$(nw)_z_gen",
+            lowerbound = 0,
+            upperbound = 1,
+            category = :Int,
+            start = getval(ref(pm, nw, :gen, i), "z_gen_start", 1, 1.0)
+        )
+    else
+        var(pm, nw)[:z_gen] = @variable(pm.model,
+            [i in ids(pm, nw, :gen)], basename="$(nw)_z_gen",
+            lowerbound = 0,
+            upperbound = 1,
+            start = getval(ref(pm, nw, :gen, i), "z_gen_start", 1, 1.0)
+        )
+    end
+end
+
+
+function variable_generation_on_off(pm::GenericPowerModel; kwargs...)
+    variable_active_generation_on_off(pm; kwargs...)
+    variable_reactive_generation_on_off(pm; kwargs...)
+end
+
+function variable_active_generation_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    var(pm, nw, cnd)[:pg] = @variable(pm.model, 
+        [i in ids(pm, nw, :gen)], basename="$(nw)_$(cnd)_pg",
+        lowerbound = min(0, ref(pm, nw, :gen, i, "pmin", cnd)),
+        upperbound = max(0, ref(pm, nw, :gen, i, "pmax", cnd)),
+        start = getval(ref(pm, nw, :gen, i), "pg_start", cnd)
+    )
+end
+
+function variable_reactive_generation_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    var(pm, nw, cnd)[:qg] = @variable(pm.model, 
+        [i in ids(pm, nw, :gen)], basename="$(nw)_$(cnd)_qg",
+        lowerbound = min(0, ref(pm, nw, :gen, i, "qmin", cnd)),
+        upperbound = max(0, ref(pm, nw, :gen, i, "qmax", cnd)), 
+        start = getval(ref(pm, nw, :gen, i), "qg_start", cnd)
+    )
+end
+
+
 
 ""
 function variable_branch_flow(pm::GenericPowerModel; kwargs...)
@@ -290,17 +334,26 @@ function variable_active_branch_flow(pm::GenericPowerModel; nw::Int=pm.cnw, cnd:
     if bounded
         flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
 
-        var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
+        p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(cnd)_p",
             lowerbound = flow_lb[l],
             upperbound = flow_ub[l],
-            start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     else
-        var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
+        p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(cnd)_p",
-            start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
         )
+    end
+
+    for (l,branch) in ref(pm, nw, :branch)
+        if haskey(branch, "pf_start")
+            f_idx = (l, branch["f_bus"], branch["t_bus"])
+            JuMP.setvalue(p[f_idx], branch["pf_start"])
+        end
+        if haskey(branch, "pt_start")
+            t_idx = (l, branch["t_bus"], branch["f_bus"])
+            JuMP.setvalue(p[t_idx], branch["pt_start"])
+        end
     end
 end
 
@@ -309,17 +362,26 @@ function variable_reactive_branch_flow(pm::GenericPowerModel; nw::Int=pm.cnw, cn
     if bounded
         flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
 
-        var(pm, nw, cnd)[:q] = JuMP.@variable(pm.model,
+        q = var(pm, nw, cnd)[:q] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(cnd)_q",
             lowerbound = flow_lb[l],
             upperbound = flow_ub[l],
-            start = getval(ref(pm, nw, :branch, l), "q_start", cnd)
         )
     else
-        var(pm, nw, cnd)[:q] = JuMP.@variable(pm.model,
+        q = var(pm, nw, cnd)[:q] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs)], basename="$(nw)_$(cnd)_q",
-            start = getval(ref(pm, nw, :branch, l), "q_start", cnd)
         )
+    end
+
+    for (l,branch) in ref(pm, nw, :branch)
+        if haskey(branch, "qf_start")
+            f_idx = (l, branch["f_bus"], branch["t_bus"])
+            JuMP.setvalue(q[f_idx], branch["qf_start"])
+        end
+        if haskey(branch, "qt_start")
+            t_idx = (l, branch["t_bus"], branch["f_bus"])
+            JuMP.setvalue(q[t_idx], branch["qt_start"])
+        end
     end
 end
 

@@ -141,7 +141,7 @@ function parse_matpower_string(data_string::String)
 
     case["source_type"] = "matpower"
     if haskey(matlab_data, "mpc.version")
-        case["source_version"] = VersionNumber(matlab_data["mpc.version"])
+        case["source_version"] = matlab_data["mpc.version"]
     else
         Memento.warn(LOGGER, string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
         case["source_version"] = "0.0.0+"
@@ -327,7 +327,7 @@ end
 """
 Converts a Matpower dict into a PowerModels dict
 """
-function matpower_to_powermodels(mp_data::Dict{String,Any})
+function matpower_to_powermodels(mp_data::Dict{String,<:Any})
     pm_data = deepcopy(mp_data)
 
     # required default values
@@ -929,7 +929,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
 end
 
 "Export fields of a component type"
-function export_extra_data(io::IO, data::Dict{String,Any}, component, excluded_fields=Set(["index"]); postfix="")
+function export_extra_data(io::IO, data::Dict{String,<:Any}, component, excluded_fields=Set(["index"]); postfix="")
     if isa(data[component], Int) || isa(data[component], Int64) || isa(data[component], Float64)
         println(io, "mpc.", component, " = ", data[component], ";")
         println(io)

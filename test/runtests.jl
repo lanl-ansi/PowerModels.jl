@@ -22,6 +22,10 @@ using Test
 
 # default setup for solvers
 ipopt_solver = Ipopt.IpoptSolver(tol=1e-6, print_level=0)
+ipopt_ws_solver = Ipopt.IpoptSolver(tol=1e-6, mu_init=1e-4, print_level=0)
+#ipopt_solver = Ipopt.IpoptSolver(tol=1e-6)
+#ipopt_ws_solver = Ipopt.IpoptSolver(tol=1e-6, mu_init=1e-4)
+
 cbc_solver = Cbc.CbcSolver()
 juniper_solver = Juniper.JuniperSolver(Ipopt.IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
 #juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
@@ -67,6 +71,8 @@ include("common.jl")
     include("multi-nw-cnd.jl")
 
     include("util.jl")
+
+    include("warmstart.jl")
 
     include("docs.jl")
 

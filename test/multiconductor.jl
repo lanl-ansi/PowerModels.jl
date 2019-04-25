@@ -41,6 +41,42 @@ end
 
 @testset "test multi-conductor" begin
 
+    @testset "json parser" begin
+        mc_data = build_mc_data("../test/data/pti/parser_test_defaults.raw")
+        mc_json_string = PowerModels.parse_json(JSON.json(mc_data))
+        if VERSION > v"0.7.0-"
+            @test mc_data == mc_json_string
+        end
+
+        io = PipeBuffer()
+        JSON.print(io, mc_data)
+        mc_json_file = PowerModels.parse_file(io)
+        if VERSION > v"0.7.0-"
+            @test mc_data == mc_json_file
+        else
+            @test InfrastructureModels.compare_dict(mc_data, mc_json_file)
+        end
+
+        mc_strg_data = build_mc_data("../test/data/matpower/case5_strg.m")
+        mc_strg_json_string = PowerModels.parse_json(JSON.json(mc_strg_data))
+        if VERSION > v"0.7.0-"
+            @test mc_strg_data == mc_strg_json_string
+        else
+            @test InfrastructureModels.compare_dict(mc_strg_data, mc_strg_json_string)
+        end
+
+        # test that non-multiconductor json still parses, pti_json_file will result in error if fails
+        pti_data = PowerModels.parse_file("../test/data/pti/parser_test_defaults.raw")
+        io = PipeBuffer()
+        JSON.print(io, pti_data)
+        pti_json_file = PowerModels.parse_file(io)
+        if VERSION > v"0.7.0-"
+            @test pti_data == pti_json_file
+        else
+            @test InfrastructureModels.compare_dict(pti_data, pti_json_file)
+        end
+    end
+
     @testset "idempotent unit transformation" begin
         @testset "5-bus replicate case" begin
             mp_data = build_mc_data("../test/data/matpower/case5_dc.m")
@@ -103,6 +139,20 @@ end
         @testset "3-bus 3-conductor case" begin
             mp_data = build_mc_data("../test/data/matpower/case3.m", conductors=3)
             result = PowerModels.run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 47267.9; atol = 1e-1)
+
+            for c in 1:mp_data["conductors"]
+                @test isapprox(result["solution"]["gen"]["1"]["pg"][c], 1.58067; atol = 1e-3)
+                @test isapprox(result["solution"]["bus"]["2"]["va"][c], 0.12669; atol = 1e-3)
+            end
+        end
+
+        @testset "3-bus 3-conductor case with theta_ref=pi" begin
+            mp_data = build_mc_data("../test/data/matpower/case3.m", conductors=3)
+            pm = PowerModels.build_generic_model(mp_data, ACRPowerModel, PowerModels.post_mc_opf, multiconductor=true)
+            result = PowerModels.solve_generic_model(pm, ipopt_solver)
 
             @test result["status"] == :LocalOptimal
             @test isapprox(result["objective"], 47267.9; atol = 1e-1)
@@ -181,6 +231,28 @@ end
     end
 
 
+    @testset "test multi-conductor uc opf variants" begin
+        mp_data = build_mc_data("../test/data/matpower/case5_uc.m")
+
+        @testset "ac 5-bus case" begin
+            result = PowerModels.run_uc_mc_opf(mp_data, ACPPowerModel, juniper_solver)
+
+            @test result["status"] == :LocalOptimal
+            @test isapprox(result["objective"], 54810.0; atol = 1e-1)
+            @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0, atol=1e-6)
+        end
+
+        @testset "dc 5-bus case" begin
+            result = PowerModels.run_uc_mc_opf(mp_data, DCPPowerModel, cbc_solver)
+
+            @test result["status"] == :Optimal
+            @test isapprox(result["objective"], 52839.6; atol = 1e-1)
+            @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0)
+        end
+
+    end
+
+
     @testset "dual variable case" begin
 
         @testset "test dc polar opf" begin
@@ -249,7 +321,7 @@ end
         @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
 
         mp_data_3p["gen"]["1"]["ncost"] = 2
-        mp_data_3p["gen"]["1"]["cost"] = [0.0, 0.0, 0.0, 0.0]
+        mp_data_3p["gen"]["1"]["cost"] = [0.0, 1.0, 0.0, 2.0]
         @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mp_data_3p))
 
         mp_data_3p["gen"]["1"]["model"] = 2
@@ -435,8 +507,8 @@ end
         @test PowerModels.conductors(c) == 3
         @test PowerModels.conductors(a) == 3
         @test all(size(a) == (3,3))
-        @test isa(JSON.lower(a), Array)
-        @test all(JSON.lower(a) == a.values)
+        @test isa(JSON.lower(a), Dict)
+        @test all(JSON.lower(a)["values"] == a.values)
         @test !isapprox(d, e)
         @test PowerModels.getmcv(a, 1, 1) == a[1,1]
 
@@ -464,6 +536,17 @@ end
         @test a[1,1] == 9.0
 
         @test_nowarn PowerModels.summary(devnull, mp_data)
+
         Memento.setlevel!(TESTLOG, "error")
+        setlevel!(TESTLOG, "error")
+
+        # Test broadcasting edge-case
+        v = ones(Real, 3)
+        mcv = PowerModels.MultiConductorVector(v)
+        @test all(floor.(mcv) .+ mcv .== PowerModels.MultiConductorVector(floor.(v) .+ v))
+
+        m = LinearAlgebra.diagm(0 => v)
+        mcm = PowerModels.MultiConductorMatrix(m)
+        @test all(floor.(mcm) .+ mcm .== PowerModels.MultiConductorMatrix(floor.(m) .+ m))
     end
 end

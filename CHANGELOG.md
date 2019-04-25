@@ -2,7 +2,20 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Removed support for Julia versions < 1.0
+- Added calc_power_balance function for computing bus balance from the data model
+- Added calc_branch_flow functions for computing flows from the data model
+- Added JSON parser with support for multiconductor values
+- Added Base.norm for multiconductorvectors
+- Improved starting point support for branch flow variables
+- Improved starting point of piecewise linear cost function variables
+- Minor improvement to piecewise linear cost function pre-processing
+- Minor fix to multiconductor broadcasting
+- Dropped support for Julia v0.6 and v0.7
+
+### v0.9.5
+- Added generator on/off constraints
+- Added opf model with unit commitment (#475)
+- Fixed multiconductor support for ACR formulation
 
 ### v0.9.4
 - Added all error messages to memento log

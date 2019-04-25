@@ -103,6 +103,11 @@ function add_generator_power_setpoint(sol, pm::GenericPowerModel)
 end
 
 ""
+function add_generator_status_setpoint(sol, pm::GenericPowerModel)
+    add_setpoint(sol, pm, "gen", "gen_status", :z_gen; conductorless=true, default_value = (item) -> item["gen_status"]*1.0)
+end
+
+""
 function add_storage_setpoint(sol, pm::GenericPowerModel)
     add_setpoint(sol, pm, "storage", "ps", :ps)
     add_setpoint(sol, pm, "storage", "qs", :qs)

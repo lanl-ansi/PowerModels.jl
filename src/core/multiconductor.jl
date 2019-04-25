@@ -58,6 +58,7 @@ Base.broadcast(f::Any, a::MultiConductorValue, b::MultiConductorValue) = broadca
 Base.BroadcastStyle(::Type{<:MultiConductorVector}) = Broadcast.ArrayStyle{MultiConductorVector}()
 Base.BroadcastStyle(::Type{<:MultiConductorMatrix}) = Broadcast.ArrayStyle{MultiConductorMatrix}()
 
+
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorVector}}, ::Type{ElType}) where ElType
     A = find_mcv(bc)
     return MultiConductorVector(similar(Array{ElType}, axes(bc)))
@@ -65,6 +66,7 @@ end
 
 "`A = find_mcv(As)` returns the first MultiConductorVector among the arguments."
 find_mcv(bc::Base.Broadcast.Broadcasted) = find_mcv(bc.args)
+# find_mcv(args::Base.Broadcast.Extruded) = find_mcv(args.x)
 find_mcv(args::Tuple) = find_mcv(find_mcv(args[1]), Base.tail(args))
 find_mcv(x) = x
 find_mcv(a::MultiConductorVector, rest) = a
@@ -74,10 +76,10 @@ find_mcv(::Any, rest) = find_mcv(rest)
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorMatrix}}, ::Type{ElType}) where ElType
     A = find_mcm(bc)
     return MultiConductorMatrix(similar(Array{ElType}, axes(bc)))
-end
 
 "`A = find_mcm(As)` returns the first MultiConductorMatrix among the arguments."
 find_mcm(bc::Base.Broadcast.Broadcasted) = find_mcm(bc.args)
+# find_mcm(args::Base.Broadcast.Extruded) = find_mcm(args.x)
 find_mcm(args::Tuple) = find_mcm(find_mcm(args[1]), Base.tail(args))
 find_mcm(x) = x
 find_mcm(a::MultiConductorMatrix, rest) = a
@@ -106,7 +108,8 @@ Base.:/(a::Union{Array,Number}, b::MultiConductorVector) = MultiConductorVector(
 Base.:/(a::MultiConductorVector, b::MultiConductorVector) = MultiConductorVector(Base.broadcast(/, a.values, b.values))
 
 Base.:*(a::MultiConductorVector, b::LinearAlgebra.Adjoint) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
-Base.:*(a::LinearAlgebra.Adjoint, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
+Base.:*(a::LinearAlgebra.Adjoint, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values)
+
 
 # Matrices
 Base.:+(a::MultiConductorMatrix) = MultiConductorMatrix(+(a.values))
@@ -161,11 +164,15 @@ Base.rad2deg(a::MultiConductorMatrix) = MultiConductorMatrix(map(rad2deg, a.valu
 Base.deg2rad(a::MultiConductorVector) = MultiConductorVector(map(deg2rad, a.values))
 Base.deg2rad(a::MultiConductorMatrix) = MultiConductorMatrix(map(deg2rad, a.values))
 
-
-
-
-JSON.lower(mcv::MultiConductorValue) = mcv.values
-
+JSON.lower(mcv::PowerModels.MultiConductorValue) = Dict("values"=>mcv.values, "type"=>string(typeof(mcv)))
+function JSON.show_json(io::JSON.StructuralContext, s::JSON.CommonSerialization, p::PowerModels.MultiConductorValue)
+    a = Dict("values"=>p.values, "type"=>string(typeof(p)))
+    JSON.begin_object(io)
+    for kv in a
+        JSON.show_pair(io, s, kv)
+    end
+    JSON.end_object(io)
+end
 
 "converts a MultiConductorValue value to a string in summary"
 function InfrastructureModels._value2string(mcv::MultiConductorValue, float_precision::Int)

@@ -129,7 +129,7 @@ end
 
 
 "prints the text summary for a data file or dictionary to stdout"
-function print_summary(obj::Union{String, Dict{String,Any}}; kwargs...)
+function print_summary(obj::Union{String, Dict{String,<:Any}}; kwargs...)
     summary(stdout, obj; kwargs...)
 end
 
@@ -517,6 +517,280 @@ function _rescale_cost_model(comp::Dict{String,<:Any}, scale::Real)
 end
 
 
+
+
+
+"assumes a vaild ac solution is included in the data and computes the branch flow values"
+function calc_branch_flow_ac(data::Dict{String,<:Any})
+    @assert("per_unit" in keys(data) && data["per_unit"])
+    @assert(!haskey(data, "conductors"))
+
+    if InfrastructureModels.ismultinetwork(data)
+        nws = Dict{String,Any}()
+        for (i,nw_data) in data["nw"]
+            nws[i] = _calc_branch_flow_ac(nw_data)
+        end
+        return Dict{String,Any}(
+            "nw" => nws,
+            "per_unit" => data["per_unit"],
+            "baseMVA" => data["baseMVA"]
+        )
+    else
+        flows = _calc_branch_flow_ac(data)
+        flows["per_unit"] = data["per_unit"]
+        flows["baseMVA"] = data["baseMVA"]
+        return flows
+    end
+end
+
+
+"helper function for calc_branch_flow_ac"
+function _calc_branch_flow_ac(data::Dict{String,<:Any})
+    vm = Dict(bus["index"] => bus["vm"] for (i,bus) in data["bus"])
+    va = Dict(bus["index"] => bus["va"] for (i,bus) in data["bus"])
+
+    flows = Dict{String,Any}()
+    for (i,branch) in data["branch"]
+        if branch["br_status"] != 0
+            f_bus = branch["f_bus"]
+            t_bus = branch["t_bus"]
+
+            g, b = calc_branch_y(branch)
+            tr, ti = calc_branch_t(branch)
+            g_fr = branch["g_fr"]
+            b_fr = branch["b_fr"]
+            g_to = branch["g_to"]
+            b_to = branch["b_to"]
+            
+            tm = branch["tap"]
+
+            vm_fr = vm[f_bus]
+            vm_to = vm[t_bus]
+            va_fr = va[f_bus]
+            va_to = va[t_bus]
+
+            p_fr =  (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))
+            q_fr = -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))
+
+            p_to =  (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))
+            q_to = -(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))
+        else
+            p_fr = NaN
+            q_fr = NaN
+
+            p_to = NaN
+            q_to = NaN
+        end
+
+        flows[i] = Dict(
+            "pf" => p_fr,
+            "qf" => q_fr,
+            "pt" => p_to,
+            "qt" => q_to
+        )
+    end
+
+    return Dict{String,Any}("branch" => flows)
+end
+
+
+
+"assumes a vaild dc solution is included in the data and computes the branch flow values"
+function calc_branch_flow_dc(data::Dict{String,<:Any})
+    @assert("per_unit" in keys(data) && data["per_unit"])
+    @assert(!haskey(data, "conductors"))
+
+    if InfrastructureModels.ismultinetwork(data)
+        nws = Dict{String,Any}()
+        for (i,nw_data) in data["nw"]
+            nws[i] = _calc_branch_flow_dc(nw_data)
+        end
+        return Dict{String,Any}(
+            "nw" => nws,
+            "per_unit" => data["per_unit"],
+            "baseMVA" => data["baseMVA"]
+        )
+    else
+        flows = _calc_branch_flow_dc(data)
+        flows["per_unit"] = data["per_unit"]
+        flows["baseMVA"] = data["baseMVA"]
+        return flows
+    end
+end
+
+
+"helper function for calc_branch_flow_dc"
+function _calc_branch_flow_dc(data::Dict{String,<:Any})
+    vm = Dict(bus["index"] => bus["vm"] for (i,bus) in data["bus"])
+    va = Dict(bus["index"] => bus["va"] for (i,bus) in data["bus"])
+
+    flows = Dict{String,Any}()
+    for (i,branch) in data["branch"]
+        if branch["br_status"] != 0
+            f_bus = branch["f_bus"]
+            t_bus = branch["t_bus"]
+
+            g, b = calc_branch_y(branch)
+
+            p_fr = -b*(va[f_bus] - va[t_bus])
+        else
+            p_fr = NaN
+        end
+
+        flows[i] = Dict(
+            "pf" =>  p_fr,
+            "qf" =>  NaN,
+            "pt" => -p_fr,
+            "qt" =>  NaN
+        )
+    end
+
+    return Dict{String,Any}("branch" => flows)
+end
+
+
+
+
+"assumes a vaild solution is included in the data and computes the power balance at each bus"
+function calc_power_balance(data::Dict{String,<:Any})
+    @assert("per_unit" in keys(data) && data["per_unit"]) # may not be strictly required
+    @assert(!haskey(data, "conductors"))
+
+    if InfrastructureModels.ismultinetwork(data)
+        nws = Dict{String,Any}()
+        for (i,nw_data) in data["nw"]
+            nws[i] = _calc_power_balance(nw_data)
+        end
+        return Dict{String,Any}(
+            "nw" => nws,
+            "per_unit" => data["per_unit"],
+            "baseMVA" => data["baseMVA"]
+        )
+    else
+        flows = _calc_power_balance(data)
+        flows["per_unit"] = data["per_unit"]
+        flows["baseMVA"] = data["baseMVA"]
+        return flows
+    end
+end
+
+
+"helper function for calc_power_balance"
+function _calc_power_balance(data::Dict{String,<:Any})
+    bus_values = Dict(bus["index"] => Dict{String,Float64}() for (i,bus) in data["bus"])
+    for (i,bus) in data["bus"]
+        bvals = bus_values[bus["index"]]
+        bvals["vm"] = bus["vm"]
+
+        bvals["pd"] = 0.0
+        bvals["qd"] = 0.0
+
+        bvals["gs"] = 0.0
+        bvals["bs"] = 0.0
+
+        bvals["ps"] = 0.0
+        bvals["qs"] = 0.0
+
+        bvals["pg"] = 0.0
+        bvals["qg"] = 0.0
+
+        bvals["p"] = 0.0
+        bvals["q"] = 0.0
+
+        bvals["p_dc"] = 0.0
+        bvals["q_dc"] = 0.0
+    end
+
+    for (i,load) in data["load"]
+        if load["status"] != 0
+            bvals = bus_values[load["load_bus"]]
+            bvals["pd"] += load["pd"]
+            bvals["qd"] += load["qd"]
+        end
+    end
+
+    for (i,shunt) in data["shunt"]
+        if shunt["status"] != 0
+            bvals = bus_values[shunt["shunt_bus"]]
+            bvals["gs"] += shunt["gs"]
+            bvals["bs"] += shunt["bs"]
+        end
+    end
+
+    for (i,storage) in data["storage"]
+        if storage["status"] != 0
+            bvals = bus_values[storage["storage_bus"]]
+            if haskey(storage, "ps")
+                bvals["ps"] += storage["ps"]
+            end
+            if haskey(storage, "qs")
+                bvals["qs"] += storage["qs"]
+            end
+        end
+    end
+
+    for (i,gen) in data["gen"]
+        if gen["gen_status"] != 0
+            bvals = bus_values[gen["gen_bus"]]
+            bvals["pg"] += gen["pg"]
+            bvals["qg"] += gen["qg"]
+        end
+    end
+
+    for (i,branch) in data["branch"]
+        if branch["br_status"] != 0
+            bus_fr = branch["f_bus"]
+            bvals_fr = bus_values[bus_fr]
+            bvals_fr["p"] += branch["pf"]
+            bvals_fr["q"] += branch["qf"]
+
+            bus_to = branch["t_bus"]
+            bvals_to = bus_values[bus_to]
+            bvals_to["p"] += branch["pt"]
+            bvals_to["q"] += branch["qt"]
+        end
+    end
+
+    for (i,dcline) in data["dcline"]
+        if dcline["br_status"] != 0
+            bus_fr = dcline["f_bus"]
+            bvals_fr = bus_values[bus_fr]
+            bvals_fr["p_dc"] += dcline["pf"]
+            bvals_fr["q_dc"] += dcline["qf"]
+
+            bus_to = dcline["t_bus"]
+            bvals_to = bus_values[bus_to]
+            bvals_to["p_dc"] += dcline["pt"]
+            bvals_to["q_dc"] += dcline["qt"]
+        end
+    end
+
+    deltas = Dict{String,Any}()
+    for (i,bus) in data["bus"]
+        if bus["bus_type"] != 4
+            bvals = bus_values[bus["index"]]
+            p_delta = bvals["p"] + bvals["p_dc"] - bvals["pg"] + bvals["ps"] + bvals["pd"] + bvals["gs"]*(bvals["vm"]^2)
+            q_delta = bvals["q"] + bvals["q_dc"] - bvals["qg"] + bvals["qs"] + bvals["qd"] - bvals["bs"]*(bvals["vm"]^2)
+        else
+            p_delta = NaN
+            q_delta = NaN
+        end
+
+        deltas[i] = Dict(
+            "p_delta" => p_delta,
+            "q_delta" => q_delta,
+        )
+    end
+
+    return Dict{String,Any}("bus" => deltas)
+end
+
+
+
+
+
+
+
 ""
 function check_conductors(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
@@ -524,7 +798,7 @@ function check_conductors(data::Dict{String,<:Any})
             _check_conductors(nw_data)
         end
     else
-         _check_conductors(data)
+        _check_conductors(data)
     end
 end
 
@@ -916,13 +1190,23 @@ function check_storage_parameters(data::Dict{String,<:Any})
             Memento.error(LOGGER, "storage unit $(strg["index"]) has a non-positive standby losses $(strg["standby_loss"])")
         end
 
-        if haskey(strg, "thermal_rating") && strg["thermal_rating"] < 0.0
-            Memento.error(LOGGER, "storage unit $(strg["index"]) has a non-positive thermal rating $(strg["thermal_rating"])")
+        for c in 1:get(data, "conductors", 1)
+            if strg["r"][c] < 0.0
+                error(LOGGER, "storage unit $(strg["index"]) has a non-positive resistance $(strg["r"][c])")
+            end
+            if strg["x"][c] < 0.0
+                error(LOGGER, "storage unit $(strg["index"]) has a non-positive reactance $(strg["x"][c])")
+            end
+            if haskey(strg, "thermal_rating") && strg["thermal_rating"][c] < 0.0
+                error(LOGGER, "storage unit $(strg["index"]) has a non-positive thermal rating $(strg["thermal_rating"][c])")
+            end
+            if haskey(strg, "current_rating") && strg["current_rating"][c] < 0.0
+                error(LOGGER, "storage unit $(strg["index"]) has a non-positive current rating $(strg["thermal_rating"][c])")
+            end
+            if !isapprox(strg["x"][c], 0.0, atol=1e-6, rtol=1e-6)
+                warn(LOGGER, "storage unit $(strg["index"]) has a non-zero reactance $(strg["x"][c]), which is currently ignored")
+            end
         end
-        if haskey(strg, "current_rating") && strg["current_rating"] < 0.0
-            Memento.error(LOGGER, "storage unit $(strg["index"]) has a non-positive current rating $(strg["thermal_rating"])")
-        end
-
 
         if strg["charge_efficiency"] < 0.0
             Memento.error(LOGGER, "storage unit $(strg["index"]) has a non-positive charge efficiency of $(strg["charge_efficiency"])")
@@ -930,18 +1214,12 @@ function check_storage_parameters(data::Dict{String,<:Any})
         if strg["charge_efficiency"] <= 0.0 || strg["charge_efficiency"] > 1.0
             Memento.warn(LOGGER, "storage unit $(strg["index"]) charge efficiency of $(strg["charge_efficiency"]) is out of the valid range (0.0. 1.0]")
         end
-
         if strg["discharge_efficiency"] < 0.0
             Memento.error(LOGGER, "storage unit $(strg["index"]) has a non-positive discharge efficiency of $(strg["discharge_efficiency"])")
         end
         if strg["discharge_efficiency"] <= 0.0 || strg["discharge_efficiency"] > 1.0
             Memento.warn(LOGGER, "storage unit $(strg["index"]) discharge efficiency of $(strg["discharge_efficiency"]) is out of the valid range (0.0. 1.0]")
         end
-
-        if !isapprox(strg["x"], 0.0, atol=1e-6, rtol=1e-6)
-            Memento.warn(LOGGER, "storage unit $(strg["index"]) has a non-zero reactance $(strg["x"]), which is currently ignored")
-        end
-
 
         if strg["standby_loss"] > 0.0 && strg["energy"] <= 0.0
             Memento.warn(LOGGER, "storage unit $(strg["index"]) has standby losses but zero initial energy.  This can lead to model infeasiblity.")
@@ -1134,6 +1412,9 @@ function _check_cost_function(id, comp, type_name)
             if length(comp["cost"]) < 4
                 error(LOGGER, "cost includes $(comp["ncost"]) points, but at least two points are required on $(type_name) $(id)")
             end
+
+            modified = _remove_pwl_cost_duplicates(id, comp, type_name)
+
             for i in 3:2:length(comp["cost"])
                 if comp["cost"][i-2] >= comp["cost"][i]
                     error(LOGGER, "non-increasing x values in pwl cost model on $(type_name) $(id)")
@@ -1148,7 +1429,7 @@ function _check_cost_function(id, comp, type_name)
                     end
                 end
             end
-            modified = _simplify_pwl_cost(id, comp, type_name)
+            modified |= _simplify_pwl_cost(id, comp, type_name)
         elseif comp["model"] == 2
             if length(comp["cost"]) != comp["ncost"]
                 error(LOGGER, "ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
@@ -1159,6 +1440,32 @@ function _check_cost_function(id, comp, type_name)
     end
 
     return modified
+end
+
+
+"checks that each point in the a pwl function is unqiue, simplifies the function if duplicates appear"
+function _remove_pwl_cost_duplicates(id, comp, type_name, tolerance = 1e-2)
+    @assert comp["model"] == 1
+
+    unique_costs = Float64[comp["cost"][1], comp["cost"][2]]
+    for i in 3:2:length(comp["cost"])
+        x1 = unique_costs[end-1]
+        y1 = unique_costs[end]
+        x2 = comp["cost"][i+0]
+        y2 = comp["cost"][i+1]
+        if !(isapprox(x1, x2) && isapprox(y1, y2))
+            push!(unique_costs, x2)
+            push!(unique_costs, y2)
+        end
+    end
+
+    if length(unique_costs) < length(comp["cost"])
+        warn(LOGGER, "removing duplicate points from pwl cost on $(type_name) $(id), $(comp["cost"]) -> $(unique_costs)")
+        comp["cost"] = unique_costs
+        comp["ncost"] = length(unique_costs)/2
+        return true
+    end
+    return false
 end
 
 
@@ -1759,7 +2066,7 @@ conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
     "br_status", "gen_bus", "load_bus", "shunt_bus", "storage_bus", "f_bus", "t_bus",
     "transformer", "area", "zone", "base_kv", "energy", "energy_rating", "charge_rating",
     "discharge_rating", "charge_efficiency", "discharge_efficiency", "standby_loss",
-    "model", "ncost", "cost", "startup", "shutdown"])
+    "model", "ncost", "cost", "startup", "shutdown", "name", "source_id", "active_phases"])
 
 conductor_matrix = Set(["br_r", "br_x"])
 
