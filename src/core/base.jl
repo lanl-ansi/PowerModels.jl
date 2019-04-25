@@ -164,7 +164,7 @@ con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) =
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
-function setsolver(pm::GenericPowerModel, solver::MathProgBase.AbstractMathProgSolver)
+function setsolver(pm::GenericPowerModel, solver)
     JuMP.setsolver(pm.model, solver)
 end
 

@@ -4,7 +4,6 @@ import LinearAlgebra, SparseArrays
 
 import JSON
 import InfrastructureModels
-import MathProgBase
 import JuMP
 import Memento
 
