@@ -10,6 +10,7 @@ PowerModels.jl Change Log
 - Improved starting point of piecewise linear cost function variables
 - Minor improvement to piecewise linear cost function pre-processing
 - Minor fix to multiconductor broadcasting
+- Updated using to import
 - Dropped support for Julia v0.6 and v0.7
 
 ### v0.9.5
