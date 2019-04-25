@@ -18,7 +18,7 @@ function parse_file(io::IO; import_all=false, validate=true, filetype="json")
     if filetype == "m"
         pm_data = PowerModels.parse_matpower(io, validate=validate)
     elseif filetype == "raw"
-        info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
+        Memento.info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
         pm_data = PowerModels.parse_psse(io; import_all=import_all, validate=validate)
     elseif filetype == "json"
         pm_data = PowerModels.parse_json(io; validate=validate)
