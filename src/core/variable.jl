@@ -279,7 +279,7 @@ end
 
 function variable_generation_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, relax=false)
     if !relax
-        var(pm, nw)[:z_gen] = @variable(pm.model,
+        var(pm, nw)[:z_gen] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :gen)], basename="$(nw)_z_gen",
             lowerbound = 0,
             upperbound = 1,
@@ -287,7 +287,7 @@ function variable_generation_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, cn
             start = getval(ref(pm, nw, :gen, i), "z_gen_start", 1, 1.0)
         )
     else
-        var(pm, nw)[:z_gen] = @variable(pm.model,
+        var(pm, nw)[:z_gen] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :gen)], basename="$(nw)_z_gen",
             lowerbound = 0,
             upperbound = 1,
@@ -303,7 +303,7 @@ function variable_generation_on_off(pm::GenericPowerModel; kwargs...)
 end
 
 function variable_active_generation_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    var(pm, nw, cnd)[:pg] = @variable(pm.model, 
+    var(pm, nw, cnd)[:pg] = JuMP.@variable(pm.model, 
         [i in ids(pm, nw, :gen)], basename="$(nw)_$(cnd)_pg",
         lowerbound = min(0, ref(pm, nw, :gen, i, "pmin", cnd)),
         upperbound = max(0, ref(pm, nw, :gen, i, "pmax", cnd)),
@@ -312,7 +312,7 @@ function variable_active_generation_on_off(pm::GenericPowerModel; nw::Int=pm.cnw
 end
 
 function variable_reactive_generation_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    var(pm, nw, cnd)[:qg] = @variable(pm.model, 
+    var(pm, nw, cnd)[:qg] = JuMP.@variable(pm.model, 
         [i in ids(pm, nw, :gen)], basename="$(nw)_$(cnd)_qg",
         lowerbound = min(0, ref(pm, nw, :gen, i, "qmin", cnd)),
         upperbound = max(0, ref(pm, nw, :gen, i, "qmax", cnd)), 

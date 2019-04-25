@@ -76,6 +76,7 @@ find_mcv(::Any, rest) = find_mcv(rest)
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorMatrix}}, ::Type{ElType}) where ElType
     A = find_mcm(bc)
     return MultiConductorMatrix(similar(Array{ElType}, axes(bc)))
+end
 
 "`A = find_mcm(As)` returns the first MultiConductorMatrix among the arguments."
 find_mcm(bc::Base.Broadcast.Broadcasted) = find_mcm(bc.args)
@@ -108,7 +109,7 @@ Base.:/(a::Union{Array,Number}, b::MultiConductorVector) = MultiConductorVector(
 Base.:/(a::MultiConductorVector, b::MultiConductorVector) = MultiConductorVector(Base.broadcast(/, a.values, b.values))
 
 Base.:*(a::MultiConductorVector, b::LinearAlgebra.Adjoint) = MultiConductorMatrix(Base.broadcast(*, a.values, b))
-Base.:*(a::LinearAlgebra.Adjoint, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values)
+Base.:*(a::LinearAlgebra.Adjoint, b::MultiConductorVector) = MultiConductorMatrix(Base.broadcast(*, a, b.values))
 
 
 # Matrices

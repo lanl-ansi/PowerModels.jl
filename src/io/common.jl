@@ -23,7 +23,7 @@ function parse_file(io::IO; import_all=false, validate=true, filetype="json")
     elseif filetype == "json"
         pm_data = PowerModels.parse_json(io; validate=validate)
     else
-        error(LOGGER, "Unrecognized filetype")
+        Memento.error(LOGGER, "Unrecognized filetype")
     end
 
     return pm_data
