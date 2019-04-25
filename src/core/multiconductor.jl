@@ -66,7 +66,7 @@ end
 
 "`A = find_mcv(As)` returns the first MultiConductorVector among the arguments."
 find_mcv(bc::Base.Broadcast.Broadcasted) = find_mcv(bc.args)
-# find_mcv(args::Base.Broadcast.Extruded) = find_mcv(args.x)
+find_mcv(args::Base.Broadcast.Extruded) = find_mcv(args.x)
 find_mcv(args::Tuple) = find_mcv(find_mcv(args[1]), Base.tail(args))
 find_mcv(x) = x
 find_mcv(a::MultiConductorVector, rest) = a
@@ -80,7 +80,7 @@ end
 
 "`A = find_mcm(As)` returns the first MultiConductorMatrix among the arguments."
 find_mcm(bc::Base.Broadcast.Broadcasted) = find_mcm(bc.args)
-# find_mcm(args::Base.Broadcast.Extruded) = find_mcm(args.x)
+find_mcm(args::Base.Broadcast.Extruded) = find_mcm(args.x)
 find_mcm(args::Tuple) = find_mcm(find_mcm(args[1]), Base.tail(args))
 find_mcm(x) = x
 find_mcm(a::MultiConductorMatrix, rest) = a

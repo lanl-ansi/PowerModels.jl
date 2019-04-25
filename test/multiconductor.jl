@@ -538,7 +538,6 @@ end
         @test_nowarn PowerModels.summary(devnull, mp_data)
 
         Memento.setlevel!(TESTLOG, "error")
-        setlevel!(TESTLOG, "error")
 
         # Test broadcasting edge-case
         v = ones(Real, 3)

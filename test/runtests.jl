@@ -28,7 +28,7 @@ ipopt_ws_solver = Ipopt.IpoptSolver(tol=1e-6, mu_init=1e-4, print_level=0)
 
 cbc_solver = Cbc.CbcSolver()
 juniper_solver = Juniper.JuniperSolver(Ipopt.IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
-#juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
+#juniper_solver = JuniperSolver(Ipopt.IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
 pavito_solver = Pavito.PavitoSolver(mip_solver=cbc_solver, cont_solver=ipopt_solver, mip_solver_drives=false, log_level=0)
 scs_solver = SCS.SCSSolver(max_iters=500000, acceleration_lookback=1, verbose=0)
 
