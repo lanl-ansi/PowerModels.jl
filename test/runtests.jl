@@ -1,43 +1,36 @@
 using PowerModels
-using InfrastructureModels
-using Memento
+import InfrastructureModels
+import Memento
 
-using MathProgBase
+import MathProgBase
 
 # Suppress warnings during testing.
-setlevel!(getlogger(InfrastructureModels), "error")
-setlevel!(getlogger(PowerModels), "error")
+Memento.setlevel!(Memento.getlogger(InfrastructureModels), "error")
+Memento.setlevel!(Memento.getlogger(PowerModels), "error")
 
-using Cbc
-using Ipopt
-using SCS
-using Pavito
-using Juniper
-using Compat
+import Cbc
+import Ipopt
+import SCS
+import Pavito
+import Juniper
 
-using JuMP
-using JSON
+import JuMP
+import JSON
 
-using Compat.LinearAlgebra
-using Compat.Test
-import Compat: pairs
-
-if VERSION < v"0.7.0-"
-    LinearAlgebra = Compat.LinearAlgebra
-end
-
+import LinearAlgebra
+using Test
 
 # default setup for solvers
-ipopt_solver = IpoptSolver(tol=1e-6, print_level=0)
-ipopt_ws_solver = IpoptSolver(tol=1e-6, mu_init=1e-4, print_level=0)
-#ipopt_solver = IpoptSolver(tol=1e-6)
-#ipopt_ws_solver = IpoptSolver(tol=1e-6, mu_init=1e-4)
+ipopt_solver = Ipopt.IpoptSolver(tol=1e-6, print_level=0)
+ipopt_ws_solver = Ipopt.IpoptSolver(tol=1e-6, mu_init=1e-4, print_level=0)
+#ipopt_solver = Ipopt.IpoptSolver(tol=1e-6)
+#ipopt_ws_solver = Ipopt.IpoptSolver(tol=1e-6, mu_init=1e-4)
 
-cbc_solver = CbcSolver()
-juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
-#juniper_solver = JuniperSolver(IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
-pavito_solver = PavitoSolver(mip_solver=cbc_solver, cont_solver=ipopt_solver, mip_solver_drives=false, log_level=0)
-scs_solver = SCSSolver(max_iters=500000, acceleration_lookback=1, verbose=0)
+cbc_solver = Cbc.CbcSolver()
+juniper_solver = Juniper.JuniperSolver(Ipopt.IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
+#juniper_solver = JuniperSolver(Ipopt.IpoptSolver(tol=1e-4, print_level=0), mip_solver=cbc_solver)
+pavito_solver = Pavito.PavitoSolver(mip_solver=cbc_solver, cont_solver=ipopt_solver, mip_solver_drives=false, log_level=0)
+scs_solver = SCS.SCSSolver(max_iters=500000, acceleration_lookback=1, verbose=0)
 
 include("common.jl")
 

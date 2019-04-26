@@ -9,28 +9,28 @@
 function constraint_thermal_limit_from(pm::GenericPowerModel, n::Int, c::Int, f_idx, rate_a)
     p_fr = var(pm, n, c, :p, f_idx)
     q_fr = var(pm, n, c, :q, f_idx)
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2)
 end
 
 "`p[t_idx]^2 + q[t_idx]^2 <= rate_a^2`"
 function constraint_thermal_limit_to(pm::GenericPowerModel, n::Int, c::Int, t_idx, rate_a)
     p_to = var(pm, n, c, :p, t_idx)
     q_to = var(pm, n, c, :q, t_idx)
-    @constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2)
+    JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2)
 end
 
-"`norm([p[f_idx]; q[f_idx]]) <= rate_a`"
+"`JuMP.norm([p[f_idx]; q[f_idx]]) <= rate_a`"
 function constraint_thermal_limit_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, rate_a) where T <: AbstractConicForms
     p_fr = var(pm, n, c, :p, f_idx)
     q_fr = var(pm, n, c, :q, f_idx)
-    @constraint(pm.model, norm([p_fr; q_fr]) <= rate_a)
+    JuMP.@constraint(pm.model, JuMP.norm([p_fr; q_fr]) <= rate_a)
 end
 
-"`norm([p[t_idx]; q[t_idx]]) <= rate_a`"
+"`JuMP.norm([p[t_idx]; q[t_idx]]) <= rate_a`"
 function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t_idx, rate_a) where T <: AbstractConicForms
     p_to = var(pm, n, c, :p, t_idx)
     q_to = var(pm, n, c, :q, t_idx)
-    @constraint(pm.model, norm([p_to; q_to]) <= rate_a)
+    JuMP.@constraint(pm.model, JuMP.norm([p_to; q_to]) <= rate_a)
 end
 
 # Generic on/off thermal limit constraint
@@ -40,7 +40,7 @@ function constraint_thermal_limit_from_on_off(pm::GenericPowerModel, n::Int, c::
     p_fr = var(pm, n, c, :p, f_idx)
     q_fr = var(pm, n, c, :q, f_idx)
     z = var(pm, n, c, :branch_z, i)
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2*z^2)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2*z^2)
 end
 
 "`p[t_idx]^2 + q[t_idx]^2 <= (rate_a * branch_z[i])^2`"
@@ -48,7 +48,7 @@ function constraint_thermal_limit_to_on_off(pm::GenericPowerModel, n::Int, c::In
     p_to = var(pm, n, c, :p, t_idx)
     q_to = var(pm, n, c, :q, t_idx)
     z = var(pm, n, c, :branch_z, i)
-    @constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2*z^2)
+    JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2*z^2)
 end
 
 "`p_ne[f_idx]^2 + q_ne[f_idx]^2 <= (rate_a * branch_ne[i])^2`"
@@ -56,7 +56,7 @@ function constraint_thermal_limit_from_ne(pm::GenericPowerModel, n::Int, c::Int,
     p_fr = var(pm, n, c, :p_ne, f_idx)
     q_fr = var(pm, n, c, :q_ne, f_idx)
     z = var(pm, n, c, :branch_ne, i)
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2*z^2)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2*z^2)
 end
 
 "`p_ne[t_idx]^2 + q_ne[t_idx]^2 <= (rate_a * branch_ne[i])^2`"
@@ -64,19 +64,19 @@ function constraint_thermal_limit_to_ne(pm::GenericPowerModel, n::Int, c::Int, i
     p_to = var(pm, n, c, :p_ne, t_idx)
     q_to = var(pm, n, c, :q_ne, t_idx)
     z = var(pm, n, c, :branch_ne, i)
-    @constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2*z^2)
+    JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2*z^2)
 end
 
 "`pg[i] == pg`"
 function constraint_active_gen_setpoint(pm::GenericPowerModel, n::Int, c::Int, i, pg)
     pg_var = var(pm, n, c, :pg, i)
-    @constraint(pm.model, pg_var == pg)
+    JuMP.@constraint(pm.model, pg_var == pg)
 end
 
 "`qq[i] == qq`"
 function constraint_reactive_gen_setpoint(pm::GenericPowerModel, n::Int, c::Int, i, qg)
     qg_var = var(pm, n, c, :qg, i)
-    @constraint(pm.model, qg_var == qg)
+    JuMP.@constraint(pm.model, qg_var == qg)
 end
 
 "on/off constraint for generators"
@@ -85,10 +85,10 @@ function constraint_generation_on_off(pm::GenericPowerModel, n::Int, c::Int, i::
     qg = var(pm, n, c, :qg, i)
     z = var(pm, n, :z_gen, i)
 
-    @constraint(pm.model, pg <= pmax*z)
-    @constraint(pm.model, pg >= pmin*z)
-    @constraint(pm.model, qg <= qmax*z)
-    @constraint(pm.model, qg >= qmin*z)
+    JuMP.@constraint(pm.model, pg <= pmax*z)
+    JuMP.@constraint(pm.model, pg >= pmin*z)
+    JuMP.@constraint(pm.model, qg <= qmax*z)
+    JuMP.@constraint(pm.model, qg >= qmin*z)
 end
 
 
@@ -103,7 +103,7 @@ function constraint_dcline(pm::GenericPowerModel, n::Int, c::Int, f_bus, t_bus, 
     p_fr = var(pm, n, c, :p_dc, f_idx)
     p_to = var(pm, n, c, :p_dc, t_idx)
 
-    @constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0) == 0)
+    JuMP.@constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0) == 0)
 end
 
 "`pf[i] == pf, pt[i] == pt`"
@@ -111,8 +111,8 @@ function constraint_active_dcline_setpoint(pm::GenericPowerModel, n::Int, c::Int
     p_fr = var(pm, n, c, :p_dc, f_idx)
     p_to = var(pm, n, c, :p_dc, t_idx)
 
-    @constraint(pm.model, p_fr == pf)
-    @constraint(pm.model, p_to == pt)
+    JuMP.@constraint(pm.model, p_fr == pf)
+    JuMP.@constraint(pm.model, p_to == pt)
 end
 
 "do nothing, this model does not have complex voltage constraints"
@@ -125,7 +125,7 @@ end
 function constraint_storage_thermal_limit(pm::GenericPowerModel, n::Int, c::Int, i, rating)
     ps = var(pm, n, c, :ps, i)
     qs = var(pm, n, c, :qs, i)
-    @constraint(pm.model, ps^2 + qs^2 <= rating^2)
+    JuMP.@constraint(pm.model, ps^2 + qs^2 <= rating^2)
 end
 
 ""
@@ -133,7 +133,7 @@ function constraint_storage_current_limit(pm::GenericPowerModel, n::Int, c::Int,
     vm = var(pm, n, pm.ccnd, :vm, bus)
     ps = var(pm, n, c, :ps, i)
     qs = var(pm, n, c, :qs, i)
-    @constraint(pm.model, ps^2 + qs^2 <= rating^2*vm^2)
+    JuMP.@constraint(pm.model, ps^2 + qs^2 <= rating^2*vm^2)
 end
 
 ""
@@ -141,7 +141,7 @@ function constraint_storage_state_initial(pm::GenericPowerModel, n::Int, i::Int,
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
     se = var(pm, n, :se, i)
-    @constraint(pm.model, se - energy == time_elapsed*(charge_eff*sc - sd/discharge_eff))
+    JuMP.@constraint(pm.model, se - energy == time_elapsed*(charge_eff*sc - sd/discharge_eff))
 end
 
 ""
@@ -150,14 +150,14 @@ function constraint_storage_state(pm::GenericPowerModel, n_1::Int, n_2::Int, i::
     sd_2 = var(pm, n_2, :sd, i)
     se_2 = var(pm, n_2, :se, i)
     se_1 = var(pm, n_1, :se, i)
-    @constraint(pm.model, se_2 - se_1 == time_elapsed*(charge_eff*sc_2 - sd_2/discharge_eff))
+    JuMP.@constraint(pm.model, se_2 - se_1 == time_elapsed*(charge_eff*sc_2 - sd_2/discharge_eff))
 end
 
 ""
 function constraint_storage_complementarity(pm::GenericPowerModel, n::Int, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
-    @constraint(pm.model, sc*sd == 0.0)
+    JuMP.@constraint(pm.model, sc*sd == 0.0)
 end
 
 ""
@@ -167,5 +167,5 @@ function constraint_storage_loss(pm::GenericPowerModel, n::Int, i, bus, r, x, st
     qs = var(pm, n, pm.ccnd, :qs, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
-    @NLconstraint(pm.model, ps + (sd - sc) == standby_loss + r*(ps^2 + qs^2)/vm^2)
+    JuMP.@NLconstraint(pm.model, ps + (sd - sc) == standby_loss + r*(ps^2 + qs^2)/vm^2)
 end

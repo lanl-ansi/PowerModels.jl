@@ -1,6 +1,6 @@
 # Tests of data checking and transformation code
 
-TESTLOG = getlogger(PowerModels)
+TESTLOG =  Memento.getlogger(PowerModels)
 
 @testset "test data summary" begin
 
@@ -350,7 +350,7 @@ end
     data["dcline"]["1"]["t_bus"] = 2
 
     #warnings
-    setlevel!(TESTLOG, "warn")
+    Memento.setlevel!(TESTLOG, "warn")
 
     data["gen"]["1"]["model"] = 3
     @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units(data))
@@ -382,7 +382,7 @@ end
     data["branch"]["1"]["tap"] = -1.0
     @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.check_transformer_parameters(data))
 
-    setlevel!(TESTLOG, "error")
+    Memento.setlevel!(TESTLOG, "error")
 end
 
 
@@ -395,7 +395,7 @@ end
         @test haskey(pm.ext, :some_data)
         @test pm.ext[:some_data] == "bloop"
 
-        result = solve_generic_model(pm, IpoptSolver(print_level=0))
+        result = solve_generic_model(pm, Ipopt.IpoptSolver(print_level=0))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5907; atol = 1e0)

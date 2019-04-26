@@ -17,11 +17,11 @@ function check_cost_models(pm::GenericPowerModel)
                     model = gen["model"]
                 else
                     if gen["model"] != model
-                        error(LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
+                        Memento.error(LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
                     end
                 end
             else
-                error(LOGGER, "no cost given for generator $(i)")
+                Memento.error(LOGGER, "no cost given for generator $(i)")
             end
         end
 
@@ -31,11 +31,11 @@ function check_cost_models(pm::GenericPowerModel)
                     model = dcline["model"]
                 else
                     if dcline["model"] != model
-                        error(LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
+                        Memento.error(LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
                     end
                 end
             else
-                error(LOGGER, "no cost given for dcline $(i)")
+                Memento.error(LOGGER, "no cost given for dcline $(i)")
             end
         end
     end
@@ -54,7 +54,7 @@ function objective_min_fuel_cost(pm::GenericPowerModel)
     elseif model == 2
         return objective_min_polynomial_fuel_cost(pm)
     else
-        error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
+        Memento.error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
 
 end
@@ -69,7 +69,7 @@ function objective_min_gen_fuel_cost(pm::GenericPowerModel)
     elseif model == 2
         return objective_min_gen_polynomial_fuel_cost(pm)
     else
-        error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
+        Memento.error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
 
 end
@@ -88,12 +88,12 @@ end
 
 
 function _objective_min_polynomial_fuel_cost_quadratic(pm::GenericPowerModel)
-    warn(LOGGER, "call to depreciated function _objective_min_polynomial_fuel_cost_quadratic")
+    Memento.warn(LOGGER, "call to depreciated function _objective_min_polynomial_fuel_cost_quadratic")
     _objective_min_polynomial_fuel_cost_linquad(pm)
 end
 
 function _objective_min_polynomial_fuel_cost_linear(pm::GenericPowerModel)
-    warn(LOGGER, "call to depreciated function _objective_min_polynomial_fuel_cost_linear")
+    Memento.warn(LOGGER, "call to depreciated function _objective_min_polynomial_fuel_cost_linear")
     _objective_min_polynomial_fuel_cost_linquad(pm)
 end
 
@@ -120,7 +120,7 @@ function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel)
         from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
         for (i,dcline) in nw_ref[:dcline]
             p_dc = sum( var(pm, n, c, :p_dc, from_idx[i]) for c in conductor_ids(pm, n) )
-            
+
             if length(dcline["cost"]) == 1
                 dcline_cost[(n,i)] = dcline["cost"][1]
             elseif length(dcline["cost"]) == 2
@@ -133,7 +133,7 @@ function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel)
         end
     end
 
-    return @objective(pm.model, Min,
+    return JuMP.@objective(pm.model, Min,
         sum(
             sum(    gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] ) +
             sum( dcline_cost[(n,i)] for (i,dcline) in nw_ref[:dcline] )
@@ -170,12 +170,12 @@ function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel{T}) w
                     pg_sqr_lb = pmax^2
                 end
 
-                pg_sqr = var(pm, n, :pg_sqr)[i] = @variable(pm.model,
+                pg_sqr = var(pm, n, :pg_sqr)[i] = JuMP.@variable(pm.model,
                     basename="$(n)_pg_sqr_$(i)",
                     lowerbound = pg_sqr_lb,
                     upperbound = pg_sqr_ub
                 )
-                @constraint(pm.model, norm([2*pg, pg_sqr-1]) <= pg_sqr+1)
+                JuMP.@constraint(pm.model, JuMP.norm([2*pg, pg_sqr-1]) <= pg_sqr+1)
 
                 gen_cost[(n,i)] = gen["cost"][1]*pg_sqr + gen["cost"][2]*pg + gen["cost"][3]
             else
@@ -206,12 +206,12 @@ function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel{T}) w
                     p_dc_sqr_lb = pmax^2
                 end
 
-                p_dc_sqr = var(pm, n, :p_dc_sqr)[i] = @variable(pm.model,
+                p_dc_sqr = var(pm, n, :p_dc_sqr)[i] = JuMP.@variable(pm.model,
                     basename="$(n)_p_dc_sqr_$(i)",
                     lowerbound = p_dc_sqr_lb,
                     upperbound = p_dc_sqr_ub
                 )
-                @constraint(pm.model, norm([2*p_dc, p_dc_sqr-1]) <= p_dc_sqr+1)
+                JuMP.@constraint(pm.model, JuMP.norm([2*p_dc, p_dc_sqr-1]) <= p_dc_sqr+1)
 
                 dcline_cost[(n,i)] = dcline["cost"][1]*p_dc_sqr + dcline["cost"][2]*p_dc + dcline["cost"][3]
             else
@@ -220,7 +220,7 @@ function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel{T}) w
         end
     end
 
-    return @objective(pm.model, Min,
+    return JuMP.@objective(pm.model, Min,
         sum(
             sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] ) +
             sum( dcline_cost[(n,i)] for (i,dcline) in nw_ref[:dcline] )
@@ -240,16 +240,16 @@ function _objective_min_polynomial_fuel_cost_nl(pm::GenericPowerModel)
 
             cost_rev = reverse(gen["cost"])
             if length(cost_rev) == 1
-                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1])
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1])
             elseif length(cost_rev) == 2
-                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg)
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg)
             elseif length(cost_rev) == 3
-                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2)
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2)
             elseif length(cost_rev) >= 4
                 cost_rev_nl = cost_rev[4:end]
-                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[2]*pg^2 + sum( v*pg^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[2]*pg^2 + sum( v*pg^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
             else
-                gen_cost[(n,i)] = @NLexpression(pm.model, 0.0)
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, 0.0)
             end
         end
 
@@ -260,21 +260,21 @@ function _objective_min_polynomial_fuel_cost_nl(pm::GenericPowerModel)
 
             cost_rev = reverse(dcline["cost"])
             if length(cost_rev) == 1
-                dcline_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1])
+                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1])
             elseif length(cost_rev) == 2
-                dcline_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc)
+                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc)
             elseif length(cost_rev) == 3
-                dcline_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc + cost_rev[3]*p_dc^2)
+                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc + cost_rev[3]*p_dc^2)
             elseif length(cost_rev) >= 4
                 cost_rev_nl = cost_rev[4:end]
-                dcline_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc + cost_rev[2]*p_dc^2 + sum( v*p_dc^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
+                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc + cost_rev[2]*p_dc^2 + sum( v*p_dc^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
             else
-                dcline_cost[(n,i)] = @NLexpression(pm.model, 0.0)
+                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, 0.0)
             end
         end
     end
 
-    return @NLobjective(pm.model, Min,
+    return JuMP.@NLobjective(pm.model, Min,
         sum(
             sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen]) +
             sum( dcline_cost[(n,i)] for (i,dcline) in nw_ref[:dcline])
@@ -297,12 +297,12 @@ function objective_min_gen_polynomial_fuel_cost(pm::GenericPowerModel)
 end
 
 function _objective_min_gen_polynomial_fuel_cost_quadratic(pm::GenericPowerModel)
-    warn(LOGGER, "call to depreciated function _objective_min_gen_polynomial_fuel_cost_quadratic")
+    Memento.warn(LOGGER, "call to depreciated function _objective_min_gen_polynomial_fuel_cost_quadratic")
     _objective_min_gen_polynomial_fuel_cost_linquad(pm)
 end
 
 function _objective_min_gen_polynomial_fuel_cost_linear(pm::GenericPowerModel)
-    warn(LOGGER, "call to depreciated function _objective_min_gen_polynomial_fuel_cost_linear")
+    Memento.warn(LOGGER, "call to depreciated function _objective_min_gen_polynomial_fuel_cost_linear")
     _objective_min_gen_polynomial_fuel_cost_linquad(pm)
 end
 
@@ -325,7 +325,7 @@ function _objective_min_gen_polynomial_fuel_cost_linquad(pm::GenericPowerModel)
         end
     end
 
-    return @objective(pm.model, Min,
+    return JuMP.@objective(pm.model, Min,
         sum(
             sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] )
         for (n, nw_ref) in nws(pm))
@@ -342,21 +342,21 @@ function _objective_min_gen_polynomial_fuel_cost_nl(pm::GenericPowerModel)
 
             cost_rev = reverse(gen["cost"])
             if length(cost_rev) == 1
-                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1])
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1])
             elseif length(cost_rev) == 2
-                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg)
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg)
             elseif length(cost_rev) == 3
-                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2)
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2)
             elseif length(cost_rev) >= 4
                 cost_rev_nl = cost_rev[4:end]
-                gen_cost[(n,i)] = @NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2 + sum( v*pg^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2 + sum( v*pg^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
             else
-                gen_cost[(n,i)] = @NLexpression(pm.model, 0.0)
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, 0.0)
             end
         end
     end
 
-    return @NLobjective(pm.model, Min,
+    return JuMP.@NLobjective(pm.model, Min,
         sum(
             sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] )
         for (n, nw_ref) in nws(pm))
@@ -403,7 +403,7 @@ function get_lines(data)
         lines[i] = line_data
         for i in 2:length(line_data)
             if line_data[i-1]["slope"] > line_data[i]["slope"]
-                error(LOGGER, "non-convex pwl function found in points $(comp["cost"])\nlines: $(line_data)")
+                Memento.error(LOGGER, "non-convex pwl function found in points $(comp["cost"])\nlines: $(line_data)")
             end
         end
     end
@@ -428,7 +428,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
 
         #println(pg_cost_start)
 
-        pg_cost = var(pm, n)[:pg_cost] = @variable(pm.model,
+        pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
             [i in ids(pm, n, :gen)], basename="$(n)_pg_cost",
             start=pg_cost_start[i]
         )
@@ -436,7 +436,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
         # gen pwl cost
         for (i, gen) in nw_ref[:gen]
             for line in gen_lines[i]
-                @constraint(pm.model, pg_cost[i] >= line["slope"]*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line["intercept"])
+                JuMP.@constraint(pm.model, pg_cost[i] >= line["slope"]*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line["intercept"])
             end
         end
 
@@ -453,7 +453,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
             dc_p_cost_start[i] = dc_p_cost_value
         end
 
-        dc_p_cost = var(pm, n)[:p_dc_cost] = @variable(pm.model,
+        dc_p_cost = var(pm, n)[:p_dc_cost] = JuMP.@variable(pm.model,
             [i in ids(pm, n, :dcline)], basename="$(n)_dc_p_cost",
             start=dc_p_cost_start[i]
         )
@@ -462,12 +462,12 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
         for (i, dcline) in nw_ref[:dcline]
             arc = (i, dcline["f_bus"], dcline["t_bus"])
             for line in dcline_lines[i]
-                @constraint(pm.model, dc_p_cost[i] >= line["slope"]*sum(var(pm, n, c, :p_dc)[arc] for c in conductor_ids(pm, n)) + line["intercept"])
+                JuMP.@constraint(pm.model, dc_p_cost[i] >= line["slope"]*sum(var(pm, n, c, :p_dc)[arc] for c in conductor_ids(pm, n)) + line["intercept"])
             end
         end
     end
 
-    return @objective(pm.model, Min,
+    return JuMP.@objective(pm.model, Min,
         sum(
             sum( var(pm, n,   :pg_cost, i) for (i,gen) in nw_ref[:gen]) +
             sum( var(pm, n, :p_dc_cost, i) for (i,dcline) in nw_ref[:dcline])
@@ -480,7 +480,7 @@ end
 function objective_min_gen_pwl_fuel_cost(pm::GenericPowerModel)
 
     for (n, nw_ref) in nws(pm)
-        pg_cost = var(pm, n)[:pg_cost] = @variable(pm.model,
+        pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
             [i in ids(pm, n, :gen)], basename="$(n)_pg_cost"
         )
 
@@ -488,12 +488,12 @@ function objective_min_gen_pwl_fuel_cost(pm::GenericPowerModel)
         gen_lines = get_lines(nw_ref[:gen])
         for (i, gen) in nw_ref[:gen]
             for line in gen_lines[i]
-                @constraint(pm.model, pg_cost[i] >= line["slope"]*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line["intercept"])
+                JuMP.@constraint(pm.model, pg_cost[i] >= line["slope"]*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line["intercept"])
             end
         end
     end
 
-    return @objective(pm.model, Min,
+    return JuMP.@objective(pm.model, Min,
         sum(
             sum( var(pm, n, :pg_cost, i) for (i,gen) in nw_ref[:gen])
         for (n, nw_ref) in nws(pm))
@@ -503,7 +503,7 @@ end
 
 "Cost of building branches"
 function objective_tnep_cost(pm::GenericPowerModel)
-    return @objective(pm.model, Min,
+    return JuMP.@objective(pm.model, Min,
         sum(
             sum(
                 sum( branch["construction_cost"]*var(pm, n, c, :branch_ne, i) for (i,branch) in nw_ref[:ne_branch] )

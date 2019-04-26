@@ -1,7 +1,0 @@
-julia 0.6
-
-Cbc 0.4
-Ipopt 0.4
-SCS 0.4
-Juniper 0.2.2 0.3-
-Pavito 0.1.1

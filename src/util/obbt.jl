@@ -5,42 +5,42 @@ function check_variables(pm::GenericPowerModel)
     try
         vm = var(pm, :vm)
     catch err
-        (isa(error, KeyError)) && (error(LOGGER, "OBBT is not supported for models without explicit voltage magnitude variables"))
+        (isa(error, KeyError)) && (Memento.error(LOGGER, "OBBT is not supported for models without explicit voltage magnitude variables"))
     end
 
     try
         td = var(pm, :td)
     catch err
-        (isa(error, KeyError)) && (error(LOGGER, "OBBT is not supported for models without explicit voltage angle difference variables"))
+        (isa(error, KeyError)) && (Memento.error(LOGGER, "OBBT is not supported for models without explicit voltage angle difference variables"))
     end
 end
 
 function check_obbt_options(ub::Float64, rel_gap::Float64, ub_constraint::Bool)
     if ub_constraint && isinf(ub)
-        error(LOGGER, "the option upper_bound_constraint cannot be set to true without specifying an upper bound")
+        Memento.error(LOGGER, "the option upper_bound_constraint cannot be set to true without specifying an upper bound")
     end
 
     if !isinf(rel_gap) && isinf(ub)
-        error(LOGGER, "rel_gap_tol is specified without providing an upper bound")
+        Memento.error(LOGGER, "rel_gap_tol is specified without providing an upper bound")
     end
 end
 
 function constraint_obj_bound(pm::GenericPowerModel, bound)
     model = PowerModels.check_cost_models(pm)
     if model != 2
-        error(LOGGER, "Only cost models of type 2 is supported at this time, given cost model type $(model)")
+        Memento.error(LOGGER, "Only cost models of type 2 is supported at this time, given cost model type $(model)")
     end
 
     cost_index = PowerModels.calc_max_cost_index(pm.data)
     if cost_index > 3
-        error(LOGGER, "Only quadratic generator cost models are supported at this time, given cost model of order $(cost_index-1)")
+        Memento.error(LOGGER, "Only quadratic generator cost models are supported at this time, given cost model of order $(cost_index-1)")
     end
 
     PowerModels.standardize_cost_terms(pm.data, order=2)
 
     from_idx = Dict(arc[1] => arc for arc in ref(pm, :arcs_from_dc))
 
-    @constraint(pm.model,
+    JuMP.@constraint(pm.model,
             sum(
                 gen["cost"][1]*var(pm, :pg, i)^2 +
                 gen["cost"][2]*var(pm, :pg, i) +
@@ -161,12 +161,12 @@ function run_obbt_opf(data::Dict{String,<:Any}, solver;
     termination = :avg,
     kwargs...)
 
-    info(LOGGER, "maximum OBBT iterations set to default value of $max_iter")
-    info(LOGGER, "maximum time limit for OBBT set to default value of $time_limit seconds")
+    Memento.info(LOGGER, "maximum OBBT iterations set to default value of $max_iter")
+    Memento.info(LOGGER, "maximum time limit for OBBT set to default value of $time_limit seconds")
 
     model_relaxation = build_generic_model(data, model_constructor, PowerModels.post_opf)
-    (ismultinetwork(model_relaxation)) && (error(LOGGER, "OBBT is not supported for multi-networks"))
-    (ismulticonductor(model_relaxation)) && (error(LOGGER, "OBBT is not supported for multi-phase networks"))
+    (ismultinetwork(model_relaxation)) && (Memento.error(LOGGER, "OBBT is not supported for multi-networks"))
+    (ismulticonductor(model_relaxation)) && (Memento.error(LOGGER, "OBBT is not supported for multi-phase networks"))
 
     # check for model_constructor compatability with OBBT
     check_variables(model_relaxation)
@@ -175,7 +175,7 @@ function run_obbt_opf(data::Dict{String,<:Any}, solver;
     check_obbt_options(upper_bound, rel_gap_tol, upper_bound_constraint)
 
     # check termination norm criteria for obbt
-    (termination != :avg && termination != :max) && (error(LOGGER, "OBBT termination criteria can only be :max or :avg"))
+    (termination != :avg && termination != :max) && (Memento.error(LOGGER, "OBBT termination criteria can only be :max or :avg"))
 
     # pass status
     status_pass = [:LocalOptimal, :Optimal]
@@ -184,18 +184,18 @@ function run_obbt_opf(data::Dict{String,<:Any}, solver;
     result_relaxation = solve_generic_model(model_relaxation, solver)
     current_relaxation_objective = result_relaxation["objective"]
     if upper_bound < current_relaxation_objective
-        error(LOGGER, "the upper bound provided to OBBT is not a valid ACOPF upper bound")
+        Memento.error(LOGGER, "the upper bound provided to OBBT is not a valid ACOPF upper bound")
     end
     if !(result_relaxation["status"] in status_pass)
-        warn(LOGGER, "initial relaxation solve status is $(result_relaxation["status"])")
+        Memento.warn(LOGGER, "initial relaxation solve status is $(result_relaxation["status"])")
         if result_relaxation["status"] == :SubOptimal
-            warn(LOGGER, "continuing with the bound-tightening algorithm")
+            Memento.warn(LOGGER, "continuing with the bound-tightening algorithm")
         end
     end
     current_rel_gap = Inf
     if !isinf(upper_bound)
         current_rel_gap = (upper_bound - current_relaxation_objective)/upper_bound
-        info(LOGGER, "Initial relaxation gap = $current_rel_gap")
+        Memento.info(LOGGER, "Initial relaxation gap = $current_rel_gap")
     end
 
 
@@ -213,10 +213,10 @@ function run_obbt_opf(data::Dict{String,<:Any}, solver;
     buses = ids(model_bt, :bus)
     buspairs = ids(model_bt, :buspairs)
 
-    vm_lb = Dict{Any,Float64}( [bus => getlowerbound(vm[bus]) for bus in buses] )
-    vm_ub = Dict{Any,Float64}( [bus => getupperbound(vm[bus]) for bus in buses] )
-    td_lb = Dict{Any,Float64}( [bp => getlowerbound(td[bp]) for bp in buspairs] )
-    td_ub = Dict{Any,Float64}( [bp => getupperbound(td[bp]) for bp in buspairs] )
+    vm_lb = Dict{Any,Float64}( [bus => JuMP.getlowerbound(vm[bus]) for bus in buses] )
+    vm_ub = Dict{Any,Float64}( [bus => JuMP.getupperbound(vm[bus]) for bus in buses] )
+    td_lb = Dict{Any,Float64}( [bp => JuMP.getlowerbound(td[bp]) for bp in buspairs] )
+    td_ub = Dict{Any,Float64}( [bp => JuMP.getupperbound(td[bp]) for bp in buspairs] )
 
     vm_range_init = sum([vm_ub[bus] - vm_lb[bus] for bus in buses])
     stats["vm_range_init"] = vm_range_init
@@ -265,32 +265,32 @@ function run_obbt_opf(data::Dict{String,<:Any}, solver;
             start_time = time()
             # vm lower bound solve
             lb = NaN
-            @objective(model_bt.model, Min, vm[bus])
+            JuMP.@objective(model_bt.model, Min, vm[bus])
             result_bt = solve_generic_model(model_bt, solver)
             if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
-                nlb = floor(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
+                nlb = floor(10.0^precision * JuMP.getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nlb > vm_lb[bus]) && (lb = nlb)
             else
-                warn(LOGGER, "BT minimization problem for vm[$bus] errored - change tolerances.")
+                Memento.warn(LOGGER, "BT minimization problem for vm[$bus] errored - change tolerances.")
                 continue
             end
 
             #vm upper bound solve
             ub = NaN
-            @objective(model_bt.model, Max, vm[bus])
+            JuMP.@objective(model_bt.model, Max, vm[bus])
             result_bt = solve_generic_model(model_bt, solver)
             if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
-                nub = ceil(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
+                nub = ceil(10.0^precision * JuMP.getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nub < vm_ub[bus]) && (ub = nub)
             else
-                warn(LOGGER, "BT maximization problem for vm[$bus] errored - change tolerances.")
+                Memento.warn(LOGGER, "BT maximization problem for vm[$bus] errored - change tolerances.")
                 continue
             end
             end_time = time() - start_time
             max_vm_iteration_time = max(end_time, max_vm_iteration_time)
 
             # sanity checks
-            (lb > ub) && (warn(LOGGER, "bt lb > ub - adjust tolerances in solver to avoid issue"); continue)
+            (lb > ub) && (Memento.warn(LOGGER, "bt lb > ub - adjust tolerances in solver to avoid issue"); continue)
             (!isnan(lb) && lb > vm_ub[bus]) && (lb = vm_lb[bus])
             (!isnan(ub) && ub < vm_lb[bus]) && (ub = vm_ub[bus])
             isnan(lb) && (lb = vm_lb[bus])
@@ -333,32 +333,32 @@ function run_obbt_opf(data::Dict{String,<:Any}, solver;
             start_time = time()
             # td lower bound solve
             lb = NaN
-            @objective(model_bt.model, Min, td[bp])
+            JuMP.@objective(model_bt.model, Min, td[bp])
             result_bt = solve_generic_model(model_bt, solver)
             if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
-                nlb = floor(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
+                nlb = floor(10.0^precision * JuMP.getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nlb > td_lb[bp]) && (lb = nlb)
             else
-                warn(LOGGER, "BT minimization problem for td[$bp] errored - change tolerances")
+                Memento.warn(LOGGER, "BT minimization problem for td[$bp] errored - change tolerances")
                 continue
             end
 
             # td upper bound solve
             ub = NaN
-            @objective(model_bt.model, Max, td[bp])
+            JuMP.@objective(model_bt.model, Max, td[bp])
             result_bt = solve_generic_model(model_bt, solver)
             if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
-                nub = ceil(10.0^precision * getobjectivevalue(model_bt.model))/(10.0^precision)
+                nub = ceil(10.0^precision * JuMP.getobjectivevalue(model_bt.model))/(10.0^precision)
                 (nub < td_ub[bp]) && (ub = nub)
             else
-                warn(LOGGER, "BT maximization problem for td[$bp] errored - change tolerances.")
+                Memento.warn(LOGGER, "BT maximization problem for td[$bp] errored - change tolerances.")
                 continue
             end
             end_time = time() - start_time
             max_td_iteration_time = max(end_time, max_td_iteration_time)
 
             # sanity checks
-            (lb > ub) && (warn(LOGGER, "bt lb > ub - adjust tolerances in solver to avoid issue"); continue)
+            (lb > ub) && (Memento.warn(LOGGER, "bt lb > ub - adjust tolerances in solver to avoid issue"); continue)
             (!isnan(lb) && lb > td_ub[bp]) && (lb = td_lb[bp])
             (!isnan(ub) && ub < td_lb[bp]) && (ub = td_ub[bp])
             isnan(lb) && (lb = td_lb[bp])
@@ -414,11 +414,11 @@ function run_obbt_opf(data::Dict{String,<:Any}, solver;
             current_rel_gap = (upper_bound - result_relaxation["objective"])/upper_bound
             final_relaxation_objective = result_relaxation["objective"]
         else
-            warn(LOGGER, "relaxation solve failed in iteration $(current_iteration+1)")
-            warn(LOGGER, "using the previous iteration's gap to check relative gap stopping criteria")
+            Memento.warn(LOGGER, "relaxation solve failed in iteration $(current_iteration+1)")
+            Memento.warn(LOGGER, "using the previous iteration's gap to check relative gap stopping criteria")
         end
 
-        info(LOGGER, "iteration $(current_iteration+1), vm range: $vm_range_final, td range: $td_range_final, relaxation obj: $final_relaxation_objective")
+        Memento.info(LOGGER, "iteration $(current_iteration+1), vm range: $vm_range_final, td range: $td_range_final, relaxation obj: $final_relaxation_objective")
 
         # termination criteria update
         (termination == :avg) && (check_termination = (avg_vm_reduction > improvement_tol || avg_td_reduction > improvement_tol))
@@ -426,10 +426,10 @@ function run_obbt_opf(data::Dict{String,<:Any}, solver;
         # interation counter update
         current_iteration += 1
         # check all the stopping criteria
-        (current_iteration >= max_iter) && (info(LOGGER, "maximum iteration limit reached"); break)
-        (time_elapsed > time_limit) && (info(LOGGER, "maximum time limit reached"); break)
+        (current_iteration >= max_iter) && (Memento.info(LOGGER, "maximum iteration limit reached"); break)
+        (time_elapsed > time_limit) && (Memento.info(LOGGER, "maximum time limit reached"); break)
         if (!isinf(rel_gap_tol)) && (current_rel_gap < rel_gap_tol)
-            info(LOGGER, "relative optimality gap < $rel_gap_tol")
+            Memento.info(LOGGER, "relative optimality gap < $rel_gap_tol")
             break
         end
 

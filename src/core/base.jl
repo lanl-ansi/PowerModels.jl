@@ -42,7 +42,7 @@ Methods on `GenericPowerModel` for defining variables and adding constraints sho
 * follow the conventions for variable and constraint names.
 """
 mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
-    model::Model
+    model::JuMP.Model
 
     data::Dict{String,<:Any}
     setting::Dict{String,<:Any}
@@ -62,7 +62,7 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
 end
 
 "Default generic constructor."
-function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver(), jump_model::Model = Model(solver = solver))
+function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver(), jump_model::JuMP.Model = JuMP.Model(solver = solver))
 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
@@ -138,31 +138,16 @@ ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][k
 ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.ref[:nw][nw][key][idx][param][cnd]
 
 
-if VERSION < v"0.7.0-"
-    Base.var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
-    Base.var(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
-    Base.var(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
-    Base.var(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
-    Base.var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
-    Base.var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
+var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
+var(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
+var(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
+var(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
+var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
+var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 
-    Base.var(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
-    Base.var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
-    Base.var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
-end
-
-if VERSION > v"0.7.0-"
-    var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
-    var(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
-    var(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
-    var(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
-    var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
-    var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
-
-    var(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
-    var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
-    var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
-end
+var(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
+var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
+var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 
 ""
 con(pm::GenericPowerModel, nw::Int) = pm.con[:nw][nw]
@@ -179,17 +164,17 @@ con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) =
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
-function JuMP.setsolver(pm::GenericPowerModel, solver::MathProgBase.AbstractMathProgSolver)
-    setsolver(pm.model, solver)
+function setsolver(pm::GenericPowerModel, solver)
+    JuMP.setsolver(pm.model, solver)
 end
 
-function JuMP.solve(pm::GenericPowerModel)
-    status, solve_time, solve_bytes_alloc, sec_in_gc = @timed solve(pm.model)
+function solve(pm::GenericPowerModel)
+    status, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.solve(pm.model)
 
     try
-        solve_time = getsolvetime(pm.model)
+        solve_time = JuMP.getsolvetime(pm.model)
     catch
-        warn(LOGGER, "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
+        Memento.warn(LOGGER, "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
     end
 
     return status, solve_time
@@ -226,11 +211,11 @@ function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_m
     pm = model_constructor(data; kwargs...)
 
     if !multinetwork && ismultinetwork(pm)
-        error(LOGGER, "attempted to build a single-network model with multi-network data")
+        Memento.error(LOGGER, "attempted to build a single-network model with multi-network data")
     end
 
     if !multiconductor && ismulticonductor(pm)
-        error(LOGGER, "attempted to build a single-conductor model with multi-conductor data")
+        Memento.error(LOGGER, "attempted to build a single-conductor model with multi-conductor data")
     end
 
     post_method(pm)
@@ -240,7 +225,7 @@ end
 
 ""
 function solve_generic_model(pm::GenericPowerModel, solver; solution_builder = get_solution)
-    setsolver(pm.model, solver)
+    setsolver(pm, solver)
 
     status, solve_time = solve(pm)
 
@@ -404,11 +389,11 @@ function build_ref(data::Dict{String,<:Any})
             gen_bus = big_gen["gen_bus"]
             ref_bus = ref_buses[gen_bus] = ref[:bus][gen_bus]
             ref_bus["bus_type"] = 3
-            warn(LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
+            Memento.warn(LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
         end
 
         if length(ref_buses) > 1
-            warn(LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
+            Memento.warn(LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
         end
 
         ref[:ref_buses] = ref_buses

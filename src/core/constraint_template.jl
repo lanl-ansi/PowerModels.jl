@@ -111,10 +111,10 @@ end
 ""
 function constraint_kcl_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     if !haskey(con(pm, nw, cnd), :kcl_p)
-        con(pm, nw, cnd)[:kcl_p] = Dict{Int,ConstraintRef}()
+        con(pm, nw, cnd)[:kcl_p] = Dict{Int,JuMP.ConstraintRef}()
     end
     if !haskey(con(pm, nw, cnd), :kcl_q)
-        con(pm, nw, cnd)[:kcl_q] = Dict{Int,ConstraintRef}()
+        con(pm, nw, cnd)[:kcl_q] = Dict{Int,JuMP.ConstraintRef}()
     end
 
     bus = ref(pm, nw, :bus, i)
@@ -136,10 +136,10 @@ end
 ""
 function constraint_kcl_shunt_storage(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     if !haskey(con(pm, nw, cnd), :kcl_p)
-        con(pm, nw, cnd)[:kcl_p] = Dict{Int,ConstraintRef}()
+        con(pm, nw, cnd)[:kcl_p] = Dict{Int,JuMP.ConstraintRef}()
     end
     if !haskey(con(pm, nw, cnd), :kcl_q)
-        con(pm, nw, cnd)[:kcl_q] = Dict{Int,ConstraintRef}()
+        con(pm, nw, cnd)[:kcl_q] = Dict{Int,JuMP.ConstraintRef}()
     end
 
     bus = ref(pm, nw, :bus, i)
@@ -653,7 +653,7 @@ function constraint_storage_state(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
     if haskey(pm.data, "time_elapsed")
         time_elapsed = pm.data["time_elapsed"]
     else
-        warn("network data should specify time_elapsed, using 1.0 as a default")
+        Memento.warn("network data should specify time_elapsed, using 1.0 as a default")
         time_elapsed = 1.0
     end
 
@@ -667,7 +667,7 @@ function constraint_storage_state(pm::GenericPowerModel, i::Int, nw_1::Int, nw_2
     if haskey(pm.data, "time_elapsed")
         time_elapsed = pm.data["time_elapsed"]
     else
-        warn("network data should specify time_elapsed, using 1.0 as a default")
+        Memento.warn("network data should specify time_elapsed, using 1.0 as a default")
         time_elapsed = 1.0
     end
 

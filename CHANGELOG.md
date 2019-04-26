@@ -4,12 +4,14 @@ PowerModels.jl Change Log
 ### Staged
 - Added calc_power_balance function for computing bus balance from the data model
 - Added calc_branch_flow functions for computing flows from the data model
-- Improved starting point support for branch flow variables
-- Improved starting point of piecewise linear cost function variables
 - Added JSON parser with support for multiconductor values
 - Added Base.norm for multiconductorvectors
+- Improved starting point support for branch flow variables
+- Improved starting point of piecewise linear cost function variables
 - Minor improvement to piecewise linear cost function pre-processing
 - Minor fix to multiconductor broadcasting
+- Updated using to import
+- Dropped support for Julia v0.6 and v0.7
 
 ### v0.9.5
 - Added generator on/off constraints

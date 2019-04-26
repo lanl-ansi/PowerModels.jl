@@ -43,7 +43,7 @@ function get_bus_value(bus_i, field, pm_data)
         end
     end
 
-    warn(LOGGER, "Could not find bus $bus_i, returning 0 for field $field")
+    Memento.warn(LOGGER, "Could not find bus $bus_i, returning 0 for field $field")
     return 0
 end
 
@@ -306,7 +306,7 @@ function psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     end
 
     if haskey(pti_data, "SWITCHED SHUNT")
-        info(LOGGER, "Switched shunt converted to fixed shunt, with default value gs=0.0")
+        Memento.info(LOGGER, "Switched shunt converted to fixed shunt, with default value gs=0.0")
 
         for shunt in pti_data["SWITCHED SHUNT"]
             sub_data = Dict{String,Any}()
@@ -532,7 +532,7 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
     if haskey(pti_data, "TWO-TERMINAL DC")
         for dcline in pti_data["TWO-TERMINAL DC"]
-            info(LOGGER, "Two-Terminal DC lines are supported via a simple *lossless* dc line model approximated by two generators.")
+            Memento.info(LOGGER, "Two-Terminal DC lines are supported via a simple *lossless* dc line model approximated by two generators.")
             sub_data = Dict{String,Any}()
 
             # Unit conversions?
@@ -559,7 +559,7 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     push!(anmn, pop!(dcline, key))
                 else
                     push!(anmn, 0)
-                    warn(LOGGER, "$key outside reasonable limits, setting to 0 degress")
+                    Memento.warn(LOGGER, "$key outside reasonable limits, setting to 0 degress")
                 end
             end
 
@@ -589,7 +589,7 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     end
 
     if haskey(pti_data, "VOLTAGE SOURCE CONVERTER")
-        info(LOGGER, "VSC-HVDC lines are supported via a dc line model approximated by two generators and an associated loss.")
+        Memento.info(LOGGER, "VSC-HVDC lines are supported via a dc line model approximated by two generators and an associated loss.")
         for dcline in pti_data["VOLTAGE SOURCE CONVERTER"]
             # Converter buses : is the distinction between ac and dc side meaningful?
             dcside, acside = dcline["CONVERTER BUSES"]

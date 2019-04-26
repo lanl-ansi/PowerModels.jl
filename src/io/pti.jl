@@ -471,7 +471,7 @@ function _parse_line_element!(data::Dict, elements::Array, section::AbstractStri
             if isa(message, Meta.ParseError)
                 data[field] = element
             else
-                error(LOGGER, "value '$element' for $field in section $section is not of type $dtype.")
+                Memento.error(LOGGER, "value '$element' for $field in section $section is not of type $dtype.")
             end
         end
     end
@@ -504,7 +504,7 @@ function _add_section_data!(pti_data::Dict, section_data::Dict, section::Abstrac
         if isa(message, KeyError)
             pti_data[section] = [deepcopy(section_data)]
         else
-            error(LOGGER, sprint(showerror, message))
+            Memento.error(LOGGER, sprint(showerror, message))
         end
     end
 end
@@ -629,7 +629,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                     winding = "THREE-WINDING"
                     skip_lines = 4
                 else
-                    error(LOGGER, "Cannot detect type of Transformer")
+                    Memento.error(LOGGER, "Cannot detect type of Transformer")
                 end
 
                 try
@@ -684,7 +684,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                             section_data["CONVERTER BUSES"] = [deepcopy(subsection_data)]
                             continue
                         else
-                            error(LOGGER, message)
+                            Memento.error(LOGGER, message)
                         end
                     end
                 end
@@ -749,7 +749,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                                 continue
                             end
                         else
-                            error(LOGGER, sprint(showerror, message))
+                            Memento.error(LOGGER, sprint(showerror, message))
                         end
                     end
 

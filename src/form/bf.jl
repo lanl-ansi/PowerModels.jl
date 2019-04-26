@@ -10,14 +10,14 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
     end
 
     if bounded
-        var(pm, nw, cnd)[:cm] = @variable(pm.model,
+        var(pm, nw, cnd)[:cm] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_cm",
             lowerbound = 0,
             upperbound = ub[i],
             start = getval(branch[i], "cm_start", cnd)
         )
     else
-        var(pm, nw, cnd)[:cm] = @variable(pm.model,
+        var(pm, nw, cnd)[:cm] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_cm",
             lowerbound = 0,
             start = getval(branch[i], "cm_start", cnd)
@@ -49,8 +49,8 @@ function constraint_flow_losses(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_b
 
     ym_sh_sqr = g_sh_fr^2 + b_sh_fr^2
 
-    @constraint(pm.model, p_fr + p_to == r*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)) + g_sh_fr*(w_fr/tm^2) + g_sh_to*w_to)
-    @constraint(pm.model, q_fr + q_to == x*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)) - b_sh_fr*(w_fr/tm^2) - b_sh_to*w_to)
+    JuMP.@constraint(pm.model, p_fr + p_to == r*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)) + g_sh_fr*(w_fr/tm^2) + g_sh_to*w_to)
+    JuMP.@constraint(pm.model, q_fr + q_to == x*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)) - b_sh_fr*(w_fr/tm^2) - b_sh_to*w_to)
 end
 
 
@@ -66,7 +66,7 @@ function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::In
 
     ym_sh_sqr = g_sh_fr^2 + b_sh_fr^2
 
-    @constraint(pm.model, (1+2*(r*g_sh_fr - x*b_sh_fr))*(w_fr/tm^2) - w_to ==  2*(r*p_fr + x*q_fr) - (r^2 + x^2)*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)))
+    JuMP.@constraint(pm.model, (1+2*(r*g_sh_fr - x*b_sh_fr))*(w_fr/tm^2) - w_to ==  2*(r*p_fr + x*q_fr) - (r^2 + x^2)*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)))
 end
 
 """
@@ -79,7 +79,7 @@ function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, 
     cm = var(pm, n, c, :cm, i)
 
     # convex constraint linking p, q, w and ccm
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= (w_fr/tm^2)*cm)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= (w_fr/tm^2)*cm)
 end
 
 
@@ -93,7 +93,7 @@ function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, 
     cm = var(pm, n, c, :cm, i)
 
     # convex constraint linking p, q, w and ccm
-    @constraint(pm.model, norm([2*p_fr; 2*q_fr; w_fr/tm^2 - cm]) <= w_fr/tm^2 + cm)
+    JuMP.@constraint(pm.model, JuMP.norm([2*p_fr; 2*q_fr; w_fr/tm^2 - cm]) <= w_fr/tm^2 + cm)
 end
 
 
@@ -126,11 +126,11 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
     tzr = r*tr + x*ti
     tzi = r*ti - x*tr
 
-    @constraint(pm.model,
+    JuMP.@constraint(pm.model,
         tan(angmin)*((tr + tzr*g_fr + tzi*b_fr)*(w_fr/tm^2) - tzr*p_fr + tzi*q_fr)
                  <= ((ti + tzi*g_fr - tzr*b_fr)*(w_fr/tm^2) - tzi*p_fr - tzr*q_fr)
         )
-    @constraint(pm.model,
+    JuMP.@constraint(pm.model,
         tan(angmax)*((tr + tzr*g_fr + tzi*b_fr)*(w_fr/tm^2) - tzr*p_fr + tzi*q_fr)
                  >= ((ti + tzi*g_fr - tzr*b_fr)*(w_fr/tm^2) - tzi*p_fr - tzr*q_fr)
         )
