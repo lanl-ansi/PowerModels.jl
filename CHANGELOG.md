@@ -4,7 +4,7 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
-### v0.9.5
+### v0.9.6
 - Added calc_power_balance function for computing bus balance from the data model
 - Added calc_branch_flow functions for computing flows from the data model
 - Added JSON parser with support for multiconductor values
