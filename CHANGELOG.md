@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fixed solve method scope
 
 ### v0.9.6
 - Added calc_power_balance function for computing bus balance from the data model
