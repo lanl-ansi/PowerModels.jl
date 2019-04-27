@@ -5,12 +5,37 @@ PowerModels.jl Change Log
 - Added support for dispatchable shunts and loads (breaking)
 - Changed kcl constraint names to power_balance (breaking)
 - Dropped lower bounds on voltage variables
+
+### v0.9.6
+- Added calc_power_balance function for computing bus balance from the data model
+- Added calc_branch_flow functions for computing flows from the data model
+- Added JSON parser with support for multiconductor values
+- Added Base.norm for multiconductorvectors
+- Improved starting point support for branch flow variables
+- Improved starting point of piecewise linear cost function variables
+- Minor improvement to piecewise linear cost function pre-processing
+- Minor fix to multiconductor broadcasting
+- Updated using to import
+- Dropped support for Julia v0.6 and v0.7
+
+### v0.9.5
+- Added generator on/off constraints
+- Added opf model with unit commitment (#475)
+- Fixed multiconductor support for ACR formulation
+
+### v0.9.4
+>>>>>>> master
 - Added all error messages to memento log
-- Fixed minor typos in docs
-- Added a corner tolerance fix for OBBT
 - Added ability to parse default values in PTI files
+- Updated dict types to Dict{String,<:Any} (#466)
+- Dropped lower bounds on unbounded voltage variables
+- Refactored PTI parsing function names with `_` to indicate internal use only
+- Fixed minor typos in docs
+- Fixed a minor bound tolerance bug in OBBT
+- Fixed minor error in conic bfm models (#469)
 - Fixed bug in parsing of PTI transformers (#459)
-- Refactor PTI parsing function names with `_` to indicate internal use only
+- Fixed bug in PTI parsing handling commas or comment characters inside of quotations
+- Fixed bug in PTI parsing where quotation marks were not being properly stripped from String-type data
 
 ### v0.9.3
 - Added support for heterogeneous cost functions

@@ -53,7 +53,7 @@ A complete mathematical model is as follows,
 & \angle V_{r} = 0  \;\; \forall r \in R \label{eq_ref_bus}\\
 & S^{gl}_k \leq S^g_k \leq S^{gu}_k \;\; \forall k \in G  \label{eq_gen_bounds}\\
 & v^l_i \leq |V_i| \leq v^u_i \;\; \forall i \in N \label{eq_voltage_bounds}\\
-& \sum_{\substack{k \in G_i}} S^g_k - \sum_{\substack{k \in L_i}} S^d_k - \sum_{\substack{k \in S_i}} Y^s_k |V_i|^2 = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} S_{ij} \;\; \forall i\in N \label{eq_kcl_shunt} \\
+& \sum_{\substack{k \in G_i}} S^g_k - \sum_{\substack{k \in L_i}} S^d_k - \sum_{\substack{k \in S_i}} Y^s_k |V_i|^2 = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} S_{ij} \;\; \forall i\in N \label{eq_power_balance} \\
 & S_{ij} = \left( Y_{ij} + Y^c_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2} - Y^*_{ij} \frac{V_i V^*_j}{{T}_{ij}} \;\; \forall (i,j)\in E \label{eq_power_from}\\
 & S_{ji} = \left( Y_{ij} + Y^c_{ji} \right)^* |V_j|^2 - Y^*_{ij} \frac{V^*_i V_j}{{T}^*_{ij}} \;\; \forall (i,j)\in E \label{eq_power_to}\\
 & |S_{ij}| \leq s^u_{ij} \;\; \forall (i,j) \in E \cup E^R \label{eq_thermal_limit}\\
@@ -74,7 +74,7 @@ Note that for clarity of this presentation some model variants that PowerModels 
 - Eq. $\eqref{eq_ref_bus}$ - `constraint_theta_ref` in `constraint_template.jl`
 - Eq. $\eqref{eq_gen_bounds}$ - bounds of `variable_generation` in `variable.jl`
 - Eq. $\eqref{eq_voltage_bounds}$ - bounds of `variable_voltage` in `variable.jl`
-- Eq. $\eqref{eq_kcl_shunt}$ - `constraint_kcl_shunt` in `constraint_template.jl`
+- Eq. $\eqref{eq_power_balance}$ - `constraint_power_balance` in `constraint_template.jl`
 - Eq. $\eqref{eq_power_from}$ - `constraint_ohms_yt_from` in `constraint_template.jl`
 - Eq. $\eqref{eq_power_to}$ - `constraint_ohms_yt_to` in `constraint_template.jl`
 - Eq. $\eqref{eq_thermal_limit}$ - `constraint_thermal_limit_from` and `constraint_thermal_limit_to` in `constraint_template.jl`

@@ -3,25 +3,21 @@ os:
   - linux
   - osx
 julia:
-  - 0.6
-  - 0.7
   - 1.0
   - 1.1
-cache:
- directories:
-   - /home/travis/.julia
+  - nightly
+matrix:
+  allow_failures:
+    - julia: nightly
 addons:
   apt_packages:
     - gfortran
-before_install:
-  - julia -e '(VERSION >= v"0.7" && using Pkg); Pkg.rm("PowerModels"); Pkg.rm("PowerModels")'
-  - julia -e '(VERSION >= v"0.7" && using Pkg); Pkg.update()'
 after_success:
-  - julia -e '(VERSION >= v"0.7" && using Pkg); Pkg.add("Coverage"); cd(Pkg.dir("PowerModels")); using Coverage; Codecov.submit(process_folder())'
+  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
 jobs:
   include:
     - stage: "Documentation"
-      julia: 1.0
+      julia: 1.1
       os: linux
       script:
         - julia --project=docs/ -e 'using Pkg; Pkg.instantiate(); Pkg.develop(PackageSpec(path=pwd()))'

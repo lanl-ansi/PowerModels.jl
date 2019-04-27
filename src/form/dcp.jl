@@ -39,7 +39,7 @@ function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, b
     p    = var(pm, n, c, :p)
     p_dc = var(pm, n, c, :p_dc)
 
-    con(pm, n, c, :kcl_p)[i] = @constraint(pm.model,
+    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model,
         sum(p[a] for a in bus_arcs)
         + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) ==
         sum(pg[g] for g in bus_gens)
@@ -60,7 +60,7 @@ function constraint_power_balance_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i
     p_ne = var(pm, n, c, :p_ne)
     p_dc = var(pm, n, c, :p_dc)
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
+    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
 end
 
 """
@@ -75,7 +75,7 @@ function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
 
-    @constraint(pm.model, p_fr == -b*(va_fr - va_to))
+    JuMP.@constraint(pm.model, p_fr == -b*(va_fr - va_to))
     # omit reactive constraint
 end
 
@@ -85,8 +85,8 @@ function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i,
     va_to = var(pm, n, c,   :va, t_bus)
     z = var(pm, n, c, :branch_ne, i)
 
-    @constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_max*(1-z)) )
-    @constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
+    JuMP.@constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_max*(1-z)) )
+    JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
 end
 
 
@@ -114,8 +114,8 @@ function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, c::Int
     va_to = var(pm, n, c, :va, t_bus)
     z = var(pm, n, c, :branch_z, i)
 
-    @constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_max*(1-z)) )
-    @constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
+    JuMP.@constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_max*(1-z)) )
+    JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
 end
 
 
@@ -127,8 +127,8 @@ function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n:
     va_to = var(pm, n, c, :va, t_bus)
     z = var(pm, n, c, :branch_z, i)
 
-    @constraint(pm.model, va_fr - va_to <= angmax*z + vad_max*(1-z))
-    @constraint(pm.model, va_fr - va_to >= angmin*z + vad_min*(1-z))
+    JuMP.@constraint(pm.model, va_fr - va_to <= angmax*z + vad_max*(1-z))
+    JuMP.@constraint(pm.model, va_fr - va_to >= angmin*z + vad_min*(1-z))
 end
 
 "`angmin*branch_ne[i] + vad_min*(1-branch_ne[i]) <= t[f_bus] - t[t_bus] <= angmax*branch_ne[i] + vad_max*(1-branch_ne[i])`"
@@ -139,8 +139,8 @@ function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int
     va_to = var(pm, n, c, :va, t_bus)
     z = var(pm, n, c, :branch_ne, i)
 
-    @constraint(pm.model, va_fr - va_to <= angmax*z + vad_max*(1-z))
-    @constraint(pm.model, va_fr - va_to >= angmin*z + vad_min*(1-z))
+    JuMP.@constraint(pm.model, va_fr - va_to <= angmax*z + vad_max*(1-z))
+    JuMP.@constraint(pm.model, va_fr - va_to >= angmin*z + vad_min*(1-z))
 end
 
 
@@ -157,29 +157,33 @@ end
 function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: DCPlosslessForm
     if bounded
         flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
-
-        var(pm, nw, cnd)[:p] = @variable(pm.model,
+        p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(cnd)_p",
             lowerbound = flow_lb[l],
             upperbound = flow_ub[l],
-            start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     else
-        var(pm, nw, cnd)[:p] = @variable(pm.model,
+        p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], basename="$(nw)_$(cnd)_p",
-            start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     end
 
+    for (l,branch) in ref(pm, nw, :branch)
+        if haskey(branch, "pf_start")
+            f_idx = (l, branch["f_bus"], branch["t_bus"])
+            JuMP.setvalue(p[f_idx], branch["pf_start"])
+        end
+    end
+
     # this explicit type erasure is necessary
-    p_expr = Dict{Any,Any}([((l,i,j), var(pm, nw, cnd, :p, (l,i,j))) for (l,i,j) in ref(pm, nw, :arcs_from)])
-    p_expr = merge(p_expr, Dict(((l,j,i), -1.0*var(pm, nw, cnd, :p, (l,i,j))) for (l,i,j) in ref(pm, nw, :arcs_from)))
+    p_expr = Dict{Any,Any}( ((l,i,j), p[(l,i,j)]) for (l,i,j) in ref(pm, nw, :arcs_from) )
+    p_expr = merge(p_expr, Dict( ((l,j,i), -1.0*p[(l,i,j)]) for (l,i,j) in ref(pm, nw, :arcs_from)))
     var(pm, nw, cnd)[:p] = p_expr
 end
 
 ""
 function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: DCPlosslessForm
-    var(pm, nw, cnd)[:p_ne] = @variable(pm.model,
+    var(pm, nw, cnd)[:p_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs_from)], basename="$(nw)_$(cnd)_p_ne",
         lowerbound = -ref(pm, nw, :ne_branch, l, "rate_a", cnd),
         upperbound =  ref(pm, nw, :ne_branch, l, "rate_a", cnd),
@@ -199,7 +203,7 @@ function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::I
     ps = var(pm, n, c, :ps)
     pg = var(pm, n, c, :pg)
 
-    @constraint(pm.model,
+    JuMP.@constraint(pm.model,
         sum(pg[g] for g in comp_gen_ids) == 
         sum(ps[s] for s in comp_storage_ids)
         + sum(pd for (i,pd) in values(comp_pd_const))
@@ -283,7 +287,7 @@ function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, 
     va_to = var(pm, n, c, :va, t_bus)
 
     r = g/(g^2 + b^2)
-    @constraint(pm.model, p_fr + p_to >= r*(p_fr^2))
+    JuMP.@constraint(pm.model, p_fr + p_to >= r*(p_fr^2))
 end
 
 ""
@@ -296,8 +300,8 @@ function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, 
 
     r = g/(g^2 + b^2)
     t_m = max(abs(vad_min),abs(vad_max))
-    @constraint(pm.model, p_fr + p_to >= r*( (-b*(va_fr - va_to))^2 - (-b*(t_m))^2*(1-z) ) )
-    @constraint(pm.model, p_fr + p_to >= 0)
+    JuMP.@constraint(pm.model, p_fr + p_to >= r*( (-b*(va_fr - va_to))^2 - (-b*(t_m))^2*(1-z) ) )
+    JuMP.@constraint(pm.model, p_fr + p_to >= 0)
 end
 
 ""
@@ -310,6 +314,6 @@ function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, f
 
     r = g/(g^2 + b^2)
     t_m = max(abs(vad_min),abs(vad_max))
-    @constraint(pm.model, p_fr + p_to >= r*( (-b*(va_fr - va_to))^2 - (-b*(t_m))^2*(1-z) ) )
-    @constraint(pm.model, p_fr + p_to >= 0)
+    JuMP.@constraint(pm.model, p_fr + p_to >= r*( (-b*(va_fr - va_to))^2 - (-b*(t_m))^2*(1-z) ) )
+    JuMP.@constraint(pm.model, p_fr + p_to >= 0)
 end

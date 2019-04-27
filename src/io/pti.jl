@@ -456,9 +456,9 @@ function _parse_line_element!(data::Dict, elements::Array, section::AbstractStri
             end
         end
 
-        if startswith(element, "'") && endswith(element, "'")
+        if startswith(strip(element), "'") && endswith(strip(element), "'")
             dtype = String
-            element = chop(reverse(chop(reverse(element))))
+            element = chop(reverse(chop(reverse(strip(element)))))
         end
 
         try
@@ -471,7 +471,7 @@ function _parse_line_element!(data::Dict, elements::Array, section::AbstractStri
             if isa(message, Meta.ParseError)
                 data[field] = element
             else
-                error(LOGGER, "value '$element' for $field in section $section is not of type $dtype.")
+                Memento.error(LOGGER, "value '$element' for $field in section $section is not of type $dtype.")
             end
         end
     end
@@ -504,7 +504,7 @@ function _add_section_data!(pti_data::Dict, section_data::Dict, section::Abstrac
         if isa(message, KeyError)
             pti_data[section] = [deepcopy(section_data)]
         else
-            error(LOGGER, sprint(showerror, message))
+            Memento.error(LOGGER, sprint(showerror, message))
         end
     end
 end
@@ -519,13 +519,17 @@ Comments, typically indicated at the end of a line with a `'/'` character,
 are also extracted separately, and `Array{Array{String}, String}` is returned.
 """
 function _get_line_elements(line::AbstractString)::Array
-    comment_split = r"(?!\B\"[^\"]*)[\/](?![^\"]*\"\B)"
+    if length(collect(eachmatch(r"'", line))) % 2 == 1
+        throw(error(LOGGER, "There are an uneven number of single-quotes in \"{line}\", the line cannot be parsed."))
+    end
+
+    comment_split = r"(?!\B[\'][^\']*)[\/](?![^\']*[\']\B)"
     line_comment = split(line, comment_split, limit=2)
     line = strip(line_comment[1])
     comment = length(line_comment) > 1 ? strip(line_comment[2]) : ""
 
-    split_string = r"(?!\B\"[^\"]*),(?![^\"]*\"\B)"
-    elements = split(line, split_string)
+    split_string = r",(?=(?:[^']*'[^']*')*[^']*$)"
+    elements = [strip(element) for element in split(line, split_string)]
 
     Memento.debug(LOGGER, "$line")
     Memento.debug(LOGGER, "$comment")
@@ -625,7 +629,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                     winding = "THREE-WINDING"
                     skip_lines = 4
                 else
-                    error(LOGGER, "Cannot detect type of Transformer")
+                    Memento.error(LOGGER, "Cannot detect type of Transformer")
                 end
 
                 try
@@ -680,7 +684,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                             section_data["CONVERTER BUSES"] = [deepcopy(subsection_data)]
                             continue
                         else
-                            error(LOGGER, message)
+                            Memento.error(LOGGER, message)
                         end
                     end
                 end
@@ -745,7 +749,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                                 continue
                             end
                         else
-                            error(LOGGER, sprint(showerror, message))
+                            Memento.error(LOGGER, sprint(showerror, message))
                         end
                     end
 

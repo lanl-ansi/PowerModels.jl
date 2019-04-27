@@ -1,6 +1,3 @@
-using JSON
-
-
 @testset "test matpower parser" begin
     @testset "30-bus case file" begin
         result = run_opf("../test/data/matpower/case30.m", ACPPowerModel, ipopt_solver)

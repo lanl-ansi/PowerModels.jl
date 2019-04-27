@@ -6,35 +6,26 @@ PowerModels data structure. All fields from PTI files will be imported if
 `import_all` is true (Default: false).
 """
 function parse_file(file::String; import_all=false, validate=true)
-    if endswith(file, ".m")
-        pm_data = PowerModels.parse_matpower(file, validate=validate)
-    elseif endswith(lowercase(file), ".raw")
-        info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
-        pm_data = PowerModels.parse_psse(file; import_all=import_all, validate=validate)
+    pm_data = open(file) do io
+        pm_data = parse_file(io; import_all=import_all, validate=validate, filetype=split(lowercase(file), '.')[end])
+    end
+    return pm_data
+end
+
+
+"Parses the iostream from a file"
+function parse_file(io::IO; import_all=false, validate=true, filetype="json")
+    if filetype == "m"
+        pm_data = PowerModels.parse_matpower(io, validate=validate)
+    elseif filetype == "raw"
+        Memento.info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
+        pm_data = PowerModels.parse_psse(io; import_all=import_all, validate=validate)
+    elseif filetype == "json"
+        pm_data = PowerModels.parse_json(io; validate=validate)
     else
-        pm_data = parse_json(file, validate=validate)
+        Memento.error(LOGGER, "Unrecognized filetype")
     end
 
-    return pm_data
-end
-
-
-""
-function parse_json(file_string::String; kwargs...)
-    open(file_string) do f
-        pm_data = parse_json(f, kwargs...)
-    end
-    return pm_data
-end
-
-
-""
-function parse_json(io::IO; validate=true)
-    data_string = read(io, String)
-    pm_data = JSON.parse(data_string)
-    if validate
-        check_network_data(pm_data)
-    end
     return pm_data
 end
 
@@ -43,7 +34,7 @@ end
 Runs various data quality checks on a PowerModels data dictionary.
 Applies modifications in some cases.  Reports modified component ids.
 """
-function check_network_data(data::Dict{String,Any})
+function check_network_data(data::Dict{String,<:Any})
     mod_bus = Dict{Symbol,Set{Int}}()
     mod_gen = Dict{Symbol,Set{Int}}()
     mod_branch = Dict{Symbol,Set{Int}}()
@@ -83,12 +74,12 @@ end
 
 
 function row_to_typed_dict(row_data, columns)
-    warn(LOGGER, "call to depreciated function PowerModels.row_to_typed_dict, use InfrastructureModels.row_to_typed_dict")
+    Memento.warn(LOGGER, "call to depreciated function PowerModels.row_to_typed_dict, use InfrastructureModels.row_to_typed_dict")
     return InfrastructureModels.row_to_typed_dict(row_data, columns)
 end
 
 function row_to_dict(row_data, columns)
-    warn(LOGGER, "call to depreciated function PowerModels.row_to_dict, use InfrastructureModels.row_to_dict")
+    Memento.warn(LOGGER, "call to depreciated function PowerModels.row_to_dict, use InfrastructureModels.row_to_dict")
     return InfrastructureModels.row_to_dict(row_data, columns)
 end
 

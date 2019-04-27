@@ -16,15 +16,15 @@ abstract type AbstractPowerFormulation end
 ```
 type GenericPowerModel{T<:AbstractPowerFormulation}
     model::JuMP.Model
-    data::Dict{String,Any}
-    setting::Dict{String,Any}
-    solution::Dict{String,Any}
-    ref::Dict{Symbol,Any} # reference data
-    var::Dict{Symbol,Any} # JuMP variables
-    con::Dict{Symbol,Any} # JuMP constraint references
+    data::Dict{String,<:Any}
+    setting::Dict{String,<:Any}
+    solution::Dict{String,<:Any}
+    ref::Dict{Symbol,<:Any} # reference data
+    var::Dict{Symbol,<:Any} # JuMP variables
+    con::Dict{Symbol,<:Any} # JuMP constraint references
     cnw::Int              # current network index value
     ccnd::Int             # current conductor index value
-    ext::Dict{Symbol,Any} # user extentions
+    ext::Dict{Symbol,<:Any} # user extentions
 end
 ```
 where
@@ -42,15 +42,15 @@ Methods on `GenericPowerModel` for defining variables and adding constraints sho
 * follow the conventions for variable and constraint names.
 """
 mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
-    model::Model
+    model::JuMP.Model
 
-    data::Dict{String,Any}
-    setting::Dict{String,Any}
-    solution::Dict{String,Any}
+    data::Dict{String,<:Any}
+    setting::Dict{String,<:Any}
+    solution::Dict{String,<:Any}
 
-    ref::Dict{Symbol,Any}
-    var::Dict{Symbol,Any}
-    con::Dict{Symbol,Any}
+    ref::Dict{Symbol,<:Any}
+    var::Dict{Symbol,<:Any}
+    con::Dict{Symbol,<:Any}
     cnw::Int
     ccnd::Int
 
@@ -58,11 +58,11 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     # Extensions should define a type to hold information particular to
     # their functionality, and store an instance of the type in this
     # dictionary keyed on an extension-specific symbol
-    ext::Dict{Symbol,Any}
+    ext::Dict{Symbol,<:Any}
 end
 
 "Default generic constructor."
-function GenericPowerModel(data::Dict{String,Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver(), jump_model::Model = Model(solver = solver))
+function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver(), jump_model::JuMP.Model = JuMP.Model(solver = solver))
 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
@@ -161,31 +161,16 @@ ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][k
 ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.ref[:nw][nw][key][idx][param][cnd]
 
 
-if VERSION < v"0.7.0-"
-    Base.var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
-    Base.var(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
-    Base.var(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
-    Base.var(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
-    Base.var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
-    Base.var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
+var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
+var(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
+var(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
+var(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
+var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
+var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 
-    Base.var(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
-    Base.var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
-    Base.var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
-end
-
-if VERSION > v"0.7.0-"
-    var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
-    var(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
-    var(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
-    var(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
-    var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
-    var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
-
-    var(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
-    var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
-    var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
-end
+var(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
+var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
+var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 
 ""
 con(pm::GenericPowerModel, nw::Int) = pm.con[:nw][nw]
@@ -202,17 +187,17 @@ con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) =
 
 
 # TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
-function JuMP.setsolver(pm::GenericPowerModel, solver::MathProgBase.AbstractMathProgSolver)
-    setsolver(pm.model, solver)
+function setsolver(pm::GenericPowerModel, solver)
+    JuMP.setsolver(pm.model, solver)
 end
 
-function JuMP.solve(pm::GenericPowerModel)
-    status, solve_time, solve_bytes_alloc, sec_in_gc = @timed solve(pm.model)
+function solve(pm::GenericPowerModel)
+    status, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.solve(pm.model)
 
     try
-        solve_time = getsolvetime(pm.model)
+        solve_time = JuMP.getsolvetime(pm.model)
     catch
-        warn(LOGGER, "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
+        Memento.warn(LOGGER, "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
     end
 
     return status, solve_time
@@ -225,7 +210,7 @@ function run_generic_model(file::String, model_constructor, solver, post_method;
 end
 
 ""
-function run_generic_model(data::Dict{String,Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
+function run_generic_model(data::Dict{String,<:Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
     pm = build_generic_model(data, model_constructor, post_method; kwargs...)
     #pm, time, bytes_alloc, sec_in_gc = @timed build_generic_model(data, model_constructor, post_method; kwargs...)
     #println("model build time: $(time)")
@@ -244,16 +229,16 @@ function build_generic_model(file::String,  model_constructor, post_method; kwar
 end
 
 ""
-function build_generic_model(data::Dict{String,Any}, model_constructor, post_method; multinetwork=false, multiconductor=false, kwargs...)
+function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_method; multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
     pm = model_constructor(data; kwargs...)
 
     if !multinetwork && ismultinetwork(pm)
-        error(LOGGER, "attempted to build a single-network model with multi-network data")
+        Memento.error(LOGGER, "attempted to build a single-network model with multi-network data")
     end
 
     if !multiconductor && ismulticonductor(pm)
-        error(LOGGER, "attempted to build a single-conductor model with multi-conductor data")
+        Memento.error(LOGGER, "attempted to build a single-conductor model with multi-conductor data")
     end
 
     post_method(pm)
@@ -263,7 +248,7 @@ end
 
 ""
 function solve_generic_model(pm::GenericPowerModel, solver; solution_builder = get_solution)
-    setsolver(pm.model, solver)
+    setsolver(pm, solver)
 
     status, solve_time = solve(pm)
 
@@ -303,7 +288,7 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 
 * `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`.
 """
-function build_ref(data::Dict{String,Any})
+function build_ref(data::Dict{String,<:Any})
     refs = Dict{Symbol,Any}()
 
     nws = refs[:nw] = Dict{Int,Any}()
@@ -311,7 +296,7 @@ function build_ref(data::Dict{String,Any})
     if InfrastructureModels.ismultinetwork(data)
         nws_data = data["nw"]
     else
-        nws_data = Dict{String,Any}("0" => data)
+        nws_data = Dict("0" => data)
     end
 
     for (n, nw_data) in nws_data
@@ -365,7 +350,7 @@ function build_ref(data::Dict{String,Any})
         # maps dc line from and to parameters to arcs
         arcs_dc_param = ref[:arcs_dc_param] = Dict()
         for (l,i,j) in ref[:arcs_from_dc]
-            arcs_dc_param[(l,i,j)] = Dict{String,Any}(
+            arcs_dc_param[(l,i,j)] = Dict(
                 "pmin" => ref[:dcline][l]["pminf"],
                 "pmax" => ref[:dcline][l]["pmaxf"],
                 "pref" => ref[:dcline][l]["pf"],
@@ -373,7 +358,7 @@ function build_ref(data::Dict{String,Any})
                 "qmax" => ref[:dcline][l]["qmaxf"],
                 "qref" => ref[:dcline][l]["qf"]
             )
-            arcs_dc_param[(l,j,i)] = Dict{String,Any}(
+            arcs_dc_param[(l,j,i)] = Dict(
                 "pmin" => ref[:dcline][l]["pmint"],
                 "pmax" => ref[:dcline][l]["pmaxt"],
                 "pref" => ref[:dcline][l]["pt"],
@@ -460,11 +445,11 @@ function build_ref(data::Dict{String,Any})
             gen_bus = big_gen["gen_bus"]
             ref_bus = ref_buses[gen_bus] = ref[:bus][gen_bus]
             ref_bus["bus_type"] = 3
-            warn(LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
+            Memento.warn(LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
         end
 
         if length(ref_buses) > 1
-            warn(LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
+            Memento.warn(LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
         end
 
         ref[:ref_buses] = ref_buses
@@ -545,7 +530,7 @@ function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismultico
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end
 
-    buspairs = Dict(((i,j), Dict{String,Any}(
+    buspairs = Dict(((i,j), Dict(
         "branch"=>bp_branch[(i,j)],
         "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],

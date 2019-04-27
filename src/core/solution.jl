@@ -3,7 +3,7 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
     # TODO @assert that the model is solved
 
     if status != :Error
-        objective = getobjectivevalue(pm.model)
+        objective = JuMP.getobjectivevalue(pm.model)
         status = solver_status_dict(Symbol(typeof(pm.model.solver).name.module), status)
     end
 
@@ -37,7 +37,7 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
         data["branch_count"] = length(pm.data["branch"])
     end
 
-    solution = Dict{String,Any}(
+    solution = Dict(
         "solver" => string(typeof(pm.model.solver)),
         "status" => status,
         "objective" => objective,
@@ -63,7 +63,7 @@ function init_solution(pm::GenericPowerModel)
 end
 
 ""
-function get_solution(pm::GenericPowerModel, sol::Dict{String,Any})
+function get_solution(pm::GenericPowerModel, sol::Dict{String,<:Any})
     add_bus_voltage_setpoint(sol, pm)
     add_shunt_setpoint(sol, pm)
     add_load_setpoint(sol, pm)
@@ -114,6 +114,11 @@ end
 function add_load_setpoint(sol, pm::GenericPowerModel)
     add_setpoint(sol, pm, "load", "pd", :fl; scale = (x,item,i) -> x*item["pd"][i], dispatchable_check = true)
     add_setpoint(sol, pm, "load", "qd", :fl; scale = (x,item,i) -> x*item["qd"][i], dispatchable_check = true)
+end
+
+""
+function add_generator_status_setpoint(sol, pm::GenericPowerModel)
+    add_setpoint(sol, pm, "gen", "gen_status", :z_gen; conductorless=true, default_value = (item) -> item["gen_status"]*1.0)
 end
 
 ""
@@ -262,7 +267,7 @@ function add_setpoint(
             sol_item[param_name] = default_value(item)
             try
                 variable = extract_var(var(pm, pm.cnw, variable_symbol), idx, item)
-                sol_item[param_name] = scale(getvalue(variable), item, 1)
+                sol_item[param_name] = scale(JuMP.getvalue(variable), item, 1)
             catch
             end
         else
@@ -272,7 +277,7 @@ function add_setpoint(
             for conductor in conductor_ids(pm)
                 try
                     variable = extract_var(var(pm, variable_symbol, cnd=conductor), idx, item)
-                    sol_item[param_name][cnd_idx] = scale(getvalue(variable), item, conductor)
+                    sol_item[param_name][cnd_idx] = scale(JuMP.getvalue(variable), item, conductor)
                 catch
                 end
                 cnd_idx += 1
@@ -348,7 +353,7 @@ function add_dual(
             sol_item[param_name] = default_value(item)
             try
                 constraint = extract_con(var(pm, pm.cnw, con_symbol), idx, item)
-                sol_item[param_name] = scale(getdual(constraint), item, 1)
+                sol_item[param_name] = scale(JuMP.getdual(constraint), item, 1)
             catch
             end
         else
@@ -358,9 +363,9 @@ function add_dual(
             for conductor in conductor_ids(pm)
                 try
                     constraint = extract_con(con(pm, con_symbol, cnd=conductor), idx, item)
-                    sol_item[param_name][cnd_idx] = scale(getdual(constraint), item, conductor)
+                    sol_item[param_name][cnd_idx] = scale(JuMP.getdual(constraint), item, conductor)
                 catch
-                    info(LOGGER, "No constraint: $(con_symbol), $(idx)")
+                    Memento.info(LOGGER, "No constraint: $(con_symbol), $(idx)")
                 end
                 cnd_idx += 1
             end
@@ -395,7 +400,7 @@ end
 ""
 function guard_getobjbound(model)
     try
-        getobjbound(model)
+        JuMP.getobjbound(model)
     catch
         -Inf
     end

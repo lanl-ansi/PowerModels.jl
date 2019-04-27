@@ -1,8 +1,8 @@
 
 @testset "JuMP model building" begin
     @testset "run with user provided JuMP model" begin
-        m = Model()
-        x = @variable(m, my_var >= 0)
+        m = JuMP.Model()
+        x = JuMP.@variable(m, my_var >= 0)
         result = run_ac_opf("../test/data/matpower/case5.m", ipopt_solver, jump_model=m)
 
         @test result["status"] == :LocalOptimal
@@ -11,8 +11,8 @@
     end
 
     @testset "build with user provided JuMP model" begin
-        m = Model()
-        x = @variable(m, my_var >= 0)
+        m = JuMP.Model()
+        x = JuMP.@variable(m, my_var >= 0)
         pm = build_generic_model("../test/data/matpower/case5.m", ACPPowerModel, PowerModels.post_opf, jump_model=m)
 
         @test MathProgBase.numlinconstr(pm.model) == 13

@@ -85,7 +85,7 @@ History and discussion:
 const ACPPowerModel = GenericPowerModel{StandardACPForm}
 
 ""
-ACPPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, StandardACPForm; kwargs...)
+ACPPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, StandardACPForm; kwargs...)
 
 
 ""
@@ -110,7 +110,7 @@ AC power flow formulation with rectangular bus voltage variables.
 const ACRPowerModel = GenericPowerModel{StandardACRForm}
 
 "default rectangular AC constructor"
-ACRPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, StandardACRForm; kwargs...)
+ACRPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, StandardACRForm; kwargs...)
 
 ""
 abstract type AbstractACTForm <: AbstractPowerFormulation end
@@ -138,7 +138,7 @@ AC power flow formulation (nonconvex) with variables for voltage angle, voltage 
 const ACTPowerModel = GenericPowerModel{StandardACTForm}
 
 "default AC constructor"
-ACTPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, StandardACTForm; kwargs...)
+ACTPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, StandardACTForm; kwargs...)
 
 
 
@@ -177,7 +177,7 @@ Linearized 'DC' power flow formulation with polar voltage variables.
 const DCPPowerModel = GenericPowerModel{DCPlosslessForm}
 
 "default DC constructor"
-DCPPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, DCPlosslessForm; kwargs...)
+DCPPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, DCPlosslessForm; kwargs...)
 
 
 
@@ -189,7 +189,7 @@ The an active power only network flow approximation, also known as the transport
 const NFAPowerModel = GenericPowerModel{NFAForm}
 
 "default DC constructor"
-NFAPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, NFAForm; kwargs...)
+NFAPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, NFAForm; kwargs...)
 
 
 
@@ -209,7 +209,7 @@ abstract type StandardDCPLLForm <: AbstractDCPLLForm end
 const DCPLLPowerModel = GenericPowerModel{StandardDCPLLForm}
 
 "default DC constructor"
-DCPLLPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, StandardDCPLLForm; kwargs...)
+DCPLLPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, StandardDCPLLForm; kwargs...)
 
 
 
@@ -248,7 +248,7 @@ constraints.
 const LPACCPowerModel = GenericPowerModel{AbstractLPACCForm}
 
 "default LPACC constructor"
-LPACCPowerModel(data::Dict{String,Any}; kwargs...) =
+LPACCPowerModel(data::Dict{String,<:Any}; kwargs...) =
     GenericPowerModel(data, AbstractLPACCForm; kwargs...)
 
 
@@ -299,9 +299,9 @@ This implementation casts the problem as a convex conic problem.
 const SOCWRConicPowerModel = GenericPowerModel{SOCWRConicForm}
 
 "default SOC constructor"
-SOCWRPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCWRForm; kwargs...)
+SOCWRPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, SOCWRForm; kwargs...)
 
-SOCWRConicPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCWRConicForm; kwargs...)
+SOCWRConicPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, SOCWRConicForm; kwargs...)
 
 
 ""
@@ -328,7 +328,7 @@ abstract type QCWRForm <: AbstractWRForm end
 const QCWRPowerModel = GenericPowerModel{QCWRForm}
 
 "default QC constructor"
-QCWRPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, QCWRForm; kwargs...)
+QCWRPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, QCWRForm; kwargs...)
 
 
 
@@ -356,7 +356,7 @@ abstract type QCWRTriForm <: QCWRForm end
 const QCWRTriPowerModel = GenericPowerModel{QCWRTriForm}
 
 "default QC trilinear model constructor"
-QCWRTriPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, QCWRTriForm; kwargs...)
+QCWRTriPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, QCWRTriForm; kwargs...)
 
 
 
@@ -393,7 +393,7 @@ Extended as discussed in:
 const SOCBFPowerModel = GenericPowerModel{SOCBFForm}
 
 "default SOC constructor"
-SOCBFPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCBFForm; kwargs...)
+SOCBFPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, SOCBFForm; kwargs...)
 
 
 ""
@@ -403,7 +403,7 @@ abstract type SOCBFConicForm <: AbstractBFConicForm end
 const SOCBFConicPowerModel = GenericPowerModel{SOCBFConicForm}
 
 "default SOC constructor"
-SOCBFConicPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SOCBFConicForm; kwargs...)
+SOCBFConicPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, SOCBFConicForm; kwargs...)
 
 
 
@@ -454,7 +454,7 @@ First paper to use "W" variables in the BIM of AC OPF:
 const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
 
 ""
-SDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SDPWRMForm; kwargs...)
+SDPWRMPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, SDPWRMForm; kwargs...)
 
 
 abstract type SparseSDPWRMForm <: SDPWRMForm end
@@ -496,7 +496,7 @@ Original application to OPF by:
 const SparseSDPWRMPowerModel = GenericPowerModel{SparseSDPWRMForm}
 
 ""
-SparseSDPWRMPowerModel(data::Dict{String,Any}; kwargs...) = GenericPowerModel(data, SparseSDPWRMForm; kwargs...)
+SparseSDPWRMPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, SparseSDPWRMForm; kwargs...)
 
 
 

@@ -2,7 +2,7 @@
 
 "`t[ref_bus] == 0`"
 function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) where T <: AbstractACTForm
-    @constraint(pm.model, var(pm, n, c, :va)[i] == 0)
+    JuMP.@constraint(pm.model, var(pm, n, c, :va)[i] == 0)
 end
 
 ""
@@ -19,8 +19,8 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <:
     wi = var(pm, n, c, :wi)
 
     for (i,j) in ids(pm, n, :buspairs)
-        @constraint(pm.model, wr[(i,j)]^2 + wi[(i,j)]^2 == w[i]*w[j])
-        @NLconstraint(pm.model, wi[(i,j)] == tan(t[i] - t[j])*wr[(i,j)])
+        JuMP.@constraint(pm.model, wr[(i,j)]^2 + wi[(i,j)]^2 == w[i]*w[j])
+        JuMP.@NLconstraint(pm.model, wi[(i,j)] == tan(t[i] - t[j])*wr[(i,j)])
     end
 end
 
@@ -37,8 +37,8 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
     va_fr = var(pm, n, c, :va)[f_bus]
     va_to = var(pm, n, c, :va)[t_bus]
 
-    @constraint(pm.model, va_fr - va_to <= angmax)
-    @constraint(pm.model, va_fr - va_to >= angmin)
+    JuMP.@constraint(pm.model, va_fr - va_to <= angmax)
+    JuMP.@constraint(pm.model, va_fr - va_to >= angmin)
 end
 
 

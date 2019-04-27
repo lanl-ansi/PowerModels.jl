@@ -12,7 +12,7 @@
 
 "`t[ref_bus] == 0`"
 function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) where T <: AbstractPForms
-    @constraint(pm.model, var(pm, n, c, :va)[i] == 0)
+    JuMP.@constraint(pm.model, var(pm, n, c, :va)[i] == 0)
 end
 
 """
@@ -27,8 +27,8 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
 
-    @constraint(pm.model, va_fr - va_to <= angmax)
-    @constraint(pm.model, va_fr - va_to >= angmin)
+    JuMP.@constraint(pm.model, va_fr - va_to <= angmax)
+    JuMP.@constraint(pm.model, va_fr - va_to >= angmin)
 end
 
 
@@ -41,24 +41,24 @@ end
 ""
 function variable_shunt(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: AbstractWRForms
     if bounded
-        var(pm, nw, cnd)[:fs] = @variable(pm.model,
+        var(pm, nw, cnd)[:fs] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_fs",
             lowerbound = 0.0,
             upperbound = 1.0,
             start = getval(ref(pm, nw, :shunt_var, i), "fs_start", cnd, 0.5)
         )
-        var(pm, nw, cnd)[:wfs] = @variable(pm.model,
+        var(pm, nw, cnd)[:wfs] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_wfs",
             lowerbound = 0,
             upperbound = ref(pm, nw, :bus)[ref(pm, nw, :shunt, i)["shunt_bus"]]["vmax"]^2,
             start = getval(ref(pm, nw, :shunt_var, i), "wfs_start", cnd, 0.5)
         )
     else
-        var(pm, nw, cnd)[:fs] = @variable(pm.model,
+        var(pm, nw, cnd)[:fs] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_fs",
             start = getval(ref(pm, nw, :shunt_var, i), "fs_start", cnd, 1.0)
         )
-        var(pm, nw, cnd)[:wfs] = @variable(pm.model,
+        var(pm, nw, cnd)[:wfs] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :shunt_var)], basename="$(nw)_$(cnd)_wfs",
             start = getval(ref(pm, nw, :shunt_var, i), "wfs_start", cnd, 1.0)
         )
@@ -71,7 +71,7 @@ end
 function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, i, vm) where T <: AbstractWForms
     w = var(pm, n, c, :w, i)
 
-    @constraint(pm.model, w == vm^2)
+    JuMP.@constraint(pm.model, w == vm^2)
 end
 
 "Do nothing, no way to represent this in these variables"
@@ -99,7 +99,7 @@ function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, b
     p_dc = var(pm, n, c, :p_dc)
     q_dc = var(pm, n, c, :q_dc)
 
-    @constraint(pm.model,
+    JuMP.@constraint(pm.model,
         sum(p[a] for a in bus_arcs)
         + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) ==
         sum(pg[g] for g in bus_gens)
@@ -109,7 +109,7 @@ function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, b
         - sum(gs for gs in values(bus_gs_const))*w
         - sum(gs*wfs[s] for (s,gs) in bus_gs_var)
     )
-    @constraint(pm.model,
+    JuMP.@constraint(pm.model,
         sum(q[a] for a in bus_arcs)
         + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) ==
         sum(qg[g] for g in bus_gens)
@@ -143,8 +143,8 @@ function constraint_power_balance_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i
     p_dc = var(pm, n, c, :p_dc)
     q_dc = var(pm, n, c, :q_dc)
 
-    @constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*w)
-    @constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*w)
+    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*w)
+    JuMP.@constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*w)
 end
 
 
@@ -158,8 +158,8 @@ function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus
     wr   = var(pm, n, c, :wr, (f_bus, t_bus))
     wi   = var(pm, n, c, :wi, (f_bus, t_bus))
 
-    @constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi )
-    @constraint(pm.model, q_fr == -(b+b_fr)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi )
+    JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi )
+    JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi )
 end
 
 
@@ -173,8 +173,8 @@ function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, 
     wr   = var(pm, n, c, :wr, (f_bus, t_bus))
     wi   = var(pm, n, c, :wi, (f_bus, t_bus))
 
-    @constraint(pm.model, p_to ==  (g+g_to)*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi )
-    @constraint(pm.model, q_to == -(b+b_to)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
+    JuMP.@constraint(pm.model, p_to ==  (g+g_to)*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi )
+    JuMP.@constraint(pm.model, q_to == -(b+b_to)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
 end
 
 
@@ -187,8 +187,8 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
     wr   = var(pm, n, c, :wr, (f_bus, t_bus))
     wi   = var(pm, n, c, :wi, (f_bus, t_bus))
 
-    @constraint(pm.model, wi <= tan(angmax)*wr)
-    @constraint(pm.model, wi >= tan(angmin)*wr)
+    JuMP.@constraint(pm.model, wi <= tan(angmax)*wr)
+    JuMP.@constraint(pm.model, wi >= tan(angmin)*wr)
     cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 end
 
@@ -207,7 +207,7 @@ function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::I
     qs = var(pm, n, c, :ps)
     w = var(pm, n, c, :w)
 
-    @constraint(pm.model,
+    JuMP.@constraint(pm.model,
         sum(pg[g] for g in comp_gen_ids) >=
         sum(ps[s] for s in comp_storage_ids)
         + sum(pd for (i,pd) in values(comp_pd_const))
@@ -216,7 +216,7 @@ function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::I
         + sum(gs*wfs[s] for (s,(i,gs)) in comp_gs_var)
         + sum(g_fr*w[i]/tm^2 + g_to*w[j] for (i,j,r,x,tm,g_fr,g_to) in values(comp_branch_g))
     )
-    @constraint(pm.model,
+    JuMP.@constraint(pm.model,
         sum(qg[g] for g in comp_gen_ids) >=
         sum(qs[s] for s in comp_storage_ids)
         + sum(qd for (i,qd) in values(comp_qd_const))
@@ -238,11 +238,11 @@ function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_id
 
     p_fr = var(pm, n, c, :p, f_idx)
     q_fr = var(pm, n, c, :q, f_idx)
-    @constraint(pm.model, p_fr^2 + q_fr^2 <= w_fr*c_rating_a^2)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w_fr*c_rating_a^2)
 
     p_to = var(pm, n, c, :p, t_idx)
     q_to = var(pm, n, c, :q, t_idx)
-    @constraint(pm.model, p_to^2 + q_to^2 <= w_to*c_rating_a^2)
+    JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= w_to*c_rating_a^2)
 end
 
 
@@ -253,7 +253,7 @@ function constraint_storage_loss(pm::GenericPowerModel{T}, n::Int, i, bus, r, x,
     qs = var(pm, n, pm.ccnd, :qs, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
-    @NLconstraint(pm.model, ps + (sd - sc) == standby_loss + r*(ps^2 + qs^2)/w)
+    JuMP.@NLconstraint(pm.model, ps + (sd - sc) == standby_loss + r*(ps^2 + qs^2)/w)
 end
 
 

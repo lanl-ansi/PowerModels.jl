@@ -70,6 +70,12 @@
         @test isapprox(result["solution"]["load"]["2"]["pd"], 0.0; atol = 1e-6)
         @test isapprox(result["solution"]["load"]["2"]["qd"], 0.0; atol = 1e-6)
     end
+    @testset "5-bus with gen lb" begin
+        result = run_ac_opf("../test/data/matpower/case5_uc.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 18742.2; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_ac_opf("../test/data/matpower/case6.m", ipopt_solver)
 
@@ -253,6 +259,12 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 8613.22; atol = 1e0)
         @test isapprox(result["solution"]["load"]["2"]["pd"], 0.0; atol = 1e-6)
+    end
+    @testset "5-bus with gen lb" begin
+        result = run_dc_opf("../test/data/matpower/case5_uc.m", ipopt_solver)
+
+        @test result["status"] == :LocalOptimal
+        @test isapprox(result["objective"], 18064.5; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_dc_opf("../test/data/matpower/case6.m", ipopt_solver)
