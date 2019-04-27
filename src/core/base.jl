@@ -168,7 +168,7 @@ function setsolver(pm::GenericPowerModel, solver)
     JuMP.setsolver(pm.model, solver)
 end
 
-function solve(pm::GenericPowerModel)
+function JuMP.solve(pm::GenericPowerModel)
     status, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.solve(pm.model)
 
     try
@@ -227,7 +227,7 @@ end
 function solve_generic_model(pm::GenericPowerModel, solver; solution_builder = get_solution)
     setsolver(pm, solver)
 
-    status, solve_time = solve(pm)
+    status, solve_time = JuMP.solve(pm)
 
     solution = build_solution(pm, status, solve_time; solution_builder = solution_builder)
     #solution, time, bytes_alloc, sec_in_gc = @timed build_solution(pm, status, solve_time; solution_builder = solution_builder)
