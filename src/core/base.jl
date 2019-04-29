@@ -223,9 +223,6 @@ function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_m
 end
 
 
-<<<<<<< HEAD
-    status, solve_time = JuMP.solve(pm)
-=======
 function parse_status(termination_status::MOI.TerminationStatusCode, primal_status::MOI.ResultStatusCode, dual_status::MOI.ResultStatusCode)
     if termination_status == MOI.OPTIMAL
         return :Optimal
@@ -245,7 +242,6 @@ end
 function solve_generic_model(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = get_solution)
     termination_status, primal_status, dual_status, solve_time = optimize!(pm, optimizer)
     status = parse_status(termination_status, primal_status, dual_status)
->>>>>>> REF: Update to MOI 0.8.1 & JuMP 0.19-beta2
 
     solution = build_solution(pm, status, solve_time; solution_builder = solution_builder)
     #solution, time, bytes_alloc, sec_in_gc = @timed build_solution(pm, status, solve_time; solution_builder = solution_builder)

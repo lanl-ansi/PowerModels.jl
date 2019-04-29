@@ -32,9 +32,6 @@ deps = ["Base64", "Dates", "DelimitedFiles", "Distributed", "InteractiveUtils", 
 git-tree-sha1 = "84aa74986c5b9b898b0d1acaf3258741ee64754f"
 uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
 version = "2.1.0"
-git-tree-sha1 = "84aa74986c5b9b898b0d1acaf3258741ee64754f"
-uuid = "34da2185-b29b-5c13-b0c7-acf172513d20"
-version = "2.1.0"
 
 [[DataStructures]]
 deps = ["InteractiveUtils", "OrderedCollections", "Random", "Serialization", "Test"]
@@ -80,11 +77,11 @@ version = "0.10.3"
 
 [[InfrastructureModels]]
 deps = ["JuMP", "Memento"]
-git-tree-sha1 = "bc1f45d84e5ce25adc67808bc814743a460abb4a"
+git-tree-sha1 = "f4ad74faf03b899ac4a46f0c5f4ef4ddfaf47ede"
 repo-rev = "moi-2"
 repo-url = "https://github.com/lanl-ansi/InfrastructureModels.jl.git"
 uuid = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
-version = "0.2.0"
+version = "0.3.0"
 
 [[InteractiveUtils]]
 deps = ["Markdown"]
@@ -97,10 +94,10 @@ uuid = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 version = "0.20.0"
 
 [[JuMP]]
-deps = ["Calculus", "Compat", "ForwardDiff", "Libdl", "MathProgBase", "Pkg", "ReverseDiffSparse", "Serialization"]
-git-tree-sha1 = "3bd8e52f7aeb2736a8e1b0d8ae8d01c2c85fea24"
+deps = ["Calculus", "DataStructures", "ForwardDiff", "LinearAlgebra", "MathOptInterface", "NaNMath", "Random", "SparseArrays", "Statistics", "Test"]
+git-tree-sha1 = "db9f08540c1a23269acbae5d520c79f4722899f4"
 uuid = "4076af6c-e467-56ae-b986-b466b2749572"
-version = "0.18.5"
+version = "0.19.0"
 
 [[LibGit2]]
 uuid = "76f85450-5226-5b5a-8eaa-529ad045b433"
@@ -173,12 +170,6 @@ uuid = "3fa0cd96-eef1-5676-8a61-b3b8758bbffb"
 [[Random]]
 deps = ["Serialization"]
 uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
-
-[[ReverseDiffSparse]]
-deps = ["Calculus", "Compat", "DataStructures", "ForwardDiff", "MathProgBase", "NaNMath"]
-git-tree-sha1 = "cbbc2c710abea5cfe71459ce4711d80a212aac5a"
-uuid = "89212889-6d3f-5f97-b412-7825138f6c9c"
-version = "0.8.6"
 
 [[SHA]]
 uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
