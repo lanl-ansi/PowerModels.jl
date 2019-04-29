@@ -76,10 +76,10 @@ uuid = "f6369f11-7733-5829-9624-2563aa707210"
 version = "0.10.3"
 
 [[InfrastructureModels]]
-deps = ["JuMP", "Memento"]
-git-tree-sha1 = "c3dcbfd5a20ea423f8db1a800f17392b3dd1877d"
+deps = ["Compat", "JuMP", "LinearAlgebra", "Memento", "Random", "Test"]
+git-tree-sha1 = "7e123cb8dd591c6e5aa90885fbce41d34cc8ed0c"
 uuid = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
-version = "0.0.15"
+version = "0.0.14"
 
 [[InteractiveUtils]]
 deps = ["Markdown"]
@@ -121,10 +121,10 @@ uuid = "fdba3010-5040-5b88-9595-932c9decdf73"
 version = "0.7.7"
 
 [[Memento]]
-deps = ["Compat", "JSON", "Nullables", "Syslogs", "TimeZones"]
-git-tree-sha1 = "c4ade3575bcc2c180cfa14cf8b3b63eebca51629"
+deps = ["Dates", "Distributed", "JSON", "Serialization", "Sockets", "Syslogs", "Test", "TimeZones", "UUIDs"]
+git-tree-sha1 = "090463b13da88689e5eae6468a6f531a21392175"
 uuid = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
-version = "0.10.0"
+version = "0.12.1"
 
 [[Mmap]]
 uuid = "a63ad114-7e13-5084-954f-fe012c677804"
