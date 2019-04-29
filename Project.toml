@@ -14,7 +14,7 @@ Memento = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
-InfrastructureModels = "^0.2"
+InfrastructureModels = "^0.3"
 JuMP = "^0.19"
 MathOptInterface = "^0.8"
 Memento = ">= 0.11"
