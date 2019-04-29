@@ -2,7 +2,7 @@ name = "PowerModels"
 uuid = "c36e90e8-916a-50a6-bd94-075b64ef4655"
 authors = ["Carleton Coffrin"]
 repo = "https://github.com/lanl-ansi/PowerModels.jl"
-version = "0.9.6"
+version = "0.9.7"
 
 [deps]
 InfrastructureModels = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
@@ -18,7 +18,7 @@ InfrastructureModels = "< 0.2"
 Ipopt = ">= 0.4"
 JuMP = "< 0.19"
 Juniper = "< 0.4"
-Memento = ">= 0.8, < 0.11"
+Memento = ">= 0.11"
 Pavito = "^0.1"
 SCS = ">= 0.4"
 julia = "^1"
