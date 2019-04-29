@@ -1,6 +1,7 @@
 # Working with Multi-Network Data
 
 ```@setup powermodels
+import Pkg
 using PowerModels
 
 case3file = Pkg.dir(dirname(@__DIR__), "test", "data", "matpower", "case3.m")
@@ -37,7 +38,7 @@ PowerModels.ismultinetwork(pm3)
 ```
 
 !!! note
-    
+
     The `replicate()` method only works on single networks. So
     ```julia
     data33 = PowerModels.replicate(data3, 3)

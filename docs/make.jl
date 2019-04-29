@@ -2,10 +2,9 @@ using Documenter, PowerModels
 
 makedocs(
     modules = [PowerModels],
-    format = :html,
+    format = Documenter.HTML(analytics = "UA-367975-10"),
     sitename = "PowerModels",
     authors = "Carleton Coffrin, Russell Bent, and contributors.",
-    analytics = "UA-367975-10",
     pages = [
         "Home" => "index.md",
         "Manual" => [
