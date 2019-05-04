@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fixed voltage bound persistence bug in acr formulation (#497)
 
 ### v0.9.7
 - Minor fix solve method scope
