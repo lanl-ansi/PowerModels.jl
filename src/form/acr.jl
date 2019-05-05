@@ -1,32 +1,29 @@
 ### rectangular form of the non-convex AC equations
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACRForm
-    variable_voltage_real(pm; kwargs...)
-    variable_voltage_imaginary(pm; kwargs...)
-end
+function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...) where T <: AbstractACRForm
+    variable_voltage_real(pm; nw=nw, cnd=cnd, bounded=bounded, kwargs...)
+    variable_voltage_imaginary(pm; nw=nw, cnd=cnd, bounded=bounded, kwargs...)
 
+    if bounded
+        vr = var(pm, nw, cnd, :vr)
+        vi = var(pm, nw, cnd, :vi)
+        for (i,bus) in ref(pm, nw, :bus)
+            JuMP.@constraint(pm.model, bus["vmin"][cnd]^2 <= (vr[i]^2 + vi[i]^2))
+            JuMP.@constraint(pm.model, bus["vmax"][cnd]^2 >= (vr[i]^2 + vi[i]^2))
+        end
 
-"add constraints for voltage magnitude"
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractACRForm
-    vr = var(pm, n, c, :vr)
-    vi = var(pm, n, c, :vi)
-
-    for (i,bus) in ref(pm, n, :bus)
-        JuMP.@constraint(pm.model, bus["vmin"][c]^2 <= (vr[i]^2 + vi[i]^2))
-        JuMP.@constraint(pm.model, bus["vmax"][c]^2 >= (vr[i]^2 + vi[i]^2))
+        # does not seem to improve convergence
+        #wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
+        #for bp in ids(pm, nw, :buspairs)
+        #    i,j = bp
+        #    JuMP.@constraint(pm.model, wr_min[bp] <= vr[i]*vr[j] + vi[i]*vi[j])
+        #    JuMP.@constraint(pm.model, wr_max[bp] >= vr[i]*vr[j] + vi[i]*vi[j])
+        #
+        #    JuMP.@constraint(pm.model, wi_min[bp] <= vi[i]*vr[j] - vr[i]*vi[j])
+        #    JuMP.@constraint(pm.model, wi_max[bp] >= vi[i]*vr[j] - vr[i]*vi[j])
+        #end
     end
-
-    # does not seem to improve convergence
-    #wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
-    #for bp in ids(pm, nw, :buspairs)
-    #    i,j = bp
-    #    JuMP.@constraint(pm.model, wr_min[bp] <= vr[i]*vr[j] + vi[i]*vi[j])
-    #    JuMP.@constraint(pm.model, wr_max[bp] >= vr[i]*vr[j] + vi[i]*vi[j])
-    #
-    #    JuMP.@constraint(pm.model, wi_min[bp] <= vi[i]*vr[j] - vr[i]*vi[j])
-    #    JuMP.@constraint(pm.model, wi_max[bp] >= vi[i]*vr[j] - vr[i]*vi[j])
-    #end
 end
 
 
