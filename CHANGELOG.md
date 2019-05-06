@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added a test network with dangling buses, case5_db.m
 - Fixed voltage bound persistence bug in acr formulation (#497)
 
 ### v0.9.7
