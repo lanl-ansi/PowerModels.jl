@@ -240,7 +240,7 @@ end
 
 ""
 function solve_generic_model(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = get_solution)
-    termination_status, primal_status, dual_status, solve_time = optimize!(pm, optimizer)
+    termination_status, primal_status, dual_status, solve_time = JuMP.optimize!(pm, optimizer)
     status = parse_status(termination_status, primal_status, dual_status)
 
     solution = build_solution(pm, status, solve_time; solution_builder = solution_builder)
