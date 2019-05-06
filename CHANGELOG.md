@@ -4,6 +4,10 @@ PowerModels.jl Change Log
 ### Staged
 - Update to JuMP v0.19/MathOptInterface
 
+### Staged
+- Added a test network with dangling buses, case5_db.m
+- Fixed voltage bound persistence bug in acr formulation (#497)
+
 ### v0.9.7
 - Minor fix solve method scope
 
