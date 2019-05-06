@@ -171,7 +171,7 @@ function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, c
     for (l,branch) in ref(pm, nw, :branch)
         if haskey(branch, "pf_start")
             f_idx = (l, branch["f_bus"], branch["t_bus"])
-            JuMP.setvalue(p[f_idx], branch["pf_start"])
+            JuMP.set_start_value(p[f_idx], branch["pf_start"])
         end
     end
 
