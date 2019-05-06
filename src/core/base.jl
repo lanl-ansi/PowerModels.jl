@@ -162,7 +162,7 @@ con(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.c
 con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key][idx]
 
 
-function optimize!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory)
+function JuMP.optimize!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory)
     if pm.model.moi_backend.state == MOIU.NO_OPTIMIZER
         _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
     else
