@@ -26,7 +26,7 @@ function silence()
 end
 
 # so that users do not need to import JuMP to use a solver with PowerModels
-with_optimizer = JuMP.with_optimizer
+import JuMP: with_optimizer
 export with_optimizer
 
 include("io/matpower.jl")
