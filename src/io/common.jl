@@ -41,8 +41,10 @@ function check_network_data(data::Dict{String,<:Any})
     mod_dcline = Dict{Symbol,Set{Int}}()
 
     check_conductors(data)
-    make_per_unit(data)
     check_connectivity(data)
+    check_reference_bus(data)
+
+    make_per_unit(data)
 
     mod_branch[:xfer_fix] = check_transformer_parameters(data)
     mod_branch[:vad_bounds] = check_voltage_angle_differences(data)

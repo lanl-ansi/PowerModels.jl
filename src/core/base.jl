@@ -67,7 +67,7 @@ function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Sym
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
 
-    ref = build_ref(data) # refrence data
+    ref = build_generic_ref(data) # refrence data
 
     var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
     con = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
@@ -186,9 +186,9 @@ function run_generic_model(file::String, model_constructor, optimizer, post_meth
 end
 
 ""
-function run_generic_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; solution_builder = get_solution, kwargs...)
-    pm = build_generic_model(data, model_constructor, post_method; kwargs...)
-    #pm, time, bytes_alloc, sec_in_gc = @timed build_generic_model(data, model_constructor, post_method; kwargs...)
+function run_generic_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; ref_extensions=[core_ref!], solution_builder=get_solution, kwargs...)
+    pm = build_generic_model(data, model_constructor, post_method; ref_extensions=ref_extensions, kwargs...)
+    #pm, time, bytes_alloc, sec_in_gc = @timed build_generic_model(data, model_constructor, post_method; ref_extensions=ref_extensions, kwargs...)
     #println("model build time: $(time)")
 
     solution = solve_generic_model(pm, optimizer; solution_builder = solution_builder)
@@ -205,8 +205,9 @@ function build_generic_model(file::String,  model_constructor, post_method; kwar
 end
 
 ""
-function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_method; multinetwork=false, multiconductor=false, kwargs...)
+function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_method; ref_extensions=[core_ref!], multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
+    #start = time()
     pm = model_constructor(data; kwargs...)
 
     if !multinetwork && ismultinetwork(pm)
@@ -217,7 +218,16 @@ function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_m
         Memento.error(LOGGER, "attempted to build a single-conductor model with multi-conductor data")
     end
 
+    #start = time()
+    #println(ref_extensions)
+    for ref_ext in ref_extensions
+        ref_ext(pm)
+    end
+    #println("extra ref time: $(time() - start)")
+
+    #start = time()
     post_method(pm)
+    #println("model build time: $(time() - start)")
 
     return pm
 end
@@ -252,6 +262,49 @@ function solve_generic_model(pm::GenericPowerModel, optimizer::JuMP.OptimizerFac
     return solution
 end
 
+
+function build_ref(data::Dict{String,<:Any})
+    ref = build_generic_ref(data)
+    core_ref!(ref[:nw])
+    return ref
+end
+
+
+function build_generic_ref(data::Dict{String,<:Any})
+    refs = Dict{Symbol,Any}()
+
+    nws = refs[:nw] = Dict{Int,Any}()
+
+    if InfrastructureModels.ismultinetwork(data)
+        nws_data = data["nw"]
+    else
+        nws_data = Dict("0" => data)
+    end
+
+    for (n, nw_data) in nws_data
+        nw_id = parse(Int, n)
+        ref = nws[nw_id] = Dict{Symbol,Any}()
+
+        for (key, item) in nw_data
+            if isa(item, Dict{String,Any})
+                item_lookup = Dict{Int,Any}([(parse(Int, k), v) for (k,v) in item])
+                ref[Symbol(key)] = item_lookup
+            else
+                ref[Symbol(key)] = item
+            end
+        end
+
+        if !haskey(ref, :conductors)
+            ref[:conductor_ids] = 1:1
+        else
+            ref[:conductor_ids] = 1:ref[:conductors]
+        end
+    end
+
+    return refs
+end
+
+
 """
 Returns a dict that stores commonly used pre-computed data from of the data dictionary,
 primarily for converting data-types, filtering out deactivated components, and storing
@@ -281,40 +334,12 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 
 * `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`.
 """
-function build_ref(data::Dict{String,<:Any})
-    refs = Dict{Symbol,Any}()
+function core_ref!(pm::GenericPowerModel)
+    core_ref!(pm.ref[:nw])
+end
 
-    nws = refs[:nw] = Dict{Int,Any}()
-
-    if InfrastructureModels.ismultinetwork(data)
-        nws_data = data["nw"]
-    else
-        nws_data = Dict("0" => data)
-    end
-
-    for (n, nw_data) in nws_data
-        nw_id = parse(Int, n)
-        ref = nws[nw_id] = Dict{Symbol,Any}()
-
-        for (key, item) in nw_data
-            if isa(item, Dict{String,Any})
-                item_lookup = Dict{Int,Any}([(parse(Int, k), v) for (k,v) in item])
-                ref[Symbol(key)] = item_lookup
-            else
-                ref[Symbol(key)] = item
-            end
-        end
-
-        if !haskey(ref, :conductors)
-            ref[:conductor_ids] = 1:1
-        else
-            ref[:conductor_ids] = 1:ref[:conductors]
-        end
-
-        # add connected components
-        component_sets = PowerModels.connected_components(nw_data)
-        ref[:components] = Dict(i => c for (i,c) in enumerate(sort(collect(component_sets); by=length)))
-
+function core_ref!(refs::Dict)
+    for (nw, ref) in refs
         # filter turned off stuff
         ref[:bus] = Dict(x for x in ref[:bus] if x.second["bus_type"] != 4)
         ref[:load] = Dict(x for x in ref[:load] if (x.second["status"] == 1 && x.second["load_bus"] in keys(ref[:bus])))
@@ -400,61 +425,14 @@ function build_ref(data::Dict{String,<:Any})
             end
         end
 
-        if length(ref_buses) == 0
-            big_gen = biggest_generator(ref[:gen])
-            gen_bus = big_gen["gen_bus"]
-            ref_bus = ref_buses[gen_bus] = ref[:bus][gen_bus]
-            ref_bus["bus_type"] = 3
-            Memento.warn(LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
-        end
+        ref[:ref_buses] = ref_buses
 
         if length(ref_buses) > 1
             Memento.warn(LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
         end
 
-        ref[:ref_buses] = ref_buses
-
         ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:conductor_ids], haskey(ref, :conductors))
-
-        off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
-        ref[:off_angmin] = off_angmin
-        ref[:off_angmax] = off_angmax
-
-        if haskey(ref, :ne_branch)
-            ref[:ne_branch] = Dict(x for x in ref[:ne_branch] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus])))
-
-            ref[:ne_arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:ne_branch]]
-            ref[:ne_arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:ne_branch]]
-            ref[:ne_arcs] = [ref[:ne_arcs_from]; ref[:ne_arcs_to]]
-
-            ne_bus_arcs = Dict((i, []) for (i,bus) in ref[:bus])
-            for (l,i,j) in ref[:ne_arcs]
-                push!(ne_bus_arcs[i], (l,i,j))
-            end
-            ref[:ne_bus_arcs] = ne_bus_arcs
-
-            ref[:ne_buspairs] = buspair_parameters(ref[:ne_arcs_from], ref[:ne_branch], ref[:bus], ref[:conductor_ids], haskey(ref, :conductors))
-        end
-
     end
-
-    return refs
-end
-
-
-"find the largest active generator in the network"
-function biggest_generator(gens)
-    biggest_gen = nothing
-    biggest_value = -Inf
-    for (k,gen) in gens
-        pmax = maximum(gen["pmax"])
-        if pmax > biggest_value
-            biggest_gen = gen
-            biggest_value = pmax
-        end
-    end
-    @assert(biggest_gen != nothing)
-    return biggest_gen
 end
 
 
