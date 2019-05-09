@@ -341,7 +341,8 @@ end
 
 function core_ref!(nw_refs::Dict)
     for (nw, ref) in nw_refs
-        # filter turned off stuff
+
+        ### filter out inactive components ###
         ref[:bus] = Dict(x for x in ref[:bus] if x.second["bus_type"] != 4)
         ref[:load] = Dict(x for x in ref[:load] if (x.second["status"] == 1 && x.second["load_bus"] in keys(ref[:bus])))
         ref[:shunt] = Dict(x for x in ref[:shunt] if (x.second["status"] == 1 && x.second["shunt_bus"] in keys(ref[:bus])))
@@ -351,6 +352,7 @@ function core_ref!(nw_refs::Dict)
         ref[:dcline] = Dict(x for x in ref[:dcline] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus])))
 
 
+        ### setup arcs from edges ###
         ref[:arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:branch]]
         ref[:arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:branch]]
         ref[:arcs] = [ref[:arcs_from]; ref[:arcs_to]]
@@ -359,28 +361,8 @@ function core_ref!(nw_refs::Dict)
         ref[:arcs_to_dc]   = [(i,dcline["t_bus"],dcline["f_bus"]) for (i,dcline) in ref[:dcline]]
         ref[:arcs_dc]      = [ref[:arcs_from_dc]; ref[:arcs_to_dc]]
 
-        # maps dc line from and to parameters to arcs
-        arcs_dc_param = ref[:arcs_dc_param] = Dict()
-        for (l,i,j) in ref[:arcs_from_dc]
-            arcs_dc_param[(l,i,j)] = Dict(
-                "pmin" => ref[:dcline][l]["pminf"],
-                "pmax" => ref[:dcline][l]["pmaxf"],
-                "pref" => ref[:dcline][l]["pf"],
-                "qmin" => ref[:dcline][l]["qminf"],
-                "qmax" => ref[:dcline][l]["qmaxf"],
-                "qref" => ref[:dcline][l]["qf"]
-            )
-            arcs_dc_param[(l,j,i)] = Dict(
-                "pmin" => ref[:dcline][l]["pmint"],
-                "pmax" => ref[:dcline][l]["pmaxt"],
-                "pref" => ref[:dcline][l]["pt"],
-                "qmin" => ref[:dcline][l]["qmint"],
-                "qmax" => ref[:dcline][l]["qmaxt"],
-                "qref" => ref[:dcline][l]["qt"]
-            )
-        end
 
-
+        ### bus connected component lookups ###
         bus_loads = Dict((i, []) for (i,bus) in ref[:bus])
         for (i, load) in ref[:load]
             push!(bus_loads[load["load_bus"]], i)
@@ -405,7 +387,6 @@ function core_ref!(nw_refs::Dict)
         end
         ref[:bus_storage] = bus_storage
 
-
         bus_arcs = Dict((i, []) for (i,bus) in ref[:bus])
         for (l,i,j) in ref[:arcs]
             push!(bus_arcs[i], (l,i,j))
@@ -418,7 +399,8 @@ function core_ref!(nw_refs::Dict)
         end
         ref[:bus_arcs_dc] = bus_arcs_dc
 
-        # a set of buses to support multiple connected components
+
+        ### reference bus lookup (a set to support multiple connected components) ###
         ref_buses = Dict()
         for (k,v) in ref[:bus]
             if v["bus_type"] == 3
@@ -432,6 +414,9 @@ function core_ref!(nw_refs::Dict)
             Memento.warn(LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
         end
 
+
+        ### aggregate info for pairs of connected buses ###
         ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:conductor_ids], haskey(ref, :conductors))
+
     end
 end

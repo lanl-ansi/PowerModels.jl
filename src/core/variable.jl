@@ -396,35 +396,65 @@ end
 
 "variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
 function variable_active_dcline_flow(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    p_dc = var(pm, nw, cnd)[:p_dc] = JuMP.@variable(pm.model,
+        [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_p_dc",
+    )
+
     if bounded
-        var(pm, nw, cnd)[:p_dc] = JuMP.@variable(pm.model,
-            [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_p_dc",
-            lower_bound = ref(pm, nw, :arcs_dc_param, arc, "pmin", cnd),
-            upper_bound = ref(pm, nw, :arcs_dc_param, arc, "pmax", cnd),
-            start = ref(pm, nw, :arcs_dc_param, arc, "pref", cnd)
-        )
-    else
-        var(pm, nw, cnd)[:p_dc] = JuMP.@variable(pm.model,
-            [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_p_dc",
-            start = ref(pm, nw, :arcs_dc_param, arc, "pref", cnd)
-        )
+        for (l,dcline) in ref(pm, nw, :dcline)
+            f_idx = (l, dcline["f_bus"], dcline["t_bus"])
+            t_idx = (l, dcline["t_bus"], dcline["f_bus"])
+
+            JuMP.set_lower_bound(p_dc[f_idx], dcline["pminf"][cnd])
+            JuMP.set_upper_bound(p_dc[f_idx], dcline["pmaxf"][cnd])
+
+            JuMP.set_lower_bound(p_dc[t_idx], dcline["pmint"][cnd])
+            JuMP.set_upper_bound(p_dc[t_idx], dcline["pmaxt"][cnd])
+        end
+    end
+
+    for (l,dcline) in ref(pm, nw, :dcline)
+        if haskey(dcline, "pf")
+            f_idx = (l, dcline["f_bus"], dcline["t_bus"])
+            JuMP.set_start_value(p_dc[f_idx], dcline["pf"][cnd])
+        end
+
+        if haskey(dcline, "pt")
+            t_idx = (l, dcline["t_bus"], dcline["f_bus"])
+            JuMP.set_start_value(p_dc[t_idx], dcline["pt"][cnd])
+        end
     end
 end
 
 "variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
 function variable_reactive_dcline_flow(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    q_dc = var(pm, nw, cnd)[:q_dc] = JuMP.@variable(pm.model,
+        [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_q_dc",
+    )
+
     if bounded
-        var(pm, nw, cnd)[:q_dc] = JuMP.@variable(pm.model,
-            [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_q_dc",
-            lower_bound = ref(pm, nw, :arcs_dc_param, arc, "qmin", cnd),
-            upper_bound = ref(pm, nw, :arcs_dc_param, arc, "qmax", cnd),
-            start = ref(pm, nw, :arcs_dc_param, arc, "qref", cnd)
-        )
-    else
-        var(pm, nw, cnd)[:q_dc] = JuMP.@variable(pm.model,
-            [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_q_dc",
-            start = ref(pm, nw, :arcs_dc_param, arc, "qref", cnd)
-        )
+        for (l,dcline) in ref(pm, nw, :dcline)
+            f_idx = (l, dcline["f_bus"], dcline["t_bus"])
+            t_idx = (l, dcline["t_bus"], dcline["f_bus"])
+
+            JuMP.set_lower_bound(q_dc[f_idx], dcline["qminf"][cnd])
+            JuMP.set_upper_bound(q_dc[f_idx], dcline["qmaxf"][cnd])
+
+            JuMP.set_lower_bound(q_dc[t_idx], dcline["qmint"][cnd])
+            JuMP.set_upper_bound(q_dc[t_idx], dcline["qmaxt"][cnd])
+        end
+    end
+
+    for (l,dcline) in ref(pm, nw, :dcline)
+        if haskey(dcline, "qf")
+            f_idx = (l, dcline["f_bus"], dcline["t_bus"])
+            JuMP.set_start_value(q_dc[f_idx], dcline["qf"][cnd])
+        end
+
+        if haskey(dcline, "qt")
+            t_idx = (l, dcline["t_bus"], dcline["f_bus"])
+            JuMP.set_start_value(q_dc[t_idx], dcline["qt"][cnd])
+        end
     end
 end
 
