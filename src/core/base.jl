@@ -339,8 +339,8 @@ function core_ref!(pm::GenericPowerModel)
     core_ref!(pm.ref[:nw])
 end
 
-function core_ref!(refs::Dict)
-    for (nw, ref) in refs
+function core_ref!(nw_refs::Dict)
+    for (nw, ref) in nw_refs
         # filter turned off stuff
         ref[:bus] = Dict(x for x in ref[:bus] if x.second["bus_type"] != 4)
         ref[:load] = Dict(x for x in ref[:load] if (x.second["status"] == 1 && x.second["load_bus"] in keys(ref[:bus])))
@@ -434,63 +434,4 @@ function core_ref!(refs::Dict)
 
         ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:conductor_ids], haskey(ref, :conductors))
     end
-end
-
-
-"compute bus pair level structures"
-function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismulticondcutor)
-    buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
-
-    bp_branch = Dict((bp, typemax(Int64)) for bp in buspair_indexes)
-
-    if ismulticondcutor
-        bp_angmin = Dict((bp, MultiConductorVector([-Inf for c in conductor_ids])) for bp in buspair_indexes)
-        bp_angmax = Dict((bp, MultiConductorVector([ Inf for c in conductor_ids])) for bp in buspair_indexes)
-    else
-        @assert(length(conductor_ids) == 1)
-        bp_angmin = Dict((bp, -Inf) for bp in buspair_indexes)
-        bp_angmax = Dict((bp,  Inf) for bp in buspair_indexes)
-    end
-
-    for (l,branch) in branches
-        i = branch["f_bus"]
-        j = branch["t_bus"]
-
-        if ismulticondcutor
-            for c in conductor_ids
-                bp_angmin[(i,j)][c] = max(bp_angmin[(i,j)][c], branch["angmin"][c])
-                bp_angmax[(i,j)][c] = min(bp_angmax[(i,j)][c], branch["angmax"][c])
-            end
-        else
-            bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
-            bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
-        end
-
-        bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
-    end
-
-    buspairs = Dict(((i,j), Dict(
-        "branch"=>bp_branch[(i,j)],
-        "angmin"=>bp_angmin[(i,j)],
-        "angmax"=>bp_angmax[(i,j)],
-        "tap"=>branches[bp_branch[(i,j)]]["tap"],
-        "vm_fr_min"=>buses[i]["vmin"],
-        "vm_fr_max"=>buses[i]["vmax"],
-        "vm_to_min"=>buses[j]["vmin"],
-        "vm_to_max"=>buses[j]["vmax"]
-        )) for (i,j) in buspair_indexes
-    )
-
-    # add optional parameters
-    for bp in buspair_indexes
-        branch = branches[bp_branch[bp]]
-        if haskey(branch, "rate_a")
-            buspairs[bp]["rate_a"] = branch["rate_a"]
-        end
-        if haskey(branch, "c_rating_a")
-            buspairs[bp]["c_rating_a"] = branch["c_rating_a"]
-        end
-    end
-
-    return buspairs
 end
