@@ -8,7 +8,7 @@ export run_ots
 
 ""
 function run_ots(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_ots; ref_extensions=[core_ref!,on_off_va_bounds_ref!], solution_builder = get_ots_solution, kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_ots; ref_extensions=[on_off_va_bounds_ref!], solution_builder = get_ots_solution, kwargs...)
 end
 
 ""

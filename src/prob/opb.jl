@@ -7,7 +7,7 @@ end
 
 "the optimal power balance problem"
 function run_opb(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_opb; ref_extensions=[core_ref!,cc_ref!], kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_opb; ref_extensions=[cc_ref!], kwargs...)
 end
 
 ""

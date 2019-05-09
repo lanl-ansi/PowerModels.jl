@@ -205,7 +205,7 @@ function build_generic_model(file::String,  model_constructor, post_method; kwar
 end
 
 ""
-function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_method; ref_extensions=[core_ref!], multinetwork=false, multiconductor=false, kwargs...)
+function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_method; ref_extensions=[], multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
     #start = time()
     pm = model_constructor(data; kwargs...)
@@ -220,6 +220,7 @@ function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_m
 
     #start = time()
     #println(ref_extensions)
+    core_ref!(pm)
     for ref_ext in ref_extensions
         ref_ext(pm)
     end
