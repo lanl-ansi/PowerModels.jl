@@ -3,8 +3,8 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
     # TODO @assert that the model is solved
 
     if status != :Error
-        objective = JuMP.getobjectivevalue(pm.model)
-        status = solver_status_dict(Symbol(typeof(pm.model.solver).name.module), status)
+        objective = JuMP.objective_value(pm.model)
+        status = optimizer_status_dict(Symbol(typeof(pm.model.moi_backend).name.module), status)
     end
 
     sol = init_solution(pm)
@@ -37,8 +37,8 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
         data["branch_count"] = length(pm.data["branch"])
     end
 
-    solution = Dict(
-        "solver" => string(typeof(pm.model.solver)),
+    solution = Dict{String,Any}(
+        "optimizer" => string(typeof(pm.model.moi_backend.optimizer)),
         "status" => status,
         "objective" => objective,
         "objective_lb" => guard_getobjbound(pm.model),
@@ -243,7 +243,7 @@ function add_setpoint(
             sol_item[param_name] = default_value(item)
             try
                 variable = extract_var(var(pm, pm.cnw, variable_symbol), idx, item)
-                sol_item[param_name] = scale(JuMP.getvalue(variable), item, 1)
+                sol_item[param_name] = scale(JuMP.value(variable), item, 1)
             catch
             end
         else
@@ -253,7 +253,7 @@ function add_setpoint(
             for conductor in conductor_ids(pm)
                 try
                     variable = extract_var(var(pm, variable_symbol, cnd=conductor), idx, item)
-                    sol_item[param_name][cnd_idx] = scale(JuMP.getvalue(variable), item, conductor)
+                    sol_item[param_name][cnd_idx] = scale(JuMP.value(variable), item, conductor)
                 catch
                 end
                 cnd_idx += 1
@@ -329,7 +329,7 @@ function add_dual(
             sol_item[param_name] = default_value(item)
             try
                 constraint = extract_con(var(pm, pm.cnw, con_symbol), idx, item)
-                sol_item[param_name] = scale(JuMP.getdual(constraint), item, 1)
+                sol_item[param_name] = scale(JuMP.dual(constraint), item, 1)
             catch
             end
         else
@@ -339,7 +339,7 @@ function add_dual(
             for conductor in conductor_ids(pm)
                 try
                     constraint = extract_con(con(pm, con_symbol, cnd=conductor), idx, item)
-                    sol_item[param_name][cnd_idx] = scale(JuMP.getdual(constraint), item, conductor)
+                    sol_item[param_name][cnd_idx] = scale(JuMP.dual(constraint), item, conductor)
                 catch
                     Memento.info(LOGGER, "No constraint: $(con_symbol), $(idx)")
                 end
@@ -355,19 +355,19 @@ function add_dual(
 end
 
 
-solver_status_lookup = Dict{Any, Dict{Symbol, Symbol}}(
+optimizer_status_lookup = Dict{Any, Dict{Symbol, Symbol}}(
     :Ipopt => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
     :Juniper => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
     :ConicNonlinearBridge => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
-    # note that AmplNLWriter.AmplNLSolver is the solver type of bonmin
+    # note that AmplNLWriter.AmplNLSolver is the optimizer type of bonmin
     :AmplNLWriter => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
     )
 
-"translates solver status codes to our status codes"
-function solver_status_dict(solver_module_symbol, status)
-    for (st, solver_stat_dict) in solver_status_lookup
-        if solver_module_symbol == st
-            return get(solver_stat_dict, status, status)
+"translates optimizer status codes to our status codes"
+function optimizer_status_dict(optimizer_module_symbol, status)
+    for (st, optimizer_stat_dict) in optimizer_status_lookup
+        if optimizer_module_symbol == st
+            return get(optimizer_stat_dict, status, status)
         end
     end
     return status

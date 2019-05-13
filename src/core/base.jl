@@ -2,7 +2,7 @@
 
 export
     GenericPowerModel,
-    setdata, setsolver, solve,
+    optimize!,
     run_generic_model, build_generic_model, solve_generic_model,
     ismultinetwork, nw_ids, nws,
     ismulticonductor, conductor_ids,
@@ -61,8 +61,8 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     ext::Dict{Symbol,<:Any}
 end
 
-"Default generic constructor."
-function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), solver = JuMP.UnsetSolver(), jump_model::JuMP.Model = JuMP.Model(solver = solver))
+# default generic constructor
+function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), jump_model::JuMP.Model=JuMP.Model())
 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
@@ -162,38 +162,37 @@ con(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.c
 con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key][idx]
 
 
-
-# TODO Ask Miles, why do we need to put JuMP. here?  using at top level should bring it in
-function setsolver(pm::GenericPowerModel, solver)
-    JuMP.setsolver(pm.model, solver)
-end
-
-function JuMP.solve(pm::GenericPowerModel)
-    status, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.solve(pm.model)
-
-    try
-        solve_time = JuMP.getsolvetime(pm.model)
-    catch
-        Memento.warn(LOGGER, "there was an issue with getsolvetime() on the solver, falling back on @timed.  This is not a rigorous timing value.");
+function JuMP.optimize!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory)
+    if pm.model.moi_backend.state == MOIU.NO_OPTIMIZER
+        _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
+    else
+        Memento.warn(LOGGER, "Model already contains optimizer factory, cannot use optimizer specified in `solve_generic_model`")
+        _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
     end
 
-    return status, solve_time
+    try
+        solve_time = MOI.get(pm.model, MOI.SolveTime())
+    catch
+        Memento.warn(LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
+    end
+
+    return JuMP.termination_status(pm.model), JuMP.primal_status(pm.model), JuMP.dual_status(pm.model), solve_time
 end
 
 ""
-function run_generic_model(file::String, model_constructor, solver, post_method; kwargs...)
+function run_generic_model(file::String, model_constructor, optimizer, post_method; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_generic_model(data, model_constructor, solver, post_method; kwargs...)
+    return run_generic_model(data, model_constructor, optimizer, post_method; kwargs...)
 end
 
 ""
-function run_generic_model(data::Dict{String,<:Any}, model_constructor, solver, post_method; solution_builder = get_solution, kwargs...)
+function run_generic_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; solution_builder = get_solution, kwargs...)
     pm = build_generic_model(data, model_constructor, post_method; kwargs...)
     #pm, time, bytes_alloc, sec_in_gc = @timed build_generic_model(data, model_constructor, post_method; kwargs...)
     #println("model build time: $(time)")
 
-    solution = solve_generic_model(pm, solver; solution_builder = solution_builder)
-    #solution, time, bytes_alloc, sec_in_gc = @timed solve_generic_model(pm, solver; solution_builder = solution_builder)
+    solution = solve_generic_model(pm, optimizer; solution_builder = solution_builder)
+    #solution, time, bytes_alloc, sec_in_gc = @timed solve_generic_model(pm, optimizer; solution_builder = solution_builder)
     #println("solution time: $(time)")
 
     return solution
@@ -223,11 +222,28 @@ function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_m
     return pm
 end
 
-""
-function solve_generic_model(pm::GenericPowerModel, solver; solution_builder = get_solution)
-    setsolver(pm, solver)
 
-    status, solve_time = JuMP.solve(pm)
+function parse_status(termination_status::MOI.TerminationStatusCode, primal_status::MOI.ResultStatusCode, dual_status::MOI.ResultStatusCode)
+    if termination_status == MOI.OPTIMAL
+        return :Optimal
+    elseif termination_status == MOI.LOCALLY_SOLVED
+        return :LocalOptimal
+    elseif termination_status == MOI.ALMOST_LOCALLY_SOLVED
+        return :LocalOptimal
+    elseif termination_status == MOI.INFEASIBLE
+        return :Infeasible
+    elseif termination_status == MOI.LOCALLY_INFEASIBLE
+        return :LocalInfeasible
+    else
+        return :Error
+    end
+end
+
+
+""
+function solve_generic_model(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = get_solution)
+    termination_status, primal_status, dual_status, solve_time = JuMP.optimize!(pm, optimizer)
+    status = parse_status(termination_status, primal_status, dual_status)
 
     solution = build_solution(pm, status, solve_time; solution_builder = solution_builder)
     #solution, time, bytes_alloc, sec_in_gc = @timed build_solution(pm, status, solve_time; solution_builder = solution_builder)

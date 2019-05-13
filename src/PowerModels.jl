@@ -2,10 +2,14 @@ module PowerModels
 
 import LinearAlgebra, SparseArrays
 
-import JSON
 import InfrastructureModels
+import JSON
 import JuMP
 import Memento
+
+import MathOptInterface
+const MOI = MathOptInterface
+const MOIU = MathOptInterface.Utilities
 
 # Create our module level logger (this will get precompiled)
 const LOGGER = Memento.getlogger(@__MODULE__)
@@ -21,6 +25,9 @@ function silence()
     Memento.setlevel!(Memento.getlogger(PowerModels), "error")
 end
 
+# so that users do not need to import JuMP to use a solver with PowerModels
+import JuMP: with_optimizer
+export with_optimizer
 
 include("io/matpower.jl")
 include("io/common.jl")

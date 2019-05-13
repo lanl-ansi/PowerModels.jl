@@ -171,11 +171,12 @@ function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel{T}) w
                 end
 
                 pg_sqr = var(pm, n, :pg_sqr)[i] = JuMP.@variable(pm.model,
-                    basename="$(n)_pg_sqr_$(i)",
-                    lowerbound = pg_sqr_lb,
-                    upperbound = pg_sqr_ub
+                    base_name="$(n)_pg_sqr_$(i)",
+                    lower_bound = pg_sqr_lb,
+                    upper_bound = pg_sqr_ub,
+                    start = 0.0
                 )
-                JuMP.@constraint(pm.model, JuMP.norm([2*pg, pg_sqr-1]) <= pg_sqr+1)
+                JuMP.@constraint(pm.model, [0.5, pg_sqr, pg] in JuMP.RotatedSecondOrderCone())
 
                 gen_cost[(n,i)] = gen["cost"][1]*pg_sqr + gen["cost"][2]*pg + gen["cost"][3]
             else
@@ -207,11 +208,12 @@ function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel{T}) w
                 end
 
                 p_dc_sqr = var(pm, n, :p_dc_sqr)[i] = JuMP.@variable(pm.model,
-                    basename="$(n)_p_dc_sqr_$(i)",
-                    lowerbound = p_dc_sqr_lb,
-                    upperbound = p_dc_sqr_ub
+                    base_name="$(n)_p_dc_sqr_$(i)",
+                    lower_bound = p_dc_sqr_lb,
+                    upper_bound = p_dc_sqr_ub,
+                    start = 0.0
                 )
-                JuMP.@constraint(pm.model, JuMP.norm([2*p_dc, p_dc_sqr-1]) <= p_dc_sqr+1)
+                JuMP.@constraint(pm.model, [0.5, p_dc_sqr, p_dc] in JuMP.RotatedSecondOrderCone())
 
                 dcline_cost[(n,i)] = dcline["cost"][1]*p_dc_sqr + dcline["cost"][2]*p_dc + dcline["cost"][3]
             else
@@ -418,7 +420,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
         gen_lines = get_lines(nw_ref[:gen])
         pg_cost_start = Dict{Int64,Float64}()
         for (i, gen) in nw_ref[:gen]
-            pg_value = sum(JuMP.getvalue(var(pm, n, c, :pg, i)) for c in conductor_ids(pm, n))
+            pg_value = sum(JuMP.start_value(var(pm, n, c, :pg, i)) for c in conductor_ids(pm, n))
             pg_cost_value = -Inf
             for line in gen_lines[i]
                 pg_cost_value = max(pg_cost_value, line["slope"]*pg_value + line["intercept"])
@@ -429,7 +431,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
         #println(pg_cost_start)
 
         pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
-            [i in ids(pm, n, :gen)], basename="$(n)_pg_cost",
+            [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost",
             start=pg_cost_start[i]
         )
 
@@ -445,7 +447,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
         dc_p_cost_start = Dict{Int64,Float64}()
         for (i, dcline) in nw_ref[:dcline]
             arc = (i, dcline["f_bus"], dcline["t_bus"])
-            dc_p_value = sum(JuMP.getvalue(var(pm, n, c, :p_dc)[arc]) for c in conductor_ids(pm, n))
+            dc_p_value = sum(JuMP.start_value(var(pm, n, c, :p_dc)[arc]) for c in conductor_ids(pm, n))
             dc_p_cost_value = -Inf
             for line in dcline_lines[i]
                 dc_p_cost_value = max(dc_p_cost_value, line["slope"]*dc_p_value + line["intercept"])
@@ -454,7 +456,7 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
         end
 
         dc_p_cost = var(pm, n)[:p_dc_cost] = JuMP.@variable(pm.model,
-            [i in ids(pm, n, :dcline)], basename="$(n)_dc_p_cost",
+            [i in ids(pm, n, :dcline)], base_name="$(n)_dc_p_cost",
             start=dc_p_cost_start[i]
         )
 
@@ -481,7 +483,7 @@ function objective_min_gen_pwl_fuel_cost(pm::GenericPowerModel)
 
     for (n, nw_ref) in nws(pm)
         pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
-            [i in ids(pm, n, :gen)], basename="$(n)_pg_cost"
+            [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost", start=0.0
         )
 
         # pwl cost

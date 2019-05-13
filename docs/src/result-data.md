@@ -9,8 +9,8 @@ At the top level the results data dictionary is structured as follows:
 
 ```json
 {
-"solver":<string>,       # name of the Julia class used to solve the model
-"status":<julia symbol>, # solver status at termination
+"optimizer":<string>,    # name of the Julia class used to solve the model
+"status":<julia symbol>, # optimizer status at termination
 "solve_time":<float>,    # reported solve time (seconds)
 "objective":<float>,     # the final evaluation of the objective function
 "objective_lb":<float>,  # the final lower bound of the objective function (if available)

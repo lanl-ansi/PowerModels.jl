@@ -63,6 +63,18 @@ version = "0.0.10"
 deps = ["Random", "Serialization", "Sockets"]
 uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
+[[DocStringExtensions]]
+deps = ["LibGit2", "Markdown", "Pkg", "Test"]
+git-tree-sha1 = "4d30e889c9f106a51ffa4791a88ffd4765bf20c3"
+uuid = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
+version = "0.7.0"
+
+[[Documenter]]
+deps = ["Base64", "DocStringExtensions", "InteractiveUtils", "JSON", "LibGit2", "Logging", "Markdown", "Pkg", "REPL", "Random", "Test", "Unicode"]
+git-tree-sha1 = "13a6d15102410d8e70146533b759fc48d844a1d0"
+uuid = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+version = "0.22.3"
+
 [[EzXML]]
 deps = ["BinaryProvider", "Libdl", "Pkg", "Printf", "Test"]
 git-tree-sha1 = "ad00b79cca4bb3eabb4209217859c553af4401f5"
@@ -78,6 +90,8 @@ version = "0.10.3"
 [[InfrastructureModels]]
 deps = ["JuMP", "Memento"]
 git-tree-sha1 = "ec3f1ba27dbfd29a93f3c520ee189ce32deec049"
+repo-rev = "moi-2"
+repo-url = "https://github.com/lanl-ansi/InfrastructureModels.jl.git"
 uuid = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
 version = "0.2.0"
 

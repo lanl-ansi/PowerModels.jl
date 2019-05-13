@@ -8,8 +8,6 @@ end
 
 
 @testset "test ac tnep" begin
-    #=
-    # stopped working in Ipopt v0.5
     @testset "3-bus case" begin
         result = run_tnep("../test/data/matpower/case3_tnep.m", ACPPowerModel, juniper_solver)
 
@@ -18,7 +16,6 @@ end
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
-    =#
 
     @testset "5-bus case" begin
         result = run_tnep("../test/data/matpower/case5_tnep.m", ACPPowerModel, juniper_solver)
@@ -33,20 +30,20 @@ end
 
 @testset "test soc tnep" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/matpower/case3_tnep.m", SOCWRPowerModel, pavito_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_tnep("../test/data/matpower/case3_tnep.m", SOCWRPowerModel, juniper_solver; setting = Dict("output" => Dict("branch_flows" => true)))
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
 
     @testset "5-bus rts case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", SOCWRPowerModel, pavito_solver)
+        result = run_tnep("../test/data/matpower/case5_tnep.m", SOCWRPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 1; atol = 1e-2)
     end
 end
@@ -54,44 +51,41 @@ end
 
 @testset "test qc tnep" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/matpower/case3_tnep.m", QCWRPowerModel, pavito_solver)
+        result = run_tnep("../test/data/matpower/case3_tnep.m", QCWRPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
 
     @testset "5-bus rts case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", QCWRPowerModel, pavito_solver)
+        result = run_tnep("../test/data/matpower/case5_tnep.m", QCWRPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 1; atol = 1e-2)
     end
 end
 
 
 @testset "test dc tnep" begin
-    #=
-    # Seems to be a bug in Pavito
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/matpower/case3_tnep.m", DCPPowerModel, pavito_solver)
+        result = run_tnep("../test/data/matpower/case3_tnep.m", DCPPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
-    =#
 
     @testset "5-bus case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", DCPPowerModel, pavito_solver)
+        result = run_tnep("../test/data/matpower/case5_tnep.m", DCPPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 1; atol = 1e-2)
     end
 end
@@ -100,21 +94,21 @@ end
     #=
     # turn off due to numerical stability across operating systems
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/matpower/case3_tnep.m", DCPLLPowerModel, pavito_solver)
+        result = run_tnep("../test/data/matpower/case3_tnep.m", DCPLLPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
     end
     =#
 
     @testset "5-bus case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", DCPLLPowerModel, pavito_solver)
+        result = run_tnep("../test/data/matpower/case5_tnep.m", DCPLLPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 1; atol = 1e-2)
     end
 end
@@ -122,11 +116,11 @@ end
 
 @testset "test tnep branch flow output" begin
     @testset "3-bus case" begin
-        result = run_tnep("../test/data/matpower/case3_tnep.m", SOCWRPowerModel, pavito_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_tnep("../test/data/matpower/case3_tnep.m", SOCWRPowerModel, juniper_solver; setting = Dict("output" => Dict("branch_flows" => true)))
 
         check_tnep_status(result["solution"])
 
-        @test result["status"] == :Optimal
+        @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 2; atol = 1e-2)
 
         branches = result["solution"]["branch"]

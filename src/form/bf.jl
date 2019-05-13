@@ -11,15 +11,15 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
 
     if bounded
         var(pm, nw, cnd)[:cm] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_cm",
-            lowerbound = 0,
-            upperbound = ub[i],
+            [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_cm",
+            lower_bound = 0,
+            upper_bound = ub[i],
             start = getval(branch[i], "cm_start", cnd)
         )
     else
         var(pm, nw, cnd)[:cm] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :branch)], basename="$(nw)_$(cnd)_cm",
-            lowerbound = 0,
+            [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_cm",
+            lower_bound = 0,
             start = getval(branch[i], "cm_start", cnd)
         )
     end
@@ -93,7 +93,7 @@ function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, 
     cm = var(pm, n, c, :cm, i)
 
     # convex constraint linking p, q, w and ccm
-    JuMP.@constraint(pm.model, JuMP.norm([2*p_fr; 2*q_fr; w_fr/tm^2 - cm]) <= w_fr/tm^2 + cm)
+    JuMP.@constraint(pm.model, [w_fr/tm^2, cm/2, p_fr, q_fr] in JuMP.RotatedSecondOrderCone())
 end
 
 

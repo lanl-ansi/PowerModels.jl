@@ -1,6 +1,6 @@
 # Tests of data checking and transformation code
 
-TESTLOG =  Memento.getlogger(PowerModels)
+TESTLOG = Memento.getlogger(PowerModels)
 
 @testset "test data summary" begin
 
@@ -395,7 +395,7 @@ end
         @test haskey(pm.ext, :some_data)
         @test pm.ext[:some_data] == "bloop"
 
-        result = solve_generic_model(pm, Ipopt.IpoptSolver(print_level=0))
+        result = solve_generic_model(pm, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
 
         @test result["status"] == :LocalOptimal
         @test isapprox(result["objective"], 5907; atol = 1e0)
@@ -485,7 +485,7 @@ end
         end
     end
 
-end 
+end
 
 
 

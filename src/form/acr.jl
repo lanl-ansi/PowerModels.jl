@@ -148,8 +148,8 @@ function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: Abst
         sol_item["va"] = MultiConductorVector{Real}([NaN for i in 1:num_conductors])
         for c in conductor_ids(pm)
             try
-                vr = JuMP.getvalue(var(pm, :vr, cnd=c)[idx])
-                vi = JuMP.getvalue(var(pm, :vi, cnd=c)[idx])
+                vr = JuMP.value(var(pm, :vr, cnd=c)[idx])
+                vi = JuMP.value(var(pm, :vi, cnd=c)[idx])
 
                 vm = sqrt(vr^2 + vi^2)
 
