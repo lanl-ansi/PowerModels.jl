@@ -1986,7 +1986,7 @@ end
 computes the connected components of the network graph
 returns a set of sets of bus ids, each set is a connected component
 """
-function connected_components(data::Dict{String,<:Any}; lines=["branch", "dcline"])
+function connected_components(data::Dict{String,<:Any}; edges=["branch", "dcline"])
     if InfrastructureModels.ismultinetwork(data)
         Memento.error(LOGGER, "connected_components does not yet support multinetwork data")
     end
@@ -1995,7 +1995,7 @@ function connected_components(data::Dict{String,<:Any}; lines=["branch", "dcline
     active_bus_ids = Set{Int64}([bus["bus_i"] for (i,bus) in active_bus])
 
     neighbors = Dict(i => [] for i in active_bus_ids)
-    for line_type in lines
+    for line_type in edges
         for line in values(get(data, line_type, Dict()))
             if get(line, "br_status", 1) != 0 && line["f_bus"] in active_bus_ids && line["t_bus"] in active_bus_ids
                 push!(neighbors[line["f_bus"]], line["t_bus"])
