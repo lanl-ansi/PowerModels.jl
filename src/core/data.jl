@@ -1986,30 +1986,23 @@ end
 computes the connected components of the network graph
 returns a set of sets of bus ids, each set is a connected component
 """
-function connected_components(data::Dict{String,<:Any})
+function connected_components(data::Dict{String,<:Any}; edges=["branch", "dcline"])
     if InfrastructureModels.ismultinetwork(data)
         Memento.error(LOGGER, "connected_components does not yet support multinetwork data")
     end
 
     active_bus = Dict(x for x in data["bus"] if x.second["bus_type"] != 4)
-    #active_bus = filter((i, bus) -> bus["bus_type"] != 4, data["bus"])
     active_bus_ids = Set{Int64}([bus["bus_i"] for (i,bus) in active_bus])
-    #println(active_bus_ids)
 
     neighbors = Dict(i => [] for i in active_bus_ids)
-    for (i,branch) in data["branch"]
-        if branch["br_status"] != 0 && branch["f_bus"] in active_bus_ids && branch["t_bus"] in active_bus_ids
-            push!(neighbors[branch["f_bus"]], branch["t_bus"])
-            push!(neighbors[branch["t_bus"]], branch["f_bus"])
+    for line_type in edges
+        for line in values(get(data, line_type, Dict()))
+            if get(line, "br_status", 1) != 0 && line["f_bus"] in active_bus_ids && line["t_bus"] in active_bus_ids
+                push!(neighbors[line["f_bus"]], line["t_bus"])
+                push!(neighbors[line["t_bus"]], line["f_bus"])
+            end
         end
     end
-    for (i,dcline) in data["dcline"]
-        if dcline["br_status"] != 0 && dcline["f_bus"] in active_bus_ids && dcline["t_bus"] in active_bus_ids
-            push!(neighbors[dcline["f_bus"]], dcline["t_bus"])
-            push!(neighbors[dcline["t_bus"]], dcline["f_bus"])
-        end
-    end
-    #println(neighbors)
 
     component_lookup = Dict(i => Set{Int64}([i]) for i in active_bus_ids)
     touched = Set{Int64}()
