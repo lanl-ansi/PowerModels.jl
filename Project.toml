@@ -15,13 +15,12 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 Cbc = ">= 0.4"
-InfrastructureModels = "^0.3"
+InfrastructureModels = "~0.2"
 Ipopt = ">= 0.4"
-JuMP = "^0.19"
+JuMP = "~0.19.1"
 Juniper = ">= 0.4"
-MathOptInterface = "^0.8"
-Memento = "~0.10, ~0.11, ^0.12"
-Pavito = "^0.1"
+MathOptInterface = "~0.8"
+Memento = "~0.10, ~0.11, ~0.12"
 SCS = ">= 0.4"
 julia = "^1"
 
@@ -33,4 +32,4 @@ SCS = "c946c3f1-0d1f-5ce8-9dea-7daa1f7e2d13"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["Test", "Cbc", "Ipopt", "Juniper", "SCS"]
+test = ["Test", "Ipopt", "SCS", "Cbc", "Juniper"]

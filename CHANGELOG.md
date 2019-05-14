@@ -2,9 +2,12 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Update to JuMP v0.19/MathOptInterface
+- Add support for extensible ref building (#263) (breaking)
 
-### Staged
+### v0.10.0
+- Update to JuMP v0.19/MathOptInterface (breaking)
+
+### v0.9.8
 - Added a test network with dangling buses, case5_db.m
 - Fixed voltage bound persistence bug in acr formulation (#497)
 
