@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Refactor connected_components to accept arbitrary edge-types with `edges` kwarg
 - Add support for extensible ref building (#263) (breaking)
 
 ### v0.10.0
