@@ -423,7 +423,7 @@ end
             for v in values(data[key])
                 @test "source_id" in keys(v)
                 @test isa(v["source_id"], Array)
-                @test v["source_id"][1] in ["bus", "load", "fixed shunt", "switched shunt", "branch", "generator", "transformer", "two-terminal dc", "voltage source converter"]
+                @test v["source_id"][1] in ["bus", "load", "fixed shunt", "switched shunt", "branch", "generator", "transformer", "two-terminal dc", "vsc dc"]
             end
         end
     end

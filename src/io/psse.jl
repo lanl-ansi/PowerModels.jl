@@ -633,7 +633,7 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["cost"] = [0.0, 0.0, 0.0]
             sub_data["model"] = 2
 
-            sub_data["source_id"] = ["voltage source converter", sub_data["f_bus"], sub_data["t_bus"], pop!(dcline, "NAME")]
+            sub_data["source_id"] = ["vsc dc", sub_data["f_bus"], sub_data["t_bus"], pop!(dcline, "NAME")]
             sub_data["index"] = length(pm_data["dcline"]) + 1
 
             import_remaining!(sub_data, dcline, import_all)
