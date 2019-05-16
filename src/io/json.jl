@@ -14,7 +14,8 @@ function _parse_mcv!(pm_data)
                    "Int"=>Int64,
                    "Real"=>Real,
                    "Complex"=>Complex,
-                   "String"=>String)
+                   "String"=>String,
+                   "Bool"=>Bool)
 
     for (comp_type, comp_items) in pm_data
         if isa(comp_items, Dict)
