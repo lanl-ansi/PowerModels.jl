@@ -66,6 +66,7 @@ end
         mc_data["gen"]["1"]["pmax"] = PowerModels.MultiConductorVector([Inf, Inf, Inf])
         mc_data["gen"]["1"]["qmin"] = PowerModels.MultiConductorVector([-Inf, -Inf, -Inf])
         mc_data["gen"]["1"]["bool_test"] = PowerModels.MultiConductorVector([true, true, false])
+        mc_data["gen"]["1"]["string_test"] = PowerModels.MultiConductorVector(["a", "b", "c"])
         mc_data["branch"]["1"]["br_x"][1,2] = -Inf
         mc_data["branch"]["1"]["br_x"][1,3] = Inf
 
