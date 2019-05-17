@@ -34,7 +34,7 @@ end
 Runs various data quality checks on a PowerModels data dictionary.
 Applies modifications in some cases.  Reports modified component ids.
 """
-function check_network_data!(data::Dict{String,<:Any})
+function correct_network_data!(data::Dict{String,<:Any})
     mod_bus = Dict{Symbol,Set{Int}}()
     mod_gen = Dict{Symbol,Set{Int}}()
     mod_branch = Dict{Symbol,Set{Int}}()
@@ -44,20 +44,20 @@ function check_network_data!(data::Dict{String,<:Any})
     make_per_unit!(data)
     check_connectivity(data)
 
-    mod_branch[:xfer_fix] = check_transformer_parameters!(data)
-    mod_branch[:vad_bounds] = check_voltage_angle_differences!(data)
-    mod_branch[:mva_zero] = check_thermal_limits!(data)
-    mod_branch[:orientation] = check_branch_directions!(data)
+    mod_branch[:xfer_fix] = correct_transformer_parameters!(data)
+    mod_branch[:vad_bounds] = correct_voltage_angle_differences!(data)
+    mod_branch[:mva_zero] = correct_thermal_limits!(data)
+    mod_branch[:orientation] = correct_branch_directions!(data)
     check_branch_loops(data)
 
-    mod_dcline[:losses] = check_dcline_limits!(data)
+    mod_dcline[:losses] = correct_dcline_limits!(data)
 
-    mod_bus[:type] = check_bus_types!(data)
+    mod_bus[:type] = correct_bus_types!(data)
     check_voltage_setpoints(data)
 
     check_storage_parameters(data)
 
-    gen, dcline = check_cost_functions!(data)
+    gen, dcline = correct_cost_functions!(data)
     mod_gen[:cost_pwl] = gen
     mod_dcline[:cost_pwl] = dcline
 

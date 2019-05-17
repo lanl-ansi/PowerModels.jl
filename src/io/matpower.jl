@@ -9,7 +9,7 @@ function parse_matpower(file::Union{IO, String}; validate=true)
     mp_data = parse_matpower_file(file)
     pm_data = matpower_to_powermodels(mp_data)
     if validate
-        check_network_data!(pm_data)
+        correct_network_data!(pm_data)
     end
     return pm_data
 end

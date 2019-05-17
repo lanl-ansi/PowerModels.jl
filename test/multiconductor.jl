@@ -315,48 +315,48 @@ end
         mp_data_3p["gen"]["1"]["model"] = 1
         mp_data_3p["gen"]["1"]["ncost"] = 1
         mp_data_3p["gen"]["1"]["cost"] = [0.0, 1.0, 0.0]
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions!(mp_data_3p))
+        @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(mp_data_3p))
 
         mp_data_3p["gen"]["1"]["cost"] = [0.0, 0.0]
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions!(mp_data_3p))
+        @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(mp_data_3p))
 
         mp_data_3p["gen"]["1"]["ncost"] = 2
         mp_data_3p["gen"]["1"]["cost"] = [0.0, 1.0, 0.0, 2.0]
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions!(mp_data_3p))
+        @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(mp_data_3p))
 
         mp_data_3p["gen"]["1"]["model"] = 2
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions!(mp_data_3p))
+        @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(mp_data_3p))
 
         Memento.setlevel!(TESTLOG, "info")
 
         mp_data_3p["gen"]["1"]["model"] = 3
         @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units!(mp_data_3p))
         @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_per_unit!(mp_data_3p))
-        @test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.check_cost_functions!(mp_data_3p))
+        @test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.correct_cost_functions!(mp_data_3p))
 
         mp_data_3p["gen"]["1"]["model"] = 1
         mp_data_3p["gen"]["1"]["cost"][3] = 3000
-        @test_warn(TESTLOG, "pwl x value 3000.0 is outside the bounds 0.0-60.0 on generator 1", PowerModels.check_cost_functions!(mp_data_3p))
+        @test_warn(TESTLOG, "pwl x value 3000.0 is outside the bounds 0.0-60.0 on generator 1", PowerModels.correct_cost_functions!(mp_data_3p))
 
-        @test_nowarn PowerModels.check_voltage_angle_differences!(mp_data_3p)
+        @test_nowarn PowerModels.correct_voltage_angle_differences!(mp_data_3p)
 
         mp_data_2p["branch"]["1"]["angmin"] = [-pi, 0]
         mp_data_2p["branch"]["1"]["angmax"] = [ pi, 0]
 
         @test_warn(TESTLOG, "this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch 1, conductor 1 from -180.0 to -60.0 deg.",
-            PowerModels.check_voltage_angle_differences!(mp_data_2p))
+            PowerModels.correct_voltage_angle_differences!(mp_data_2p))
 
         mp_data_2p["branch"]["1"]["angmin"] = [-pi, 0]
         mp_data_2p["branch"]["1"]["angmax"] = [ pi, 0]
 
         @test_warn(TESTLOG, "angmin and angmax values are 0, widening these values on branch 1, conductor 2 to +/- 60.0 deg.",
-            PowerModels.check_voltage_angle_differences!(mp_data_2p))
+            PowerModels.correct_voltage_angle_differences!(mp_data_2p))
 
         mp_data_2p["branch"]["1"]["angmin"] = [-pi, 0]
         mp_data_2p["branch"]["1"]["angmax"] = [ pi, 0]
 
         @test_warn(TESTLOG, "this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch 1, conductor 1 from 180.0 to 60.0 deg.",
-            PowerModels.check_voltage_angle_differences!(mp_data_2p))
+            PowerModels.correct_voltage_angle_differences!(mp_data_2p))
 
         @test_warn(TESTLOG, "skipping network that is already multiconductor", PowerModels.make_multiconductor!(mp_data_3p, 3))
 
@@ -368,34 +368,34 @@ end
         @test mp_data_3p["shunt"]["1"]["status"] == 0
 
         mp_data_3p["dcline"]["1"]["loss0"][2] = -1.0
-        @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1, conductor 2 from -100.0 to 0.0", PowerModels.check_dcline_limits!(mp_data_3p))
+        @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1, conductor 2 from -100.0 to 0.0", PowerModels.correct_dcline_limits!(mp_data_3p))
 
         mp_data_3p["dcline"]["1"]["loss1"][2] = -1.0
-        @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1, conductor 2 from -1.0 to 0.0", PowerModels.check_dcline_limits!(mp_data_3p))
+        @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1, conductor 2 from -1.0 to 0.0", PowerModels.correct_dcline_limits!(mp_data_3p))
 
         @test mp_data_3p["dcline"]["1"]["loss0"][2] == 0.0
         @test mp_data_3p["dcline"]["1"]["loss1"][2] == 0.0
 
         mp_data_3p["dcline"]["1"]["loss1"][2] = 100.0
-        @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1, conductor 2 from 100.0 to 0.0", PowerModels.check_dcline_limits!(mp_data_3p))
+        @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1, conductor 2 from 100.0 to 0.0", PowerModels.correct_dcline_limits!(mp_data_3p))
 
         delete!(mp_data_3p["branch"]["1"], "tap")
-        @test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.check_transformer_parameters!(mp_data_3p))
+        @test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.correct_transformer_parameters!(mp_data_3p))
 
         delete!(mp_data_3p["branch"]["1"], "shift")
-        @test_warn(TESTLOG, "branch found without shift value, setting a shift to 0.0", PowerModels.check_transformer_parameters!(mp_data_3p))
+        @test_warn(TESTLOG, "branch found without shift value, setting a shift to 0.0", PowerModels.correct_transformer_parameters!(mp_data_3p))
 
         mp_data_3p["branch"]["1"]["tap"][2] = -1.0
-        @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.check_transformer_parameters!(mp_data_3p))
+        @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.correct_transformer_parameters!(mp_data_3p))
 
         mp_data_3p["branch"]["1"]["rate_a"][2] = -1.0
-        @test_warn(TESTLOG, "this code only supports positive rate_a values, changing the value on branch 1, conductor 2 to 100.47", PowerModels.check_thermal_limits!(mp_data_3p))
+        @test_warn(TESTLOG, "this code only supports positive rate_a values, changing the value on branch 1, conductor 2 to 100.47", PowerModels.correct_thermal_limits!(mp_data_3p))
         @test isapprox(mp_data_3p["branch"]["1"]["rate_a"][2], 1.0047227335; atol=1e-6)
 
         mp_data_3p["branch"]["4"] = deepcopy(mp_data_3p["branch"]["1"])
         mp_data_3p["branch"]["4"]["f_bus"] = mp_data_3p["branch"]["1"]["t_bus"]
         mp_data_3p["branch"]["4"]["t_bus"] = mp_data_3p["branch"]["1"]["f_bus"]
-        @test_warn(TESTLOG, "reversing the orientation of branch 1 (1, 3) to be consistent with other parallel branches", PowerModels.check_branch_directions!(mp_data_3p))
+        @test_warn(TESTLOG, "reversing the orientation of branch 1 (1, 3) to be consistent with other parallel branches", PowerModels.correct_branch_directions!(mp_data_3p))
         @test mp_data_3p["branch"]["4"]["f_bus"] == mp_data_3p["branch"]["1"]["f_bus"]
         @test mp_data_3p["branch"]["4"]["t_bus"] == mp_data_3p["branch"]["1"]["t_bus"]
 

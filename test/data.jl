@@ -316,17 +316,17 @@ end
     data["gen"]["1"]["model"] = 1
     data["gen"]["1"]["ncost"] = 1
     data["gen"]["1"]["cost"] = [0, 1, 0]
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions!(data))
+    @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
 
     data["gen"]["1"]["cost"] = [0, 0]
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions!(data))
+    @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
 
     data["gen"]["1"]["ncost"] = 2
     data["gen"]["1"]["cost"] = [0, 1, 0, 2]
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions!(data))
+    @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
 
     data["gen"]["1"]["model"] = 2
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions!(data))
+    @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
 
     # check_connectivity
     data["load"]["1"]["load_bus"] = 1000
@@ -363,32 +363,32 @@ end
     data["gen"]["1"]["model"] = 3
     @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units!(data))
     @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_per_unit!(data))
-    @test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.check_cost_functions!(data))
+    @test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.correct_cost_functions!(data))
     data["gen"]["1"]["model"] = 1
 
     data["gen"]["1"]["cost"][3] = 3000
-    @test_warn(TESTLOG, "pwl x value 3000 is outside the bounds 0.0-20.0 on generator 1", PowerModels.check_cost_functions!(data))
+    @test_warn(TESTLOG, "pwl x value 3000 is outside the bounds 0.0-20.0 on generator 1", PowerModels.correct_cost_functions!(data))
 
     data["dcline"]["1"]["loss0"] = -1.0
-    @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0", PowerModels.check_dcline_limits!(data))
+    @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0", PowerModels.correct_dcline_limits!(data))
 
     data["dcline"]["1"]["loss1"] = -1.0
-    @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1 from -1.0 to 0.0", PowerModels.check_dcline_limits!(data))
+    @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1 from -1.0 to 0.0", PowerModels.correct_dcline_limits!(data))
 
     @test data["dcline"]["1"]["loss0"] == 0.0
     @test data["dcline"]["1"]["loss1"] == 0.0
 
     data["dcline"]["1"]["loss1"] = 100.0
-    @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1 from 100.0 to 0.0", PowerModels.check_dcline_limits!(data))
+    @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1 from 100.0 to 0.0", PowerModels.correct_dcline_limits!(data))
 
     delete!(data["branch"]["1"], "tap")
-    @test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.check_transformer_parameters!(data))
+    @test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.correct_transformer_parameters!(data))
 
     delete!(data["branch"]["1"], "shift")
-    @test_warn(TESTLOG, "branch found without shift value, setting a shift to 0.0", PowerModels.check_transformer_parameters!(data))
+    @test_warn(TESTLOG, "branch found without shift value, setting a shift to 0.0", PowerModels.correct_transformer_parameters!(data))
 
     data["branch"]["1"]["tap"] = -1.0
-    @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.check_transformer_parameters!(data))
+    @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.correct_transformer_parameters!(data))
 
     Memento.setlevel!(TESTLOG, "error")
 end

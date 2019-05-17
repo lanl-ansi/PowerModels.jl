@@ -812,9 +812,9 @@ end
 
 
 "checks that voltage angle differences are within 90 deg., if not tightens"
-function check_voltage_angle_differences!(data::Dict{String,<:Any}, default_pad = 1.0472)
+function correct_voltage_angle_differences!(data::Dict{String,<:Any}, default_pad = 1.0472)
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_voltage_angle_differences does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_voltage_angle_differences! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -867,9 +867,9 @@ end
 
 
 "checks that each branch has a reasonable thermal rating-a, if not computes one"
-function check_thermal_limits!(data::Dict{String,<:Any})
+function correct_thermal_limits!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_thermal_limits does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_thermal_limits! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -932,9 +932,9 @@ end
 
 
 "checks that each branch has a reasonable current rating-a, if not computes one"
-function check_current_limits!(data::Dict{String,<:Any})
+function correct_current_limits!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_current_limits does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_current_limits! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -999,9 +999,9 @@ end
 
 
 "checks that all parallel branches have the same orientation"
-function check_branch_directions!(data::Dict{String,<:Any})
+function correct_branch_directions!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_branch_directions does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_branch_directions! does not yet support multinetwork data")
     end
 
     modified = Set{Int}()
@@ -1112,9 +1112,9 @@ checks that each branch has a reasonable transformer parameters
 
 this is important because setting tap == 0.0 leads to NaN computations, which are hard to debug
 """
-function check_transformer_parameters!(data::Dict{String,<:Any})
+function correct_transformer_parameters!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_transformer_parameters does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_transformer_parameters! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -1224,9 +1224,9 @@ end
 
 
 "checks bus types are consistent with generator connections, if not, fixes them"
-function check_bus_types!(data::Dict{String,<:Any})
+function correct_bus_types!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_bus_types does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_bus_types! does not yet support multinetwork data")
     end
 
     modified = Set{Int}()
@@ -1264,9 +1264,9 @@ end
 
 
 "checks that parameters for dc lines are reasonable"
-function check_dcline_limits!(data::Dict{String,<:Any})
+function correct_dcline_limits!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_dcline_limits does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_dcline_limits! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -1370,21 +1370,21 @@ end
 
 
 "throws warnings if cost functions are malformed"
-function check_cost_functions!(data::Dict{String,<:Any})
+function correct_cost_functions!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_cost_functions does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_cost_functions! does not yet support multinetwork data")
     end
 
     modified_gen = Set{Int}()
     for (i,gen) in data["gen"]
-        if _check_cost_function!(i, gen, "generator")
+        if _correct_cost_function!(i, gen, "generator")
             push!(modified_gen, gen["index"])
         end
     end
 
     modified_dcline = Set{Int}()
     for (i, dcline) in data["dcline"]
-        if _check_cost_function!(i, dcline, "dcline")
+        if _correct_cost_function!(i, dcline, "dcline")
             push!(modified_dcline, dcline["index"])
         end
     end
@@ -1394,7 +1394,7 @@ end
 
 
 ""
-function _check_cost_function!(id, comp, type_name)
+function _correct_cost_function!(id, comp, type_name)
     #println(comp)
     modified = false
 
@@ -1842,7 +1842,7 @@ function _propagate_topology_status!(data::Dict{String,<:Any})
 
     Memento.info(LOGGER, "topology status propagation fixpoint reached in $(iteration) rounds")
 
-    check_reference_buses!(data)
+    correct_reference_buses!(data)
 end
 
 
@@ -1877,26 +1877,26 @@ function _select_largest_component!(data::Dict{String,<:Any})
         end
     end
 
-    check_reference_buses!(data)
+    correct_reference_buses!(data)
 end
 
 
 """
 checks that each connected components has a reference bus, if not, adds one
 """
-function check_reference_buses!(data::Dict{String,<:Any})
+function correct_reference_buses!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
-            _check_reference_buses!(nw_data)
+            _correct_reference_buses!(nw_data)
         end
     else
-        _check_reference_buses!(data)
+        _correct_reference_buses!(data)
     end
 end
 
 
 ""
-function _check_reference_buses!(data::Dict{String,<:Any})
+function _correct_reference_buses!(data::Dict{String,<:Any})
     bus_lookup = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
     bus_gen = bus_gen_lookup(data["gen"], data["bus"])
 
@@ -1920,7 +1920,7 @@ function _check_reference_buses!(data::Dict{String,<:Any})
     end
 
     for (i, cc) in enumerate(ccs_order)
-        check_component_refrence_bus!(cc, bus_lookup, cc_gens[i])
+        correct_component_refrence_bus!(cc, bus_lookup, cc_gens[i])
     end
 end
 
@@ -1928,7 +1928,7 @@ end
 """
 checks that a connected component has a reference bus, if not, adds one
 """
-function check_component_refrence_bus!(component_bus_ids, bus_lookup, component_gens)
+function correct_component_refrence_bus!(component_bus_ids, bus_lookup, component_gens)
     refrence_buses = Set()
     for bus_id in component_bus_ids
         bus = bus_lookup[bus_id]
