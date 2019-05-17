@@ -24,9 +24,11 @@ function _parse_mcv!(pm_data)
                     if isa(value, Dict) && haskey(value, "values") && haskey(value, "type")
                         element_type = match(r"MultiConductor(?:Vector|Matrix){([a-zA-Z]+)\d*}", value["type"]).captures[1]
                         if startswith(value["type"], "MultiConductorVector") || startswith(value["type"], "PowerModels.MultiConductorVector")
-                            pm_data[comp_type][n][field] = PowerModels.MultiConductorVector(convert(Array{eltypes[element_type]}, value["values"]))
+                            values = [isa(v, AbstractString) ? parse(eltypes[element_type], v) : v for v in value["values"]]
+                            pm_data[comp_type][n][field] = PowerModels.MultiConductorVector(convert(Array{eltypes[element_type]}, values))
                         elseif startswith(value["type"], "MultiConductorMatrix") || startswith(value["type"], "PowerModels.MultiConductorMatrix")
-                            pm_data[comp_type][n][field] = PowerModels.MultiConductorMatrix(convert(Array{eltypes[element_type]}, hcat(value["values"]...)))
+                            values = [[isa(v, AbstractString) ? parse(eltypes[element_type], v) : v for v in row] for row in value["values"]]
+                            pm_data[comp_type][n][field] = PowerModels.MultiConductorMatrix(convert(Array{eltypes[element_type]}, hcat(values...)))
                         end
                     end
                 end
