@@ -1,4 +1,5 @@
 ### Tests for OPF variants ###
+TESTLOG = Memento.getlogger(PowerModels)
 
 function build_current_data(base_data)
     c_data = PowerModels.parse_file(base_data)
@@ -218,6 +219,14 @@ end
             @test isapprox(result["solution"]["storage"]["2"]["se"],  0.0; atol = 1e0)
             @test isapprox(result["solution"]["storage"]["2"]["ps"], -0.234501; atol = 1e-2)
         end
+    end
+
+    @testset "storage constraint warn" begin
+        mp_data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
+        delete!(mp_data, "time_elapsed")
+        Memento.setlevel!(TESTLOG, "warn")
+        @test_warn(TESTLOG, "network data should specify time_elapsed, using 1.0 as a default", PowerModels.run_strg_opf(mp_data, PowerModels.ACPPowerModel, ipopt_solver))
+        Memento.setlevel!(TESTLOG, "error")
     end
 
 end
