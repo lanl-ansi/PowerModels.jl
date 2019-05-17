@@ -282,6 +282,12 @@ TESTLOG = Memento.getlogger(PowerModels)
             end
         end
 
+        @testset "storage constraint warning" begin
+            delete!(mn_data, "time_elapsed")
+            Memento.setlevel!(TESTLOG, "warn")
+            @test_warn(TESTLOG, "network data should specify time_elapsed, using 1.0 as a default", PowerModels.run_mn_strg_opf(mn_data, PowerModels.ACPPowerModel, ipopt_solver))
+            Memento.setlevel!(TESTLOG, "error")
+        end
     end
 
 
