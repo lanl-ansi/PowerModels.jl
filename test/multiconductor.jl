@@ -35,7 +35,7 @@ function post_tp_opf(pm::PowerModels.GenericPowerModel)
         end
     end
 
-    PowerModels.objective_min_fuel_cost(pm)
+    PowerModels.objective_min_fuel_and_flow_cost(pm)
 end
 
 

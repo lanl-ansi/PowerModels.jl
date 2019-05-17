@@ -233,7 +233,7 @@ end
         PMs.variable_branch_flow(pm)
         PMs.variable_dcline_flow(pm)
 
-        PMs.objective_min_fuel_cost(pm)
+        PMs.objective_min_fuel_and_flow_cost(pm)
 
         PMs.constraint_voltage(pm)
 
