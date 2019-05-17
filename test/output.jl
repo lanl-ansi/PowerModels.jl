@@ -4,7 +4,9 @@
         result = run_opf("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver)
 
         @test haskey(result, "optimizer") == true
-        @test haskey(result, "status") == true
+        @test haskey(result, "termination_status") == true
+        @test haskey(result, "primal_status") == true
+        @test haskey(result, "dual_status") == true
         @test haskey(result, "objective") == true
         @test haskey(result, "objective_lb") == true
         @test haskey(result, "solve_time") == true
@@ -25,7 +27,9 @@ end
         result = run_opf("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
 
         @test haskey(result, "optimizer") == true
-        @test haskey(result, "status") == true
+        @test haskey(result, "termination_status") == true
+        @test haskey(result, "primal_status") == true
+        @test haskey(result, "dual_status") == true
         @test haskey(result, "objective") == true
         @test haskey(result, "objective_lb") == true
         @test haskey(result, "solve_time") == true
@@ -121,13 +125,13 @@ end
     function solution_feedback(case, ac_opf_obj)
         data = PowerModels.parse_file(case)
         opf_result = run_ac_opf(data, ipopt_solver)
-        @test opf_result["status"] == :LocalOptimal
+        @test opf_result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(opf_result["objective"], ac_opf_obj; atol = 1e0)
 
         PowerModels.update_data(data, opf_result["solution"])
 
         pf_result = run_ac_pf(data, ipopt_solver)
-        @test pf_result["status"] == :LocalOptimal
+        @test pf_result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(pf_result["objective"], 0.0; atol = 1e-3)
 
         for (i,bus) in data["bus"]

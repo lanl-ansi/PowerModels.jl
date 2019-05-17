@@ -2,7 +2,7 @@
     @testset "3-bus case" begin
         result = run_ac_pf("../test/data/matpower/case3.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
 
         @test isapprox(result["solution"]["gen"]["2"]["pg"], 1.600063; atol = 1e-3)
@@ -21,19 +21,19 @@
     @testset "5-bus transformer swap case" begin
         result = run_pf("../test/data/matpower/case5.m", ACPPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "5-bus asymmetric case" begin
         result = run_pf("../test/data/matpower/case5_asym.m", ACPPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "5-bus case with hvdc line" begin
         result = run_ac_pf("../test/data/matpower/case5_dc.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
 
         @test isapprox(result["solution"]["gen"]["3"]["pg"], 3.336866; atol = 1e-3)
@@ -53,7 +53,7 @@
     @testset "6-bus case" begin
         result = run_pf("../test/data/matpower/case6.m", ACPPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
         @test isapprox(result["solution"]["bus"]["1"]["vm"], 1.10000; atol = 1e-3)
         @test isapprox(result["solution"]["bus"]["1"]["va"], 0.00000; atol = 1e-3)
@@ -63,7 +63,7 @@
     @testset "24-bus rts case" begin
         result = run_pf("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
 end
@@ -73,7 +73,7 @@ end
     @testset "5-bus asymmetric case" begin
         result = run_pf("../test/data/matpower/case5_asym.m", ACRPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     #=
@@ -81,7 +81,7 @@ end
     @testset "5-bus case with hvdc line" begin
         result = run_pf("../test/data/matpower/case5_dc.m", ACRPowerModel, ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
 
         @test isapprox(result["solution"]["gen"]["3"]["pg"], 3.336866; atol = 1e-3)
@@ -105,13 +105,13 @@ end
     @testset "5-bus asymmetric case" begin
         result = run_pf("../test/data/matpower/case5_asym.m", ACTPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "5-bus case with hvdc line" begin
         result = run_pf("../test/data/matpower/case5_dc.m", ACTPowerModel, ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
 
         @test isapprox(result["solution"]["gen"]["3"]["pg"], 3.336866; atol = 1e-3)
@@ -134,7 +134,7 @@ end
     @testset "3-bus case" begin
         result = run_dc_pf("../test/data/matpower/case3.m", ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
 
         @test isapprox(result["solution"]["gen"]["1"]["pg"], 1.54994; atol = 1e-3)
@@ -146,13 +146,13 @@ end
     @testset "5-bus asymmetric case" begin
         result = run_dc_pf("../test/data/matpower/case5_asym.m", ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "6-bus case" begin
         result = run_dc_pf("../test/data/matpower/case6.m", ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
         @test isapprox(result["solution"]["bus"]["1"]["va"], 0.00000; atol = 1e-5)
         @test isapprox(result["solution"]["bus"]["4"]["va"], 0.00000; atol = 1e-5)
@@ -160,7 +160,7 @@ end
     @testset "24-bus rts case" begin
         result = run_pf("../test/data/matpower/case24.m", DCPPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
 end
@@ -170,7 +170,7 @@ end
     @testset "3-bus case" begin
         result = run_pf("../test/data/matpower/case3.m", SOCWRPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
 
         @test result["solution"]["gen"]["1"]["pg"] >= 1.480
@@ -188,13 +188,13 @@ end
     @testset "5-bus asymmetric case" begin
         result = run_pf("../test/data/matpower/case5_asym.m", SOCWRPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "6-bus case" begin
         result = run_pf("../test/data/matpower/case6.m", SOCWRPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
         @test isapprox(result["solution"]["bus"]["1"]["vm"], 1.09999; atol = 1e-3)
         @test isapprox(result["solution"]["bus"]["4"]["vm"], 1.09999; atol = 1e-3)
@@ -202,7 +202,7 @@ end
     @testset "24-bus rts case" begin
         result = run_pf("../test/data/matpower/case24.m", SOCWRPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
 end
@@ -213,7 +213,7 @@ end
     @testset "3-bus case" begin
         result = run_pf_bf("../test/data/matpower/case3.m", SOCBFPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
 
         @test result["solution"]["gen"]["1"]["pg"] >= 1.480
@@ -231,19 +231,19 @@ end
     @testset "5-bus asymmetric case" begin
         result = run_pf_bf("../test/data/matpower/case5_asym.m", SOCBFPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "5-bus case with hvdc line" begin
         result = run_pf_bf("../test/data/matpower/case5_dc.m", SOCBFPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "6-bus case" begin
         result = run_pf_bf("../test/data/matpower/case6.m", SOCBFPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
         @test isapprox(result["solution"]["bus"]["1"]["vm"], 1.09999; atol = 1e-3)
         @test isapprox(result["solution"]["bus"]["4"]["vm"], 1.09999; atol = 1e-3)
@@ -251,7 +251,7 @@ end
     @testset "24-bus rts case" begin
         result = run_pf_bf("../test/data/matpower/case24.m", SOCBFPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
 end
@@ -262,7 +262,7 @@ end
     @testset "3-bus case" begin
         result = run_pf("../test/data/matpower/case3.m", SDPWRMPowerModel, scs_solver)
 
-        @test result["status"] == :Optimal
+        @test result["termination_status"] == MOI.OPTIMAL
         @test isapprox(result["objective"], 0; atol = 1e-2)
 
         @test result["solution"]["gen"]["1"]["pg"] >= 1.480
@@ -281,13 +281,13 @@ end
     @testset "5-bus asymmetric case" begin
         result = run_pf("../test/data/matpower/case5_asym.m", SDPWRMPowerModel, scs_solver)
 
-        @test result["status"] == :Optimal
+        @test result["termination_status"] == MOI.OPTIMAL
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "6-bus case" begin
         result = run_pf("../test/data/matpower/case6.m", SDPWRMPowerModel, scs_solver)
 
-        @test result["status"] == :Optimal
+        @test result["termination_status"] == MOI.OPTIMAL
         @test isapprox(result["objective"], 0; atol = 1e-2)
         @test isapprox(result["solution"]["bus"]["1"]["vm"], 1.09999; atol = 1e-3)
         @test isapprox(result["solution"]["bus"]["4"]["vm"], 1.09999; atol = 1e-3)
@@ -295,7 +295,7 @@ end
     @testset "24-bus rts case" begin
         result = run_pf("../test/data/matpower/case24.m", SDPWRMPowerModel, scs_solver)
 
-        @test result["status"] == :Optimal
+        @test result["termination_status"] == MOI.OPTIMAL
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
 end

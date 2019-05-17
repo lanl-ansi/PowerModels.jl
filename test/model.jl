@@ -5,7 +5,7 @@
         x = JuMP.@variable(m, my_var >= 0, start=0.0)
         result = run_ac_opf("../test/data/matpower/case5.m", ipopt_solver, jump_model=m)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 18269; atol = 1e0)
         @test m[:my_var] == x
     end

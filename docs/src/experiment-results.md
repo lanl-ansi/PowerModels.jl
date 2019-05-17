@@ -9,7 +9,7 @@ result_ac  = run_opf(case, ACPPowerModel, JuMP.with_optimizer(Ipopt.Optimizer, t
 result_soc = run_opf(case, SOCWRPowerModel, JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6))
 result_qc  = run_opf(case, QCWRPowerModel, JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6))
 ```
-for each `case` in the NESTA archive. If the value of `result["status"]` is `:LocalOptimal` then the values of `result["objective"]` and `result["solve_time"]` are reported, otherwise an `err.` or `--` is displayed. A value of `n.d.` indicates that no data was available. The optimality gap is defined as,
+for each `case` in the NESTA archive. If the value of `result["termination_status"]` is `LOCALLY_SOLVED` then the values of `result["objective"]` and `result["solve_time"]` are reported, otherwise an `err.` or `--` is displayed. A value of `n.d.` indicates that no data was available. The optimality gap is defined as,
 ```
 soc_gap = 100*(result_ac["objective"] - result_soc["objective"])/result_ac["objective"]
 ```
