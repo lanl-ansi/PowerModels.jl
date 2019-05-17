@@ -7,15 +7,15 @@ TESTLOG = Memento.getlogger(PowerModels)
     @testset "idempotent unit transformation" begin
         @testset "5-bus replicate case" begin
             mn_data = build_mn_data("../test/data/matpower/case5_dc.m")
-            PowerModels.make_mixed_units(mn_data)
-            PowerModels.make_per_unit(mn_data)
+            PowerModels.make_mixed_units!(mn_data)
+            PowerModels.make_per_unit!(mn_data)
 
             @test InfrastructureModels.compare_dict(mn_data, build_mn_data("../test/data/matpower/case5_dc.m"))
         end
         @testset "14+24 hybrid case" begin
             mn_data = build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
-            PowerModels.make_mixed_units(mn_data)
-            PowerModels.make_per_unit(mn_data)
+            PowerModels.make_mixed_units!(mn_data)
+            PowerModels.make_per_unit!(mn_data)
 
             @test InfrastructureModels.compare_dict(mn_data, build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m"))
         end
@@ -25,7 +25,7 @@ TESTLOG = Memento.getlogger(PowerModels)
     @testset "topology processing" begin
         @testset "7-bus replicate status case" begin
             mn_data = build_mn_data("../test/data/matpower/case7_tplgy.m")
-            PowerModels.propagate_topology_status(mn_data)
+            PowerModels.propagate_topology_status!(mn_data)
 
             active_buses = Set(["2", "4", "5", "7"])
             active_branches = Set(["8"])
@@ -59,8 +59,8 @@ TESTLOG = Memento.getlogger(PowerModels)
         end
         @testset "7-bus replicate filer case" begin
             mn_data = build_mn_data("../test/data/matpower/case7_tplgy.m")
-            PowerModels.propagate_topology_status(mn_data)
-            PowerModels.select_largest_component(mn_data)
+            PowerModels.propagate_topology_status!(mn_data)
+            PowerModels.select_largest_component!(mn_data)
 
             active_buses = Set(["4", "5", "7"])
             active_branches = Set(["8"])
@@ -94,8 +94,8 @@ TESTLOG = Memento.getlogger(PowerModels)
         end
         @testset "7+14 hybrid filer case" begin
             mn_data = build_mn_data("../test/data/matpower/case7_tplgy.m", "../test/data/matpower/case14.m")
-            PowerModels.propagate_topology_status(mn_data)
-            PowerModels.select_largest_component(mn_data)
+            PowerModels.propagate_topology_status!(mn_data)
+            PowerModels.select_largest_component!(mn_data)
 
             case7_data = mn_data["nw"]["1"]
             case14_data = mn_data["nw"]["2"]
@@ -292,7 +292,7 @@ TESTLOG = Memento.getlogger(PowerModels)
         @test opf_result["status"] == :LocalOptimal
         @test isapprox(opf_result["objective"], 35103.8; atol = 1e0)
 
-        PowerModels.update_data(mn_data, opf_result["solution"])
+        PowerModels.update_data!(mn_data, opf_result["solution"])
 
         pf_result = PowerModels.run_mn_pf(mn_data, ACPPowerModel, ipopt_solver)
         @test pf_result["status"] == :LocalOptimal
@@ -326,21 +326,21 @@ TESTLOG = Memento.getlogger(PowerModels)
     @testset "test errors and warnings" begin
         mn_data = build_mn_data("../test/data/matpower/case5.m")
 
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_angle_differences(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_thermal_limits(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_branch_directions(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_angle_differences!(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_thermal_limits!(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_branch_directions!(mn_data))
         @test_throws(TESTLOG, ErrorException, PowerModels.check_branch_loops(mn_data))
         @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_transformer_parameters(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_bus_types(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_dcline_limits(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_transformer_parameters!(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_bus_types!(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_dcline_limits!(mn_data))
         @test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_setpoints(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(mn_data))
+        @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions!(mn_data))
         @test_throws(TESTLOG, ErrorException, PowerModels.connected_components(mn_data))
 
         Memento.setlevel!(TESTLOG, "warn")
-        @test_nowarn PowerModels.check_reference_buses(mn_data)
-        @test_nowarn PowerModels.make_multiconductor(mn_data, 3)
+        @test_nowarn PowerModels.check_reference_buses!(mn_data)
+        @test_nowarn PowerModels.make_multiconductor!(mn_data, 3)
         @test_nowarn PowerModels.check_conductors(mn_data)
         Memento.setlevel!(TESTLOG, "error")
 

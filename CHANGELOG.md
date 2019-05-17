@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Renamed data functions to indicate when modification can occur
 - Renamed objective functions to make dcline flow costs more explicit
 
 ### Staged

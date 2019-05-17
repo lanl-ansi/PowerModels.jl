@@ -698,7 +698,7 @@ function parse_psse(pti_data::Dict; import_all=false, validate=true)::Dict
     end
 
     if validate
-        check_network_data(pm_data)
+        check_network_data!(pm_data)
     end
 
     return pm_data

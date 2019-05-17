@@ -2,7 +2,7 @@
 
 function build_current_data(base_data)
     c_data = PowerModels.parse_file(base_data)
-    PowerModels.check_current_limits(c_data)
+    PowerModels.check_current_limits!(c_data)
     for (i,branch) in c_data["branch"]
         delete!(branch, "rate_a")
     end

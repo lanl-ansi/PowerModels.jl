@@ -49,7 +49,7 @@ function parse_json(io::Union{IO,String}; kwargs...)::Dict{String,Any}
     end
 
     if get(kwargs, :validate, true)
-        PowerModels.check_network_data(pm_data)
+        PowerModels.check_network_data!(pm_data)
     end
 
     return pm_data
