@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Refactor connected_components to accept arbitrary edge-types with `edges` kwarg
+- Fixes bug in warnings inside storage constraints
 
 ### v0.10.0
 - Update to JuMP v0.19/MathOptInterface
