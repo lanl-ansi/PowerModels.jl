@@ -85,9 +85,9 @@ function objective_min_fuel_and_flow_cost(pm::GenericPowerModel)
     model = check_cost_models(pm)
 
     if model == 1
-        return objective_min_pwl_fuel_and_flow_cost(pm)
+        return objective_min_fuel_and_flow_cost_pwl(pm)
     elseif model == 2
-        return objective_min_polynomial_fuel_and_flow_cost(pm)
+        return objective_min_fuel_and_flow_cost_polynomial(pm)
     else
         Memento.error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
@@ -100,9 +100,9 @@ function objective_min_fuel_cost(pm::GenericPowerModel)
     model = check_gen_cost_models(pm)
 
     if model == 1
-        return objective_min_pwl_fuel_cost(pm)
+        return objective_min_fuel_cost_pwl(pm)
     elseif model == 2
-        return objective_min_polynomial_fuel_cost(pm)
+        return objective_min_fuel_cost_polynomial(pm)
     else
         Memento.error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
@@ -111,18 +111,18 @@ end
 
 
 ""
-function objective_min_polynomial_fuel_and_flow_cost(pm::GenericPowerModel)
+function objective_min_fuel_and_flow_cost_polynomial(pm::GenericPowerModel)
     order = calc_max_cost_index(pm.data)-1
 
     if order <= 2
-        return _objective_min_polynomial_fuel_and_flow_cost_linquad(pm)
+        return _objective_min_fuel_and_flow_cost_polynomial_linquad(pm)
     else
-        return _objective_min_polynomial_fuel_and_flow_cost_nl(pm)
+        return _objective_min_fuel_and_flow_cost_polynomial_nl(pm)
     end
 end
 
 ""
-function _objective_min_polynomial_fuel_and_flow_cost_linquad(pm::GenericPowerModel)
+function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::GenericPowerModel)
     gen_cost = Dict()
     dcline_cost = Dict()
 
@@ -167,7 +167,7 @@ end
 
 
 "Adds lifted variables to turn a quadatic objective into a linear one; needed for conic solvers that only support linear objectives"
-function _objective_min_polynomial_fuel_and_flow_cost_linquad(pm::GenericPowerModel{T}) where T <: AbstractConicForms
+function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::GenericPowerModel{T}) where T <: AbstractConicForms
     gen_cost = Dict()
     dcline_cost = Dict()
 
@@ -256,7 +256,7 @@ end
 
 
 ""
-function _objective_min_polynomial_fuel_and_flow_cost_nl(pm::GenericPowerModel)
+function _objective_min_fuel_and_flow_cost_polynomial_nl(pm::GenericPowerModel)
     gen_cost = Dict()
     dcline_cost = Dict()
 
@@ -312,18 +312,18 @@ end
 
 
 ""
-function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
+function objective_min_fuel_cost_polynomial(pm::GenericPowerModel)
     order = calc_max_cost_index(pm.data)-1
 
     if order <= 2
-        return _objective_min_polynomial_fuel_cost_linquad(pm)
+        return _objective_min_fuel_cost_polynomial_linquad(pm)
     else
-        return _objective_min_polynomial_fuel_cost_nl(pm)
+        return _objective_min_fuel_cost_polynomial_nl(pm)
     end
 end
 
 ""
-function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel)
+function _objective_min_fuel_cost_polynomial_linquad(pm::GenericPowerModel)
     gen_cost = Dict()
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
@@ -350,7 +350,7 @@ end
 
 
 ""
-function _objective_min_polynomial_fuel_cost_nl(pm::GenericPowerModel)
+function _objective_min_fuel_cost_polynomial_nl(pm::GenericPowerModel)
     gen_cost = Dict()
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
@@ -428,7 +428,7 @@ end
 
 
 ""
-function objective_min_pwl_fuel_and_flow_cost(pm::GenericPowerModel)
+function objective_min_fuel_and_flow_cost_pwl(pm::GenericPowerModel)
 
     for (n, nw_ref) in nws(pm)
         gen_lines = get_lines(nw_ref[:gen])
@@ -493,7 +493,7 @@ end
 
 
 ""
-function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
+function objective_min_fuel_cost_pwl(pm::GenericPowerModel)
 
     for (n, nw_ref) in nws(pm)
         pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
@@ -512,18 +512,6 @@ function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
     return JuMP.@objective(pm.model, Min,
         sum(
             sum( var(pm, n, :pg_cost, i) for (i,gen) in nw_ref[:gen])
-        for (n, nw_ref) in nws(pm))
-    )
-end
-
-
-"Cost of building branches"
-function objective_tnep_cost(pm::GenericPowerModel)
-    return JuMP.@objective(pm.model, Min,
-        sum(
-            sum(
-                sum( branch["construction_cost"]*var(pm, n, c, :branch_ne, i) for (i,branch) in nw_ref[:ne_branch] )
-            for c in conductor_ids(pm, n))
         for (n, nw_ref) in nws(pm))
     )
 end
