@@ -720,12 +720,8 @@ function _calc_power_balance(data::Dict{String,<:Any})
     for (i,storage) in data["storage"]
         if storage["status"] != 0
             bvals = bus_values[storage["storage_bus"]]
-            if haskey(storage, "ps")
-                bvals["ps"] += storage["ps"]
-            end
-            if haskey(storage, "qs")
-                bvals["qs"] += storage["qs"]
-            end
+            bvals["ps"] += storage["ps"]
+            bvals["qs"] += storage["qs"]
         end
     end
 

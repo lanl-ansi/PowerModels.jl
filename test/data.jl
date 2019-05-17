@@ -527,6 +527,36 @@ end
         end
     end
 
+
+     @testset "5-bus ac polar balance with storage" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
+        data["branch"]["4"]["br_status"] = 0
+        result = PowerModels.run_strg_opf(data, ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        PowerModels.update_data!(data, result["solution"])
+
+        balance = PowerModels.calc_power_balance(data)
+
+        for (i,bus) in balance["bus"]
+            @test isapprox(bus["p_delta"], 0.0; atol=1e-6)
+            @test isapprox(bus["q_delta"], 0.0; atol=1e-6)
+        end
+    end
+
+     @testset "5-bus dc balance with storage" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
+        data["branch"]["4"]["br_status"] = 0
+        result = PowerModels.run_strg_opf(data, DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        PowerModels.update_data!(data, result["solution"])
+
+        balance = PowerModels.calc_power_balance(data)
+
+        for (i,bus) in balance["bus"]
+            @test isapprox(bus["p_delta"], 0.0; atol=1e-6)
+            @test isnan(bus["q_delta"])
+        end
+    end
+
+
      @testset "5-bus balance from flow ac" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         data["branch"]["4"]["br_status"] = 0

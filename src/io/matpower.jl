@@ -97,6 +97,7 @@ mp_dcline_columns = [
 
 mp_storage_columns = [
     ("storage_bus", Int),
+    ("ps", Float64), ("qs", Float64),
     ("energy", Float64), ("energy_rating", Float64),
     ("charge_rating", Float64), ("discharge_rating", Float64),
     ("charge_efficiency", Float64), ("discharge_efficiency", Float64),
