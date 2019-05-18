@@ -19,7 +19,7 @@ function post_ots(pm::GenericPowerModel)
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
-    objective_min_fuel_cost(pm)
+    objective_min_fuel_and_flow_cost(pm)
 
     constraint_voltage_on_off(pm)
 

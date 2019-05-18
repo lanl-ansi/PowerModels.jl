@@ -138,8 +138,8 @@ end
             data_pti = PowerModels.parse_file("../test/data/pti/case7_tplgy.raw")
             data_mp  = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
 
-            PowerModels.propagate_topology_status(data_pti)
-            PowerModels.propagate_topology_status(data_mp)
+            PowerModels.propagate_topology_status!(data_pti)
+            PowerModels.propagate_topology_status!(data_mp)
 
             set_costs!(data_mp)
 
@@ -209,7 +209,7 @@ end
     @testset "exception handling" begin
         dummy_data = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw")
 
-        @test dummy_data["gen"]["1"]["source_id"] == [1001, "1 "]
+        @test dummy_data["gen"]["1"]["source_id"] == ["generator", 1001, "1 "]
 
         Memento.setlevel!(TESTLOG, "warn")
 
@@ -423,6 +423,7 @@ end
             for v in values(data[key])
                 @test "source_id" in keys(v)
                 @test isa(v["source_id"], Array)
+                @test v["source_id"][1] in ["bus", "load", "fixed shunt", "switched shunt", "branch", "generator", "transformer", "two-terminal dc", "vsc dc"]
             end
         end
     end

@@ -15,7 +15,7 @@ function post_opb(pm::GenericPowerModel)
     variable_bus_voltage(pm)
     variable_generation(pm)
 
-    objective_min_gen_fuel_cost(pm)
+    objective_min_fuel_cost(pm)
 
     for i in ids(pm, :components)
         constraint_power_balance(pm, i)

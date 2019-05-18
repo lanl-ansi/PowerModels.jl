@@ -18,7 +18,7 @@ function post_opf_bf(pm::GenericPowerModel)
     variable_branch_current(pm)
     variable_dcline_flow(pm)
 
-    objective_min_fuel_cost(pm)
+    objective_min_fuel_and_flow_cost(pm)
 
     for i in ids(pm, :ref_buses)
         constraint_theta_ref(pm, i)

@@ -58,6 +58,18 @@ function post_tnep(pm::GenericPowerModel)
 end
 
 
+"Cost of building branches"
+function objective_tnep_cost(pm::GenericPowerModel)
+    return JuMP.@objective(pm.model, Min,
+        sum(
+            sum(
+                sum( branch["construction_cost"]*var(pm, n, c, :branch_ne, i) for (i,branch) in nw_ref[:ne_branch] )
+            for c in conductor_ids(pm, n))
+        for (n, nw_ref) in nws(pm))
+    )
+end
+
+
 ""
 function ne_branch_ref!(pm::GenericPowerModel)
     for (nw, nw_ref) in pm.ref[:nw]
@@ -80,6 +92,7 @@ function ne_branch_ref!(pm::GenericPowerModel)
         nw_ref[:ne_buspairs] = buspair_parameters(nw_ref[:ne_arcs_from], nw_ref[:ne_branch], nw_ref[:bus], nw_ref[:conductor_ids], haskey(nw_ref, :conductors))
     end
 end
+
 
 ""
 function get_tnep_solution(pm::GenericPowerModel, sol::Dict{String,<:Any})
