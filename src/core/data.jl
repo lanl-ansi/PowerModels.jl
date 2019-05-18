@@ -1103,6 +1103,51 @@ function check_connectivity(data::Dict{String,<:Any})
 end
 
 
+"checks that contains at least one refrence bus"
+function check_reference_bus(data::Dict{String,<:Any})
+    if InfrastructureModels.ismultinetwork(data)
+        Memento.error(LOGGER, "check_reference_bus does not yet support multinetwork data")
+    end
+
+    ref_buses = Dict{String,Any}()
+    for (k,v) in data["bus"]
+        if v["bus_type"] == 3
+            ref_buses[k] = v
+        end
+    end
+
+    if length(ref_buses) == 0
+            if length(data["gen"]) > 0
+            big_gen = _biggest_generator(data["gen"])
+            gen_bus = big_gen["gen_bus"]
+            ref_bus = data["bus"]["$(gen_bus)"]
+            ref_bus["bus_type"] = 3
+            Memento.warn(LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
+        else
+            (bus_item, state) = Base.iterate(data["bus"])
+            bus_item.second["bus_type"] = 3
+            Memento.warn(LOGGER, "no reference bus found, setting bus $(bus_item.second["index"]) as reference")
+        end
+    end
+end
+
+
+"find the largest active generator in the network"
+function _biggest_generator(gens)
+    biggest_gen = nothing
+    biggest_value = -Inf
+    for (k,gen) in gens
+        pmax = maximum(gen["pmax"])
+        if pmax > biggest_value
+            biggest_gen = gen
+            biggest_value = pmax
+        end
+    end
+    @assert(biggest_gen != nothing)
+    return biggest_gen
+end
+
+
 """
 checks that each branch has a reasonable transformer parameters
 
@@ -1937,7 +1982,7 @@ function correct_component_refrence_bus!(component_bus_ids, bus_lookup, componen
         Memento.warn(LOGGER, "no reference bus found in connected component $(component_bus_ids)")
 
         if length(component_gens) > 0
-            big_gen = biggest_generator(component_gens)
+            big_gen = _biggest_generator(component_gens)
             gen_bus = bus_lookup[big_gen["gen_bus"]]
             gen_bus["bus_type"] = 3
             Memento.warn(LOGGER, "setting bus $(gen_bus["index"]) as reference bus in connected component $(component_bus_ids), based on generator $(big_gen["index"])")

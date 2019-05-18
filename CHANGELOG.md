@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Add support for extensible ref building (#263) (breaking)
 - Updates PSS(R)E `source_id` to include string indicating originating component type
 - Renamed data functions to indicate when modification can occur
 - Renamed objective functions to make dcline flow costs more explicit
@@ -11,7 +12,7 @@ PowerModels.jl Change Log
 - Fixes bug in warnings inside storage constraints
 
 ### v0.10.0
-- Update to JuMP v0.19/MathOptInterface
+- Update to JuMP v0.19/MathOptInterface (breaking)
 
 ### v0.9.8
 - Added a test network with dangling buses, case5_db.m
