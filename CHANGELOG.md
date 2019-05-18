@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Updates PSS(R)E `source_id` to include string indicating originating component type
 - Renamed data functions to indicate when modification can occur
 - Renamed objective functions to make dcline flow costs more explicit
 
