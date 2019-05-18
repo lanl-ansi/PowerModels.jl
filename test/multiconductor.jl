@@ -44,37 +44,39 @@ end
     @testset "json parser" begin
         mc_data = build_mc_data("../test/data/pti/parser_test_defaults.raw")
         mc_json_string = PowerModels.parse_json(JSON.json(mc_data))
-        if VERSION > v"0.7.0-"
-            @test mc_data == mc_json_string
-        end
+        @test mc_data == mc_json_string
 
         io = PipeBuffer()
         JSON.print(io, mc_data)
         mc_json_file = PowerModels.parse_file(io)
-        if VERSION > v"0.7.0-"
-            @test mc_data == mc_json_file
-        else
-            @test InfrastructureModels.compare_dict(mc_data, mc_json_file)
-        end
+        @test mc_data == mc_json_file
 
         mc_strg_data = build_mc_data("../test/data/matpower/case5_strg.m")
         mc_strg_json_string = PowerModels.parse_json(JSON.json(mc_strg_data))
-        if VERSION > v"0.7.0-"
-            @test mc_strg_data == mc_strg_json_string
-        else
-            @test InfrastructureModels.compare_dict(mc_strg_data, mc_strg_json_string)
-        end
+        @test mc_strg_data == mc_strg_json_string
 
         # test that non-multiconductor json still parses, pti_json_file will result in error if fails
         pti_data = PowerModels.parse_file("../test/data/pti/parser_test_defaults.raw")
         io = PipeBuffer()
         JSON.print(io, pti_data)
         pti_json_file = PowerModels.parse_file(io)
-        if VERSION > v"0.7.0-"
-            @test pti_data == pti_json_file
-        else
-            @test InfrastructureModels.compare_dict(pti_data, pti_json_file)
-        end
+        @test pti_data == pti_json_file
+
+        mc_data = build_mc_data("../test/data/matpower/case5.m")
+        mc_data["gen"]["1"]["pmax"] = PowerModels.MultiConductorVector([Inf, Inf, Inf])
+        mc_data["gen"]["1"]["qmin"] = PowerModels.MultiConductorVector([-Inf, -Inf, -Inf])
+        mc_data["gen"]["1"]["bool_test"] = PowerModels.MultiConductorVector([true, true, false])
+        mc_data["gen"]["1"]["string_test"] = PowerModels.MultiConductorVector(["a", "b", "c"])
+        mc_data["branch"]["1"]["br_x"][1,2] = -Inf
+        mc_data["branch"]["1"]["br_x"][1,3] = Inf
+
+        mc_data_json = PowerModels.parse_json(JSON.json(mc_data))
+        @test mc_data_json == mc_data
+
+        mc_data["gen"]["1"]["nan_test"] = PowerModels.MultiConductorVector([0, NaN, 0])
+        mc_data_json = PowerModels.parse_json(JSON.json(mc_data))
+        @test isnan(mc_data_json["gen"]["1"]["nan_test"][2])
+
     end
 
     @testset "idempotent unit transformation" begin

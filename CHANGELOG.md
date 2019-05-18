@@ -4,6 +4,8 @@ PowerModels.jl Change Log
 ### Staged
 - Refactor connected_components to accept arbitrary edge-types with `edges` kwarg
 - Fixes bug in warnings inside storage constraints
+- Add Bool to allowed data types in json parse of MultiConductorVector/Matrix
+- Add handling of Inf/NaN values in JSON parser in MultiConductorVector/Matrix
 
 ### v0.10.0
 - Update to JuMP v0.19/MathOptInterface
