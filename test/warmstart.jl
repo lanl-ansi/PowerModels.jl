@@ -42,7 +42,7 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         result = run_dc_opf(data, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)));
 
-        PowerModels.update_data(data, result["solution"])
+        PowerModels.update_data!(data, result["solution"])
 
         # 14 iterations
         result = run_dc_opf(data, ipopt_solver);
@@ -57,7 +57,7 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
         result = run_dc_opf(data, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)));
 
-        PowerModels.update_data(data, result["solution"])
+        PowerModels.update_data!(data, result["solution"])
 
         # 35 iterations
         result = run_dc_opf(data, ipopt_solver);
@@ -75,7 +75,7 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         result = run_ac_opf(data, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)));
 
-        PowerModels.update_data(data, result["solution"])
+        PowerModels.update_data!(data, result["solution"])
 
         # 22 iterations
         result = run_ac_opf(data, ipopt_solver);
@@ -90,7 +90,7 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
         result = run_ac_opf(data, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)));
 
-        PowerModels.update_data(data, result["solution"])
+        PowerModels.update_data!(data, result["solution"])
 
         # 40 iterations
         result = run_ac_opf(data, ipopt_solver);

@@ -16,6 +16,8 @@ The list of columns for the generic storage model can be found at `PowerModels.m
 {
   "index":<int>,
   "storage_bus":<int>,
+  "ps":<float, MW>,
+  "qs":<float, MVAr>,
   "energy":<float, MWh>,
   "energy_rating":<float, MWh>,
   "charge_rating":<float, MW>,
@@ -44,10 +46,10 @@ PowerModels' storage components can be added to Matpower data files as follows,
 mpc.time_elapsed = 1.0
 
 %% storage data
-%   storage_bus  energy  energy_rating charge_rating  discharge_rating  charge_efficiency  discharge_efficiency  thermal_rating  qmin  qmax  r  x  standby_loss  status
+%   storage_bus ps  qs  energy  energy_rating charge_rating  discharge_rating  charge_efficiency  discharge_efficiency  thermal_rating  qmin  qmax  r  x  standby_loss  status
 mpc.storage = [
-   3   20.0  100.0   50.0  70.0  0.8   0.9   100.0   -50.0   70.0  0.1   0.0   0.0   1;
-   10  30.0  100.0   50.0  70.0  0.9   0.8   100.0   -50.0   70.0  0.1   0.0   0.0   1;
+   3   0.0  0.0  20.0  100.0   50.0  70.0  0.8   0.9   100.0   -50.0   70.0  0.1   0.0   0.0   1;
+   10  0.0  0.0  30.0  100.0   50.0  70.0  0.9   0.8   100.0   -50.0   70.0  0.1   0.0   0.0   1;
 ];
 ```
 Note that this Matpower-based format includes the optional `thermal_rating` parameter.

@@ -5,9 +5,32 @@
 
 
 """
-Checks that all cost models are present and of the same type
+Checks that all cost models are of the same type
 """
 function check_cost_models(pm::GenericPowerModel)
+    gen_model = check_gen_cost_models(pm)
+    dcline_model = check_dcline_cost_models(pm)
+
+    if dcline_model == nothing
+        return gen_model
+    end
+
+    if gen_model == nothing
+        return dcline_model
+    end
+
+    if gen_model != dcline_model
+        Memento.error(LOGGER, "generator and dcline cost models are inconsistent, the generator model is $(gen_model) however dcline model $(dcline_model)")
+    end
+
+    return gen_model
+end
+
+
+"""
+Checks that all generator cost models are of the same type
+"""
+function check_gen_cost_models(pm::GenericPowerModel)
     model = nothing
 
     for (n, nw_ref) in nws(pm)
@@ -24,7 +47,19 @@ function check_cost_models(pm::GenericPowerModel)
                 Memento.error(LOGGER, "no cost given for generator $(i)")
             end
         end
+    end
 
+    return model
+end
+
+
+"""
+Checks that all dcline cost models are of the same type
+"""
+function check_dcline_cost_models(pm::GenericPowerModel)
+    model = nothing
+
+    for (n, nw_ref) in nws(pm)
         for (i,dcline) in nw_ref[:dcline]
             if haskey(dcline, "model")
                 if model == nothing
@@ -46,13 +81,28 @@ end
 
 
 ""
+function objective_min_fuel_and_flow_cost(pm::GenericPowerModel)
+    model = check_cost_models(pm)
+
+    if model == 1
+        return objective_min_fuel_and_flow_cost_pwl(pm)
+    elseif model == 2
+        return objective_min_fuel_and_flow_cost_polynomial(pm)
+    else
+        Memento.error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
+    end
+
+end
+
+
+""
 function objective_min_fuel_cost(pm::GenericPowerModel)
-    model = check_cost_models(pm)
+    model = check_gen_cost_models(pm)
 
     if model == 1
-        return objective_min_pwl_fuel_cost(pm)
+        return objective_min_fuel_cost_pwl(pm)
     elseif model == 2
-        return objective_min_polynomial_fuel_cost(pm)
+        return objective_min_fuel_cost_polynomial(pm)
     else
         Memento.error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
@@ -61,44 +111,18 @@ end
 
 
 ""
-function objective_min_gen_fuel_cost(pm::GenericPowerModel)
-    model = check_cost_models(pm)
-
-    if model == 1
-        return objective_min_gen_pwl_fuel_cost(pm)
-    elseif model == 2
-        return objective_min_gen_polynomial_fuel_cost(pm)
-    else
-        Memento.error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
-    end
-
-end
-
-
-""
-function objective_min_polynomial_fuel_cost(pm::GenericPowerModel)
+function objective_min_fuel_and_flow_cost_polynomial(pm::GenericPowerModel)
     order = calc_max_cost_index(pm.data)-1
 
     if order <= 2
-        return _objective_min_polynomial_fuel_cost_linquad(pm)
+        return _objective_min_fuel_and_flow_cost_polynomial_linquad(pm)
     else
-        return _objective_min_polynomial_fuel_cost_nl(pm)
+        return _objective_min_fuel_and_flow_cost_polynomial_nl(pm)
     end
 end
 
-
-function _objective_min_polynomial_fuel_cost_quadratic(pm::GenericPowerModel)
-    Memento.warn(LOGGER, "call to depreciated function _objective_min_polynomial_fuel_cost_quadratic")
-    _objective_min_polynomial_fuel_cost_linquad(pm)
-end
-
-function _objective_min_polynomial_fuel_cost_linear(pm::GenericPowerModel)
-    Memento.warn(LOGGER, "call to depreciated function _objective_min_polynomial_fuel_cost_linear")
-    _objective_min_polynomial_fuel_cost_linquad(pm)
-end
-
 ""
-function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel)
+function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::GenericPowerModel)
     gen_cost = Dict()
     dcline_cost = Dict()
 
@@ -143,7 +167,7 @@ end
 
 
 "Adds lifted variables to turn a quadatic objective into a linear one; needed for conic solvers that only support linear objectives"
-function _objective_min_polynomial_fuel_cost_linquad(pm::GenericPowerModel{T}) where T <: AbstractConicForms
+function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::GenericPowerModel{T}) where T <: AbstractConicForms
     gen_cost = Dict()
     dcline_cost = Dict()
 
@@ -232,7 +256,7 @@ end
 
 
 ""
-function _objective_min_polynomial_fuel_cost_nl(pm::GenericPowerModel)
+function _objective_min_fuel_and_flow_cost_polynomial_nl(pm::GenericPowerModel)
     gen_cost = Dict()
     dcline_cost = Dict()
 
@@ -288,28 +312,18 @@ end
 
 
 ""
-function objective_min_gen_polynomial_fuel_cost(pm::GenericPowerModel)
+function objective_min_fuel_cost_polynomial(pm::GenericPowerModel)
     order = calc_max_cost_index(pm.data)-1
 
     if order <= 2
-        return _objective_min_gen_polynomial_fuel_cost_linquad(pm)
+        return _objective_min_fuel_cost_polynomial_linquad(pm)
     else
-        return _objective_min_gen_polynomial_fuel_cost_nl(pm)
+        return _objective_min_fuel_cost_polynomial_nl(pm)
     end
 end
 
-function _objective_min_gen_polynomial_fuel_cost_quadratic(pm::GenericPowerModel)
-    Memento.warn(LOGGER, "call to depreciated function _objective_min_gen_polynomial_fuel_cost_quadratic")
-    _objective_min_gen_polynomial_fuel_cost_linquad(pm)
-end
-
-function _objective_min_gen_polynomial_fuel_cost_linear(pm::GenericPowerModel)
-    Memento.warn(LOGGER, "call to depreciated function _objective_min_gen_polynomial_fuel_cost_linear")
-    _objective_min_gen_polynomial_fuel_cost_linquad(pm)
-end
-
 ""
-function _objective_min_gen_polynomial_fuel_cost_linquad(pm::GenericPowerModel)
+function _objective_min_fuel_cost_polynomial_linquad(pm::GenericPowerModel)
     gen_cost = Dict()
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
@@ -336,7 +350,7 @@ end
 
 
 ""
-function _objective_min_gen_polynomial_fuel_cost_nl(pm::GenericPowerModel)
+function _objective_min_fuel_cost_polynomial_nl(pm::GenericPowerModel)
     gen_cost = Dict()
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
@@ -414,7 +428,7 @@ end
 
 
 ""
-function objective_min_pwl_fuel_cost(pm::GenericPowerModel)
+function objective_min_fuel_and_flow_cost_pwl(pm::GenericPowerModel)
 
     for (n, nw_ref) in nws(pm)
         gen_lines = get_lines(nw_ref[:gen])
@@ -479,7 +493,7 @@ end
 
 
 ""
-function objective_min_gen_pwl_fuel_cost(pm::GenericPowerModel)
+function objective_min_fuel_cost_pwl(pm::GenericPowerModel)
 
     for (n, nw_ref) in nws(pm)
         pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
@@ -498,18 +512,6 @@ function objective_min_gen_pwl_fuel_cost(pm::GenericPowerModel)
     return JuMP.@objective(pm.model, Min,
         sum(
             sum( var(pm, n, :pg_cost, i) for (i,gen) in nw_ref[:gen])
-        for (n, nw_ref) in nws(pm))
-    )
-end
-
-
-"Cost of building branches"
-function objective_tnep_cost(pm::GenericPowerModel)
-    return JuMP.@objective(pm.model, Min,
-        sum(
-            sum(
-                sum( branch["construction_cost"]*var(pm, n, c, :branch_ne, i) for (i,branch) in nw_ref[:ne_branch] )
-            for c in conductor_ids(pm, n))
         for (n, nw_ref) in nws(pm))
     )
 end

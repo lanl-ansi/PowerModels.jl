@@ -9,7 +9,7 @@ function parse_matpower(file::Union{IO, String}; validate=true)
     mp_data = parse_matpower_file(file)
     pm_data = matpower_to_powermodels(mp_data)
     if validate
-        check_network_data(pm_data)
+        correct_network_data!(pm_data)
     end
     return pm_data
 end
@@ -97,6 +97,7 @@ mp_dcline_columns = [
 
 mp_storage_columns = [
     ("storage_bus", Int),
+    ("ps", Float64), ("qs", Float64),
     ("energy", Float64), ("energy_rating", Float64),
     ("charge_rating", Float64), ("discharge_rating", Float64),
     ("charge_efficiency", Float64), ("discharge_efficiency", Float64),
@@ -640,11 +641,11 @@ function export_matpower(io::IO, data::Dict{String,Any})
 
     #convert data to mixed unit
     if data["per_unit"]
-       make_mixed_units(data)
+       make_mixed_units!(data)
     end
 
     # make all costs have the name number of items (to prepare for table export)
-    standardize_cost_terms(data)
+    standardize_cost_terms!(data)
 
     # create some useful maps and data structures
     buses = Dict{Int, Dict}()

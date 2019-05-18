@@ -2,8 +2,13 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Refactor connected_components to accept arbitrary edge-types with `edges` kwarg
 - Updates PSS(R)E `source_id` to include string indicating originating component type
+- Renamed data functions to indicate when modification can occur
+- Renamed objective functions to make dcline flow costs more explicit
+
+### Staged
+- Refactor connected_components to accept arbitrary edge-types with `edges` kwarg
+- Fixes bug in warnings inside storage constraints
 
 ### v0.10.0
 - Update to JuMP v0.19/MathOptInterface
