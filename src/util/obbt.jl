@@ -36,7 +36,7 @@ function constraint_obj_bound(pm::GenericPowerModel, bound)
         Memento.error(LOGGER, "Only quadratic generator cost models are supported at this time, given cost model of order $(cost_index-1)")
     end
 
-    PowerModels.standardize_cost_terms(pm.data, order=2)
+    PowerModels.standardize_cost_terms!(pm.data, order=2)
 
     from_idx = Dict(arc[1] => arc for arc in ref(pm, :arcs_from_dc))
 
@@ -401,7 +401,7 @@ function run_obbt_opf(data::Dict{String,<:Any}, optimizer;
 
         # populate the modifications, update the data, and rebuild the bound-tightening model
         modifications = create_modifications(model_bt, vm_lb, vm_ub, td_lb, td_ub)
-        PowerModels.update_data(data, modifications)
+        PowerModels.update_data!(data, modifications)
         model_bt = build_generic_model(data, model_constructor, PowerModels.post_opf)
         (upper_bound_constraint) && (constraint_obj_bound(model_bt, upper_bound))
         vm = var(model_bt, :vm)

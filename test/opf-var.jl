@@ -3,7 +3,7 @@ TESTLOG = Memento.getlogger(PowerModels)
 
 function build_current_data(base_data)
     c_data = PowerModels.parse_file(base_data)
-    PowerModels.check_current_limits(c_data)
+    PowerModels.correct_current_limits!(c_data)
     for (i,branch) in c_data["branch"]
         delete!(branch, "rate_a")
     end
@@ -242,7 +242,7 @@ end
         PMs.variable_branch_flow(pm)
         PMs.variable_dcline_flow(pm)
 
-        PMs.objective_min_fuel_cost(pm)
+        PMs.objective_min_fuel_and_flow_cost(pm)
 
         PMs.constraint_voltage(pm)
 

@@ -29,7 +29,7 @@ function build_mn_data(base_data_1, base_data_2)
     delete!(data_2, "baseMVA")
     mn_data["nw"]["2"] = data_2
 
-    PowerModels.standardize_cost_terms(mn_data)
+    PowerModels.standardize_cost_terms!(mn_data)
 
     return mn_data
 end
@@ -37,14 +37,14 @@ end
 
 function build_mc_data(base_data; conductors::Int=3)
     mp_data = PowerModels.parse_file(base_data)
-    PowerModels.make_multiconductor(mp_data, conductors)
+    PowerModels.make_multiconductor!(mp_data, conductors)
     return mp_data
 end
 
 
 function build_mn_mc_data(base_data; replicates::Int=3, conductors::Int=3)
     mp_data = PowerModels.parse_file(base_data)
-    PowerModels.make_multiconductor(mp_data, conductors)
+    PowerModels.make_multiconductor!(mp_data, conductors)
     mn_mc_data = PowerModels.replicate(mp_data, replicates)
     mn_mc_data["conductors"] = mn_mc_data["nw"]["1"]["conductors"]
     return mn_mc_data
@@ -59,11 +59,11 @@ function build_mn_mc_data(base_data_1, base_data_2; conductors_1::Int=3, conduct
     @assert mp_data_1["baseMVA"] == mp_data_2["baseMVA"]
 
     if conductors_1 > 0
-        PowerModels.make_multiconductor(mp_data_1, conductors_1)
+        PowerModels.make_multiconductor!(mp_data_1, conductors_1)
     end
 
     if conductors_2 > 0
-        PowerModels.make_multiconductor(mp_data_2, conductors_2)
+        PowerModels.make_multiconductor!(mp_data_2, conductors_2)
     end
 
     mn_data = Dict(
@@ -84,7 +84,7 @@ function build_mn_mc_data(base_data_1, base_data_2; conductors_1::Int=3, conduct
     delete!(mp_data_2, "baseMVA")
     mn_data["nw"]["2"] = mp_data_2
 
-    PowerModels.standardize_cost_terms(mn_data)
+    PowerModels.standardize_cost_terms!(mn_data)
 
     return mn_data
 end

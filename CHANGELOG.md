@@ -2,6 +2,10 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Renamed data functions to indicate when modification can occur
+- Renamed objective functions to make dcline flow costs more explicit
+
+### Staged
 - Refactor connected_components to accept arbitrary edge-types with `edges` kwarg
 - Fixes bug in warnings inside storage constraints
 
