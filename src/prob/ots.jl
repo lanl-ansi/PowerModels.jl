@@ -8,7 +8,7 @@ export run_ots
 
 ""
 function run_ots(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_ots; solution_builder = get_ots_solution, kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_ots; ref_extensions=[on_off_va_bounds_ref!], solution_builder = get_ots_solution, kwargs...)
 end
 
 ""
@@ -19,7 +19,7 @@ function post_ots(pm::GenericPowerModel)
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
-    objective_min_fuel_cost(pm)
+    objective_min_fuel_and_flow_cost(pm)
 
     constraint_voltage_on_off(pm)
 
@@ -43,6 +43,25 @@ function post_ots(pm::GenericPowerModel)
 
     for i in ids(pm, :dcline)
         constraint_dcline(pm, i)
+    end
+end
+
+
+""
+function on_off_va_bounds_ref!(pm::GenericPowerModel)
+    if InfrastructureModels.ismultinetwork(pm.data)
+        nws_data = pm.data["nw"]
+    else
+        nws_data = Dict("0" => pm.data)
+    end
+
+    for (n, nw_data) in nws_data
+        nw_id = parse(Int, n)
+        nw_ref = ref(pm, nw_id)
+
+        off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
+        nw_ref[:off_angmin] = off_angmin
+        nw_ref[:off_angmax] = off_angmax
     end
 end
 

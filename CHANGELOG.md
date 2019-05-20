@@ -3,10 +3,17 @@ PowerModels.jl Change Log
 
 ### Staged
 - Update to JuMP/MOI status values (breaking)
+- Add support for extensible ref building (#263) (breaking)
+- Updates PSS(R)E `source_id` to include string indicating originating component type (breaking)
+- Renamed data functions to indicate when modification can occur (breaking)
+- Renamed objective functions to make dcline flow costs more explicit (breaking)
+
+### Staged
 - Refactor connected_components to accept arbitrary edge-types with `edges` kwarg
+- Fixes bug in warnings inside storage constraints
 
 ### v0.10.0
-- Update to JuMP v0.19/MathOptInterface
+- Update to JuMP v0.19/MathOptInterface (breaking)
 
 ### v0.9.8
 - Added a test network with dangling buses, case5_db.m

@@ -51,7 +51,7 @@
             }
         }")
 
-        PowerModels.update_data(data, data_delta)
+        PowerModels.update_data!(data, data_delta)
 
         result = run_opf(data, ACPPowerModel, ipopt_solver)
         @test result["termination_status"] == MOI.LOCALLY_SOLVED

@@ -76,7 +76,7 @@ end
     settings = Dict("output" => Dict("duals" => true))
     result = run_dc_opf("../test/data/matpower/case14.m", ipopt_solver, setting = settings)
 
-    PowerModels.make_mixed_units(result["solution"])
+    PowerModels.make_mixed_units!(result["solution"])
     @testset "14 bus - kcl duals" begin
         for (i, bus) in result["solution"]["bus"]
             @test haskey(bus, "lam_kcl_r")
@@ -98,7 +98,7 @@ end
 
     result = run_dc_opf("../test/data/matpower/case5.m", ipopt_solver, setting = settings)
 
-    PowerModels.make_mixed_units(result["solution"])
+    PowerModels.make_mixed_units!(result["solution"])
     @testset "5 bus - kcl duals" begin
         for (i, bus) in result["solution"]["bus"]
             @test bus["lam_kcl_r"] <= -9.00
@@ -128,7 +128,7 @@ end
         @test opf_result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(opf_result["objective"], ac_opf_obj; atol = 1e0)
 
-        PowerModels.update_data(data, opf_result["solution"])
+        PowerModels.update_data!(data, opf_result["solution"])
 
         pf_result = run_ac_pf(data, ipopt_solver)
         @test pf_result["termination_status"] == MOI.LOCALLY_SOLVED

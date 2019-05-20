@@ -89,7 +89,7 @@ function create_starbus_from_transformer(pm_data::Dict, transformer::Dict)::Dict
     starbus["bus_type"] = transformer["STAT"]
     starbus["area"] = get_bus_value(transformer["I"], "area", pm_data)
     starbus["zone"] = get_bus_value(transformer["I"], "zone", pm_data)
-    starbus["source_id"] = push!([starbus["bus_i"], starbus["name"]], transformer["I"], transformer["J"], transformer["K"], transformer["CKT"])
+    starbus["source_id"] = push!(["transformer", starbus["bus_i"], starbus["name"]], transformer["I"], transformer["J"], transformer["K"], transformer["CKT"])
 
     return starbus
 end
@@ -152,7 +152,7 @@ function psse2pm_branch!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["angmax"] = 0.0
             sub_data["transformer"] = false
 
-            sub_data["source_id"] = [sub_data["f_bus"], sub_data["t_bus"], pop!(branch, "CKT")]
+            sub_data["source_id"] = ["branch", sub_data["f_bus"], sub_data["t_bus"], pop!(branch, "CKT")]
             sub_data["index"] = i
 
             import_remaining!(sub_data, branch, import_all; exclude=["B", "BI", "BJ"])
@@ -203,7 +203,7 @@ function psse2pm_generator!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["ncost"] = 2
             sub_data["cost"] = [1.0, 0.0]
 
-            sub_data["source_id"] = [sub_data["gen_bus"], pop!(gen, "ID")]
+            sub_data["source_id"] = ["generator", sub_data["gen_bus"], pop!(gen, "ID")]
             sub_data["index"] = length(pm_data["gen"]) + 1
 
             import_remaining!(sub_data, gen, import_all)
@@ -237,7 +237,7 @@ function psse2pm_bus!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["vmax"] = pop!(bus, "NVHI")
             sub_data["vmin"] = pop!(bus, "NVLO")
 
-            sub_data["source_id"] = ["$(bus["I"])"]
+            sub_data["source_id"] = ["bus", "$(bus["I"])"]
             sub_data["index"] = pop!(bus, "I")
 
             import_remaining!(sub_data, bus, import_all)
@@ -265,7 +265,7 @@ function psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["qd"] = pop!(load, "QL")
             sub_data["status"] = pop!(load, "STATUS")
 
-            sub_data["source_id"] = [sub_data["load_bus"], pop!(load, "ID")]
+            sub_data["source_id"] = ["load", sub_data["load_bus"], pop!(load, "ID")]
             sub_data["index"] = length(pm_data["load"]) + 1
 
             import_remaining!(sub_data, load, import_all)
@@ -296,7 +296,7 @@ function psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["bs"] = pop!(shunt, "BL")
             sub_data["status"] = pop!(shunt, "STATUS")
 
-            sub_data["source_id"] = [sub_data["shunt_bus"], pop!(shunt, "ID")]
+            sub_data["source_id"] = ["fixed shunt", sub_data["shunt_bus"], pop!(shunt, "ID")]
             sub_data["index"] = length(pm_data["shunt"]) + 1
 
             import_remaining!(sub_data, shunt, import_all)
@@ -316,7 +316,7 @@ function psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["bs"] = pop!(shunt, "BINIT")
             sub_data["status"] = pop!(shunt, "STAT")
 
-            sub_data["source_id"] = [sub_data["shunt_bus"], pop!(shunt, "SWREM")]
+            sub_data["source_id"] = ["switched shunt", sub_data["shunt_bus"], pop!(shunt, "SWREM")]
             sub_data["index"] = length(pm_data["shunt"]) + 1
 
             import_remaining!(sub_data, shunt, import_all)
@@ -400,7 +400,7 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 sub_data["angmin"] = 0.0
                 sub_data["angmax"] = 0.0
 
-                sub_data["source_id"] = [pop!(transformer, "I"), pop!(transformer, "J"), pop!(transformer, "K"), pop!(transformer, "CKT"), 0]
+                sub_data["source_id"] = ["transformer", pop!(transformer, "I"), pop!(transformer, "J"), pop!(transformer, "K"), pop!(transformer, "CKT"), 0]
                 sub_data["transformer"] = true
                 sub_data["index"] = length(pm_data["branch"]) + 1
 
@@ -495,7 +495,7 @@ function psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     sub_data["angmin"] = 0.0
                     sub_data["angmax"] = 0.0
 
-                    sub_data["source_id"] = [transformer["I"], transformer["J"], transformer["K"], transformer["CKT"], m]
+                    sub_data["source_id"] = ["transformer", transformer["I"], transformer["J"], transformer["K"], transformer["CKT"], m]
                     sub_data["transformer"] = true
                     sub_data["index"] = length(pm_data["branch"]) + 1
 
@@ -579,7 +579,7 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["cost"] = [0.0, 0.0, 0.0]
             sub_data["model"] = 2
 
-            sub_data["source_id"] = [sub_data["f_bus"], sub_data["t_bus"], pop!(dcline, "NAME")]
+            sub_data["source_id"] = ["two-terminal dc", sub_data["f_bus"], sub_data["t_bus"], pop!(dcline, "NAME")]
             sub_data["index"] = length(pm_data["dcline"]) + 1
 
             import_remaining!(sub_data, dcline, import_all)
@@ -633,7 +633,7 @@ function psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["cost"] = [0.0, 0.0, 0.0]
             sub_data["model"] = 2
 
-            sub_data["source_id"] = [sub_data["f_bus"], sub_data["t_bus"], pop!(dcline, "NAME")]
+            sub_data["source_id"] = ["vsc dc", sub_data["f_bus"], sub_data["t_bus"], pop!(dcline, "NAME")]
             sub_data["index"] = length(pm_data["dcline"]) + 1
 
             import_remaining!(sub_data, dcline, import_all)
@@ -698,7 +698,7 @@ function parse_psse(pti_data::Dict; import_all=false, validate=true)::Dict
     end
 
     if validate
-        check_network_data(pm_data)
+        correct_network_data!(pm_data)
     end
 
     return pm_data

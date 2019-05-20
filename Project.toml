@@ -15,12 +15,12 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 Cbc = ">= 0.4"
-InfrastructureModels = "^0.2"
+InfrastructureModels = "~0.2"
 Ipopt = ">= 0.4"
-JuMP = "^0.19.1"
+JuMP = "~0.19.1"
 Juniper = ">= 0.4"
-MathOptInterface = "^0.8"
-Memento = "~0.10, ~0.11, ^0.12"
+MathOptInterface = "~0.8"
+Memento = "~0.10, ~0.11, ~0.12"
 SCS = ">= 0.4"
 julia = "^1"
 

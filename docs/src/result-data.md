@@ -83,10 +83,10 @@ PowerModels.print_summary(result["solution"])
 ```
 
 Because the data dictionary and the solution dictionary have the same structure
-PowerModels provides an `update_data` helper function which can be used to
+PowerModels provides an `update_data!` helper function which can be used to
 update a data dictionary with the values from a solution as follows,
 
 ```
-PowerModels.update_data(data, result["solution"])
+PowerModels.update_data!(data, result["solution"])
 ```
 
