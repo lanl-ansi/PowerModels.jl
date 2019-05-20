@@ -246,9 +246,13 @@ function solve_generic_model(pm::GenericPowerModel, optimizer::JuMP.OptimizerFac
 end
 
 
-function build_ref(data::Dict{String,<:Any})
+"used for building ref without the need to build a GenericPowerModel"
+function build_ref(data::Dict{String,<:Any}; ref_extensions=[])
     ref = build_generic_ref(data)
     core_ref!(ref[:nw])
+    for ref_ext in ref_extensions
+        ref_ext(pm)
+    end
     return ref
 end
 
