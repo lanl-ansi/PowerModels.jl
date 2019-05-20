@@ -22,3 +22,25 @@
         @test m[:my_var] == x
     end
 end
+
+
+
+@testset "exports for usablity" begin
+    @testset "with_optimizer and NLP status" begin
+        result = run_opf("../test/data/matpower/case5.m", ACPPowerModel, with_optimizer(Ipopt.Optimizer, print_level=0))
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test result["primal_status"] == FEASIBLE_POINT
+        @test result["dual_status"] == FEASIBLE_POINT
+        @test isapprox(result["objective"], 18269.1; atol = 1e0)
+    end
+
+    @testset "with_optimizer and LP status" begin
+        result = run_opf("../test/data/matpower/case5.m", DCPPowerModel, with_optimizer(Cbc.Optimizer, logLevel=0))
+
+        @test result["termination_status"] == OPTIMAL
+        @test result["primal_status"] == FEASIBLE_POINT
+        @test result["dual_status"] == NO_SOLUTION
+        @test isapprox(result["objective"], 17613.2; atol = 1e0)
+    end
+end

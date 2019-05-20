@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Update to JuMP/MOI status values (breaking)
 - Refactor connected_components to accept arbitrary edge-types with `edges` kwarg
 
 ### v0.10.0
