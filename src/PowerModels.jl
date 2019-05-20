@@ -25,15 +25,12 @@ function silence()
     Memento.setlevel!(Memento.getlogger(PowerModels), "error")
 end
 
-# so that users do not need to import JuMP to use a solver with PowerModels
-import JuMP: with_optimizer
-export with_optimizer
-
 include("io/matpower.jl")
 include("io/common.jl")
 include("io/pti.jl")
 include("io/psse.jl")
 
+include("core/export.jl")
 include("core/data.jl")
 include("core/ref.jl")
 include("core/base.jl")

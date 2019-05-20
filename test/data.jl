@@ -283,7 +283,7 @@ end
         PowerModels.propagate_topology_status!(data)
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 1778; atol = 1e0)
 
         solution = result["solution"]
@@ -405,7 +405,7 @@ end
 
         result = solve_generic_model(pm, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 5907; atol = 1e0)
     end
 end

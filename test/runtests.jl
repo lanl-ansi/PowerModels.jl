@@ -6,6 +6,10 @@ import Memento
 Memento.setlevel!(Memento.getlogger(InfrastructureModels), "error")
 Memento.setlevel!(Memento.getlogger(PowerModels), "error")
 
+# for checking status codes
+import MathOptInterface
+const MOI = MathOptInterface
+
 import Cbc
 import Ipopt
 import SCS

@@ -176,7 +176,7 @@ function JuMP.optimize!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory)
         Memento.warn(LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
     end
 
-    return JuMP.termination_status(pm.model), JuMP.primal_status(pm.model), JuMP.dual_status(pm.model), solve_time
+    return solve_time
 end
 
 ""
@@ -234,29 +234,11 @@ function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_m
 end
 
 
-function parse_status(termination_status::MOI.TerminationStatusCode, primal_status::MOI.ResultStatusCode, dual_status::MOI.ResultStatusCode)
-    if termination_status == MOI.OPTIMAL
-        return :Optimal
-    elseif termination_status == MOI.LOCALLY_SOLVED
-        return :LocalOptimal
-    elseif termination_status == MOI.ALMOST_LOCALLY_SOLVED
-        return :LocalOptimal
-    elseif termination_status == MOI.INFEASIBLE
-        return :Infeasible
-    elseif termination_status == MOI.LOCALLY_INFEASIBLE
-        return :LocalInfeasible
-    else
-        return :Error
-    end
-end
-
-
 ""
 function solve_generic_model(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = get_solution)
-    termination_status, primal_status, dual_status, solve_time = JuMP.optimize!(pm, optimizer)
-    status = parse_status(termination_status, primal_status, dual_status)
+    solve_time = JuMP.optimize!(pm, optimizer)
 
-    solution = build_solution(pm, status, solve_time; solution_builder = solution_builder)
+    solution = build_solution(pm, solve_time; solution_builder = solution_builder)
     #solution, time, bytes_alloc, sec_in_gc = @timed build_solution(pm, status, solve_time; solution_builder = solution_builder)
     #println("build_solution time: $(time)")
 

@@ -12,7 +12,7 @@
 
         result = run_opf(network_data, ACPPowerModel, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 5906.88; atol = 1e0)
 
         network_data["load"]["3"]["pd"] = 0.0
@@ -20,7 +20,7 @@
 
         result = run_opf(network_data, ACPPowerModel, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 2937.16; atol = 1e0)
     end
 
@@ -35,7 +35,7 @@
 
         result = solve_generic_model(pm, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 5906.88; atol = 1e0)
     end
 end
