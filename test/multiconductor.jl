@@ -76,8 +76,6 @@ end
         mc_data["gen"]["1"]["nan_test"] = PowerModels.MultiConductorVector([0, NaN, 0])
         mc_data_json = PowerModels.parse_json(JSON.json(mc_data))
         @test isnan(mc_data_json["gen"]["1"]["nan_test"][2])
-
->>>>>>> master
     end
 
     @testset "idempotent unit transformation" begin
