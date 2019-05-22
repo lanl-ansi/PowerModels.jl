@@ -83,8 +83,8 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case3.m")
         data_base = deepcopy(data)
 
-        PowerModels.make_mixed_units(data)
-        PowerModels.make_per_unit(data)
+        PowerModels.make_mixed_units!(data)
+        PowerModels.make_per_unit!(data)
 
         @test InfrastructureModels.compare_dict(data, data_base)
     end
@@ -92,8 +92,8 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case5_asym.m")
         data_base = deepcopy(data)
 
-        PowerModels.make_mixed_units(data)
-        PowerModels.make_per_unit(data)
+        PowerModels.make_mixed_units!(data)
+        PowerModels.make_per_unit!(data)
 
         @test InfrastructureModels.compare_dict(data, data_base)
     end
@@ -101,8 +101,8 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
         data_base = deepcopy(data)
 
-        PowerModels.make_mixed_units(data)
-        PowerModels.make_per_unit(data)
+        PowerModels.make_mixed_units!(data)
+        PowerModels.make_per_unit!(data)
 
         @test InfrastructureModels.compare_dict(data, data_base)
     end
@@ -110,8 +110,8 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case24.m")
         data_base = deepcopy(data)
 
-        PowerModels.make_mixed_units(data)
-        PowerModels.make_per_unit(data)
+        PowerModels.make_mixed_units!(data)
+        PowerModels.make_per_unit!(data)
 
         @test InfrastructureModels.compare_dict(data, data_base)
     end
@@ -121,8 +121,8 @@ end
         result = run_ac_opf("../test/data/matpower/case3.m", ipopt_solver)
         result_base = deepcopy(result)
 
-        PowerModels.make_mixed_units(result["solution"])
-        PowerModels.make_per_unit(result["solution"])
+        PowerModels.make_mixed_units!(result["solution"])
+        PowerModels.make_per_unit!(result["solution"])
 
         @test InfrastructureModels.compare_dict(result, result_base)
     end
@@ -130,8 +130,8 @@ end
         result = run_ac_opf("../test/data/matpower/case5_asym.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
         result_base = deepcopy(result)
 
-        PowerModels.make_mixed_units(result["solution"])
-        PowerModels.make_per_unit(result["solution"])
+        PowerModels.make_mixed_units!(result["solution"])
+        PowerModels.make_per_unit!(result["solution"])
 
         @test InfrastructureModels.compare_dict(result, result_base)
     end
@@ -139,8 +139,8 @@ end
         result = run_ac_opf("../test/data/matpower/case24.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
         result_base = deepcopy(result)
 
-        PowerModels.make_mixed_units(result["solution"])
-        PowerModels.make_per_unit(result["solution"])
+        PowerModels.make_mixed_units!(result["solution"])
+        PowerModels.make_per_unit!(result["solution"])
 
         @test InfrastructureModels.compare_dict(result, result_base)
     end
@@ -150,8 +150,8 @@ end
         result = run_dc_opf("../test/data/matpower/case5.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true, "duals" => true)))
         result_base = deepcopy(result)
 
-        PowerModels.make_mixed_units(result["solution"])
-        PowerModels.make_per_unit(result["solution"])
+        PowerModels.make_mixed_units!(result["solution"])
+        PowerModels.make_per_unit!(result["solution"])
 
         @test InfrastructureModels.compare_dict(result, result_base)
     end
@@ -164,7 +164,7 @@ end
         data_initial = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
 
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
-        PowerModels.propagate_topology_status(data)
+        PowerModels.propagate_topology_status!(data)
 
         @test length(data_initial["bus"]) == length(data["bus"])
         @test length(data_initial["gen"]) == length(data["gen"])
@@ -220,7 +220,7 @@ end
 
     @testset "connecected components with propagate topology status" begin
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
-        PowerModels.propagate_topology_status(data)
+        PowerModels.propagate_topology_status!(data)
         cc = PowerModels.connected_components(data)
 
         cc_ordered = sort(collect(cc); by=length)
@@ -242,8 +242,8 @@ end
         data_initial = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
 
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
-        PowerModels.propagate_topology_status(data)
-        PowerModels.select_largest_component(data)
+        PowerModels.propagate_topology_status!(data)
+        PowerModels.select_largest_component!(data)
 
         @test length(data_initial["bus"]) == length(data["bus"])
         @test length(data_initial["gen"]) == length(data["gen"])
@@ -280,10 +280,10 @@ end
 
     @testset "output values" begin
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
-        PowerModels.propagate_topology_status(data)
+        PowerModels.propagate_topology_status!(data)
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 1778; atol = 1e0)
 
         solution = result["solution"]
@@ -316,17 +316,17 @@ end
     data["gen"]["1"]["model"] = 1
     data["gen"]["1"]["ncost"] = 1
     data["gen"]["1"]["cost"] = [0, 1, 0]
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+    @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
 
     data["gen"]["1"]["cost"] = [0, 0]
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+    @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
 
     data["gen"]["1"]["ncost"] = 2
     data["gen"]["1"]["cost"] = [0, 1, 0, 2]
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+    @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
 
     data["gen"]["1"]["model"] = 2
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_cost_functions(data))
+    @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
 
     # check_connectivity
     data["load"]["1"]["load_bus"] = 1000
@@ -361,34 +361,34 @@ end
     Memento.setlevel!(TESTLOG, "warn")
 
     data["gen"]["1"]["model"] = 3
-    @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units(data))
-    @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_per_unit(data))
-    @test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.check_cost_functions(data))
+    @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units!(data))
+    @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_per_unit!(data))
+    @test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.correct_cost_functions!(data))
     data["gen"]["1"]["model"] = 1
 
     data["gen"]["1"]["cost"][3] = 3000
-    @test_warn(TESTLOG, "pwl x value 3000 is outside the bounds 0.0-20.0 on generator 1", PowerModels.check_cost_functions(data))
+    @test_warn(TESTLOG, "pwl x value 3000 is outside the bounds 0.0-20.0 on generator 1", PowerModels.correct_cost_functions!(data))
 
     data["dcline"]["1"]["loss0"] = -1.0
-    @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0", PowerModels.check_dcline_limits(data))
+    @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0", PowerModels.correct_dcline_limits!(data))
 
     data["dcline"]["1"]["loss1"] = -1.0
-    @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1 from -1.0 to 0.0", PowerModels.check_dcline_limits(data))
+    @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1 from -1.0 to 0.0", PowerModels.correct_dcline_limits!(data))
 
     @test data["dcline"]["1"]["loss0"] == 0.0
     @test data["dcline"]["1"]["loss1"] == 0.0
 
     data["dcline"]["1"]["loss1"] = 100.0
-    @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1 from 100.0 to 0.0", PowerModels.check_dcline_limits(data))
+    @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1 from 100.0 to 0.0", PowerModels.correct_dcline_limits!(data))
 
     delete!(data["branch"]["1"], "tap")
-    @test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.check_transformer_parameters(data))
+    @test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.correct_transformer_parameters!(data))
 
     delete!(data["branch"]["1"], "shift")
-    @test_warn(TESTLOG, "branch found without shift value, setting a shift to 0.0", PowerModels.check_transformer_parameters(data))
+    @test_warn(TESTLOG, "branch found without shift value, setting a shift to 0.0", PowerModels.correct_transformer_parameters!(data))
 
     data["branch"]["1"]["tap"] = -1.0
-    @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.check_transformer_parameters(data))
+    @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.correct_transformer_parameters!(data))
 
     Memento.setlevel!(TESTLOG, "error")
 end
@@ -405,7 +405,7 @@ end
 
         result = solve_generic_model(pm, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
 
-        @test result["status"] == :LocalOptimal
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 5907; atol = 1e0)
     end
 end
@@ -449,7 +449,7 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
         result = run_opf(data, ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
-        PowerModels.update_data(data, result["solution"])
+        PowerModels.update_data!(data, result["solution"])
 
         ac_flows = PowerModels.calc_branch_flow_ac(data)
 
@@ -465,7 +465,7 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
         result = run_opf(data, ACRPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
-        PowerModels.update_data(data, result["solution"])
+        PowerModels.update_data!(data, result["solution"])
 
         ac_flows = PowerModels.calc_branch_flow_ac(data)
 
@@ -481,7 +481,7 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
         result = run_opf(data, DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
-        PowerModels.update_data(data, result["solution"])
+        PowerModels.update_data!(data, result["solution"])
 
         dc_flows = PowerModels.calc_branch_flow_dc(data)
 
@@ -503,7 +503,7 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         data["branch"]["4"]["br_status"] = 0
         result = run_opf(data, ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
-        PowerModels.update_data(data, result["solution"])
+        PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)
 
@@ -517,7 +517,7 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         data["branch"]["4"]["br_status"] = 0
         result = run_opf(data, DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
-        PowerModels.update_data(data, result["solution"])
+        PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)
 
@@ -527,14 +527,44 @@ end
         end
     end
 
+
+     @testset "5-bus ac polar balance with storage" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
+        data["branch"]["4"]["br_status"] = 0
+        result = PowerModels.run_strg_opf(data, ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        PowerModels.update_data!(data, result["solution"])
+
+        balance = PowerModels.calc_power_balance(data)
+
+        for (i,bus) in balance["bus"]
+            @test isapprox(bus["p_delta"], 0.0; atol=1e-6)
+            @test isapprox(bus["q_delta"], 0.0; atol=1e-6)
+        end
+    end
+
+     @testset "5-bus dc balance with storage" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
+        data["branch"]["4"]["br_status"] = 0
+        result = PowerModels.run_strg_opf(data, DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        PowerModels.update_data!(data, result["solution"])
+
+        balance = PowerModels.calc_power_balance(data)
+
+        for (i,bus) in balance["bus"]
+            @test isapprox(bus["p_delta"], 0.0; atol=1e-6)
+            @test isnan(bus["q_delta"])
+        end
+    end
+
+
      @testset "5-bus balance from flow ac" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         data["branch"]["4"]["br_status"] = 0
         result = run_opf(data, ACPPowerModel, ipopt_solver)
-        PowerModels.update_data(data, result["solution"])
+        PowerModels.update_data!(data, result["solution"])
 
         flows = PowerModels.calc_branch_flow_ac(data)
-        PowerModels.update_data(data, flows)
+        PowerModels.update_data!(data, flows)
 
         balance = PowerModels.calc_power_balance(data)
 
@@ -548,10 +578,10 @@ end
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         data["branch"]["4"]["br_status"] = 0
         result = run_opf(data, DCPPowerModel, ipopt_solver)
-        PowerModels.update_data(data, result["solution"])
+        PowerModels.update_data!(data, result["solution"])
 
         flows = PowerModels.calc_branch_flow_dc(data)
-        PowerModels.update_data(data, flows)
+        PowerModels.update_data!(data, flows)
 
         balance = PowerModels.calc_power_balance(data)
 

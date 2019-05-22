@@ -1,6 +1,17 @@
 PowerModels.jl Change Log
 =========================
 
+### Staged
+- nothing
+
+### v0.11.0
+- Update to use JuMP/MOI status values (#276) (breaking)
+- Made power setpoint values required in storage model (#487) (breaking)
+- Added support for extensible ref building (#263) (breaking)
+- Updates PSS(R)E `source_id` to include string indicating originating component type (#511) (breaking)
+- Renamed data functions to indicate when modification can occur (#441) (breaking)
+- Renamed objective functions to make dcline flow costs more explicit (#364) (breaking)
+
 ### v0.10.1
 - Refactor connected_components to accept arbitrary edge-types with `edges` kwarg
 - Fixes bug in warnings inside storage constraints
@@ -8,7 +19,7 @@ PowerModels.jl Change Log
 - Add handling of Inf/NaN values in JSON parser in MultiConductorVector/Matrix
 
 ### v0.10.0
-- Update to JuMP v0.19/MathOptInterface
+- Update to JuMP v0.19/MathOptInterface (breaking)
 
 ### v0.9.8
 - Added a test network with dangling buses, case5_db.m

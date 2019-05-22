@@ -198,7 +198,7 @@ component_table(data::Dict{String,<:Any}, component::String, args...) = Infrastr
 
 
 "recursively applies new_data to data, overwriting information"
-function update_data(data::Dict{String,<:Any}, new_data::Dict{String,<:Any})
+function update_data!(data::Dict{String,<:Any}, new_data::Dict{String,<:Any})
     if haskey(data, "conductors") && haskey(new_data, "conductors")
         if data["conductors"] != new_data["conductors"]
             Memento.error(LOGGER, "update_data requires datasets with the same number of conductors")
@@ -232,23 +232,23 @@ end
 
 
 "Transforms network data into per-unit"
-function make_per_unit(data::Dict{String,<:Any})
+function make_per_unit!(data::Dict{String,<:Any})
     if !haskey(data, "per_unit") || data["per_unit"] == false
         data["per_unit"] = true
         mva_base = data["baseMVA"]
         if InfrastructureModels.ismultinetwork(data)
             for (i,nw_data) in data["nw"]
-                _make_per_unit(nw_data, mva_base)
+                _make_per_unit!(nw_data, mva_base)
             end
         else
-            _make_per_unit(data, mva_base)
+            _make_per_unit!(data, mva_base)
         end
     end
 end
 
 
 ""
-function _make_per_unit(data::Dict{String,<:Any}, mva_base::Real)
+function _make_per_unit!(data::Dict{String,<:Any}, mva_base::Real)
     # to be consistent with matpower's opf.flow_lim= 'I' with current magnitude
     # limit defined in MVA at 1 p.u. voltage
     ka_base = mva_base
@@ -292,7 +292,7 @@ function _make_per_unit(data::Dict{String,<:Any}, mva_base::Real)
             apply_func(gen, "qmax", rescale)
             apply_func(gen, "qmin", rescale)
 
-            _rescale_cost_model(gen, mva_base)
+            _rescale_cost_model!(gen, mva_base)
         end
     end
 
@@ -358,7 +358,7 @@ function _make_per_unit(data::Dict{String,<:Any}, mva_base::Real)
             apply_func(dcline, "qmaxf", rescale)
             apply_func(dcline, "qminf", rescale)
 
-            _rescale_cost_model(dcline, mva_base)
+            _rescale_cost_model!(dcline, mva_base)
         end
     end
 
@@ -366,23 +366,23 @@ end
 
 
 "Transforms network data into mixed-units (inverse of per-unit)"
-function make_mixed_units(data::Dict{String,<:Any})
+function make_mixed_units!(data::Dict{String,<:Any})
     if haskey(data, "per_unit") && data["per_unit"] == true
         data["per_unit"] = false
         mva_base = data["baseMVA"]
         if InfrastructureModels.ismultinetwork(data)
             for (i,nw_data) in data["nw"]
-                _make_mixed_units(nw_data, mva_base)
+                _make_mixed_units!(nw_data, mva_base)
             end
         else
-             _make_mixed_units(data, mva_base)
+             _make_mixed_units!(data, mva_base)
         end
     end
 end
 
 
 ""
-function _make_mixed_units(data::Dict{String,<:Any}, mva_base::Real)
+function _make_mixed_units!(data::Dict{String,<:Any}, mva_base::Real)
     # to be consistent with matpower's opf.flow_lim= 'I' with current magnitude
     # limit defined in MVA at 1 p.u. voltage
     ka_base = mva_base
@@ -425,7 +425,7 @@ function _make_mixed_units(data::Dict{String,<:Any}, mva_base::Real)
             apply_func(gen, "qmax", rescale)
             apply_func(gen, "qmin", rescale)
 
-            _rescale_cost_model(gen, 1.0/mva_base)
+            _rescale_cost_model!(gen, 1.0/mva_base)
         end
     end
 
@@ -491,7 +491,7 @@ function _make_mixed_units(data::Dict{String,<:Any}, mva_base::Real)
             apply_func(dcline, "qmaxf", rescale)
             apply_func(dcline, "qminf", rescale)
 
-            _rescale_cost_model(dcline, 1.0/mva_base)
+            _rescale_cost_model!(dcline, 1.0/mva_base)
         end
     end
 
@@ -499,7 +499,7 @@ end
 
 
 ""
-function _rescale_cost_model(comp::Dict{String,<:Any}, scale::Real)
+function _rescale_cost_model!(comp::Dict{String,<:Any}, scale::Real)
     if "model" in keys(comp) && "cost" in keys(comp)
         if comp["model"] == 1
             for i in 1:2:length(comp["cost"])
@@ -720,12 +720,8 @@ function _calc_power_balance(data::Dict{String,<:Any})
     for (i,storage) in data["storage"]
         if storage["status"] != 0
             bvals = bus_values[storage["storage_bus"]]
-            if haskey(storage, "ps")
-                bvals["ps"] += storage["ps"]
-            end
-            if haskey(storage, "qs")
-                bvals["qs"] += storage["qs"]
-            end
+            bvals["ps"] += storage["ps"]
+            bvals["qs"] += storage["qs"]
         end
     end
 
@@ -812,9 +808,9 @@ end
 
 
 "checks that voltage angle differences are within 90 deg., if not tightens"
-function check_voltage_angle_differences(data::Dict{String,<:Any}, default_pad = 1.0472)
+function correct_voltage_angle_differences!(data::Dict{String,<:Any}, default_pad = 1.0472)
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_voltage_angle_differences does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_voltage_angle_differences! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -867,9 +863,9 @@ end
 
 
 "checks that each branch has a reasonable thermal rating-a, if not computes one"
-function check_thermal_limits(data::Dict{String,<:Any})
+function correct_thermal_limits!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_thermal_limits does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_thermal_limits! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -932,9 +928,9 @@ end
 
 
 "checks that each branch has a reasonable current rating-a, if not computes one"
-function check_current_limits(data::Dict{String,<:Any})
+function correct_current_limits!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_current_limits does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_current_limits! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -999,9 +995,9 @@ end
 
 
 "checks that all parallel branches have the same orientation"
-function check_branch_directions(data::Dict{String,<:Any})
+function correct_branch_directions!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_branch_directions does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_branch_directions! does not yet support multinetwork data")
     end
 
     modified = Set{Int}()
@@ -1107,14 +1103,59 @@ function check_connectivity(data::Dict{String,<:Any})
 end
 
 
+"checks that contains at least one refrence bus"
+function check_reference_bus(data::Dict{String,<:Any})
+    if InfrastructureModels.ismultinetwork(data)
+        Memento.error(LOGGER, "check_reference_bus does not yet support multinetwork data")
+    end
+
+    ref_buses = Dict{String,Any}()
+    for (k,v) in data["bus"]
+        if v["bus_type"] == 3
+            ref_buses[k] = v
+        end
+    end
+
+    if length(ref_buses) == 0
+            if length(data["gen"]) > 0
+            big_gen = _biggest_generator(data["gen"])
+            gen_bus = big_gen["gen_bus"]
+            ref_bus = data["bus"]["$(gen_bus)"]
+            ref_bus["bus_type"] = 3
+            Memento.warn(LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
+        else
+            (bus_item, state) = Base.iterate(data["bus"])
+            bus_item.second["bus_type"] = 3
+            Memento.warn(LOGGER, "no reference bus found, setting bus $(bus_item.second["index"]) as reference")
+        end
+    end
+end
+
+
+"find the largest active generator in the network"
+function _biggest_generator(gens)
+    biggest_gen = nothing
+    biggest_value = -Inf
+    for (k,gen) in gens
+        pmax = maximum(gen["pmax"])
+        if pmax > biggest_value
+            biggest_gen = gen
+            biggest_value = pmax
+        end
+    end
+    @assert(biggest_gen != nothing)
+    return biggest_gen
+end
+
+
 """
 checks that each branch has a reasonable transformer parameters
 
 this is important because setting tap == 0.0 leads to NaN computations, which are hard to debug
 """
-function check_transformer_parameters(data::Dict{String,<:Any})
+function correct_transformer_parameters!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_transformer_parameters does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_transformer_parameters! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -1224,9 +1265,9 @@ end
 
 
 "checks bus types are consistent with generator connections, if not, fixes them"
-function check_bus_types(data::Dict{String,<:Any})
+function correct_bus_types!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_bus_types does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_bus_types! does not yet support multinetwork data")
     end
 
     modified = Set{Int}()
@@ -1264,9 +1305,9 @@ end
 
 
 "checks that parameters for dc lines are reasonable"
-function check_dcline_limits(data::Dict{String,<:Any})
+function correct_dcline_limits!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_dcline_limits does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_dcline_limits! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -1370,21 +1411,21 @@ end
 
 
 "throws warnings if cost functions are malformed"
-function check_cost_functions(data::Dict{String,<:Any})
+function correct_cost_functions!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
-        Memento.error(LOGGER, "check_cost_functions does not yet support multinetwork data")
+        Memento.error(LOGGER, "correct_cost_functions! does not yet support multinetwork data")
     end
 
     modified_gen = Set{Int}()
     for (i,gen) in data["gen"]
-        if _check_cost_function(i, gen, "generator")
+        if _correct_cost_function!(i, gen, "generator")
             push!(modified_gen, gen["index"])
         end
     end
 
     modified_dcline = Set{Int}()
     for (i, dcline) in data["dcline"]
-        if _check_cost_function(i, dcline, "dcline")
+        if _correct_cost_function!(i, dcline, "dcline")
             push!(modified_dcline, dcline["index"])
         end
     end
@@ -1394,7 +1435,7 @@ end
 
 
 ""
-function _check_cost_function(id, comp, type_name)
+function _correct_cost_function!(id, comp, type_name)
     #println(comp)
     modified = false
 
@@ -1407,7 +1448,7 @@ function _check_cost_function(id, comp, type_name)
                 Memento.error(LOGGER, "cost includes $(comp["ncost"]) points, but at least two points are required on $(type_name) $(id)")
             end
 
-            modified = _remove_pwl_cost_duplicates(id, comp, type_name)
+            modified = _remove_pwl_cost_duplicates!(id, comp, type_name)
 
             for i in 3:2:length(comp["cost"])
                 if comp["cost"][i-2] >= comp["cost"][i]
@@ -1423,7 +1464,7 @@ function _check_cost_function(id, comp, type_name)
                     end
                 end
             end
-            modified |= _simplify_pwl_cost(id, comp, type_name)
+            modified |= _simplify_pwl_cost!(id, comp, type_name)
         elseif comp["model"] == 2
             if length(comp["cost"]) != comp["ncost"]
                 Memento.error(LOGGER, "ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
@@ -1438,7 +1479,7 @@ end
 
 
 "checks that each point in the a pwl function is unqiue, simplifies the function if duplicates appear"
-function _remove_pwl_cost_duplicates(id, comp, type_name, tolerance = 1e-2)
+function _remove_pwl_cost_duplicates!(id, comp, type_name, tolerance = 1e-2)
     @assert comp["model"] == 1
 
     unique_costs = Float64[comp["cost"][1], comp["cost"][2]]
@@ -1464,7 +1505,7 @@ end
 
 
 "checks the slope of each segment in a pwl function, simplifies the function if the slope changes is below a tolerance"
-function _simplify_pwl_cost(id, comp, type_name, tolerance = 1e-2)
+function _simplify_pwl_cost!(id, comp, type_name, tolerance = 1e-2)
     @assert comp["model"] == 1
 
     slopes = Float64[]
@@ -1504,7 +1545,7 @@ end
 
 
 "trims zeros from higher order cost terms"
-function simplify_cost_terms(data::Dict{String,<:Any})
+function simplify_cost_terms!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
         networks = data["nw"]
     else
@@ -1561,7 +1602,7 @@ end
 
 
 "ensures all polynomial costs functions have the same number of terms"
-function standardize_cost_terms(data::Dict{String,<:Any}; order=-1)
+function standardize_cost_terms!(data::Dict{String,<:Any}; order=-1)
     comp_max_order = 1
 
     if InfrastructureModels.ismultinetwork(data)
@@ -1619,10 +1660,10 @@ function standardize_cost_terms(data::Dict{String,<:Any}; order=-1)
 
     for (i, network) in networks
         if haskey(network, "gen")
-            _standardize_cost_terms(network["gen"], comp_max_order, "generator")
+            _standardize_cost_terms!(network["gen"], comp_max_order, "generator")
         end
         if haskey(network, "dcline")
-            _standardize_cost_terms(network["dcline"], comp_max_order, "dcline")
+            _standardize_cost_terms!(network["dcline"], comp_max_order, "dcline")
         end
     end
 
@@ -1630,7 +1671,7 @@ end
 
 
 "ensures all polynomial costs functions have at exactly comp_order terms"
-function _standardize_cost_terms(components::Dict{String,<:Any}, comp_order::Int, cost_comp_name::String)
+function _standardize_cost_terms!(components::Dict{String,<:Any}, comp_order::Int, cost_comp_name::String)
     modified = Set{Int}()
     for (i, comp) in components
         if haskey(comp, "model") && comp["model"] == 2 && length(comp["cost"]) != comp_order
@@ -1663,19 +1704,19 @@ Works on a PowerModels data dict, so that a it can be used without a GenericPowe
 
 Warning: this implementation has quadratic complexity, in the worst case
 """
-function propagate_topology_status(data::Dict{String,<:Any})
+function propagate_topology_status!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
-            _propagate_topology_status(nw_data)
+            _propagate_topology_status!(nw_data)
         end
     else
-         _propagate_topology_status(data)
+         _propagate_topology_status!(data)
     end
 end
 
 
 ""
-function _propagate_topology_status(data::Dict{String,<:Any})
+function _propagate_topology_status!(data::Dict{String,<:Any})
     buses = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
 
     for (i,load) in data["load"]
@@ -1842,26 +1883,26 @@ function _propagate_topology_status(data::Dict{String,<:Any})
 
     Memento.info(LOGGER, "topology status propagation fixpoint reached in $(iteration) rounds")
 
-    check_reference_buses(data)
+    correct_reference_buses!(data)
 end
 
 
 """
 determines the largest connected component of the network and turns everything else off
 """
-function select_largest_component(data::Dict{String,<:Any})
+function select_largest_component!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
-            _select_largest_component(nw_data)
+            _select_largest_component!(nw_data)
         end
     else
-         _select_largest_component(data)
+         _select_largest_component!(data)
     end
 end
 
 
 ""
-function _select_largest_component(data::Dict{String,<:Any})
+function _select_largest_component!(data::Dict{String,<:Any})
     ccs = connected_components(data)
     Memento.info(LOGGER, "found $(length(ccs)) components")
 
@@ -1877,26 +1918,26 @@ function _select_largest_component(data::Dict{String,<:Any})
         end
     end
 
-    check_reference_buses(data)
+    correct_reference_buses!(data)
 end
 
 
 """
 checks that each connected components has a reference bus, if not, adds one
 """
-function check_reference_buses(data::Dict{String,<:Any})
+function correct_reference_buses!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
-            _check_reference_buses(nw_data)
+            _correct_reference_buses!(nw_data)
         end
     else
-        _check_reference_buses(data)
+        _correct_reference_buses!(data)
     end
 end
 
 
 ""
-function _check_reference_buses(data::Dict{String,<:Any})
+function _correct_reference_buses!(data::Dict{String,<:Any})
     bus_lookup = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
     bus_gen = bus_gen_lookup(data["gen"], data["bus"])
 
@@ -1920,7 +1961,7 @@ function _check_reference_buses(data::Dict{String,<:Any})
     end
 
     for (i, cc) in enumerate(ccs_order)
-        check_component_refrence_bus(cc, bus_lookup, cc_gens[i])
+        correct_component_refrence_bus!(cc, bus_lookup, cc_gens[i])
     end
 end
 
@@ -1928,7 +1969,7 @@ end
 """
 checks that a connected component has a reference bus, if not, adds one
 """
-function check_component_refrence_bus(component_bus_ids, bus_lookup, component_gens)
+function correct_component_refrence_bus!(component_bus_ids, bus_lookup, component_gens)
     refrence_buses = Set()
     for bus_id in component_bus_ids
         bus = bus_lookup[bus_id]
@@ -1941,12 +1982,12 @@ function check_component_refrence_bus(component_bus_ids, bus_lookup, component_g
         Memento.warn(LOGGER, "no reference bus found in connected component $(component_bus_ids)")
 
         if length(component_gens) > 0
-            big_gen = biggest_generator(component_gens)
+            big_gen = _biggest_generator(component_gens)
             gen_bus = bus_lookup[big_gen["gen_bus"]]
             gen_bus["bus_type"] = 3
             Memento.warn(LOGGER, "setting bus $(gen_bus["index"]) as reference bus in connected component $(component_bus_ids), based on generator $(big_gen["index"])")
         else
-            Memento.warn(LOGGER, "no generators found in connected component $(component_bus_ids), try running propagate_topology_status")
+            Memento.warn(LOGGER, "no generators found in connected component $(component_bus_ids), try running propagate_topology_status!(")
         end
     end
 end
@@ -2037,13 +2078,13 @@ end
 
 
 "Transforms single-conductor network data into multi-conductor data"
-function make_multiconductor(data::Dict{String,<:Any}, conductors::Int)
+function make_multiconductor!(data::Dict{String,<:Any}, conductors::Int)
     if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
-            _make_multiconductor(nw_data, conductors)
+            _make_multiconductor!(nw_data, conductors)
         end
     else
-         _make_multiconductor(data, conductors)
+         _make_multiconductor!(data, conductors)
     end
 end
 
@@ -2059,7 +2100,7 @@ conductor_matrix = Set(["br_r", "br_x"])
 
 
 ""
-function _make_multiconductor(data::Dict{String,<:Any}, conductors::Real)
+function _make_multiconductor!(data::Dict{String,<:Any}, conductors::Real)
     if haskey(data, "conductors")
         Memento.warn(LOGGER, "skipping network that is already multiconductor")
         return

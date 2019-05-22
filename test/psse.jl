@@ -31,8 +31,8 @@ end
             result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
             result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_pti["status"] == :LocalOptimal
-            @test result_mp["status"]  == :LocalOptimal
+            @test result_pti["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result_mp["termination_status"] == MOI.LOCALLY_SOLVED
             @test isapprox(result_mp["objective"], result_pti["objective"]; atol = 1e-5)
         end
 
@@ -45,8 +45,8 @@ end
             result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
             result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_pti["status"] == :LocalOptimal
-            @test result_mp["status"]  == :LocalOptimal
+            @test result_pti["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result_mp["termination_status"] == MOI.LOCALLY_SOLVED
             @test isapprox(result_mp["objective"], result_pti["objective"]; atol = 1e-5)
         end
 
@@ -61,8 +61,8 @@ end
                 result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
                 result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
 
-                @test result_pti["status"] == :LocalOptimal
-                @test result_mp["status"]  == :LocalOptimal
+                @test result_pti["termination_status"] == MOI.LOCALLY_SOLVED
+                @test result_mp["termination_status"] == MOI.LOCALLY_SOLVED
                 @test isapprox(result_mp["objective"], result_pti["objective"]; atol = 1e-5)
             end
         end
@@ -84,7 +84,7 @@ end
 
             result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_opf["status"] == :LocalOptimal
+            @test result_opf["termination_status"] == MOI.LOCALLY_SOLVED
             @test isapprox(result_opf["objective"], 29.4043; atol=1e-4)
 
             result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
@@ -108,8 +108,8 @@ end
             result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
             result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_pti["status"] == :LocalOptimal
-            @test result_mp["status"]  == :LocalOptimal
+            @test result_pti["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result_mp["termination_status"] == MOI.LOCALLY_SOLVED
 
             # TODO: Needs approximation of DCLINES
             @test isapprox(result_pti["objective"], result_mp["objective"]; atol=10)
@@ -126,8 +126,8 @@ end
             result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
             result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_pti["status"] == :LocalOptimal
-            @test result_mp["status"]  == :LocalOptimal
+            @test result_pti["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result_mp["termination_status"] == MOI.LOCALLY_SOLVED
 
             @test isapprox(result_pti["objective"], result_mp["objective"]; atol=1e-5)
         end
@@ -138,16 +138,16 @@ end
             data_pti = PowerModels.parse_file("../test/data/pti/case7_tplgy.raw")
             data_mp  = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
 
-            PowerModels.propagate_topology_status(data_pti)
-            PowerModels.propagate_topology_status(data_mp)
+            PowerModels.propagate_topology_status!(data_pti)
+            PowerModels.propagate_topology_status!(data_mp)
 
             set_costs!(data_mp)
 
             result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
             result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_pti["status"] == :LocalOptimal
-            @test result_mp["status"]  == :LocalOptimal
+            @test result_pti["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result_mp["termination_status"] == MOI.LOCALLY_SOLVED
 
             # TODO: Needs approximation of DCLINES
             @test isapprox(result_mp["objective"], result_pti["objective"]; atol=20)
@@ -164,8 +164,8 @@ end
             result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
             result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_pti["status"] == :LocalOptimal
-            @test result_mp["status"]  == :LocalOptimal
+            @test result_pti["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result_mp["termination_status"] == MOI.LOCALLY_SOLVED
 
             @test isapprox(result_pti["objective"], result_mp["objective"]; atol=1e-2)
         end
@@ -181,8 +181,8 @@ end
             result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
             result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_pti["status"] == :LocalOptimal
-            @test result_mp["status"]  == :LocalOptimal
+            @test result_pti["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result_mp["termination_status"] == MOI.LOCALLY_SOLVED
 
             # NOTE: ANGMIN and ANGMAX do not exist in PSS(R)E Spec, accounting for the objective differences
             @test isapprox(result_pti["objective"], result_mp["objective"]; atol=0.6914)
@@ -199,8 +199,8 @@ end
             result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
             result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_pti["status"] == :LocalOptimal
-            @test result_mp["status"]  == :LocalOptimal
+            @test result_pti["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result_mp["termination_status"] == MOI.LOCALLY_SOLVED
 
             @test isapprox(result_pti["objective"], result_mp["objective"]; atol=1e-5)
         end
@@ -209,7 +209,7 @@ end
     @testset "exception handling" begin
         dummy_data = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw")
 
-        @test dummy_data["gen"]["1"]["source_id"] == [1001, "1 "]
+        @test dummy_data["gen"]["1"]["source_id"] == ["generator", 1001, "1 "]
 
         Memento.setlevel!(TESTLOG, "warn")
 
@@ -248,7 +248,7 @@ end
 
             result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_opf["status"] == :LocalOptimal
+            @test result_opf["termination_status"] == MOI.LOCALLY_SOLVED
             @test isapprox(result_opf["objective"], 9.99647; atol=1e-5)
 
             result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
@@ -282,7 +282,7 @@ end
 
             result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_opf["status"] == :LocalOptimal
+            @test result_opf["termination_status"] == MOI.LOCALLY_SOLVED
             @test isapprox(result_opf["objective"], 10.0; atol=1e-5)
 
             result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
@@ -306,12 +306,12 @@ end
 
             result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_opf["status"] == :LocalOptimal
+            @test result_opf["termination_status"] == MOI.LOCALLY_SOLVED
             @test isapprox(result_opf["objective"], 701.637157; atol=1e-5)
 
             result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_pf["status"] == :LocalOptimal
+            @test result_pf["termination_status"] == MOI.LOCALLY_SOLVED
             @test result_pf["objective"] == 0.0
 
             for (bus, vm, va) in zip(["1", "2"], [1.0932940, 1.06414], [0.928781, 0.])
@@ -330,12 +330,12 @@ end
 
             result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_opf["status"] == :LocalOptimal
+            @test result_opf["termination_status"] == MOI.LOCALLY_SOLVED
             @test isapprox(result_opf["objective"], 10.4001; atol=1e-2)
 
             result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result_pf["status"] == :LocalOptimal
+            @test result_pf["termination_status"] == MOI.LOCALLY_SOLVED
             @test result_pf["objective"] == 0.0
 
             for (bus, vm, va) in zip(["1001", "1002", "1003", "11001"], [1.0965262, 1.0, 0.9999540, 0.9978417], [2.234718, 0., 5.985760, 2.538179])
@@ -361,7 +361,7 @@ end
 
             result = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
 
-            @test result["status"] == :LocalOptimal
+            @test result["termination_status"] == MOI.LOCALLY_SOLVED
             @test isapprox(result["objective"], 297.878089; atol=1e-4)
         end
 
@@ -394,11 +394,11 @@ end
             @test length(data["dcline"]["1"]) == 26
 
             opf = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
-            @test opf["status"] == :LocalOptimal
+            @test opf["termination_status"] == MOI.LOCALLY_SOLVED
             @test isapprox(opf["objective"], 10.5; atol=1e-3)
 
             pf = PowerModels.run_pf(data, PowerModels.ACPPowerModel, ipopt_solver)
-            @test pf["status"] == :LocalOptimal
+            @test pf["termination_status"] == MOI.LOCALLY_SOLVED
         end
 
         @testset "voltage source converter" begin
@@ -408,11 +408,11 @@ end
             @test length(data["dcline"]["1"]) == 26
 
             opf = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
-            @test opf["status"] == :LocalOptimal
+            @test opf["termination_status"] == MOI.LOCALLY_SOLVED
             @test isapprox(opf["objective"], 21.8842; atol=1e-3)
 
             pf = PowerModels.run_pf(data, PowerModels.ACPPowerModel, ipopt_solver)
-            @test pf["status"] == :LocalOptimal
+            @test pf["termination_status"] == MOI.LOCALLY_SOLVED
         end
     end
 
@@ -423,6 +423,7 @@ end
             for v in values(data[key])
                 @test "source_id" in keys(v)
                 @test isa(v["source_id"], Array)
+                @test v["source_id"][1] in ["bus", "load", "fixed shunt", "switched shunt", "branch", "generator", "transformer", "two-terminal dc", "vsc dc"]
             end
         end
     end

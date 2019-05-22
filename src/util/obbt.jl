@@ -36,7 +36,7 @@ function constraint_obj_bound(pm::GenericPowerModel, bound)
         Memento.error(LOGGER, "Only quadratic generator cost models are supported at this time, given cost model of order $(cost_index-1)")
     end
 
-    PowerModels.standardize_cost_terms(pm.data, order=2)
+    PowerModels.standardize_cost_terms!(pm.data, order=2)
 
     from_idx = Dict(arc[1] => arc for arc in ref(pm, :arcs_from_dc))
 
@@ -178,7 +178,7 @@ function run_obbt_opf(data::Dict{String,<:Any}, optimizer;
     (termination != :avg && termination != :max) && (Memento.error(LOGGER, "OBBT termination criteria can only be :max or :avg"))
 
     # pass status
-    status_pass = [:LocalOptimal, :Optimal]
+    status_pass = [MOI.LOCALLY_SOLVED, MOI.OPTIMAL]
 
     # compute initial relative gap between relaxation objective and upper_bound
     result_relaxation = solve_generic_model(model_relaxation, optimizer)
@@ -186,9 +186,9 @@ function run_obbt_opf(data::Dict{String,<:Any}, optimizer;
     if upper_bound < current_relaxation_objective
         Memento.error(LOGGER, "the upper bound provided to OBBT is not a valid ACOPF upper bound")
     end
-    if !(result_relaxation["status"] in status_pass)
-        Memento.warn(LOGGER, "initial relaxation solve status is $(result_relaxation["status"])")
-        if result_relaxation["status"] == :SubOptimal
+    if !(result_relaxation["termination_status"] in status_pass)
+        Memento.warn(LOGGER, "initial relaxation solve status is $(result_relaxation["termination_status"])")
+        if result_relaxation["termination_status"] == :SubOptimal
             Memento.warn(LOGGER, "continuing with the bound-tightening algorithm")
         end
     end
@@ -267,7 +267,7 @@ function run_obbt_opf(data::Dict{String,<:Any}, optimizer;
             lb = NaN
             JuMP.@objective(model_bt.model, Min, vm[bus])
             result_bt = solve_generic_model(model_bt, optimizer)
-            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
+            if (result_bt["termination_status"] == MOI.LOCALLY_SOLVED || result_bt["termination_status"] == MOI.OPTIMAL)
                 nlb = floor(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nlb > vm_lb[bus]) && (lb = nlb)
             else
@@ -279,7 +279,7 @@ function run_obbt_opf(data::Dict{String,<:Any}, optimizer;
             ub = NaN
             JuMP.@objective(model_bt.model, Max, vm[bus])
             result_bt = solve_generic_model(model_bt, optimizer)
-            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
+            if (result_bt["termination_status"] == MOI.LOCALLY_SOLVED || result_bt["termination_status"] == MOI.OPTIMAL)
                 nub = ceil(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nub < vm_ub[bus]) && (ub = nub)
             else
@@ -335,7 +335,7 @@ function run_obbt_opf(data::Dict{String,<:Any}, optimizer;
             lb = NaN
             JuMP.@objective(model_bt.model, Min, td[bp])
             result_bt = solve_generic_model(model_bt, optimizer)
-            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
+            if (result_bt["termination_status"] == MOI.LOCALLY_SOLVED || result_bt["termination_status"] == MOI.OPTIMAL)
                 nlb = floor(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nlb > td_lb[bp]) && (lb = nlb)
             else
@@ -347,7 +347,7 @@ function run_obbt_opf(data::Dict{String,<:Any}, optimizer;
             ub = NaN
             JuMP.@objective(model_bt.model, Max, td[bp])
             result_bt = solve_generic_model(model_bt, optimizer)
-            if (result_bt["status"] == :LocalOptimal || result_bt["status"] == :Optimal)
+            if (result_bt["termination_status"] == MOI.LOCALLY_SOLVED || result_bt["termination_status"] == MOI.OPTIMAL)
                 nub = ceil(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nub < td_ub[bp]) && (ub = nub)
             else
@@ -401,7 +401,7 @@ function run_obbt_opf(data::Dict{String,<:Any}, optimizer;
 
         # populate the modifications, update the data, and rebuild the bound-tightening model
         modifications = create_modifications(model_bt, vm_lb, vm_ub, td_lb, td_ub)
-        PowerModels.update_data(data, modifications)
+        PowerModels.update_data!(data, modifications)
         model_bt = build_generic_model(data, model_constructor, PowerModels.post_opf)
         (upper_bound_constraint) && (constraint_obj_bound(model_bt, upper_bound))
         vm = var(model_bt, :vm)
@@ -410,7 +410,7 @@ function run_obbt_opf(data::Dict{String,<:Any}, optimizer;
         # run the qc relaxation for the updated bounds
         result_relaxation = run_opf(data, model_constructor, optimizer)
 
-        if result_relaxation["status"] in status_pass
+        if result_relaxation["termination_status"] in status_pass
             current_rel_gap = (upper_bound - result_relaxation["objective"])/upper_bound
             final_relaxation_objective = result_relaxation["objective"]
         else

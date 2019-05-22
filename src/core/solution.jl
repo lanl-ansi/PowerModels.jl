@@ -1,11 +1,6 @@
 ""
-function build_solution(pm::GenericPowerModel, status, solve_time; objective = NaN, solution_builder = get_solution)
+function build_solution(pm::GenericPowerModel, solve_time; solution_builder = get_solution)
     # TODO @assert that the model is solved
-
-    if status != :Error
-        objective = JuMP.objective_value(pm.model)
-        status = optimizer_status_dict(Symbol(typeof(pm.model.moi_backend).name.module), status)
-    end
 
     sol = init_solution(pm)
     data = Dict{String,Any}("name" => pm.data["name"])
@@ -39,9 +34,11 @@ function build_solution(pm::GenericPowerModel, status, solve_time; objective = N
 
     solution = Dict{String,Any}(
         "optimizer" => string(typeof(pm.model.moi_backend.optimizer)),
-        "status" => status,
-        "objective" => objective,
-        "objective_lb" => guard_getobjbound(pm.model),
+        "termination_status" => JuMP.termination_status(pm.model),
+        "primal_status" => JuMP.primal_status(pm.model),
+        "dual_status" => JuMP.dual_status(pm.model),
+        "objective" => guard_objective_value(pm.model),
+        "objective_lb" => guard_objective_bound(pm.model),
         "solve_time" => solve_time,
         "solution" => sol,
         "machine" => Dict(
@@ -355,29 +352,28 @@ function add_dual(
 end
 
 
-optimizer_status_lookup = Dict{Any, Dict{Symbol, Symbol}}(
-    :Ipopt => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
-    :Juniper => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
-    :ConicNonlinearBridge => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
-    # note that AmplNLWriter.AmplNLSolver is the optimizer type of bonmin
-    :AmplNLWriter => Dict(:Optimal => :LocalOptimal, :Infeasible => :LocalInfeasible),
-    )
-
-"translates optimizer status codes to our status codes"
-function optimizer_status_dict(optimizer_module_symbol, status)
-    for (st, optimizer_stat_dict) in optimizer_status_lookup
-        if optimizer_module_symbol == st
-            return get(optimizer_stat_dict, status, status)
-        end
-    end
-    return status
-end
 
 ""
-function guard_getobjbound(model)
+function guard_objective_value(model)
+    obj_val = NaN
+
     try
-        JuMP.getobjbound(model)
+        obj_val = JuMP.objective_value(model)
     catch
-        -Inf
     end
+
+    return obj_val
+end
+
+
+""
+function guard_objective_bound(model)
+    obj_lb = -Inf
+
+    try
+        obj_lb = JuMP.objective_bound(model)
+    catch
+    end
+
+    return obj_lb
 end

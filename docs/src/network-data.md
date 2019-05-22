@@ -62,6 +62,8 @@ The network data dictionary structure is roughly as follows:
     "1":{
         "index":<int>,
         "storage_bus":<int>,
+        "ps"::<float>,
+        "qs"::<float>,
         "energy":<float>,
         "energy_rating":<float>,
         ...
@@ -133,32 +135,32 @@ The PowerModels network data dictionary differs from the Matpower format in the 
 
 Data exchange via JSON files is ideal for building algorithms, however it is hard to for humans to read and process.  To that end PowerModels provides various helper functions for manipulating the network data dictionary.
 
-The first of these helper functions are `make_per_unit` and `make_mixed_units`, which convert the units of the data inside a network data dictionary.  The *mixed units* format follows the unit conventions from Matpower and other common power network formats where some of the values are in per unit and others are the true values.  These functions can be used as follows,
+The first of these helper functions are `make_per_unit` and `make_mixed_units!`, which convert the units of the data inside a network data dictionary.  The *mixed units* format follows the unit conventions from Matpower and other common power network formats where some of the values are in per unit and others are the true values.  These functions can be used as follows,
 ```
 network_data = PowerModels.parse_file("matpower/case3.m")
 PowerModels.print_summary(network_data) # default per-unit form
-PowerModels.make_mixed_units(network_data)
+PowerModels.make_mixed_units!(network_data)
 PowerModels.print_summary(network_data) # mixed units form
 ```
 
 Another useful helper function is `update_data`, which takes two network data dictionaries and updates the values in the first dictionary with the values from the second dictionary.  This is particularly helpful when applying sparse updates to network data.  A good example is using the solution of one computation to update the data in preparation for a second computation, like so,
 ```
 data = PowerModels.parse_file("matpower/case3.m")
-opf_result = run_ac_opf(data, JuMP.with_optimizer(Ipopt.Optimizer))
+opf_result = run_ac_opf(data, with_optimizer(Ipopt.Optimizer))
 PowerModels.print_summary(opf_result["solution"])
 
-PowerModels.update_data(data, opf_result["solution"])
-pf_result = run_ac_pf(data, JuMP.with_optimizer(Ipopt.Optimizer))
+PowerModels.update_data!(data, opf_result["solution"])
+pf_result = run_ac_pf(data, with_optimizer(Ipopt.Optimizer))
 PowerModels.print_summary(pf_result["solution"])
 ```
 
-A variety of helper functions are available for processing the topology of the network.  For example, `connected_components` will compute the collections of buses that are connected by branches (i.e. the network's islands).  By default PowerModels will attempt to solve all of the network components simultaneously.  The `select_largest_component` function can be used to only consider the largest component in the network.  Finally the `propagate_topology_status` can be used to explicitly deactivate components that are implicitly inactive due to the status of other components (e.g. deactivating branches based on the status of their connecting buses), like so,
+A variety of helper functions are available for processing the topology of the network.  For example, `connected_components` will compute the collections of buses that are connected by branches (i.e. the network's islands).  By default PowerModels will attempt to solve all of the network components simultaneously.  The `select_largest_component` function can be used to only consider the largest component in the network.  Finally the `propagate_topology_status!` can be used to explicitly deactivate components that are implicitly inactive due to the status of other components (e.g. deactivating branches based on the status of their connecting buses), like so,
 ```
 data = PowerModels.parse_file("matpower/case3.m")
-PowerModels.propagate_topology_status(data)
-opf_result = run_ac_opf(data, JuMP.with_optimizer(Ipopt.Optimizer))
+PowerModels.propagate_topology_status!(data)
+opf_result = run_ac_opf(data, with_optimizer(Ipopt.Optimizer))
 ```
-The `test/data/matpower/case7_tplgy.m` case provides an example of the kind of component status deductions that can be made.  The `propagate_topology_status` function can be helpful in diagnosing network models that converge to an infeasible solution.
+The `test/data/matpower/case7_tplgy.m` case provides an example of the kind of component status deductions that can be made.  The `propagate_topology_status!` function can be helpful in diagnosing network models that converge to an infeasible solution.
 
 For details on all of the network data helper functions see, `src/core/data.jl`.
 

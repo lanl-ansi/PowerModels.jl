@@ -18,7 +18,7 @@ function post_cl_opf(pm::GenericPowerModel)
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
-    objective_min_fuel_cost(pm)
+    objective_min_fuel_and_flow_cost(pm)
 
     constraint_voltage(pm)
 
@@ -60,7 +60,7 @@ function post_uc_opf(pm::GenericPowerModel)
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
-    objective_min_fuel_cost(pm)
+    objective_min_fuel_and_flow_cost(pm)
 
     constraint_voltage(pm)
 
@@ -139,7 +139,7 @@ function post_uc_mc_opf(pm::GenericPowerModel)
         end
     end
 
-    objective_min_fuel_cost(pm)
+    objective_min_fuel_and_flow_cost(pm)
 end
 
 ""
@@ -158,7 +158,7 @@ end
 
 ""
 function run_mn_opb(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_mn_opb; multinetwork=true, kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_mn_opb; ref_extensions=[cc_ref!], multinetwork=true, kwargs...)
 end
 
 ""
@@ -171,7 +171,7 @@ function post_mn_opb(pm::GenericPowerModel)
         end
     end
 
-    objective_min_gen_fuel_cost(pm)
+    objective_min_fuel_cost(pm)
 end
 
 
@@ -213,7 +213,7 @@ function post_mn_opf(pm::GenericPowerModel)
         end
     end
 
-    objective_min_fuel_cost(pm)
+    objective_min_fuel_and_flow_cost(pm)
 end
 
 ""
@@ -311,7 +311,7 @@ function post_mc_opf(pm::GenericPowerModel)
         end
     end
 
-    objective_min_fuel_cost(pm)
+    objective_min_fuel_and_flow_cost(pm)
 end
 
 
@@ -356,7 +356,7 @@ function post_mn_mc_opf(pm::GenericPowerModel)
         end
     end
 
-    objective_min_fuel_cost(pm)
+    objective_min_fuel_and_flow_cost(pm)
 end
 
 
@@ -374,7 +374,7 @@ function post_strg_opf(pm::GenericPowerModel)
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
-    objective_min_fuel_cost(pm)
+    objective_min_fuel_and_flow_cost(pm)
 
     constraint_voltage(pm)
 
@@ -468,7 +468,7 @@ function post_mn_strg_opf(pm::GenericPowerModel)
         n_1 = n_2
     end
 
-    objective_min_fuel_cost(pm)
+    objective_min_fuel_and_flow_cost(pm)
 end
 
 
@@ -541,5 +541,5 @@ function post_mn_mc_strg_opf(pm::GenericPowerModel)
         n_1 = n_2
     end
 
-    objective_min_fuel_cost(pm)
+    objective_min_fuel_and_flow_cost(pm)
 end

@@ -10,7 +10,9 @@ At the top level the results data dictionary is structured as follows:
 ```json
 {
 "optimizer":<string>,    # name of the Julia class used to solve the model
-"status":<julia symbol>, # optimizer status at termination
+"termination_status":<TerminationStatusCode enum>, # optimizer status at termination
+"primal_status":<ResultStatusCode enum>, # the primal solution status at termination
+"dual_status":<ResultStatusCode enum>, # the dual solution status at termination
 "solve_time":<float>,    # reported solve time (seconds)
 "objective":<float>,     # the final evaluation of the objective function
 "objective_lb":<float>,  # the final lower bound of the objective function (if available)
@@ -81,10 +83,10 @@ PowerModels.print_summary(result["solution"])
 ```
 
 Because the data dictionary and the solution dictionary have the same structure
-PowerModels provides an `update_data` helper function which can be used to
+PowerModels provides an `update_data!` helper function which can be used to
 update a data dictionary with the values from a solution as follows,
 
 ```
-PowerModels.update_data(data, result["solution"])
+PowerModels.update_data!(data, result["solution"])
 ```
 

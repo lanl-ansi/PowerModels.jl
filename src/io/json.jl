@@ -48,9 +48,6 @@ end
 
 "Parses json from iostream or string"
 function parse_json(io::Union{IO,String}; kwargs...)::Dict{String,Any}
-    if VERSION <= v"0.7.0-"
-        kwargs = Dict{Symbol,Any}(kwargs)
-    end
     pm_data = JSON.parse(io)
 
     _jsonver2juliaver!(pm_data)
@@ -60,7 +57,7 @@ function parse_json(io::Union{IO,String}; kwargs...)::Dict{String,Any}
     end
 
     if get(kwargs, :validate, true)
-        PowerModels.check_network_data(pm_data)
+        PowerModels.correct_network_data!(pm_data)
     end
 
     return pm_data
