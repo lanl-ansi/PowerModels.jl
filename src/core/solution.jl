@@ -33,7 +33,7 @@ function build_solution(pm::GenericPowerModel, solve_time; solution_builder = ge
     end
 
     solution = Dict{String,Any}(
-        "optimizer" => string(typeof(pm.model.moi_backend.optimizer)),
+        "optimizer" => JuMP.solver_name(pm.model),
         "termination_status" => JuMP.termination_status(pm.model),
         "primal_status" => JuMP.primal_status(pm.model),
         "dual_status" => JuMP.dual_status(pm.model),
