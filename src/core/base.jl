@@ -186,14 +186,14 @@ function run_generic_model(file::String, model_constructor, optimizer, post_meth
 end
 
 ""
-function run_generic_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; ref_extensions=[core_ref!], solution_builder=get_solution, kwargs...)
+function run_generic_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; ref_extensions=[], solution_builder=get_solution, kwargs...)
+    #start_time = time()
     pm = build_generic_model(data, model_constructor, post_method; ref_extensions=ref_extensions, kwargs...)
-    #pm, time, bytes_alloc, sec_in_gc = @timed build_generic_model(data, model_constructor, post_method; ref_extensions=ref_extensions, kwargs...)
-    #println("model build time: $(time)")
+    #Memento.info(LOGGER, "pm model build time: $(time() - start_time)")
 
+    #start_time = time()
     solution = solve_generic_model(pm, optimizer; solution_builder = solution_builder)
-    #solution, time, bytes_alloc, sec_in_gc = @timed solve_generic_model(pm, optimizer; solution_builder = solution_builder)
-    #println("solution time: $(time)")
+    #Memento.info(LOGGER, "pm model solve and solution time: $(time() - start_time)")
 
     return solution
 end
@@ -207,8 +207,10 @@ end
 ""
 function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_method; ref_extensions=[], multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
-    #start = time()
+
+    #start_time = time()
     pm = model_constructor(data; kwargs...)
+    #Memento.info(LOGGER, "pm model_constructor time: $(time() - start_time)")
 
     if !multinetwork && ismultinetwork(pm)
         Memento.error(LOGGER, "attempted to build a single-network model with multi-network data")
@@ -218,17 +220,16 @@ function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_m
         Memento.error(LOGGER, "attempted to build a single-conductor model with multi-conductor data")
     end
 
-    #start = time()
-    #println(ref_extensions)
+    #start_time = time()
     core_ref!(pm)
     for ref_ext in ref_extensions
         ref_ext(pm)
     end
-    #println("extra ref time: $(time() - start)")
+    #Memento.info(LOGGER, "pm build ref time: $(time() - start_time)")
 
-    #start = time()
+    #start_time = time()
     post_method(pm)
-    #println("model build time: $(time() - start)")
+    #Memento.info(LOGGER, "pm post_method time: $(time() - start_time)")
 
     return pm
 end
@@ -236,11 +237,14 @@ end
 
 ""
 function solve_generic_model(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = get_solution)
-    solve_time = JuMP.optimize!(pm, optimizer)
 
+    #start_time = time()
+    solve_time = JuMP.optimize!(pm, optimizer)
+    #Memento.info(LOGGER, "JuMP model optimize time: $(time() - start_time)")
+
+    #start_time = time()
     solution = build_solution(pm, solve_time; solution_builder = solution_builder)
-    #solution, time, bytes_alloc, sec_in_gc = @timed build_solution(pm, status, solve_time; solution_builder = solution_builder)
-    #println("build_solution time: $(time)")
+    #Memento.info(LOGGER, "PowerModels solution build time: $(time() - start_time)")
 
     return solution
 end
@@ -349,37 +353,37 @@ function core_ref!(nw_refs::Dict)
 
 
         ### bus connected component lookups ###
-        bus_loads = Dict((i, []) for (i,bus) in ref[:bus])
+        bus_loads = Dict((i, Int[]) for (i,bus) in ref[:bus])
         for (i, load) in ref[:load]
             push!(bus_loads[load["load_bus"]], i)
         end
         ref[:bus_loads] = bus_loads
 
-        bus_shunts = Dict((i, []) for (i,bus) in ref[:bus])
+        bus_shunts = Dict((i, Int[]) for (i,bus) in ref[:bus])
         for (i,shunt) in ref[:shunt]
             push!(bus_shunts[shunt["shunt_bus"]], i)
         end
         ref[:bus_shunts] = bus_shunts
 
-        bus_gens = Dict((i, []) for (i,bus) in ref[:bus])
+        bus_gens = Dict((i, Int[]) for (i,bus) in ref[:bus])
         for (i,gen) in ref[:gen]
             push!(bus_gens[gen["gen_bus"]], i)
         end
         ref[:bus_gens] = bus_gens
 
-        bus_storage = Dict((i, []) for (i,bus) in ref[:bus])
+        bus_storage = Dict((i, Int[]) for (i,bus) in ref[:bus])
         for (i,strg) in ref[:storage]
             push!(bus_storage[strg["storage_bus"]], i)
         end
         ref[:bus_storage] = bus_storage
 
-        bus_arcs = Dict((i, []) for (i,bus) in ref[:bus])
+        bus_arcs = Dict((i, Tuple{Int,Int,Int}[]) for (i,bus) in ref[:bus])
         for (l,i,j) in ref[:arcs]
             push!(bus_arcs[i], (l,i,j))
         end
         ref[:bus_arcs] = bus_arcs
 
-        bus_arcs_dc = Dict((i, []) for (i,bus) in ref[:bus])
+        bus_arcs_dc = Dict((i, Tuple{Int,Int,Int}[]) for (i,bus) in ref[:bus])
         for (l,i,j) in ref[:arcs_dc]
             push!(bus_arcs_dc[i], (l,i,j))
         end
@@ -387,7 +391,7 @@ function core_ref!(nw_refs::Dict)
 
 
         ### reference bus lookup (a set to support multiple connected components) ###
-        ref_buses = Dict()
+        ref_buses = Dict{Int,Any}()
         for (k,v) in ref[:bus]
             if v["bus_type"] == 3
                 ref_buses[k] = v
