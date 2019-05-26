@@ -380,33 +380,6 @@ function _objective_min_fuel_cost_polynomial_nl(pm::GenericPowerModel)
 end
 
 
-
-"""
-compute m and b from points pwl points
-"""
-function slope_intercepts(points::Array{T,1}) where T <: Real
-    line_data = []
-
-    for i in 3:2:length(points)
-        x1 = points[i-2]
-        y1 = points[i-1]
-        x2 = points[i-0]
-        y2 = points[i+1]
-
-        m = (y2 - y1)/(x2 - x1)
-        b = y1 - m * x1
-
-        line = Dict(
-            "slope" => m,
-            "intercept" => b
-        )
-        push!(line_data, line)
-    end
-
-    return line_data
-end
-
-
 """
 compute lines in m and b from from pwl cost models
 data is a list of components
@@ -414,17 +387,11 @@ data is a list of components
 function get_lines(data)
     lines = Dict{Int,Any}()
     for (i,comp) in data
-        @assert comp["model"] == 1
-        line_data = slope_intercepts(comp["cost"])
-        lines[i] = line_data
-        for i in 2:length(line_data)
-            if line_data[i-1]["slope"] > line_data[i]["slope"]
-                Memento.error(LOGGER, "non-convex pwl function found in points $(comp["cost"])\nlines: $(line_data)")
-            end
-        end
+        lines[i] = _get_comp_lines(comp)
     end
     return lines
 end
+
 
 
 ""

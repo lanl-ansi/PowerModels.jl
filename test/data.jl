@@ -496,6 +496,53 @@ end
 end
 
 
+@testset "test cost model computations" begin
+
+     @testset "5-bus polynomial gen cost" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        result = run_opf(data, ACPPowerModel, ipopt_solver)
+        PowerModels.update_data!(data, result["solution"])
+
+        gen_cost = PowerModels.calc_gen_cost(data)
+        dcline_cost = PowerModels.calc_dcline_cost(data)
+        @test isapprox(result["objective"], gen_cost + dcline_cost; atol=1e-1)
+    end
+
+     @testset "5-bus pwlc gen cost" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
+        result = run_opf(data, ACPPowerModel, ipopt_solver)
+        PowerModels.update_data!(data, result["solution"])
+
+        gen_cost = PowerModels.calc_gen_cost(data)
+        dcline_cost = PowerModels.calc_dcline_cost(data)
+        @test isapprox(result["objective"], gen_cost + dcline_cost; atol=1e-1)
+    end
+
+     @testset "5-bus polynomial gen and dcline cost" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
+        result = run_opf(data, ACPPowerModel, ipopt_solver)
+        PowerModels.update_data!(data, result["solution"])
+
+        gen_cost = PowerModels.calc_gen_cost(data)
+        dcline_cost = PowerModels.calc_dcline_cost(data)
+        @test isapprox(result["objective"], gen_cost + dcline_cost; atol=1e-1)
+    end
+
+     @testset "5-bus inactive components" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
+        data["gen"]["1"]["gen_status"] = 0
+        data["dcline"]["1"]["br_status"] = 0
+
+        result = run_opf(data, ACPPowerModel, ipopt_solver)
+        PowerModels.update_data!(data, result["solution"])
+
+        gen_cost = PowerModels.calc_gen_cost(data)
+        dcline_cost = PowerModels.calc_dcline_cost(data)
+        @test isapprox(result["objective"], gen_cost + dcline_cost; atol=1e-1)
+    end
+
+end
+
 
 @testset "test power balance computations" begin
 

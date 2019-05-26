@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Added calc_gen_cost to compute the generator cost from the setpoint in the data model
+- Added calc_dcline_cost to compute the dcline cost from the setpoint in the data model
 
 ### v0.11.0
 - Update to use JuMP/MOI status values (#276) (breaking)
