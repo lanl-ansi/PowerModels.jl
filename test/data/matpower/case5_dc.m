@@ -49,7 +49,7 @@ mpc.branch = [
 %% dcline data
 %	fbus	tbus	status	Pf	Pt	Qf	Qt	Vf	Vt	Pmin	Pmax	QminF	QmaxF	QminT	QmaxT	loss0	loss1
 mpc.dcline = [
-	3	5	1	10	8.9	99.9934	-10.4049	1.1	1.05555	10	100 	-100	100	-100 100	1	0.01;
+	3	5	1	15	8.9	99.9934	-10.4049	1.1	1.05555	10	100 	-100	100	-100 100	1	0.01;
 ];
 
 %% dcline cost data

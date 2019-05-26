@@ -46,7 +46,7 @@
         @test isapprox(result["solution"]["bus"]["5"]["vm"], 1.0530; atol = 1e-3)
 
 
-        @test isapprox(result["solution"]["dcline"]["1"]["pf"],  0.10; atol = 1e-5)
+        @test isapprox(result["solution"]["dcline"]["1"]["pf"],  0.15; atol = 1e-5)
         @test isapprox(result["solution"]["dcline"]["1"]["pt"], -0.089; atol = 1e-5)
 
     end
@@ -124,7 +124,7 @@ end
         @test isapprox(result["solution"]["bus"]["5"]["vm"], 1.0530; atol = 1e-3)
 
 
-        @test isapprox(result["solution"]["dcline"]["1"]["pf"],  0.10; atol = 1e-5)
+        @test isapprox(result["solution"]["dcline"]["1"]["pf"],  0.15; atol = 1e-5)
         @test isapprox(result["solution"]["dcline"]["1"]["pt"], -0.089; atol = 1e-5)
     end
 end

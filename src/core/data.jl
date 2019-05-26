@@ -518,6 +518,146 @@ end
 
 
 
+"computes the generator cost from given network data"
+function calc_gen_cost(data::Dict{String,<:Any})
+    @assert("per_unit" in keys(data) && data["per_unit"])
+    @assert(!haskey(data, "conductors"))
+
+    if InfrastructureModels.ismultinetwork(data)
+        nw_costs = Dict{String,Any}()
+        for (i,nw_data) in data["nw"]
+            nw_costs[i] = _calc_gen_cost(nw_data)
+        end
+        return sum(nw_cost for (i,nw_cost) in nw_costs)
+    else
+        return _calc_gen_cost(data)
+    end
+end
+
+function _calc_gen_cost(data::Dict{String,<:Any})
+    cost = 0.0
+    for (i,gen) in data["gen"]
+        if gen["gen_status"] == 1
+            if haskey(gen, "model")
+                if gen["model"] == 1
+                    cost += _calc_cost_pwl(gen, "pg")
+                elseif gen["model"] == 2
+                    cost += _calc_cost_polynomial(gen, "pg")
+                else
+                    Memento.warn(LOGGER, "generator $(i) has an unknown cost model $(gen["model"])")
+                end
+            else
+                Memento.warn(LOGGER, "generator $(i) does not have a cost model")
+            end
+        end
+    end
+    return cost
+end
+
+
+"computes the dcline cost from given network data"
+function calc_dcline_cost(data::Dict{String,<:Any})
+    @assert("per_unit" in keys(data) && data["per_unit"])
+    @assert(!haskey(data, "conductors"))
+
+    if InfrastructureModels.ismultinetwork(data)
+        nw_costs = Dict{String,Any}()
+        for (i,nw_data) in data["nw"]
+            nw_costs[i] = _calc_dcline_cost(nw_data)
+        end
+        return sum(nw_cost for (i,nw_cost) in nw_costs)
+    else
+        return _calc_dcline_cost(data)
+    end
+end
+
+function _calc_dcline_cost(data::Dict{String,<:Any})
+    cost = 0.0
+    for (i,dcline) in data["dcline"]
+        if dcline["br_status"] == 1
+            if haskey(dcline, "model")
+                if dcline["model"] == 1
+                    cost += _calc_cost_pwl(dcline, "pf")
+                elseif dcline["model"] == 2
+                    cost += _calc_cost_polynomial(dcline, "pf")
+                else
+                    Memento.warn(LOGGER, "dcline $(i) has an unknown cost model $(dcline["model"])")
+                end
+            else
+                Memento.warn(LOGGER, "dcline $(i) does not have a cost model")
+            end
+        end
+    end
+    return cost
+end
+
+
+"""
+compute lines in m and b from from pwl cost models
+"""
+function _get_comp_lines(component::Dict{String,<:Any})
+    @assert component["model"] == 1
+    points = component["cost"]
+
+    line_data = []
+    for i in 3:2:length(points)
+        x1 = points[i-2]
+        y1 = points[i-1]
+        x2 = points[i-0]
+        y2 = points[i+1]
+
+        m = (y2 - y1)/(x2 - x1)
+        b = y1 - m * x1
+
+        line = Dict(
+            "slope" => m,
+            "intercept" => b
+        )
+        push!(line_data, line)
+    end
+
+    for i in 2:length(line_data)
+        if line_data[i-1]["slope"] > line_data[i]["slope"]
+            Memento.error(LOGGER, "non-convex pwl function found in points $(component["cost"])\nlines: $(line_data)")
+        end
+    end
+
+    return line_data
+end
+
+
+function _calc_cost_pwl(component::Dict{String,<:Any}, setpoint_id)
+    comp_lines = _get_comp_lines(component)
+
+    setpoint = component[setpoint_id]
+    cost = -Inf
+    for line in comp_lines
+        cost = max(cost, line["slope"]*setpoint + line["intercept"])
+    end
+
+    return cost
+end
+
+
+function _calc_cost_polynomial(component::Dict{String,<:Any}, setpoint_id)
+    cost_terms_rev = reverse(component["cost"])
+
+    setpoint = component[setpoint_id]
+
+    if length(cost_terms_rev) == 0
+        cost = 0.0
+    elseif length(cost_terms_rev) == 1
+        cost = cost_terms_rev[1]
+    elseif length(cost_terms_rev) == 2
+        cost = cost_terms_rev[1] + cost_terms_rev[2]*setpoint
+    else
+        cost_terms_rev_high = cost_terms_rev[3:end]
+        cost = cost_terms_rev[1] + cost_terms_rev[2]*setpoint + sum( v*setpoint^(d+1) for (d,v) in enumerate(cost_terms_rev_high) )
+    end
+
+    return cost
+end
+
 
 
 "assumes a vaild ac solution is included in the data and computes the branch flow values"
