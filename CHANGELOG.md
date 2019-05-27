@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.11.1
 - Added calc_gen_cost to compute the generator cost from the setpoint in the data model
 - Added calc_dcline_cost to compute the dcline cost from the setpoint in the data model
 - Fixed a bug that resulted in an extra call to core_ref!
