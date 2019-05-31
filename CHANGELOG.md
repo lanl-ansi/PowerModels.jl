@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Added source_id to Matpower parser (#512)
+- Minor improvments Matpower export function (#388)
 
 ### v0.11.1
 - Added calc_gen_cost to compute the generator cost from the setpoint in the data model
