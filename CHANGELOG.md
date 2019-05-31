@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Updated slope and intercept data structure (#521)
+
+### Staged
 - Added source_id to Matpower parser (#512)
 - Minor improvments Matpower export function (#388)
 

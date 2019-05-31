@@ -404,7 +404,7 @@ function objective_min_fuel_and_flow_cost_pwl(pm::GenericPowerModel)
             pg_value = sum(JuMP.start_value(var(pm, n, c, :pg, i)) for c in conductor_ids(pm, n))
             pg_cost_value = -Inf
             for line in gen_lines[i]
-                pg_cost_value = max(pg_cost_value, line["slope"]*pg_value + line["intercept"])
+                pg_cost_value = max(pg_cost_value, line.slope*pg_value + line.intercept)
             end
             pg_cost_start[i] = pg_cost_value
         end
@@ -419,7 +419,7 @@ function objective_min_fuel_and_flow_cost_pwl(pm::GenericPowerModel)
         # gen pwl cost
         for (i, gen) in nw_ref[:gen]
             for line in gen_lines[i]
-                JuMP.@constraint(pm.model, pg_cost[i] >= line["slope"]*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line["intercept"])
+                JuMP.@constraint(pm.model, pg_cost[i] >= line.slope*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line.intercept)
             end
         end
 
@@ -431,7 +431,7 @@ function objective_min_fuel_and_flow_cost_pwl(pm::GenericPowerModel)
             dc_p_value = sum(JuMP.start_value(var(pm, n, c, :p_dc)[arc]) for c in conductor_ids(pm, n))
             dc_p_cost_value = -Inf
             for line in dcline_lines[i]
-                dc_p_cost_value = max(dc_p_cost_value, line["slope"]*dc_p_value + line["intercept"])
+                dc_p_cost_value = max(dc_p_cost_value, line.slope*dc_p_value + line.intercept)
             end
             dc_p_cost_start[i] = dc_p_cost_value
         end
@@ -445,7 +445,7 @@ function objective_min_fuel_and_flow_cost_pwl(pm::GenericPowerModel)
         for (i, dcline) in nw_ref[:dcline]
             arc = (i, dcline["f_bus"], dcline["t_bus"])
             for line in dcline_lines[i]
-                JuMP.@constraint(pm.model, dc_p_cost[i] >= line["slope"]*sum(var(pm, n, c, :p_dc)[arc] for c in conductor_ids(pm, n)) + line["intercept"])
+                JuMP.@constraint(pm.model, dc_p_cost[i] >= line.slope*sum(var(pm, n, c, :p_dc)[arc] for c in conductor_ids(pm, n)) + line.intercept)
             end
         end
     end
@@ -471,7 +471,7 @@ function objective_min_fuel_cost_pwl(pm::GenericPowerModel)
         gen_lines = get_lines(nw_ref[:gen])
         for (i, gen) in nw_ref[:gen]
             for line in gen_lines[i]
-                JuMP.@constraint(pm.model, pg_cost[i] >= line["slope"]*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line["intercept"])
+                JuMP.@constraint(pm.model, pg_cost[i] >= line.slope*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line.intercept)
             end
         end
     end

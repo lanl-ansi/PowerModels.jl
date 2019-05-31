@@ -609,15 +609,11 @@ function _get_comp_lines(component::Dict{String,<:Any})
         m = (y2 - y1)/(x2 - x1)
         b = y1 - m * x1
 
-        line = Dict(
-            "slope" => m,
-            "intercept" => b
-        )
-        push!(line_data, line)
+        push!(line_data, (slope=m, intercept=b))
     end
 
     for i in 2:length(line_data)
-        if line_data[i-1]["slope"] > line_data[i]["slope"]
+        if line_data[i-1].slope > line_data[i].slope
             Memento.error(LOGGER, "non-convex pwl function found in points $(component["cost"])\nlines: $(line_data)")
         end
     end
@@ -632,7 +628,7 @@ function _calc_cost_pwl(component::Dict{String,<:Any}, setpoint_id)
     setpoint = component[setpoint_id]
     cost = -Inf
     for line in comp_lines
-        cost = max(cost, line["slope"]*setpoint + line["intercept"])
+        cost = max(cost, line.slope*setpoint + line.intercept)
     end
 
     return cost
