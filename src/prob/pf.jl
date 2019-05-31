@@ -16,7 +16,7 @@ function run_pf(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function post_pf(pm::GenericPowerModel)
+function post_pf(pm::AbstractPowerModel)
     variable_voltage(pm, bounded = false)
     variable_generation(pm, bounded = false)
     variable_branch_flow(pm, bounded = false)

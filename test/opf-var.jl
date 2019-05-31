@@ -236,7 +236,7 @@ end
 @testset "test ac v+t polar opf" begin
     PMs = PowerModels
 
-    function post_opf_var(pm::GenericPowerModel)
+    function post_opf_var(pm::AbstractPowerModel)
         PMs.variable_voltage(pm)
         PMs.variable_generation(pm)
         PMs.variable_branch_flow(pm)

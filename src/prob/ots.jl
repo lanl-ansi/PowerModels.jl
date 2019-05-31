@@ -12,7 +12,7 @@ function run_ots(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function post_ots(pm::GenericPowerModel)
+function post_ots(pm::AbstractPowerModel)
     variable_branch_indicator(pm)
     variable_voltage_on_off(pm)
     variable_generation(pm)
@@ -48,7 +48,7 @@ end
 
 
 ""
-function on_off_va_bounds_ref!(pm::GenericPowerModel)
+function on_off_va_bounds_ref!(pm::AbstractPowerModel)
     if InfrastructureModels.ismultinetwork(pm.data)
         nws_data = pm.data["nw"]
     else
@@ -66,7 +66,7 @@ function on_off_va_bounds_ref!(pm::GenericPowerModel)
 end
 
 ""
-function get_ots_solution(pm::GenericPowerModel, sol::Dict{String,<:Any})
+function get_ots_solution(pm::AbstractPowerModel, sol::Dict{String,<:Any})
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)

@@ -3,7 +3,7 @@ import LinearAlgebra: Hermitian, cholesky, Symmetric, diag
 import SparseArrays: SparseMatrixCSC, sparse, spdiagm, findnz, spzeros, nonzeros
 
 ""
-function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractWRMForm
+function constraint_current_limit(pm::AbstractWRMModel, n::Int, c::Int, f_idx, c_rating_a)
     l,i,j = f_idx
     t_idx = (l,j,i)
 
@@ -22,7 +22,7 @@ end
 
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: SDPWRMForm
+function constraint_voltage(pm::AbstractWRMModel, nw::Int, cnd::Int)
     WR = var(pm, nw, cnd)[:WR]
     WI = var(pm, nw, cnd)[:WI]
 
@@ -31,7 +31,7 @@ end
 
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: SDPWRMForm
+function variable_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
     bus_ids = ids(pm, nw, :bus)
 
@@ -119,7 +119,7 @@ function ==(d1::SDconstraintDecomposition, d2::SDconstraintDecomposition)
     return eq
 end
 
-function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true) where T <: SparseSDPWRMForm
+function variable_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true)
 
     if haskey(pm.ext, :SDconstraintDecomposition)
         decomp = pm.ext[:SDconstraintDecomposition]
@@ -212,7 +212,7 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
 end
 
 
-function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: SparseSDPWRMForm
+function constraint_voltage(pm::AbstractSparseSDPWRMModel, nw::Int, cnd::Int)
     pair_matrix(group) = [(i, j) for i in group, j in group]
 
     decomp = pm.ext[:SDconstraintDecomposition]
@@ -268,7 +268,7 @@ Return:
 - `lookup_index` s.t. `lookup_index[bus_id]` returns the integer index
 of the bus with `bus_id` in the adjacency matrix.
 """
-function adjacency_matrix(pm::GenericPowerModel, nw::Int=pm.cnw)
+function adjacency_matrix(pm::AbstractPowerModel, nw::Int=pm.cnw)
     bus_ids = ids(pm, nw, :bus)
     buspairs = ref(pm, nw, :buspairs)
 
@@ -292,7 +292,7 @@ of the power grid graph.
 of the bus with `bus_id` in the adjacency matrix.
 - the graph ordering that may be used to reconstruct the chordal extension
 """
-function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
+function chordal_extension(pm::AbstractPowerModel, nw::Int=pm.cnw)
     adj, lookup_index = adjacency_matrix(pm, nw)
     nb = size(adj, 1)
     diag_el = sum(adj, dims=1)[:]

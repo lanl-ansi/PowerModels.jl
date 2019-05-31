@@ -16,7 +16,7 @@ function run_opf(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function post_opf(pm::GenericPowerModel)
+function post_opf(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_branch_flow(pm)

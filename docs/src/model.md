@@ -7,7 +7,7 @@ CurrentModule = PowerModels
 All methods for constructing powermodels should be defined on the following type:
 
 ```@docs
-GenericPowerModel
+AbstractPowerModel
 ```
 
 which utilizes the following (internal) functions:

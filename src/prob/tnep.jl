@@ -10,7 +10,7 @@ function run_tnep(file, model_constructor, optimizer; kwargs...)
 end
 
 "the general form of the tnep optimization model"
-function post_tnep(pm::GenericPowerModel)
+function post_tnep(pm::AbstractPowerModel)
     variable_branch_ne(pm)
     variable_voltage(pm)
     variable_voltage_ne(pm)
@@ -59,7 +59,7 @@ end
 
 
 "Cost of building branches"
-function objective_tnep_cost(pm::GenericPowerModel)
+function objective_tnep_cost(pm::AbstractPowerModel)
     return JuMP.@objective(pm.model, Min,
         sum(
             sum(
@@ -71,7 +71,7 @@ end
 
 
 ""
-function ne_branch_ref!(pm::GenericPowerModel)
+function ne_branch_ref!(pm::AbstractPowerModel)
     for (nw, nw_ref) in pm.ref[:nw]
         if !haskey(nw_ref, :ne_branch)
             error(LOGGER, "required ne_branch data not found")
@@ -95,7 +95,7 @@ end
 
 
 ""
-function get_tnep_solution(pm::GenericPowerModel, sol::Dict{String,<:Any})
+function get_tnep_solution(pm::AbstractPowerModel, sol::Dict{String,<:Any})
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_branch_flow_setpoint(sol, pm)

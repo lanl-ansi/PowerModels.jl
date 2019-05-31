@@ -1,7 +1,7 @@
 export run_obbt_opf
 
 "optimality-based bound tightening for Optimal Power Flow Relaxations"
-function check_variables(pm::GenericPowerModel)
+function check_variables(pm::AbstractPowerModel)
     try
         vm = var(pm, :vm)
     catch err
@@ -25,7 +25,7 @@ function check_obbt_options(ub::Float64, rel_gap::Float64, ub_constraint::Bool)
     end
 end
 
-function constraint_obj_bound(pm::GenericPowerModel, bound)
+function constraint_obj_bound(pm::AbstractPowerModel, bound)
     model = PowerModels.check_cost_models(pm)
     if model != 2
         Memento.error(LOGGER, "Only cost models of type 2 is supported at this time, given cost model type $(model)")
@@ -55,7 +55,7 @@ function constraint_obj_bound(pm::GenericPowerModel, bound)
     )
 end
 
-function create_modifications(pm::GenericPowerModel,
+function create_modifications(pm::AbstractPowerModel,
     vm_lb::Dict{Any,Float64}, vm_ub::Dict{Any,Float64},
     td_lb::Dict{Any,Float64}, td_ub::Dict{Any,Float64})
 
@@ -108,7 +108,7 @@ Dict{String,Any} with 19 entries:
   "avg_vm_range_init"            => 0.2
   "final_rel_gap_from_ub"        => NaN
   "run_time"                     => 0.832232
-  "model_constructor"            => PowerModels.GenericPowerModel{...}
+  "model_constructor"            => AbstractPowerModel
   "avg_td_range_final"           => 0.436166
   "initial_rel_gap_from_ub"      => Inf
   "sim_parallel_run_time"        => 1.13342

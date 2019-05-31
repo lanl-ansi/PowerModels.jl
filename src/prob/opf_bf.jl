@@ -1,7 +1,7 @@
 export run_opf_bf, run_ac_opf_bf, run_dc_opf_bf
 
 ""
-function run_opf_bf(file, model_constructor::Type{GenericPowerModel{T}}, optimizer; kwargs...) where T <: AbstractBFForm
+function run_opf_bf(file, model_constructor::Type{T}, optimizer; kwargs...) where T <: AbstractBFModel
     return run_generic_model(file, model_constructor, optimizer, post_opf_bf; kwargs...)
 end
 
@@ -11,7 +11,7 @@ function run_opf_bf(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function post_opf_bf(pm::GenericPowerModel)
+function post_opf_bf(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_branch_flow(pm)

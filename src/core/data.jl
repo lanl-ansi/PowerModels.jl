@@ -231,7 +231,7 @@ function apply_func(data::Dict{String,<:Any}, key::String, func)
 end
 
 
-"Transforms network data into per-unit"
+"TransModels network data into per-unit"
 function make_per_unit!(data::Dict{String,<:Any})
     if !haskey(data, "per_unit") || data["per_unit"] == false
         data["per_unit"] = true
@@ -365,7 +365,7 @@ function _make_per_unit!(data::Dict{String,<:Any}, mva_base::Real)
 end
 
 
-"Transforms network data into mixed-units (inverse of per-unit)"
+"TransModels network data into mixed-units (inverse of per-unit)"
 function make_mixed_units!(data::Dict{String,<:Any})
     if haskey(data, "per_unit") && data["per_unit"] == true
         data["per_unit"] = false
@@ -1840,8 +1840,6 @@ end
 finds active network buses and branches that are not necessary for the
 computation and sets their status to off.
 
-Works on a PowerModels data dict, so that a it can be used without a GenericPowerModel object
-
 Warning: this implementation has quadratic complexity, in the worst case
 """
 function propagate_topology_status!(data::Dict{String,<:Any})
@@ -2201,7 +2199,7 @@ end
 
 
 """
-performs DFS on a graph
+perModels DFS on a graph
 """
 function _dfs(i, neighbors, component_lookup, touched)
     push!(touched, i)
@@ -2217,7 +2215,7 @@ function _dfs(i, neighbors, component_lookup, touched)
 end
 
 
-"Transforms single-conductor network data into multi-conductor data"
+"TransModels single-conductor network data into multi-conductor data"
 function make_multiconductor!(data::Dict{String,<:Any}, conductors::Int)
     if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]

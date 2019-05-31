@@ -7,7 +7,7 @@
 """
 Checks that all cost models are of the same type
 """
-function check_cost_models(pm::GenericPowerModel)
+function check_cost_models(pm::AbstractPowerModel)
     gen_model = check_gen_cost_models(pm)
     dcline_model = check_dcline_cost_models(pm)
 
@@ -30,7 +30,7 @@ end
 """
 Checks that all generator cost models are of the same type
 """
-function check_gen_cost_models(pm::GenericPowerModel)
+function check_gen_cost_models(pm::AbstractPowerModel)
     model = nothing
 
     for (n, nw_ref) in nws(pm)
@@ -56,7 +56,7 @@ end
 """
 Checks that all dcline cost models are of the same type
 """
-function check_dcline_cost_models(pm::GenericPowerModel)
+function check_dcline_cost_models(pm::AbstractPowerModel)
     model = nothing
 
     for (n, nw_ref) in nws(pm)
@@ -81,7 +81,7 @@ end
 
 
 ""
-function objective_min_fuel_and_flow_cost(pm::GenericPowerModel)
+function objective_min_fuel_and_flow_cost(pm::AbstractPowerModel)
     model = check_cost_models(pm)
 
     if model == 1
@@ -96,7 +96,7 @@ end
 
 
 ""
-function objective_min_fuel_cost(pm::GenericPowerModel)
+function objective_min_fuel_cost(pm::AbstractPowerModel)
     model = check_gen_cost_models(pm)
 
     if model == 1
@@ -111,7 +111,7 @@ end
 
 
 ""
-function objective_min_fuel_and_flow_cost_polynomial(pm::GenericPowerModel)
+function objective_min_fuel_and_flow_cost_polynomial(pm::AbstractPowerModel)
     order = calc_max_cost_index(pm.data)-1
 
     if order <= 2
@@ -122,7 +122,7 @@ function objective_min_fuel_and_flow_cost_polynomial(pm::GenericPowerModel)
 end
 
 ""
-function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::GenericPowerModel)
+function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractPowerModel)
     gen_cost = Dict()
     dcline_cost = Dict()
 
@@ -167,7 +167,7 @@ end
 
 
 "Adds lifted variables to turn a quadatic objective into a linear one; needed for conic solvers that only support linear objectives"
-function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::GenericPowerModel{T}) where T <: AbstractConicForms
+function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractConicModels)
     gen_cost = Dict()
     dcline_cost = Dict()
 
@@ -256,7 +256,7 @@ end
 
 
 ""
-function _objective_min_fuel_and_flow_cost_polynomial_nl(pm::GenericPowerModel)
+function _objective_min_fuel_and_flow_cost_polynomial_nl(pm::AbstractPowerModel)
     gen_cost = Dict()
     dcline_cost = Dict()
 
@@ -312,7 +312,7 @@ end
 
 
 ""
-function objective_min_fuel_cost_polynomial(pm::GenericPowerModel)
+function objective_min_fuel_cost_polynomial(pm::AbstractPowerModel)
     order = calc_max_cost_index(pm.data)-1
 
     if order <= 2
@@ -323,7 +323,7 @@ function objective_min_fuel_cost_polynomial(pm::GenericPowerModel)
 end
 
 ""
-function _objective_min_fuel_cost_polynomial_linquad(pm::GenericPowerModel)
+function _objective_min_fuel_cost_polynomial_linquad(pm::AbstractPowerModel)
     gen_cost = Dict()
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
@@ -350,7 +350,7 @@ end
 
 
 ""
-function _objective_min_fuel_cost_polynomial_nl(pm::GenericPowerModel)
+function _objective_min_fuel_cost_polynomial_nl(pm::AbstractPowerModel)
     gen_cost = Dict()
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
@@ -395,7 +395,7 @@ end
 
 
 ""
-function objective_min_fuel_and_flow_cost_pwl(pm::GenericPowerModel)
+function objective_min_fuel_and_flow_cost_pwl(pm::AbstractPowerModel)
 
     for (n, nw_ref) in nws(pm)
         gen_lines = get_lines(nw_ref[:gen])
@@ -460,7 +460,7 @@ end
 
 
 ""
-function objective_min_fuel_cost_pwl(pm::GenericPowerModel)
+function objective_min_fuel_cost_pwl(pm::AbstractPowerModel)
 
     for (n, nw_ref) in nws(pm)
         pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,

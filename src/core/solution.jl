@@ -1,5 +1,5 @@
 ""
-function build_solution(pm::GenericPowerModel, solve_time; solution_builder = get_solution)
+function build_solution(pm::AbstractPowerModel, solve_time; solution_builder = get_solution)
     # TODO @assert that the model is solved
 
     sol = init_solution(pm)
@@ -54,13 +54,13 @@ function build_solution(pm::GenericPowerModel, solve_time; solution_builder = ge
 end
 
 ""
-function init_solution(pm::GenericPowerModel)
+function init_solution(pm::AbstractPowerModel)
     data_keys = ["per_unit", "baseMVA"]
     return Dict{String,Any}(key => pm.data[key] for key in data_keys)
 end
 
 ""
-function get_solution(pm::GenericPowerModel, sol::Dict{String,<:Any})
+function get_solution(pm::AbstractPowerModel, sol::Dict{String,<:Any})
     add_bus_voltage_setpoint(sol, pm)
     add_generator_power_setpoint(sol, pm)
     add_storage_setpoint(sol, pm)
@@ -72,13 +72,13 @@ function get_solution(pm::GenericPowerModel, sol::Dict{String,<:Any})
 end
 
 ""
-function add_bus_voltage_setpoint(sol, pm::GenericPowerModel)
+function add_bus_voltage_setpoint(sol, pm::AbstractPowerModel)
     add_setpoint(sol, pm, "bus", "vm", :vm)
     add_setpoint(sol, pm, "bus", "va", :va)
 end
 
 ""
-function add_kcl_duals(sol, pm::GenericPowerModel)
+function add_kcl_duals(sol, pm::AbstractPowerModel)
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
         add_dual(sol, pm, "bus", "lam_kcl_r", :kcl_p)
         add_dual(sol, pm, "bus", "lam_kcl_i", :kcl_q)
@@ -86,7 +86,7 @@ function add_kcl_duals(sol, pm::GenericPowerModel)
 end
 
 ""
-function add_sm_duals(sol, pm::GenericPowerModel)
+function add_sm_duals(sol, pm::AbstractPowerModel)
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
         add_dual(sol, pm, "branch", "mu_sm_fr", :sm_fr)
         add_dual(sol, pm, "branch", "mu_sm_to", :sm_to)
@@ -94,18 +94,18 @@ function add_sm_duals(sol, pm::GenericPowerModel)
 end
 
 ""
-function add_generator_power_setpoint(sol, pm::GenericPowerModel)
+function add_generator_power_setpoint(sol, pm::AbstractPowerModel)
     add_setpoint(sol, pm, "gen", "pg", :pg)
     add_setpoint(sol, pm, "gen", "qg", :qg)
 end
 
 ""
-function add_generator_status_setpoint(sol, pm::GenericPowerModel)
+function add_generator_status_setpoint(sol, pm::AbstractPowerModel)
     add_setpoint(sol, pm, "gen", "gen_status", :z_gen; conductorless=true, default_value = (item) -> item["gen_status"]*1.0)
 end
 
 ""
-function add_storage_setpoint(sol, pm::GenericPowerModel)
+function add_storage_setpoint(sol, pm::AbstractPowerModel)
     add_setpoint(sol, pm, "storage", "ps", :ps)
     add_setpoint(sol, pm, "storage", "qs", :qs)
     add_setpoint(sol, pm, "storage", "se", :se, conductorless=true)
@@ -115,7 +115,7 @@ function add_storage_setpoint(sol, pm::GenericPowerModel)
 end
 
 ""
-function add_branch_flow_setpoint(sol, pm::GenericPowerModel)
+function add_branch_flow_setpoint(sol, pm::AbstractPowerModel)
     # check the branch flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
         add_setpoint(sol, pm, "branch", "pf", :p; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
@@ -126,7 +126,7 @@ function add_branch_flow_setpoint(sol, pm::GenericPowerModel)
 end
 
 ""
-function add_dcline_flow_setpoint(sol, pm::GenericPowerModel)
+function add_dcline_flow_setpoint(sol, pm::AbstractPowerModel)
     add_setpoint(sol, pm, "dcline", "pf", :p_dc; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
     add_setpoint(sol, pm, "dcline", "qf", :q_dc; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
     add_setpoint(sol, pm, "dcline", "pt", :p_dc; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
@@ -134,7 +134,7 @@ function add_dcline_flow_setpoint(sol, pm::GenericPowerModel)
 end
 
 ""
-function add_branch_flow_setpoint_ne(sol, pm::GenericPowerModel)
+function add_branch_flow_setpoint_ne(sol, pm::AbstractPowerModel)
     # check the branch flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
         add_setpoint(sol, pm, "ne_branch", "pf", :p_ne; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
@@ -145,16 +145,16 @@ function add_branch_flow_setpoint_ne(sol, pm::GenericPowerModel)
 end
 
 ""
-function add_branch_status_setpoint(sol, pm::GenericPowerModel)
+function add_branch_status_setpoint(sol, pm::AbstractPowerModel)
   add_setpoint(sol, pm, "branch", "br_status", :branch_z; default_value = (item) -> 1)
 end
 
-function add_branch_status_setpoint_dc(sol, pm::GenericPowerModel)
+function add_branch_status_setpoint_dc(sol, pm::AbstractPowerModel)
   add_setpoint(sol, pm, "dcline", "br_status", :dcline_z; default_value = (item) -> 1)
 end
 
 ""
-function add_branch_ne_setpoint(sol, pm::GenericPowerModel)
+function add_branch_ne_setpoint(sol, pm::AbstractPowerModel)
   add_setpoint(sol, pm, "ne_branch", "built", :branch_ne; default_value = (item) -> 1)
 end
 
@@ -168,7 +168,7 @@ e.g. the reactive power values in a DC power flow model
 """
 function add_setpoint_fixed(
     sol,
-    pm::GenericPowerModel,
+    pm::AbstractPowerModel,
     dict_name,
     param_name;
     index_name = "index",
@@ -211,7 +211,7 @@ end
 "adds values based on JuMP variables"
 function add_setpoint(
     sol,
-    pm::GenericPowerModel,
+    pm::AbstractPowerModel,
     dict_name,
     param_name,
     variable_symbol;
@@ -269,7 +269,7 @@ end
 
     function add_dual(
         sol::AbstractDict,
-        pm::GenericPowerModel,
+        pm::AbstractPowerModel,
         dict_name::AbstractString,
         param_name::AbstractString,
         con_symbol::Symbol;
@@ -284,7 +284,7 @@ This function takes care of adding the values of dual variables to the solution 
 # Arguments
 
 - `sol::AbstractDict`: The dict where the desired final details of the solution are stored;
-- `pm::GenericPowerModel`: The PowerModel which has been considered;
+- `pm::AbstractPowerModel`: The PowerModel which has been considered;
 - `dict_name::AbstractString`: The particular class of items for the solution (e.g. branch, bus);
 - `param_name::AbstractString`: The name associated to the dual variable;
 - `con_symbol::Symbol`: the Symbol attached to the class of constraints;
@@ -296,7 +296,7 @@ This function takes care of adding the values of dual variables to the solution 
 """
 function add_dual(
     sol::AbstractDict,
-    pm::GenericPowerModel,
+    pm::AbstractPowerModel,
     dict_name::AbstractString,
     param_name::AbstractString,
     con_symbol::Symbol;
