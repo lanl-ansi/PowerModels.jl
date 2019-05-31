@@ -62,6 +62,15 @@
         @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0.0; atol = 1e-1)
     end
+
+    @testset "5-bus source ids" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
+        @test data["bus"]["1"]["source_id"] == ["bus", 1]
+        @test data["gen"]["1"]["source_id"] == ["gen", 1]
+        @test data["load"]["1"]["source_id"] == ["bus", 2]
+        @test data["branch"]["1"]["source_id"] == ["branch", 1]
+        @test data["storage"]["1"]["source_id"] == ["storage", 1]
+    end
 end
 
 
@@ -251,6 +260,11 @@ end
 
     @testset "test case5 gap" begin
         file = "../test/data/matpower/case5_gap.m"
+        test_case(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case5 strg" begin
+        file = "../test/data/matpower/case5_strg.m"
         test_case(file, PowerModels.parse_matpower)
     end
 
