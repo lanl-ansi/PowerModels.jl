@@ -40,7 +40,7 @@
 
     @testset "14-bus case file with bus names" begin
         data = PowerModels.parse_file("../test/data/matpower/case14.m")
-        @test data["bus"]["1"]["bus_name"] == "Bus 1     HV"
+        @test data["bus"]["1"]["name"] == "Bus 1     HV"
         @test isa(JSON.json(data), String)
     end
 

@@ -67,7 +67,7 @@ end
     @testset "14-bus mixed type tables" begin
         data = PowerModels.parse_file("../test/data/matpower/case14.m")
 
-        ct = PowerModels.component_table(data, "bus", ["vmin", "vmax", "bus_name", "none"])
+        ct = PowerModels.component_table(data, "bus", ["vmin", "vmax", "name", "none"])
         @test length(ct) == 70
         @test size(ct,1) == 14
         @test size(ct,2) == 5

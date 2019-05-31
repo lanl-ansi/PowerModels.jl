@@ -37,7 +37,7 @@ mp_bus_columns = [
 ]
 
 mp_bus_name_columns = [
-    ("bus_name", Union{String,SubString{String}})
+    ("name", Union{String,SubString{String}})
 ]
 
 mp_gen_columns = [
@@ -737,24 +737,25 @@ function export_matpower(io::IO, data::Dict{String,Any})
     println(io, "%    bus_i    type    Pd    Qd    Gs    Bs    area    Vm    Va    baseKV    zone    Vmax    Vmin")
     println(io, "mpc.bus = [")
     for (idx,bus) in sort(buses)
-    println(io, "\t", bus["index"],
-                "\t", bus["bus_type"],
-                "\t", get_default(pd, bus["index"]),
-                "\t", get_default(qd, bus["index"]),
-                "\t", get_default(gs, bus["index"]),
-                "\t", get_default(bs, bus["index"]),
-                "\t", get_default(bus, "area"),
-                "\t", get_default(bus, "vm"),
-                "\t", get_default(bus, "va"),
-                "\t", get_default(bus, "base_kv"),
-                "\t", get_default(bus, "zone"),
-                "\t", get_default(bus, "vmax"),
-                "\t", get_default(bus, "vmin"),
-                "\t", get_default(bus, "lam_p", ""),
-                "\t", get_default(bus, "lam_q", ""),
-                "\t", get_default(bus, "mu_vmax", ""),
-                "\t", get_default(bus, "mu_vmin",""),
-                )
+        println(io,
+            "\t", bus["index"],
+            "\t", bus["bus_type"],
+            "\t", get_default(pd, bus["index"]),
+            "\t", get_default(qd, bus["index"]),
+            "\t", get_default(gs, bus["index"]),
+            "\t", get_default(bs, bus["index"]),
+            "\t", get_default(bus, "area"),
+            "\t", get_default(bus, "vm"),
+            "\t", get_default(bus, "va"),
+            "\t", get_default(bus, "base_kv"),
+            "\t", get_default(bus, "zone"),
+            "\t", get_default(bus, "vmax"),
+            "\t", get_default(bus, "vmin"),
+            "\t", get_default(bus, "lam_p", ""),
+            "\t", get_default(bus, "lam_q", ""),
+            "\t", get_default(bus, "mu_vmax", ""),
+            "\t", get_default(bus, "mu_vmin",""),
+        )
     end
     println(io, "];")
     println(io)
@@ -779,33 +780,33 @@ function export_matpower(io::IO, data::Dict{String,Any})
         if idx != gen["index"]
             Memento.warn(LOGGER, "The index of the generator does not match the matpower assigned index. Any data that uses generator indexes for reference is corrupted.");
         end
-    println(io, "\t", gen["gen_bus"],
-                "\t", get_default(gen, "pg"),
-                "\t", get_default(gen, "qg"),
-                "\t", get_default(gen, "qmax"),
-                "\t", get_default(gen, "qmin"),
-                "\t", get_default(gen, "vg"),
-                "\t", get_default(gen, "mbase"),
-                "\t", get_default(gen, "gen_status"),
-                "\t", get_default(gen, "pmax"),
-                "\t", get_default(gen, "pmin"),
-                "\t", get_default(gen, "pc1", ""),
-                "\t", get_default(gen, "pc2", ""),
-                "\t", get_default(gen, "qc1min", ""),
-                "\t", get_default(gen, "qc1max", ""),
-                "\t", get_default(gen, "qc2min", ""),
-                "\t", get_default(gen, "qc2max", ""),
-                "\t", get_default(gen, "ramp_agc", ""),
-                "\t", (haskey(gen, "ramp_10") ? gen["ramp_10"] : haskey(gen, "ramp_30") ? 0 : ""),
-                "\t", get_default(gen, "ramp_30", ""),
-                "\t", get_default(gen, "ramp_q", ""),
-                "\t", get_default(gen, "apf", ""),
-                "\t", get_default(gen, "mu_pmax", ""),
-                "\t", get_default(gen, "mu_pmin", ""),
-                "\t", get_default(gen, "mu_qmax", ""),
-                "\t", get_default(gen, "mu_qmin", ""),
-                )
-
+        println(io, 
+            "\t", gen["gen_bus"],
+            "\t", get_default(gen, "pg"),
+            "\t", get_default(gen, "qg"),
+            "\t", get_default(gen, "qmax"),
+            "\t", get_default(gen, "qmin"),
+            "\t", get_default(gen, "vg"),
+            "\t", get_default(gen, "mbase"),
+            "\t", get_default(gen, "gen_status"),
+            "\t", get_default(gen, "pmax"),
+            "\t", get_default(gen, "pmin"),
+            "\t", get_default(gen, "pc1", ""),
+            "\t", get_default(gen, "pc2", ""),
+            "\t", get_default(gen, "qc1min", ""),
+            "\t", get_default(gen, "qc1max", ""),
+            "\t", get_default(gen, "qc2min", ""),
+            "\t", get_default(gen, "qc2max", ""),
+            "\t", get_default(gen, "ramp_agc", ""),
+            "\t", (haskey(gen, "ramp_10") ? gen["ramp_10"] : haskey(gen, "ramp_30") ? 0 : ""),
+            "\t", get_default(gen, "ramp_30", ""),
+            "\t", get_default(gen, "ramp_q", ""),
+            "\t", get_default(gen, "apf", ""),
+            "\t", get_default(gen, "mu_pmax", ""),
+            "\t", get_default(gen, "mu_pmin", ""),
+            "\t", get_default(gen, "mu_qmax", ""),
+            "\t", get_default(gen, "mu_qmin", ""),
+        )
         i = i+1
     end
     println(io,"];")
@@ -838,7 +839,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
                 "\t", get_default(strg, "x"),
                 "\t", get_default(strg, "standby_loss"),
                 "\t", get_default(strg, "status"),
-                )
+            )
             i = i+1
         end
         println(io,"];")
@@ -958,8 +959,21 @@ function export_matpower(io::IO, data::Dict{String,Any})
         println(io)
     end
 
+    if all(haskey(bus, "name") for (i,bus) in buses)
+        # Print the bus name data
+        println(io, "%% bus names")
+        println(io, "mpc.bus_name = {")
+        for (idx,bus) in sort(buses)
+            println(io,
+                "\t", "'", bus["name"], "'"
+            )
+        end
+        println(io, "};")
+        println(io)
+    end
+
     # Print the extra bus data
-    export_extra_data(io, data, "bus", Set(["index", "source_id", "gs", "bs", "zone", "bus_i", "bus_type", "qd",  "vmax", "area", "vmin", "va", "vm", "base_kv", "pd", "bus_name", "lam_p", "lam_q", "mu_vmax", "mu_vmin"]); postfix="_data")
+    export_extra_data(io, data, "bus", Set(["index", "source_id", "gs", "bs", "zone", "bus_i", "bus_type", "qd",  "vmax", "area", "vmin", "va", "vm", "base_kv", "pd", "name", "lam_p", "lam_q", "mu_vmax", "mu_vmin"]); postfix="_data")
 
     # Print the extra generator data
     export_extra_data(io, data, "gen", Set(["index", "source_id", "gen_bus", "pg", "qg", "qmax", "qmin", "vg", "mbase", "gen_status", "pmax", "pmin", "pc1", "pc2", "qc1min", "qc1max", "qc2min", "qc2max", "ramp_agc", "ramp_10", "ramp_30", "ramp_q", "apf", "ncost", "model", "shutdown", "startup", "cost", "mu_pmax", "mu_pmin", "mu_qmax", "mu_qmin"]); postfix="_data")

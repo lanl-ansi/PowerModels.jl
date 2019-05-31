@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Update Matpower "bus_name" to map to bus parameter "name"
 - Updated slope and intercept data structure (#521)
 
 ### Staged
