@@ -161,6 +161,7 @@ function parse_matpower_string(data_string::String)
         for bus_row in matlab_data["mpc.bus"]
             bus_data = InfrastructureModels.row_to_typed_dict(bus_row, mp_bus_columns)
             bus_data["index"] = InfrastructureModels.check_type(Int, bus_row[1])
+            bus_data["source_id"] = ["bus", bus_data["index"]]
             push!(buses, bus_data)
         end
         case["bus"] = buses
@@ -173,6 +174,7 @@ function parse_matpower_string(data_string::String)
         for (i, gen_row) in enumerate(matlab_data["mpc.gen"])
             gen_data = InfrastructureModels.row_to_typed_dict(gen_row, mp_gen_columns)
             gen_data["index"] = i
+            gen_data["source_id"] = ["gen", i]
             push!(gens, gen_data)
         end
         case["gen"] = gens
@@ -185,6 +187,7 @@ function parse_matpower_string(data_string::String)
         for (i, branch_row) in enumerate(matlab_data["mpc.branch"])
             branch_data = InfrastructureModels.row_to_typed_dict(branch_row, mp_branch_columns)
             branch_data["index"] = i
+            branch_data["source_id"] = ["branch", i]
             push!(branches, branch_data)
         end
         case["branch"] = branches
@@ -197,6 +200,7 @@ function parse_matpower_string(data_string::String)
         for (i, dcline_row) in enumerate(matlab_data["mpc.dcline"])
             dcline_data = InfrastructureModels.row_to_typed_dict(dcline_row, mp_dcline_columns)
             dcline_data["index"] = i
+            dcline_data["source_id"] = ["dcline", i]
             push!(dclines, dcline_data)
         end
         case["dcline"] = dclines
@@ -207,6 +211,7 @@ function parse_matpower_string(data_string::String)
         for (i, storage_row) in enumerate(matlab_data["mpc.storage"])
             storage_data = InfrastructureModels.row_to_typed_dict(storage_row, mp_storage_columns)
             storage_data["index"] = i
+            storage_data["source_id"] = ["storage", i]
             push!(storage, storage_data)
         end
         case["storage"] = storage
@@ -218,6 +223,7 @@ function parse_matpower_string(data_string::String)
         for (i, bus_name_row) in enumerate(matlab_data["mpc.bus_name"])
             bus_name_data = InfrastructureModels.row_to_typed_dict(bus_name_row, mp_bus_name_columns)
             bus_name_data["index"] = i
+            bus_name_data["source_id"] = ["bus_name", i]
             push!(bus_names, bus_name_data)
         end
         case["bus_name"] = bus_names
@@ -232,6 +238,7 @@ function parse_matpower_string(data_string::String)
         for (i, gencost_row) in enumerate(matlab_data["mpc.gencost"])
             gencost_data = mp_cost_data(gencost_row)
             gencost_data["index"] = i
+            gencost_data["source_id"] = ["gencost", i]
             push!(gencost, gencost_data)
         end
         case["gencost"] = gencost
@@ -246,6 +253,7 @@ function parse_matpower_string(data_string::String)
         for (i, dclinecost_row) in enumerate(matlab_data["mpc.dclinecost"])
             dclinecost_data = mp_cost_data(dclinecost_row)
             dclinecost_data["index"] = i
+            dclinecost_data["source_id"] = ["dclinecost", i]
             push!(dclinecosts, dclinecost_data)
         end
         case["dclinecost"] = dclinecosts
@@ -268,6 +276,7 @@ function parse_matpower_string(data_string::String)
                 for (i, row) in enumerate(matlab_data[k])
                     row_data = InfrastructureModels.row_to_dict(row, column_names)
                     row_data["index"] = i
+                    row_data["source_id"] = [case_name, i]
                     push!(tbl, row_data)
                 end
                 case[case_name] = tbl
@@ -388,20 +397,26 @@ function split_loads_shunts(data::Dict{String,Any})
     shunt_num = 1
     for (i,bus) in enumerate(data["bus"])
         if bus["pd"] != 0.0 || bus["qd"] != 0.0
-            append!(data["load"], [Dict{String,Any}("pd" => bus["pd"],
-                                                    "qd" => bus["qd"],
-                                                    "load_bus" => bus["bus_i"],
-                                                    "status" => convert(Int8, bus["bus_type"] != 4),
-                                                    "index" => load_num)])
+            append!(data["load"], [Dict{String,Any}(
+                "pd" => bus["pd"],
+                "qd" => bus["qd"],
+                "load_bus" => bus["bus_i"],
+                "status" => convert(Int8, bus["bus_type"] != 4),
+                "index" => load_num,
+                "source_id" => ["bus", bus["bus_i"]]
+            )])
             load_num += 1
         end
 
         if bus["gs"] != 0.0 || bus["bs"] != 0.0
-            append!(data["shunt"], [Dict{String,Any}("gs" => bus["gs"],
-                                                     "bs" => bus["bs"],
-                                                     "shunt_bus" => bus["bus_i"],
-                                                     "status" => convert(Int8, bus["bus_type"] != 4),
-                                                     "index" => shunt_num)])
+            append!(data["shunt"], [Dict{String,Any}(
+                "gs" => bus["gs"],
+                 "bs" => bus["bs"],
+                 "shunt_bus" => bus["bus_i"],
+                 "status" => convert(Int8, bus["bus_type"] != 4),
+                 "index" => shunt_num,
+                 "source_id" => ["bus", bus["bus_i"]]
+            )])
             shunt_num += 1
         end
 
@@ -540,6 +555,7 @@ function merge_generator_cost_data(data::Dict{String,Any})
             gen = data["gen"][i]
             @assert(gen["index"] == gencost["index"])
             delete!(gencost, "index")
+            delete!(gencost, "source_id")
 
             check_keys(gen, keys(gencost))
             merge!(gen, gencost)
@@ -552,6 +568,7 @@ function merge_generator_cost_data(data::Dict{String,Any})
             dcline = data["dcline"][i]
             @assert(dcline["index"] == dclinecost["index"])
             delete!(dclinecost, "index")
+            delete!(dclinecost, "source_id")
 
             check_keys(dcline, keys(dclinecost))
             merge!(dcline, dclinecost)
@@ -569,6 +586,7 @@ function merge_bus_name_data(data::Dict{String,Any})
         for (i, bus_name) in enumerate(data["bus_name"])
             bus = data["bus"][i]
             delete!(bus_name, "index")
+            delete!(bus_name, "source_id")
 
             check_keys(bus, keys(bus_name))
             merge!(bus, bus_name)
@@ -600,6 +618,7 @@ function merge_generic_data(data::Dict{String,Any})
                         merge_row = v[i]
                         #@assert(row["index"] == merge_row["index"]) # note this does not hold for the bus table
                         delete!(merge_row, "index")
+                        delete!(merge_row, "source_id")
                         for key in keys(merge_row)
                             if haskey(row, key)
                                 Memento.error(LOGGER, "failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(k)\" because they both share \"$(key)\" as a column name.")
@@ -655,6 +674,10 @@ function export_matpower(io::IO, data::Dict{String,Any})
     generators = Dict{Int, Dict}()
     for (idx,gen) in data["gen"]
         generators[gen["index"]] = gen
+    end
+    storage = Dict{Int, Dict}()
+    for (idx,strg) in data["storage"]
+        storage[strg["index"]] = strg
     end
     branches = Dict{Int, Dict}()
     for (idx,branch) in data["branch"]
@@ -788,6 +811,41 @@ function export_matpower(io::IO, data::Dict{String,Any})
     println(io,"];")
     println(io)
 
+
+    if length(storage) > 0
+        # Print the storage data
+        println(io, "%% storage data")
+        println(io, "%    storage_bus    ps    qs    energy    energy_rating    charge_rating    discharge_rating    charge_efficiency    discharge_efficiency    thermal_rating    qmin    qmax    r    x    standby_loss    status")
+        println(io, "mpc.storage = [")
+        i = 1
+        for (idx,strg) in sort(storage)
+            if idx != strg["index"]
+                Memento.warn(LOGGER, "The index of the storage does not match the matpower assigned index. Any data that uses storage indexes for reference is corrupted.");
+            end
+            println(io, "\t", strg["storage_bus"],
+                "\t", get_default(strg, "ps"),
+                "\t", get_default(strg, "qs"),
+                "\t", get_default(strg, "energy"),
+                "\t", get_default(strg, "energy_rating"),
+                "\t", get_default(strg, "charge_rating"),
+                "\t", get_default(strg, "discharge_rating"),
+                "\t", get_default(strg, "charge_efficiency"),
+                "\t", get_default(strg, "discharge_efficiency"),
+                "\t", get_default(strg, "thermal_rating"),
+                "\t", get_default(strg, "qmin"),
+                "\t", get_default(strg, "qmax"),
+                "\t", get_default(strg, "r"),
+                "\t", get_default(strg, "x"),
+                "\t", get_default(strg, "standby_loss"),
+                "\t", get_default(strg, "status"),
+                )
+            i = i+1
+        end
+        println(io,"];")
+        println(io)
+    end
+
+
     # Print the branch data
     println(io, "%% branch data")
     println(io, "%    fbus    tbus    r    x    b    rateA    rateB    rateC    ratio    angle    status    angmin    angmax")
@@ -826,39 +884,41 @@ function export_matpower(io::IO, data::Dict{String,Any})
     println(io, "];")
     println(io)
 
-    # print the dcline data
-    println(io, "%% dcline data")
-    println(io, "%	fbus	tbus	status	Pf	Pt	Qf	Qt	Vf	Vt	Pmin	Pmax	QminF	QmaxF	QminT	QmaxT	loss0	loss1")
-    println(io, "mpc.dcline = [")
-    for (idx, dcline) in sort(dclines)
-        println(io,
-            "\t", get_default(dcline, "f_bus"),
-            "\t", get_default(dcline, "t_bus"),
-            "\t", get_default(dcline, "br_status"),
-            "\t", get_default(dcline, "pf"),
-            "\t", -get_default(dcline, "pt"),  # opposite convention
-            "\t", -get_default(dcline, "qf"),  # opposite convention
-            "\t", -get_default(dcline, "qt"),  # opposite convention
-            "\t", get_default(dcline, "vf"),
-            "\t", get_default(dcline, "vt"),
-            "\t", (haskey(dcline, "mp_pmin") ? dcline["mp_pmin"] : min(dcline["pmaxt"], dcline["pmint"], dcline["pmaxf"], dcline["pminf"])),
-            "\t", (haskey(dcline, "mp_pmax") ? dcline["mp_pmax"] : max(dcline["pmaxt"], dcline["pmint"], dcline["pmaxf"], dcline["pminf"])),
-            "\t", get_default(dcline, "qminf"),
-            "\t", get_default(dcline, "qmaxf"),
-            "\t", get_default(dcline, "qmint"),
-            "\t", get_default(dcline, "qmaxt"),
-            "\t", get_default(dcline, "loss0"),
-            "\t", get_default(dcline, "loss1"),
-            "\t", get_default(dcline, "mu_pmin", ""),
-            "\t", get_default(dcline, "mu_pmax", ""),
-            "\t", get_default(dcline, "mu_qminf", ""),
-            "\t", get_default(dcline, "mu_qmaxf", ""),
-            "\t", get_default(dcline, "mu_qmint", ""),
-            "\t", get_default(dcline, "mu_qmaxt", ""),
-        )
+    if length(dclines) > 0 
+        # print the dcline data
+        println(io, "%% dcline data")
+        println(io, "%	fbus	tbus	status	Pf	Pt	Qf	Qt	Vf	Vt	Pmin	Pmax	QminF	QmaxF	QminT	QmaxT	loss0	loss1")
+        println(io, "mpc.dcline = [")
+        for (idx, dcline) in sort(dclines)
+            println(io,
+                "\t", get_default(dcline, "f_bus"),
+                "\t", get_default(dcline, "t_bus"),
+                "\t", get_default(dcline, "br_status"),
+                "\t", get_default(dcline, "pf"),
+                "\t", -get_default(dcline, "pt"),  # opposite convention
+                "\t", -get_default(dcline, "qf"),  # opposite convention
+                "\t", -get_default(dcline, "qt"),  # opposite convention
+                "\t", get_default(dcline, "vf"),
+                "\t", get_default(dcline, "vt"),
+                "\t", (haskey(dcline, "mp_pmin") ? dcline["mp_pmin"] : min(dcline["pmaxt"], dcline["pmint"], dcline["pmaxf"], dcline["pminf"])),
+                "\t", (haskey(dcline, "mp_pmax") ? dcline["mp_pmax"] : max(dcline["pmaxt"], dcline["pmint"], dcline["pmaxf"], dcline["pminf"])),
+                "\t", get_default(dcline, "qminf"),
+                "\t", get_default(dcline, "qmaxf"),
+                "\t", get_default(dcline, "qmint"),
+                "\t", get_default(dcline, "qmaxt"),
+                "\t", get_default(dcline, "loss0"),
+                "\t", get_default(dcline, "loss1"),
+                "\t", get_default(dcline, "mu_pmin", ""),
+                "\t", get_default(dcline, "mu_pmax", ""),
+                "\t", get_default(dcline, "mu_qminf", ""),
+                "\t", get_default(dcline, "mu_qmaxf", ""),
+                "\t", get_default(dcline, "mu_qmint", ""),
+                "\t", get_default(dcline, "mu_qmaxt", ""),
+            )
+        end
+        println(io, "];")
+        println(io)
     end
-    println(io, "];")
-    println(io)
 
     # Print the gen cost data
     export_cost_data(io, generators, "mpc.gencost")
@@ -899,38 +959,41 @@ function export_matpower(io::IO, data::Dict{String,Any})
     end
 
     # Print the extra bus data
-    export_extra_data(io, data, "bus", Set(["index", "gs", "bs", "zone", "bus_i", "bus_type", "qd",  "vmax", "area", "vmin", "va", "vm", "base_kv", "pd", "bus_name", "lam_p", "lam_q", "mu_vmax", "mu_vmin"]); postfix="_data")
+    export_extra_data(io, data, "bus", Set(["index", "source_id", "gs", "bs", "zone", "bus_i", "bus_type", "qd",  "vmax", "area", "vmin", "va", "vm", "base_kv", "pd", "bus_name", "lam_p", "lam_q", "mu_vmax", "mu_vmin"]); postfix="_data")
 
     # Print the extra generator data
-    export_extra_data(io, data, "gen", Set(["index", "gen_bus", "pg", "qg", "qmax", "qmin", "vg", "mbase", "gen_status", "pmax", "pmin", "pc1", "pc2", "qc1min", "qc1max", "qc2min", "qc2max", "ramp_agc", "ramp_10", "ramp_30", "ramp_q", "apf", "ncost", "model", "shutdown", "startup", "cost", "mu_pmax", "mu_pmin", "mu_qmax", "mu_qmin"]); postfix="_data")
+    export_extra_data(io, data, "gen", Set(["index", "source_id", "gen_bus", "pg", "qg", "qmax", "qmin", "vg", "mbase", "gen_status", "pmax", "pmin", "pc1", "pc2", "qc1min", "qc1max", "qc2min", "qc2max", "ramp_agc", "ramp_10", "ramp_30", "ramp_q", "apf", "ncost", "model", "shutdown", "startup", "cost", "mu_pmax", "mu_pmin", "mu_qmax", "mu_qmin"]); postfix="_data")
+
+    # Print the extra storage data
+    export_extra_data(io, data, "storage", Set(["index", "source_id", "storage_bus", "ps", "qs", "energy", "energy_rating", "charge_rating", "discharge_rating", "charge_efficiency", "discharge_efficiency", "thermal_rating", "qmin", "qmax", "r", "x", "standby_loss", "status"]); postfix="_data")
 
     # Print the extra branch data
-    export_extra_data(io, data, "branch", Set(["index", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "g_to", "g_fr", "pf", "qf", "pt", "qt", "mu_sf", "mu_st", "mu_angmin", "mu_angmax"]); postfix="_data")
+    export_extra_data(io, data, "branch", Set(["index", "source_id", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "g_to", "g_fr", "pf", "qf", "pt", "qt", "mu_sf", "mu_st", "mu_angmin", "mu_angmax"]); postfix="_data")
 
     # Print the extra dcline data
-    export_extra_data(io, data, "dcline", Set(["index", "mu_qmaxt", "mu_qmint", "mu_qmaxf", "mu_qminf", "mu_pmax", "mu_pmin", "loss0", "loss1", "qmint", "qmaxt", "pmin", "pmax", "qminf", "qmaxf", "f_bus", "t_bus", "br_status", "pf", "pt", "qf", "qt", "vf", "vt", "ncost", "model", "shutdown", "pmaxt", "startup", "pmint", "cost", "pminf", "pmaxf", "mp_pmax", "mp_pmin"]); postfix="_data")
+    export_extra_data(io, data, "dcline", Set(["index", "source_id", "mu_qmaxt", "mu_qmint", "mu_qmaxf", "mu_qminf", "mu_pmax", "mu_pmin", "loss0", "loss1", "qmint", "qmaxt", "pmin", "pmax", "qminf", "qmaxf", "f_bus", "t_bus", "br_status", "pf", "pt", "qf", "qt", "vf", "vt", "ncost", "model", "shutdown", "pmaxt", "startup", "pmint", "cost", "pminf", "pmaxf", "mp_pmax", "mp_pmin"]); postfix="_data")
 
     # Print the extra ne_branch data
     if haskey(data, "ne_branch")
-        export_extra_data(io, data, "ne_branch", Set(["index", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "construction_cost", "g_to", "g_fr"]); postfix="_data")
+        export_extra_data(io, data, "ne_branch", Set(["index", "source_id", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "construction_cost", "g_to", "g_fr"]); postfix="_data")
     end
 
     # print the extra load data
-    export_extra_data(io, data, "load", Set(["index", "load_bus", "status", "qd", "pd"]); postfix="_data")
+    export_extra_data(io, data, "load", Set(["index", "source_id", "load_bus", "status", "qd", "pd"]); postfix="_data")
 
     # print the extra shunt data
-    export_extra_data(io, data, "shunt", Set(["index", "shunt_bus", "status", "gs", "bs"]); postfix="_data")
+    export_extra_data(io, data, "shunt", Set(["index", "source_id", "shunt_bus", "status", "gs", "bs"]); postfix="_data")
 
     # print the extra component data
     for (key, value) in data
-        if key != "bus" && key != "gen" && key != "branch" && key != "load" && key != "shunt" && key != "dcline" && key != "ne_branch" && key != "version" && key != "baseMVA" && key != "per_unit" && key != "name" && key != "source_type" && key != "source_version"
+        if key != "bus" && key != "gen" && key != "branch" && key != "load" && key != "shunt" && key != "storage" && key != "dcline" && key != "ne_branch" && key != "version" && key != "baseMVA" && key != "per_unit" && key != "name" && key != "source_type" && key != "source_version"
             export_extra_data(io, data, key)
         end
     end
 end
 
 "Export fields of a component type"
-function export_extra_data(io::IO, data::Dict{String,<:Any}, component, excluded_fields=Set(["index"]); postfix="")
+function export_extra_data(io::IO, data::Dict{String,<:Any}, component, excluded_fields=Set(["index", "source_id"]); postfix="")
     if isa(data[component], Int) || isa(data[component], Int64) || isa(data[component], Float64)
         println(io, "mpc.", component, " = ", data[component], ";")
         println(io)

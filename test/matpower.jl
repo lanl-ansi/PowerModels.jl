@@ -62,6 +62,15 @@
         @test result["termination_status"] == MOI.LOCALLY_SOLVED
         @test isapprox(result["objective"], 0.0; atol = 1e-1)
     end
+
+    @testset "5-bus source ids" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
+        @test data["bus"]["1"]["source_id"] == ["bus", 1]
+        @test data["gen"]["1"]["source_id"] == ["gen", 1]
+        @test data["load"]["1"]["source_id"] == ["bus", 2]
+        @test data["branch"]["1"]["source_id"] == ["branch", 1]
+        @test data["storage"]["1"]["source_id"] == ["storage", 1]
+    end
 end
 
 
@@ -202,7 +211,7 @@ end
 
 @testset "test idempotent matpower export" begin
 
-    function test_case(filename::AbstractString, parse_file::Function)
+    function test_mp_idempotent(filename::AbstractString, parse_file::Function)
         source_data = parse_file(filename)
 
         io = PipeBuffer()
@@ -214,80 +223,123 @@ end
 
     @testset "test frankenstein_00" begin
         file = "../test/data/matpower/frankenstein_00.m"
-        test_case(file, PowerModels.parse_file)
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_file)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 
     @testset "test case14" begin
         file = "../test/data/matpower/case14.m"
-        test_case(file, PowerModels.parse_file)
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_file)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 
     @testset "test case2" begin
         file = "../test/data/matpower/case2.m"
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 
     @testset "test case24" begin
         file = "../test/data/matpower/case24.m"
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 
     @testset "test case3_tnep" begin
         file = "../test/data/matpower/case3_tnep.m"
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 
     @testset "test case30" begin
         file = "../test/data/matpower/case30.m"
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 
     @testset "test case5 asym" begin
         file = "../test/data/matpower/case5_asym.m"
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 
     @testset "test case5 gap" begin
         file = "../test/data/matpower/case5_gap.m"
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
+    end
+
+    @testset "test case5 strg" begin
+        file = "../test/data/matpower/case5_strg.m"
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 
     # currently not idempotent due to pwl function simplification
     #@testset "test case5 pwlc" begin
     #    file = "../test/data/matpower/case5_pwlc.m"
-    #    test_case(file, PowerModels.parse_matpower)
+    #    test_mp_idempotent(file, PowerModels.parse_matpower)
     #end
 
     # line reversal, with line charging is not invertable
     #@testset "test case5" begin
     #    file = "../test/data/matpower/case5.m"
-    #    test_case(file, PowerModels.parse_matpower)
+    #    test_mp_idempotent(file, PowerModels.parse_matpower)
     #end
 
     @testset "test case6" begin
         file = "../test/data/matpower/case6.m"
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 
     @testset "test case3" begin
         file = "../test/data/matpower/case3.m"
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 
     @testset "test case5 dc" begin
         file = "../test/data/matpower/case5_dc.m"
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 
     @testset "test case5 tnep" begin
         file = "../test/data/matpower/case5_tnep.m"
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 
     @testset "test case7 tplgy" begin
         file = "../test/data/matpower/case7_tplgy.m"
-        test_case(file, PowerModels.parse_matpower)
+        test_mp_idempotent(file, PowerModels.parse_matpower)
     end
 end
+
+
+
+
+
+@testset "test pti to matpower" begin
+
+    function test_mp_export(filename::AbstractString, parse_file::Function)
+        source_data = parse_file(filename)
+
+        io = PipeBuffer()
+        PowerModels.export_matpower(io, source_data)
+        destination_data = PowerModels.parse_matpower(io)
+    end
+
+    # special string name edge case
+    #@testset "test case3" begin
+    #    file = "../test/data/pti/case3.raw"
+    #    test_mp_export(file, PowerModels.parse_psse)
+    #end
+
+    @testset "test case5" begin
+        file = "../test/data/pti/case5.raw"
+        test_mp_export(file, PowerModels.parse_psse)
+    end
+
+    @testset "test case14" begin
+        file = "../test/data/pti/case14.raw"
+        test_mp_export(file, PowerModels.parse_psse)
+    end
+
+    @testset "test case24" begin
+        file = "../test/data/pti/case24.raw"
+        test_mp_export(file, PowerModels.parse_psse)
+    end
+
+end
+
