@@ -16,30 +16,62 @@
 
 """
 This constraint captures problem agnostic constraints that are used to link
-the model's variables together, in addition to the standard problem formulation
-constraints.
+the model's voltage variables together, in addition to the standard problem
+formulation constraints.
 
 Notable examples include the constraints linking the voltages in the
 ACTPowerModel, constraints linking convex relaxations of voltage variables
-and the constraints linking the voltage, current and power variables in the BFM
-models.
-
-Note that model specific constraints should be problem agnostic and not make
-assuptions about the other constraints occuring in the rest of the problem
-specification.
+and the constraints linking the voltage.
 """
-function constraint_model_specific(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    constraint_model_specific(pm, nw, cnd)
+function constraint_model_voltage(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    constraint_model_voltage(pm, nw, cnd)
 end
 
-""
-function constraint_voltage_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    constraint_voltage_on_off(pm, nw, cnd)
+"""
+This constraint captures problem agnostic constraints that are used to link
+the model's voltage variables together, in addition to the standard problem
+formulation constraints.  The on/off name indicates that the voltages in this
+constraint can be set to zero via an indicator variable
+
+Notable examples include the constraints linking the voltages in the
+ACTPowerModel, constraints linking convex relaxations of voltage variables
+and the constraints linking the voltage.
+"""
+function constraint_model_voltage_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    constraint_model_voltage_on_off(pm, nw, cnd)
 end
 
-""
-function constraint_voltage_ne(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    constraint_voltage_ne(pm, nw, cnd)
+"""
+This constraint captures problem agnostic constraints that are used to link
+the model's voltage variables together, in addition to the standard problem
+formulation constraints.  The network expantion name (ne) indicates that the
+voltages in this constraint can be set to zero via an indicator variable
+
+Notable examples include the constraints linking the voltages in the
+ACTPowerModel, constraints linking convex relaxations of voltage variables
+and the constraints linking the voltage.
+"""
+function constraint_model_voltage_ne(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    constraint_model_voltage_ne(pm, nw, cnd)
+end
+
+
+### Current Constraints ###
+
+"""
+This constraint captures problem agnostic constraints that are used to link
+the model's current variables together, in addition to the standard problem
+formulation constraints.
+
+Notable examples include the constraints linking the current and power
+variables in the BFM models.
+
+Note that these model-based current constraints should be problem agnostic and
+not make assuptions about the other constraints occuring in the rest of the
+problem specification.
+"""
+function constraint_model_current(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    constraint_model_current(pm, nw, cnd)
 end
 
 

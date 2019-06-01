@@ -22,7 +22,7 @@ function post_pf(pm::GenericPowerModel)
     variable_branch_flow(pm, bounded = false)
     variable_dcline_flow(pm, bounded = false)
 
-    constraint_model_specific(pm)
+    constraint_model_voltage(pm)
 
     for (i,bus) in ref(pm, :ref_buses)
         @assert bus["bus_type"] == 3

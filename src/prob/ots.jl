@@ -21,7 +21,7 @@ function post_ots(pm::GenericPowerModel)
 
     objective_min_fuel_and_flow_cost(pm)
 
-    constraint_voltage_on_off(pm)
+    constraint_model_voltage_on_off(pm)
 
     for i in ids(pm, :ref_buses)
         constraint_theta_ref(pm, i)

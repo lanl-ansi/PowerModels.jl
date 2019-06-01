@@ -122,5 +122,5 @@ Note that constraints $\eqref{eq_line_losses} - \eqref{eq_ohms_bfm}$ replace $\e
 - Eq. $\eqref{var_branch_current}$ - `variable_branch_current` in `variable.jl`
 - Eq. $\eqref{eq_line_losses}$ - `constraint_flow_losses` in `constraint_template.jl`
 - Eq. $\eqref{eq_series_power_flow}$ - implicit, substituted out before implementation
-- Eq. $\eqref{eq_complex_power_definition}$ - `constraint_model_specific` in `constraint_template.jl`
+- Eq. $\eqref{eq_complex_power_definition}$ - `constraint_model_voltage` in `constraint_template.jl`
 - Eq. $\eqref{eq_ohms_bfm}$ - `constraint_voltage_magnitude_difference` in `constraint_template.jl`

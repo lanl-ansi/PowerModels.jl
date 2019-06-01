@@ -10,7 +10,7 @@ function post_tp_opf(pm::PowerModels.GenericPowerModel)
     end
 
     for c in PowerModels.conductor_ids(pm)
-        PowerModels.constraint_model_specific(pm, cnd=c)
+        PowerModels.constraint_model_voltage(pm, cnd=c)
 
         for i in ids(pm, :ref_buses)
             PowerModels.constraint_theta_ref(pm, i, cnd=c)
