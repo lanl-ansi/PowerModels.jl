@@ -4,6 +4,7 @@ PowerModels.jl Change Log
 ### Staged
 - Added source_id to Matpower parser (#512)
 - Minor improvments Matpower export function (#388)
+- Removed inequality constraint from theta_ref constraint in the ACR formulation
 
 ### v0.11.1
 - Added calc_gen_cost to compute the generator cost from the setpoint in the data model
