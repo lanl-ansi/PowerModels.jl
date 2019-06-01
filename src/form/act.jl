@@ -13,6 +13,8 @@ function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: Abstra
 end
 
 function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: StandardACTForm
+    check_missing_keys(var(pm, n, c), [:va,:w,:wr,:wi], T)
+
     t  = var(pm, n, c, :va)
     w  = var(pm, n, c,  :w)
     wr = var(pm, n, c, :wr)

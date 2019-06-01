@@ -26,7 +26,7 @@ models.
 
 Note that model specific constraints should be problem agnostic and not make
 assuptions about the other constraints occuring in the rest of the problem
-specification
+specification.
 """
 function constraint_model_specific(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     constraint_model_specific(pm, nw, cnd)

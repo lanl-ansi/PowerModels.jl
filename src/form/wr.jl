@@ -15,6 +15,8 @@ end
 
 ""
 function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
+    check_missing_keys(var(pm, n, c), [:w,:wr,:wi], T)
+
     w  = var(pm, n, c,  :w)
     wr = var(pm, n, c, :wr)
     wi = var(pm, n, c, :wi)
@@ -26,6 +28,8 @@ end
 
 ""
 function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRConicForm
+    check_missing_keys(var(pm, n, c), [:w,:wr,:wi], T)
+
     w  = var(pm, n, c,  :w)
     wr = var(pm, n, c, :wr)
     wi = var(pm, n, c, :wi)
@@ -383,6 +387,8 @@ end
 
 ""
 function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRForm
+    check_missing_keys(var(pm, n, c), [:vm,:va,:td,:si,:cs,:vv,:w,:wr,:wi], T)
+
     v = var(pm, n, c, :vm)
     t = var(pm, n, c, :va)
 
@@ -755,6 +761,8 @@ end
 
 ""
 function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRTriForm
+    check_missing_keys(var(pm, n, c), [:vm,:va,:td,:si,:cs,:w,:wr,:wi,:lambda_wr,:lambda_wi], T)
+
     v = var(pm, n, c, :vm)
     t = var(pm, n, c, :va)
 

@@ -74,6 +74,8 @@ end
 Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
 function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractBFQPForm
+    check_missing_keys(var(pm, n, c), [:p,:q,:w,:cm], T)
+
     p  = var(pm, n, c, :p)
     q  = var(pm, n, c, :q)
     w  = var(pm, n, c, :w)
@@ -94,6 +96,8 @@ end
 Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
 function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractBFConicForm
+    check_missing_keys(var(pm, n, c), [:p,:q,:w,:cm], T)
+
     p  = var(pm, n, c, :p)
     q  = var(pm, n, c, :q)
     w  = var(pm, n, c, :w)

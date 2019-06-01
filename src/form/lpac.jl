@@ -27,6 +27,8 @@ end
 
 ""
 function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractLPACForm
+    check_missing_keys(var(pm, n, c), [:va,:cs], T)
+
     t = var(pm, n, c, :va)
     cs = var(pm, n, c, :cs)
 
