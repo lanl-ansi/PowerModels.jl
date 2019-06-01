@@ -16,6 +16,8 @@ function post_pf_bf(pm::GenericPowerModel)
     variable_branch_current(pm, bounded = false)
     variable_dcline_flow(pm, bounded = false)
 
+    constraint_model_specific(pm)
+
     for (i,bus) in ref(pm, :ref_buses)
         @assert bus["bus_type"] == 3
         constraint_theta_ref(pm, i)
@@ -40,7 +42,6 @@ function post_pf_bf(pm::GenericPowerModel)
     for i in ids(pm, :branch)
         constraint_flow_losses(pm, i)
         constraint_voltage_magnitude_difference(pm, i)
-        constraint_branch_current(pm, i)
     end
 
     for (i,dcline) in ref(pm, :dcline)

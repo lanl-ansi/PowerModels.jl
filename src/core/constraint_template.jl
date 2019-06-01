@@ -14,9 +14,22 @@
 
 ### Voltage Constraints ###
 
-""
-function constraint_voltage(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    constraint_voltage(pm, nw, cnd)
+"""
+This constraint captures problem agnostic constraints that are used to link
+the model's variables together, in addition to the standard problem formulation
+constraints.
+
+Notable examples include the constraints linking the voltages in the
+ACTPowerModel, constraints linking convex relaxations of voltage variables
+and the constraints linking the voltage, current and power variables in the BFM
+models.
+
+Note that model specific constraints should be problem agnostic and not make
+assuptions about the other constraints occuring in the rest of the problem
+specification
+"""
+function constraint_model_specific(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    constraint_model_specific(pm, nw, cnd)
 end
 
 ""
@@ -602,21 +615,6 @@ function constraint_voltage_magnitude_difference(pm::GenericPowerModel, i::Int; 
 
     constraint_voltage_magnitude_difference(pm, nw, cnd, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm)
 end
-
-""
-function constraint_branch_current(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    branch = ref(pm, nw, :branch, i)
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-
-    tm = branch["tap"][cnd]
-    g_sh_fr = branch["g_fr"][cnd]
-    b_sh_fr = branch["b_fr"][cnd]
-
-    constraint_branch_current(pm, nw, cnd, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm)
-end
-
 
 
 

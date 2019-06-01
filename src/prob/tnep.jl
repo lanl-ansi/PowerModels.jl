@@ -21,7 +21,7 @@ function post_tnep(pm::GenericPowerModel)
 
     objective_tnep_cost(pm)
 
-    constraint_voltage(pm)
+    constraint_model_specific(pm)
     constraint_voltage_ne(pm)
 
     for i in ids(pm, :ref_buses)

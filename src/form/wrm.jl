@@ -22,7 +22,7 @@ end
 
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: SDPWRMForm
+function constraint_model_specific(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: SDPWRMForm
     WR = var(pm, nw, cnd)[:WR]
     WI = var(pm, nw, cnd)[:WI]
 
@@ -212,7 +212,7 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
 end
 
 
-function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: SparseSDPWRMForm
+function constraint_model_specific(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: SparseSDPWRMForm
     pair_matrix(group) = [(i, j) for i in group, j in group]
 
     decomp = pm.ext[:SDconstraintDecomposition]

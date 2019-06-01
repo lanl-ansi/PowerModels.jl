@@ -244,7 +244,7 @@ end
 
         PMs.objective_min_fuel_and_flow_cost(pm)
 
-        PMs.constraint_voltage(pm)
+        PMs.constraint_model_specific(pm)
 
         for i in ids(pm,:ref_buses)
             PMs.constraint_theta_ref(pm, i)

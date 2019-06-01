@@ -2,8 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Update constraint_voltage to constraint_model_specific (#499)
 - Update Matpower "bus_name" to map to bus parameter "name"
-- Updated slope and intercept data structure (#521)
+- Update slope and intercept data structure (#521)
 
 ### Staged
 - Added source_id to Matpower parser (#512)

@@ -14,7 +14,7 @@ function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: Abstra
 end
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
+function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
     w  = var(pm, n, c,  :w)
     wr = var(pm, n, c, :wr)
     wi = var(pm, n, c, :wi)
@@ -25,7 +25,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <:
 end
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRConicForm
+function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRConicForm
     w  = var(pm, n, c,  :w)
     wr = var(pm, n, c, :wr)
     wi = var(pm, n, c, :wi)
@@ -382,7 +382,7 @@ function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: QCWRFo
 end
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRForm
+function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRForm
     v = var(pm, n, c, :vm)
     t = var(pm, n, c, :va)
 
@@ -704,7 +704,7 @@ function variable_voltage_magnitude_product(pm::GenericPowerModel{T}; nw::Int=pm
 end
 
 "creates lambda variables for convex combination model"
-function variable_multipliers(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: QCWRTriForm
+function variable_voltage_magnitude_product_multipliers(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: QCWRTriForm
     var(pm, nw, cnd)[:lambda_wr] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs), i=1:8], base_name="$(nw)_$(cnd)_lambda",
         lower_bound = 0, upper_bound = 1, start = 0.0)
@@ -724,7 +724,7 @@ function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: QCWRTr
 
     variable_voltage_angle_difference(pm; kwargs...)
     variable_voltage_magnitude_product(pm; kwargs...)
-    variable_multipliers(pm; kwargs...)
+    variable_voltage_magnitude_product_multipliers(pm; kwargs...)
     variable_cosine(pm; kwargs...)
     variable_sine(pm; kwargs...)
     variable_current_magnitude_sqr(pm; kwargs...)
@@ -754,7 +754,7 @@ function relaxation_tighten_vv(m, x, y, lambda_a, lambda_b)
 end
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRTriForm
+function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRTriForm
     v = var(pm, n, c, :vm)
     t = var(pm, n, c, :va)
 

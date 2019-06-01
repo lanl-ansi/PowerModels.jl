@@ -69,31 +69,44 @@ function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::In
     JuMP.@constraint(pm.model, (1+2*(r*g_sh_fr - x*b_sh_fr))*(w_fr/tm^2) - w_to ==  2*(r*p_fr + x*q_fr) - (r^2 + x^2)*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)))
 end
 
+
 """
 Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
-function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFQPForm
-    p_fr   = var(pm, n, c, :p, f_idx)
-    q_fr   = var(pm, n, c, :q, f_idx)
-    w_fr   = var(pm, n, c, :w, f_bus)
-    cm = var(pm, n, c, :cm, i)
+function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractBFQPForm
+    p  = var(pm, n, c, :p)
+    q  = var(pm, n, c, :q)
+    w  = var(pm, n, c, :w)
+    cm = var(pm, n, c, :cm)
 
-    # convex constraint linking p, q, w and ccm
-    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= (w_fr/tm^2)*cm)
+    for (i,branch) in ref(pm, n, :branch)
+        f_bus = branch["f_bus"]
+        t_bus = branch["t_bus"]
+        f_idx = (i, f_bus, t_bus)
+        tm = branch["tap"][c]
+
+        JuMP.@constraint(pm.model, p[f_idx]^2 + q[f_idx]^2 <= (w[f_bus]/tm^2)*cm[i])
+    end
 end
 
 
 """
 Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
-function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFConicForm
-    p_fr   = var(pm, n, c, :p, f_idx)
-    q_fr   = var(pm, n, c, :q, f_idx)
-    w_fr   = var(pm, n, c, :w, f_bus)
-    cm = var(pm, n, c, :cm, i)
+function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractBFConicForm
+    p  = var(pm, n, c, :p)
+    q  = var(pm, n, c, :q)
+    w  = var(pm, n, c, :w)
+    cm = var(pm, n, c, :cm)
 
-    # convex constraint linking p, q, w and ccm
-    JuMP.@constraint(pm.model, [w_fr/tm^2, cm/2, p_fr, q_fr] in JuMP.RotatedSecondOrderCone())
+    for (i,branch) in ref(pm, n, :branch)
+        f_bus = branch["f_bus"]
+        t_bus = branch["t_bus"]
+        f_idx = (i, f_bus, t_bus)
+        tm = branch["tap"][c]
+
+        JuMP.@constraint(pm.model, [w[f_bus]/tm^2, cm[i]/2, p[f_idx], q[f_idx]] in JuMP.RotatedSecondOrderCone())
+    end
 end
 
 

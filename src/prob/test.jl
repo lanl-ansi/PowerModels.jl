@@ -20,7 +20,7 @@ function post_cl_opf(pm::GenericPowerModel)
 
     objective_min_fuel_and_flow_cost(pm)
 
-    constraint_voltage(pm)
+    constraint_model_specific(pm)
 
     for i in ids(pm, :ref_buses)
         constraint_theta_ref(pm, i)
@@ -62,7 +62,7 @@ function post_uc_opf(pm::GenericPowerModel)
 
     objective_min_fuel_and_flow_cost(pm)
 
-    constraint_voltage(pm)
+    constraint_model_specific(pm)
 
     for i in ids(pm, :ref_buses)
         constraint_theta_ref(pm, i)
@@ -110,7 +110,7 @@ function post_uc_mc_opf(pm::GenericPowerModel)
         variable_branch_flow(pm, cnd=c)
         variable_dcline_flow(pm, cnd=c)
 
-        constraint_voltage(pm, cnd=c)
+        constraint_model_specific(pm, cnd=c)
 
         for i in ids(pm, :ref_buses)
             constraint_theta_ref(pm, i, cnd=c)
@@ -188,7 +188,7 @@ function post_mn_opf(pm::GenericPowerModel)
         variable_branch_flow(pm, nw=n)
         variable_dcline_flow(pm, nw=n)
 
-        constraint_voltage(pm, nw=n)
+        constraint_model_specific(pm, nw=n)
 
         for i in ids(pm, :ref_buses, nw=n)
             constraint_theta_ref(pm, i, nw=n)
@@ -229,7 +229,7 @@ function post_mn_pf(pm::GenericPowerModel)
         variable_branch_flow(pm, nw=n, bounded = false)
         variable_dcline_flow(pm, nw=n, bounded = false)
 
-        constraint_voltage(pm, nw=n)
+        constraint_model_specific(pm, nw=n)
 
         for i in ids(pm, :ref_buses, nw=n)
             constraint_theta_ref(pm, i, nw=n)
@@ -286,7 +286,7 @@ function post_mc_opf(pm::GenericPowerModel)
         variable_branch_flow(pm, cnd=c)
         variable_dcline_flow(pm, cnd=c)
 
-        constraint_voltage(pm, cnd=c)
+        constraint_model_specific(pm, cnd=c)
 
         for i in ids(pm, :ref_buses)
             constraint_theta_ref(pm, i, cnd=c)
@@ -330,7 +330,7 @@ function post_mn_mc_opf(pm::GenericPowerModel)
             variable_branch_flow(pm, nw=n, cnd=c)
             variable_dcline_flow(pm, nw=n, cnd=c)
 
-            constraint_voltage(pm, nw=n, cnd=c)
+            constraint_model_specific(pm, nw=n, cnd=c)
 
             for i in ids(pm, :ref_buses, nw=n)
                 constraint_theta_ref(pm, i, nw=n, cnd=c)
@@ -376,7 +376,7 @@ function post_strg_opf(pm::GenericPowerModel)
 
     objective_min_fuel_and_flow_cost(pm)
 
-    constraint_voltage(pm)
+    constraint_model_specific(pm)
 
     for i in ids(pm, :ref_buses)
         constraint_theta_ref(pm, i)
@@ -423,7 +423,7 @@ function post_mn_strg_opf(pm::GenericPowerModel)
         variable_branch_flow(pm, nw=n)
         variable_dcline_flow(pm, nw=n)
 
-        constraint_voltage(pm, nw=n)
+        constraint_model_specific(pm, nw=n)
 
         for i in ids(pm, :ref_buses, nw=n)
             constraint_theta_ref(pm, i, nw=n)
@@ -492,7 +492,7 @@ function post_mn_mc_strg_opf(pm::GenericPowerModel)
             variable_branch_flow(pm, nw=n, cnd=c)
             variable_dcline_flow(pm, nw=n, cnd=c)
 
-            constraint_voltage(pm, nw=n, cnd=c)
+            constraint_model_specific(pm, nw=n, cnd=c)
 
             for i in ids(pm, :ref_buses, nw=n)
                 constraint_theta_ref(pm, i, nw=n, cnd=c)

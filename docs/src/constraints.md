@@ -107,7 +107,6 @@ constraint_voltage_angle_difference_ne
 constraint_loss_lb
 constraint_flow_losses
 constraint_voltage_magnitude_difference
-constraint_branch_current
 ```
 
 ### Storage Constraints

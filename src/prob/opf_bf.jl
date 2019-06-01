@@ -20,6 +20,8 @@ function post_opf_bf(pm::GenericPowerModel)
 
     objective_min_fuel_and_flow_cost(pm)
 
+    constraint_model_specific(pm)
+
     for i in ids(pm, :ref_buses)
         constraint_theta_ref(pm, i)
     end
@@ -31,7 +33,6 @@ function post_opf_bf(pm::GenericPowerModel)
     for i in ids(pm, :branch)
         constraint_flow_losses(pm, i)
         constraint_voltage_magnitude_difference(pm, i)
-        constraint_branch_current(pm, i)
 
         constraint_voltage_angle_difference(pm, i)
 

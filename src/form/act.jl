@@ -12,7 +12,7 @@ function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: Abstra
     variable_voltage_product(pm; kwargs...)
 end
 
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: StandardACTForm
+function constraint_model_specific(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: StandardACTForm
     t  = var(pm, n, c, :va)
     w  = var(pm, n, c,  :w)
     wr = var(pm, n, c, :wr)

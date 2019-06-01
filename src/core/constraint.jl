@@ -115,8 +115,10 @@ function constraint_active_dcline_setpoint(pm::GenericPowerModel, n::Int, c::Int
     JuMP.@constraint(pm.model, p_to == pt)
 end
 
-"do nothing, this model does not have complex voltage constraints"
-function constraint_voltage(pm::GenericPowerModel, n::Int, c::Int)
+"""
+do nothing, most models to not require any model-specific constraints
+"""
+function constraint_model_specific(pm::GenericPowerModel, n::Int, c::Int)
 end
 
 
