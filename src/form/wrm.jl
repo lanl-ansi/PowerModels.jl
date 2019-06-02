@@ -22,9 +22,11 @@ end
 
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: SDPWRMForm
-    WR = var(pm, nw, cnd)[:WR]
-    WI = var(pm, nw, cnd)[:WI]
+function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: SDPWRMForm
+    check_missing_keys(var(pm, n, c), [:WR,:WI], T)
+
+    WR = var(pm, n, c)[:WR]
+    WI = var(pm, n, c)[:WI]
 
     JuMP.@constraint(pm.model, [WR WI; -WI WR] in JuMP.PSDCone())
 end
@@ -212,15 +214,19 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
 end
 
 
-function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: SparseSDPWRMForm
+function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: SparseSDPWRMForm
+    check_missing_keys(var(pm, n, c), [:voltage_product_groups], T)
+
     pair_matrix(group) = [(i, j) for i in group, j in group]
 
     decomp = pm.ext[:SDconstraintDecomposition]
     groups = decomp.decomp
-    voltage_product_groups = var(pm, nw, cnd)[:voltage_product_groups]
+    voltage_product_groups = var(pm, n, c)[:voltage_product_groups]
 
     # semidefinite constraint for each group in clique grouping
     for (gidx, voltage_product_group) in enumerate(voltage_product_groups)
+        check_missing_keys(voltage_product_group, [:WR,:WI], T)
+
         group = groups[gidx]
         ng = length(group)
         WR = voltage_product_group[:WR]

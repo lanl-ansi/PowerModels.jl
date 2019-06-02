@@ -14,7 +14,9 @@ function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: Abstra
 end
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
+function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
+    check_missing_keys(var(pm, n, c), [:w,:wr,:wi], T)
+
     w  = var(pm, n, c,  :w)
     wr = var(pm, n, c, :wr)
     wi = var(pm, n, c, :wi)
@@ -25,7 +27,9 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <:
 end
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRConicForm
+function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRConicForm
+    check_missing_keys(var(pm, n, c), [:w,:wr,:wi], T)
+
     w  = var(pm, n, c,  :w)
     wr = var(pm, n, c, :wr)
     wi = var(pm, n, c, :wi)
@@ -83,7 +87,7 @@ function variable_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <:
 end
 
 ""
-function constraint_voltage_on_off(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
+function constraint_model_voltage_on_off(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
     w  = var(pm, n, c, :w)
     wr = var(pm, n, c, :wr)
     wi = var(pm, n, c, :wi)
@@ -104,7 +108,7 @@ function constraint_voltage_on_off(pm::GenericPowerModel{T}, n::Int, c::Int) whe
 end
 
 ""
-function constraint_voltage_ne(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
+function constraint_model_voltage_ne(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
     buses = ref(pm, n, :bus)
     branches = ref(pm, n, :ne_branch)
 
@@ -382,7 +386,9 @@ function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: QCWRFo
 end
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRForm
+function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRForm
+    check_missing_keys(var(pm, n, c), [:vm,:va,:td,:si,:cs,:vv,:w,:wr,:wi], T)
+
     v = var(pm, n, c, :vm)
     t = var(pm, n, c, :va)
 
@@ -598,7 +604,7 @@ end
 
 
 ""
-function constraint_voltage_on_off(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRForm
+function constraint_model_voltage_on_off(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRForm
     v = var(pm, n, c, :vm)
     t = var(pm, n, c, :va)
     vm_fr = var(pm, n, c, :vm_fr)
@@ -704,7 +710,7 @@ function variable_voltage_magnitude_product(pm::GenericPowerModel{T}; nw::Int=pm
 end
 
 "creates lambda variables for convex combination model"
-function variable_multipliers(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: QCWRTriForm
+function variable_voltage_magnitude_product_multipliers(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: QCWRTriForm
     var(pm, nw, cnd)[:lambda_wr] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs), i=1:8], base_name="$(nw)_$(cnd)_lambda",
         lower_bound = 0, upper_bound = 1, start = 0.0)
@@ -724,7 +730,7 @@ function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: QCWRTr
 
     variable_voltage_angle_difference(pm; kwargs...)
     variable_voltage_magnitude_product(pm; kwargs...)
-    variable_multipliers(pm; kwargs...)
+    variable_voltage_magnitude_product_multipliers(pm; kwargs...)
     variable_cosine(pm; kwargs...)
     variable_sine(pm; kwargs...)
     variable_current_magnitude_sqr(pm; kwargs...)
@@ -754,7 +760,9 @@ function relaxation_tighten_vv(m, x, y, lambda_a, lambda_b)
 end
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRTriForm
+function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRTriForm
+    check_missing_keys(var(pm, n, c), [:vm,:va,:td,:si,:cs,:w,:wr,:wi,:lambda_wr,:lambda_wi], T)
+
     v = var(pm, n, c, :vm)
     t = var(pm, n, c, :va)
 
@@ -780,7 +788,7 @@ function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <:
         relaxation_cos(pm.model, td[bp], cs[bp])
         InfrastructureModels.relaxation_trilinear(pm.model, v[i], v[j], cs[bp], wr[bp], lambda_wr[bp,:])
         InfrastructureModels.relaxation_trilinear(pm.model, v[i], v[j], si[bp], wi[bp], lambda_wi[bp,:])
-		relaxation_tighten_vv(pm.model, v[i], v[j], lambda_wr[bp,:], lambda_wi[bp,:])
+        relaxation_tighten_vv(pm.model, v[i], v[j], lambda_wr[bp,:], lambda_wi[bp,:])
 
         # this constraint is redudant and useful for debugging
         #InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])

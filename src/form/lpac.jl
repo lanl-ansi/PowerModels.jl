@@ -26,7 +26,9 @@ function variable_voltage_magnitude(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cn
 end
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractLPACForm
+function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractLPACForm
+    check_missing_keys(var(pm, n, c), [:va,:cs], T)
+
     t = var(pm, n, c, :va)
     cs = var(pm, n, c, :cs)
 

@@ -18,7 +18,7 @@ variable_dcline_flow(pm)
 
 ### Constraints
 ```julia
-constraint_voltage(pm)
+constraint_model_voltage(pm)
 for i in ids(pm, :ref_buses)
     constraint_theta_ref(pm, i)
 end
@@ -58,7 +58,7 @@ variable_dcline_flow(pm)
 
 ### Constraints
 ```julia
-constraint_voltage(pm)
+constraint_model_voltage(pm)
 for i in ids(pm, :ref_buses)
     constraint_theta_ref(pm, i)
 end
@@ -68,7 +68,6 @@ end
 for i in ids(pm, :branch)
     constraint_flow_losses(pm, i)
     constraint_voltage_magnitude_difference(pm, i)
-    constraint_branch_current(pm, i)
 
     constraint_voltage_angle_difference(pm, i)
 
@@ -107,7 +106,7 @@ objective_min_fuel_cost(pm)
 ### Constraints
 
 ```julia
-constraint_voltage_on_off(pm)
+constraint_model_voltage_on_off(pm)
 for i in ids(pm, :ref_buses)
     constraint_theta_ref(pm, i)
 end
@@ -143,7 +142,7 @@ variable_dcline_flow(pm, bounded = false)
 
 ### Constraints
 ```julia
-constraint_voltage(pm)
+constraint_model_voltage(pm)
 for (i,bus) in ref(pm, :ref_buses)
     @assert bus["bus_type"] == 3
     constraint_theta_ref(pm, i)
@@ -196,6 +195,7 @@ variable_dcline_flow(pm, bounded = false)
 
 ### Constraints
 ```julia
+constraint_model_voltage(pm)
 for (i,bus) in ref(pm, :ref_buses)
     @assert bus["bus_type"] == 3
     constraint_theta_ref(pm, i)
@@ -215,7 +215,6 @@ end
 for i in ids(pm, :branch)
     constraint_flow_losses(pm, i)
     constraint_voltage_magnitude_difference(pm, i)
-    constraint_branch_current(pm, i)
 end
 for (i,dcline) in ref(pm, :dcline)
     constraint_active_dcline_setpoint(pm, i)
@@ -253,8 +252,8 @@ variable_branch_flow_ne(pm)
 
 ### Constraints
 ```julia
-constraint_voltage(pm)
-constraint_voltage_ne(pm)
+constraint_model_voltage(pm)
+constraint_model_voltage_ne(pm)
 for i in ids(pm, :ref_buses)
     constraint_theta_ref(pm, i)
 end

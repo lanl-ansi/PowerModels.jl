@@ -13,8 +13,8 @@ These templates should be defined over `GenericPowerModel` and should not refer 
 
 ```@docs
 constraint_voltage
-constraint_voltage_on_off
-constraint_voltage_ne
+constraint_model_voltage_on_off
+constraint_model_voltage_ne
 ```
 
 ## Generator Constraints
@@ -107,7 +107,6 @@ constraint_voltage_angle_difference_ne
 constraint_loss_lb
 constraint_flow_losses
 constraint_voltage_magnitude_difference
-constraint_branch_current
 ```
 
 ### Storage Constraints

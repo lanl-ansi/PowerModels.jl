@@ -410,3 +410,18 @@ function core_ref!(nw_refs::Dict)
 
     end
 end
+
+
+"checks of any of the given keys are missing from the given dict"
+function check_missing_keys(dict, keys, type)
+    missing = []
+    for key in keys
+        if !haskey(dict, key)
+            push!(missing, key)
+        end
+    end
+    if length(missing) > 0
+        error(LOGGER, "the formulation $(type) requires the following varible(s) $(keys) but the $(missing) variable(s) were not found in the model")
+    end
+end
+

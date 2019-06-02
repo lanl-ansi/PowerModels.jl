@@ -11,11 +11,7 @@ function variable_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: Abs
 end
 
 "do nothing, this model does not have complex voltage constraints"
-function constraint_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
-end
-
-"do nothing, this model does not have complex voltage constraints"
-function constraint_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
+function constraint_model_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
 end
 
 
@@ -189,7 +185,7 @@ function variable_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <:
 end
 
 "do nothing, this model does not have complex voltage constraints"
-function constraint_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
+function constraint_model_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
 end
 
 """

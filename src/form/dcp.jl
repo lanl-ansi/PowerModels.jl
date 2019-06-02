@@ -13,11 +13,7 @@ function variable_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: Abs
 end
 
 "do nothing, this model does not have complex voltage variables"
-function constraint_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
-end
-
-"do nothing, this model does not have complex voltage variables"
-function constraint_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
+function constraint_model_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
 end
 
 "do nothing, this model does not have voltage variables"
@@ -102,7 +98,7 @@ function variable_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <:
 end
 
 "do nothing, this model does not have complex voltage variables"
-function constraint_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
+function constraint_model_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
 end
 
 "`-b*(t[f_bus] - t[t_bus] + vad_min*(1-branch_z[i])) <= p[f_idx] <= -b*(t[f_bus] - t[t_bus] + vad_max*(1-branch_z[i]))`"
