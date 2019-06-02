@@ -39,7 +39,6 @@ end
 "reference bus angle constraint"
 function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) where T <: AbstractACRForm
     JuMP.@constraint(pm.model, var(pm, n, c, :vi)[i] == 0)
-    JuMP.@constraint(pm.model, var(pm, n, c, :vr)[i] >= 0)
 end
 
 

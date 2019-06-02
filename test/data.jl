@@ -442,6 +442,20 @@ end
 end
 
 
+@testset "test buspair computations" begin
+
+     @testset "5-bus test" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        data["branch"]["4"]["br_status"] = 0
+        data["buspairs"] = PowerModels.calc_buspair_parameters(data["bus"], data["branch"], 1:1, haskey(data, "conductors"))
+        result = run_opf(data, ACPPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test isapprox(result["objective"], 16642; atol = 1e0)
+    end
+
+end
+
 
 @testset "test branch flow computations" begin
 
