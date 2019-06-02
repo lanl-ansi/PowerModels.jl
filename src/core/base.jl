@@ -406,7 +406,8 @@ function core_ref!(nw_refs::Dict)
 
 
         ### aggregate info for pairs of connected buses ###
-        ref[:buspairs] = buspair_parameters(ref[:arcs_from], ref[:branch], ref[:bus], ref[:conductor_ids], haskey(ref, :conductors))
-
+        if !haskey(ref, :buspairs)
+            ref[:buspairs] = calc_buspair_parameters(ref[:bus], ref[:branch], ref[:conductor_ids], haskey(ref, :conductors))
+        end
     end
 end

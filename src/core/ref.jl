@@ -1,9 +1,13 @@
 # tools for working with a PowerModels ref dict structures
 
 
-"compute bus pair level structures"
-function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismulticondcutor)
-    buspair_indexes = collect(Set([(i,j) for (l,i,j) in arcs_from]))
+"compute bus pair level data, can be run on data or ref datastructures"
+function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcutor)
+    bus_lookup = Dict(bus["index"] => bus for (i,bus) in buses if bus["bus_type"] != 4)
+
+    branch_lookup = Dict(branch["index"] => branch for (i,branch) in branches if branch["br_status"] == 1 && haskey(bus_lookup, branch["f_bus"]) && haskey(bus_lookup, branch["t_bus"]))
+
+    buspair_indexes = Set((branch["f_bus"], branch["t_bus"]) for (i,branch) in branch_lookup)
 
     bp_branch = Dict((bp, typemax(Int64)) for bp in buspair_indexes)
 
@@ -16,7 +20,7 @@ function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismultico
         bp_angmax = Dict((bp,  Inf) for bp in buspair_indexes)
     end
 
-    for (l,branch) in branches
+    for (l,branch) in branch_lookup
         i = branch["f_bus"]
         j = branch["t_bus"]
 
@@ -33,21 +37,21 @@ function buspair_parameters(arcs_from, branches, buses, conductor_ids, ismultico
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end
 
-    buspairs = Dict(((i,j), Dict(
+    buspairs = Dict((i,j) => Dict(
         "branch"=>bp_branch[(i,j)],
         "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],
-        "tap"=>branches[bp_branch[(i,j)]]["tap"],
-        "vm_fr_min"=>buses[i]["vmin"],
-        "vm_fr_max"=>buses[i]["vmax"],
-        "vm_to_min"=>buses[j]["vmin"],
-        "vm_to_max"=>buses[j]["vmax"]
-        )) for (i,j) in buspair_indexes
+        "tap"=>branch_lookup[bp_branch[(i,j)]]["tap"],
+        "vm_fr_min"=>bus_lookup[i]["vmin"],
+        "vm_fr_max"=>bus_lookup[i]["vmax"],
+        "vm_to_min"=>bus_lookup[j]["vmin"],
+        "vm_to_max"=>bus_lookup[j]["vmax"]
+        ) for (i,j) in buspair_indexes
     )
 
     # add optional parameters
     for bp in buspair_indexes
-        branch = branches[bp_branch[bp]]
+        branch = branch_lookup[bp_branch[bp]]
         if haskey(branch, "rate_a")
             buspairs[bp]["rate_a"] = branch["rate_a"]
         end
