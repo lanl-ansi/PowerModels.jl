@@ -89,7 +89,9 @@ function ne_branch_ref!(pm::GenericPowerModel)
         end
         nw_ref[:ne_bus_arcs] = ne_bus_arcs
 
-        nw_ref[:ne_buspairs] = buspair_parameters(nw_ref[:ne_arcs_from], nw_ref[:ne_branch], nw_ref[:bus], nw_ref[:conductor_ids], haskey(nw_ref, :conductors))
+        if !haskey(nw_ref, :ne_buspairs)
+            nw_ref[:ne_buspairs] = calc_buspair_parameters(nw_ref[:bus], nw_ref[:ne_branch], nw_ref[:conductor_ids], haskey(nw_ref, :conductors))
+        end
     end
 end
 

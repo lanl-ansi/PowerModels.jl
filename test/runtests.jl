@@ -4,7 +4,7 @@ import Memento
 
 # Suppress warnings during testing.
 Memento.setlevel!(Memento.getlogger(InfrastructureModels), "error")
-Memento.setlevel!(Memento.getlogger(PowerModels), "error")
+PowerModels.logger_config!("error")
 
 # for checking status codes
 import MathOptInterface

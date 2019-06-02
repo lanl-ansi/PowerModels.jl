@@ -2,7 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added support for pre-computed buspair data (#524)
 - Added source_id to Matpower parser (#512)
+- Added logger_config! to configure the PowerModels logger (#402)
 - Minor improvments Matpower export function (#388)
 - Removed inequality constraint from theta_ref constraint in the ACR formulation
 

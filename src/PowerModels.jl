@@ -25,6 +25,11 @@ function silence()
     Memento.setlevel!(Memento.getlogger(PowerModels), "error")
 end
 
+"alows the user to set the logging level without the need to add Memento"
+function logger_config!(level)
+    Memento.config!(Memento.getlogger("PowerModels"), level)
+end
+
 include("io/matpower.jl")
 include("io/common.jl")
 include("io/pti.jl")
