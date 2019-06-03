@@ -231,7 +231,7 @@ function apply_func(data::Dict{String,<:Any}, key::String, func)
 end
 
 
-"TransModels network data into per-unit"
+"Transforms network data into per-unit"
 function make_per_unit!(data::Dict{String,<:Any})
     if !haskey(data, "per_unit") || data["per_unit"] == false
         data["per_unit"] = true
@@ -365,7 +365,7 @@ function _make_per_unit!(data::Dict{String,<:Any}, mva_base::Real)
 end
 
 
-"TransModels network data into mixed-units (inverse of per-unit)"
+"Transforms network data into mixed-units (inverse of per-unit)"
 function make_mixed_units!(data::Dict{String,<:Any})
     if haskey(data, "per_unit") && data["per_unit"] == true
         data["per_unit"] = false
@@ -2215,7 +2215,7 @@ function _dfs(i, neighbors, component_lookup, touched)
 end
 
 
-"TransModels single-conductor network data into multi-conductor data"
+"Transforms single-conductor network data into multi-conductor data"
 function make_multiconductor!(data::Dict{String,<:Any}, conductors::Int)
     if InfrastructureModels.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
