@@ -129,13 +129,13 @@ end
 
 
 ""
-function add_generator_power_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractActivePowerFormulation
+function add_setpoint_generator_power(sol, pm::GenericPowerModel{T}) where T <: AbstractActivePowerFormulation
     add_setpoint(sol, pm, "gen", "pg", :pg)
     add_setpoint_fixed(sol, pm, "gen", "qg")
 end
 
 ""
-function add_storage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractActivePowerFormulation
+function add_setpoint_storage(sol, pm::GenericPowerModel{T}) where T <: AbstractActivePowerFormulation
     add_setpoint(sol, pm, "storage", "ps", :ps)
     add_setpoint_fixed(sol, pm, "storage", "qs")
     add_setpoint(sol, pm, "storage", "se", :se, conductorless=true)

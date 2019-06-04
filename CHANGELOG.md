@@ -17,7 +17,7 @@ PowerModels.jl Change Log
 ### v0.11.1
 - Added calc_gen_cost to compute the generator cost from the setpoint in the data model
 - Added calc_dcline_cost to compute the dcline cost from the setpoint in the data model
-- Fixed a bug that resulted in an extra call to core_ref!
+- Fixed a bug that resulted in an extra call to ref_core!
 
 ### v0.11.0
 - Update to use JuMP/MOI status values (#276) (breaking)
@@ -183,7 +183,7 @@ PowerModels.jl Change Log
 - Allow multinetwork as an optional parameter
 - Removed multi-network filter option from objective functions (breaking)
 - Removed option to run multi-network data in single-network models (breaking)
-- Removed add_bus_demand_setpoint function (breaking)
+- Removed add_setpoint_bus_demand function (breaking)
 - Changed parameters and improved performance of KCL constraints (breaking)
 - Improved robustness of matpower data parsing and transformation
 - Improved testing of convex relaxations

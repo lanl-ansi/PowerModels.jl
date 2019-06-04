@@ -14,20 +14,20 @@ function variable_voltage_magnitude(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cn
             [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_phi",
             lower_bound = ref(pm, nw, :bus, i, "vmin", cnd) - 1.0,
             upper_bound = ref(pm, nw, :bus, i, "vmax", cnd) - 1.0,
-            start = getval(ref(pm, nw, :bus, i), "phi_start", cnd)
+            start = comp_start_value(ref(pm, nw, :bus, i), "phi_start", cnd)
         )
     else
         var(pm, nw, cnd)[:vm] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_vm",
             lower_bound = -1.0,
-            start = getval(ref(pm, nw, :bus, i), "phi_start", cnd)
+            start = comp_start_value(ref(pm, nw, :bus, i), "phi_start", cnd)
         )
     end
 end
 
 ""
 function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractLPACForm
-    check_missing_keys(var(pm, n, c), [:va,:cs], T)
+    _check_missing_keys(var(pm, n, c), [:va,:cs], T)
 
     t = var(pm, n, c, :va)
     cs = var(pm, n, c, :cs)
@@ -85,7 +85,7 @@ end
 
 
 ""
-function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractLPACForm
+function add_setpoint_bus_voltage(sol, pm::GenericPowerModel{T}) where T <: AbstractLPACForm
     add_setpoint(sol, pm, "bus", "vm", :phi; scale = (x,item,cnd) -> 1.0+x)
     add_setpoint(sol, pm, "bus", "va", :va)
 end

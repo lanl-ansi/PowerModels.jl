@@ -4,11 +4,9 @@
 # - the network will be maintained as one connected component (i.e. at least n-1 edges)
 #
 
-export run_ots
-
 ""
 function run_ots(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_ots; ref_extensions=[on_off_va_bounds_ref!], solution_builder = get_ots_solution, kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_ots; ref_extensions=[ref_on_off_va_bounds!], solution_builder = get_solution_ots, kwargs...)
 end
 
 ""
@@ -48,7 +46,7 @@ end
 
 
 ""
-function on_off_va_bounds_ref!(pm::GenericPowerModel)
+function ref_on_off_va_bounds!(pm::GenericPowerModel)
     if InfrastructureModels.ismultinetwork(pm.data)
         nws_data = pm.data["nw"]
     else
@@ -66,9 +64,9 @@ function on_off_va_bounds_ref!(pm::GenericPowerModel)
 end
 
 ""
-function get_ots_solution(pm::GenericPowerModel, sol::Dict{String,<:Any})
-    add_bus_voltage_setpoint(sol, pm)
-    add_generator_power_setpoint(sol, pm)
-    add_branch_flow_setpoint(sol, pm)
-    add_branch_status_setpoint(sol, pm)
+function get_solution_ots(pm::GenericPowerModel, sol::Dict{String,<:Any})
+    add_setpoint_bus_voltage(sol, pm)
+    add_setpoint_generator_power(sol, pm)
+    add_setpoint_branch_flow(sol, pm)
+    add_setpoint_branch_status(sol, pm)
 end

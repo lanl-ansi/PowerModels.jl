@@ -139,9 +139,9 @@ end
     @testset "test multi-conductor ac opf" begin
         @testset "3-bus 3-conductor case" begin
             mp_data = build_mc_data("../test/data/matpower/case3.m", conductors=3)
-            result = PowerModels.run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
+            result = PowerModels._run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
 
-            @test result["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 47267.9; atol = 1e-1)
 
             for c in 1:mp_data["conductors"]
@@ -152,10 +152,10 @@ end
 
         @testset "3-bus 3-conductor case with theta_ref=pi" begin
             mp_data = build_mc_data("../test/data/matpower/case3.m", conductors=3)
-            pm = PowerModels.build_generic_model(mp_data, ACRPowerModel, PowerModels.post_mc_opf, multiconductor=true)
+            pm = PowerModels.build_generic_model(mp_data, ACRPowerModel, PowerModels._post_mc_opf, multiconductor=true)
             result = PowerModels.solve_generic_model(pm, ipopt_solver)
 
-            @test result["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 47267.9; atol = 1e-1)
 
             for c in 1:mp_data["conductors"]
@@ -167,9 +167,9 @@ end
         @testset "5-bus 5-conductor case" begin
             mp_data = build_mc_data("../test/data/matpower/case5.m", conductors=5)
 
-            result = PowerModels.run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
+            result = PowerModels._run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
 
-            @test result["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 91345.5; atol = 1e-1)
             for c in 1:mp_data["conductors"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][c],  0.4; atol = 1e-3)
@@ -180,9 +180,9 @@ end
         @testset "30-bus 3-conductor case" begin
             mp_data = build_mc_data("../test/data/matpower/case30.m", conductors=3)
 
-            result = PowerModels.run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
+            result = PowerModels._run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
 
-            @test result["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 614.905; atol = 1e-1)
 
             for c in 1:mp_data["conductors"]
@@ -197,9 +197,9 @@ end
         mp_data = build_mc_data("../test/data/matpower/case5_dc.m")
 
         @testset "ac 5-bus case" begin
-            result = PowerModels.run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
+            result = PowerModels._run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
 
-            @test result["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 54468.5; atol = 1e-1)
             for c in 1:mp_data["conductors"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][c],  0.4; atol = 1e-3)
@@ -208,9 +208,9 @@ end
         end
 
         @testset "dc 5-bus case" begin
-            result = PowerModels.run_mc_opf(mp_data, DCPPowerModel, ipopt_solver)
+            result = PowerModels._run_mc_opf(mp_data, DCPPowerModel, ipopt_solver)
 
-            @test result["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 54272.7; atol = 1e-1)
             for c in 1:mp_data["conductors"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][c],  0.4; atol = 1e-3)
@@ -219,9 +219,9 @@ end
         end
 
         @testset "soc 5-bus case" begin
-            result = PowerModels.run_mc_opf(mp_data, SOCWRPowerModel, ipopt_solver)
+            result = PowerModels._run_mc_opf(mp_data, SOCWRPowerModel, ipopt_solver)
 
-            @test result["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 46314.1; atol = 1e-1)
             for c in 1:mp_data["conductors"]
                 @test isapprox(result["solution"]["gen"]["1"]["pg"][c],  0.4; atol = 1e-3)
@@ -236,17 +236,17 @@ end
         mp_data = build_mc_data("../test/data/matpower/case5_uc.m")
 
         @testset "ac 5-bus case" begin
-            result = PowerModels.run_uc_mc_opf(mp_data, ACPPowerModel, juniper_solver)
+            result = PowerModels._run_uc_mc_opf(mp_data, ACPPowerModel, juniper_solver)
 
-            @test result["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 54810.0; atol = 1e-1)
             @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0, atol=1e-6)
         end
 
         @testset "dc 5-bus case" begin
-            result = PowerModels.run_uc_mc_opf(mp_data, DCPPowerModel, cbc_solver)
+            result = PowerModels._run_uc_mc_opf(mp_data, DCPPowerModel, cbc_solver)
 
-            @test result["termination_status"] == MOI.OPTIMAL
+            @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 52839.6; atol = 1e-1)
             @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0)
         end
@@ -259,9 +259,9 @@ end
         @testset "test dc polar opf" begin
             mp_data = build_mc_data("../test/data/matpower/case5.m")
 
-            result = PowerModels.run_mc_opf(mp_data, DCPPowerModel, ipopt_solver, setting = Dict("output" => Dict("duals" => true)))
+            result = PowerModels._run_mc_opf(mp_data, DCPPowerModel, ipopt_solver, setting = Dict("output" => Dict("duals" => true)))
 
-            @test result["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 52839.6; atol = 1e0)
 
 
@@ -291,9 +291,9 @@ end
     @testset "test solution feedback" begin
         mp_data = build_mc_data("../test/data/matpower/case5_asym.m")
 
-        result = PowerModels.run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
+        result = PowerModels._run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
 
-        @test result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 52655.7; atol = 1e0)
 
         PowerModels.update_data!(mp_data, result["solution"])
@@ -310,7 +310,7 @@ end
         PowerModels.make_multiconductor!(mp_data_3p, 3)
 
         @test_throws(TESTLOG, ErrorException, PowerModels.update_data!(mp_data_2p, mp_data_3p))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_keys(mp_data_3p, ["load"]))
+        @test_throws(TESTLOG, ErrorException, PowerModels._check_keys(mp_data_3p, ["load"]))
 
         # check_cost_functions
         mp_data_3p["gen"]["1"]["model"] = 1

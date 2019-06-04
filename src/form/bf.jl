@@ -14,13 +14,13 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
             [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_ccm",
             lower_bound = 0,
             upper_bound = ub[i],
-            start = getval(branch[i], "ccm_start", cnd)
+            start = comp_start_value(branch[i], "ccm_start", cnd)
         )
     else
         var(pm, nw, cnd)[:ccm] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_ccm",
             lower_bound = 0,
-            start = getval(branch[i], "ccm_start", cnd)
+            start = comp_start_value(branch[i], "ccm_start", cnd)
         )
     end
 end
@@ -74,7 +74,7 @@ end
 Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
 function constraint_model_current(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractBFQPForm
-    check_missing_keys(var(pm, n, c), [:p,:q,:w,:ccm], T)
+    _check_missing_keys(var(pm, n, c), [:p,:q,:w,:ccm], T)
 
     p  = var(pm, n, c, :p)
     q  = var(pm, n, c, :q)
@@ -96,7 +96,7 @@ end
 Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
 function constraint_model_current(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractBFConicForm
-    check_missing_keys(var(pm, n, c), [:p,:q,:w,:ccm], T)
+    _check_missing_keys(var(pm, n, c), [:p,:q,:w,:ccm], T)
 
     p  = var(pm, n, c, :p)
     q  = var(pm, n, c, :q)

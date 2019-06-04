@@ -86,7 +86,7 @@ end
 
 
 ""
-function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractDCPForm
+function add_setpoint_bus_voltage(sol, pm::GenericPowerModel{T}) where T <: AbstractDCPForm
     add_setpoint_fixed(sol, pm, "bus", "vm"; default_value = (item) -> 1)
     add_setpoint(sol, pm, "bus", "va", :va)
 end
@@ -150,17 +150,17 @@ end
 ""
 function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: DCPlosslessForm
     if bounded
-        flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
+        flow_lb, flow_ub = calc_ref_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
         p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_p",
             lower_bound = flow_lb[l],
             upper_bound = flow_ub[l],
-            start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
+            start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     else
         p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_p",
-            start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
+            start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     end
 
@@ -183,7 +183,7 @@ function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw
         [(l,i,j) in ref(pm, nw, :ne_arcs_from)], base_name="$(nw)_$(cnd)_p_ne",
         lower_bound = -ref(pm, nw, :ne_branch, l, "rate_a", cnd),
         upper_bound =  ref(pm, nw, :ne_branch, l, "rate_a", cnd),
-        start = getval(ref(pm, nw, :ne_branch, l), "p_start", cnd)
+        start = comp_start_value(ref(pm, nw, :ne_branch, l), "p_start", cnd)
     )
 
     # this explicit type erasure is necessary
@@ -253,7 +253,7 @@ function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus
 end
 
 ""
-function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: NFAForm
+function add_setpoint_bus_voltage(sol, pm::GenericPowerModel{T}) where T <: NFAForm
     add_setpoint_fixed(sol, pm, "bus", "vm")
     add_setpoint_fixed(sol, pm, "bus", "va")
 end

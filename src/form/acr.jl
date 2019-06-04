@@ -14,7 +14,7 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         end
 
         # does not seem to improve convergence
-        #wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
+        #wr_min, wr_max, wi_min, wi_max = calc_ref_voltage_product_bounds(pm.ref[:buspairs])
         #for bp in ids(pm, nw, :buspairs)
         #    i,j = bp
         #    JuMP.@constraint(pm.model, wr_min[bp] <= vr[i]*vr[j] + vi[i]*vi[j])
@@ -124,7 +124,7 @@ end
 
 
 "extracts voltage set points from rectangular voltage form and converts into polar voltage form"
-function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractACRForm
+function add_setpoint_bus_voltage(sol, pm::GenericPowerModel{T}) where T <: AbstractACRForm
     sol_dict = get(sol, "bus", Dict{String,Any}())
 
     if ismultinetwork(pm)
