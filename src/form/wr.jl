@@ -362,11 +362,11 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
     for (bp, buspair) in buspairs
         ub[bp] = ((buspair["rate_a"][cnd]*buspair["tap"][cnd])/buspair["vm_fr_min"][cnd])^2
     end
-    var(pm, nw, cnd)[:cm] = JuMP.@variable(pm.model,
-        [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_cm",
+    var(pm, nw, cnd)[:ccm] = JuMP.@variable(pm.model,
+        [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_ccm",
         lower_bound = 0,
         upper_bound = ub[bp],
-        start = getval(buspairs[bp], "cm_start", cnd)
+        start = getval(buspairs[bp], "ccm_start", cnd)
     )
 end
 
@@ -432,17 +432,17 @@ function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) wher
 
 end
 
-"`p[f_idx]^2 + q[f_idx]^2 <= w[f_bus]/tm*cm[f_bus,t_bus]`"
+"`p[f_idx]^2 + q[f_idx]^2 <= w[f_bus]/tm*ccm[f_bus,t_bus]`"
 function constraint_power_magnitude_sqr(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, arc_from, tm) where T <: QCWRForm
     w_i  = var(pm, n, c, :w, f_bus)
     p_fr = var(pm, n, c, :p, arc_from)
     q_fr = var(pm, n, c, :q, arc_from)
-    cm   = var(pm, n, c, :cm, (f_bus, t_bus))
+    ccm   = var(pm, n, c, :ccm, (f_bus, t_bus))
 
-    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w_i/tm^2*cm)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w_i/tm^2*ccm)
 end
 
-"`cm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
+"`ccm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
 function constraint_power_magnitude_link(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, arc_from, g, b, g_fr, b_fr, g_to, b_to, tr, ti, tm) where T <: QCWRForm
     w_fr = var(pm, n, c, :w, f_bus)
     w_to = var(pm, n, c, :w, t_bus)
@@ -450,11 +450,11 @@ function constraint_power_magnitude_link(pm::GenericPowerModel{T}, n::Int, c::In
     q_fr = var(pm, n, c, :q, arc_from)
     wr = var(pm, n, c, :wr, (f_bus, t_bus))
     wi = var(pm, n, c, :wi, (f_bus, t_bus))
-    cm = var(pm, n, c, :cm, (f_bus, t_bus))
+    ccm = var(pm, n, c, :ccm, (f_bus, t_bus))
 
     ym_sh_sqr = g_fr^2 + b_fr^2
 
-    JuMP.@constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - ym_sh_sqr*(w_fr/tm^2) + 2*(g_fr*p_fr - b_fr*q_fr))
+    JuMP.@constraint(pm.model, ccm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - ym_sh_sqr*(w_fr/tm^2) + 2*(g_fr*p_fr - b_fr*q_fr))
 end
 
 "`t[ref_bus] == 0`"
@@ -585,20 +585,20 @@ end
 
 ""
 function variable_current_magnitude_sqr_on_off(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T
-    cm_min = Dict((l, 0) for l in ids(pm, nw, :branch))
+    ccm_min = Dict((l, 0) for l in ids(pm, nw, :branch))
 
     branches = ref(pm, nw, :branch)
-    cm_max = Dict()
+    ccm_max = Dict()
     for (l, branch) in branches
         vm_fr_min = ref(pm, nw, :bus, branch["f_bus"], "vmin", cnd)
-        cm_max[l] = ((branch["rate_a"][cnd]*branch["tap"][cnd])/vm_fr_min)^2
+        ccm_max[l] = ((branch["rate_a"][cnd]*branch["tap"][cnd])/vm_fr_min)^2
     end
 
-    var(pm, nw, cnd)[:cm] = JuMP.@variable(pm.model,
-        [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_cm",
-        lower_bound = cm_min[l],
-        upper_bound = cm_max[l],
-        start = getval(ref(pm, nw, :branch, l), "cm_start", cnd)
+    var(pm, nw, cnd)[:ccm] = JuMP.@variable(pm.model,
+        [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_ccm",
+        lower_bound = ccm_min[l],
+        upper_bound = ccm_max[l],
+        start = getval(ref(pm, nw, :branch, l), "ccm_start", cnd)
     )
 end
 
@@ -668,25 +668,25 @@ function constraint_model_voltage_on_off(pm::GenericPowerModel{T}, n::Int, c::In
 end
 
 
-"`p[arc_from]^2 + q[arc_from]^2 <= w[f_bus]/tm*cm[i]`"
+"`p[arc_from]^2 + q[arc_from]^2 <= w[f_bus]/tm*ccm[i]`"
 function constraint_power_magnitude_sqr_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, arc_from, tm) where T <: QCWRForm
     w    = var(pm, n, c, :w, f_bus)
     p_fr = var(pm, n, c, :p, arc_from)
     q_fr = var(pm, n, c, :q, arc_from)
-    cm   = var(pm, n, c, :cm, i)
+    ccm   = var(pm, n, c, :ccm, i)
     z    = var(pm, n, c, :branch_z, i)
 
     # TODO see if there is a way to leverage relaxation_complex_product_on_off here
     w_ub = JuMP.upper_bound(w)
-    cm_ub = JuMP.upper_bound(cm)
+    ccm_ub = JuMP.upper_bound(ccm)
     z_ub = JuMP.upper_bound(z)
 
-    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm*z_ub/tm^2)
-    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w_ub*cm*z/tm^2)
-    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w*cm_ub*z/tm^2)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w*ccm*z_ub/tm^2)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w_ub*ccm*z/tm^2)
+    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w*ccm_ub*z/tm^2)
 end
 
-"`cm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
+"`ccm[f_bus,t_bus] == (g^2 + b^2)*(w[f_bus]/tm + w[t_bus] - 2*(tr*wr[f_bus,t_bus] + ti*wi[f_bus,t_bus])/tm) - c*q[f_idx] - ((c/2)/tm)^2*w[f_bus]`"
 function constraint_power_magnitude_link_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, arc_from, g, b, g_fr, b_fr, g_to, b_to, tr, ti, tm) where T <: QCWRForm
     w_fr = var(pm, n, c, :w_fr, i)
     w_to = var(pm, n, c, :w_to, i)
@@ -694,11 +694,11 @@ function constraint_power_magnitude_link_on_off(pm::GenericPowerModel{T}, n::Int
     q_fr = var(pm, n, c, :q, arc_from)
     wr   = var(pm, n, c, :wr, i)
     wi   = var(pm, n, c, :wi, i)
-    cm   = var(pm, n, c, :cm, i)
+    ccm   = var(pm, n, c, :ccm, i)
 
     ym_sh_sqr = g_fr^2 + b_fr^2
 
-    JuMP.@constraint(pm.model, cm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - ym_sh_sqr*(w_fr/tm^2) + 2*(g_fr*p_fr - b_fr*q_fr))
+    JuMP.@constraint(pm.model, ccm == (g^2 + b^2)*(w_fr/tm^2 + w_to - 2*(tr*wr + ti*wi)/tm^2) - ym_sh_sqr*(w_fr/tm^2) + 2*(g_fr*p_fr - b_fr*q_fr))
 end
 
 
