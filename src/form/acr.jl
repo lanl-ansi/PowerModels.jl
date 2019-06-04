@@ -124,7 +124,7 @@ end
 
 
 "extracts voltage set points from rectangular voltage form and converts into polar voltage form"
-function add_setpoint_bus_voltage(sol, pm::GenericPowerModel{T}) where T <: AbstractACRForm
+function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: AbstractACRForm
     sol_dict = get(sol, "bus", Dict{String,Any}())
 
     if ismultinetwork(pm)

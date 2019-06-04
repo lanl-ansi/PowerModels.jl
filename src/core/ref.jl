@@ -134,7 +134,7 @@ end
 
 
 "computes storage bounds"
-function calc_storage_injection_bounds(storage, buses, conductor::Int=1)
+function calc_ref_storage_injection_bounds(storage, buses, conductor::Int=1)
     injection_lb = Dict() 
     injection_ub = Dict()
 

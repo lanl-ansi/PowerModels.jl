@@ -216,7 +216,7 @@ end
 
 
 ""
-function _apply_func(data::Dict{String,<:Any}, key::String, func)
+function _apply_func!(data::Dict{String,<:Any}, key::String, func)
     if haskey(data, key)
         if isa(data[key], MultiConductorVector)
             data[key] = MultiConductorVector([func(v) for v in data[key]])
@@ -256,37 +256,37 @@ function _make_per_unit!(data::Dict{String,<:Any}, mva_base::Real)
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
-            _apply_func(bus, "va", deg2rad)
+            _apply_func!(bus, "va", deg2rad)
 
-            _apply_func(bus, "lam_kcl_r", rescale_dual)
-            _apply_func(bus, "lam_kcl_i", rescale_dual)
+            _apply_func!(bus, "lam_kcl_r", rescale_dual)
+            _apply_func!(bus, "lam_kcl_i", rescale_dual)
         end
     end
 
     if haskey(data, "load")
         for (i, load) in data["load"]
-            _apply_func(load, "pd", rescale)
-            _apply_func(load, "qd", rescale)
+            _apply_func!(load, "pd", rescale)
+            _apply_func!(load, "qd", rescale)
         end
     end
 
     if haskey(data, "shunt")
         for (i, shunt) in data["shunt"]
-            _apply_func(shunt, "gs", rescale)
-            _apply_func(shunt, "bs", rescale)
+            _apply_func!(shunt, "gs", rescale)
+            _apply_func!(shunt, "bs", rescale)
         end
     end
 
     if haskey(data, "gen")
         for (i, gen) in data["gen"]
-            _apply_func(gen, "pg", rescale)
-            _apply_func(gen, "qg", rescale)
+            _apply_func!(gen, "pg", rescale)
+            _apply_func!(gen, "qg", rescale)
 
-            _apply_func(gen, "pmax", rescale)
-            _apply_func(gen, "pmin", rescale)
+            _apply_func!(gen, "pmax", rescale)
+            _apply_func!(gen, "pmin", rescale)
 
-            _apply_func(gen, "qmax", rescale)
-            _apply_func(gen, "qmin", rescale)
+            _apply_func!(gen, "qmax", rescale)
+            _apply_func!(gen, "qmin", rescale)
 
             _rescale_cost_model!(gen, mva_base)
         end
@@ -294,15 +294,15 @@ function _make_per_unit!(data::Dict{String,<:Any}, mva_base::Real)
 
     if haskey(data, "storage")
         for (i, strg) in data["storage"]
-            _apply_func(strg, "energy", rescale)
-            _apply_func(strg, "energy_rating", rescale)
-            _apply_func(strg, "charge_rating", rescale)
-            _apply_func(strg, "discharge_rating", rescale)
-            _apply_func(strg, "thermal_rating", rescale)
-            _apply_func(strg, "current_rating", rescale)
-            _apply_func(strg, "qmin", rescale)
-            _apply_func(strg, "qmax", rescale)
-            _apply_func(strg, "standby_loss", rescale)
+            _apply_func!(strg, "energy", rescale)
+            _apply_func!(strg, "energy_rating", rescale)
+            _apply_func!(strg, "charge_rating", rescale)
+            _apply_func!(strg, "discharge_rating", rescale)
+            _apply_func!(strg, "thermal_rating", rescale)
+            _apply_func!(strg, "current_rating", rescale)
+            _apply_func!(strg, "qmin", rescale)
+            _apply_func!(strg, "qmax", rescale)
+            _apply_func!(strg, "standby_loss", rescale)
         end
     end
 
@@ -317,42 +317,42 @@ function _make_per_unit!(data::Dict{String,<:Any}, mva_base::Real)
     end
 
     for branch in branches
-        _apply_func(branch, "rate_a", rescale)
-        _apply_func(branch, "rate_b", rescale)
-        _apply_func(branch, "rate_c", rescale)
+        _apply_func!(branch, "rate_a", rescale)
+        _apply_func!(branch, "rate_b", rescale)
+        _apply_func!(branch, "rate_c", rescale)
 
-        _apply_func(branch, "c_rating_a", rescale_ampere)
-        _apply_func(branch, "c_rating_b", rescale_ampere)
-        _apply_func(branch, "c_rating_c", rescale_ampere)
+        _apply_func!(branch, "c_rating_a", rescale_ampere)
+        _apply_func!(branch, "c_rating_b", rescale_ampere)
+        _apply_func!(branch, "c_rating_c", rescale_ampere)
 
-        _apply_func(branch, "shift", deg2rad)
-        _apply_func(branch, "angmax", deg2rad)
-        _apply_func(branch, "angmin", deg2rad)
+        _apply_func!(branch, "shift", deg2rad)
+        _apply_func!(branch, "angmax", deg2rad)
+        _apply_func!(branch, "angmin", deg2rad)
 
-        _apply_func(branch, "pf", rescale)
-        _apply_func(branch, "pt", rescale)
-        _apply_func(branch, "qf", rescale)
-        _apply_func(branch, "qt", rescale)
+        _apply_func!(branch, "pf", rescale)
+        _apply_func!(branch, "pt", rescale)
+        _apply_func!(branch, "qf", rescale)
+        _apply_func!(branch, "qt", rescale)
 
-        _apply_func(branch, "mu_sm_fr", rescale_dual)
-        _apply_func(branch, "mu_sm_to", rescale_dual)
+        _apply_func!(branch, "mu_sm_fr", rescale_dual)
+        _apply_func!(branch, "mu_sm_to", rescale_dual)
     end
 
     if haskey(data, "dcline")
         for (i, dcline) in data["dcline"]
-            _apply_func(dcline, "loss0", rescale)
-            _apply_func(dcline, "pf", rescale)
-            _apply_func(dcline, "pt", rescale)
-            _apply_func(dcline, "qf", rescale)
-            _apply_func(dcline, "qt", rescale)
-            _apply_func(dcline, "pmaxt", rescale)
-            _apply_func(dcline, "pmint", rescale)
-            _apply_func(dcline, "pmaxf", rescale)
-            _apply_func(dcline, "pminf", rescale)
-            _apply_func(dcline, "qmaxt", rescale)
-            _apply_func(dcline, "qmint", rescale)
-            _apply_func(dcline, "qmaxf", rescale)
-            _apply_func(dcline, "qminf", rescale)
+            _apply_func!(dcline, "loss0", rescale)
+            _apply_func!(dcline, "pf", rescale)
+            _apply_func!(dcline, "pt", rescale)
+            _apply_func!(dcline, "qf", rescale)
+            _apply_func!(dcline, "qt", rescale)
+            _apply_func!(dcline, "pmaxt", rescale)
+            _apply_func!(dcline, "pmint", rescale)
+            _apply_func!(dcline, "pmaxf", rescale)
+            _apply_func!(dcline, "pminf", rescale)
+            _apply_func!(dcline, "qmaxt", rescale)
+            _apply_func!(dcline, "qmint", rescale)
+            _apply_func!(dcline, "qmaxf", rescale)
+            _apply_func!(dcline, "qminf", rescale)
 
             _rescale_cost_model!(dcline, mva_base)
         end
@@ -389,37 +389,37 @@ function _make_mixed_units!(data::Dict{String,<:Any}, mva_base::Real)
 
     if haskey(data, "bus")
         for (i, bus) in data["bus"]
-            _apply_func(bus, "va", rad2deg)
+            _apply_func!(bus, "va", rad2deg)
 
-            _apply_func(bus, "lam_kcl_r", rescale_dual)
-            _apply_func(bus, "lam_kcl_i", rescale_dual)
+            _apply_func!(bus, "lam_kcl_r", rescale_dual)
+            _apply_func!(bus, "lam_kcl_i", rescale_dual)
         end
     end
 
     if haskey(data, "load")
         for (i, load) in data["load"]
-            _apply_func(load, "pd", rescale)
-            _apply_func(load, "qd", rescale)
+            _apply_func!(load, "pd", rescale)
+            _apply_func!(load, "qd", rescale)
         end
     end
 
     if haskey(data, "shunt")
         for (i, shunt) in data["shunt"]
-            _apply_func(shunt, "gs", rescale)
-            _apply_func(shunt, "bs", rescale)
+            _apply_func!(shunt, "gs", rescale)
+            _apply_func!(shunt, "bs", rescale)
         end
     end
 
     if haskey(data, "gen")
         for (i, gen) in data["gen"]
-            _apply_func(gen, "pg", rescale)
-            _apply_func(gen, "qg", rescale)
+            _apply_func!(gen, "pg", rescale)
+            _apply_func!(gen, "qg", rescale)
 
-            _apply_func(gen, "pmax", rescale)
-            _apply_func(gen, "pmin", rescale)
+            _apply_func!(gen, "pmax", rescale)
+            _apply_func!(gen, "pmin", rescale)
 
-            _apply_func(gen, "qmax", rescale)
-            _apply_func(gen, "qmin", rescale)
+            _apply_func!(gen, "qmax", rescale)
+            _apply_func!(gen, "qmin", rescale)
 
             _rescale_cost_model!(gen, 1.0/mva_base)
         end
@@ -427,15 +427,15 @@ function _make_mixed_units!(data::Dict{String,<:Any}, mva_base::Real)
 
     if haskey(data, "storage")
         for (i, strg) in data["storage"]
-            _apply_func(strg, "energy", rescale)
-            _apply_func(strg, "energy_rating", rescale)
-            _apply_func(strg, "charge_rating", rescale)
-            _apply_func(strg, "discharge_rating", rescale)
-            _apply_func(strg, "thermal_rating", rescale)
-            _apply_func(strg, "current_rating", rescale)
-            _apply_func(strg, "qmin", rescale)
-            _apply_func(strg, "qmax", rescale)
-            _apply_func(strg, "standby_loss", rescale)
+            _apply_func!(strg, "energy", rescale)
+            _apply_func!(strg, "energy_rating", rescale)
+            _apply_func!(strg, "charge_rating", rescale)
+            _apply_func!(strg, "discharge_rating", rescale)
+            _apply_func!(strg, "thermal_rating", rescale)
+            _apply_func!(strg, "current_rating", rescale)
+            _apply_func!(strg, "qmin", rescale)
+            _apply_func!(strg, "qmax", rescale)
+            _apply_func!(strg, "standby_loss", rescale)
         end
     end
 
@@ -450,42 +450,42 @@ function _make_mixed_units!(data::Dict{String,<:Any}, mva_base::Real)
     end
 
     for branch in branches
-        _apply_func(branch, "rate_a", rescale)
-        _apply_func(branch, "rate_b", rescale)
-        _apply_func(branch, "rate_c", rescale)
+        _apply_func!(branch, "rate_a", rescale)
+        _apply_func!(branch, "rate_b", rescale)
+        _apply_func!(branch, "rate_c", rescale)
 
-        _apply_func(branch, "c_rating_a", rescale_ampere)
-        _apply_func(branch, "c_rating_b", rescale_ampere)
-        _apply_func(branch, "c_rating_c", rescale_ampere)
+        _apply_func!(branch, "c_rating_a", rescale_ampere)
+        _apply_func!(branch, "c_rating_b", rescale_ampere)
+        _apply_func!(branch, "c_rating_c", rescale_ampere)
 
-        _apply_func(branch, "shift", rad2deg)
-        _apply_func(branch, "angmax", rad2deg)
-        _apply_func(branch, "angmin", rad2deg)
+        _apply_func!(branch, "shift", rad2deg)
+        _apply_func!(branch, "angmax", rad2deg)
+        _apply_func!(branch, "angmin", rad2deg)
 
-        _apply_func(branch, "pf", rescale)
-        _apply_func(branch, "pt", rescale)
-        _apply_func(branch, "qf", rescale)
-        _apply_func(branch, "qt", rescale)
+        _apply_func!(branch, "pf", rescale)
+        _apply_func!(branch, "pt", rescale)
+        _apply_func!(branch, "qf", rescale)
+        _apply_func!(branch, "qt", rescale)
 
-        _apply_func(branch, "mu_sm_fr", rescale_dual)
-        _apply_func(branch, "mu_sm_to", rescale_dual)
+        _apply_func!(branch, "mu_sm_fr", rescale_dual)
+        _apply_func!(branch, "mu_sm_to", rescale_dual)
     end
 
     if haskey(data, "dcline")
         for (i,dcline) in data["dcline"]
-            _apply_func(dcline, "loss0", rescale)
-            _apply_func(dcline, "pf", rescale)
-            _apply_func(dcline, "pt", rescale)
-            _apply_func(dcline, "qf", rescale)
-            _apply_func(dcline, "qt", rescale)
-            _apply_func(dcline, "pmaxt", rescale)
-            _apply_func(dcline, "pmint", rescale)
-            _apply_func(dcline, "pmaxf", rescale)
-            _apply_func(dcline, "pminf", rescale)
-            _apply_func(dcline, "qmaxt", rescale)
-            _apply_func(dcline, "qmint", rescale)
-            _apply_func(dcline, "qmaxf", rescale)
-            _apply_func(dcline, "qminf", rescale)
+            _apply_func!(dcline, "loss0", rescale)
+            _apply_func!(dcline, "pf", rescale)
+            _apply_func!(dcline, "pt", rescale)
+            _apply_func!(dcline, "qf", rescale)
+            _apply_func!(dcline, "qt", rescale)
+            _apply_func!(dcline, "pmaxt", rescale)
+            _apply_func!(dcline, "pmint", rescale)
+            _apply_func!(dcline, "pmaxf", rescale)
+            _apply_func!(dcline, "pminf", rescale)
+            _apply_func!(dcline, "qmaxt", rescale)
+            _apply_func!(dcline, "qmint", rescale)
+            _apply_func!(dcline, "qmaxf", rescale)
+            _apply_func!(dcline, "qminf", rescale)
 
             _rescale_cost_model!(dcline, 1.0/mva_base)
         end
@@ -601,6 +601,7 @@ function calc_cost_pwl_lines(comp_dict::Dict)
     end
     return lines
 end
+
 
 """
 compute lines in m and b from from pwl cost models

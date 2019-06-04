@@ -47,7 +47,7 @@ end
 
 "opf with unit commitment, tests constraint_current_limit"
 function _run_uc_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, _post_uc_opf; solution_builder = _get_solution_uc, kwargs...)
+    return run_generic_model(file, model_constructor, solver, _post_uc_opf; solution_builder = _solution_uc!, kwargs...)
 end
 
 ""
@@ -94,7 +94,7 @@ end
 
 ""
 function _run_uc_mc_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, _post_uc_mc_opf; solution_builder = _get_solution_uc, multiconductor=true, kwargs...)
+    return run_generic_model(file, model_constructor, solver, _post_uc_mc_opf; solution_builder = _solution_uc!, multiconductor=true, kwargs...)
 end
 
 ""
@@ -143,16 +143,16 @@ function _post_uc_mc_opf(pm::GenericPowerModel)
 end
 
 ""
-function _get_solution_uc(pm::GenericPowerModel, sol::Dict{String,<:Any})
-    add_setpoint_bus_voltage(sol, pm)
-    add_setpoint_generator_power(sol, pm)
-    add_setpoint_generator_status(sol, pm)
-    add_setpoint_storage(sol, pm)
-    add_setpoint_branch_flow(sol, pm)
-    add_setpoint_dcline_flow(sol, pm)
+function _solution_uc!(pm::GenericPowerModel, sol::Dict{String,<:Any})
+    add_setpoint_bus_voltage!(sol, pm)
+    add_setpoint_generator_power!(sol, pm)
+    add_setpoint_generator_status!(sol, pm)
+    add_setpoint_storage!(sol, pm)
+    add_setpoint_branch_flow!(sol, pm)
+    add_setpoint_dcline_flow!(sol, pm)
 
-    add_dual_kcl(sol, pm)
-    add_dual_sm(sol, pm) # Adds the duals of the transmission lines' thermal limits.
+    add_dual_kcl!(sol, pm)
+    add_dual_sm!(sol, pm) # Adds the duals of the transmission lines' thermal limits.
 end
 
 

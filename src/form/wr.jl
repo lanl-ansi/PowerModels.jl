@@ -488,9 +488,9 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
 end
 
 ""
-function add_setpoint_bus_voltage(sol, pm::GenericPowerModel{T}) where T <: QCWRForm
-    add_setpoint(sol, pm, "bus", "vm", :vm)
-    add_setpoint(sol, pm, "bus", "va", :va)
+function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: QCWRForm
+    add_setpoint!(sol, pm, "bus", "vm", :vm)
+    add_setpoint!(sol, pm, "bus", "va", :va)
 end
 
 

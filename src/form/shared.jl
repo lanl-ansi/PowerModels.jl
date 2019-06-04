@@ -170,8 +170,8 @@ end
 
 
 ""
-function add_setpoint_bus_voltage(sol, pm::GenericPowerModel{T}) where T <: AbstractWForms
-    add_setpoint(sol, pm, "bus", "vm", :w; scale = (x,item,cnd) -> sqrt(x))
+function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: AbstractWForms
+    add_setpoint!(sol, pm, "bus", "vm", :w; scale = (x,item,cnd) -> sqrt(x))
     # What should the default value be?
-    add_setpoint_fixed(sol, pm, "bus", "va")
+    add_setpoint_fixed!(sol, pm, "bus", "va")
 end

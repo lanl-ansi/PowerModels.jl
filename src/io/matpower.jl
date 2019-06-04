@@ -7,7 +7,7 @@
 "Parses the matpwer data from either a filename or an IO object"
 function parse_matpower(io::IO; validate=true)::Dict
     mp_data = _parse_matpower_string(read(io, String))
-    pm_data = _matpower_to_powermodels(mp_data)
+    pm_data = _matpower_to_powermodels!(mp_data)
     if validate
         correct_network_data!(pm_data)
     end
@@ -252,6 +252,7 @@ function _parse_matpower_string(data_string::String)
         end
     end
 
+
     for k in keys(matlab_data)
         if !in(k, _mp_data_names) && startswith(k, "mpc.")
             case_name = k[5:length(k)]
@@ -326,8 +327,8 @@ end
 """
 Converts a Matpower dict into a PowerModels dict
 """
-function _matpower_to_powermodels(mp_data::Dict{String,<:Any})
-    pm_data = deepcopy(mp_data)
+function _matpower_to_powermodels!(mp_data::Dict{String,<:Any})
+    pm_data = mp_data
 
     # required default values
     if !haskey(pm_data, "dcline")
@@ -344,19 +345,19 @@ function _matpower_to_powermodels(mp_data::Dict{String,<:Any})
     end
 
     # translate component models
-    _mp2pm_branch(pm_data)
-    _mp2pm_dcline(pm_data)
+    _mp2pm_branch!(pm_data)
+    _mp2pm_dcline!(pm_data)
 
     # translate cost models
-    _add_dcline_costs(pm_data)
+    _add_dcline_costs!(pm_data)
 
     # merge data tables
-    _merge_bus_name_data(pm_data)
-    _merge_generator_cost_data(pm_data)
-    _merge_generic_data(pm_data)
+    _merge_bus_name_data!(pm_data)
+    _merge_generator_cost_data!(pm_data)
+    _merge_generic_data!(pm_data)
 
     # split loads and shunts from buses
-    _split_loads_shunts(pm_data)
+    _split_loads_shunts!(pm_data)
 
     # use once available
     InfrastructureModels.arrays_to_dicts!(pm_data)
@@ -372,13 +373,13 @@ end
 
 
 """
-    _split_loads_shunts(data)
+    _split_loads_shunts!(data)
 
 Seperates Loads and Shunts in `data` under separate "load" and "shunt" keys in the
 PowerModels data format. Includes references to originating bus via "load_bus"
 and "shunt_bus" keys, respectively.
 """
-function _split_loads_shunts(data::Dict{String,Any})
+function _split_loads_shunts!(data::Dict{String,Any})
     data["load"] = []
     data["shunt"] = []
 
@@ -417,7 +418,7 @@ end
 
 
 "sets all branch transformer taps to 1.0, to simplify branch models"
-function _mp2pm_branch(data::Dict{String,Any})
+function _mp2pm_branch!(data::Dict{String,Any})
     branches = [branch for branch in data["branch"]]
     if haskey(data, "ne_branch")
         append!(branches, data["ne_branch"])
@@ -452,7 +453,7 @@ end
 
 
 "adds pmin and pmax values at to and from buses"
-function _mp2pm_dcline(data::Dict{String,Any})
+function _mp2pm_dcline!(data::Dict{String,Any})
     for dcline in data["dcline"]
         pmin = dcline["pmin"]
         pmax = dcline["pmax"]
@@ -504,7 +505,7 @@ end
 
 
 "adds dcline costs, if gen costs exist"
-function _add_dcline_costs(data::Dict{String,Any})
+function _add_dcline_costs!(data::Dict{String,Any})
     if length(data["gencost"]) > 0 && length(data["dclinecost"]) <= 0 && length(data["dcline"]) > 0
         Memento.warn(_LOGGER, "added zero cost function data for dclines")
         model = data["gencost"][1]["model"]
@@ -538,7 +539,7 @@ end
 
 
 "merges generator cost functions into generator data, if costs exist"
-function _merge_generator_cost_data(data::Dict{String,Any})
+function _merge_generator_cost_data!(data::Dict{String,Any})
     if haskey(data, "gencost")
         for (i, gencost) in enumerate(data["gencost"])
             gen = data["gen"][i]
@@ -568,7 +569,7 @@ end
 
 
 "merges bus name data into buses, if names exist"
-function _merge_bus_name_data(data::Dict{String,Any})
+function _merge_bus_name_data!(data::Dict{String,Any})
     if haskey(data, "bus_name")
         # can assume same length is same as bus
         # this is validated during matpower parsing
@@ -586,7 +587,7 @@ end
 
 
 "merges Matpower tables based on the table extension syntax"
-function _merge_generic_data(data::Dict{String,Any})
+function _merge_generic_data!(data::Dict{String,Any})
     mp_matrix_names = [name[5:length(name)] for name in _mp_data_names]
 
     key_to_delete = []

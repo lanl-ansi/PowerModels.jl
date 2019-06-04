@@ -177,13 +177,13 @@ function run_generic_model(file::String, model_constructor, optimizer, post_meth
 end
 
 ""
-function run_generic_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; ref_extensions=[], solution_builder=get_solution, kwargs...)
+function run_generic_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; ref_extensions=[], solution_builder=solution_opf!, kwargs...)
     #start_time = time()
     pm = build_generic_model(data, model_constructor, post_method; ref_extensions=ref_extensions, kwargs...)
     #Memento.info(_LOGGER, "pm model build time: $(time() - start_time)")
 
     #start_time = time()
-    solution = solve_generic_model(pm, optimizer; solution_builder = solution_builder)
+    solution = solve_generic_model!(pm, optimizer; solution_builder=solution_builder)
     #Memento.info(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
 
     return solution
@@ -227,7 +227,7 @@ end
 
 
 ""
-function solve_generic_model(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = get_solution)
+function solve_generic_model!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = solution_opf!)
 
     #start_time = time()
     solve_time = JuMP.optimize!(pm, optimizer)
@@ -236,6 +236,8 @@ function solve_generic_model(pm::GenericPowerModel, optimizer::JuMP.OptimizerFac
     #start_time = time()
     solution = build_solution(pm, solve_time; solution_builder = solution_builder)
     #Memento.info(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
+
+    pm.solution = solution
 
     return solution
 end

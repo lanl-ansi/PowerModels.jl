@@ -20,8 +20,7 @@ the model's voltage variables together, in addition to the standard problem
 formulation constraints.
 
 Notable examples include the constraints linking the voltages in the
-ACTPowerModel, constraints linking convex relaxations of voltage variables
-and the constraints linking the voltage.
+ACTPowerModel, constraints linking convex relaxations of voltage variables.
 """
 function constraint_model_voltage(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     constraint_model_voltage(pm, nw, cnd)
@@ -34,8 +33,7 @@ formulation constraints.  The on/off name indicates that the voltages in this
 constraint can be set to zero via an indicator variable
 
 Notable examples include the constraints linking the voltages in the
-ACTPowerModel, constraints linking convex relaxations of voltage variables
-and the constraints linking the voltage.
+ACTPowerModel, constraints linking convex relaxations of voltage variables.
 """
 function constraint_model_voltage_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     constraint_model_voltage_on_off(pm, nw, cnd)
@@ -48,8 +46,7 @@ formulation constraints.  The network expantion name (ne) indicates that the
 voltages in this constraint can be set to zero via an indicator variable
 
 Notable examples include the constraints linking the voltages in the
-ACTPowerModel, constraints linking convex relaxations of voltage variables
-and the constraints linking the voltage.
+ACTPowerModel, constraints linking convex relaxations of voltage variables.
 """
 function constraint_model_voltage_ne(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     constraint_model_voltage_ne(pm, nw, cnd)
@@ -65,10 +62,6 @@ formulation constraints.
 
 Notable examples include the constraints linking the current and power
 variables in the BFM models.
-
-Note that these model-based current constraints should be problem agnostic and
-not make assuptions about the other constraints occuring in the rest of the
-problem specification.
 """
 function constraint_model_current(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     constraint_model_current(pm, nw, cnd)

@@ -4,7 +4,7 @@
 
 ""
 function run_tnep(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_tnep; ref_extensions=[ref_on_off_va_bounds!,ref_ne_branch!], solution_builder = get_solution_tnep, kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_tnep; ref_extensions=[ref_on_off_va_bounds!,ref_ne_branch!], solution_builder = solution_tnep!, kwargs...)
 end
 
 "the general form of the tnep optimization model"
@@ -95,28 +95,28 @@ end
 
 
 ""
-function add_setpoint_branch_ne_flow(sol, pm::GenericPowerModel)
+function add_setpoint_branch_ne_flow!(sol, pm::GenericPowerModel)
     # check the branch flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
-        add_setpoint(sol, pm, "ne_branch", "pf", :p_ne; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "ne_branch", "qf", :q_ne; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "ne_branch", "pt", :p_ne; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-        add_setpoint(sol, pm, "ne_branch", "qt", :q_ne; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint!(sol, pm, "ne_branch", "pf", :p_ne; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint!(sol, pm, "ne_branch", "qf", :q_ne; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
+        add_setpoint!(sol, pm, "ne_branch", "pt", :p_ne; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint!(sol, pm, "ne_branch", "qt", :q_ne; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
     end
 end
 
 
 ""
-function add_setpoint_branch_ne_built(sol, pm::GenericPowerModel)
-    add_setpoint(sol, pm, "ne_branch", "built", :branch_ne; default_value = (item) -> 1)
+function add_setpoint_branch_ne_built!(sol, pm::GenericPowerModel)
+    add_setpoint!(sol, pm, "ne_branch", "built", :branch_ne; default_value = (item) -> 1)
 end
 
 
 ""
-function get_solution_tnep(pm::GenericPowerModel, sol::Dict{String,<:Any})
-    add_setpoint_bus_voltage(sol, pm)
-    add_setpoint_generator_power(sol, pm)
-    add_setpoint_branch_flow(sol, pm)
-    add_setpoint_branch_ne_flow(sol, pm)
-    add_setpoint_branch_ne_built(sol, pm)
+function solution_tnep!(pm::GenericPowerModel, sol::Dict{String,<:Any})
+    add_setpoint_bus_voltage!(sol, pm)
+    add_setpoint_generator_power!(sol, pm)
+    add_setpoint_branch_flow!(sol, pm)
+    add_setpoint_branch_ne_flow!(sol, pm)
+    add_setpoint_branch_ne_built!(sol, pm)
 end

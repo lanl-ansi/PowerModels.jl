@@ -6,7 +6,7 @@
 
 ""
 function run_ots(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_ots; ref_extensions=[ref_on_off_va_bounds!], solution_builder = get_solution_ots, kwargs...)
+    return run_generic_model(file, model_constructor, optimizer, post_ots; ref_extensions=[ref_on_off_va_bounds!], solution_builder = solution_ots!, kwargs...)
 end
 
 ""
@@ -64,9 +64,9 @@ function ref_on_off_va_bounds!(pm::GenericPowerModel)
 end
 
 ""
-function get_solution_ots(pm::GenericPowerModel, sol::Dict{String,<:Any})
-    add_setpoint_bus_voltage(sol, pm)
-    add_setpoint_generator_power(sol, pm)
-    add_setpoint_branch_flow(sol, pm)
-    add_setpoint_branch_status(sol, pm)
+function solution_ots!(pm::GenericPowerModel, sol::Dict{String,<:Any})
+    add_setpoint_bus_voltage!(sol, pm)
+    add_setpoint_generator_power!(sol, pm)
+    add_setpoint_branch_flow!(sol, pm)
+    add_setpoint_branch_status!(sol, pm)
 end

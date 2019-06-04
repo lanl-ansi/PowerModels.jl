@@ -472,7 +472,7 @@ end
 
 ""
 function variable_active_storage(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    inj_lb, inj_ub = calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
+    inj_lb, inj_ub = calc_ref_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
 
     var(pm, nw, cnd)[:ps] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_$(cnd)_ps",
@@ -484,7 +484,7 @@ end
 
 ""
 function variable_reactive_storage(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    inj_lb, inj_ub = calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
+    inj_lb, inj_ub = calc_ref_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
 
     var(pm, nw, cnd)[:qs] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_$(cnd)_qs",

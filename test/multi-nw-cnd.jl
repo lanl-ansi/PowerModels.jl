@@ -2,27 +2,27 @@
 
     @testset "idempotent unit transformation" begin
         @testset "5-bus replicate case" begin
-            mn_mc_data = build_mn_mc_data("../test/data/matpower/case5_dc.m")
+            mn_mc_data = build_mn_mc_data!("../test/data/matpower/case5_dc.m")
 
             PowerModels.make_mixed_units!(mn_mc_data)
             PowerModels.make_per_unit!(mn_mc_data)
 
-            @test InfrastructureModels.compare_dict(mn_mc_data, build_mn_mc_data("../test/data/matpower/case5_dc.m"))
+            @test InfrastructureModels.compare_dict(mn_mc_data, build_mn_mc_data!("../test/data/matpower/case5_dc.m"))
         end
         @testset "14+24 hybrid case" begin
-            mn_mc_data = build_mn_mc_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
+            mn_mc_data = build_mn_mc_data!("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
 
             PowerModels.make_mixed_units!(mn_mc_data)
             PowerModels.make_per_unit!(mn_mc_data)
 
-            @test InfrastructureModels.compare_dict(mn_mc_data, build_mn_mc_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m"))
+            @test InfrastructureModels.compare_dict(mn_mc_data, build_mn_mc_data!("../test/data/matpower/case14.m", "../test/data/matpower/case24.m"))
         end
     end
 
 
     @testset "topology processing" begin
         @testset "7-bus replicate status case" begin
-            mn_mc_data = build_mn_mc_data("../test/data/matpower/case7_tplgy.m")
+            mn_mc_data = build_mn_mc_data!("../test/data/matpower/case7_tplgy.m")
             PowerModels.propagate_topology_status!(mn_mc_data)
 
             active_buses = Set(["2", "4", "5", "7"])
@@ -56,7 +56,7 @@
             end
         end
         @testset "7-bus replicate filer case" begin
-            mn_mc_data = build_mn_mc_data("../test/data/matpower/case7_tplgy.m")
+            mn_mc_data = build_mn_mc_data!("../test/data/matpower/case7_tplgy.m")
             PowerModels.propagate_topology_status!(mn_mc_data)
             PowerModels.select_largest_component!(mn_mc_data)
 
@@ -91,7 +91,7 @@
             end
         end
         @testset "7+14 hybrid filer case" begin
-            mn_mc_data = build_mn_mc_data("../test/data/matpower/case7_tplgy.m", "../test/data/matpower/case14.m")
+            mn_mc_data = build_mn_mc_data!("../test/data/matpower/case7_tplgy.m", "../test/data/matpower/case14.m")
             PowerModels.propagate_topology_status!(mn_mc_data)
             PowerModels.select_largest_component!(mn_mc_data)
 
@@ -110,7 +110,7 @@
     @testset "test multi-network multi-conductor ac opf" begin
 
         @testset "3 period 5-bus 3-conductor asymmetric case" begin
-            mn_mc_data = build_mn_mc_data("../test/data/matpower/case5_asym.m", replicates=3, conductors=3)
+            mn_mc_data = build_mn_mc_data!("../test/data/matpower/case5_asym.m", replicates=3, conductors=3)
 
             @test length(mn_mc_data["nw"]) == 3
 
@@ -155,7 +155,7 @@
         end
 
         @testset "14+24 3-conductor hybrid case" begin
-            mn_mc_data = build_mn_mc_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m", conductors_1=3, conductors_2=3)
+            mn_mc_data = build_mn_mc_data!("../test/data/matpower/case14.m", "../test/data/matpower/case24.m", conductors_1=3, conductors_2=3)
 
             @test length(mn_mc_data["nw"]) == 2
 
@@ -172,7 +172,7 @@
         end
 
         @testset "14+24 mixed-conductor hybrid case" begin
-            mn_mc_data = build_mn_mc_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m", conductors_1=4, conductors_2=0)
+            mn_mc_data = build_mn_mc_data!("../test/data/matpower/case14.m", "../test/data/matpower/case24.m", conductors_1=4, conductors_2=0)
 
             @test length(mn_mc_data["nw"]) == 2
 
@@ -195,7 +195,7 @@
 
 
     @testset "test multi-network multi-conductor opf formulation variants" begin
-        mn_mc_data = build_mn_mc_data("../test/data/matpower/case5_dc.m", "../test/data/matpower/case14.m", conductors_1=4, conductors_2=0)
+        mn_mc_data = build_mn_mc_data!("../test/data/matpower/case5_dc.m", "../test/data/matpower/case14.m", conductors_1=4, conductors_2=0)
 
         @testset "ac 5/14-bus case" begin
             result = PowerModels._run_mn_mc_opf(mn_mc_data, ACPPowerModel, ipopt_solver)
@@ -222,7 +222,7 @@
 
 
     @testset "test multi-network multi-conductor opf with storage" begin
-        mn_mc_data = build_mn_mc_data("../test/data/matpower/case5_strg.m")
+        mn_mc_data = build_mn_mc_data!("../test/data/matpower/case5_strg.m")
 
         @testset "ac 5-bus storage case" begin
             result = PowerModels._run_mn_mc_strg_opf(mn_mc_data, PowerModels.ACPPowerModel, ipopt_solver)
@@ -258,7 +258,7 @@
 
 
     @testset "test solution feedback" begin
-        mn_mc_data = build_mn_mc_data("../test/data/matpower/case5_dc.m", "../test/data/matpower/case5_asym.m", conductors_1=4, conductors_2=0)
+        mn_mc_data = build_mn_mc_data!("../test/data/matpower/case5_dc.m", "../test/data/matpower/case5_asym.m", conductors_1=4, conductors_2=0)
 
         result = PowerModels._run_mn_mc_opf(mn_mc_data, ACPPowerModel, ipopt_solver)
 
@@ -267,7 +267,7 @@
 
         PowerModels.update_data!(mn_mc_data, result["solution"])
 
-        @test !InfrastructureModels.compare_dict(mn_mc_data, build_mn_mc_data("../test/data/matpower/case5_dc.m", "../test/data/matpower/case5_asym.m", conductors_1=4, conductors_2=0))
+        @test !InfrastructureModels.compare_dict(mn_mc_data, build_mn_mc_data!("../test/data/matpower/case5_dc.m", "../test/data/matpower/case5_asym.m", conductors_1=4, conductors_2=0))
     end
 
 end

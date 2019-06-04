@@ -106,7 +106,7 @@ pm = build_generic_model("matpower/case3.m", ACPPowerModel, PowerModels.post_opf
 
 print(pm.model)
 
-solve_generic_model(pm, IpoptSolver())
+solve_generic_model!(pm, IpoptSolver())
 ```
 
 Alternatively, you can further break it up by parsing a file into a network data dictionary, before passing it on to `build_generic_model()` like so
@@ -118,5 +118,5 @@ pm = build_generic_model(network_data, ACPPowerModel, PowerModels.post_opf)
 
 print(pm.model)
 
-solve_generic_model(pm, with_optimizer(Ipopt.Optimizer))
+solve_generic_model!(pm, with_optimizer(Ipopt.Optimizer))
 ```
