@@ -281,9 +281,7 @@ function variable_generation_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, cn
     if !relax
         var(pm, nw)[:z_gen] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :gen)], base_name="$(nw)_z_gen",
-            lower_bound = 0,
-            upper_bound = 1,
-            integer = true,
+            binary = true,
             start = getval(ref(pm, nw, :gen, i), "z_gen_start", 1, 1.0)
         )
     else
@@ -559,8 +557,6 @@ end
 function variable_branch_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     var(pm, nw, cnd)[:branch_z] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_branch_z",
-        lower_bound = 0,
-        upper_bound = 1,
         binary = true,
         start = getval(ref(pm, nw, :branch, l), "branch_z_start", cnd, 1.0)
     )
@@ -570,8 +566,6 @@ end
 function variable_branch_ne(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     var(pm, nw, cnd)[:branch_ne] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :ne_branch)], base_name="$(nw)_$(cnd)_branch_ne",
-        lower_bound = 0,
-        upper_bound = 1,
         binary = true,
         start = getval(ref(pm, nw, :ne_branch, l), "branch_tnep_start", cnd, 1.0)
     )
