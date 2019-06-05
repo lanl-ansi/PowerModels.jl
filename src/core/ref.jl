@@ -102,7 +102,7 @@ function calc_ref_voltage_product_bounds(buspairs, conductor::Int=1)
 
     buspairs_conductor = Dict()
     for (bp, buspair) in buspairs
-        buspairs_conductor[bp] = Dict((k, getmcv(v, conductor)) for (k,v) in buspair)
+        buspairs_conductor[bp] = Dict((k, conductor_value(v, conductor)) for (k,v) in buspair)
     end
 
     for (bp, buspair) in buspairs_conductor

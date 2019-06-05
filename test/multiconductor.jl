@@ -511,7 +511,7 @@ end
         @test isa(JSON.lower(a), Dict)
         @test all(JSON.lower(a)["values"] == a.values)
         @test !isapprox(d, e)
-        @test PowerModels.getmcv(a, 1, 1) == a[1,1]
+        @test PowerModels.conductor_value(a, 1, 1) == a[1,1]
 
         # diagm
         @test all(LinearAlgebra.diagm(0 => c).values .== [0.225 0.0 0.0; 0.0 0.225 0.0; 0.0 0.0 0.225])

@@ -195,8 +195,9 @@ function Base.isapprox(a::MultiConductorValue, b::MultiConductorValue; kwargs...
 end
 
 
-getmcv(value::Any, conductor::Int) = value
-getmcv(value::Any, conductor_i::Int, conductor_j::Int) = value
-getmcv(value::MultiConductorVector, conductor::Int) = value[conductor]
-getmcv(value::MultiConductorMatrix{T}, conductor::Int) where T = MultiConductorVector{T}(value[conductor])
-getmcv(value::MultiConductorMatrix, conductor_i::Int, conductor_j::Int) = value[conductor_i, conductor_j]
+conductor_value(mc::Any, conductor::Int) = mc
+conductor_value(mc::Any, conductor_i::Int, conductor_j::Int) = mc
+conductor_value(mc::MultiConductorVector, conductor::Int) = mc[conductor]
+conductor_value(mc::MultiConductorMatrix{T}, conductor::Int) where T = MultiConductorVector{T}(mc[conductor])
+conductor_value(mc::MultiConductorMatrix, conductor_i::Int, conductor_j::Int) = mc[conductor_i, conductor_j]
+
