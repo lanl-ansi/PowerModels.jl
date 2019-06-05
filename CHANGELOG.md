@@ -7,7 +7,7 @@ PowerModels.jl Change Log
 - Added logger_config! to configure the PowerModels logger (#402)
 - Minor improvements to Matpower export function (#388)
 - Removed inequality constraint from theta_ref constraint in the ACR formulation
-- Update binary variable constructors to be binary instead of integer (#535)
+- Removed bounds on binary variable constructors (#535)
 
 ### v0.11.1
 - Added calc_gen_cost to compute the generator cost from the setpoint in the data model
