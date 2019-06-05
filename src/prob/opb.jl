@@ -5,7 +5,7 @@ end
 
 "the optimal power balance problem"
 function run_opb(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_opb; ref_extensions=[ref_connected_components!], kwargs...)
+    return run_model(file, model_constructor, optimizer, post_opb; ref_extensions=[ref_connected_components!], kwargs...)
 end
 
 ""
@@ -16,7 +16,7 @@ function post_opb(pm::GenericPowerModel)
     objective_min_fuel_cost(pm)
 
     for i in ids(pm, :components)
-        constraint_power_balance(pm, i)
+        constraint_network_power_balance(pm, i)
     end
 end
 

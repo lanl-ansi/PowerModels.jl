@@ -10,7 +10,7 @@ end
 
 ""
 function run_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_opf; kwargs...)
+    return run_model(file, model_constructor, optimizer, post_opf; kwargs...)
 end
 
 ""
@@ -29,7 +29,7 @@ function post_opf(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_kcl_shunt(pm, i)
+        constraint_power_balance_shunt(pm, i)
     end
 
     for i in ids(pm, :branch)
@@ -51,7 +51,7 @@ end
 
 "a toy example of how to model with multi-networks"
 function run_mn_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_mn_opf; multinetwork=true, kwargs...)
+    return run_model(file, model_constructor, optimizer, post_mn_opf; multinetwork=true, kwargs...)
 end
 
 ""
@@ -69,7 +69,7 @@ function post_mn_opf(pm::GenericPowerModel)
         end
 
         for i in ids(pm, :bus, nw=n)
-            constraint_kcl_shunt(pm, i, nw=n)
+            constraint_power_balance_shunt(pm, i, nw=n)
         end
 
         for i in ids(pm, :branch, nw=n)

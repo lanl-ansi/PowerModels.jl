@@ -10,7 +10,7 @@ end
 
 ""
 function run_pf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_pf; kwargs...)
+    return run_model(file, model_constructor, optimizer, post_pf; kwargs...)
 end
 
 ""
@@ -29,7 +29,7 @@ function post_pf(pm::GenericPowerModel)
     end
 
     for (i,bus) in ref(pm, :bus)
-        constraint_kcl_shunt(pm, i)
+        constraint_power_balance_shunt(pm, i)
 
         # PV Bus Constraints
         if length(ref(pm, :bus_gens, i)) > 0 && !(i in ids(pm,:ref_buses))

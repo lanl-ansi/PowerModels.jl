@@ -42,7 +42,7 @@ function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) 
 end
 
 
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACRForm
+function constraint_power_balance_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACRForm
     vr = var(pm, n, c, :vr, i)
     vi = var(pm, n, c, :vi, i)
     p  = var(pm, n, c, :p)

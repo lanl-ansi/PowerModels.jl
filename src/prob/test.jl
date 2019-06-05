@@ -8,7 +8,7 @@
 
 "opf using current limits instead of thermal limits, tests constraint_current_limit"
 function _run_cl_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, _post_cl_opf; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_cl_opf; kwargs...)
 end
 
 ""
@@ -27,7 +27,7 @@ function _post_cl_opf(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_kcl_shunt(pm, i)
+        constraint_power_balance_shunt(pm, i)
     end
 
     for i in ids(pm, :branch)
@@ -47,7 +47,7 @@ end
 
 "opf with unit commitment, tests constraint_current_limit"
 function _run_uc_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, _post_uc_opf; solution_builder = _solution_uc!, kwargs...)
+    return run_model(file, model_constructor, solver, _post_uc_opf; solution_builder = _solution_uc!, kwargs...)
 end
 
 ""
@@ -73,7 +73,7 @@ function _post_uc_opf(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_kcl_shunt(pm, i)
+        constraint_power_balance_shunt(pm, i)
     end
 
     for i in ids(pm, :branch)
@@ -94,7 +94,7 @@ end
 
 ""
 function _run_uc_mc_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, _post_uc_mc_opf; solution_builder = _solution_uc!, multiconductor=true, kwargs...)
+    return run_model(file, model_constructor, solver, _post_uc_mc_opf; solution_builder = _solution_uc!, multiconductor=true, kwargs...)
 end
 
 ""
@@ -121,7 +121,7 @@ function _post_uc_mc_opf(pm::GenericPowerModel)
         end
 
         for i in ids(pm, :bus)
-            constraint_kcl_shunt(pm, i, cnd=c)
+            constraint_power_balance_shunt(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
@@ -158,7 +158,7 @@ end
 
 ""
 function _run_mn_opb(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, _post_mn_opb; ref_extensions=[ref_connected_components!], multinetwork=true, kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mn_opb; ref_extensions=[ref_connected_components!], multinetwork=true, kwargs...)
 end
 
 ""
@@ -167,7 +167,7 @@ function _post_mn_opb(pm::GenericPowerModel)
         variable_generation(pm, nw=n)
 
         for i in ids(pm, :components, nw=n)
-            constraint_power_balance(pm, i, nw=n)
+            constraint_network_power_balance(pm, i, nw=n)
         end
     end
 
@@ -177,7 +177,7 @@ end
 
 ""
 function _run_mn_pf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, _post_mn_pf; multinetwork=true, kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mn_pf; multinetwork=true, kwargs...)
 end
 
 ""
@@ -196,7 +196,7 @@ function _post_mn_pf(pm::GenericPowerModel)
         end
 
         for (i,bus) in ref(pm, :bus, nw=n)
-            constraint_kcl_shunt(pm, i, nw=n)
+            constraint_power_balance_shunt(pm, i, nw=n)
 
             # PV Bus Constraints
             if length(ref(pm, :bus_gens, i, nw=n)) > 0 && !(i in ids(pm, :ref_buses, nw=n))
@@ -234,7 +234,7 @@ end
 
 ""
 function _run_mc_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, _post_mc_opf; multiconductor=true, kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mc_opf; multiconductor=true, kwargs...)
 end
 
 ""
@@ -252,7 +252,7 @@ function _post_mc_opf(pm::GenericPowerModel)
         end
 
         for i in ids(pm, :bus)
-            constraint_kcl_shunt(pm, i, cnd=c)
+            constraint_power_balance_shunt(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
@@ -277,7 +277,7 @@ end
 
 ""
 function _run_mn_mc_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, _post_mn_mc_opf; multinetwork=true, multiconductor=true, kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mn_mc_opf; multinetwork=true, multiconductor=true, kwargs...)
 end
 
 ""
@@ -296,7 +296,7 @@ function _post_mn_mc_opf(pm::GenericPowerModel)
             end
 
             for i in ids(pm, :bus, nw=n)
-                constraint_kcl_shunt(pm, i, nw=n, cnd=c)
+                constraint_power_balance_shunt(pm, i, nw=n, cnd=c)
             end
 
             for i in ids(pm, :branch, nw=n)
@@ -322,7 +322,7 @@ end
 
 "opf with storage"
 function _run_strg_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, _post_strg_opf; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_strg_opf; kwargs...)
 end
 
 ""
@@ -342,7 +342,7 @@ function _post_strg_opf(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_kcl_shunt_storage(pm, i)
+        constraint_power_balance_shunt_storage(pm, i)
     end
 
     for i in ids(pm, :storage)
@@ -370,7 +370,7 @@ end
 
 "multi-network opf with storage"
 function _run_mn_strg_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, _post_mn_strg_opf; multinetwork=true, kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mn_strg_opf; multinetwork=true, kwargs...)
 end
 
 ""
@@ -389,7 +389,7 @@ function _post_mn_strg_opf(pm::GenericPowerModel)
         end
 
         for i in ids(pm, :bus, nw=n)
-            constraint_kcl_shunt_storage(pm, i, nw=n)
+            constraint_power_balance_shunt_storage(pm, i, nw=n)
         end
 
         for i in ids(pm, :storage, nw=n)
@@ -433,7 +433,7 @@ end
 
 ""
 function _run_mn_mc_strg_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, _post_mn_mc_strg_opf; multinetwork=true, multiconductor=true, kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mn_mc_strg_opf; multinetwork=true, multiconductor=true, kwargs...)
 end
 
 "warning: this model is not realistic or physically reasonable, it is only for test coverage"
@@ -458,7 +458,7 @@ function _post_mn_mc_strg_opf(pm::GenericPowerModel)
             end
 
             for i in ids(pm, :bus, nw=n)
-                constraint_kcl_shunt_storage(pm, i, nw=n, cnd=c)
+                constraint_power_balance_shunt_storage(pm, i, nw=n, cnd=c)
             end
 
             for i in ids(pm, :storage, nw=n)

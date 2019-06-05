@@ -6,7 +6,7 @@
 
 ""
 function run_ots(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_ots; ref_extensions=[ref_on_off_va_bounds!], solution_builder = solution_ots!, kwargs...)
+    return run_model(file, model_constructor, optimizer, post_ots; ref_extensions=[ref_on_off_va_bounds!], solution_builder = solution_ots!, kwargs...)
 end
 
 ""
@@ -26,7 +26,7 @@ function post_ots(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_kcl_shunt(pm, i)
+        constraint_power_balance_shunt(pm, i)
     end
 
     for i in ids(pm, :branch)

@@ -396,14 +396,14 @@ end
 
 @testset "test user ext init" begin
     @testset "3-bus case" begin
-        pm = build_generic_model("../test/data/matpower/case3.m", ACPPowerModel, PowerModels.post_opf, ext = Dict(:some_data => "bloop"))
+        pm = build_model("../test/data/matpower/case3.m", ACPPowerModel, PowerModels.post_opf, ext = Dict(:some_data => "bloop"))
 
         #println(pm.ext)
 
         @test haskey(pm.ext, :some_data)
         @test pm.ext[:some_data] == "bloop"
 
-        result = solve_generic_model!(pm, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
+        result = optimize_model!(pm, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 5907; atol = 1e0)

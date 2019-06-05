@@ -27,7 +27,7 @@ end
 
 
 ""
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
+function constraint_power_balance_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
     pg   = var(pm, n, c, :pg)
     p    = var(pm, n, c, :p)
     p_dc = var(pm, n, c, :p_dc)
@@ -37,7 +37,7 @@ function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_a
 end
 
 ""
-function constraint_kcl_shunt_storage(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
+function constraint_power_balance_shunt_storage(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
     p = var(pm, n, c, :p)
     pg = var(pm, n, c, :pg)
     ps = var(pm, n, c, :ps)
@@ -48,7 +48,7 @@ function constraint_kcl_shunt_storage(pm::GenericPowerModel{T}, n::Int, c::Int, 
 end
 
 ""
-function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
+function constraint_power_balance_shunt_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
     pg   = var(pm, n, c, :pg)
     p    = var(pm, n, c, :p)
     p_ne = var(pm, n, c, :p_ne)
@@ -193,7 +193,7 @@ function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw
 end
 
 ""
-function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
+function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
     pg = var(pm, n, c, :pg)
 
     JuMP.@constraint(pm.model, sum(pg[g] for g in comp_gen_ids) == sum(pd for (i,pd) in values(comp_pd)) + sum(gs*1.0^2 for (i,gs) in values(comp_gs)))

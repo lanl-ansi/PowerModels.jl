@@ -23,7 +23,7 @@ for i in ids(pm, :ref_buses)
     constraint_theta_ref(pm, i)
 end
 for i in ids(pm, :bus)
-    constraint_kcl_shunt(pm, i)
+    constraint_power_balance_shunt(pm, i)
 end
 for i in ids(pm, :branch)
     constraint_ohms_yt_from(pm, i)
@@ -63,7 +63,7 @@ for i in ids(pm, :ref_buses)
     constraint_theta_ref(pm, i)
 end
 for i in ids(pm, :bus)
-    constraint_kcl_shunt(pm, i)
+    constraint_power_balance_shunt(pm, i)
 end
 for i in ids(pm, :branch)
     constraint_flow_losses(pm, i)
@@ -111,7 +111,7 @@ for i in ids(pm, :ref_buses)
     constraint_theta_ref(pm, i)
 end
 for i in ids(pm, :bus)
-    constraint_kcl_shunt(pm, i)
+    constraint_power_balance_shunt(pm, i)
 end
 for i in ids(pm, :branch)
     constraint_ohms_yt_from_on_off(pm, i)
@@ -149,7 +149,7 @@ for (i,bus) in ref(pm, :ref_buses)
     constraint_voltage_magnitude_setpoint(pm, i)
 end
 for (i,bus) in ref(pm, :bus)
-    constraint_kcl_shunt(pm, i)
+    constraint_power_balance_shunt(pm, i)
     # PV Bus Constraints
     if length(ref(pm, :bus_gens, i)) > 0 && !(i in ids(pm,:ref_buses))
         # this assumes inactive generators are filtered out of bus_gens
@@ -202,7 +202,7 @@ for (i,bus) in ref(pm, :ref_buses)
     constraint_voltage_magnitude_setpoint(pm, i)
 end
 for (i,bus) in ref(pm, :bus)
-    constraint_kcl_shunt(pm, i)
+    constraint_power_balance_shunt(pm, i)
     if length(ref(pm, :bus_gens, i)) > 0 && !(i in ids(pm,:ref_buses))
         # this assumes inactive generators are filtered out of bus_gens
         @assert bus["bus_type"] == 2
@@ -258,7 +258,7 @@ for i in ids(pm, :ref_buses)
     constraint_theta_ref(pm, i)
 end
 for i in ids(pm, :bus)
-    constraint_kcl_shunt_ne(pm, i)
+    constraint_power_balance_shunt_ne(pm, i)
 end
 for i in ids(pm, :branch)
     constraint_ohms_yt_from(pm, i)

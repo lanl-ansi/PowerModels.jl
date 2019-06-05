@@ -17,7 +17,7 @@ function post_tp_opf(pm::PowerModels.GenericPowerModel)
         end
 
         for i in ids(pm, :bus)
-            PowerModels.constraint_kcl_shunt(pm, i, cnd=c)
+            PowerModels.constraint_power_balance_shunt(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
@@ -152,8 +152,8 @@ end
 
         @testset "3-bus 3-conductor case with theta_ref=pi" begin
             mp_data = build_mc_data!("../test/data/matpower/case3.m", conductors=3)
-            pm = PowerModels.build_generic_model(mp_data, ACRPowerModel, PowerModels._post_mc_opf, multiconductor=true)
-            result = PowerModels.solve_generic_model!(pm, ipopt_solver)
+            pm = PowerModels.build_model(mp_data, ACRPowerModel, PowerModels._post_mc_opf, multiconductor=true)
+            result = PowerModels.optimize_model!(pm, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 47267.9; atol = 1e-1)
@@ -423,7 +423,7 @@ end
 
     @testset "multiconductor extensions" begin
         mp_data = build_mc_data!("../test/data/matpower/case3.m")
-        pm = build_generic_model(mp_data, PowerModels.ACPPowerModel, post_tp_opf; multiconductor=true)
+        pm = build_model(mp_data, PowerModels.ACPPowerModel, post_tp_opf; multiconductor=true)
 
         @test haskey(var(pm, pm.cnw), :cnd)
         @test length(var(pm, pm.cnw)) == 1

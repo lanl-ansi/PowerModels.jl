@@ -41,7 +41,7 @@ end
 
 
 ""
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractLPACForm
+function constraint_power_balance_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractLPACForm
     phi  = var(pm, n, c, :phi, i)
     pg   = var(pm, n, c, :pg)
     qg   = var(pm, n, c, :qg)

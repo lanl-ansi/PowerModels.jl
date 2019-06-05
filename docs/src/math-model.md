@@ -74,7 +74,7 @@ Note that for clarity of this presentation some model variants that PowerModels 
 - Eq. $\eqref{eq_ref_bus}$ - `constraint_theta_ref` in `constraint_template.jl`
 - Eq. $\eqref{eq_gen_bounds}$ - bounds of `variable_generation` in `variable.jl`
 - Eq. $\eqref{eq_voltage_bounds}$ - bounds of `variable_voltage` in `variable.jl`
-- Eq. $\eqref{eq_kcl_shunt}$ - `constraint_kcl_shunt` in `constraint_template.jl`
+- Eq. $\eqref{eq_kcl_shunt}$ - `constraint_power_balance_shunt` in `constraint_template.jl`
 - Eq. $\eqref{eq_power_from}$ - `constraint_ohms_yt_from` in `constraint_template.jl`
 - Eq. $\eqref{eq_power_to}$ - `constraint_ohms_yt_to` in `constraint_template.jl`
 - Eq. $\eqref{eq_thermal_limit}$ - `constraint_thermal_limit_from` and `constraint_thermal_limit_to` in `constraint_template.jl`

@@ -171,32 +171,32 @@ function JuMP.optimize!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory)
 end
 
 ""
-function run_generic_model(file::String, model_constructor, optimizer, post_method; kwargs...)
+function run_model(file::String, model_constructor, optimizer, post_method; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_generic_model(data, model_constructor, optimizer, post_method; kwargs...)
+    return run_model(data, model_constructor, optimizer, post_method; kwargs...)
 end
 
 ""
-function run_generic_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; ref_extensions=[], solution_builder=solution_opf!, kwargs...)
+function run_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; ref_extensions=[], solution_builder=solution_opf!, kwargs...)
     #start_time = time()
-    pm = build_generic_model(data, model_constructor, post_method; ref_extensions=ref_extensions, kwargs...)
+    pm = build_model(data, model_constructor, post_method; ref_extensions=ref_extensions, kwargs...)
     #Memento.info(_LOGGER, "pm model build time: $(time() - start_time)")
 
     #start_time = time()
-    solution = solve_generic_model!(pm, optimizer; solution_builder=solution_builder)
+    result = optimize_model!(pm, optimizer; solution_builder=solution_builder)
     #Memento.info(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
 
-    return solution
+    return result
 end
 
 ""
-function build_generic_model(file::String,  model_constructor, post_method; kwargs...)
+function build_model(file::String,  model_constructor, post_method; kwargs...)
     data = PowerModels.parse_file(file)
-    return build_generic_model(data, model_constructor, post_method; kwargs...)
+    return build_model(data, model_constructor, post_method; kwargs...)
 end
 
 ""
-function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_method; ref_extensions=[], multinetwork=false, multiconductor=false, kwargs...)
+function build_model(data::Dict{String,<:Any}, model_constructor, post_method; ref_extensions=[], multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
 
     #start_time = time()
@@ -227,19 +227,18 @@ end
 
 
 ""
-function solve_generic_model!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = solution_opf!)
-
+function optimize_model!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = solution_opf!)
     #start_time = time()
     solve_time = JuMP.optimize!(pm, optimizer)
     #Memento.info(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
 
     #start_time = time()
-    solution = build_solution(pm, solve_time; solution_builder = solution_builder)
+    result = build_solution(pm, solve_time; solution_builder = solution_builder)
     #Memento.info(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
 
-    pm.solution = solution
+    pm.solution = result["solution"]
 
-    return solution
+    return result
 end
 
 

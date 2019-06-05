@@ -4,7 +4,7 @@
 
 ""
 function run_tnep(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_tnep; ref_extensions=[ref_on_off_va_bounds!,ref_ne_branch!], solution_builder = solution_tnep!, kwargs...)
+    return run_model(file, model_constructor, optimizer, post_tnep; ref_extensions=[ref_on_off_va_bounds!,ref_ne_branch!], solution_builder = solution_tnep!, kwargs...)
 end
 
 "the general form of the tnep optimization model"
@@ -27,7 +27,7 @@ function post_tnep(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_kcl_shunt_ne(pm, i)
+        constraint_power_balance_shunt_ne(pm, i)
     end
 
     for i in ids(pm, :branch)
