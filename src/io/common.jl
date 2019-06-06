@@ -18,12 +18,12 @@ function parse_file(io::IO; import_all=false, validate=true, filetype="json")
     if filetype == "m"
         pm_data = PowerModels.parse_matpower(io, validate=validate)
     elseif filetype == "raw"
-        Memento.info(LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
+        Memento.info(_LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
         pm_data = PowerModels.parse_psse(io; import_all=import_all, validate=validate)
     elseif filetype == "json"
         pm_data = PowerModels.parse_json(io; validate=validate)
     else
-        Memento.error(LOGGER, "Unrecognized filetype")
+        Memento.error(_LOGGER, "Unrecognized filetype")
     end
 
     return pm_data
@@ -72,19 +72,3 @@ function correct_network_data!(data::Dict{String,<:Any})
         "dcline" => mod_dcline
     )
 end
-
-
-
-function row_to_typed_dict(row_data, columns)
-    Memento.warn(LOGGER, "call to depreciated function PowerModels.row_to_typed_dict, use InfrastructureModels.row_to_typed_dict")
-    return InfrastructureModels.row_to_typed_dict(row_data, columns)
-end
-
-function row_to_dict(row_data, columns)
-    Memento.warn(LOGGER, "call to depreciated function PowerModels.row_to_dict, use InfrastructureModels.row_to_dict")
-    return InfrastructureModels.row_to_dict(row_data, columns)
-end
-
-
-
-

@@ -125,13 +125,13 @@ end
     function solution_feedback(case, ac_opf_obj)
         data = PowerModels.parse_file(case)
         opf_result = run_ac_opf(data, ipopt_solver)
-        @test opf_result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test opf_result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(opf_result["objective"], ac_opf_obj; atol = 1e0)
 
         PowerModels.update_data!(data, opf_result["solution"])
 
         pf_result = run_ac_pf(data, ipopt_solver)
-        @test pf_result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test pf_result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(pf_result["objective"], 0.0; atol = 1e-3)
 
         for (i,bus) in data["bus"]

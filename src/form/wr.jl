@@ -15,7 +15,7 @@ end
 
 ""
 function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
-    check_missing_keys(var(pm, n, c), [:w,:wr,:wi], T)
+    _check_missing_keys(var(pm, n, c), [:w,:wr,:wi], T)
 
     w  = var(pm, n, c,  :w)
     wr = var(pm, n, c, :wr)
@@ -28,7 +28,7 @@ end
 
 ""
 function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRConicForm
-    check_missing_keys(var(pm, n, c), [:w,:wr,:wi], T)
+    _check_missing_keys(var(pm, n, c), [:w,:wr,:wi], T)
 
     w  = var(pm, n, c,  :w)
     wr = var(pm, n, c, :wr)
@@ -112,7 +112,7 @@ function constraint_model_voltage_ne(pm::GenericPowerModel{T}, n::Int, c::Int) w
     buses = ref(pm, n, :bus)
     branches = ref(pm, n, :ne_branch)
 
-    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, n, :ne_buspairs))
+    wr_min, wr_max, wi_min, wi_max = calc_ref_voltage_product_bounds(ref(pm, n, :ne_buspairs))
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in branches)
 
     w  = var(pm, n, c, :w)
@@ -201,7 +201,7 @@ end
 
 ""
 function constraint_voltage_product_on_off(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
-    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, n, :buspairs), c)
+    wr_min, wr_max, wi_min, wi_max = calc_ref_voltage_product_bounds(ref(pm, n, :buspairs), c)
 
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, n, :branch))
 
@@ -291,7 +291,7 @@ function variable_voltage_magnitude_sqr_from_ne(pm::GenericPowerModel{T}; nw::In
         [i in ids(pm, nw, :ne_branch)], base_name="$(nw)_$(cnd)_w_fr_ne",
         lower_bound = 0,
         upper_bound = (buses[branches[i]["f_bus"]]["vmax"][cnd])^2,
-        start = getval(ref(pm, nw, :bus, branches[i]["f_bus"]), "w_fr_start", cnd, 1.001)
+        start = comp_start_value(ref(pm, nw, :bus, branches[i]["f_bus"]), "w_fr_start", cnd, 1.001)
     )
 end
 
@@ -304,27 +304,27 @@ function variable_voltage_magnitude_sqr_to_ne(pm::GenericPowerModel{T}; nw::Int=
         [i in ids(pm, nw, :ne_branch)], base_name="$(nw)_$(cnd)_w_to_ne",
         lower_bound = 0,
         upper_bound = (buses[branches[i]["t_bus"]]["vmax"][cnd])^2,
-        start = getval(ref(pm, nw, :bus, branches[i]["t_bus"]), "w_to_start", cnd, 1.001)
+        start = comp_start_value(ref(pm, nw, :bus, branches[i]["t_bus"]), "w_to_start", cnd, 1.001)
     )
 end
 
 ""
 function variable_voltage_product_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: AbstractWRForm
-    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :ne_buspairs), cnd)
+    wr_min, wr_max, wi_min, wi_max = calc_ref_voltage_product_bounds(ref(pm, nw, :ne_buspairs), cnd)
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
 
     var(pm, nw, cnd)[:wr_ne] = JuMP.@variable(pm.model,
         [b in ids(pm, nw, :ne_branch)], base_name="$(nw)_$(cnd)_wr_ne",
         lower_bound = min(0, wr_min[bi_bp[b]]),
         upper_bound = max(0, wr_max[bi_bp[b]]),
-        start = getval(ref(pm, nw, :ne_buspairs, bi_bp[b]), "wr_start", cnd, 1.0)
+        start = comp_start_value(ref(pm, nw, :ne_buspairs, bi_bp[b]), "wr_start", cnd, 1.0)
     )
 
     var(pm, nw, cnd)[:wi_ne] = JuMP.@variable(pm.model,
         [b in ids(pm, nw, :ne_branch)], base_name="$(nw)_$(cnd)_wi_ne",
         lower_bound = min(0, wi_min[bi_bp[b]]),
         upper_bound = max(0, wi_max[bi_bp[b]]),
-        start = getval(ref(pm, nw, :ne_buspairs, bi_bp[b]), "wi_start", cnd)
+        start = comp_start_value(ref(pm, nw, :ne_buspairs, bi_bp[b]), "wi_start", cnd)
     )
 end
 
@@ -339,7 +339,7 @@ function variable_voltage_angle_difference(pm::GenericPowerModel{T}; nw::Int=pm.
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_td",
         lower_bound = ref(pm, nw, :buspairs, bp, "angmin", cnd),
         upper_bound = ref(pm, nw, :buspairs, bp, "angmax", cnd),
-        start = getval(ref(pm, nw, :buspairs, bp), "td_start", cnd)
+        start = comp_start_value(ref(pm, nw, :buspairs, bp), "td_start", cnd)
     )
 end
 
@@ -350,7 +350,7 @@ function variable_voltage_magnitude_product(pm::GenericPowerModel{T}; nw::Int=pm
         [bp in keys(buspairs)], base_name="$(nw)_$(cnd)_vv",
         lower_bound = buspairs[bp]["vm_fr_min"][cnd]*buspairs[bp]["vm_to_min"][cnd],
         upper_bound = buspairs[bp]["vm_fr_max"][cnd]*buspairs[bp]["vm_to_max"][cnd],
-        start = getval(buspairs[bp], "vv_start", cnd, 1.0)
+        start = comp_start_value(buspairs[bp], "vv_start", cnd, 1.0)
     )
 end
 
@@ -366,7 +366,7 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_ccm",
         lower_bound = 0,
         upper_bound = ub[bp],
-        start = getval(buspairs[bp], "ccm_start", cnd)
+        start = comp_start_value(buspairs[bp], "ccm_start", cnd)
     )
 end
 
@@ -387,7 +387,7 @@ end
 
 ""
 function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRForm
-    check_missing_keys(var(pm, n, c), [:vm,:va,:td,:si,:cs,:vv,:w,:wr,:wi], T)
+    _check_missing_keys(var(pm, n, c), [:vm,:va,:td,:si,:cs,:vv,:w,:wr,:wi], T)
 
     v = var(pm, n, c, :vm)
     t = var(pm, n, c, :va)
@@ -488,9 +488,9 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
 end
 
 ""
-function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: QCWRForm
-    add_setpoint(sol, pm, "bus", "vm", :vm)
-    add_setpoint(sol, pm, "bus", "va", :va)
+function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: QCWRForm
+    add_setpoint!(sol, pm, "bus", "vm", :vm)
+    add_setpoint!(sol, pm, "bus", "va", :va)
 end
 
 
@@ -521,7 +521,7 @@ function variable_voltage_angle_difference_on_off(pm::GenericPowerModel{T}; nw::
         [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_td",
         lower_bound = min(0, ref(pm, nw, :branch, l, "angmin", cnd)),
         upper_bound = max(0, ref(pm, nw, :branch, l, "angmax", cnd)),
-        start = getval(ref(pm, nw, :branch, l), "td_start", cnd)
+        start = comp_start_value(ref(pm, nw, :branch, l), "td_start", cnd)
     )
 end
 
@@ -537,7 +537,7 @@ function variable_voltage_magnitude_product_on_off(pm::GenericPowerModel{T}; nw:
         [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_vv",
         lower_bound = min(0, vv_min[l]),
         upper_bound = max(0, vv_max[l]),
-        start = getval(ref(pm, nw, :branch, l), "vv_start", cnd, 1.0)
+        start = comp_start_value(ref(pm, nw, :branch, l), "vv_start", cnd, 1.0)
     )
 end
 
@@ -568,7 +568,7 @@ function variable_cosine_on_off(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::I
         [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_cs",
         lower_bound = min(0, cos_min[l]),
         upper_bound = max(0, cos_max[l]),
-        start = getval(ref(pm, nw, :branch, l), "cs_start", cnd, 1.0)
+        start = comp_start_value(ref(pm, nw, :branch, l), "cs_start", cnd, 1.0)
     )
 end
 
@@ -578,7 +578,7 @@ function variable_sine_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm
         [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_si",
         lower_bound = min(0, sin(ref(pm, nw, :branch, l, "angmin", cnd))),
         upper_bound = max(0, sin(ref(pm, nw, :branch, l, "angmax", cnd))),
-        start = getval(ref(pm, nw, :branch, l), "si_start", cnd)
+        start = comp_start_value(ref(pm, nw, :branch, l), "si_start", cnd)
     )
 end
 
@@ -598,7 +598,7 @@ function variable_current_magnitude_sqr_on_off(pm::GenericPowerModel{T}; nw::Int
         [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_ccm",
         lower_bound = ccm_min[l],
         upper_bound = ccm_max[l],
-        start = getval(ref(pm, nw, :branch, l), "ccm_start", cnd)
+        start = comp_start_value(ref(pm, nw, :branch, l), "ccm_start", cnd)
     )
 end
 
@@ -736,32 +736,10 @@ function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: QCWRTr
     variable_current_magnitude_sqr(pm; kwargs...)
 end
 
-"qc lambda formulation based relaxation tightening"
-function relaxation_tighten_vv(m, x, y, lambda_a, lambda_b)
-    x_ub = JuMP.upper_bound(x)
-    x_lb = JuMP.lower_bound(x)
-    y_ub = JuMP.upper_bound(y)
-    y_lb = JuMP.lower_bound(y)
-
-    @assert length(lambda_a) == 8
-    @assert length(lambda_b) == 8
-
-    val = [x_lb * y_lb
-           x_lb * y_lb
-           x_lb * y_ub
-           x_lb * y_ub
-           x_ub * y_lb
-           x_ub * y_lb
-           x_ub * y_ub
-           x_ub * y_ub]
-
-    JuMP.@constraint(m, sum(lambda_a[i]*val[i] - lambda_b[i]*val[i] for i in 1:8) == 0)
-
-end
 
 ""
 function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: QCWRTriForm
-    check_missing_keys(var(pm, n, c), [:vm,:va,:td,:si,:cs,:w,:wr,:wi,:lambda_wr,:lambda_wi], T)
+    _check_missing_keys(var(pm, n, c), [:vm,:va,:td,:si,:cs,:w,:wr,:wi,:lambda_wr,:lambda_wi], T)
 
     v = var(pm, n, c, :vm)
     t = var(pm, n, c, :va)
@@ -788,7 +766,7 @@ function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) wher
         relaxation_cos(pm.model, td[bp], cs[bp])
         InfrastructureModels.relaxation_trilinear(pm.model, v[i], v[j], cs[bp], wr[bp], lambda_wr[bp,:])
         InfrastructureModels.relaxation_trilinear(pm.model, v[i], v[j], si[bp], wi[bp], lambda_wi[bp,:])
-        relaxation_tighten_vv(pm.model, v[i], v[j], lambda_wr[bp,:], lambda_wi[bp,:])
+        cut_product_replicates(pm.model, v[i], v[j], lambda_wr[bp,:], lambda_wi[bp,:])
 
         # this constraint is redudant and useful for debugging
         #InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])

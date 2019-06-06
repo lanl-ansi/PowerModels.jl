@@ -1,8 +1,6 @@
-export run_opf_bf, run_ac_opf_bf, run_dc_opf_bf
-
 ""
 function run_opf_bf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_opf_bf; kwargs...)
+    return run_model(file, model_constructor, optimizer, post_opf_bf; kwargs...)
 end
 
 ""
@@ -22,7 +20,7 @@ function post_opf_bf(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_kcl_shunt(pm, i)
+        constraint_power_balance_shunt(pm, i)
     end
 
     for i in ids(pm, :branch)

@@ -42,9 +42,9 @@ constraint_power_balance
 ### KCL Constraints
 
 ```@docs
-constraint_kcl_shunt
-constraint_kcl_shunt_storage
-constraint_kcl_shunt_ne
+constraint_power_balance_shunt
+constraint_power_balance_shunt_storage
+constraint_power_balance_shunt_ne
 ```
 
 ## Branch Constraints

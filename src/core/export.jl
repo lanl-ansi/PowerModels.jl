@@ -6,8 +6,6 @@
 # Do not add PowerModels-defined symbols to this exclude list. Instead, rename
 # them with an underscore.
 
-# Not yet used
-#=
 const _EXCLUDE_SYMBOLS = [Symbol(@__MODULE__), :eval, :include]
 
 for sym in names(@__MODULE__, all=true)
@@ -19,9 +17,10 @@ for sym in names(@__MODULE__, all=true)
          Base.isidentifier(sym_string[2:end])))
        continue
     end
+    #println("$(sym)")
     @eval export $sym
 end
-=#
+
 
 # the follow items are also exported for user-friendlyness when calling
 # `using PowerModels`

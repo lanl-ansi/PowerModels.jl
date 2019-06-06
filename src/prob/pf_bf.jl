@@ -1,8 +1,6 @@
-export run_pf_bf, run_ac_pf_bf, run_dc_pf_bf
-
 ""
 function run_pf_bf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_pf_bf; kwargs...)
+    return run_model(file, model_constructor, optimizer, post_pf_bf; kwargs...)
 end
 
 ""
@@ -22,7 +20,7 @@ function post_pf_bf(pm::GenericPowerModel)
     end
 
     for (i,bus) in ref(pm, :bus)
-        constraint_kcl_shunt(pm, i)
+        constraint_power_balance_shunt(pm, i)
 
         # PV Bus Constraints
         if length(ref(pm, :bus_gens, i)) > 0 && !(i in ids(pm,:ref_buses))

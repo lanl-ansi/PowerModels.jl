@@ -1,6 +1,16 @@
 # Developer Documentation
 
-## Variable and parameter naming scheme
+## Function Naming Guidelines
+
+Following the Julia style guidelines, functions that mutate arguments should
+end with `!`.  Following the JuMP style guidelines functions beginning with
+an `_` are intended for internal package use only (i.e. similar private 
+scope functions).  Underscores are used to separate multi-word function names
+and the words should typically be ordered from general to more specific,
+so that alphabetical sorting clusters similar functions together.
+
+
+## Variable and Parameter Naming Guidelines
 
 ### Suffixes
 
