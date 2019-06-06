@@ -5,28 +5,28 @@ function cut_complex_product_and_angle_difference(m, wf, wt, wr, wi, angmin, ang
     @assert angmax >= -pi/2 && angmax <= pi/2
     @assert angmin < angmax
 
-    vfub = sqrt(JuMP.upper_bound(wf))
-    vflb = sqrt(JuMP.lower_bound(wf))
-    vtub = sqrt(JuMP.upper_bound(wt))
-    vtlb = sqrt(JuMP.lower_bound(wt))
-    tdub = angmax
-    tdlb = angmin
+    wf_lb, wf_ub = InfrastructureModels.variable_domain(wf)
+    wt_lb, wt_ub = InfrastructureModels.variable_domain(wt)
 
-    phi = (tdub + tdlb)/2
-    d   = (tdub - tdlb)/2
+    vf_lb, vf_ub = sqrt(wf_lb), sqrt(wf_ub)
+    vt_lb, vt_ub = sqrt(wt_lb), sqrt(wt_ub)
+    td_ub = angmax
+    td_lb = angmin
 
-    sf = vflb + vfub
-    st = vtlb + vtub
+    phi = (td_ub + td_lb)/2
+    d   = (td_ub - td_lb)/2
 
-    JuMP.@constraint(m, sf*st*(cos(phi)*wr + sin(phi)*wi) - vtub*cos(d)*st*wf - vfub*cos(d)*sf*wt >=  vfub*vtub*cos(d)*(vflb*vtlb - vfub*vtub))
-    JuMP.@constraint(m, sf*st*(cos(phi)*wr + sin(phi)*wi) - vtlb*cos(d)*st*wf - vflb*cos(d)*sf*wt >= -vflb*vtlb*cos(d)*(vflb*vtlb - vfub*vtub))
+    sf = vf_lb + vf_ub
+    st = vt_lb + vt_ub
+
+    JuMP.@constraint(m, sf*st*(cos(phi)*wr + sin(phi)*wi) - vt_ub*cos(d)*st*wf - vf_ub*cos(d)*sf*wt >=  vf_ub*vt_ub*cos(d)*(vf_lb*vt_lb - vf_ub*vt_ub))
+    JuMP.@constraint(m, sf*st*(cos(phi)*wr + sin(phi)*wi) - vt_lb*cos(d)*st*wf - vf_lb*cos(d)*sf*wt >= -vf_lb*vt_lb*cos(d)*(vf_lb*vt_lb - vf_ub*vt_ub))
 end
 
 
 "general relaxation of a sine term, in -pi/2 to pi/2"
 function relaxation_sin(m, x, y)
-    ub = JuMP.upper_bound(x)
-    lb = JuMP.lower_bound(x)
+    lb, ub = InfrastructureModels.variable_domain(x)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))
@@ -48,8 +48,7 @@ end
 
 "general relaxation of a cosine term, in -pi/2 to pi/2"
 function relaxation_cos(m, x, y)
-    ub = JuMP.upper_bound(x)
-    lb = JuMP.lower_bound(x)
+    lb, ub = InfrastructureModels.variable_domain(x)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))
@@ -61,8 +60,7 @@ end
 
 "general relaxation of a sine term, in -pi/2 to pi/2"
 function relaxation_sin_on_off(m, x, y, z, M_x)
-    ub = JuMP.upper_bound(x)
-    lb = JuMP.lower_bound(x)
+    lb, ub = InfrastructureModels.variable_domain(x)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))
@@ -83,8 +81,7 @@ end
 
 "general relaxation of a cosine term, in -pi/2 to pi/2"
 function relaxation_cos_on_off(m, x, y, z, M_x)
-    ub = JuMP.upper_bound(x)
-    lb = JuMP.lower_bound(x)
+    lb, ub = InfrastructureModels.variable_domain(x)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))
