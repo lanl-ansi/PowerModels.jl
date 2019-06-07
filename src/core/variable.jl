@@ -189,7 +189,7 @@ end
 ""
 function variable_voltage_product(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     if bounded
-        wr_min, wr_max, wi_min, wi_max = calc_ref_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
+        wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
 
         var(pm, nw, cnd)[:wr] = JuMP.@variable(pm.model,
             [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_wr",
@@ -217,7 +217,7 @@ end
 
 ""
 function variable_voltage_product_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    wr_min, wr_max, wi_min, wi_max = calc_ref_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
+    wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :branch))
 
     var(pm, nw, cnd)[:wr] = JuMP.@variable(pm.model,
@@ -332,7 +332,7 @@ end
 "variable: `p[l,i,j]` for `(l,i,j)` in `arcs`"
 function variable_active_branch_flow(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     if bounded
-        flow_lb, flow_ub = calc_ref_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
+        flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
 
         p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_p",
@@ -362,7 +362,7 @@ end
 "variable: `q[l,i,j]` for `(l,i,j)` in `arcs`"
 function variable_reactive_branch_flow(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     if bounded
-        flow_lb, flow_ub = calc_ref_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
+        flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
 
         q = var(pm, nw, cnd)[:q] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_q",
@@ -472,7 +472,7 @@ end
 
 ""
 function variable_active_storage(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    inj_lb, inj_ub = calc_ref_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
+    inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
 
     var(pm, nw, cnd)[:ps] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_$(cnd)_ps",
@@ -484,7 +484,7 @@ end
 
 ""
 function variable_reactive_storage(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    inj_lb, inj_ub = calc_ref_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
+    inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
 
     var(pm, nw, cnd)[:qs] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_$(cnd)_qs",

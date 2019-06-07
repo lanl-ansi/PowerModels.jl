@@ -158,7 +158,7 @@ end
 
 ""
 function _run_mn_opb(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _post_mn_opb; ref_extensions=[ref_connected_components!], multinetwork=true, kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mn_opb; ref_extensions=[ref_add_connected_components!], multinetwork=true, kwargs...)
 end
 
 ""

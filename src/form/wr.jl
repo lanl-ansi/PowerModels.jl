@@ -112,7 +112,7 @@ function constraint_model_voltage_ne(pm::GenericPowerModel{T}, n::Int, c::Int) w
     buses = ref(pm, n, :bus)
     branches = ref(pm, n, :ne_branch)
 
-    wr_min, wr_max, wi_min, wi_max = calc_ref_voltage_product_bounds(ref(pm, n, :ne_buspairs))
+    wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, n, :ne_buspairs))
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in branches)
 
     w  = var(pm, n, c, :w)
@@ -201,7 +201,7 @@ end
 
 ""
 function constraint_voltage_product_on_off(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractWRForm
-    wr_min, wr_max, wi_min, wi_max = calc_ref_voltage_product_bounds(ref(pm, n, :buspairs), c)
+    wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, n, :buspairs), c)
 
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, n, :branch))
 
@@ -310,7 +310,7 @@ end
 
 ""
 function variable_voltage_product_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd) where T <: AbstractWRForm
-    wr_min, wr_max, wi_min, wi_max = calc_ref_voltage_product_bounds(ref(pm, nw, :ne_buspairs), cnd)
+    wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :ne_buspairs), cnd)
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
 
     var(pm, nw, cnd)[:wr_ne] = JuMP.@variable(pm.model,

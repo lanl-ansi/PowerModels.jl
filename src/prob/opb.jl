@@ -5,7 +5,7 @@ end
 
 "the optimal power balance problem"
 function run_opb(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, post_opb; ref_extensions=[ref_connected_components!], kwargs...)
+    return run_model(file, model_constructor, optimizer, post_opb; ref_extensions=[ref_add_connected_components!], kwargs...)
 end
 
 ""
@@ -21,7 +21,7 @@ function post_opb(pm::GenericPowerModel)
 end
 
 
-function ref_connected_components!(pm::GenericPowerModel)
+function ref_add_connected_components!(pm::GenericPowerModel)
     if InfrastructureModels.ismultinetwork(pm.data)
         nws_data = pm.data["nw"]
     else

@@ -150,7 +150,7 @@ end
 ""
 function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: DCPlosslessForm
     if bounded
-        flow_lb, flow_ub = calc_ref_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
+        flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
         p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_p",
             lower_bound = flow_lb[l],

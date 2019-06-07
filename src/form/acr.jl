@@ -14,7 +14,7 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         end
 
         # does not seem to improve convergence
-        #wr_min, wr_max, wi_min, wi_max = calc_ref_voltage_product_bounds(pm.ref[:buspairs])
+        #wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(pm.ref[:buspairs])
         #for bp in ids(pm, nw, :buspairs)
         #    i,j = bp
         #    JuMP.@constraint(pm.model, wr_min[bp] <= vr[i]*vr[j] + vi[i]*vi[j])

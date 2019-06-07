@@ -58,7 +58,7 @@ function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Sym
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
 
-    ref = _build_generic_ref(data) # refrence data
+    ref = _ref_initialize(data) # refrence data
 
     var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
     con = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
@@ -212,7 +212,7 @@ function build_model(data::Dict{String,<:Any}, model_constructor, post_method; r
     end
 
     #start_time = time()
-    ref_core!(pm)
+    ref_add_core!(pm)
     for ref_ext in ref_extensions
         ref_ext(pm)
     end
@@ -244,8 +244,8 @@ end
 
 "used for building ref without the need to build a GenericPowerModel"
 function build_ref(data::Dict{String,<:Any}; ref_extensions=[])
-    ref = _build_generic_ref(data)
-    _ref_core!(ref[:nw])
+    ref = _ref_initialize(data)
+    _ref_add_core!(ref[:nw])
     for ref_ext in ref_extensions
         ref_ext(pm)
     end
@@ -253,7 +253,7 @@ function build_ref(data::Dict{String,<:Any}; ref_extensions=[])
 end
 
 
-function _build_generic_ref(data::Dict{String,<:Any})
+function _ref_initialize(data::Dict{String,<:Any})
     refs = Dict{Symbol,Any}()
 
     nws = refs[:nw] = Dict{Int,Any}()
@@ -317,11 +317,11 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 
 * `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`.
 """
-function ref_core!(pm::GenericPowerModel)
-    _ref_core!(pm.ref[:nw])
+function ref_add_core!(pm::GenericPowerModel)
+    _ref_add_core!(pm.ref[:nw])
 end
 
-function _ref_core!(nw_refs::Dict)
+function _ref_add_core!(nw_refs::Dict)
     for (nw, ref) in nw_refs
 
         ### filter out inactive components ###

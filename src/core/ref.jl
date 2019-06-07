@@ -65,7 +65,7 @@ end
 
 
 "computes flow bounds on branches from ref data"
-function calc_ref_branch_flow_bounds(branches, buses, conductor::Int=1)
+function ref_calc_branch_flow_bounds(branches, buses, conductor::Int=1)
     flow_lb = Dict() 
     flow_ub = Dict()
 
@@ -94,7 +94,7 @@ end
 
 
 "computes voltage product bounds from ref data"
-function calc_ref_voltage_product_bounds(buspairs, conductor::Int=1)
+function ref_calc_voltage_product_bounds(buspairs, conductor::Int=1)
     wr_min = Dict((bp, -Inf) for bp in keys(buspairs))
     wr_max = Dict((bp,  Inf) for bp in keys(buspairs))
     wi_min = Dict((bp, -Inf) for bp in keys(buspairs))
@@ -134,7 +134,7 @@ end
 
 
 "computes storage bounds"
-function calc_ref_storage_injection_bounds(storage, buses, conductor::Int=1)
+function ref_calc_storage_injection_bounds(storage, buses, conductor::Int=1)
     injection_lb = Dict() 
     injection_ub = Dict()
 

@@ -792,7 +792,7 @@ end
     @testset "passing in decomposition" begin
         data = PowerModels.parse_file("../test/data/matpower/case14.m")
         pm = GenericPowerModel(data, SparseSDPWRMForm)
-        PowerModels.ref_core!(pm)
+        PowerModels.ref_add_core!(pm)
 
         cadj, lookup_index, sigma = PowerModels._chordal_extension(pm)
         cliques = PowerModels._maximal_cliques(cadj)

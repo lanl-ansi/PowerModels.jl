@@ -34,7 +34,7 @@ end
 
 ""
 function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: SDPWRMForm
-    wr_min, wr_max, wi_min, wi_max = calc_ref_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
+    wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
     bus_ids = ids(pm, nw, :bus)
 
     w_index = 1:length(bus_ids)
@@ -161,7 +161,7 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
     var(pm, nw, cnd)[:w] = Dict{Int,Any}()
     var(pm, nw, cnd)[:wr] = Dict{Tuple{Int,Int},Any}()
     var(pm, nw, cnd)[:wi] = Dict{Tuple{Int,Int},Any}()
-    wr_min, wr_max, wi_min, wi_max = calc_ref_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
+    wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
     for (gidx, voltage_product_group) in enumerate(voltage_product_groups)
         WR, WI = voltage_product_group[:WR], voltage_product_group[:WI]
         group = groups[gidx]

@@ -6,7 +6,7 @@
 
 ""
 function run_ots(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, post_ots; ref_extensions=[ref_on_off_va_bounds!], solution_builder = solution_ots!, kwargs...)
+    return run_model(file, model_constructor, optimizer, post_ots; ref_extensions=[ref_add_on_off_va_bounds!], solution_builder = solution_ots!, kwargs...)
 end
 
 ""
@@ -46,7 +46,7 @@ end
 
 
 ""
-function ref_on_off_va_bounds!(pm::GenericPowerModel)
+function ref_add_on_off_va_bounds!(pm::GenericPowerModel)
     if InfrastructureModels.ismultinetwork(pm.data)
         nws_data = pm.data["nw"]
     else

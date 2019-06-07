@@ -4,7 +4,7 @@
 
 ""
 function run_tnep(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, post_tnep; ref_extensions=[ref_on_off_va_bounds!,ref_ne_branch!], solution_builder = solution_tnep!, kwargs...)
+    return run_model(file, model_constructor, optimizer, post_tnep; ref_extensions=[ref_add_on_off_va_bounds!,ref_add_ne_branch!], solution_builder = solution_tnep!, kwargs...)
 end
 
 "the general form of the tnep optimization model"
@@ -69,7 +69,7 @@ end
 
 
 ""
-function ref_ne_branch!(pm::GenericPowerModel)
+function ref_add_ne_branch!(pm::GenericPowerModel)
     for (nw, nw_ref) in pm.ref[:nw]
         if !haskey(nw_ref, :ne_branch)
             error(_LOGGER, "required ne_branch data not found")
