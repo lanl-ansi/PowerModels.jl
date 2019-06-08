@@ -677,9 +677,9 @@ function constraint_power_magnitude_sqr_on_off(pm::GenericPowerModel{T}, n::Int,
     z    = var(pm, n, c, :branch_z, i)
 
     # TODO see if there is a way to leverage relaxation_complex_product_on_off here
-    w_ub = JuMP.upper_bound(w)
-    ccm_ub = JuMP.upper_bound(ccm)
-    z_ub = JuMP.upper_bound(z)
+    w_lb, w_ub = InfrastructureModels.variable_domain(w)
+    ccm_lb, ccm_ub = InfrastructureModels.variable_domain(ccm)
+    z_lb, z_ub = InfrastructureModels.variable_domain(z)
 
     JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w*ccm*z_ub/tm^2)
     JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w_ub*ccm*z/tm^2)

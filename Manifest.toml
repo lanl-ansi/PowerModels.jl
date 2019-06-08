@@ -77,9 +77,9 @@ version = "0.10.3"
 
 [[InfrastructureModels]]
 deps = ["JuMP", "Memento"]
-git-tree-sha1 = "ec3f1ba27dbfd29a93f3c520ee189ce32deec049"
+git-tree-sha1 = "131d2d24a2a0d404f59dceab2fb8f8cca2aadce5"
 uuid = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
-version = "0.2.0"
+version = "0.2.1"
 
 [[InteractiveUtils]]
 deps = ["Markdown"]

@@ -15,7 +15,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 Cbc = ">= 0.4"
-InfrastructureModels = "~0.2"
+InfrastructureModels = "~0.2.1"
 Ipopt = ">= 0.4"
 JSON = ">= 0.18"
 JuMP = "~0.19.1"
