@@ -88,7 +88,7 @@ end
 ""
 function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: AbstractDCPForm
     add_setpoint_fixed!(sol, pm, "bus", "vm"; default_value = (item) -> 1)
-    add_setpoint!(sol, pm, "bus", "va", :va)
+    add_setpoint!(sol, pm, "bus", "va", :va, status_name="bus_type", inactive_status_value = 4)
 end
 
 
@@ -202,9 +202,9 @@ end
 
 "nothing to do, this model is symetric"
 function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t_idx, rate_a) where T <: DCPlosslessForm
-    # l,i,j = t_idx
-    # p_fr = var(pm, n, c, :p, (l,j,i))
-    # con(pm, n, c, :sm_to)[l] = JuMP.UpperBoundRef(p_fr)
+    l,i,j = t_idx
+    p_fr = var(pm, n, c, :p, (l,j,i))
+    con(pm, n, c, :sm_to)[l] = JuMP.UpperBoundRef(p_fr)
 end
 
 "nothing to do, this model is symetric"
@@ -252,11 +252,11 @@ end
 function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: NFAForm
 end
 
-""
-function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: NFAForm
-    add_setpoint_fixed!(sol, pm, "bus", "vm")
-    add_setpoint_fixed!(sol, pm, "bus", "va")
-end
+#""
+#function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: NFAForm
+#    add_setpoint_fixed!(sol, pm, "bus", "vm")
+#    add_setpoint_fixed!(sol, pm, "bus", "va")
+#end
 
 
 

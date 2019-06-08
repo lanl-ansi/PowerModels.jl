@@ -86,7 +86,7 @@ end
 
 ""
 function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: AbstractLPACForm
-    add_setpoint!(sol, pm, "bus", "vm", :phi; scale = (x,item,cnd) -> 1.0+x)
-    add_setpoint!(sol, pm, "bus", "va", :va)
+    add_setpoint!(sol, pm, "bus", "vm", :phi, status_name="bus_type", inactive_status_value = 4, scale = (x,item,cnd) -> 1.0+x)
+    add_setpoint!(sol, pm, "bus", "va", :va, status_name="bus_type", inactive_status_value = 4)
 end
 

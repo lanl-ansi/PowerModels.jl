@@ -91,7 +91,7 @@ end
             @test haskey(branch, "mu_sm_fr")
             @test haskey(branch, "mu_sm_to")
             @test isapprox(branch["mu_sm_fr"], 0.0; atol = 1e-2)
-            @test isnan(branch["mu_sm_to"])
+            @test isapprox(branch["mu_sm_to"], 0.0; atol = 1e-2)
         end
     end
 
@@ -113,7 +113,7 @@ end
             else
                 @test isapprox(branch["mu_sm_fr"], 54.70; atol = 1e-2)
             end
-            @test isnan(branch["mu_sm_to"])
+            @test isapprox(branch["mu_sm_to"], 0.0; atol = 1e-2)
         end
     end
 end
