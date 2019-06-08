@@ -98,17 +98,17 @@ end
 function add_setpoint_branch_ne_flow!(sol, pm::GenericPowerModel)
     # check the branch flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
-        add_setpoint!(sol, pm, "ne_branch", "pf", :p_ne; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint!(sol, pm, "ne_branch", "qf", :q_ne; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint!(sol, pm, "ne_branch", "pt", :p_ne; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-        add_setpoint!(sol, pm, "ne_branch", "qt", :q_ne; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint!(sol, pm, "ne_branch", "pf", :p_ne, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "ne_branch", "qf", :q_ne, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "ne_branch", "pt", :p_ne, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+        add_setpoint!(sol, pm, "ne_branch", "qt", :q_ne, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
     end
 end
 
 
 ""
 function add_setpoint_branch_ne_built!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "ne_branch", "built", :branch_ne; default_value = (item) -> 1)
+    add_setpoint!(sol, pm, "ne_branch", "built", :branch_ne, status_name="br_status", default_value = (item) -> 1)
 end
 
 

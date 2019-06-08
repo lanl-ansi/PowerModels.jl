@@ -489,8 +489,8 @@ end
 
 ""
 function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: QCWRForm
-    add_setpoint!(sol, pm, "bus", "vm", :vm)
-    add_setpoint!(sol, pm, "bus", "va", :va)
+    add_setpoint!(sol, pm, "bus", "vm", :vm, status_name="bus_type", inactive_status_value = 4)
+    add_setpoint!(sol, pm, "bus", "va", :va, status_name="bus_type", inactive_status_value = 4)
 end
 
 
