@@ -180,11 +180,11 @@ end
 function run_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; ref_extensions=[], solution_builder=solution_opf!, kwargs...)
     #start_time = time()
     pm = build_model(data, model_constructor, post_method; ref_extensions=ref_extensions, kwargs...)
-    #Memento.info(_LOGGER, "pm model build time: $(time() - start_time)")
+    #Memento.debug(_LOGGER, "pm model build time: $(time() - start_time)")
 
     #start_time = time()
     result = optimize_model!(pm, optimizer; solution_builder=solution_builder)
-    #Memento.info(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
+    #Memento.debug(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
 
     return result
 end
@@ -199,9 +199,9 @@ end
 function build_model(data::Dict{String,<:Any}, model_constructor, post_method; ref_extensions=[], multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
 
-    #start_time = time()
+    start_time = time()
     pm = model_constructor(data; kwargs...)
-    #Memento.info(_LOGGER, "pm model_constructor time: $(time() - start_time)")
+    Memento.debug(_LOGGER, "pm model_constructor time: $(time() - start_time)")
 
     if !multinetwork && ismultinetwork(pm)
         Memento.error(_LOGGER, "attempted to build a single-network model with multi-network data")
@@ -211,16 +211,16 @@ function build_model(data::Dict{String,<:Any}, model_constructor, post_method; r
         Memento.error(_LOGGER, "attempted to build a single-conductor model with multi-conductor data")
     end
 
-    #start_time = time()
+    start_time = time()
     ref_add_core!(pm)
     for ref_ext in ref_extensions
         ref_ext(pm)
     end
-    #Memento.info(_LOGGER, "pm build ref time: $(time() - start_time)")
+    Memento.debug(_LOGGER, "pm build ref time: $(time() - start_time)")
 
-    #start_time = time()
+    start_time = time()
     post_method(pm)
-    #Memento.info(_LOGGER, "pm post_method time: $(time() - start_time)")
+    Memento.debug(_LOGGER, "pm post_method time: $(time() - start_time)")
 
     return pm
 end
@@ -228,13 +228,13 @@ end
 
 ""
 function optimize_model!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = solution_opf!)
-    #start_time = time()
+    start_time = time()
     solve_time = JuMP.optimize!(pm, optimizer)
-    #Memento.info(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
+    Memento.debug(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
 
-    #start_time = time()
+    start_time = time()
     result = build_solution(pm, solve_time; solution_builder = solution_builder)
-    #Memento.info(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
+    Memento.debug(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
 
     pm.solution = result["solution"]
 
