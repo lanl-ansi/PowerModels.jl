@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.11.2
 - Added support for pre-computed buspair data (#524)
 - Added source_id to Matpower parser (#512)
 - Added logger_config! to configure the PowerModels logger (#402)
