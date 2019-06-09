@@ -277,7 +277,7 @@ function variable_reactive_generation(pm::GenericPowerModel; nw::Int=pm.cnw, cnd
 end
 
 
-function variable_generation_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, relax=false)
+function variable_generation_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, relax=false)
     if !relax
         var(pm, nw)[:z_gen] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :gen)], base_name="$(nw)_z_gen",
