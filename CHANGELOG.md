@@ -2,12 +2,19 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Update constraint_voltage to constraint_model_voltage (#499) (breaking)
-- Added constraint_model_current to bfm formulations (breaking)
-- Update Matpower "bus_name" to map to bus parameter "name" (breaking)
-- Update slope and intercept data structure (#521) (breaking)
+- nothing
 
-### Staged
+### v0.12.0
+- Significant updates to function naming (#268,#454,#533) (breaking)
+- Added component status based filtering to solution building (#523)
+- Added constraint_model_current to bfm formulations (breaking)
+- Updated constraint_voltage to constraint_model_voltage (#499) (breaking)
+- Updated Matpower "bus_name" to map to bus parameter "name" (breaking)
+- Updated slope and intercept data structure (#521) (breaking)
+- Updated time_elapsed to be a network-wise parameter (#541) (breaking)
+- Updated current variable name from cm to ccm (#366) (breaking)
+
+### v0.11.2
 - Added support for pre-computed buspair data (#524)
 - Added source_id to Matpower parser (#512)
 - Added logger_config! to configure the PowerModels logger (#402)

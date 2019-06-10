@@ -210,7 +210,7 @@ achieved by building application specific methods of building multinetwork
 with minimal data replication.
 """
 function replicate(sn_data::Dict{String,<:Any}, count::Int; global_keys::Set{String}=Set{String}())
-    pm_global_keys = Set(["time_elapsed", "baseMVA", "per_unit"])
+    pm_global_keys = Set(["baseMVA", "per_unit"])
     return InfrastructureModels.replicate(sn_data, count, global_keys=union(global_keys, pm_global_keys))
 end
 
