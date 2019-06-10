@@ -650,8 +650,8 @@ end
 function constraint_storage_state(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
     storage = ref(pm, nw, :storage, i)
 
-    if haskey(pm.data, "time_elapsed")
-        time_elapsed = pm.data["time_elapsed"]
+    if haskey(ref(pm, nw), :time_elapsed)
+        time_elapsed = ref(pm, nw, :time_elapsed)
     else
         Memento.warn(LOGGER, "network data should specify time_elapsed, using 1.0 as a default")
         time_elapsed = 1.0
