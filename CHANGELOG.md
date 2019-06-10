@@ -5,10 +5,9 @@ PowerModels.jl Change Log
 - nothing
 
 ### v0.12.0
-- Significant updates to function naming (#268,#454,#533) (breaking)
+- Significant updates to function naming details in #538 (#268,#454,#499,#533) (breaking)
 - Added component status based filtering to solution building (#523)
 - Added constraint_model_current to bfm formulations (breaking)
-- Updated constraint_voltage to constraint_model_voltage (#499) (breaking)
 - Updated Matpower "bus_name" to map to bus parameter "name" (breaking)
 - Updated slope and intercept data structure (#521) (breaking)
 - Updated time_elapsed to be a network-wise parameter (#541) (breaking)
