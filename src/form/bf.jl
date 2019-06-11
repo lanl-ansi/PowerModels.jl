@@ -10,17 +10,17 @@ function variable_current_magnitude_sqr(pm::GenericPowerModel{T}; nw::Int=pm.cnw
     end
 
     if bounded
-        var(pm, nw, cnd)[:cm] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_cm",
+        var(pm, nw, cnd)[:ccm] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_ccm",
             lower_bound = 0,
             upper_bound = ub[i],
-            start = getval(branch[i], "cm_start", cnd)
+            start = comp_start_value(branch[i], "ccm_start", cnd)
         )
     else
-        var(pm, nw, cnd)[:cm] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_cm",
+        var(pm, nw, cnd)[:ccm] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_ccm",
             lower_bound = 0,
-            start = getval(branch[i], "cm_start", cnd)
+            start = comp_start_value(branch[i], "ccm_start", cnd)
         )
     end
 end
@@ -45,12 +45,12 @@ function constraint_flow_losses(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_b
     q_to = var(pm, n, c, :q, t_idx)
     w_fr = var(pm, n, c, :w, f_bus)
     w_to = var(pm, n, c, :w, t_bus)
-    cm =  var(pm, n, c, :cm, i)
+    ccm =  var(pm, n, c, :ccm, i)
 
     ym_sh_sqr = g_sh_fr^2 + b_sh_fr^2
 
-    JuMP.@constraint(pm.model, p_fr + p_to == r*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)) + g_sh_fr*(w_fr/tm^2) + g_sh_to*w_to)
-    JuMP.@constraint(pm.model, q_fr + q_to == x*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)) - b_sh_fr*(w_fr/tm^2) - b_sh_to*w_to)
+    JuMP.@constraint(pm.model, p_fr + p_to == r*(ccm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)) + g_sh_fr*(w_fr/tm^2) + g_sh_to*w_to)
+    JuMP.@constraint(pm.model, q_fr + q_to == x*(ccm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)) - b_sh_fr*(w_fr/tm^2) - b_sh_to*w_to)
 end
 
 
@@ -62,38 +62,55 @@ function constraint_voltage_magnitude_difference(pm::GenericPowerModel{T}, n::In
     q_fr = var(pm, n, c, :q, f_idx)
     w_fr = var(pm, n, c, :w, f_bus)
     w_to = var(pm, n, c, :w, t_bus)
-    cm =  var(pm, n, c, :cm, i)
+    ccm =  var(pm, n, c, :ccm, i)
 
     ym_sh_sqr = g_sh_fr^2 + b_sh_fr^2
 
-    JuMP.@constraint(pm.model, (1+2*(r*g_sh_fr - x*b_sh_fr))*(w_fr/tm^2) - w_to ==  2*(r*p_fr + x*q_fr) - (r^2 + x^2)*(cm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)))
-end
-
-"""
-Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
-"""
-function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFQPForm
-    p_fr   = var(pm, n, c, :p, f_idx)
-    q_fr   = var(pm, n, c, :q, f_idx)
-    w_fr   = var(pm, n, c, :w, f_bus)
-    cm = var(pm, n, c, :cm, i)
-
-    # convex constraint linking p, q, w and ccm
-    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= (w_fr/tm^2)*cm)
+    JuMP.@constraint(pm.model, (1+2*(r*g_sh_fr - x*b_sh_fr))*(w_fr/tm^2) - w_to ==  2*(r*p_fr + x*q_fr) - (r^2 + x^2)*(ccm + ym_sh_sqr*(w_fr/tm^2) - 2*(g_sh_fr*p_fr - b_sh_fr*q_fr)))
 end
 
 
 """
 Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
-function constraint_branch_current(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm) where T <: AbstractBFConicForm
-    p_fr   = var(pm, n, c, :p, f_idx)
-    q_fr   = var(pm, n, c, :q, f_idx)
-    w_fr   = var(pm, n, c, :w, f_bus)
-    cm = var(pm, n, c, :cm, i)
+function constraint_model_current(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractBFQPForm
+    _check_missing_keys(var(pm, n, c), [:p,:q,:w,:ccm], T)
 
-    # convex constraint linking p, q, w and ccm
-    JuMP.@constraint(pm.model, [w_fr/tm^2, cm/2, p_fr, q_fr] in JuMP.RotatedSecondOrderCone())
+    p  = var(pm, n, c, :p)
+    q  = var(pm, n, c, :q)
+    w  = var(pm, n, c, :w)
+    ccm = var(pm, n, c, :ccm)
+
+    for (i,branch) in ref(pm, n, :branch)
+        f_bus = branch["f_bus"]
+        t_bus = branch["t_bus"]
+        f_idx = (i, f_bus, t_bus)
+        tm = branch["tap"][c]
+
+        JuMP.@constraint(pm.model, p[f_idx]^2 + q[f_idx]^2 <= (w[f_bus]/tm^2)*ccm[i])
+    end
+end
+
+
+"""
+Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
+"""
+function constraint_model_current(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractBFConicForm
+    _check_missing_keys(var(pm, n, c), [:p,:q,:w,:ccm], T)
+
+    p  = var(pm, n, c, :p)
+    q  = var(pm, n, c, :q)
+    w  = var(pm, n, c, :w)
+    ccm = var(pm, n, c, :ccm)
+
+    for (i,branch) in ref(pm, n, :branch)
+        f_bus = branch["f_bus"]
+        t_bus = branch["t_bus"]
+        f_idx = (i, f_bus, t_bus)
+        tm = branch["tap"][c]
+
+        JuMP.@constraint(pm.model, [w[f_bus]/tm^2, ccm[i]/2, p[f_idx], q[f_idx]] in JuMP.RotatedSecondOrderCone())
+    end
 end
 
 

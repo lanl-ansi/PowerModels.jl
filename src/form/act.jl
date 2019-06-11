@@ -12,7 +12,9 @@ function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: Abstra
     variable_voltage_product(pm; kwargs...)
 end
 
-function constraint_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: StandardACTForm
+function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: StandardACTForm
+    _check_missing_keys(var(pm, n, c), [:va,:w,:wr,:wi], T)
+
     t  = var(pm, n, c, :va)
     w  = var(pm, n, c,  :w)
     wr = var(pm, n, c, :wr)
@@ -43,7 +45,7 @@ end
 
 
 ""
-function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractACTForm
-    add_setpoint(sol, pm, "bus", "vm", :w; scale = (x,item,cnd) -> sqrt(x))
-    add_setpoint(sol, pm, "bus", "va", :va)
+function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: AbstractACTForm
+    add_setpoint!(sol, pm, "bus", "vm", :w, status_name="bus_type", inactive_status_value = 4, scale = (x,item,cnd) -> sqrt(x))
+    add_setpoint!(sol, pm, "bus", "va", :va, status_name="bus_type", inactive_status_value = 4)
 end

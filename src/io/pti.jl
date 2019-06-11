@@ -19,6 +19,8 @@ function _get_pti_sections()::Array
 end
 
 
+
+
 """
     _get_pti_dtypes(field_name)
 
@@ -246,7 +248,7 @@ function _get_component_property(section, ret, search_field, search_value)
             return component[ret]
         end
     end
-    Memento.warn(LOGGER, "cannot find $search_field = $search_value, no return for $ret")
+    Memento.warn(_LOGGER, "cannot find $search_field = $search_value, no return for $ret")
 end
 
 
@@ -450,7 +452,7 @@ function _parse_line_element!(data::Dict, elements::Array, section::AbstractStri
             element = popfirst!(elements)
         catch message
             if isa(message, ArgumentError)
-                Memento.debug(LOGGER, "Have run out of elements in $section at $field")
+                Memento.debug(_LOGGER, "Have run out of elements in $section at $field")
                 push!(missing_fields, field)
                 continue
             end
@@ -471,7 +473,7 @@ function _parse_line_element!(data::Dict, elements::Array, section::AbstractStri
             if isa(message, Meta.ParseError)
                 data[field] = element
             else
-                Memento.error(LOGGER, "value '$element' for $field in section $section is not of type $dtype.")
+                Memento.error(_LOGGER, "value '$element' for $field in section $section is not of type $dtype.")
             end
         end
     end
@@ -484,7 +486,7 @@ function _parse_line_element!(data::Dict, elements::Array, section::AbstractStri
         if !(section == "SWITCHED SHUNT" && startswith(missing_str, "N")) &&
             !(section == "MULTI-SECTION LINE" && startswith(missing_str, "DUM")) &&
             !(section == "IMPEDANCE CORRECTION" && startswith(missing_str, "T"))
-            Memento.warn(LOGGER, "The following fields in $section are missing: $missing_str")
+            Memento.warn(_LOGGER, "The following fields in $section are missing: $missing_str")
         end
     end
 end
@@ -504,7 +506,7 @@ function _add_section_data!(pti_data::Dict, section_data::Dict, section::Abstrac
         if isa(message, KeyError)
             pti_data[section] = [deepcopy(section_data)]
         else
-            Memento.error(LOGGER, sprint(showerror, message))
+            Memento.error(_LOGGER, sprint(showerror, message))
         end
     end
 end
@@ -520,7 +522,7 @@ are also extracted separately, and `Array{Array{String}, String}` is returned.
 """
 function _get_line_elements(line::AbstractString)::Array
     if length(collect(eachmatch(r"'", line))) % 2 == 1
-        throw(Memento.error(LOGGER, "There are an uneven number of single-quotes in \"{line}\", the line cannot be parsed."))
+        throw(Memento.error(_LOGGER, "There are an uneven number of single-quotes in \"{line}\", the line cannot be parsed."))
     end
 
     comment_split = r"(?!\B[\'][^\']*)[\/](?![^\']*[\']\B)"
@@ -531,9 +533,9 @@ function _get_line_elements(line::AbstractString)::Array
     split_string = r",(?=(?:[^']*'[^']*')*[^']*$)"
     elements = [strip(element) for element in split(line, split_string)]
 
-    Memento.debug(LOGGER, "$line")
-    Memento.debug(LOGGER, "$comment")
-    Memento.debug(LOGGER, "$elements")
+    Memento.debug(_LOGGER, "$line")
+    Memento.debug(_LOGGER, "$comment")
+    Memento.debug(_LOGGER, "$elements")
 
     return [elements, comment]
 end
@@ -558,7 +560,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
     section_data = Dict{String,Any}()
 
     for (line_number, line) in enumerate(data_lines)
-        Memento.debug(LOGGER, "$line_number: $line")
+        Memento.debug(_LOGGER, "$line_number: $line")
 
         (elements, comment) = _get_line_elements(line)
 
@@ -571,9 +573,9 @@ function _parse_pti_data(data_io::IO, sections::Array)
             end
 
             if length(elements) > 1
-                Memento.warn(LOGGER, "At line $line_number, new section started with '0', but additional non-comment data is present. Pattern '^\\s*0\\s*[/]*.*' is reserved for section start/end.")
+                Memento.warn(_LOGGER, "At line $line_number, new section started with '0', but additional non-comment data is present. Pattern '^\\s*0\\s*[/]*.*' is reserved for section start/end.")
             elseif length(comment) > 0
-                Memento.debug(LOGGER, "At line $line_number, switched to $section")
+                Memento.debug(_LOGGER, "At line $line_number, switched to $section")
             end
 
             if !isempty(sections)
@@ -592,13 +594,13 @@ function _parse_pti_data(data_io::IO, sections::Array)
                 continue
             end
 
-            Memento.debug(LOGGER, join(["Section:", section], " "))
+            Memento.debug(_LOGGER, join(["Section:", section], " "))
             if !(section in ["CASE IDENTIFICATION","TRANSFORMER","VOLTAGE SOURCE CONVERTER","MULTI-TERMINAL DC","TWO-TERMINAL DC","GNE DEVICE"])
                 section_data = Dict{String,Any}()
                 try
                     _parse_line_element!(section_data, elements, section)
                 catch message
-                    throw(Memento.error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
+                    throw(Memento.error(_LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                 end
 
             elseif section == "CASE IDENTIFICATION"
@@ -606,11 +608,11 @@ function _parse_pti_data(data_io::IO, sections::Array)
                     try
                         _parse_line_element!(section_data, elements, section)
                     catch message
-                        throw(Memento.error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
+                        throw(Memento.error(_LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                     end
 
                     if section_data["REV"] != "" && section_data["REV"] < 33
-                        Memento.warn(LOGGER, "Version $(section_data["REV"]) of PTI format is unsupported, parser may not function correctly.")
+                        Memento.warn(_LOGGER, "Version $(section_data["REV"]) of PTI format is unsupported, parser may not function correctly.")
                     end
                 else
                     section_data["Comment_Line_$(line_number - 1)"] = line
@@ -629,7 +631,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                     winding = "THREE-WINDING"
                     skip_lines = 4
                 else
-                    Memento.error(LOGGER, "Cannot detect type of Transformer")
+                    Memento.error(_LOGGER, "Cannot detect type of Transformer")
                 end
 
                 try
@@ -648,7 +650,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                         end
                     end
                 catch message
-                    throw(Memento.error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
+                    throw(Memento.error(_LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                 end
 
             elseif section == "VOLTAGE SOURCE CONVERTER"
@@ -657,7 +659,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                     try
                         _parse_line_element!(section_data, elements, section)
                     catch message
-                        throw(Memento.error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
+                        throw(Memento.error(_LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                     end
                     skip_sublines = 2
                     continue
@@ -684,7 +686,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                             section_data["CONVERTER BUSES"] = [deepcopy(subsection_data)]
                             continue
                         else
-                            Memento.error(LOGGER, message)
+                            Memento.error(_LOGGER, message)
                         end
                     end
                 end
@@ -699,7 +701,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                 try
                     _parse_line_element!(section_data, elements, section)
                 catch message
-                    throw(Memento.error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
+                    throw(Memento.error(_LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                 end
 
             elseif section == "MULTI-TERMINAL DC"
@@ -708,7 +710,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                     try
                         _parse_line_element!(section_data, elements, section)
                     catch message
-                        throw(Memento.error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
+                        throw(Memento.error(_LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                     end
 
                     if section_data["NCONV"] > 0
@@ -734,7 +736,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                     try
                         _parse_line_element!(subsection_data, elements, "$section $subsection")
                     catch message
-                        throw(Memento.error(LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
+                        throw(Memento.error(_LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                     end
 
                     try
@@ -749,7 +751,7 @@ function _parse_pti_data(data_io::IO, sections::Array)
                                 continue
                             end
                         else
-                            Memento.error(LOGGER, sprint(showerror, message))
+                            Memento.error(_LOGGER, sprint(showerror, message))
                         end
                     end
 
@@ -772,11 +774,11 @@ function _parse_pti_data(data_io::IO, sections::Array)
 
             elseif section == "GNE DEVICE"
                 # TODO: handle multiple lines of GNE Device
-                Memento.warn(LOGGER, "GNE DEVICE parsing is not supported.")
+                Memento.warn(_LOGGER, "GNE DEVICE parsing is not supported.")
             end
         end
         if subsection != ""
-            Memento.debug(LOGGER, "appending data")
+            Memento.debug(_LOGGER, "appending data")
         end
         _add_section_data!(pti_data, section_data, section)
     end
@@ -813,7 +815,7 @@ function parse_pti(io::IO)::Dict
     try
         pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"^\<file\s[\/\\]*(?:.*[\/\\])*(.*)\.raw\>$", lowercase(io.name)).captures[1]
     catch
-        throw(Memento.error(LOGGER, "This file is unrecognized and cannot be parsed"))
+        throw(Memento.error(_LOGGER, "This file is unrecognized and cannot be parsed"))
     end
 
     return pti_data
@@ -842,7 +844,7 @@ function _populate_defaults!(data::Dict)
                                         new_sub_component[sub_field] = _get_pti_default(section, field, data, sub_component; sub_field=sub_field)
                                     catch msg
                                         if isa(msg, KeyError)
-                                            Memento.warn(LOGGER, "'$sub_field' in '$field' in '$section' has no default value")
+                                            Memento.warn(_LOGGER, "'$sub_field' in '$field' in '$section' has no default value")
                                         else
                                             rethrow(msg)
                                         end
@@ -857,7 +859,7 @@ function _populate_defaults!(data::Dict)
                             new_component[field] = _get_pti_default(section, field, data, component)
                         catch msg
                             if isa(msg, KeyError)
-                                Memento.warn(LOGGER, "'$field' in '$section' has no default value")
+                                Memento.warn(_LOGGER, "'$field' in '$section' has no default value")
                             else
                                 rethrow(msg)
                             end

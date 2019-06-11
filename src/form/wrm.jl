@@ -22,9 +22,11 @@ end
 
 
 ""
-function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: SDPWRMForm
-    WR = var(pm, nw, cnd)[:WR]
-    WI = var(pm, nw, cnd)[:WI]
+function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: SDPWRMForm
+    _check_missing_keys(var(pm, n, c), [:WR,:WI], T)
+
+    WR = var(pm, n, c)[:WR]
+    WI = var(pm, n, c)[:WI]
 
     JuMP.@constraint(pm.model, [WR WI; -WI WR] in JuMP.PSDCone())
 end
@@ -32,7 +34,7 @@ end
 
 ""
 function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: SDPWRMForm
-    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
+    wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
     bus_ids = ids(pm, nw, :bus)
 
     w_index = 1:length(bus_ids)
@@ -102,7 +104,7 @@ end
 ###### Sparse SDP Relaxations ######
 
 
-struct SDconstraintDecomposition
+struct _SDconstraintDecomposition
     "Each sub-vector consists of bus IDs corresponding to a clique grouping"
     decomp::Vector{Vector{Int64}}
     "`lookup_index[bus_id] --> idx` for mapping between 1:n and bus indices"
@@ -111,9 +113,9 @@ struct SDconstraintDecomposition
     ordering::Vector{Int64}
 end
 import Base: ==
-function ==(d1::SDconstraintDecomposition, d2::SDconstraintDecomposition)
+function ==(d1::_SDconstraintDecomposition, d2::_SDconstraintDecomposition)
     eq = true
-    for f in fieldnames(SDconstraintDecomposition)
+    for f in fieldnames(_SDconstraintDecomposition)
         eq = eq && (getfield(d1, f) == getfield(d2, f))
     end
     return eq
@@ -127,11 +129,11 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
         lookup_index = decomp.lookup_index
         lookup_bus_index = Dict((reverse(p) for p = pairs(lookup_index)))
     else
-        cadj, lookup_index, ordering = chordal_extension(pm)
-        groups = maximal_cliques(cadj)
+        cadj, lookup_index, ordering = _chordal_extension(pm)
+        groups = _maximal_cliques(cadj)
         lookup_bus_index = Dict((reverse(p) for p = pairs(lookup_index)))
         groups = [[lookup_bus_index[gi] for gi in g] for g in groups]
-        pm.ext[:SDconstraintDecomposition] = SDconstraintDecomposition(groups, lookup_index, ordering)
+        pm.ext[:SDconstraintDecomposition] = _SDconstraintDecomposition(groups, lookup_index, ordering)
     end
 
     voltage_product_groups =
@@ -159,7 +161,7 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
     var(pm, nw, cnd)[:w] = Dict{Int,Any}()
     var(pm, nw, cnd)[:wr] = Dict{Tuple{Int,Int},Any}()
     var(pm, nw, cnd)[:wi] = Dict{Tuple{Int,Int},Any}()
-    wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
+    wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
     for (gidx, voltage_product_group) in enumerate(voltage_product_groups)
         WR, WI = voltage_product_group[:WR], voltage_product_group[:WI]
         group = groups[gidx]
@@ -212,15 +214,19 @@ function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
 end
 
 
-function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T <: SparseSDPWRMForm
+function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: SparseSDPWRMForm
+    _check_missing_keys(var(pm, n, c), [:voltage_product_groups], T)
+
     pair_matrix(group) = [(i, j) for i in group, j in group]
 
     decomp = pm.ext[:SDconstraintDecomposition]
     groups = decomp.decomp
-    voltage_product_groups = var(pm, nw, cnd)[:voltage_product_groups]
+    voltage_product_groups = var(pm, n, c)[:voltage_product_groups]
 
     # semidefinite constraint for each group in clique grouping
     for (gidx, voltage_product_group) in enumerate(voltage_product_groups)
+        _check_missing_keys(voltage_product_group, [:WR,:WI], T)
+
         group = groups[gidx]
         ng = length(group)
         WR = voltage_product_group[:WR]
@@ -244,14 +250,14 @@ function constraint_voltage(pm::GenericPowerModel{T}, nw::Int, cnd::Int) where T
     end
 
     # linking constraints
-    tree = prim(overlap_graph(groups))
+    tree = _prim(_overlap_graph(groups))
     overlapping_pairs = [Tuple(CartesianIndices(tree)[i]) for i in (LinearIndices(tree))[findall(x->x!=0, tree)]]
     for (i, j) in overlapping_pairs
         gi, gj = groups[i], groups[j]
         var_i, var_j = voltage_product_groups[i], voltage_product_groups[j]
 
         Gi, Gj = pair_matrix(gi), pair_matrix(gj)
-        overlap_i, overlap_j = overlap_indices(Gi, Gj)
+        overlap_i, overlap_j = _overlap_indices(Gi, Gj)
         indices = zip(overlap_i, overlap_j)
         for (idx_i, idx_j) in indices
             JuMP.@constraint(pm.model, var_i[:WR][idx_i] == var_j[:WR][idx_j])
@@ -262,13 +268,13 @@ end
 
 
 """
-    adj, lookup_index = adjacency_matrix(pm, nw)
+    adj, lookup_index = _adjacency_matrix(pm, nw)
 Return:
 - a sparse adjacency matrix
 - `lookup_index` s.t. `lookup_index[bus_id]` returns the integer index
 of the bus with `bus_id` in the adjacency matrix.
 """
-function adjacency_matrix(pm::GenericPowerModel, nw::Int=pm.cnw)
+function _adjacency_matrix(pm::GenericPowerModel, nw::Int=pm.cnw)
     bus_ids = ids(pm, nw, :bus)
     buspairs = ref(pm, nw, :buspairs)
 
@@ -284,7 +290,7 @@ end
 
 
 """
-    cadj, lookup_index, ordering = chordal_extension(pm, nw)
+    cadj, lookup_index, ordering = _chordal_extension(pm, nw)
 Return:
 - a sparse adjacency matrix corresponding to a chordal extension
 of the power grid graph.
@@ -292,8 +298,8 @@ of the power grid graph.
 of the bus with `bus_id` in the adjacency matrix.
 - the graph ordering that may be used to reconstruct the chordal extension
 """
-function chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
-    adj, lookup_index = adjacency_matrix(pm, nw)
+function _chordal_extension(pm::GenericPowerModel, nw::Int=pm.cnw)
+    adj, lookup_index = _adjacency_matrix(pm, nw)
     nb = size(adj, 1)
     diag_el = sum(adj, dims=1)[:]
     W = Hermitian(adj + spdiagm(0 => diag_el))
@@ -312,11 +318,11 @@ end
 
 
 """
-    mc = maximal_cliques(cadj, peo)
+    mc = _maximal_cliques(cadj, peo)
 Given a chordal graph adjacency matrix and perfect elimination
 ordering, return the set of maximal cliques.
 """
-function maximal_cliques(cadj::SparseMatrixCSC, peo::Vector{Int})
+function _maximal_cliques(cadj::SparseMatrixCSC, peo::Vector{Int})
     nb = size(cadj, 1)
 
     # use peo to obtain one clique for each vertex
@@ -338,14 +344,14 @@ function maximal_cliques(cadj::SparseMatrixCSC, peo::Vector{Int})
     mc = [sort(c) for c in mc]
     return mc
 end
-maximal_cliques(cadj::SparseMatrixCSC) = maximal_cliques(cadj, mcs(cadj))
+_maximal_cliques(cadj::SparseMatrixCSC) = _maximal_cliques(cadj, _mcs(cadj))
 
 """
-    peo = mcs(A)
+    peo = _mcs(A)
 Maximum cardinality search for graph adjacency matrix A.
 Returns a perfect elimination ordering for chordal graphs.
 """
-function mcs(A)
+function _mcs(A)
     n = size(A, 1)
     w = zeros(Int, n)
     peo = zeros(Int, n)
@@ -365,13 +371,13 @@ function mcs(A)
 end
 
 """
-    T = prim(A, minweight=false)
+    T = _prim(A, minweight=false)
 Return minimum spanning tree adjacency matrix, given adjacency matrix.
 If minweight == false, return the *maximum* weight spanning tree.
 
 Convention: start with node 1.
 """
-function prim(A, minweight=false)
+function _prim(A, minweight=false)
     n = size(A, 1)
     candidate_edges = []
     unvisited = collect(1:n)
@@ -397,11 +403,11 @@ end
 
 
 """
-    A = overlap_graph(groups)
+    A = _overlap_graph(groups)
 Return adjacency matrix for overlap graph associated with `groups`.
 I.e. if `A[i, j] = k`, then `groups[i]` and `groups[j]` share `k` elements.
 """
-function overlap_graph(groups)
+function _overlap_graph(groups)
     n = length(groups)
     I = Vector{Int}()
     J = Vector{Int}()
@@ -422,7 +428,7 @@ function overlap_graph(groups)
 end
 
 
-function filter_flipped_pairs!(pairs)
+function _filter_flipped_pairs!(pairs)
     for (i, j) in pairs
         if i != j && (j, i) in pairs
             filter!(x -> x != (j, i), pairs)
@@ -432,7 +438,7 @@ end
 
 
 """
-    idx_a, idx_b = overlap_indices(A, B)
+    idx_a, idx_b = _overlap_indices(A, B)
 Given two arrays (sizes need not match) that share some values, return:
 
 - linear index of shared values in A
@@ -440,9 +446,9 @@ Given two arrays (sizes need not match) that share some values, return:
 
 Thus, A[idx_a] == B[idx_b].
 """
-function overlap_indices(A::Array, B::Array, symmetric=true)
+function _overlap_indices(A::Array, B::Array, symmetric=true)
     overlap = intersect(A, B)
-    symmetric && filter_flipped_pairs!(overlap)
+    symmetric && _filter_flipped_pairs!(overlap)
     idx_a = [something(findfirst(isequal(o), A), 0) for o in overlap]
     idx_b = [something(findfirst(isequal(o), B), 0) for o in overlap]
     return idx_a, idx_b
@@ -450,14 +456,14 @@ end
 
 
 """
-    ps = problem_size(groups)
+    ps = _problem_size(groups)
 Returns the sum of variables and linking constraints corresponding to the
 semidefinite constraint decomposition given by `groups`. This function is
 not necessary for the operation of clique merge, since `merge_cost`
 computes the change in problem size for a proposed group merge.
 """
-function problem_size(groups)
+function _problem_size(groups)
     nvars(n::Integer) = n*(2*n + 1)
-    A = prim(overlap_graph(groups))
+    A = _prim(_overlap_graph(groups))
     return sum(nvars.(Int64.(nonzeros(A)))) + sum(nvars.(length.(groups)))
 end

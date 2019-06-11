@@ -67,7 +67,7 @@ end
     @testset "14-bus mixed type tables" begin
         data = PowerModels.parse_file("../test/data/matpower/case14.m")
 
-        ct = PowerModels.component_table(data, "bus", ["vmin", "vmax", "bus_name", "none"])
+        ct = PowerModels.component_table(data, "bus", ["vmin", "vmax", "name", "none"])
         @test length(ct) == 70
         @test size(ct,1) == 14
         @test size(ct,2) == 5
@@ -201,7 +201,7 @@ end
 
     @testset "connecected components" begin
         data = PowerModels.parse_file("../test/data/matpower/case6.m")
-        cc = PowerModels.connected_components(data)
+        cc = PowerModels.calc_connected_components(data)
 
         cc_ordered = sort(collect(cc); by=length)
 
@@ -214,14 +214,14 @@ end
         data["trans"]["1"] = deepcopy(data["branch"]["6"])
         delete!(data["branch"], "6")
 
-        cc2 = PowerModels.connected_components(data; edges=["branch", "trans"])
+        cc2 = PowerModels.calc_connected_components(data; edges=["branch", "trans"])
         @test cc2 == cc
     end
 
     @testset "connecected components with propagate topology status" begin
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
         PowerModels.propagate_topology_status!(data)
-        cc = PowerModels.connected_components(data)
+        cc = PowerModels.calc_connected_components(data)
 
         cc_ordered = sort(collect(cc); by=length)
 
@@ -283,7 +283,7 @@ end
         PowerModels.propagate_topology_status!(data)
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
-        @test result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 1778; atol = 1e0)
 
         solution = result["solution"]
@@ -396,16 +396,16 @@ end
 
 @testset "test user ext init" begin
     @testset "3-bus case" begin
-        pm = build_generic_model("../test/data/matpower/case3.m", ACPPowerModel, PowerModels.post_opf, ext = Dict(:some_data => "bloop"))
+        pm = build_model("../test/data/matpower/case3.m", ACPPowerModel, PowerModels.post_opf, ext = Dict(:some_data => "bloop"))
 
         #println(pm.ext)
 
         @test haskey(pm.ext, :some_data)
         @test pm.ext[:some_data] == "bloop"
 
-        result = solve_generic_model(pm, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
+        result = optimize_model!(pm, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
 
-        @test result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 5907; atol = 1e0)
     end
 end
@@ -450,7 +450,7 @@ end
         data["buspairs"] = PowerModels.calc_buspair_parameters(data["bus"], data["branch"], 1:1, haskey(data, "conductors"))
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
-        @test result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 16642; atol = 1e0)
     end
 
@@ -592,7 +592,7 @@ end
      @testset "5-bus ac polar balance with storage" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
         data["branch"]["4"]["br_status"] = 0
-        result = PowerModels.run_strg_opf(data, ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = PowerModels._run_strg_opf(data, ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
         PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)
@@ -606,7 +606,7 @@ end
      @testset "5-bus dc balance with storage" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
         data["branch"]["4"]["br_status"] = 0
-        result = PowerModels.run_strg_opf(data, DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = PowerModels._run_strg_opf(data, DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
         PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)

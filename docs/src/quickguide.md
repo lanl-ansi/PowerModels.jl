@@ -102,21 +102,21 @@ loss_dc =  Dict(name => data["pt"]+data["pf"] for (name, data) in result["soluti
 The following example demonstrates how to break a `run_opf` call into separate model building and solving steps.  This allows inspection of the JuMP model created by PowerModels for the AC-OPF problem,
 
 ```julia
-pm = build_generic_model("matpower/case3.m", ACPPowerModel, PowerModels.post_opf)
+pm = build_model("matpower/case3.m", ACPPowerModel, PowerModels.post_opf)
 
 print(pm.model)
 
-solve_generic_model(pm, IpoptSolver())
+result = optimize_model!(pm, IpoptSolver())
 ```
 
-Alternatively, you can further break it up by parsing a file into a network data dictionary, before passing it on to `build_generic_model()` like so
+Alternatively, you can further break it up by parsing a file into a network data dictionary, before passing it on to `build_model()` like so
 
 ```julia
 network_data = PowerModels.parse_file("matpower/case3.m")
 
-pm = build_generic_model(network_data, ACPPowerModel, PowerModels.post_opf)
+pm = build_model(network_data, ACPPowerModel, PowerModels.post_opf)
 
 print(pm.model)
 
-solve_generic_model(pm, with_optimizer(Ipopt.Optimizer))
+result = optimize_model!(pm, with_optimizer(Ipopt.Optimizer))
 ```

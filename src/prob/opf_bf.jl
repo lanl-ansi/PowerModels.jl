@@ -1,13 +1,6 @@
-export run_opf_bf, run_ac_opf_bf, run_dc_opf_bf
-
-""
-function run_opf_bf(file, model_constructor::Type{GenericPowerModel{T}}, optimizer; kwargs...) where T <: AbstractBFForm
-    return run_generic_model(file, model_constructor, optimizer, post_opf_bf; kwargs...)
-end
-
 ""
 function run_opf_bf(file, model_constructor, optimizer; kwargs...)
-    Memento.error(LOGGER, "The problem type opf_bf at the moment only supports subtypes of AbstractBFForm")
+    return run_model(file, model_constructor, optimizer, post_opf_bf; kwargs...)
 end
 
 ""
@@ -20,18 +13,19 @@ function post_opf_bf(pm::GenericPowerModel)
 
     objective_min_fuel_and_flow_cost(pm)
 
+    constraint_model_current(pm)
+
     for i in ids(pm, :ref_buses)
         constraint_theta_ref(pm, i)
     end
 
     for i in ids(pm, :bus)
-        constraint_kcl_shunt(pm, i)
+        constraint_power_balance_shunt(pm, i)
     end
 
     for i in ids(pm, :branch)
         constraint_flow_losses(pm, i)
         constraint_voltage_magnitude_difference(pm, i)
-        constraint_branch_current(pm, i)
 
         constraint_voltage_angle_difference(pm, i)
 

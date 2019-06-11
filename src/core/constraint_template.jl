@@ -14,19 +14,57 @@
 
 ### Voltage Constraints ###
 
-""
-function constraint_voltage(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    constraint_voltage(pm, nw, cnd)
+"""
+This constraint captures problem agnostic constraints that are used to link
+the model's voltage variables together, in addition to the standard problem
+formulation constraints.
+
+Notable examples include the constraints linking the voltages in the
+ACTPowerModel, constraints linking convex relaxations of voltage variables.
+"""
+function constraint_model_voltage(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    constraint_model_voltage(pm, nw, cnd)
 end
 
-""
-function constraint_voltage_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    constraint_voltage_on_off(pm, nw, cnd)
+"""
+This constraint captures problem agnostic constraints that are used to link
+the model's voltage variables together, in addition to the standard problem
+formulation constraints.  The on/off name indicates that the voltages in this
+constraint can be set to zero via an indicator variable
+
+Notable examples include the constraints linking the voltages in the
+ACTPowerModel, constraints linking convex relaxations of voltage variables.
+"""
+function constraint_model_voltage_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    constraint_model_voltage_on_off(pm, nw, cnd)
 end
 
-""
-function constraint_voltage_ne(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    constraint_voltage_ne(pm, nw, cnd)
+"""
+This constraint captures problem agnostic constraints that are used to link
+the model's voltage variables together, in addition to the standard problem
+formulation constraints.  The network expantion name (ne) indicates that the
+voltages in this constraint can be set to zero via an indicator variable
+
+Notable examples include the constraints linking the voltages in the
+ACTPowerModel, constraints linking convex relaxations of voltage variables.
+"""
+function constraint_model_voltage_ne(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    constraint_model_voltage_ne(pm, nw, cnd)
+end
+
+
+### Current Constraints ###
+
+"""
+This constraint captures problem agnostic constraints that are used to link
+the model's current variables together, in addition to the standard problem
+formulation constraints.
+
+Notable examples include the constraints linking the current and power
+variables in the BFM models.
+"""
+function constraint_model_current(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    constraint_model_current(pm, nw, cnd)
 end
 
 
@@ -68,7 +106,7 @@ end
 ### Power Balance Constraints ###
 
 "ensures that power generation and demand are balanced"
-function constraint_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_network_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     comp_bus_ids = ref(pm, nw, :components, i)
 
     comp_gen_ids = Set{Int64}()
@@ -102,14 +140,14 @@ function constraint_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw,
     comp_branch_g = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["br_r"][cnd], branch["br_x"][cnd], branch["tap"][cnd], branch["g_fr"][cnd], branch["g_to"][cnd]) for branch in comp_branches)
     comp_branch_b = Dict(branch["index"] => (branch["f_bus"], branch["t_bus"], branch["br_r"][cnd], branch["br_x"][cnd], branch["tap"][cnd], branch["b_fr"][cnd], branch["b_to"][cnd]) for branch in comp_branches)
 
-    constraint_power_balance(pm, nw, cnd, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b)
+    constraint_network_power_balance(pm, nw, cnd, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b)
 end
 
 
 ### Bus - KCL Constraints ###
 
 ""
-function constraint_kcl_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_power_balance_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     if !haskey(con(pm, nw, cnd), :kcl_p)
         con(pm, nw, cnd)[:kcl_p] = Dict{Int,JuMP.ConstraintRef}()
     end
@@ -130,11 +168,11 @@ function constraint_kcl_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd
     bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts)
     bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts)
 
-    constraint_kcl_shunt(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
+    constraint_power_balance_shunt(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
 ""
-function constraint_kcl_shunt_storage(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_power_balance_shunt_storage(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     if !haskey(con(pm, nw, cnd), :kcl_p)
         con(pm, nw, cnd)[:kcl_p] = Dict{Int,JuMP.ConstraintRef}()
     end
@@ -156,11 +194,11 @@ function constraint_kcl_shunt_storage(pm::GenericPowerModel, i::Int; nw::Int=pm.
     bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts)
     bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts)
 
-    constraint_kcl_shunt_storage(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+    constraint_power_balance_shunt_storage(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
 ""
-function constraint_kcl_shunt_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_power_balance_shunt_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     bus = ref(pm, nw, :bus, i)
     bus_arcs = ref(pm, nw, :bus_arcs, i)
     bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
@@ -175,7 +213,7 @@ function constraint_kcl_shunt_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, 
     bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts)
     bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts)
 
-    constraint_kcl_shunt_ne(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
+    constraint_power_balance_shunt_ne(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
 
@@ -603,21 +641,6 @@ function constraint_voltage_magnitude_difference(pm::GenericPowerModel, i::Int; 
     constraint_voltage_magnitude_difference(pm, nw, cnd, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm)
 end
 
-""
-function constraint_branch_current(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    branch = ref(pm, nw, :branch, i)
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-
-    tm = branch["tap"][cnd]
-    g_sh_fr = branch["g_fr"][cnd]
-    b_sh_fr = branch["b_fr"][cnd]
-
-    constraint_branch_current(pm, nw, cnd, i, f_bus, f_idx, g_sh_fr, b_sh_fr, tm)
-end
-
-
 
 
 ### Storage Constraints ###
@@ -653,7 +676,7 @@ function constraint_storage_state(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
     if haskey(ref(pm, nw), :time_elapsed)
         time_elapsed = ref(pm, nw, :time_elapsed)
     else
-        Memento.warn(LOGGER, "network data should specify time_elapsed, using 1.0 as a default")
+        Memento.warn(_LOGGER, "network data should specify time_elapsed, using 1.0 as a default")
         time_elapsed = 1.0
     end
 
@@ -667,7 +690,7 @@ function constraint_storage_state(pm::GenericPowerModel, i::Int, nw_1::Int, nw_2
     if haskey(pm.data, "time_elapsed")
         time_elapsed = pm.data["time_elapsed"]
     else
-        Memento.warn(LOGGER, "network data should specify time_elapsed, using 1.0 as a default")
+        Memento.warn(_LOGGER, "network data should specify time_elapsed, using 1.0 as a default")
         time_elapsed = 1.0
     end
 

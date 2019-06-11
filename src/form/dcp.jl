@@ -13,11 +13,7 @@ function variable_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: Abs
 end
 
 "do nothing, this model does not have complex voltage variables"
-function constraint_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
-end
-
-"do nothing, this model does not have complex voltage variables"
-function constraint_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
+function constraint_model_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
 end
 
 "do nothing, this model does not have voltage variables"
@@ -31,7 +27,7 @@ end
 
 
 ""
-function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
+function constraint_power_balance_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
     pg   = var(pm, n, c, :pg)
     p    = var(pm, n, c, :p)
     p_dc = var(pm, n, c, :p_dc)
@@ -41,7 +37,7 @@ function constraint_kcl_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_a
 end
 
 ""
-function constraint_kcl_shunt_storage(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
+function constraint_power_balance_shunt_storage(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
     p = var(pm, n, c, :p)
     pg = var(pm, n, c, :pg)
     ps = var(pm, n, c, :ps)
@@ -52,7 +48,7 @@ function constraint_kcl_shunt_storage(pm::GenericPowerModel{T}, n::Int, c::Int, 
 end
 
 ""
-function constraint_kcl_shunt_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
+function constraint_power_balance_shunt_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
     pg   = var(pm, n, c, :pg)
     p    = var(pm, n, c, :p)
     p_ne = var(pm, n, c, :p_ne)
@@ -90,9 +86,9 @@ end
 
 
 ""
-function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: AbstractDCPForm
-    add_setpoint_fixed(sol, pm, "bus", "vm"; default_value = (item) -> 1)
-    add_setpoint(sol, pm, "bus", "va", :va)
+function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: AbstractDCPForm
+    add_setpoint_fixed!(sol, pm, "bus", "vm"; default_value = (item) -> 1)
+    add_setpoint!(sol, pm, "bus", "va", :va, status_name="bus_type", inactive_status_value = 4)
 end
 
 
@@ -102,7 +98,7 @@ function variable_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <:
 end
 
 "do nothing, this model does not have complex voltage variables"
-function constraint_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
+function constraint_model_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractDCPForm
 end
 
 "`-b*(t[f_bus] - t[t_bus] + vad_min*(1-branch_z[i])) <= p[f_idx] <= -b*(t[f_bus] - t[t_bus] + vad_max*(1-branch_z[i]))`"
@@ -154,17 +150,17 @@ end
 ""
 function variable_active_branch_flow(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: DCPlosslessForm
     if bounded
-        flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
+        flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
         p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_p",
             lower_bound = flow_lb[l],
             upper_bound = flow_ub[l],
-            start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
+            start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     else
         p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_p",
-            start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
+            start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     end
 
@@ -187,7 +183,7 @@ function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw
         [(l,i,j) in ref(pm, nw, :ne_arcs_from)], base_name="$(nw)_$(cnd)_p_ne",
         lower_bound = -ref(pm, nw, :ne_branch, l, "rate_a", cnd),
         upper_bound =  ref(pm, nw, :ne_branch, l, "rate_a", cnd),
-        start = getval(ref(pm, nw, :ne_branch, l), "p_start", cnd)
+        start = comp_start_value(ref(pm, nw, :ne_branch, l), "p_start", cnd)
     )
 
     # this explicit type erasure is necessary
@@ -197,7 +193,7 @@ function variable_active_branch_flow_ne(pm::GenericPowerModel{T}; nw::Int=pm.cnw
 end
 
 ""
-function constraint_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
+function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b) where T <: DCPlosslessForm
     pg = var(pm, n, c, :pg)
 
     JuMP.@constraint(pm.model, sum(pg[g] for g in comp_gen_ids) == sum(pd for (i,pd) in values(comp_pd)) + sum(gs*1.0^2 for (i,gs) in values(comp_gs)))
@@ -206,9 +202,9 @@ end
 
 "nothing to do, this model is symetric"
 function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t_idx, rate_a) where T <: DCPlosslessForm
-    # l,i,j = t_idx
-    # p_fr = var(pm, n, c, :p, (l,j,i))
-    # con(pm, n, c, :sm_to)[l] = JuMP.UpperBoundRef(p_fr)
+    l,i,j = t_idx
+    p_fr = var(pm, n, c, :p, (l,j,i))
+    con(pm, n, c, :sm_to)[l] = JuMP.UpperBoundRef(p_fr)
 end
 
 "nothing to do, this model is symetric"
@@ -256,11 +252,11 @@ end
 function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: NFAForm
 end
 
-""
-function add_bus_voltage_setpoint(sol, pm::GenericPowerModel{T}) where T <: NFAForm
-    add_setpoint_fixed(sol, pm, "bus", "vm")
-    add_setpoint_fixed(sol, pm, "bus", "va")
-end
+#""
+#function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: NFAForm
+#    add_setpoint_fixed!(sol, pm, "bus", "vm")
+#    add_setpoint_fixed!(sol, pm, "bus", "va")
+#end
 
 
 

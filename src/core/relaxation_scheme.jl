@@ -1,5 +1,18 @@
 
-"In the literature this constraints are called the Lifted Nonlinear Cuts (LNCs)"
+"""
+A valid inequality for the product of two complex variables with magnitude and
+angle difference bounds.
+
+In the literature this constraints are called the Lifted Nonlinear Cuts (LNCs).
+
+@misc{1512.04644,
+    Author = {Carleton Coffrin and Hassan Hijazi and Pascal Van Hentenryck},
+    Title = {Strengthening the SDP Relaxation of AC Power Flows with Convex
+        Envelopes, Bound Tightening, and Lifted Nonlinear Cuts},
+    Year = {2015},
+    Eprint = {arXiv:1512.04644},
+}
+"""
 function cut_complex_product_and_angle_difference(m, wf, wt, wr, wi, angmin, angmax)
     @assert angmin >= -pi/2 && angmin <= pi/2
     @assert angmax >= -pi/2 && angmax <= pi/2
@@ -21,6 +34,41 @@ function cut_complex_product_and_angle_difference(m, wf, wt, wr, wi, angmin, ang
 
     JuMP.@constraint(m, sf*st*(cos(phi)*wr + sin(phi)*wi) - vt_ub*cos(d)*st*wf - vf_ub*cos(d)*sf*wt >=  vf_ub*vt_ub*cos(d)*(vf_lb*vt_lb - vf_ub*vt_ub))
     JuMP.@constraint(m, sf*st*(cos(phi)*wr + sin(phi)*wi) - vt_lb*cos(d)*st*wf - vf_lb*cos(d)*sf*wt >= -vf_lb*vt_lb*cos(d)*(vf_lb*vt_lb - vf_ub*vt_ub))
+end
+
+
+"""
+A valid inequality for when the same product of two variables occurs in two
+different higher order products (e.g. trilinear terms).
+
+@misc{1809.04565,
+    Author = {Kaarthik Sundar and Harsha Nagarajan and Sidhant Misra and
+        Mowen Lu and Carleton Coffrin and Russell Bent},
+    Title = {Optimization-Based Bound Tightening using a Strengthened
+        QC-Relaxation of the Optimal Power Flow Problem},
+    Year = {2018},
+    Eprint = {arXiv:1809.04565},
+}
+"""
+function cut_product_replicates(m, x, y, lambda_a, lambda_b)
+    x_ub = JuMP.upper_bound(x)
+    x_lb = JuMP.lower_bound(x)
+    y_ub = JuMP.upper_bound(y)
+    y_lb = JuMP.lower_bound(y)
+
+    @assert length(lambda_a) == 8
+    @assert length(lambda_b) == 8
+
+    val = [x_lb * y_lb
+           x_lb * y_lb
+           x_lb * y_ub
+           x_lb * y_ub
+           x_ub * y_lb
+           x_ub * y_lb
+           x_ub * y_ub
+           x_ub * y_ub]
+
+    JuMP.@constraint(m, sum(lambda_a[i]*val[i] - lambda_b[i]*val[i] for i in 1:8) == 0)
 end
 
 

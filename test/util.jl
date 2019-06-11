@@ -4,12 +4,12 @@
         result_ac = run_ac_opf("../test/data/matpower/case3.m", ipopt_solver);
         upper_bound = result_ac["objective"]
 
-        data, stats = run_obbt_opf("../test/data/matpower/case3.m", ipopt_solver, model_constructor=QCWRTriPowerModel);
+        data, stats = run_obbt_opf!("../test/data/matpower/case3.m", ipopt_solver, model_constructor=QCWRTriPowerModel);
         @test isapprox(stats["final_relaxation_objective"], 5901.96; atol=1e0)
         @test isnan(stats["final_rel_gap_from_ub"])
         @test stats["iteration_count"] == 5
 
-        data, stats = run_obbt_opf("../test/data/matpower/case3.m", ipopt_solver, 
+        data, stats = run_obbt_opf!("../test/data/matpower/case3.m", ipopt_solver, 
             model_constructor = QCWRTriPowerModel,
             upper_bound = upper_bound, 
             upper_bound_constraint = true, 
@@ -26,12 +26,12 @@ end
         result_ac = run_ac_opf("../test/data/matpower/case3.m", ipopt_solver);
         upper_bound = result_ac["objective"]
 
-        data, stats = run_obbt_opf("../test/data/matpower/case3.m", ipopt_solver, model_constructor=QCWRPowerModel);
+        data, stats = run_obbt_opf!("../test/data/matpower/case3.m", ipopt_solver, model_constructor=QCWRPowerModel);
         @test isapprox(stats["final_relaxation_objective"], 5900.04; atol=1e0)
         @test isnan(stats["final_rel_gap_from_ub"])
         @test stats["iteration_count"] == 5
 
-        data, stats = run_obbt_opf("../test/data/matpower/case3.m", ipopt_solver, 
+        data, stats = run_obbt_opf!("../test/data/matpower/case3.m", ipopt_solver, 
             model_constructor = QCWRPowerModel,
             upper_bound = upper_bound, 
             upper_bound_constraint = true, 
@@ -50,7 +50,7 @@ end
         result_ac = run_ac_opf(data, ipopt_solver);
         upper_bound = result_ac["objective"]
 
-        data, stats = run_obbt_opf(data, ipopt_solver,
+        data, stats = run_obbt_opf!(data, ipopt_solver,
             model_constructor=QCWRPowerModel,
             upper_bound = upper_bound,
             upper_bound_constraint = true);

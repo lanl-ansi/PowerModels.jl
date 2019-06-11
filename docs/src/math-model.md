@@ -74,7 +74,7 @@ Note that for clarity of this presentation some model variants that PowerModels 
 - Eq. $\eqref{eq_ref_bus}$ - `constraint_theta_ref` in `constraint_template.jl`
 - Eq. $\eqref{eq_gen_bounds}$ - bounds of `variable_generation` in `variable.jl`
 - Eq. $\eqref{eq_voltage_bounds}$ - bounds of `variable_voltage` in `variable.jl`
-- Eq. $\eqref{eq_kcl_shunt}$ - `constraint_kcl_shunt` in `constraint_template.jl`
+- Eq. $\eqref{eq_kcl_shunt}$ - `constraint_power_balance_shunt` in `constraint_template.jl`
 - Eq. $\eqref{eq_power_from}$ - `constraint_ohms_yt_from` in `constraint_template.jl`
 - Eq. $\eqref{eq_power_to}$ - `constraint_ohms_yt_to` in `constraint_template.jl`
 - Eq. $\eqref{eq_thermal_limit}$ - `constraint_thermal_limit_from` and `constraint_thermal_limit_to` in `constraint_template.jl`
@@ -122,5 +122,5 @@ Note that constraints $\eqref{eq_line_losses} - \eqref{eq_ohms_bfm}$ replace $\e
 - Eq. $\eqref{var_branch_current}$ - `variable_branch_current` in `variable.jl`
 - Eq. $\eqref{eq_line_losses}$ - `constraint_flow_losses` in `constraint_template.jl`
 - Eq. $\eqref{eq_series_power_flow}$ - implicit, substituted out before implementation
-- Eq. $\eqref{eq_complex_power_definition}$ - `constraint_branch_current` in `constraint_template.jl`
+- Eq. $\eqref{eq_complex_power_definition}$ - `constraint_model_voltage` in `constraint_template.jl`
 - Eq. $\eqref{eq_ohms_bfm}$ - `constraint_voltage_magnitude_difference` in `constraint_template.jl`

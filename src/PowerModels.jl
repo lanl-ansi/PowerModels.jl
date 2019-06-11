@@ -8,19 +8,18 @@ import JuMP
 import Memento
 
 import MathOptInterface
-const MOI = MathOptInterface
-const MOIU = MathOptInterface.Utilities
+const _MOI = MathOptInterface
 
 # Create our module level logger (this will get precompiled)
-const LOGGER = Memento.getlogger(@__MODULE__)
+const _LOGGER = Memento.getlogger(@__MODULE__)
 
 # Register the module level logger at runtime so that folks can access the logger via `getlogger(PowerModels)`
-# NOTE: If this line is not included then the precompiled `PowerModels.LOGGER` won't be registered at runtime.
-__init__() = Memento.register(LOGGER)
+# NOTE: If this line is not included then the precompiled `PowerModels._LOGGER` won't be registered at runtime.
+__init__() = Memento.register(_LOGGER)
 
 "Suppresses information and warning messages output by PowerModels, for fine grained control use the Memento package"
 function silence()
-    Memento.info(LOGGER, "Suppressing information and warning messages for the rest of this session.  Use the Memento package for more fine-grained control of logging.")
+    Memento.info(_LOGGER, "Suppressing information and warning messages for the rest of this session.  Use the Memento package for more fine-grained control of logging.")
     Memento.setlevel!(Memento.getlogger(InfrastructureModels), "error")
     Memento.setlevel!(Memento.getlogger(PowerModels), "error")
 end
@@ -35,7 +34,6 @@ include("io/common.jl")
 include("io/pti.jl")
 include("io/psse.jl")
 
-include("core/export.jl")
 include("core/data.jl")
 include("core/ref.jl")
 include("core/base.jl")
@@ -71,5 +69,9 @@ include("prob/tnep.jl")
 include("prob/test.jl")
 
 include("util/obbt.jl")
+
+
+# this must come last to support automated export
+include("core/export.jl")
 
 end

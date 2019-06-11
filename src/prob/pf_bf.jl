@@ -1,11 +1,6 @@
-export run_pf_bf, run_ac_pf_bf, run_dc_pf_bf
-
 ""
 function run_pf_bf(file, model_constructor, optimizer; kwargs...)
-    if model_constructor != SOCBFPowerModel
-        Memento.error(LOGGER, "The problem type pf_bf at the moment only supports the SOCBFForm formulation")
-    end
-    return run_generic_model(file, model_constructor, optimizer, post_pf_bf; kwargs...)
+    return run_model(file, model_constructor, optimizer, post_pf_bf; kwargs...)
 end
 
 ""
@@ -16,6 +11,8 @@ function post_pf_bf(pm::GenericPowerModel)
     variable_branch_current(pm, bounded = false)
     variable_dcline_flow(pm, bounded = false)
 
+    constraint_model_current(pm)
+
     for (i,bus) in ref(pm, :ref_buses)
         @assert bus["bus_type"] == 3
         constraint_theta_ref(pm, i)
@@ -23,7 +20,7 @@ function post_pf_bf(pm::GenericPowerModel)
     end
 
     for (i,bus) in ref(pm, :bus)
-        constraint_kcl_shunt(pm, i)
+        constraint_power_balance_shunt(pm, i)
 
         # PV Bus Constraints
         if length(ref(pm, :bus_gens, i)) > 0 && !(i in ids(pm,:ref_buses))
@@ -40,7 +37,6 @@ function post_pf_bf(pm::GenericPowerModel)
     for i in ids(pm, :branch)
         constraint_flow_losses(pm, i)
         constraint_voltage_magnitude_difference(pm, i)
-        constraint_branch_current(pm, i)
     end
 
     for (i,dcline) in ref(pm, :dcline)

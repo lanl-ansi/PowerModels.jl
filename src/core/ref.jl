@@ -1,7 +1,7 @@
 # tools for working with a PowerModels ref dict structures
 
 
-"compute bus pair level data, can be run on data or ref datastructures"
+"compute bus pair level data, can be run on data or ref data structures"
 function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcutor)
     bus_lookup = Dict(bus["index"] => bus for (i,bus) in buses if bus["bus_type"] != 4)
 
@@ -64,8 +64,8 @@ function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcuto
 end
 
 
-"computes flow bounds on branches"
-function calc_branch_flow_bounds(branches, buses, conductor::Int=1)
+"computes flow bounds on branches from ref data"
+function ref_calc_branch_flow_bounds(branches, buses, conductor::Int=1)
     flow_lb = Dict() 
     flow_ub = Dict()
 
@@ -93,8 +93,8 @@ function calc_branch_flow_bounds(branches, buses, conductor::Int=1)
 end
 
 
-""
-function calc_voltage_product_bounds(buspairs, conductor::Int=1)
+"computes voltage product bounds from ref data"
+function ref_calc_voltage_product_bounds(buspairs, conductor::Int=1)
     wr_min = Dict((bp, -Inf) for bp in keys(buspairs))
     wr_max = Dict((bp,  Inf) for bp in keys(buspairs))
     wi_min = Dict((bp, -Inf) for bp in keys(buspairs))
@@ -102,7 +102,7 @@ function calc_voltage_product_bounds(buspairs, conductor::Int=1)
 
     buspairs_conductor = Dict()
     for (bp, buspair) in buspairs
-        buspairs_conductor[bp] = Dict((k, getmcv(v, conductor)) for (k,v) in buspair)
+        buspairs_conductor[bp] = Dict((k, conductor_value(v, conductor)) for (k,v) in buspair)
     end
 
     for (bp, buspair) in buspairs_conductor
@@ -134,7 +134,7 @@ end
 
 
 "computes storage bounds"
-function calc_storage_injection_bounds(storage, buses, conductor::Int=1)
+function ref_calc_storage_injection_bounds(storage, buses, conductor::Int=1)
     injection_lb = Dict() 
     injection_ub = Dict()
 

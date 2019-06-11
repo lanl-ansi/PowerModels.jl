@@ -1,14 +1,5 @@
 # stuff that is universal to all power models
 
-export
-    GenericPowerModel,
-    optimize!,
-    run_generic_model, build_generic_model, solve_generic_model,
-    ismultinetwork, nw_ids, nws,
-    ismulticonductor, conductor_ids,
-    ids, ref, var, con, ext
-
-
 "root of the power formulation type hierarchy"
 abstract type AbstractPowerFormulation end
 
@@ -67,7 +58,7 @@ function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Sym
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
 
-    ref = build_generic_ref(data) # refrence data
+    ref = _ref_initialize(data) # refrence data
 
     var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
     con = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
@@ -163,97 +154,98 @@ con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) =
 
 
 function JuMP.optimize!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory)
-    if pm.model.moi_backend.state == MOIU.NO_OPTIMIZER
+    if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
         _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
     else
-        Memento.warn(LOGGER, "Model already contains optimizer factory, cannot use optimizer specified in `solve_generic_model`")
+        Memento.warn(_LOGGER, "Model already contains optimizer factory, cannot use optimizer specified in `solve_generic_model`")
         _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
     end
 
     try
-        solve_time = MOI.get(pm.model, MOI.SolveTime())
+        solve_time = _MOI.get(pm.model, _MOI.SolveTime())
     catch
-        Memento.warn(LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
+        Memento.warn(_LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
     end
 
     return solve_time
 end
 
 ""
-function run_generic_model(file::String, model_constructor, optimizer, post_method; kwargs...)
+function run_model(file::String, model_constructor, optimizer, post_method; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_generic_model(data, model_constructor, optimizer, post_method; kwargs...)
+    return run_model(data, model_constructor, optimizer, post_method; kwargs...)
 end
 
 ""
-function run_generic_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; ref_extensions=[], solution_builder=get_solution, kwargs...)
+function run_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; ref_extensions=[], solution_builder=solution_opf!, kwargs...)
     #start_time = time()
-    pm = build_generic_model(data, model_constructor, post_method; ref_extensions=ref_extensions, kwargs...)
-    #Memento.info(LOGGER, "pm model build time: $(time() - start_time)")
+    pm = build_model(data, model_constructor, post_method; ref_extensions=ref_extensions, kwargs...)
+    #Memento.debug(_LOGGER, "pm model build time: $(time() - start_time)")
 
     #start_time = time()
-    solution = solve_generic_model(pm, optimizer; solution_builder = solution_builder)
-    #Memento.info(LOGGER, "pm model solve and solution time: $(time() - start_time)")
+    result = optimize_model!(pm, optimizer; solution_builder=solution_builder)
+    #Memento.debug(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
 
-    return solution
+    return result
 end
 
 ""
-function build_generic_model(file::String,  model_constructor, post_method; kwargs...)
+function build_model(file::String,  model_constructor, post_method; kwargs...)
     data = PowerModels.parse_file(file)
-    return build_generic_model(data, model_constructor, post_method; kwargs...)
+    return build_model(data, model_constructor, post_method; kwargs...)
 end
 
 ""
-function build_generic_model(data::Dict{String,<:Any}, model_constructor, post_method; ref_extensions=[], multinetwork=false, multiconductor=false, kwargs...)
+function build_model(data::Dict{String,<:Any}, model_constructor, post_method; ref_extensions=[], multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
 
-    #start_time = time()
+    start_time = time()
     pm = model_constructor(data; kwargs...)
-    #Memento.info(LOGGER, "pm model_constructor time: $(time() - start_time)")
+    Memento.debug(_LOGGER, "pm model_constructor time: $(time() - start_time)")
 
     if !multinetwork && ismultinetwork(pm)
-        Memento.error(LOGGER, "attempted to build a single-network model with multi-network data")
+        Memento.error(_LOGGER, "attempted to build a single-network model with multi-network data")
     end
 
     if !multiconductor && ismulticonductor(pm)
-        Memento.error(LOGGER, "attempted to build a single-conductor model with multi-conductor data")
+        Memento.error(_LOGGER, "attempted to build a single-conductor model with multi-conductor data")
     end
 
-    #start_time = time()
-    core_ref!(pm)
+    start_time = time()
+    ref_add_core!(pm)
     for ref_ext in ref_extensions
         ref_ext(pm)
     end
-    #Memento.info(LOGGER, "pm build ref time: $(time() - start_time)")
+    Memento.debug(_LOGGER, "pm build ref time: $(time() - start_time)")
 
-    #start_time = time()
+    start_time = time()
     post_method(pm)
-    #Memento.info(LOGGER, "pm post_method time: $(time() - start_time)")
+    Memento.debug(_LOGGER, "pm post_method time: $(time() - start_time)")
 
     return pm
 end
 
 
 ""
-function solve_generic_model(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = get_solution)
-
-    #start_time = time()
+function optimize_model!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = solution_opf!)
+    start_time = time()
     solve_time = JuMP.optimize!(pm, optimizer)
-    #Memento.info(LOGGER, "JuMP model optimize time: $(time() - start_time)")
+    Memento.debug(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
 
-    #start_time = time()
-    solution = build_solution(pm, solve_time; solution_builder = solution_builder)
-    #Memento.info(LOGGER, "PowerModels solution build time: $(time() - start_time)")
+    start_time = time()
+    result = build_solution(pm, solve_time; solution_builder = solution_builder)
+    Memento.debug(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
 
-    return solution
+    pm.solution = result["solution"]
+
+    return result
 end
 
 
 "used for building ref without the need to build a GenericPowerModel"
 function build_ref(data::Dict{String,<:Any}; ref_extensions=[])
-    ref = build_generic_ref(data)
-    core_ref!(ref[:nw])
+    ref = _ref_initialize(data)
+    _ref_add_core!(ref[:nw])
     for ref_ext in ref_extensions
         ref_ext(pm)
     end
@@ -261,7 +253,7 @@ function build_ref(data::Dict{String,<:Any}; ref_extensions=[])
 end
 
 
-function build_generic_ref(data::Dict{String,<:Any})
+function _ref_initialize(data::Dict{String,<:Any})
     refs = Dict{Symbol,Any}()
 
     nws = refs[:nw] = Dict{Int,Any}()
@@ -325,11 +317,11 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 
 * `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`.
 """
-function core_ref!(pm::GenericPowerModel)
-    core_ref!(pm.ref[:nw])
+function ref_add_core!(pm::GenericPowerModel)
+    _ref_add_core!(pm.ref[:nw])
 end
 
-function core_ref!(nw_refs::Dict)
+function _ref_add_core!(nw_refs::Dict)
     for (nw, ref) in nw_refs
 
         ### filter out inactive components ###
@@ -401,7 +393,7 @@ function core_ref!(nw_refs::Dict)
         ref[:ref_buses] = ref_buses
 
         if length(ref_buses) > 1
-            Memento.warn(LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
+            Memento.warn(_LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
         end
 
 
@@ -411,3 +403,18 @@ function core_ref!(nw_refs::Dict)
         end
     end
 end
+
+
+"checks of any of the given keys are missing from the given dict"
+function _check_missing_keys(dict, keys, type)
+    missing = []
+    for key in keys
+        if !haskey(dict, key)
+            push!(missing, key)
+        end
+    end
+    if length(missing) > 0
+        error(_LOGGER, "the formulation $(type) requires the following varible(s) $(keys) but the $(missing) variable(s) were not found in the model")
+    end
+end
+
