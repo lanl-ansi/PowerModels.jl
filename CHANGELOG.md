@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fixed bug in add_setpoint! for multiconductor networks
 
 ### v0.12.0
 - Significant updates to function naming details in #538 (#268,#454,#499,#533) (breaking)

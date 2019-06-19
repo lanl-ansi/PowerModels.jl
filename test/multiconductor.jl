@@ -150,6 +150,24 @@ end
             end
         end
 
+        @testset "3-bus 3-conductor unbalanced case" begin
+            # TESTS for add_setpoint! bug on multiconductor systems
+            mp_data = build_mc_data!("../test/data/matpower/case3.m", conductors=3)
+            for load in values(mp_data["load"])
+                load["pd"][2] /= 2
+                load["pd"][3] /= 3
+            end
+            result = PowerModels._run_mc_opf(mp_data, ACPPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 17826.8; atol = 1e-1)
+
+            for (c, pg, va) in zip(1:mp_data["conductors"], [1.70667, 0.53344, 0.21976], [0.02996, 0.18645, 0.19194])
+                @test isapprox(result["solution"]["gen"]["1"]["pg"][c], pg; atol = 1e-3)
+                @test isapprox(result["solution"]["bus"]["2"]["va"][c], va; atol = 1e-3)
+            end
+        end
+
         @testset "3-bus 3-conductor case with theta_ref=pi" begin
             mp_data = build_mc_data!("../test/data/matpower/case3.m", conductors=3)
             pm = PowerModels.build_model(mp_data, ACRPowerModel, PowerModels._post_mc_opf, multiconductor=true)
