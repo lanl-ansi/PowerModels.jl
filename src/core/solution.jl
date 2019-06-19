@@ -160,21 +160,25 @@ function add_setpoint!(
     status_name = "status",
     inactive_status_value = 0,
 )
+
     if conductorless
         has_variable_symbol = haskey(var(pm, pm.cnw), variable_symbol)
     else
         has_variable_symbol = haskey(var(pm, pm.cnw, pm.ccnd), variable_symbol)
     end
 
-    if !has_variable_symbol
-        add_setpoint_fixed!(sol, pm, dict_name, param_name; index_name=index_name, default_value=default_value, conductorless=conductorless)
-        return
-    else
+    variables = []
+    if has_variable_symbol
         if conductorless
             variables = var(pm, pm.cnw, variable_symbol)
         else
             variables = var(pm, pm.cnw, pm.ccnd, variable_symbol)
         end
+    end
+
+    if !has_variable_symbol || length(variables) == 0
+        add_setpoint_fixed!(sol, pm, dict_name, param_name; index_name=index_name, default_value=default_value, conductorless=conductorless)
+        return
     end
 
     if InfrastructureModels.ismultinetwork(pm.data)
@@ -192,15 +196,21 @@ function add_setpoint!(
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
 
-        if conductorless || !mc
+        if conductorless
             sol_item[param_name] = default_value(item)
 
             if item[status_name] != inactive_status_value
                 var_id = var_key(idx, item)
-                #variables = var(pm, variable_symbol, cnd=conductor)
-                #if var_id in keys(variables)
+                variables = var(pm, pm.cnw, variable_symbol)
                 sol_item[param_name] = scale(JuMP.value(variables[var_id]), item, 1)
-                #end
+            end
+        elseif !mc
+            sol_item[param_name] = default_value(item)
+
+            if item[status_name] != inactive_status_value
+                var_id = var_key(idx, item)
+                variables = var(pm, variable_symbol)
+                sol_item[param_name] = scale(JuMP.value(variables[var_id]), item, 1)
             end
         else
             num_conductors = length(conductor_ids(pm))
@@ -210,16 +220,14 @@ function add_setpoint!(
             if item[status_name] != inactive_status_value
                 for conductor in conductor_ids(pm)
                     var_id = var_key(idx, item)
-                    #variables = var(pm, variable_symbol, cnd=conductor)
-                    #if var_id in keys(variables)
+                    variables = var(pm, variable_symbol, cnd=conductor)
                     sol_item[param_name][cnd_idx] = scale(JuMP.value(variables[var_id]), item, conductor)
-                    #end
                     cnd_idx += 1
                 end
             end
         end
-
     end
+
 end
 
 
@@ -355,15 +363,21 @@ function add_dual!(
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
 
-        if conductorless || !mc
+        if conductorless
             sol_item[param_name] = default_value(item)
 
             if item[status_name] != inactive_status_value
                 con_id = con_key(idx, item)
-                #constraints = con(pm, con_symbol)
-                #if con_id in keys(constraints)
+                constraints = con(pm, pm.cnw, con_symbol)
+                sol_item[param_name] = scale(JuMP.dual(constraints[var_id]), item, 1)
+            end
+        elseif !mc
+            sol_item[param_name] = default_value(item)
+
+            if item[status_name] != inactive_status_value
+                con_id = con_key(idx, item)
+                constraints = con(pm, con_symbol)
                 sol_item[param_name] = scale(JuMP.dual(constraints[con_id]), item, 1)
-                #end
             end
         else
             num_conductors = length(conductor_ids(pm))
@@ -373,10 +387,8 @@ function add_dual!(
             if item[status_name] != inactive_status_value
                 for conductor in conductor_ids(pm)
                     con_id = con_key(idx, item)
-                    #constraints = con(pm, con_symbol, cnd=conductor)
-                    #if con_id in keys(constraints)
+                    constraints = con(pm, con_symbol, cnd=conductor)
                     sol_item[param_name][cnd_idx] = scale(JuMP.dual(constraints[con_id]), item, conductor)
-                    #Memento.info(_LOGGER, "No constraint: $(con_symbol), $(idx)")
                     cnd_idx += 1
                 end
             end
