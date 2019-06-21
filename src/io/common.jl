@@ -42,6 +42,7 @@ function correct_network_data!(data::Dict{String,<:Any})
 
     check_conductors(data)
     check_connectivity(data)
+    check_status(data)
     check_reference_bus(data)
 
     make_per_unit!(data)
