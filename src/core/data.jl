@@ -1201,7 +1201,7 @@ function check_connectivity(data::Dict{String,<:Any})
         Memento.error(_LOGGER, "check_connectivity does not yet support multinetwork data")
     end
 
-    bus_ids = Set([bus["index"] for (i,bus) in data["bus"]])
+    bus_ids = Set(bus["index"] for (i,bus) in data["bus"])
     @assert(length(bus_ids) == length(data["bus"])) # if this is not true something very bad is going on
 
     for (i, load) in data["load"]
@@ -1245,6 +1245,60 @@ function check_connectivity(data::Dict{String,<:Any})
 
         if !(dcline["t_bus"] in bus_ids)
             Memento.error(_LOGGER, "to bus $(dcline["t_bus"]) in dcline $(i) is not defined")
+        end
+    end
+end
+
+
+"checks that active components are not connected to inactive buses, otherwise prints warnings"
+function check_status(data::Dict{String,<:Any})
+    if InfrastructureModels.ismultinetwork(data)
+        Memento.error(_LOGGER, "check_status does not yet support multinetwork data")
+    end
+
+    active_bus_ids = Set(bus["index"] for (i,bus) in data["bus"] if bus["bus_type"] != 4)
+
+    for (i, load) in data["load"]
+        if load["status"] != 0 && !(load["load_bus"] in active_bus_ids)
+            Memento.warn(_LOGGER, "active load $(i) is connected to inactive bus $(load["load_bus"])")
+        end
+    end
+
+    for (i, shunt) in data["shunt"]
+        if shunt["status"] != 0 && !(shunt["shunt_bus"] in active_bus_ids)
+            Memento.warn(_LOGGER, "active shunt $(i) is connected to inactive bus $(shunt["shunt_bus"])")
+        end
+    end
+
+    for (i, gen) in data["gen"]
+        if gen["gen_status"] != 0 && !(gen["gen_bus"] in active_bus_ids)
+            Memento.warn(_LOGGER, "active generator $(i) is connected to inactive bus $(gen["gen_bus"])")
+        end
+    end
+
+    for (i, strg) in data["storage"]
+        if strg["status"] != 0 && !(strg["storage_bus"] in active_bus_ids)
+            Memento.warn(_LOGGER, "active storage unit $(i) is connected to inactive bus $(strg["storage_bus"])")
+        end
+    end
+
+    for (i, branch) in data["branch"]
+        if branch["br_status"] != 0 && !(branch["f_bus"] in active_bus_ids)
+            Memento.warn(_LOGGER, "active branch $(i) is connected to inactive bus $(branch["f_bus"])")
+        end
+
+        if branch["br_status"] != 0 && !(branch["t_bus"] in active_bus_ids)
+            Memento.warn(_LOGGER, "active branch $(i) is connected to inactive bus $(branch["t_bus"])")
+        end
+    end
+
+    for (i, dcline) in data["dcline"]
+        if dcline["br_status"] != 0 && !(dcline["f_bus"] in active_bus_ids)
+            Memento.warn(_LOGGER, "active dcline $(i) is connected to inactive bus $(dcline["f_bus"])")
+        end
+
+        if dcline["br_status"] != 0 && !(dcline["t_bus"] in active_bus_ids)
+            Memento.warn(_LOGGER, "active dcline $(i) is connected to inactive bus $(dcline["t_bus"])")
         end
     end
 end
