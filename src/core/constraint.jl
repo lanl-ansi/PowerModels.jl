@@ -181,6 +181,19 @@ function constraint_storage_complementarity(pm::GenericPowerModel, n::Int, i)
 end
 
 ""
+function constraint_storage_complementarity_mixed_int(pm::GenericPowerModel, n::Int, i, charge_lb, charge_ub, discharge_lb, discharge_ub)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+    sc_on = var(pm, n, :sc_on, i)
+    sd_on = var(pm, n, :sd_on, i)
+    JuMP.@constraint(pm.model, sc_on + sd_on == 1)
+    JuMP.@constraint(pm.model, sc_on*charge_lb <= sc)
+    JuMP.@constraint(pm.model, sc_on*charge_ub >= sc)
+    JuMP.@constraint(pm.model, sd_on*discharge_lb <= sd)
+    JuMP.@constraint(pm.model, sd_on*discharge_ub >= sd)
+end
+
+""
 function constraint_storage_loss(pm::GenericPowerModel, n::Int, i, bus, r, x, standby_loss)
     vm = var(pm, n, pm.ccnd, :vm, bus)
     ps = var(pm, n, pm.ccnd, :ps, i)
@@ -188,4 +201,15 @@ function constraint_storage_loss(pm::GenericPowerModel, n::Int, i, bus, r, x, st
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
     JuMP.@NLconstraint(pm.model, ps + (sd - sc) == standby_loss + r*(ps^2 + qs^2)/vm^2)
+end
+
+function constraint_storage_on_off(pm::GenericPowerModel, n::Int, i, charge_lb, charge_ub, discharge_lb, discharge_ub)
+    z_storage = var(pm, n, :z_storage, i)
+    sc_var = var(pm, n, :sc, i)
+    sd_var = var(pm, n, :sd, i)
+
+    JuMP.@constraint(pm.model, sc_var >= z_storage*charge_lb)
+    JuMP.@constraint(pm.model, sc_var <= z_storage*charge_ub)
+    JuMP.@constraint(pm.model, sd_var >= z_storage*discharge_lb)
+    JuMP.@constraint(pm.model, sd_var <= z_storage*discharge_ub)
 end

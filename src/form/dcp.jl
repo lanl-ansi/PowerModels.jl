@@ -137,6 +137,13 @@ function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int
     JuMP.@constraint(pm.model, va_fr - va_to >= angmin*z + vad_min*(1-z))
 end
 
+# Should this only be for DCPLosslessForm or general DC forms?
+function constraint_storage_loss(pm::GenericPowerModel{T}, n::Int, i, bus, r, x, standby_loss) where T <: AbstractDCPForm
+    ps = var(pm, n, pm.ccnd, :ps, i)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+    JuMP.@constraint(pm.model, ps == sc - sd)
+end
 
 
 

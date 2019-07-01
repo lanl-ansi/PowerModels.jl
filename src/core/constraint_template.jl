@@ -663,6 +663,17 @@ function constraint_storage_complementarity(pm::GenericPowerModel, i::Int; nw::I
 end
 
 ""
+function constraint_storage_complementarity_mixed_int(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+storage = ref(pm, nw, :storage, i)
+charge_lb = 0
+charge_ub = storage["charge_rating"]
+discharge_lb = 0
+discharge_ub = storage["discharge_rating"]
+constraint_storage_complementarity_mixed_int(pm, nw, i, charge_lb, charge_ub, discharge_lb, discharge_ub)
+end
+
+
+""
 function constraint_storage_loss(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     storage = ref(pm, nw, :storage, i)
 
@@ -697,6 +708,15 @@ function constraint_storage_state(pm::GenericPowerModel, i::Int, nw_1::Int, nw_2
     constraint_storage_state(pm, nw_1, nw_2, i, storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
 end
 
+""
+function constraint_storage_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
+    storage = ref(pm, nw, :storage, i)
+    charge_lb = 0
+    charge_ub = storage["charge_rating"]
+    discharge_lb = 0
+    discharge_ub = storage["discharge_rating"]
+    constraint_storage_on_off(pm, nw, i, charge_lb, charge_ub, discharge_lb, discharge_ub)
+end
 
 ### DC LINES ###
 
