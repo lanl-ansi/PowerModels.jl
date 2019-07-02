@@ -711,11 +711,10 @@ end
 ""
 function constraint_storage_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
     storage = ref(pm, nw, :storage, i)
-    charge_lb = 0
     charge_ub = storage["charge_rating"]
-    discharge_lb = 0
     discharge_ub = storage["discharge_rating"]
-    constraint_storage_on_off(pm, nw, i, charge_lb, charge_ub, discharge_lb, discharge_ub)
+
+    constraint_storage_on_off(pm, nw, i, charge_ub, discharge_ub)
 end
 
 ### DC LINES ###
