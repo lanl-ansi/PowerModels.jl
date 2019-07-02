@@ -135,12 +135,12 @@ end
 
 ""
 function add_setpoint_branch_status!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "branch", "br_status", :branch_z, status_name="br_status", default_value = (item) -> 1)
+    add_setpoint!(sol, pm, "branch", "br_status", :branch_z, status_name="br_status", default_value = (item) -> item["br_status"]*1.0)
 end
 
 ""
 function add_setpoint_dcline_status!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "dcline", "br_status", :dcline_z, status_name="br_status", default_value = (item) -> 1)
+    add_setpoint!(sol, pm, "dcline", "br_status", :dcline_z, status_name="br_status", default_value = (item) -> item["br_status"]*1.0)
 end
 
 
