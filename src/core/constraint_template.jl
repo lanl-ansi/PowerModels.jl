@@ -663,13 +663,12 @@ function constraint_storage_complementarity(pm::GenericPowerModel, i::Int; nw::I
 end
 
 ""
-function constraint_storage_complementarity_mixed_int(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_storage_complementarity_mi(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
 storage = ref(pm, nw, :storage, i)
-charge_lb = 0
 charge_ub = storage["charge_rating"]
-discharge_lb = 0
 discharge_ub = storage["discharge_rating"]
-constraint_storage_complementarity_mixed_int(pm, nw, i, charge_lb, charge_ub, discharge_lb, discharge_ub)
+
+constraint_storage_complementarity_mi(pm, nw, i, charge_ub, discharge_ub)
 end
 
 
@@ -709,12 +708,18 @@ function constraint_storage_state(pm::GenericPowerModel, i::Int, nw_1::Int, nw_2
 end
 
 ""
-function constraint_storage_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_storage_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     storage = ref(pm, nw, :storage, i)
     charge_ub = storage["charge_rating"]
     discharge_ub = storage["discharge_rating"]
+    
+    inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
+    pmin = inj_lb
+    pmax = inj_ub
+    qmin = max(inj_lb[i], ref(pm, nw, :storage, i, "qmin", cnd))
+    qmax = min(inj_ub[i], ref(pm, nw, :storage, i, "qmax", cnd))
 
-    constraint_storage_on_off(pm, nw, i, charge_ub, discharge_ub)
+    constraint_storage_on_off(pm, nw, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
 end
 
 ### DC LINES ###

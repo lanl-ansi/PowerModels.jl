@@ -196,7 +196,7 @@ function constraint_storage_complementarity(pm::GenericPowerModel, n::Int, i)
 end
 
 ""
-function constraint_storage_complementarity_mixed_int(pm::GenericPowerModel, n::Int, i, charge_ub, discharge_ub)
+function constraint_storage_complementarity_mi(pm::GenericPowerModel, n::Int, i, charge_ub, discharge_ub)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
     sc_on = var(pm, n, :sc_on, i)
@@ -214,17 +214,40 @@ function constraint_storage_loss(pm::GenericPowerModel, n::Int, i, bus, r, x, st
     qs = var(pm, n, pm.ccnd, :qs, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
-    
+
     JuMP.@NLconstraint(pm.model, ps + (sd - sc) == standby_loss + r*(ps^2 + qs^2)/vm^2)
 end
 
-function constraint_storage_on_off(pm::GenericPowerModel, n::Int, i, charge_lb, charge_ub, discharge_lb, discharge_ub)
+""
+function constraint_storage_on_off(pm::GenericPowerModel, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
     z_storage = var(pm, n, :z_storage, i)
-    sc_var = var(pm, n, :sc, i)
-    sd_var = var(pm, n, :sd, i)
+    ps = var(pm, n, pm.ccnd, :ps, i)
+    qs = var(pm, n, pm.ccnd, :qs, i)
 
-    JuMP.@constraint(pm.model, sc_var >= z_storage*charge_lb)
-    JuMP.@constraint(pm.model, sc_var <= z_storage*charge_ub)
-    JuMP.@constraint(pm.model, sd_var >= z_storage*discharge_lb)
-    JuMP.@constraint(pm.model, sd_var <= z_storage*discharge_ub)
+    JuMP.@constraint(pm.model, ps <= z_storage*pmax)
+    JuMP.@constraint(pm.model, ps >= z_storage*pmin)
+    JuMP.@constraint(pm.model, qs <= z_storage*qmax)
+    JuMP.@constraint(pm.model, qs >= z_storage*qmin)
+end
+
+""
+function constraint_storage_on_off(pm::GenericPowerModel{T}, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub) where T <: AbstractActivePowerFormulation
+    z_storage = var(pm, n, :z_storage, i)
+    ps = var(pm, n, pm.ccnd, :ps, i)
+
+    JuMP.@constraint(pm.model, ps <= z_storage*pmax)
+    JuMP.@constraint(pm.model, ps >= z_storage*pmin)
+end
+
+""
+function constraint_storage_on_off(pm::GenericPowerModel{T}, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub) where T <: DCPlosslessForm
+    z_storage = var(pm, n, :z_storage, i)
+    ps = var(pm, n, pm.ccnd, :ps, i)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+
+    JuMP.@constraint(pm.model, ps <= z_storage*pmax)
+    JuMP.@constraint(pm.model, ps >= z_storage*pmin)
+    JuMP.@constraint(pm.model, sc <= z_storage*charge_ub)
+    JuMP.@constraint(pm.model, sd <= z_storage*discharge_ub)
 end
