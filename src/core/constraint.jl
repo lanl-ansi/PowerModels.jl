@@ -188,7 +188,7 @@ function constraint_storage_state(pm::GenericPowerModel, n_1::Int, n_2::Int, i::
 end
 
 ""
-function constraint_storage_complementarity(pm::GenericPowerModel, n::Int, i)
+function constraint_storage_complementarity_nl(pm::GenericPowerModel, n::Int, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
 

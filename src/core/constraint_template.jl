@@ -657,10 +657,18 @@ function constraint_storage_current_limit(pm::GenericPowerModel, i::Int; nw::Int
     constraint_storage_current_limit(pm, nw, cnd, i, storage["storage_bus"], storage["current_rating"][cnd])
 end
 
+
 ""
-function constraint_storage_complementarity(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    constraint_storage_complementarity(pm, nw, i)
+function constraint_storage_complementarity_nl(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    constraint_storage_complementarity_nl(pm, nw, i)
 end
+
+"deprecated: name change to constraint_storage_complementarity_nl( ... )"
+function constraint_storage_complementarity(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    Memento.warn(LOGGER, "call to depreciated function constraint_storage_complementarity")
+    return constraint_storage_complementarity_nl(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+end
+
 
 ""
 function constraint_storage_complementarity_mi(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
