@@ -198,7 +198,7 @@ end
             result = PowerModels._run_strg_opf("../test/data/matpower/case5_strg.m", PowerModels.DCPPowerModel, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result["objective"], 16855.6; atol = 1e0)
+            @test isapprox(result["objective"], 16840.7; atol = 1e0)
 
             @test isapprox(result["solution"]["storage"]["1"]["se"],  0.0; atol = 1e0)
             @test isapprox(result["solution"]["storage"]["1"]["ps"], -0.176871; atol = 1e-2)
