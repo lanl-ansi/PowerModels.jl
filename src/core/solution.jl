@@ -100,7 +100,6 @@ end
 ""
 function add_setpoint_generator_status!(sol, pm::GenericPowerModel)
     add_setpoint!(sol, pm, "gen", "gen_status", :z_gen, status_name="gen_status", conductorless=true, default_value = (item) -> item["gen_status"]*1.0)
-
 end
 
 ""
@@ -111,6 +110,11 @@ function add_setpoint_storage!(sol, pm::GenericPowerModel)
     # useful for model debugging
     #add_setpoint!(sol, pm, "storage", "sc", :sc, conductorless=true)
     #add_setpoint!(sol, pm, "storage", "sd", :sd, conductorless=true)
+end
+
+""
+function add_setpoint_storage_status!(sol, pm::GenericPowerModel)
+    add_setpoint!(sol, pm, "storage", "status", :z_storage, status_name="status", conductorless=true, default_value = (item) -> item["status"]*1.0)
 end
 
 ""

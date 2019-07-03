@@ -173,6 +173,29 @@ end
         end
     end
 
+    @testset "test ac opf" begin
+        @testset "5-bus uc storage case" begin
+            # work around possible bug in Juniper strong branching
+            result = PowerModels._run_uc_strg_opf("../test/data/matpower/case5_uc.m", ACPPowerModel, JuMP.with_optimizer(Juniper.Optimizer, nl_solver=JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-4, print_level=0), branch_strategy=:MostInfeasible, log_levels=[]))
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 17740.9; atol = 1e0)
+            @test isapprox(result["solution"]["storage"]["1"]["status"], 1.0, atol=1e-6)
+            @test isapprox(result["solution"]["storage"]["2"]["status"], 0.0, atol=1e-6)
+        end
+    end
+
+    @testset "test dc opf" begin
+        @testset "5-bus uc case" begin
+            result = PowerModels._run_uc_strg_opf("../test/data/matpower/case5_uc.m", DCPPowerModel, juniper_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 17073.2; atol = 1e0)
+            @test isapprox(result["solution"]["storage"]["1"]["status"], 1.0, atol=1e-6)
+            @test isapprox(result["solution"]["storage"]["2"]["status"], 0.0, atol=1e-6)
+        end
+    end
+
 end
 
 

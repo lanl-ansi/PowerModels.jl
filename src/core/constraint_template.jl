@@ -722,8 +722,8 @@ function constraint_storage_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw
     discharge_ub = storage["discharge_rating"]
     
     inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
-    pmin = inj_lb
-    pmax = inj_ub
+    pmin = inj_lb[i]
+    pmax = inj_ub[i]
     qmin = max(inj_lb[i], ref(pm, nw, :storage, i, "qmin", cnd))
     qmax = min(inj_ub[i], ref(pm, nw, :storage, i, "qmax", cnd))
 

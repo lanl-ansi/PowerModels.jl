@@ -91,6 +91,65 @@ function _post_uc_opf(pm::GenericPowerModel)
     end
 end
 
+"opf with unit commitment, tests constraint_current_limit"
+function _run_uc_strg_opf(file, model_constructor, solver; kwargs...)
+    return run_model(file, model_constructor, solver, _post_uc_strg_opf; solution_builder = _solution_uc!, kwargs...)
+end
+
+""
+function _post_uc_strg_opf(pm::GenericPowerModel)
+    variable_voltage(pm)
+
+    variable_generation_indicator(pm)
+    variable_generation_on_off(pm)
+
+    variable_storage_indicator(pm)
+    variable_storage_on_off(pm)
+    
+    variable_branch_flow(pm)
+    variable_dcline_flow(pm)
+
+    objective_min_fuel_and_flow_cost(pm)
+
+    constraint_model_voltage(pm)
+
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
+    end
+
+    for i in ids(pm, :gen)
+        constraint_generation_on_off(pm, i)
+    end
+
+    for i in ids(pm, :storage)
+        constraint_storage_on_off(pm, i)
+    end
+
+    for i in ids(pm, :bus)
+        constraint_power_balance_shunt_storage(pm, i)
+    end
+    
+    for i in ids(pm, :storage)
+        constraint_storage_state(pm, i)
+        constraint_storage_complementarity_mi(pm, i)
+        constraint_storage_loss(pm, i)
+        constraint_storage_thermal_limit(pm, i)
+    end
+
+    for i in ids(pm, :branch)
+        constraint_ohms_yt_from(pm, i)
+        constraint_ohms_yt_to(pm, i)
+
+        constraint_voltage_angle_difference(pm, i)
+
+        constraint_thermal_limit_from(pm, i)
+        constraint_thermal_limit_to(pm, i)
+    end
+
+    for i in ids(pm, :dcline)
+        constraint_dcline(pm, i)
+    end
+end
 
 ""
 function _run_uc_mc_opf(file, model_constructor, solver; kwargs...)
@@ -148,6 +207,7 @@ function _solution_uc!(pm::GenericPowerModel, sol::Dict{String,<:Any})
     add_setpoint_generator_power!(sol, pm)
     add_setpoint_generator_status!(sol, pm)
     add_setpoint_storage!(sol, pm)
+    add_setpoint_storage_status!(sol, pm)
     add_setpoint_branch_flow!(sol, pm)
     add_setpoint_dcline_flow!(sol, pm)
 
