@@ -193,6 +193,20 @@ end
         end
     end
 
+    @testset "test mi ac polar opf" begin
+        @testset "5-bus case" begin
+            result = PowerModels._run_strg_mi_opf("../test/data/matpower/case5_strg.m", PowerModels.ACPPowerModel, juniper_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 17039.7; atol = 1e0)
+
+            @test isapprox(result["solution"]["storage"]["1"]["se"],  0.0; atol = 1e0)
+            @test isapprox(result["solution"]["storage"]["1"]["ps"], -0.176572; atol = 1e-2)
+            @test isapprox(result["solution"]["storage"]["2"]["se"],  0.0; atol = 1e0)
+            @test isapprox(result["solution"]["storage"]["2"]["ps"], -0.233351; atol = 1e-2)
+        end
+    end
+
     @testset "test dc opf" begin
         @testset "5-bus case" begin
             result = PowerModels._run_strg_opf("../test/data/matpower/case5_strg.m", PowerModels.DCPPowerModel, ipopt_solver)
@@ -206,6 +220,20 @@ end
             @test isapprox(result["solution"]["storage"]["2"]["ps"], -0.2345009; atol = 1e-2)
         end
     end
+
+    @testset "test mi dc opf" begin
+    @testset "5-bus case" begin
+        result = PowerModels._run_strg_mi_opf("../test/data/matpower/case5_strg.m", PowerModels.DCPPowerModel, juniper_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 16840.7; atol = 1e0)
+
+        @test isapprox(result["solution"]["storage"]["1"]["se"],  0.0; atol = 1e0)
+        @test isapprox(result["solution"]["storage"]["1"]["ps"], -0.176572; atol = 1e-2)
+        @test isapprox(result["solution"]["storage"]["2"]["se"],  0.0; atol = 1e0)
+        @test isapprox(result["solution"]["storage"]["2"]["ps"], -0.233351; atol = 1e-2)
+    end
+end
 
     @testset "test dc+ll opf" begin
         @testset "5-bus case" begin
