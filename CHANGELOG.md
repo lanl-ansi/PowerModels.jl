@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Add pwl objective variable functions
 - Add check_status to standard data reading checks (#547)
 - Fixed a bug in branch status reporting (#553)
 
