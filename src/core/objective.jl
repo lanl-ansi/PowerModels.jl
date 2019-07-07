@@ -377,9 +377,8 @@ function _objective_min_fuel_cost_polynomial_nl(pm::GenericPowerModel)
 end
 
 
-""
-function objective_min_fuel_and_flow_cost_pwl(pm::GenericPowerModel)
-
+"adds pg_cost variables and constraints"
+function objective_variable_pg_cost(pm::GenericPowerModel)
     for (n, nw_ref) in nws(pm)
         gen_lines = calc_cost_pwl_lines(nw_ref[:gen])
         pg_cost_start = Dict{Int64,Float64}()
@@ -405,8 +404,13 @@ function objective_min_fuel_and_flow_cost_pwl(pm::GenericPowerModel)
                 JuMP.@constraint(pm.model, pg_cost[i] >= line.slope*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line.intercept)
             end
         end
+    end
+end
 
 
+"adds p_dc_cost variables and constraints"
+function objective_variable_dc_cost(pm::GenericPowerModel)
+    for (n, nw_ref) in nws(pm)
         dcline_lines = calc_cost_pwl_lines(nw_ref[:dcline])
         dc_p_cost_start = Dict{Int64,Float64}()
         for (i, dcline) in nw_ref[:dcline]
@@ -432,6 +436,13 @@ function objective_min_fuel_and_flow_cost_pwl(pm::GenericPowerModel)
             end
         end
     end
+end
+
+
+""
+function objective_min_fuel_and_flow_cost_pwl(pm::GenericPowerModel)
+    objective_variable_pg_cost(pm)
+    objective_variable_dc_cost(pm)
 
     return JuMP.@objective(pm.model, Min,
         sum(
@@ -444,20 +455,7 @@ end
 
 ""
 function objective_min_fuel_cost_pwl(pm::GenericPowerModel)
-
-    for (n, nw_ref) in nws(pm)
-        pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
-            [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost", start=0.0
-        )
-
-        # pwl cost
-        gen_lines = calc_cost_pwl_lines(nw_ref[:gen])
-        for (i, gen) in nw_ref[:gen]
-            for line in gen_lines[i]
-                JuMP.@constraint(pm.model, pg_cost[i] >= line.slope*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line.intercept)
-            end
-        end
-    end
+    objective_variable_pg_cost(pm)
 
     return JuMP.@objective(pm.model, Min,
         sum(
