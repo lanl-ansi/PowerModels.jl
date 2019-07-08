@@ -270,18 +270,18 @@ TESTLOG = Memento.getlogger(PowerModels)
             end
         end
 
-        @testset "test ac polar mi opf" begin
-            result = PowerModels._run_mn_strg_mi_opf(mn_data, PowerModels.ACPPowerModel, juniper_solver)
+        # @testset "test ac polar mi opf" begin
+        #     result = PowerModels._run_mn_strg_mi_opf(mn_data, PowerModels.ACPPowerModel, juniper_solver)
 
-            @test result["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result["objective"], 70435.9; atol = 1e0)
+        #     @test result["termination_status"] == LOCALLY_SOLVED
+        #     @test isapprox(result["objective"], 70435.9; atol = 1e0)
 
-            @test isapprox(sum(network["storage"]["1"]["ps"] for (n, network) in result["solution"]["nw"]), -0.178962; atol=1e-3)
-            @test isapprox(sum(network["storage"]["1"]["qs"] for (n, network) in result["solution"]["nw"]), -0.078913; atol=1e-3)
+        #     @test isapprox(sum(network["storage"]["1"]["ps"] for (n, network) in result["solution"]["nw"]), -0.178962; atol=1e-3)
+        #     @test isapprox(sum(network["storage"]["1"]["qs"] for (n, network) in result["solution"]["nw"]), -0.078913; atol=1e-3)
 
-            @test isapprox(sum(network["storage"]["2"]["ps"] for (n, network) in result["solution"]["nw"]), -0.238266; atol=1e-3)
-            @test isapprox(sum(network["storage"]["2"]["qs"] for (n, network) in result["solution"]["nw"]),  0.000000; atol=1e-3)
-        end
+        #     @test isapprox(sum(network["storage"]["2"]["ps"] for (n, network) in result["solution"]["nw"]), -0.238266; atol=1e-3)
+        #     @test isapprox(sum(network["storage"]["2"]["qs"] for (n, network) in result["solution"]["nw"]),  0.000000; atol=1e-3)
+        # end
 
         @testset "test dc polar opf" begin
             result = PowerModels._run_mn_strg_opf(mn_data, PowerModels.DCPPowerModel, ipopt_solver)
@@ -293,15 +293,15 @@ TESTLOG = Memento.getlogger(PowerModels)
             @test isapprox(sum(network["storage"]["2"]["ps"] for (n, network) in result["solution"]["nw"]), -0.240000; atol=1e-3)
         end
 
-        @testset "test dc polar mi opf" begin
-            result = PowerModels._run_mn_strg_mi_opf(mn_data, PowerModels.DCPPowerModel, juniper_solver)
+        # @testset "test dc polar mi opf" begin
+        #     result = PowerModels._run_mn_strg_mi_opf(mn_data, PowerModels.DCPPowerModel, juniper_solver)
 
-            @test result["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result["objective"], 69703.07; atol = 1e0)
+        #     @test result["termination_status"] == LOCALLY_SOLVED
+        #     @test isapprox(result["objective"], 69703.07; atol = 1e0)
 
-            @test isapprox(sum(network["storage"]["1"]["ps"] for (n, network) in result["solution"]["nw"]), -0.180000; atol=1e-3)
-            @test isapprox(sum(network["storage"]["2"]["ps"] for (n, network) in result["solution"]["nw"]), -0.240000; atol=1e-3)
-        end
+        #     @test isapprox(sum(network["storage"]["1"]["ps"] for (n, network) in result["solution"]["nw"]), -0.180000; atol=1e-3)
+        #     @test isapprox(sum(network["storage"]["2"]["ps"] for (n, network) in result["solution"]["nw"]), -0.240000; atol=1e-3)
+        # end
 
         @testset "storage constraint warning" begin
             delete!(mn_data, "time_elapsed")

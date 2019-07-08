@@ -154,7 +154,7 @@ end
 
     @testset "test ac opf" begin
         @testset "5-bus uc case" begin
-            result = PowerModels._run_uc_strg_opf("../test/data/matpower/case5_uc.m", ACPPowerModel, juniper_solver)
+            result = PowerModels._run_uc_opf("../test/data/matpower/case5_uc.m", ACPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 18270.0; atol = 1e0)
@@ -164,7 +164,7 @@ end
 
     @testset "test dc opf" begin
         @testset "5-bus uc case" begin
-            result = PowerModels._run_uc_strg_opf("../test/data/matpower/case5_uc.m", DCPPowerModel, cbc_solver)
+            result = PowerModels._run_uc_opf("../test/data/matpower/case5_uc.m", DCPPowerModel, cbc_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 17613.2; atol = 1e0)
@@ -174,7 +174,7 @@ end
 
     @testset "test ac opf" begin
         @testset "5-bus uc storage case" begin
-            result = PowerModels._run_uc_strg_opf("../test/data/matpower/case5_uc_strg.m", ACPPowerModel, juniper_solver)
+            result = PowerModels._run_uc_opf("../test/data/matpower/case5_uc_strg.m", ACPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 17740.9; atol = 1e0)
@@ -185,7 +185,7 @@ end
 
     @testset "test dc opf" begin
         @testset "5-bus uc case" begin
-            result = PowerModels._run_uc_strg_opf("../test/data/matpower/case5_uc_strg.m", DCPPowerModel, juniper_solver)
+            result = PowerModels._run_uc_opf("../test/data/matpower/case5_uc_strg.m", DCPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 17073.2; atol = 1e0)
