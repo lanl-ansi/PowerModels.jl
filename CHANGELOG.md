@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Add pwl objective variable functions
 - Add check_status to standard data reading checks (#547)
 - Fixed a bug in branch status reporting (#553)
+- Fixed a bug in `AbstractBFForm` version of `constraint_voltage_angle_difference` (#557)
 
 ### v0.12.1
 - Fixed a bug in add_setpoint! in the multiconductor case
