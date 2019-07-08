@@ -529,11 +529,11 @@ function variable_storage_mi(pm::GenericPowerModel; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
     variable_storage_discharge(pm; kwargs...)
-    variable_storage_complementary_mi(pm; kwargs...)
+    variable_storage_complementary_indicator(pm; kwargs...)
 end
 
 ""
-function variable_storage_complementary_mi(pm::GenericPowerModel; nw::Int=pm.cnw)
+function variable_storage_complementary_indicator(pm::GenericPowerModel; nw::Int=pm.cnw)
     var(pm, nw)[:sc_on] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_sc", Bin,
         start = comp_start_value(ref(pm, nw, :storage, i), "sc_on_start", 0)
@@ -550,7 +550,7 @@ function variable_storage_on_off(pm::GenericPowerModel; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
     variable_storage_discharge(pm; kwargs...)
-    variable_storage_complementary_mi(pm; kwargs...)
+    variable_storage_complementary_indicator(pm; kwargs...)
 end
 
 function variable_active_storage_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
@@ -578,7 +578,7 @@ end
 function variable_storage_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, relax=false)
     if !relax
         var(pm, nw)[:z_storage] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :storage)], base_name="$(nw)-z_storage",
+            [i in ids(pm, nw, :storage)], base_name="$(nw)_z_storage",
             binary = true,
             start = comp_start_value(ref(pm, nw, :storage, i), "z_storage_start", 1, 1.0)
         )

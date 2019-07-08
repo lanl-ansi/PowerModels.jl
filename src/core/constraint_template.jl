@@ -666,17 +666,17 @@ end
 "deprecated: name change to constraint_storage_complementarity_nl( ... )"
 function constraint_storage_complementarity(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     Memento.warn(_LOGGER, "call to depreciated function constraint_storage_complementarity")
-    return constraint_storage_complementarity_nl(pm, nw, i)
+    constraint_storage_complementarity_nl(pm, nw, i)
 end
 
 
 ""
 function constraint_storage_complementarity_mi(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-storage = ref(pm, nw, :storage, i)
-charge_ub = storage["charge_rating"]
-discharge_ub = storage["discharge_rating"]
+    storage = ref(pm, nw, :storage, i)
+    charge_ub = storage["charge_rating"]
+    discharge_ub = storage["discharge_rating"]
 
-constraint_storage_complementarity_mi(pm, nw, i, charge_ub, discharge_ub)
+    constraint_storage_complementarity_mi(pm, nw, i, charge_ub, discharge_ub)
 end
 
 
