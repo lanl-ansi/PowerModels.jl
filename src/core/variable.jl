@@ -544,7 +544,7 @@ function variable_storage_complementary_indicator(pm::GenericPowerModel; nw::Int
     )
 end
 
-function variable_storage_on_off(pm::GenericPowerModel; kwargs...)
+function variable_storage_mi_on_off(pm::GenericPowerModel; kwargs...)
     variable_active_storage_on_off(pm; kwargs...)
     variable_reactive_storage_on_off(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
