@@ -590,6 +590,12 @@ end
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 70690.7; atol = 1e0)
     end
+    @testset "3-bus case w/ r,x=0 on branch" begin
+        mp_data = PowerModels.parse_file("../test/data/matpower/case3.m")
+        mp_data["branch"]["1"]["br_r"] = mp_data["branch"]["1"]["br_x"] = 0.0
+        result = run_opf_bf(mp_data, SOCBFPowerModel, ipopt_solver)
+        @test result["termination_status"] == LOCALLY_SOLVED
+    end
 end
 
 @testset "test soc conic distflow opf_bf" begin
