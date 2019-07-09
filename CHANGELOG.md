@@ -2,7 +2,10 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Added pwl objective variable functions
+- nothing
+
+### v0.12.2
+- Added function for building pwl objective variables and constraints
 - Added check_status to standard data reading checks (#547)
 - Added storage on/off constraints (#552)
 - Added an alternative storage complementary constraint that uses MIP instead of NLP (#552)
