@@ -259,7 +259,7 @@ TESTLOG = Memento.getlogger(PowerModels)
             result = PowerModels._run_mn_strg_opf(mn_data, PowerModels.ACPPowerModel, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result["objective"], 70435.9; atol = 1e0)
+            @test isapprox(result["objective"], 70434.5; atol = 1e0)
 
             for (n, network) in result["solution"]["nw"]
                 @test isapprox(network["storage"]["1"]["ps"], -0.0447406; atol = 1e-3)
@@ -271,15 +271,20 @@ TESTLOG = Memento.getlogger(PowerModels)
         end
 
         @testset "test dc polar opf" begin
+   
+            for (n, net) in mn_data["nw"]
+                for (i, gen) in net["gen"]
+                    gen["cost"]= prepend!(gen["cost"], 0.01)
+                end
+            end
+            
             result = PowerModels._run_mn_strg_opf(mn_data, PowerModels.DCPPowerModel, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result["objective"], 69706.9; atol = 1e0)
+            @test isapprox(result["objective"], 69703.07; atol = 1e0)
 
-            for (n, network) in result["solution"]["nw"]
-                @test isapprox(network["storage"]["1"]["ps"], -0.0447992; atol = 1e-3)
-                @test isapprox(network["storage"]["2"]["ps"], -0.0596441; atol = 1e-3)
-            end
+            @test isapprox(sum(network["storage"]["1"]["ps"] for (n, network) in result["solution"]["nw"]), -0.180000; atol=1e-3)
+            @test isapprox(sum(network["storage"]["2"]["ps"] for (n, network) in result["solution"]["nw"]), -0.240000; atol=1e-3)
         end
 
         @testset "storage constraint warning" begin

@@ -57,6 +57,9 @@ function _post_uc_opf(pm::GenericPowerModel)
     variable_generation_indicator(pm)
     variable_generation_on_off(pm)
 
+    variable_storage_indicator(pm)
+    variable_storage_mi_on_off(pm)
+    
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
@@ -72,8 +75,19 @@ function _post_uc_opf(pm::GenericPowerModel)
         constraint_generation_on_off(pm, i)
     end
 
+    for i in ids(pm, :storage)
+        constraint_storage_on_off(pm, i)
+    end
+
     for i in ids(pm, :bus)
-        constraint_power_balance_shunt(pm, i)
+        constraint_power_balance_shunt_storage(pm, i)
+    end
+    
+    for i in ids(pm, :storage)
+        constraint_storage_state(pm, i)
+        constraint_storage_complementarity_mi(pm, i)
+        constraint_storage_loss(pm, i)
+        constraint_storage_thermal_limit(pm, i)
     end
 
     for i in ids(pm, :branch)
@@ -91,7 +105,6 @@ function _post_uc_opf(pm::GenericPowerModel)
     end
 end
 
-
 ""
 function _run_uc_mc_opf(file, model_constructor, solver; kwargs...)
     return run_model(file, model_constructor, solver, _post_uc_mc_opf; solution_builder = _solution_uc!, multiconductor=true, kwargs...)
@@ -100,13 +113,21 @@ end
 ""
 function _post_uc_mc_opf(pm::GenericPowerModel)
     variable_generation_indicator(pm)
+    variable_storage_indicator(pm)
+    
+    variable_storage_energy(pm)
+    variable_storage_charge(pm)
+    variable_storage_discharge(pm)
+    variable_storage_complementary_indicator(pm)
 
     for c in conductor_ids(pm)
         variable_voltage(pm, cnd=c)
-        variable_voltage(pm, cnd=c)
-
+        
         variable_generation_on_off(pm, cnd=c)
-
+        
+        variable_active_storage(pm, cnd=c)
+        variable_reactive_storage(pm, cnd=c)
+        
         variable_branch_flow(pm, cnd=c)
         variable_dcline_flow(pm, cnd=c)
 
@@ -120,8 +141,12 @@ function _post_uc_mc_opf(pm::GenericPowerModel)
             constraint_generation_on_off(pm, i, cnd=c)
         end
 
+        for i in ids(pm, :storage)
+            constraint_storage_on_off(pm, i)
+        end
+
         for i in ids(pm, :bus)
-            constraint_power_balance_shunt(pm, i, cnd=c)
+            constraint_power_balance_shunt_storage(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
@@ -137,6 +162,13 @@ function _post_uc_mc_opf(pm::GenericPowerModel)
         for i in ids(pm, :dcline)
             constraint_dcline(pm, i, cnd=c)
         end
+
+        for i in ids(pm, :storage)
+            constraint_storage_state(pm, i, cnd=c)
+            constraint_storage_complementarity_mi(pm, i, cnd=c)
+            constraint_storage_loss(pm, i, cnd=c)
+            constraint_storage_thermal_limit(pm, i, cnd=c)
+        end
     end
 
     objective_min_fuel_and_flow_cost(pm)
@@ -148,6 +180,7 @@ function _solution_uc!(pm::GenericPowerModel, sol::Dict{String,<:Any})
     add_setpoint_generator_power!(sol, pm)
     add_setpoint_generator_status!(sol, pm)
     add_setpoint_storage!(sol, pm)
+    add_setpoint_storage_status!(sol, pm)
     add_setpoint_branch_flow!(sol, pm)
     add_setpoint_dcline_flow!(sol, pm)
 
@@ -428,6 +461,55 @@ function _post_mn_strg_opf(pm::GenericPowerModel)
     end
 
     objective_min_fuel_and_flow_cost(pm)
+end
+
+
+
+"opf with mi storage variables"
+function _run_strg_mi_opf(file, model_constructor, optimizer; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_strg_mi_opf; kwargs...)
+end
+
+""
+function _post_strg_mi_opf(pm::GenericPowerModel)
+    variable_voltage(pm)
+    variable_generation(pm)
+    variable_storage_mi(pm)
+    variable_branch_flow(pm)
+    variable_dcline_flow(pm)
+    
+    objective_min_fuel_and_flow_cost(pm)
+
+    constraint_model_voltage(pm)
+
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
+    end
+
+    for i in ids(pm, :bus)
+        constraint_power_balance_shunt_storage(pm, i)
+    end
+
+    for i in ids(pm, :storage)
+        constraint_storage_state(pm, i)
+        constraint_storage_complementarity_mi(pm, i)
+        constraint_storage_loss(pm, i)
+        constraint_storage_thermal_limit(pm, i)
+    end
+
+    for i in ids(pm, :branch)
+        constraint_ohms_yt_from(pm, i)
+        constraint_ohms_yt_to(pm, i)
+
+        constraint_voltage_angle_difference(pm, i)
+
+        constraint_thermal_limit_from(pm, i)
+        constraint_thermal_limit_to(pm, i)
+    end
+
+    for i in ids(pm, :dcline)
+        constraint_dcline(pm, i)
+    end
 end
 
 

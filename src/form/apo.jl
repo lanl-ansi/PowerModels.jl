@@ -125,3 +125,12 @@ function constraint_storage_loss(pm::GenericPowerModel{T}, n::Int, i, bus, r, x,
     JuMP.@constraint(pm.model, ps + (sd - sc) == standby_loss + r*ps^2)
 end
 
+""
+function constraint_storage_on_off(pm::GenericPowerModel{T}, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub) where T <: AbstractActivePowerFormulation
+    z_storage = var(pm, n, :z_storage, i)
+    ps = var(pm, n, pm.ccnd, :ps, i)
+
+    JuMP.@constraint(pm.model, ps <= z_storage*pmax)
+    JuMP.@constraint(pm.model, ps >= z_storage*pmin)
+end
+

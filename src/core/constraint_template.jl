@@ -657,10 +657,29 @@ function constraint_storage_current_limit(pm::GenericPowerModel, i::Int; nw::Int
     constraint_storage_current_limit(pm, nw, cnd, i, storage["storage_bus"], storage["current_rating"][cnd])
 end
 
+
 ""
-function constraint_storage_complementarity(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    constraint_storage_complementarity(pm, nw, i)
+function constraint_storage_complementarity_nl(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    constraint_storage_complementarity_nl(pm, nw, i)
 end
+
+"deprecated: name change to constraint_storage_complementarity_nl( ... )"
+function constraint_storage_complementarity(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    Memento.warn(_LOGGER, "call to depreciated function constraint_storage_complementarity use constraint_storage_complementarity_nl")
+    constraint_storage_complementarity_nl(pm, nw, i)
+end
+
+
+
+""
+function constraint_storage_complementarity_mi(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    storage = ref(pm, nw, :storage, i)
+    charge_ub = storage["charge_rating"]
+    discharge_ub = storage["discharge_rating"]
+
+    constraint_storage_complementarity_mi(pm, nw, i, charge_ub, discharge_ub)
+end
+
 
 ""
 function constraint_storage_loss(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
@@ -697,6 +716,20 @@ function constraint_storage_state(pm::GenericPowerModel, i::Int, nw_1::Int, nw_2
     constraint_storage_state(pm, nw_1, nw_2, i, storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
 end
 
+""
+function constraint_storage_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    storage = ref(pm, nw, :storage, i)
+    charge_ub = storage["charge_rating"]
+    discharge_ub = storage["discharge_rating"]
+    
+    inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
+    pmin = inj_lb[i]
+    pmax = inj_ub[i]
+    qmin = max(inj_lb[i], ref(pm, nw, :storage, i, "qmin", cnd))
+    qmax = min(inj_ub[i], ref(pm, nw, :storage, i, "qmax", cnd))
+
+    constraint_storage_on_off(pm, nw, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
+end
 
 ### DC LINES ###
 

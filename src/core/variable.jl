@@ -522,6 +522,75 @@ function variable_storage_discharge(pm::GenericPowerModel; nw::Int=pm.cnw)
     )
 end
 
+"variables for modeling storage units, includes grid injection and internal variables, with mixed int variables for charge/discharge"
+function variable_storage_mi(pm::GenericPowerModel; kwargs...)
+    variable_active_storage(pm; kwargs...)
+    variable_reactive_storage(pm; kwargs...)
+    variable_storage_energy(pm; kwargs...)
+    variable_storage_charge(pm; kwargs...)
+    variable_storage_discharge(pm; kwargs...)
+    variable_storage_complementary_indicator(pm; kwargs...)
+end
+
+""
+function variable_storage_complementary_indicator(pm::GenericPowerModel; nw::Int=pm.cnw)
+    var(pm, nw)[:sc_on] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_sc", Bin,
+        start = comp_start_value(ref(pm, nw, :storage, i), "sc_on_start", 0)
+    )
+    var(pm, nw)[:sd_on] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_sd", Bin,
+        start = comp_start_value(ref(pm, nw, :storage, i), "sd_on_start", 0)
+    )
+end
+
+function variable_storage_mi_on_off(pm::GenericPowerModel; kwargs...)
+    variable_active_storage_on_off(pm; kwargs...)
+    variable_reactive_storage_on_off(pm; kwargs...)
+    variable_storage_energy(pm; kwargs...)
+    variable_storage_charge(pm; kwargs...)
+    variable_storage_discharge(pm; kwargs...)
+    variable_storage_complementary_indicator(pm; kwargs...)
+end
+
+function variable_active_storage_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
+
+    var(pm, nw, cnd)[:ps] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_$(cnd)_ps",
+        lower_bound = min(0, inj_lb[i]),
+        upper_bound = max(0, inj_ub[i]),
+        start = comp_start_value(ref(pm, nw, :storage, i), "ps_start", cnd)
+    )
+end
+
+function variable_reactive_storage_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
+
+    var(pm, nw, cnd)[:qs] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_$(cnd)_qs",
+        lower_bound = min(0, max(inj_lb[i], ref(pm, nw, :storage, i, "qmin", cnd))),
+        upper_bound = max(0, min(inj_ub[i], ref(pm, nw, :storage, i, "qmax", cnd))),
+        start = comp_start_value(ref(pm, nw, :storage, i), "qs_start", cnd)
+    )
+end
+
+function variable_storage_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, relax=false)
+    if !relax
+        var(pm, nw)[:z_storage] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :storage)], base_name="$(nw)_z_storage",
+            binary = true,
+            start = comp_start_value(ref(pm, nw, :storage, i), "z_storage_start", 1, 1.0)
+        )
+    else
+        var(pm, nw)[:z_storage] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :storage)], base_name="$(nw)_z_storage",
+            lower_bound = 0,
+            upper_bound = 1,
+            start = comp_start_value(ref(pm, nw, :storage, i), "z_storage_start", 1, 1.0)
+        )
+    end
+end
 
 
 ##################################################################
