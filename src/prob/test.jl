@@ -58,7 +58,7 @@ function _post_uc_opf(pm::GenericPowerModel)
     variable_generation_on_off(pm)
 
     variable_storage_indicator(pm)
-    variable_storage_on_off(pm)
+    variable_storage_mi_on_off(pm)
     
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
