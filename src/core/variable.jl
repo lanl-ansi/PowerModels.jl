@@ -17,7 +17,7 @@ end
 function variable_voltage_angle(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool = true)
     var(pm, nw, cnd)[:va] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_va",
-        start = comp_start_value(ref(pm, nw, :bus, i), "va_start", cnd, 1.0)
+        start = comp_start_value(ref(pm, nw, :bus, i), "va_start", cnd)
     )
 end
 

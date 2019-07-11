@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fixed `va` default start point
 
 ### v0.12.2
 - Added function for building pwl objective variables and constraints
