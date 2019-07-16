@@ -281,7 +281,9 @@ function variable_generation_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, re
     if !relax
         var(pm, nw)[:z_gen] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :gen)], base_name="$(nw)_z_gen",
-            binary = true,
+            integer = true,
+            lower_bound = 0,
+            upper_bound = 1,
             start = comp_start_value(ref(pm, nw, :gen, i), "z_gen_start", 1, 1.0)
         )
     else
@@ -535,11 +537,17 @@ end
 ""
 function variable_storage_complementary_indicator(pm::GenericPowerModel; nw::Int=pm.cnw)
     var(pm, nw)[:sc_on] = JuMP.@variable(pm.model,
-        [i in ids(pm, nw, :storage)], base_name="$(nw)_sc", Bin,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_sc",
+        integer = true,
+        lower_bound = 0,
+        upper_bound = 1,
         start = comp_start_value(ref(pm, nw, :storage, i), "sc_on_start", 0)
     )
     var(pm, nw)[:sd_on] = JuMP.@variable(pm.model,
-        [i in ids(pm, nw, :storage)], base_name="$(nw)_sd", Bin,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_sd", 
+        integer = true,
+        lower_bound = 0,
+        upper_bound = 1,
         start = comp_start_value(ref(pm, nw, :storage, i), "sd_on_start", 0)
     )
 end
@@ -579,7 +587,9 @@ function variable_storage_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, relax
     if !relax
         var(pm, nw)[:z_storage] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :storage)], base_name="$(nw)_z_storage",
-            binary = true,
+            integer = true,
+            lower_bound = 0,
+            upper_bound = 1,
             start = comp_start_value(ref(pm, nw, :storage, i), "z_storage_start", 1, 1.0)
         )
     else
@@ -626,7 +636,9 @@ end
 function variable_branch_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     var(pm, nw, cnd)[:branch_z] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_branch_z",
-        binary = true,
+        integer = true,
+        lower_bound = 0,
+        upper_bound = 1,
         start = comp_start_value(ref(pm, nw, :branch, l), "branch_z_start", cnd, 1.0)
     )
 end
