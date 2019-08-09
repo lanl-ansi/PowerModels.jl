@@ -71,35 +71,35 @@ end
 
 ""
 function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "bus", "vm", :vm, status_name="bus_type", inactive_status_value = 4)
-    add_setpoint!(sol, pm, "bus", "va", :va, status_name="bus_type", inactive_status_value = 4)
+    add_setpoint!(sol, pm, "bus", "vm", :vm, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
+    add_setpoint!(sol, pm, "bus", "va", :va, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
 end
 
 ""
 function add_dual_kcl!(sol, pm::GenericPowerModel)
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
-        add_dual!(sol, pm, "bus", "lam_kcl_r", :kcl_p, status_name="bus_type", inactive_status_value = 4)
-        add_dual!(sol, pm, "bus", "lam_kcl_i", :kcl_q, status_name="bus_type", inactive_status_value = 4)
+        add_dual!(sol, pm, "bus", "lam_kcl_r", :kcl_p, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
+        add_dual!(sol, pm, "bus", "lam_kcl_i", :kcl_q, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
     end
 end
 
 ""
 function add_dual_sm!(sol, pm::GenericPowerModel)
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
-        add_dual!(sol, pm, "branch", "mu_sm_fr", :sm_fr, status_name="br_status")
-        add_dual!(sol, pm, "branch", "mu_sm_to", :sm_to, status_name="br_status")
+        add_dual!(sol, pm, "branch", "mu_sm_fr", :sm_fr, status_name=pm_component_status["branch"])
+        add_dual!(sol, pm, "branch", "mu_sm_to", :sm_to, status_name=pm_component_status["branch"])
     end
 end
 
 ""
 function add_setpoint_generator_power!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "gen", "pg", :pg, status_name="gen_status")
-    add_setpoint!(sol, pm, "gen", "qg", :qg, status_name="gen_status")
+    add_setpoint!(sol, pm, "gen", "pg", :pg, status_name=pm_component_status["gen"])
+    add_setpoint!(sol, pm, "gen", "qg", :qg, status_name=pm_component_status["gen"])
 end
 
 ""
 function add_setpoint_generator_status!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "gen", "gen_status", :z_gen, status_name="gen_status", conductorless=true, default_value = (item) -> item["gen_status"]*1.0)
+    add_setpoint!(sol, pm, "gen", "gen_status", :z_gen, status_name=pm_component_status["gen"], conductorless=true, default_value = (item) -> item["gen_status"]*1.0)
 end
 
 ""
@@ -114,37 +114,37 @@ end
 
 ""
 function add_setpoint_storage_status!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "storage", "status", :z_storage, status_name="status", conductorless=true, default_value = (item) -> item["status"]*1.0)
+    add_setpoint!(sol, pm, "storage", "status", :z_storage, status_name=pm_component_status["storage"], conductorless=true, default_value = (item) -> item["status"]*1.0)
 end
 
 ""
 function add_setpoint_branch_flow!(sol, pm::GenericPowerModel)
     # check the branch flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
-        add_setpoint!(sol, pm, "branch", "pf", :p, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint!(sol, pm, "branch", "qf", :q, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint!(sol, pm, "branch", "pt", :p, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
-        add_setpoint!(sol, pm, "branch", "qt", :q, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+        add_setpoint!(sol, pm, "branch", "pf", :p, status_name=pm_component_status["branch"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "branch", "qf", :q, status_name=pm_component_status["branch"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "branch", "pt", :p, status_name=pm_component_status["branch"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+        add_setpoint!(sol, pm, "branch", "qt", :q, status_name=pm_component_status["branch"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
     end
 end
 
 ""
 function add_setpoint_dcline_flow!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "dcline", "pf", :p_dc, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-    add_setpoint!(sol, pm, "dcline", "qf", :q_dc, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-    add_setpoint!(sol, pm, "dcline", "pt", :p_dc, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
-    add_setpoint!(sol, pm, "dcline", "qt", :q_dc, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+    add_setpoint!(sol, pm, "dcline", "pf", :p_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+    add_setpoint!(sol, pm, "dcline", "qf", :q_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+    add_setpoint!(sol, pm, "dcline", "pt", :p_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+    add_setpoint!(sol, pm, "dcline", "qt", :q_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
 end
 
 
 ""
 function add_setpoint_branch_status!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "branch", "br_status", :branch_z, status_name="br_status", default_value = (item) -> item["br_status"]*1.0)
+    add_setpoint!(sol, pm, "branch", "br_status", :branch_z, status_name=pm_component_status["branch"], default_value = (item) -> item["br_status"]*1.0)
 end
 
 ""
 function add_setpoint_dcline_status!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "dcline", "br_status", :dcline_z, status_name="br_status", default_value = (item) -> item["br_status"]*1.0)
+    add_setpoint!(sol, pm, "dcline", "br_status", :dcline_z, status_name=pm_component_status["dcline"], default_value = (item) -> item["br_status"]*1.0)
 end
 
 

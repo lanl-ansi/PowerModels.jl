@@ -132,6 +132,28 @@ function summary(io::IO, file::String; kwargs...)
 end
 
 
+"maps component types to status parameters"
+const pm_component_status = Dict(
+    "bus" => "bus_type",
+    "load" => "status",
+    "shunt" => "status",
+    "gen" => "gen_status",
+    "storage" => "status",
+    "branch" => "br_status",
+    "dcline" => "br_status",
+)
+
+"maps component types to inactive status values"
+const pm_component_status_inactive = Dict(
+    "bus" => 4,
+    "load" => 0,
+    "shunt" => 0,
+    "gen" => 0,
+    "storage" => 0,
+    "branch" => 0,
+    "dcline" => 0,
+)
+
 const _pm_component_types_order = Dict(
     "bus" => 1.0, "load" => 2.0, "shunt" => 3.0, "gen" => 4.0, "storage" => 5.0,
     "branch" => 6.0, "dcline" => 7.0
