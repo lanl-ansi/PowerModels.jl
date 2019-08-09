@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Add switch component (#339)
 - Fixed `va` default start point
 
 ### v0.12.2
