@@ -12,7 +12,9 @@ function variable_voltage(pm::AbstractACTModel; kwargs...)
     variable_voltage_product(pm; kwargs...)
 end
 
-function constraint_voltage(pm::AbstractACTModel, n::Int, c::Int)
+function constraint_model_voltage(pm::AbstractACTModel, n::Int, c::Int)
+    _check_missing_keys(var(pm, n, c), [:va,:w,:wr,:wi], typeof(pm))
+
     t  = var(pm, n, c, :va)
     w  = var(pm, n, c,  :w)
     wr = var(pm, n, c, :wr)
@@ -44,6 +46,6 @@ end
 
 ""
 function add_bus_voltage_setpoint(sol, pm::AbstractACTModel)
-    add_setpoint(sol, pm, "bus", "vm", :w; scale = (x,item,cnd) -> sqrt(x))
-    add_setpoint(sol, pm, "bus", "va", :va)
+    add_setpoint!(sol, pm, "bus", "vm", :w, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"], scale = (x,item,cnd) -> sqrt(x))
+    add_setpoint!(sol, pm, "bus", "va", :va, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
 end

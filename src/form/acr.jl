@@ -14,7 +14,7 @@ function variable_voltage(pm::AbstractACRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd
         end
 
         # does not seem to improve convergence
-        #wr_min, wr_max, wi_min, wi_max = calc_voltage_product_bounds(pm.ref[:buspairs])
+        #wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(pm.ref[:buspairs])
         #for bp in ids(pm, nw, :buspairs)
         #    i,j = bp
         #    JuMP.@constraint(pm.model, wr_min[bp] <= vr[i]*vr[j] + vi[i]*vi[j])
@@ -39,11 +39,10 @@ end
 "reference bus angle constraint"
 function constraint_theta_ref(pm::AbstractACRModel, n::Int, c::Int, i::Int)
     JuMP.@constraint(pm.model, var(pm, n, c, :vi)[i] == 0)
-    JuMP.@constraint(pm.model, var(pm, n, c, :vr)[i] >= 0)
 end
 
 
-function constraint_kcl_shunt(pm::AbstractACRModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
+function constraint_power_balance_shunt(pm::AbstractACRModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
     vr = var(pm, n, c, :vr, i)
     vi = var(pm, n, c, :vi, i)
     p  = var(pm, n, c, :p)
@@ -125,7 +124,7 @@ end
 
 
 "extracts voltage set points from rectangular voltage form and converts into polar voltage form"
-function add_bus_voltage_setpoint(sol, pm::AbstractACRModel)
+function add_setpoint_bus_voltage!(sol, pm::AbstractACRModel)
     sol_dict = get(sol, "bus", Dict{String,Any}())
 
     if ismultinetwork(pm)

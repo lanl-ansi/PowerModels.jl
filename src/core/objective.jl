@@ -20,7 +20,7 @@ function check_cost_models(pm::AbstractPowerModel)
     end
 
     if gen_model != dcline_model
-        Memento.error(LOGGER, "generator and dcline cost models are inconsistent, the generator model is $(gen_model) however dcline model $(dcline_model)")
+        Memento.error(_LOGGER, "generator and dcline cost models are inconsistent, the generator model is $(gen_model) however dcline model $(dcline_model)")
     end
 
     return gen_model
@@ -40,11 +40,11 @@ function check_gen_cost_models(pm::AbstractPowerModel)
                     model = gen["model"]
                 else
                     if gen["model"] != model
-                        Memento.error(LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
+                        Memento.error(_LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
                     end
                 end
             else
-                Memento.error(LOGGER, "no cost given for generator $(i)")
+                Memento.error(_LOGGER, "no cost given for generator $(i)")
             end
         end
     end
@@ -66,18 +66,17 @@ function check_dcline_cost_models(pm::AbstractPowerModel)
                     model = dcline["model"]
                 else
                     if dcline["model"] != model
-                        Memento.error(LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
+                        Memento.error(_LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
                     end
                 end
             else
-                Memento.error(LOGGER, "no cost given for dcline $(i)")
+                Memento.error(_LOGGER, "no cost given for dcline $(i)")
             end
         end
     end
 
     return model
 end
-
 
 
 ""
@@ -89,7 +88,7 @@ function objective_min_fuel_and_flow_cost(pm::AbstractPowerModel)
     elseif model == 2
         return objective_min_fuel_and_flow_cost_polynomial(pm)
     else
-        Memento.error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
+        Memento.error(_LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
 
 end
@@ -104,7 +103,7 @@ function objective_min_fuel_cost(pm::AbstractPowerModel)
     elseif model == 2
         return objective_min_fuel_cost_polynomial(pm)
     else
-        Memento.error(LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
+        Memento.error(_LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
 
 end
@@ -309,8 +308,6 @@ function _objective_min_fuel_and_flow_cost_polynomial_nl(pm::AbstractPowerModel)
 end
 
 
-
-
 ""
 function objective_min_fuel_cost_polynomial(pm::AbstractPowerModel)
     order = calc_max_cost_index(pm.data)-1
@@ -380,31 +377,16 @@ function _objective_min_fuel_cost_polynomial_nl(pm::AbstractPowerModel)
 end
 
 
-"""
-compute lines in m and b from from pwl cost models
-data is a list of components
-"""
-function get_lines(data)
-    lines = Dict{Int,Any}()
-    for (i,comp) in data
-        lines[i] = _get_comp_lines(comp)
-    end
-    return lines
-end
-
-
-
-""
-function objective_min_fuel_and_flow_cost_pwl(pm::AbstractPowerModel)
-
+"adds pg_cost variables and constraints"
+function objective_variable_pg_cost(pm::AbstractPowerModel)
     for (n, nw_ref) in nws(pm)
-        gen_lines = get_lines(nw_ref[:gen])
+        gen_lines = calc_cost_pwl_lines(nw_ref[:gen])
         pg_cost_start = Dict{Int64,Float64}()
         for (i, gen) in nw_ref[:gen]
             pg_value = sum(JuMP.start_value(var(pm, n, c, :pg, i)) for c in conductor_ids(pm, n))
             pg_cost_value = -Inf
             for line in gen_lines[i]
-                pg_cost_value = max(pg_cost_value, line["slope"]*pg_value + line["intercept"])
+                pg_cost_value = max(pg_cost_value, line.slope*pg_value + line.intercept)
             end
             pg_cost_start[i] = pg_cost_value
         end
@@ -419,19 +401,24 @@ function objective_min_fuel_and_flow_cost_pwl(pm::AbstractPowerModel)
         # gen pwl cost
         for (i, gen) in nw_ref[:gen]
             for line in gen_lines[i]
-                JuMP.@constraint(pm.model, pg_cost[i] >= line["slope"]*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line["intercept"])
+                JuMP.@constraint(pm.model, pg_cost[i] >= line.slope*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line.intercept)
             end
         end
+    end
+end
 
 
-        dcline_lines = get_lines(nw_ref[:dcline])
+"adds p_dc_cost variables and constraints"
+function objective_variable_dc_cost(pm::AbstractPowerModel)
+    for (n, nw_ref) in nws(pm)
+        dcline_lines = calc_cost_pwl_lines(nw_ref[:dcline])
         dc_p_cost_start = Dict{Int64,Float64}()
         for (i, dcline) in nw_ref[:dcline]
             arc = (i, dcline["f_bus"], dcline["t_bus"])
             dc_p_value = sum(JuMP.start_value(var(pm, n, c, :p_dc)[arc]) for c in conductor_ids(pm, n))
             dc_p_cost_value = -Inf
             for line in dcline_lines[i]
-                dc_p_cost_value = max(dc_p_cost_value, line["slope"]*dc_p_value + line["intercept"])
+                dc_p_cost_value = max(dc_p_cost_value, line.slope*dc_p_value + line.intercept)
             end
             dc_p_cost_start[i] = dc_p_cost_value
         end
@@ -445,10 +432,17 @@ function objective_min_fuel_and_flow_cost_pwl(pm::AbstractPowerModel)
         for (i, dcline) in nw_ref[:dcline]
             arc = (i, dcline["f_bus"], dcline["t_bus"])
             for line in dcline_lines[i]
-                JuMP.@constraint(pm.model, dc_p_cost[i] >= line["slope"]*sum(var(pm, n, c, :p_dc)[arc] for c in conductor_ids(pm, n)) + line["intercept"])
+                JuMP.@constraint(pm.model, dc_p_cost[i] >= line.slope*sum(var(pm, n, c, :p_dc)[arc] for c in conductor_ids(pm, n)) + line.intercept)
             end
         end
     end
+end
+
+
+""
+function objective_min_fuel_and_flow_cost_pwl(pm::AbstractPowerModel)
+    objective_variable_pg_cost(pm)
+    objective_variable_dc_cost(pm)
 
     return JuMP.@objective(pm.model, Min,
         sum(
@@ -461,20 +455,7 @@ end
 
 ""
 function objective_min_fuel_cost_pwl(pm::AbstractPowerModel)
-
-    for (n, nw_ref) in nws(pm)
-        pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
-            [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost", start=0.0
-        )
-
-        # pwl cost
-        gen_lines = get_lines(nw_ref[:gen])
-        for (i, gen) in nw_ref[:gen]
-            for line in gen_lines[i]
-                JuMP.@constraint(pm.model, pg_cost[i] >= line["slope"]*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line["intercept"])
-            end
-        end
-    end
+    objective_variable_pg_cost(pm)
 
     return JuMP.@objective(pm.model, Min,
         sum(

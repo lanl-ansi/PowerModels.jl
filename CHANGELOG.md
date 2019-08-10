@@ -2,13 +2,44 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Simplify PowerModel types (#192)
+
+### Staged
+- Added component status parameter lookup (#565)
+- Fixed `va` default start point
+
+### v0.12.2
+- Added function for building pwl objective variables and constraints
+- Added check_status to standard data reading checks (#547)
+- Added storage on/off constraints (#552)
+- Added an alternative storage complementary constraint that uses MIP instead of NLP (#552)
+- Fixed a bug in branch status reporting (#553)
+- Fixed a bug in `AbstractBFForm` version of `constraint_voltage_angle_difference` (#557)
+
+### v0.12.1
+- Fixed a bug in add_setpoint! in the multiconductor case
+
+### v0.12.0
+- Significant updates to function naming details in #538 (#268,#454,#499,#533) (breaking)
+- Added component status based filtering to solution building (#523)
+- Added constraint_model_current to bfm formulations (breaking)
+- Updated Matpower "bus_name" to map to bus parameter "name" (breaking)
+- Updated slope and intercept data structure (#521) (breaking)
+- Updated time_elapsed to be a network-wise parameter (#541) (breaking)
+- Updated current variable name from cm to ccm (#366) (breaking)
+
+### v0.11.2
+- Added support for pre-computed buspair data (#524)
 - Added source_id to Matpower parser (#512)
-- Minor improvments Matpower export function (#388)
+- Added logger_config! to configure the PowerModels logger (#402)
+- Minor improvements to Matpower export function (#388)
+- Removed inequality constraint from theta_ref constraint in the ACR formulation
+- Removed bounds on binary variable constructors (#535)
 
 ### v0.11.1
 - Added calc_gen_cost to compute the generator cost from the setpoint in the data model
 - Added calc_dcline_cost to compute the dcline cost from the setpoint in the data model
-- Fixed a bug that resulted in an extra call to core_ref!
+- Fixed a bug that resulted in an extra call to ref_core!
 
 ### v0.11.0
 - Update to use JuMP/MOI status values (#276) (breaking)
@@ -174,7 +205,7 @@ PowerModels.jl Change Log
 - Allow multinetwork as an optional parameter
 - Removed multi-network filter option from objective functions (breaking)
 - Removed option to run multi-network data in single-network models (breaking)
-- Removed add_bus_demand_setpoint function (breaking)
+- Removed add_setpoint_bus_demand function (breaking)
 - Changed parameters and improved performance of KCL constraints (breaking)
 - Improved robustness of matpower data parsing and transformation
 - Improved testing of convex relaxations

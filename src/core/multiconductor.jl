@@ -1,7 +1,5 @@
 using LinearAlgebra: I
 
-export MultiConductorValue, MultiConductorVector, MultiConductorMatrix, conductors
-
 # "a data structure for working with multiconductor datasets"
 abstract type MultiConductorValue{T,N} <: AbstractArray{T,N} end
 
@@ -58,31 +56,31 @@ Base.BroadcastStyle(::Type{<:MultiConductorVector}) = Broadcast.ArrayStyle{Multi
 Base.BroadcastStyle(::Type{<:MultiConductorMatrix}) = Broadcast.ArrayStyle{MultiConductorMatrix}()
 
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorVector}}, ::Type{ElType}) where ElType
-    A = find_mcv(bc)
+    A = _find_mcv(bc)
     return MultiConductorVector(similar(Array{ElType}, axes(bc)))
 end
 
-"`A = find_mcv(As)` returns the first MultiConductorVector among the arguments."
-find_mcv(bc::Base.Broadcast.Broadcasted) = find_mcv(bc.args)
-find_mcv(args::Base.Broadcast.Extruded) = find_mcv(args.x)
-find_mcv(args::Tuple) = find_mcv(find_mcv(args[1]), Base.tail(args))
-find_mcv(x) = x
-find_mcv(a::MultiConductorVector, rest) = a
-find_mcv(::Any, rest) = find_mcv(rest)
+"`A = _find_mcv(As)` returns the first MultiConductorVector among the arguments."
+_find_mcv(bc::Base.Broadcast.Broadcasted) = _find_mcv(bc.args)
+_find_mcv(args::Base.Broadcast.Extruded) = _find_mcv(args.x)
+_find_mcv(args::Tuple) = _find_mcv(_find_mcv(args[1]), Base.tail(args))
+_find_mcv(x) = x
+_find_mcv(a::MultiConductorVector, rest) = a
+_find_mcv(::Any, rest) = _find_mcv(rest)
 
 
 function Base.similar(bc::Broadcast.Broadcasted{Broadcast.ArrayStyle{MultiConductorMatrix}}, ::Type{ElType}) where ElType
-    A = find_mcm(bc)
+    A = _find_mcm(bc)
     return MultiConductorMatrix(similar(Array{ElType}, axes(bc)))
 end
 
-"`A = find_mcm(As)` returns the first MultiConductorMatrix among the arguments."
-find_mcm(bc::Base.Broadcast.Broadcasted) = find_mcm(bc.args)
-find_mcm(args::Base.Broadcast.Extruded) = find_mcm(args.x)
-find_mcm(args::Tuple) = find_mcm(find_mcm(args[1]), Base.tail(args))
-find_mcm(x) = x
-find_mcm(a::MultiConductorMatrix, rest) = a
-find_mcm(::Any, rest) = find_mcm(rest)
+"`A = _find_mcm(As)` returns the first MultiConductorMatrix among the arguments."
+_find_mcm(bc::Base.Broadcast.Broadcasted) = _find_mcm(bc.args)
+_find_mcm(args::Base.Broadcast.Extruded) = _find_mcm(args.x)
+_find_mcm(args::Tuple) = _find_mcm(_find_mcm(args[1]), Base.tail(args))
+_find_mcm(x) = x
+_find_mcm(a::MultiConductorMatrix, rest) = a
+_find_mcm(::Any, rest) = _find_mcm(rest)
 
 
 # Vectors
@@ -197,8 +195,9 @@ function Base.isapprox(a::MultiConductorValue, b::MultiConductorValue; kwargs...
 end
 
 
-getmcv(value::Any, conductor::Int) = value
-getmcv(value::Any, conductor_i::Int, conductor_j::Int) = value
-getmcv(value::MultiConductorVector, conductor::Int) = value[conductor]
-getmcv(value::MultiConductorMatrix{T}, conductor::Int) where T = MultiConductorVector{T}(value[conductor])
-getmcv(value::MultiConductorMatrix, conductor_i::Int, conductor_j::Int) = value[conductor_i, conductor_j]
+conductor_value(mc::Any, conductor::Int) = mc
+conductor_value(mc::Any, conductor_i::Int, conductor_j::Int) = mc
+conductor_value(mc::MultiConductorVector, conductor::Int) = mc[conductor]
+conductor_value(mc::MultiConductorMatrix{T}, conductor::Int) where T = MultiConductorVector{T}(mc[conductor])
+conductor_value(mc::MultiConductorMatrix, conductor_i::Int, conductor_j::Int) = mc[conductor_i, conductor_j]
+

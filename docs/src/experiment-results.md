@@ -14,7 +14,7 @@ for each `case` in the NESTA archive. If the value of `result["termination_statu
 soc_gap = 100*(result_ac["objective"] - result_soc["objective"])/result_ac["objective"]
 ```
 
-It is important to note that the `result["solve_time"]` value in this experiment does not include Julia's JIT time, about 2-5 seconds. The results were computed using the [HSL](http://www.hsl.rl.ac.uk/ipopt/) ma57 solver in IPOPT. The default linear solver provided with Ipopt.jl will increase the runtime by 2-6x.
+It is important to note that the `result["solve_time"]` value in this experiment does not include Julia's JIT time, about 2-5 seconds. The results were computed using the [HSL](http://www.hsl.rl.ac.uk/ipopt/) ma27 solver in IPOPT. The default linear solver provided with Ipopt.jl will increase the runtime by 2-6x.
 
 
 ## Software Versions

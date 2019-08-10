@@ -55,7 +55,7 @@ sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[
 sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for d in bus_shunts)*w[i]
 ```
 """
-function constraint_kcl_shunt(pm::AbstractWModels, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
+function constraint_power_balance_shunt(pm::AbstractWModels, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
     w    = var(pm, n, c, :w, i)
     pg   = var(pm, n, c, :pg)
     qg   = var(pm, n, c, :qg)
@@ -75,7 +75,7 @@ sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc]
 sum(q[a] for a in bus_arcs) + sum(q_ne[a] for a in bus_arcs_ne) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts)*w[i]
 ```
 """
-function constraint_kcl_shunt_ne(pm::AbstractWRModels, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
+function constraint_power_balance_shunt_ne(pm::AbstractWRModels, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
     w    = var(pm, n, c, :w, i)
     pg   = var(pm, n, c, :pg)
     qg   = var(pm, n, c, :qg)
@@ -137,7 +137,7 @@ end
 
 
 ""
-function constraint_power_balance(pm::AbstractWModels, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b)
+function constraint_network_power_balance(pm::AbstractWModels, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b)
     for (i,(i,j,r,x,tm,g_fr,g_to)) in comp_branch_g
         @assert(r >= 0 && x >= 0) # requirement for the relaxation property
     end
@@ -170,8 +170,8 @@ end
 
 
 ""
-function add_bus_voltage_setpoint(sol, pm::AbstractWModels)
-    add_setpoint(sol, pm, "bus", "vm", :w; scale = (x,item,cnd) -> sqrt(x))
+function add_setpoint_bus_voltage!(sol, pm::AbstractWModels)
+    add_setpoint!(sol, pm, "bus", "vm", :w, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"], scale = (x,item,cnd) -> sqrt(x))
     # What should the default value be?
-    add_setpoint_fixed(sol, pm, "bus", "va")
+    add_setpoint!(sol, pm, "bus", "va", :va, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
 end

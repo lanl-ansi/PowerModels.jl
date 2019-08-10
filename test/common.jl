@@ -35,14 +35,14 @@ function build_mn_data(base_data_1, base_data_2)
 end
 
 
-function build_mc_data(base_data; conductors::Int=3)
+function build_mc_data!(base_data; conductors::Int=3)
     mp_data = PowerModels.parse_file(base_data)
     PowerModels.make_multiconductor!(mp_data, conductors)
     return mp_data
 end
 
 
-function build_mn_mc_data(base_data; replicates::Int=3, conductors::Int=3)
+function build_mn_mc_data!(base_data; replicates::Int=3, conductors::Int=3)
     mp_data = PowerModels.parse_file(base_data)
     PowerModels.make_multiconductor!(mp_data, conductors)
     mn_mc_data = PowerModels.replicate(mp_data, replicates)
@@ -51,7 +51,7 @@ function build_mn_mc_data(base_data; replicates::Int=3, conductors::Int=3)
 end
 
 
-function build_mn_mc_data(base_data_1, base_data_2; conductors_1::Int=3, conductors_2::Int=3)
+function build_mn_mc_data!(base_data_1, base_data_2; conductors_1::Int=3, conductors_2::Int=3)
     mp_data_1 = PowerModels.parse_file(base_data_1)
     mp_data_2 = PowerModels.parse_file(base_data_2)
 

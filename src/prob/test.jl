@@ -7,12 +7,12 @@
 
 
 "opf using current limits instead of thermal limits, tests constraint_current_limit"
-function run_cl_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_cl_opf; kwargs...)
+function _run_cl_opf(file, model_constructor, optimizer; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_cl_opf; kwargs...)
 end
 
 ""
-function post_cl_opf(pm::AbstractPowerModel)
+function _post_cl_opf(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_branch_flow(pm)
@@ -20,14 +20,14 @@ function post_cl_opf(pm::AbstractPowerModel)
 
     objective_min_fuel_and_flow_cost(pm)
 
-    constraint_voltage(pm)
+    constraint_model_voltage(pm)
 
     for i in ids(pm, :ref_buses)
         constraint_theta_ref(pm, i)
     end
 
     for i in ids(pm, :bus)
-        constraint_kcl_shunt(pm, i)
+        constraint_power_balance_shunt(pm, i)
     end
 
     for i in ids(pm, :branch)
@@ -46,23 +46,26 @@ end
 
 
 "opf with unit commitment, tests constraint_current_limit"
-function run_uc_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_uc_opf; solution_builder = get_uc_solution, kwargs...)
+function _run_uc_opf(file, model_constructor, solver; kwargs...)
+    return run_model(file, model_constructor, solver, _post_uc_opf; solution_builder = _solution_uc!, kwargs...)
 end
 
 ""
-function post_uc_opf(pm::AbstractPowerModel)
+function _post_uc_opf(pm::AbstractPowerModel)
     variable_voltage(pm)
 
     variable_generation_indicator(pm)
     variable_generation_on_off(pm)
 
+    variable_storage_indicator(pm)
+    variable_storage_mi_on_off(pm)
+    
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 
-    constraint_voltage(pm)
+    constraint_model_voltage(pm)
 
     for i in ids(pm, :ref_buses)
         constraint_theta_ref(pm, i)
@@ -72,8 +75,19 @@ function post_uc_opf(pm::AbstractPowerModel)
         constraint_generation_on_off(pm, i)
     end
 
+    for i in ids(pm, :storage)
+        constraint_storage_on_off(pm, i)
+    end
+
     for i in ids(pm, :bus)
-        constraint_kcl_shunt(pm, i)
+        constraint_power_balance_shunt_storage(pm, i)
+    end
+    
+    for i in ids(pm, :storage)
+        constraint_storage_state(pm, i)
+        constraint_storage_complementarity_mi(pm, i)
+        constraint_storage_loss(pm, i)
+        constraint_storage_thermal_limit(pm, i)
     end
 
     for i in ids(pm, :branch)
@@ -91,26 +105,33 @@ function post_uc_opf(pm::AbstractPowerModel)
     end
 end
 
-
 ""
-function run_uc_mc_opf(file, model_constructor, solver; kwargs...)
-    return run_generic_model(file, model_constructor, solver, post_uc_mc_opf; solution_builder = get_uc_solution, multiconductor=true, kwargs...)
+function _run_uc_mc_opf(file, model_constructor, solver; kwargs...)
+    return run_model(file, model_constructor, solver, _post_uc_mc_opf; solution_builder = _solution_uc!, multiconductor=true, kwargs...)
 end
 
 ""
-function post_uc_mc_opf(pm::AbstractPowerModel)
+function _post_uc_mc_opf(pm::AbstractPowerModel)
     variable_generation_indicator(pm)
+    variable_storage_indicator(pm)
+    
+    variable_storage_energy(pm)
+    variable_storage_charge(pm)
+    variable_storage_discharge(pm)
+    variable_storage_complementary_indicator(pm)
 
     for c in conductor_ids(pm)
         variable_voltage(pm, cnd=c)
-        variable_voltage(pm, cnd=c)
-
+        
         variable_generation_on_off(pm, cnd=c)
-
+        
+        variable_active_storage(pm, cnd=c)
+        variable_reactive_storage(pm, cnd=c)
+        
         variable_branch_flow(pm, cnd=c)
         variable_dcline_flow(pm, cnd=c)
 
-        constraint_voltage(pm, cnd=c)
+        constraint_model_voltage(pm, cnd=c)
 
         for i in ids(pm, :ref_buses)
             constraint_theta_ref(pm, i, cnd=c)
@@ -120,8 +141,12 @@ function post_uc_mc_opf(pm::AbstractPowerModel)
             constraint_generation_on_off(pm, i, cnd=c)
         end
 
+        for i in ids(pm, :storage)
+            constraint_storage_on_off(pm, i)
+        end
+
         for i in ids(pm, :bus)
-            constraint_kcl_shunt(pm, i, cnd=c)
+            constraint_power_balance_shunt_storage(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
@@ -137,37 +162,45 @@ function post_uc_mc_opf(pm::AbstractPowerModel)
         for i in ids(pm, :dcline)
             constraint_dcline(pm, i, cnd=c)
         end
+
+        for i in ids(pm, :storage)
+            constraint_storage_state(pm, i, cnd=c)
+            constraint_storage_complementarity_mi(pm, i, cnd=c)
+            constraint_storage_loss(pm, i, cnd=c)
+            constraint_storage_thermal_limit(pm, i, cnd=c)
+        end
     end
 
     objective_min_fuel_and_flow_cost(pm)
 end
 
 ""
-function get_uc_solution(pm::AbstractPowerModel, sol::Dict{String,<:Any})
-    add_bus_voltage_setpoint(sol, pm)
-    add_generator_power_setpoint(sol, pm)
-    add_generator_status_setpoint(sol, pm)
-    add_storage_setpoint(sol, pm)
-    add_branch_flow_setpoint(sol, pm)
-    add_dcline_flow_setpoint(sol, pm)
+function _solution_uc!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
+    add_setpoint_bus_voltage!(sol, pm)
+    add_setpoint_generator_power!(sol, pm)
+    add_setpoint_generator_status!(sol, pm)
+    add_setpoint_storage!(sol, pm)
+    add_setpoint_storage_status!(sol, pm)
+    add_setpoint_branch_flow!(sol, pm)
+    add_setpoint_dcline_flow!(sol, pm)
 
-    add_kcl_duals(sol, pm)
-    add_sm_duals(sol, pm) # Adds the duals of the transmission lines' thermal limits.
+    add_dual_kcl!(sol, pm)
+    add_dual_sm!(sol, pm) # Adds the duals of the transmission lines' thermal limits.
 end
 
 
 ""
-function run_mn_opb(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_mn_opb; ref_extensions=[cc_ref!], multinetwork=true, kwargs...)
+function _run_mn_opb(file, model_constructor, optimizer; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mn_opb; ref_extensions=[ref_add_connected_components!], multinetwork=true, kwargs...)
 end
 
 ""
-function post_mn_opb(pm::AbstractPowerModel)
+function _post_mn_opb(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_generation(pm, nw=n)
 
         for i in ids(pm, :components, nw=n)
-            constraint_power_balance(pm, i, nw=n)
+            constraint_network_power_balance(pm, i, nw=n)
         end
     end
 
@@ -176,60 +209,19 @@ end
 
 
 ""
-function run_mn_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_mn_opf; multinetwork=true, kwargs...)
+function _run_mn_pf(file, model_constructor, optimizer; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mn_pf; multinetwork=true, kwargs...)
 end
 
 ""
-function post_mn_opf(pm::AbstractPowerModel)
-    for (n, network) in nws(pm)
-        variable_voltage(pm, nw=n)
-        variable_generation(pm, nw=n)
-        variable_branch_flow(pm, nw=n)
-        variable_dcline_flow(pm, nw=n)
-
-        constraint_voltage(pm, nw=n)
-
-        for i in ids(pm, :ref_buses, nw=n)
-            constraint_theta_ref(pm, i, nw=n)
-        end
-
-        for i in ids(pm, :bus, nw=n)
-            constraint_kcl_shunt(pm, i, nw=n)
-        end
-
-        for i in ids(pm, :branch, nw=n)
-            constraint_ohms_yt_from(pm, i, nw=n)
-            constraint_ohms_yt_to(pm, i, nw=n)
-
-            constraint_voltage_angle_difference(pm, i, nw=n)
-
-            constraint_thermal_limit_from(pm, i, nw=n)
-            constraint_thermal_limit_to(pm, i, nw=n)
-        end
-
-        for i in ids(pm, :dcline, nw=n)
-            constraint_dcline(pm, i, nw=n)
-        end
-    end
-
-    objective_min_fuel_and_flow_cost(pm)
-end
-
-""
-function run_mn_pf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_mn_pf; multinetwork=true, kwargs...)
-end
-
-""
-function post_mn_pf(pm::AbstractPowerModel)
+function _post_mn_pf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n, bounded = false)
         variable_generation(pm, nw=n, bounded = false)
         variable_branch_flow(pm, nw=n, bounded = false)
         variable_dcline_flow(pm, nw=n, bounded = false)
 
-        constraint_voltage(pm, nw=n)
+        constraint_model_voltage(pm, nw=n)
 
         for i in ids(pm, :ref_buses, nw=n)
             constraint_theta_ref(pm, i, nw=n)
@@ -237,7 +229,7 @@ function post_mn_pf(pm::AbstractPowerModel)
         end
 
         for (i,bus) in ref(pm, :bus, nw=n)
-            constraint_kcl_shunt(pm, i, nw=n)
+            constraint_power_balance_shunt(pm, i, nw=n)
 
             # PV Bus Constraints
             if length(ref(pm, :bus_gens, i, nw=n)) > 0 && !(i in ids(pm, :ref_buses, nw=n))
@@ -274,26 +266,26 @@ end
 
 
 ""
-function run_mc_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_mc_opf; multiconductor=true, kwargs...)
+function _run_mc_opf(file, model_constructor, optimizer; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mc_opf; multiconductor=true, kwargs...)
 end
 
 ""
-function post_mc_opf(pm::AbstractPowerModel)
+function _post_mc_opf(pm::AbstractPowerModel)
     for c in conductor_ids(pm)
         variable_voltage(pm, cnd=c)
         variable_generation(pm, cnd=c)
         variable_branch_flow(pm, cnd=c)
         variable_dcline_flow(pm, cnd=c)
 
-        constraint_voltage(pm, cnd=c)
+        constraint_model_voltage(pm, cnd=c)
 
         for i in ids(pm, :ref_buses)
             constraint_theta_ref(pm, i, cnd=c)
         end
 
         for i in ids(pm, :bus)
-            constraint_kcl_shunt(pm, i, cnd=c)
+            constraint_power_balance_shunt(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
@@ -317,12 +309,12 @@ end
 
 
 ""
-function run_mn_mc_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_mn_mc_opf; multinetwork=true, multiconductor=true, kwargs...)
+function _run_mn_mc_opf(file, model_constructor, optimizer; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mn_mc_opf; multinetwork=true, multiconductor=true, kwargs...)
 end
 
 ""
-function post_mn_mc_opf(pm::AbstractPowerModel)
+function _post_mn_mc_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         for c in conductor_ids(pm, nw=n)
             variable_voltage(pm, nw=n, cnd=c)
@@ -330,14 +322,14 @@ function post_mn_mc_opf(pm::AbstractPowerModel)
             variable_branch_flow(pm, nw=n, cnd=c)
             variable_dcline_flow(pm, nw=n, cnd=c)
 
-            constraint_voltage(pm, nw=n, cnd=c)
+            constraint_model_voltage(pm, nw=n, cnd=c)
 
             for i in ids(pm, :ref_buses, nw=n)
                 constraint_theta_ref(pm, i, nw=n, cnd=c)
             end
 
             for i in ids(pm, :bus, nw=n)
-                constraint_kcl_shunt(pm, i, nw=n, cnd=c)
+                constraint_power_balance_shunt(pm, i, nw=n, cnd=c)
             end
 
             for i in ids(pm, :branch, nw=n)
@@ -362,12 +354,12 @@ end
 
 
 "opf with storage"
-function run_strg_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_strg_opf; kwargs...)
+function _run_strg_opf(file, model_constructor, optimizer; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_strg_opf; kwargs...)
 end
 
 ""
-function post_strg_opf(pm::AbstractPowerModel)
+function _post_strg_opf(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_storage(pm)
@@ -376,14 +368,14 @@ function post_strg_opf(pm::AbstractPowerModel)
 
     objective_min_fuel_and_flow_cost(pm)
 
-    constraint_voltage(pm)
+    constraint_model_voltage(pm)
 
     for i in ids(pm, :ref_buses)
         constraint_theta_ref(pm, i)
     end
 
     for i in ids(pm, :bus)
-        constraint_kcl_shunt_storage(pm, i)
+        constraint_power_balance_shunt_storage(pm, i)
     end
 
     for i in ids(pm, :storage)
@@ -410,12 +402,12 @@ end
 
 
 "multi-network opf with storage"
-function run_mn_strg_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_mn_strg_opf; multinetwork=true, kwargs...)
+function _run_mn_strg_opf(file, model_constructor, optimizer; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mn_strg_opf; multinetwork=true, kwargs...)
 end
 
 ""
-function post_mn_strg_opf(pm::AbstractPowerModel)
+function _post_mn_strg_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n)
         variable_generation(pm, nw=n)
@@ -423,14 +415,14 @@ function post_mn_strg_opf(pm::AbstractPowerModel)
         variable_branch_flow(pm, nw=n)
         variable_dcline_flow(pm, nw=n)
 
-        constraint_voltage(pm, nw=n)
+        constraint_model_voltage(pm, nw=n)
 
         for i in ids(pm, :ref_buses, nw=n)
             constraint_theta_ref(pm, i, nw=n)
         end
 
         for i in ids(pm, :bus, nw=n)
-            constraint_kcl_shunt_storage(pm, i, nw=n)
+            constraint_power_balance_shunt_storage(pm, i, nw=n)
         end
 
         for i in ids(pm, :storage, nw=n)
@@ -472,13 +464,62 @@ function post_mn_strg_opf(pm::AbstractPowerModel)
 end
 
 
+
+"opf with mi storage variables"
+function _run_strg_mi_opf(file, model_constructor, optimizer; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_strg_mi_opf; kwargs...)
+end
+
 ""
-function run_mn_mc_strg_opf(file, model_constructor, optimizer; kwargs...)
-    return run_generic_model(file, model_constructor, optimizer, post_mn_mc_strg_opf; multinetwork=true, multiconductor=true, kwargs...)
+function _post_strg_mi_opf(pm::AbstractPowerModel)
+    variable_voltage(pm)
+    variable_generation(pm)
+    variable_storage_mi(pm)
+    variable_branch_flow(pm)
+    variable_dcline_flow(pm)
+    
+    objective_min_fuel_and_flow_cost(pm)
+
+    constraint_model_voltage(pm)
+
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
+    end
+
+    for i in ids(pm, :bus)
+        constraint_power_balance_shunt_storage(pm, i)
+    end
+
+    for i in ids(pm, :storage)
+        constraint_storage_state(pm, i)
+        constraint_storage_complementarity_mi(pm, i)
+        constraint_storage_loss(pm, i)
+        constraint_storage_thermal_limit(pm, i)
+    end
+
+    for i in ids(pm, :branch)
+        constraint_ohms_yt_from(pm, i)
+        constraint_ohms_yt_to(pm, i)
+
+        constraint_voltage_angle_difference(pm, i)
+
+        constraint_thermal_limit_from(pm, i)
+        constraint_thermal_limit_to(pm, i)
+    end
+
+    for i in ids(pm, :dcline)
+        constraint_dcline(pm, i)
+    end
+end
+
+
+""
+function _run_mn_mc_strg_opf(file, model_constructor, optimizer; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_mn_mc_strg_opf; multinetwork=true, multiconductor=true, kwargs...)
 end
 
 "warning: this model is not realistic or physically reasonable, it is only for test coverage"
-function post_mn_mc_strg_opf(pm::AbstractPowerModel)
+function _post_mn_mc_strg_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_storage_energy(pm, nw=n)
         variable_storage_charge(pm, nw=n)
@@ -492,14 +533,14 @@ function post_mn_mc_strg_opf(pm::AbstractPowerModel)
             variable_branch_flow(pm, nw=n, cnd=c)
             variable_dcline_flow(pm, nw=n, cnd=c)
 
-            constraint_voltage(pm, nw=n, cnd=c)
+            constraint_model_voltage(pm, nw=n, cnd=c)
 
             for i in ids(pm, :ref_buses, nw=n)
                 constraint_theta_ref(pm, i, nw=n, cnd=c)
             end
 
             for i in ids(pm, :bus, nw=n)
-                constraint_kcl_shunt_storage(pm, i, nw=n, cnd=c)
+                constraint_power_balance_shunt_storage(pm, i, nw=n, cnd=c)
             end
 
             for i in ids(pm, :storage, nw=n)

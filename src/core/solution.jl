@@ -1,8 +1,8 @@
 ""
-function build_solution(pm::AbstractPowerModel, solve_time; solution_builder = get_solution)
+function build_solution(pm::AbstractPowerModel, solve_time; solution_builder=solution_opf!)
     # TODO @assert that the model is solved
 
-    sol = init_solution(pm)
+    sol = _init_solution(pm)
     data = Dict{String,Any}("name" => pm.data["name"])
 
     if InfrastructureModels.ismultinetwork(pm.data)
@@ -37,8 +37,8 @@ function build_solution(pm::AbstractPowerModel, solve_time; solution_builder = g
         "termination_status" => JuMP.termination_status(pm.model),
         "primal_status" => JuMP.primal_status(pm.model),
         "dual_status" => JuMP.dual_status(pm.model),
-        "objective" => guard_objective_value(pm.model),
-        "objective_lb" => guard_objective_bound(pm.model),
+        "objective" => _guard_objective_value(pm.model),
+        "objective_lb" => _guard_objective_bound(pm.model),
         "solve_time" => solve_time,
         "solution" => sol,
         "machine" => Dict(
@@ -48,13 +48,11 @@ function build_solution(pm::AbstractPowerModel, solve_time; solution_builder = g
         "data" => data
     )
 
-    pm.solution = solution
-
     return solution
 end
 
 ""
-function init_solution(pm::AbstractPowerModel)
+function _init_solution(pm::AbstractPowerModel)
     data_keys = ["per_unit", "baseMVA"]
     return Dict{String,Any}(key => pm.data[key] for key in data_keys)
 end
@@ -78,18 +76,36 @@ function add_bus_voltage_setpoint(sol, pm::AbstractPowerModel)
 end
 
 ""
-function add_kcl_duals(sol, pm::AbstractPowerModel)
+function solution_opf!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
+    add_setpoint_bus_voltage!(sol, pm)
+    add_setpoint_generator_power!(sol, pm)
+    add_setpoint_storage!(sol, pm)
+    add_setpoint_branch_flow!(sol, pm)
+    add_setpoint_dcline_flow!(sol, pm)
+
+    add_dual_kcl!(sol, pm)
+    add_dual_sm!(sol, pm) # Adds the duals of the transmission lines' thermal limits.
+end
+
+""
+function add_setpoint_bus_voltage!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "bus", "vm", :vm, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
+    add_setpoint!(sol, pm, "bus", "va", :va, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
+end
+
+""
+function add_dual_kcl!(sol, pm::AbstractPowerModel)
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
-        add_dual(sol, pm, "bus", "lam_kcl_r", :kcl_p)
-        add_dual(sol, pm, "bus", "lam_kcl_i", :kcl_q)
+        add_dual!(sol, pm, "bus", "lam_kcl_r", :kcl_p, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
+        add_dual!(sol, pm, "bus", "lam_kcl_i", :kcl_q, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
     end
 end
 
 ""
-function add_sm_duals(sol, pm::AbstractPowerModel)
+function add_dual_sm!(sol, pm::AbstractPowerModel)
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
-        add_dual(sol, pm, "branch", "mu_sm_fr", :sm_fr)
-        add_dual(sol, pm, "branch", "mu_sm_to", :sm_to)
+        add_dual!(sol, pm, "branch", "mu_sm_fr", :sm_fr, status_name=pm_component_status["branch"])
+        add_dual!(sol, pm, "branch", "mu_sm_to", :sm_to, status_name=pm_component_status["branch"])
     end
 end
 
@@ -134,30 +150,147 @@ function add_dcline_flow_setpoint(sol, pm::AbstractPowerModel)
 end
 
 ""
-function add_branch_flow_setpoint_ne(sol, pm::AbstractPowerModel)
+function add_setpoint_generator_power!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "gen", "pg", :pg, status_name=pm_component_status["gen"])
+    add_setpoint!(sol, pm, "gen", "qg", :qg, status_name=pm_component_status["gen"])
+end
+
+""
+function add_setpoint_generator_status!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "gen", "gen_status", :z_gen, status_name=pm_component_status["gen"], conductorless=true, default_value = (item) -> item["gen_status"]*1.0)
+end
+
+""
+function add_setpoint_storage!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "storage", "ps", :ps)
+    add_setpoint!(sol, pm, "storage", "qs", :qs)
+    add_setpoint!(sol, pm, "storage", "se", :se, conductorless=true)
+    # useful for model debugging
+    #add_setpoint!(sol, pm, "storage", "sc", :sc, conductorless=true)
+    #add_setpoint!(sol, pm, "storage", "sd", :sd, conductorless=true)
+end
+
+""
+function add_setpoint_storage_status!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "storage", "status", :z_storage, status_name=pm_component_status["storage"], conductorless=true, default_value = (item) -> item["status"]*1.0)
+end
+
+""
+function add_setpoint_branch_flow!(sol, pm::AbstractPowerModel)
     # check the branch flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
-        add_setpoint(sol, pm, "ne_branch", "pf", :p_ne; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "ne_branch", "qf", :q_ne; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "ne_branch", "pt", :p_ne; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-        add_setpoint(sol, pm, "ne_branch", "qt", :q_ne; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
+        add_setpoint!(sol, pm, "branch", "pf", :p, status_name=pm_component_status["branch"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "branch", "qf", :q, status_name=pm_component_status["branch"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "branch", "pt", :p, status_name=pm_component_status["branch"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+        add_setpoint!(sol, pm, "branch", "qt", :q, status_name=pm_component_status["branch"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
     end
 end
 
 ""
-function add_branch_status_setpoint(sol, pm::AbstractPowerModel)
-  add_setpoint(sol, pm, "branch", "br_status", :branch_z; default_value = (item) -> 1)
+function add_setpoint_dcline_flow!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "dcline", "pf", :p_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+    add_setpoint!(sol, pm, "dcline", "qf", :q_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+    add_setpoint!(sol, pm, "dcline", "pt", :p_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+    add_setpoint!(sol, pm, "dcline", "qt", :q_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
 end
 
-function add_branch_status_setpoint_dc(sol, pm::AbstractPowerModel)
-  add_setpoint(sol, pm, "dcline", "br_status", :dcline_z; default_value = (item) -> 1)
+
+""
+function add_setpoint_branch_status!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "branch", "br_status", :branch_z, status_name=pm_component_status["branch"], default_value = (item) -> item["br_status"]*1.0)
 end
 
 ""
-function add_branch_ne_setpoint(sol, pm::AbstractPowerModel)
-  add_setpoint(sol, pm, "ne_branch", "built", :branch_ne; default_value = (item) -> 1)
+function add_setpoint_dcline_status!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "dcline", "br_status", :dcline_z, status_name=pm_component_status["dcline"], default_value = (item) -> item["br_status"]*1.0)
 end
 
+
+"adds values based on JuMP variables"
+function add_setpoint!(
+    sol,
+    pm::AbstractPowerModel,
+    dict_name,
+    param_name,
+    variable_symbol;
+    index_name = "index",
+    default_value = (item) -> NaN,
+    scale = (x,item,cnd) -> x,
+    var_key = (idx,item) -> idx,
+    sol_dict = get(sol, dict_name, Dict{String,Any}()),
+    conductorless = false,
+    status_name = "status",
+    inactive_status_value = 0,
+)
+
+    if conductorless
+        has_variable_symbol = haskey(var(pm, pm.cnw), variable_symbol)
+    else
+        has_variable_symbol = haskey(var(pm, pm.cnw, pm.ccnd), variable_symbol)
+    end
+
+    variables = []
+    if has_variable_symbol
+        if conductorless
+            variables = var(pm, pm.cnw, variable_symbol)
+        else
+            variables = var(pm, pm.cnw, pm.ccnd, variable_symbol)
+        end
+    end
+
+    if !has_variable_symbol || length(variables) == 0
+        add_setpoint_fixed!(sol, pm, dict_name, param_name; index_name=index_name, default_value=default_value, conductorless=conductorless)
+        return
+    end
+
+    if InfrastructureModels.ismultinetwork(pm.data)
+        data_dict = pm.data["nw"]["$(pm.cnw)"][dict_name]
+    else
+        data_dict = pm.data[dict_name]
+    end
+
+    if length(data_dict) > 0
+        sol[dict_name] = sol_dict
+    end
+
+    mc = ismulticonductor(pm)
+    for (i,item) in data_dict
+        idx = Int(item[index_name])
+        sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
+
+        if conductorless
+            sol_item[param_name] = default_value(item)
+
+            if item[status_name] != inactive_status_value
+                var_id = var_key(idx, item)
+                variables = var(pm, pm.cnw, variable_symbol)
+                sol_item[param_name] = scale(JuMP.value(variables[var_id]), item, 1)
+            end
+        elseif !mc
+            sol_item[param_name] = default_value(item)
+
+            if item[status_name] != inactive_status_value
+                var_id = var_key(idx, item)
+                variables = var(pm, variable_symbol)
+                sol_item[param_name] = scale(JuMP.value(variables[var_id]), item, 1)
+            end
+        else
+            num_conductors = length(conductor_ids(pm))
+            cnd_idx = 1
+            sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
+
+            if item[status_name] != inactive_status_value
+                for conductor in conductor_ids(pm)
+                    var_id = var_key(idx, item)
+                    variables = var(pm, variable_symbol, cnd=conductor)
+                    sol_item[param_name][cnd_idx] = scale(JuMP.value(variables[var_id]), item, conductor)
+                    cnd_idx += 1
+                end
+            end
+        end
+    end
+
+end
 
 
 """
@@ -166,7 +299,7 @@ adds setpoint values based on a given default_value function.
 this significantly improves performance in models where values are not defined
 e.g. the reactive power values in a DC power flow model
 """
-function add_setpoint_fixed(
+function add_setpoint_fixed!(
     sol,
     pm::AbstractPowerModel,
     dict_name,
@@ -208,66 +341,9 @@ end
 
 
 
-"adds values based on JuMP variables"
-function add_setpoint(
-    sol,
-    pm::AbstractPowerModel,
-    dict_name,
-    param_name,
-    variable_symbol;
-    index_name = "index",
-    default_value = (item) -> NaN,
-    scale = (x,item,cnd) -> x,
-    extract_var = (var,idx,item) -> var[idx],
-    sol_dict = get(sol, dict_name, Dict{String,Any}()),
-    conductorless = false
-)
-
-    if InfrastructureModels.ismultinetwork(pm.data)
-        data_dict = pm.data["nw"]["$(pm.cnw)"][dict_name]
-    else
-        data_dict = pm.data[dict_name]
-    end
-
-    if length(data_dict) > 0
-        sol[dict_name] = sol_dict
-    end
-    for (i,item) in data_dict
-        idx = Int(item[index_name])
-        sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
-
-        if conductorless
-            sol_item[param_name] = default_value(item)
-            try
-                variable = extract_var(var(pm, pm.cnw, variable_symbol), idx, item)
-                sol_item[param_name] = scale(JuMP.value(variable), item, 1)
-            catch
-            end
-        else
-            num_conductors = length(conductor_ids(pm))
-            cnd_idx = 1
-            sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
-            for conductor in conductor_ids(pm)
-                try
-                    variable = extract_var(var(pm, variable_symbol, cnd=conductor), idx, item)
-                    sol_item[param_name][cnd_idx] = scale(JuMP.value(variable), item, conductor)
-                catch
-                end
-                cnd_idx += 1
-            end
-        end
-
-        # remove MultiConductorValue, if it was not a ismulticonductor network
-        if !ismulticonductor(pm)
-            sol_item[param_name] = sol_item[param_name][1]
-        end
-    end
-end
-
-
 """
 
-    function add_dual(
+    function add_dual!(
         sol::AbstractDict,
         pm::AbstractPowerModel,
         dict_name::AbstractString,
@@ -276,7 +352,7 @@ end
         index_name::AbstractString = "index",
         default_value::Function = (item) -> NaN,
         scale::Function = (x,item,cnd) -> x,
-        extract_con::Function = (con,idx,item) -> con[idx],
+        con_key::Function = (idx,item) -> idx,
     )
 
 This function takes care of adding the values of dual variables to the solution Dict.
@@ -291,10 +367,12 @@ This function takes care of adding the values of dual variables to the solution 
 - `index_name::AbstractString = "index"`: ;
 - `default_value::Function = (item) -> NaN`: a function that assign to each item a default value, for missing data;
 - `scale::Function = (x,item) -> x`: a function to rescale the values of the dual variables, if needed;
-- `extract_con::Function = (con,idx,item) -> con[idx]`: a method to extract the actual dual variables.
+- `con_key::Function = (idx,item) -> idx`: a method to extract the actual dual variables.
+- `status_name::AbstractString: the status field of the given component type`
+- `inactive_status_value::Any: the value of the status field indicating an inactive component`
 
 """
-function add_dual(
+function add_dual!(
     sol::AbstractDict,
     pm::AbstractPowerModel,
     dict_name::AbstractString,
@@ -303,8 +381,92 @@ function add_dual(
     index_name::AbstractString = "index",
     default_value::Function = (item) -> NaN,
     scale::Function = (x,item,cnd) -> x,
-    extract_con::Function = (con,idx,item) -> con[idx],
-    conductorless = false
+    con_key::Function = (idx,item) -> idx,
+    conductorless = false,
+    status_name = "status",
+    inactive_status_value = 0,
+)
+    sol_dict = get(sol, dict_name, Dict{String,Any}())
+
+
+    constraints = []
+    if conductorless
+        has_con_symbol = haskey(con(pm, pm.cnw), con_symbol)
+    else
+        has_con_symbol = haskey(con(pm, pm.cnw, pm.ccnd), con_symbol)
+    end
+
+    if has_con_symbol
+        if conductorless
+            constraints = con(pm, pm.cnw, con_symbol)
+        else
+            constraints = con(pm, pm.cnw, pm.ccnd, con_symbol)
+        end
+    end
+
+    if !has_con_symbol || length(constraints) == 0
+        add_dual_fixed!(sol, pm, dict_name, param_name; index_name=index_name, default_value=default_value, conductorless=conductorless)
+        return
+    end
+
+
+    if ismultinetwork(pm)
+        data_dict = pm.data["nw"]["$(pm.cnw)"][dict_name]
+    else
+        data_dict = pm.data[dict_name]
+    end
+
+    if length(data_dict) > 0
+        sol[dict_name] = sol_dict
+    end
+
+    mc = ismulticonductor(pm)
+    for (i,item) in data_dict
+        idx = Int(item[index_name])
+        sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
+
+        if conductorless
+            sol_item[param_name] = default_value(item)
+
+            if item[status_name] != inactive_status_value
+                con_id = con_key(idx, item)
+                constraints = con(pm, pm.cnw, con_symbol)
+                sol_item[param_name] = scale(JuMP.dual(constraints[var_id]), item, 1)
+            end
+        elseif !mc
+            sol_item[param_name] = default_value(item)
+
+            if item[status_name] != inactive_status_value
+                con_id = con_key(idx, item)
+                constraints = con(pm, con_symbol)
+                sol_item[param_name] = scale(JuMP.dual(constraints[con_id]), item, 1)
+            end
+        else
+            num_conductors = length(conductor_ids(pm))
+            cnd_idx = 1
+            sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
+
+            if item[status_name] != inactive_status_value
+                for conductor in conductor_ids(pm)
+                    con_id = con_key(idx, item)
+                    constraints = con(pm, con_symbol, cnd=conductor)
+                    sol_item[param_name][cnd_idx] = scale(JuMP.dual(constraints[con_id]), item, conductor)
+                    cnd_idx += 1
+                end
+            end
+        end
+    end
+end
+
+
+function add_dual_fixed!(
+    sol::AbstractDict,
+    pm::AbstractPowerModel,
+    dict_name::AbstractString,
+    param_name::AbstractString;
+    index_name::AbstractString = "index",
+    default_value::Function = (item) -> NaN,
+    conductorless=false
 )
     sol_dict = get(sol, dict_name, Dict{String,Any}())
 
@@ -324,24 +486,10 @@ function add_dual(
 
         if conductorless
             sol_item[param_name] = default_value(item)
-            try
-                constraint = extract_con(var(pm, pm.cnw, con_symbol), idx, item)
-                sol_item[param_name] = scale(JuMP.dual(constraint), item, 1)
-            catch
-            end
         else
             num_conductors = length(conductor_ids(pm))
             cnd_idx = 1
-            sol_item[param_name] = MultiConductorVector(default_value(item), num_conductors)
-            for conductor in conductor_ids(pm)
-                try
-                    constraint = extract_con(con(pm, con_symbol, cnd=conductor), idx, item)
-                    sol_item[param_name][cnd_idx] = scale(JuMP.dual(constraint), item, conductor)
-                catch
-                    Memento.info(LOGGER, "No constraint: $(con_symbol), $(idx)")
-                end
-                cnd_idx += 1
-            end
+            sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
         end
 
         # remove MultiConductorValue, if it was not a ismulticonductor network
@@ -352,9 +500,8 @@ function add_dual(
 end
 
 
-
 ""
-function guard_objective_value(model)
+function _guard_objective_value(model)
     obj_val = NaN
 
     try
@@ -367,7 +514,7 @@ end
 
 
 ""
-function guard_objective_bound(model)
+function _guard_objective_bound(model)
     obj_lb = -Inf
 
     try

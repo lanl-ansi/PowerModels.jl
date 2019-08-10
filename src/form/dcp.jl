@@ -13,11 +13,7 @@ function variable_voltage_ne(pm::AbstractDCPModel; kwargs...)
 end
 
 "do nothing, this model does not have complex voltage variables"
-function constraint_voltage(pm::AbstractDCPModel; kwargs...)
-end
-
-"do nothing, this model does not have complex voltage variables"
-function constraint_voltage_ne(pm::AbstractDCPModel; kwargs...)
+function constraint_model_voltage_ne(pm::AbstractDCPModel; kwargs...)
 end
 
 "do nothing, this model does not have voltage variables"
@@ -31,7 +27,7 @@ end
 
 
 ""
-function constraint_kcl_shunt(pm::AbstractDCPModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
+function constraint_power_balance_shunt(pm::AbstractDCPModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
     pg   = var(pm, n, c, :pg)
     p    = var(pm, n, c, :p)
     p_dc = var(pm, n, c, :p_dc)
@@ -41,7 +37,7 @@ function constraint_kcl_shunt(pm::AbstractDCPModel, n::Int, c::Int, i, bus_arcs,
 end
 
 ""
-function constraint_kcl_shunt_storage(pm::AbstractDCPModel, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+function constraint_power_balance_shunt_storage(pm::AbstractDCPModel, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
     p = var(pm, n, c, :p)
     pg = var(pm, n, c, :pg)
     ps = var(pm, n, c, :ps)
@@ -52,7 +48,7 @@ function constraint_kcl_shunt_storage(pm::AbstractDCPModel, n::Int, c::Int, i::I
 end
 
 ""
-function constraint_kcl_shunt_ne(pm::AbstractDCPModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
+function constraint_power_balance_shunt_ne(pm::AbstractDCPModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
     pg   = var(pm, n, c, :pg)
     p    = var(pm, n, c, :p)
     p_ne = var(pm, n, c, :p_ne)
@@ -90,9 +86,9 @@ end
 
 
 ""
-function add_bus_voltage_setpoint(sol, pm::AbstractDCPModel)
-    add_setpoint_fixed(sol, pm, "bus", "vm"; default_value = (item) -> 1)
-    add_setpoint(sol, pm, "bus", "va", :va)
+function add_setpoint_bus_voltage!(sol, pm::AbstractDCPModel)
+    add_setpoint_fixed!(sol, pm, "bus", "vm"; default_value = (item) -> 1)
+    add_setpoint!(sol, pm, "bus", "va", :va, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
 end
 
 
@@ -102,7 +98,7 @@ function variable_voltage_on_off(pm::AbstractDCPModel; kwargs...)
 end
 
 "do nothing, this model does not have complex voltage variables"
-function constraint_voltage_on_off(pm::AbstractDCPModel; kwargs...)
+function constraint_model_voltage_on_off(pm::AbstractDCPModel; kwargs...)
 end
 
 "`-b*(t[f_bus] - t[t_bus] + vad_min*(1-branch_z[i])) <= p[f_idx] <= -b*(t[f_bus] - t[t_bus] + vad_max*(1-branch_z[i]))`"
@@ -146,25 +142,22 @@ end
 
 
 
-
-
-
 ######## Lossless Models ########
 
 ""
 function variable_active_branch_flow(pm::AbstractAPLossLessModels; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     if bounded
-        flow_lb, flow_ub = calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
+        flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
         p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_p",
             lower_bound = flow_lb[l],
             upper_bound = flow_ub[l],
-            start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
+            start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     else
         p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_p",
-            start = getval(ref(pm, nw, :branch, l), "p_start", cnd)
+            start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
         )
     end
 
@@ -187,7 +180,7 @@ function variable_active_branch_flow_ne(pm::AbstractAPLossLessModels; nw::Int=pm
         [(l,i,j) in ref(pm, nw, :ne_arcs_from)], base_name="$(nw)_$(cnd)_p_ne",
         lower_bound = -ref(pm, nw, :ne_branch, l, "rate_a", cnd),
         upper_bound =  ref(pm, nw, :ne_branch, l, "rate_a", cnd),
-        start = getval(ref(pm, nw, :ne_branch, l), "p_start", cnd)
+        start = comp_start_value(ref(pm, nw, :ne_branch, l), "p_start", cnd)
     )
 
     # this explicit type erasure is necessary
@@ -197,7 +190,7 @@ function variable_active_branch_flow_ne(pm::AbstractAPLossLessModels; nw::Int=pm
 end
 
 ""
-function constraint_power_balance(pm::AbstractAPLossLessModels, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b)
+function constraint_network_power_balance(pm::AbstractAPLossLessModels, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b)
     pg = var(pm, n, c, :pg)
 
     JuMP.@constraint(pm.model, sum(pg[g] for g in comp_gen_ids) == sum(pd for (i,pd) in values(comp_pd)) + sum(gs*1.0^2 for (i,gs) in values(comp_gs)))
@@ -206,9 +199,10 @@ end
 
 "nothing to do, this model is symetric"
 function constraint_thermal_limit_to(pm::AbstractAPLossLessModels, n::Int, c::Int, t_idx, rate_a)
-    # l,i,j = t_idx
-    # p_fr = var(pm, n, c, :p, (l,j,i))
-    # con(pm, n, c, :sm_to)[l] = JuMP.UpperBoundRef(p_fr)
+    # NOTE correct?
+    l,i,j = t_idx
+    p_fr = var(pm, n, c, :p, (l,j,i))
+    con(pm, n, c, :sm_to)[l] = JuMP.UpperBoundRef(p_fr)
 end
 
 "nothing to do, this model is symetric"
@@ -230,6 +224,28 @@ end
 "nothing to do, this model is symetric"
 function constraint_ohms_yt_to_ne(pm::AbstractAPLossLessModels, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
 end
+
+""
+function constraint_storage_on_off(pm::AbstractAPLossLessModels, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
+    z_storage = var(pm, n, :z_storage, i)
+    ps = var(pm, n, pm.ccnd, :ps, i)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+
+    JuMP.@constraint(pm.model, ps <= z_storage*pmax)
+    JuMP.@constraint(pm.model, ps >= z_storage*pmin)
+    JuMP.@constraint(pm.model, sc <= z_storage*charge_ub)
+    JuMP.@constraint(pm.model, sd <= z_storage*discharge_ub)
+end
+
+""
+function constraint_storage_loss(pm::AbstractAPLossLessModels, n::Int, i, bus, r, x, standby_loss)
+    ps = var(pm, n, pm.ccnd, :ps, i)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+    JuMP.@constraint(pm.model, ps == sc - sd)
+end
+
 
 
 
@@ -255,14 +271,6 @@ end
 "nothing to do, no voltage angle variables"
 function constraint_ohms_yt_from(pm::AbstractNFAModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
 end
-
-""
-function add_bus_voltage_setpoint(sol, pm::AbstractNFAModel)
-    add_setpoint_fixed(sol, pm, "bus", "vm")
-    add_setpoint_fixed(sol, pm, "bus", "va")
-end
-
-
 
 
 

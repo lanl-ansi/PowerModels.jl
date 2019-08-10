@@ -2,7 +2,7 @@
     @testset "30-bus case file" begin
         result = run_opf("../test/data/matpower/case30.m", ACPPowerModel, ipopt_solver)
 
-        @test result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
     end
 
@@ -12,7 +12,7 @@
 
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
-        @test result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
     end
 
@@ -22,7 +22,7 @@
 
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
-        @test result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
     end
 
@@ -33,14 +33,14 @@
 
             result = run_opf(data, ACPPowerModel, ipopt_solver)
 
-            @test result["termination_status"] == MOI.LOCALLY_SOLVED
+            @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 204.96; atol = 1e-1)
         end
     end
 
     @testset "14-bus case file with bus names" begin
         data = PowerModels.parse_file("../test/data/matpower/case14.m")
-        @test data["bus"]["1"]["bus_name"] == "Bus 1     HV"
+        @test data["bus"]["1"]["name"] == "Bus 1     HV"
         @test isa(JSON.json(data), String)
     end
 
@@ -59,7 +59,7 @@
     @testset "2-bus case file with spaces" begin
         result = run_pf("../test/data/matpower/case2.m", ACPPowerModel, ipopt_solver)
 
-        @test result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0.0; atol = 1e-1)
     end
 
@@ -78,20 +78,20 @@ end
     @testset "ACP Model" begin
         result = run_opf("../test/data/matpower/case14.m", ACPPowerModel, ipopt_solver)
 
-        @test result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 8081.5; atol = 1e0)
         #@test result["status"] = bus_name
     end
     @testset "DC Model" begin
         result = run_opf("../test/data/matpower/case14.m", DCPPowerModel, ipopt_solver)
 
-        @test result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 7642.6; atol = 1e0)
     end
     @testset "QC Model" begin
         result = run_opf("../test/data/matpower/case14.m", QCWRPowerModel, ipopt_solver)
 
-        @test result["termination_status"] == MOI.LOCALLY_SOLVED
+        @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 8075.1; atol = 1e0)
     end
 end

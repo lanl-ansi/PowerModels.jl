@@ -14,18 +14,20 @@ function variable_voltage_magnitude(pm::AbstractLPACModel; nw::Int=pm.cnw, cnd::
             [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_phi",
             lower_bound = ref(pm, nw, :bus, i, "vmin", cnd) - 1.0,
             upper_bound = ref(pm, nw, :bus, i, "vmax", cnd) - 1.0,
-            start = getval(ref(pm, nw, :bus, i), "phi_start", cnd)
+            start = comp_start_value(ref(pm, nw, :bus, i), "phi_start", cnd)
         )
     else
         var(pm, nw, cnd)[:phi] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_phi",
-            start = getval(ref(pm, nw, :bus, i), "phi_start", cnd)
+            start = comp_start_value(ref(pm, nw, :bus, i), "phi_start", cnd)
         )
     end
 end
 
 ""
-function constraint_voltage(pm::AbstractLPACModel, n::Int, c::Int)
+function constraint_model_voltage(pm::AbstractLPACModel, n::Int, c::Int)
+    _check_missing_keys(var(pm, n, c), [:va,:cs], typeof(pm))
+
     t = var(pm, n, c, :va)
     cs = var(pm, n, c, :cs)
 
@@ -38,7 +40,7 @@ end
 
 
 ""
-function constraint_kcl_shunt(pm::AbstractLPACCModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
+function constraint_power_balance_shunt(pm::AbstractLPACCModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
     phi  = var(pm, n, c, :phi, i)
     pg   = var(pm, n, c, :pg)
     qg   = var(pm, n, c, :qg)
@@ -82,8 +84,8 @@ end
 
 
 ""
-function add_bus_voltage_setpoint(sol, pm::AbstractLPACModel)
-    add_setpoint(sol, pm, "bus", "vm", :phi; scale = (x,item,cnd) -> 1.0+x)
-    add_setpoint(sol, pm, "bus", "va", :va)
+function add_setpoint_bus_voltage!(sol, pm::AbstractLPACModel)
+    add_setpoint!(sol, pm, "bus", "vm", :phi, status_name="bus_type", inactive_status_value = 4, scale = (x,item,cnd) -> 1.0+x)
+    add_setpoint!(sol, pm, "bus", "va", :va, status_name="bus_type", inactive_status_value = 4)
 end
 

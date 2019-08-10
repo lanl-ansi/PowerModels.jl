@@ -1,32 +1,21 @@
-export
-    AbstractPowerModel,
-
+#================================================
     # exact non-convex models
-    ACPPowerModel,
-    ACRPowerModel,
-    ACTPowerModel,
+    ACPPowerModel, ACRPowerModel, ACTPowerModel
 
     # linear approximations
-    DCPPowerModel, DCPlosslessForm,
-    NFAPowerModel,
+    DCPPowerModel, NFAPowerModel
 
     # quadratic approximations
-    DCPLLPowerModel,
-    LPACCPowerModel,
+    DCPLLPowerModel, LPACCPowerModel
 
     # quadratic relaxations
-    SOCWRPowerModel,
-    QCWRPowerModel,
-    SOCWRConicPowerModel,
-    QCWRTriPowerModel,
-    SOCBFPowerModel,
-    SOCBFConicPowerModel,
+    SOCWRPowerModel, SOCWRConicPowerModel,
+    SOCBFPowerModel, SOCBFConicPowerModel,
+    QCWRPowerModel, QCWRTriPowerModel,
 
     # sdp relaxations
-    SDPWRMPowerModel,
-    SparseSDPWRMPowerModel
-
-
+    SDPWRMPowerModel, SparseSDPWRMPowerModel
+================================================#
 
 ##### Top Level Abstract Types #####
 
