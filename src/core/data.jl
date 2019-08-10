@@ -306,6 +306,14 @@ function _make_per_unit!(data::Dict{String,<:Any}, mva_base::Real)
         end
     end
 
+    if haskey(data, "switch")
+        for (i, switch) in data["switch"]
+            _apply_func!(switch, "psw", rescale)
+            _apply_func!(switch, "qsw", rescale)
+            _apply_func!(switch, "thermal_rating", rescale)
+            _apply_func!(switch, "current_rating", rescale)
+        end
+    end
 
     branches = []
     if haskey(data, "branch")
@@ -436,6 +444,15 @@ function _make_mixed_units!(data::Dict{String,<:Any}, mva_base::Real)
             _apply_func!(strg, "qmin", rescale)
             _apply_func!(strg, "qmax", rescale)
             _apply_func!(strg, "standby_loss", rescale)
+        end
+    end
+
+    if haskey(data, "switch")
+        for (i, switch) in data["switch"]
+            _apply_func!(switch, "psw", rescale)
+            _apply_func!(switch, "qsw", rescale)
+            _apply_func!(switch, "thermal_rating", rescale)
+            _apply_func!(switch, "current_rating", rescale)
         end
     end
 
@@ -844,6 +861,9 @@ function _calc_power_balance(data::Dict{String,<:Any})
         bvals["p"] = 0.0
         bvals["q"] = 0.0
 
+        bvals["psw"] = 0.0
+        bvals["qsw"] = 0.0
+
         bvals["p_dc"] = 0.0
         bvals["q_dc"] = 0.0
     end
@@ -880,6 +900,20 @@ function _calc_power_balance(data::Dict{String,<:Any})
         end
     end
 
+    for (i,switch) in data["switch"]
+        if switch["status"] != 0
+            bus_fr = switch["f_bus"]
+            bvals_fr = bus_values[bus_fr]
+            bvals_fr["psw"] += switch["psw"]
+            bvals_fr["qsw"] += switch["qsw"]
+
+            bus_to = switch["t_bus"]
+            bvals_to = bus_values[bus_to]
+            bvals_to["psw"] -= switch["psw"]
+            bvals_to["qsw"] -= switch["qsw"]
+        end
+    end
+
     for (i,branch) in data["branch"]
         if branch["br_status"] != 0
             bus_fr = branch["f_bus"]
@@ -912,8 +946,8 @@ function _calc_power_balance(data::Dict{String,<:Any})
     for (i,bus) in data["bus"]
         if bus["bus_type"] != 4
             bvals = bus_values[bus["index"]]
-            p_delta = bvals["p"] + bvals["p_dc"] - bvals["pg"] + bvals["ps"] + bvals["pd"] + bvals["gs"]*(bvals["vm"]^2)
-            q_delta = bvals["q"] + bvals["q_dc"] - bvals["qg"] + bvals["qs"] + bvals["qd"] - bvals["bs"]*(bvals["vm"]^2)
+            p_delta = bvals["p"] + bvals["p_dc"] + bvals["psw"] - bvals["pg"] + bvals["ps"] + bvals["pd"] + bvals["gs"]*(bvals["vm"]^2)
+            q_delta = bvals["q"] + bvals["q_dc"] + bvals["qsw"] - bvals["qg"] + bvals["qs"] + bvals["qd"] - bvals["bs"]*(bvals["vm"]^2)
         else
             p_delta = NaN
             q_delta = NaN
@@ -1228,6 +1262,16 @@ function check_connectivity(data::Dict{String,<:Any})
         end
     end
 
+    for (i, switch) in data["switch"]
+        if !(switch["f_bus"] in bus_ids)
+            Memento.error(_LOGGER, "from bus $(switch["f_bus"]) in switch $(i) is not defined")
+        end
+
+        if !(switch["t_bus"] in bus_ids)
+            Memento.error(_LOGGER, "to bus $(switch["t_bus"]) in switch $(i) is not defined")
+        end
+    end
+
     for (i, branch) in data["branch"]
         if !(branch["f_bus"] in bus_ids)
             Memento.error(_LOGGER, "from bus $(branch["f_bus"]) in branch $(i) is not defined")
@@ -1460,6 +1504,30 @@ function check_storage_parameters(data::Dict{String,<:Any})
         if strg["standby_loss"] > 0.0 && strg["energy"] <= 0.0
             Memento.warn(_LOGGER, "storage unit $(strg["index"]) has standby losses but zero initial energy.  This can lead to model infeasiblity.")
         end
+    end
+
+end
+
+
+"""
+checks that each switch has a reasonable parameters
+"""
+function check_switch_parameters(data::Dict{String,<:Any})
+    if InfrastructureModels.ismultinetwork(data)
+        Memento.error(_LOGGER, "check_switch_parameters does not yet support multinetwork data")
+    end
+
+    for (i, switch) in data["switch"]
+        if switch["state"] <= 0.0 && (!isapprox(switch["psw"], 0.0) || !isapprox(switch["qsw"], 0.0))
+            Memento.warn(_LOGGER, "switch $(switch["index"]) is open with non-zero power values $(switch["psw"]), $(switch["qsw"])")
+        end
+        if haskey(switch, "thermal_rating") && switch["thermal_rating"] < 0.0
+            Memento.error(_LOGGER, "switch $(switch["index"]) has a non-positive thermal_rating $(switch["thermal_rating"])")
+        end
+        if haskey(switch, "current_rating") && switch["current_rating"] < 0.0
+            Memento.error(_LOGGER, "switch $(switch["index"]) has a non-positive current_rating $(switch["current_rating"])")
+        end
+
     end
 
 end

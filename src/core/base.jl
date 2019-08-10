@@ -330,6 +330,7 @@ function _ref_add_core!(nw_refs::Dict)
         ref[:shunt] = Dict(x for x in ref[:shunt] if (x.second["status"] == 1 && x.second["shunt_bus"] in keys(ref[:bus])))
         ref[:gen] = Dict(x for x in ref[:gen] if (x.second["gen_status"] == 1 && x.second["gen_bus"] in keys(ref[:bus])))
         ref[:storage] = Dict(x for x in ref[:storage] if (x.second["status"] == 1 && x.second["storage_bus"] in keys(ref[:bus])))
+        ref[:switch] = Dict(x for x in ref[:switch] if (x.second["status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus])))
         ref[:branch] = Dict(x for x in ref[:branch] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus])))
         ref[:dcline] = Dict(x for x in ref[:dcline] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus])))
 
@@ -342,6 +343,10 @@ function _ref_add_core!(nw_refs::Dict)
         ref[:arcs_from_dc] = [(i,dcline["f_bus"],dcline["t_bus"]) for (i,dcline) in ref[:dcline]]
         ref[:arcs_to_dc]   = [(i,dcline["t_bus"],dcline["f_bus"]) for (i,dcline) in ref[:dcline]]
         ref[:arcs_dc]      = [ref[:arcs_from_dc]; ref[:arcs_to_dc]]
+
+        ref[:arcs_from_sw] = [(i,switch["f_bus"],switch["t_bus"]) for (i,switch) in ref[:switch]]
+        ref[:arcs_to_sw]   = [(i,switch["t_bus"],switch["f_bus"]) for (i,switch) in ref[:switch]]
+        ref[:arcs_sw] = [ref[:arcs_from_sw]; ref[:arcs_to_sw]]
 
 
         ### bus connected component lookups ###
@@ -380,6 +385,13 @@ function _ref_add_core!(nw_refs::Dict)
             push!(bus_arcs_dc[i], (l,i,j))
         end
         ref[:bus_arcs_dc] = bus_arcs_dc
+
+        bus_arcs_sw = Dict((i, Tuple{Int,Int,Int}[]) for (i,bus) in ref[:bus])
+        for (l,i,j) in ref[:arcs_sw]
+            push!(bus_arcs_sw[i], (l,i,j))
+        end
+        ref[:bus_arcs_sw] = bus_arcs_sw
+
 
 
         ### reference bus lookup (a set to support multiple connected components) ###

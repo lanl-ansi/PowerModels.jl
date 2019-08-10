@@ -150,6 +150,15 @@ function constraint_model_current(pm::GenericPowerModel, n::Int, c::Int)
 end
 
 
+""
+function constraint_switch_state_open(pm::GenericPowerModel, n::Int, c::Int, f_idx)
+    psw = var(pm, n, c, :psw, f_idx)
+    qsw = var(pm, n, c, :qsw, f_idx)
+
+    JuMP.@constraint(pm.model, psw == 0.0)
+    JuMP.@constraint(pm.model, qsw == 0.0)
+end
+
 
 ""
 function constraint_storage_thermal_limit(pm::GenericPowerModel, n::Int, c::Int, i, rating)

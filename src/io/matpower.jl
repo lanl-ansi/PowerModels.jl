@@ -116,9 +116,9 @@ const _mp_storage_columns = [
 ]
 
 const _mp_switch_columns = [
-    ("fbus", Int), ("tbus", Int),
-    ("pw", Float64), ("qw", Float64), ("state", Int),
-    ("rating", Float64),
+    ("f_bus", Int), ("t_bus", Int),
+    ("psw", Float64), ("qsw", Float64), ("state", Int),
+    ("thermal_rating", Float64),
     ("status", Int)
 ]
 
@@ -359,6 +359,9 @@ function _matpower_to_powermodels!(mp_data::Dict{String,<:Any})
     end
     if !haskey(pm_data, "storage")
         pm_data["storage"] = []
+    end
+    if !haskey(pm_data, "switch")
+        pm_data["switch"] = []
     end
 
     # translate component models
