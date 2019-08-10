@@ -145,7 +145,7 @@ end
 
 ""
 function add_setpoint_switch_status!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "switch", "status", :z_swtich, conductorless=true, default_value = (item) -> item["status"]*1.0)
+    add_setpoint!(sol, pm, "switch", "status", :z_switch, conductorless=true, default_value = (item) -> item["status"]*1.0)
 end
 
 

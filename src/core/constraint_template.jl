@@ -682,7 +682,7 @@ function constraint_switch_state(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, 
     end
 end
 
-"enforces controlable swtich constraints"
+"enforces controlable switch constraints"
 function constraint_switch_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     switch = ref(pm, nw, :switch, i)
 
