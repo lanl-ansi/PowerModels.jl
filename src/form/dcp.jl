@@ -88,7 +88,7 @@ end
 ""
 function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: AbstractDCPForm
     add_setpoint_fixed!(sol, pm, "bus", "vm"; default_value = (item) -> 1)
-    add_setpoint!(sol, pm, "bus", "va", :va, status_name="bus_type", inactive_status_value = 4)
+    add_setpoint!(sol, pm, "bus", "va", :va, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
 end
 
 
