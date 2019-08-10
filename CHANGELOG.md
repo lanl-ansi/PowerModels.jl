@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Add switch component (#339)
+- Added component status parameter lookup (#565)
 - Fixed `va` default start point
 
 ### v0.12.2
