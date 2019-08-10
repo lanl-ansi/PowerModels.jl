@@ -457,6 +457,25 @@ function variable_reactive_dcline_flow(pm::GenericPowerModel; nw::Int=pm.cnw, cn
 end
 
 
+
+function variable_switch_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, relax=false)
+    if !relax
+        var(pm, nw)[:z_switch] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :switch)], base_name="$(nw)_z_switch",
+            binary = true,
+            start = comp_start_value(ref(pm, nw, :switch, i), "z_switch_start", 1, 1.0)
+        )
+    else
+        var(pm, nw)[:z_switch] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :switch)], base_name="$(nw)_z_switch",
+            lower_bound = 0,
+            upper_bound = 1,
+            start = comp_start_value(ref(pm, nw, :switch, i), "z_switch_start", 1, 1.0)
+        )
+    end
+end
+
+
 ""
 function variable_switch_flow(pm::GenericPowerModel; kwargs...)
     variable_active_switch_flow(pm; kwargs...)

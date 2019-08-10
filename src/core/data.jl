@@ -134,7 +134,7 @@ end
 
 const _pm_component_types_order = Dict(
     "bus" => 1.0, "load" => 2.0, "shunt" => 3.0, "gen" => 4.0, "storage" => 5.0,
-    "branch" => 6.0, "dcline" => 7.0
+    "switch" => 6.0, "branch" => 7.0, "dcline" => 8.0
 )
 
 const _pm_component_parameter_order = Dict(
@@ -146,6 +146,8 @@ const _pm_component_parameter_order = Dict(
     "vm" => 10.0, "va" => 11.0,
     "pd" => 20.0, "qd" => 21.0,
     "gs" => 30.0, "bs" => 31.0,
+    "ps" => 35.0, "qs" => 36.0,
+    "psw" => 37.0, "qsw" => 38.0,
     "pg" => 40.0, "qg" => 41.0, "vg" => 42.0, "mbase" => 43.0,
     "energy" => 44.0,
     "br_r" => 50.0, "br_x" => 51.0, "g_fr" => 52.0, "b_fr" => 53.0,

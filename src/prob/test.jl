@@ -45,7 +45,7 @@ function _post_cl_opf(pm::GenericPowerModel)
 end
 
 
-"opf with fixed swtiches"
+"opf with fixed switches"
 function _run_sw_opf(file, model_constructor, optimizer; kwargs...)
     return run_model(file, model_constructor, optimizer, _post_sw_opf; kwargs...)
 end
@@ -88,6 +88,69 @@ function _post_sw_opf(pm::GenericPowerModel)
         constraint_dcline(pm, i)
     end
 end
+
+
+"opf with controlable switches"
+function _run_oswpf(file, model_constructor, optimizer; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_oswpf; ref_extensions=[ref_add_on_off_va_bounds!], solution_builder = _solution_osw!, kwargs...)
+end
+
+""
+function _post_oswpf(pm::GenericPowerModel)
+    variable_voltage(pm)
+    variable_generation(pm)
+
+    variable_switch_indicator(pm)
+    variable_switch_flow(pm)
+
+    variable_branch_flow(pm)
+    variable_dcline_flow(pm)
+
+    objective_min_fuel_and_flow_cost(pm)
+
+    constraint_model_voltage(pm)
+
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
+    end
+
+    for i in ids(pm, :bus)
+        constraint_power_balance_shunt_switch(pm, i)
+    end
+
+    for i in ids(pm, :switch)
+        constraint_switch_on_off(pm, i)
+    end
+
+    for i in ids(pm, :branch)
+        constraint_ohms_yt_from(pm, i)
+        constraint_ohms_yt_to(pm, i)
+
+        constraint_voltage_angle_difference(pm, i)
+
+        constraint_thermal_limit_from(pm, i)
+        constraint_thermal_limit_to(pm, i)
+    end
+
+    for i in ids(pm, :dcline)
+        constraint_dcline(pm, i)
+    end
+end
+
+""
+function _solution_osw!(pm::GenericPowerModel, sol::Dict{String,<:Any})
+    add_setpoint_bus_voltage!(sol, pm)
+    add_setpoint_generator_power!(sol, pm)
+    add_setpoint_storage!(sol, pm)
+    add_setpoint_branch_flow!(sol, pm)
+    add_setpoint_dcline_flow!(sol, pm)
+    add_setpoint_switch_flow!(sol, pm)
+    add_setpoint_switch_status!(sol, pm)
+
+    add_dual_kcl!(sol, pm)
+    add_dual_sm!(sol, pm) # Adds the duals of the transmission lines' thermal limits.
+end
+
 
 
 "opf with unit commitment, tests constraint_current_limit"

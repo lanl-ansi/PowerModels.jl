@@ -159,6 +159,22 @@ function constraint_switch_state_open(pm::GenericPowerModel, n::Int, c::Int, f_i
     JuMP.@constraint(pm.model, qsw == 0.0)
 end
 
+""
+function constraint_switch_flow_on_off(pm::GenericPowerModel, n::Int, c::Int, i, f_idx)
+    psw = var(pm, n, c, :psw, f_idx)
+    qsw = var(pm, n, c, :qsw, f_idx)
+    z = var(pm, n, :z_switch, i)
+
+    psw_lb, psw_ub = InfrastructureModels.variable_domain(psw)
+    qsw_lb, qsw_ub = InfrastructureModels.variable_domain(qsw)
+
+    JuMP.@constraint(pm.model, psw <= psw_ub*z)
+    JuMP.@constraint(pm.model, psw >= psw_lb*z)
+    JuMP.@constraint(pm.model, qsw <= qsw_ub*z)
+    JuMP.@constraint(pm.model, qsw >= qsw_lb*z)
+end
+
+
 
 ""
 function constraint_storage_thermal_limit(pm::GenericPowerModel, n::Int, c::Int, i, rating)

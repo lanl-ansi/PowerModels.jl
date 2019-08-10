@@ -206,6 +206,17 @@ function constraint_switch_state_closed(pm::GenericPowerModel, n::Int, c::Int, f
     JuMP.@constraint(pm.model, va_fr == va_to)
 end
 
+""
+function constraint_switch_voltage_on_off(pm::GenericPowerModel, n::Int, c::Int, i, f_bus, t_bus, vad_min, vad_max)
+    vm_fr = var(pm, n, c, :vm, f_bus)
+    vm_to = var(pm, n, c, :vm, t_bus)
+    va_fr = var(pm, n, c, :va, f_bus)
+    va_to = var(pm, n, c, :va, t_bus)
+    z = var(pm, n, :z_switch, i)
+
+    JuMP.@constraint(pm.model, z*vm_fr == z*vm_to)
+    JuMP.@constraint(pm.model, z*va_fr == z*va_to)
+end
 
 ""
 function variable_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm

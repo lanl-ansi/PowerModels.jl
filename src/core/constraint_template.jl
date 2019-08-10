@@ -682,6 +682,17 @@ function constraint_switch_state(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, 
     end
 end
 
+"enforces controlable swtich constraints"
+function constraint_switch_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    switch = ref(pm, nw, :switch, i)
+
+    f_idx = (i, switch["f_bus"], switch["t_bus"])
+    vad_min = ref(pm, nw, :off_angmin, cnd)
+    vad_max = ref(pm, nw, :off_angmax, cnd)
+
+    constraint_switch_flow_on_off(pm, nw, cnd, i, f_idx)
+    constraint_switch_voltage_on_off(pm, nw, cnd, i, switch["f_bus"], switch["t_bus"], vad_min, vad_max)
+end
 
 ### Storage Constraints ###
 
