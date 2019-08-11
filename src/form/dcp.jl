@@ -77,7 +77,7 @@ function constraint_ohms_yt_from_ne(pm::AbstractDCPModel, n::Int, c::Int, i, f_b
     p_fr  = var(pm, n, c, :p_ne, f_idx)
     va_fr = var(pm, n, c,   :va, f_bus)
     va_to = var(pm, n, c,   :va, t_bus)
-    z = var(pm, n, c, :branch_ne, i)
+    z = var(pm, n, :branch_ne, i)
 
     JuMP.@constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_max*(1-z)) )
     JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
@@ -131,7 +131,7 @@ function constraint_voltage_angle_difference_ne(pm::AbstractDCPModel, n::Int, c:
 
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
-    z = var(pm, n, c, :branch_ne, i)
+    z = var(pm, n, :branch_ne, i)
 
     JuMP.@constraint(pm.model, va_fr - va_to <= angmax*z + vad_max*(1-z))
     JuMP.@constraint(pm.model, va_fr - va_to >= angmin*z + vad_min*(1-z))
@@ -311,7 +311,7 @@ function constraint_ohms_yt_to_ne(pm::AbstractDCPLLModel, n::Int, c::Int, i, f_b
     p_to = var(pm, n, c, :p_ne, t_idx)
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
-    z = var(pm, n, c, :branch_ne, i)
+    z = var(pm, n, :branch_ne, i)
 
     r = g/(g^2 + b^2)
     t_m = max(abs(vad_min),abs(vad_max))

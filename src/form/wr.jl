@@ -118,7 +118,7 @@ function constraint_model_voltage_ne(pm::AbstractWRModel, n::Int, c::Int)
     w  = var(pm, n, c, :w)
     wr = var(pm, n, c, :wr_ne)
     wi = var(pm, n, c, :wi_ne)
-    z  = var(pm, n, c, :branch_ne)
+    z  = var(pm, n, :branch_ne)
 
     w_fr = var(pm, n, c, :w_fr_ne)
     w_to = var(pm, n, c, :w_to_ne)

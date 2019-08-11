@@ -61,7 +61,7 @@ end
 function constraint_thermal_limit_from_ne(pm::AbstractPowerModel, n::Int, c::Int, i, f_idx, rate_a)
     p_fr = var(pm, n, c, :p_ne, f_idx)
     q_fr = var(pm, n, c, :q_ne, f_idx)
-    z = var(pm, n, c, :branch_ne, i)
+    z = var(pm, n, :branch_ne, i)
 
     JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2*z^2)
 end
@@ -70,7 +70,7 @@ end
 function constraint_thermal_limit_to_ne(pm::AbstractPowerModel, n::Int, c::Int, i, t_idx, rate_a)
     p_to = var(pm, n, c, :p_ne, t_idx)
     q_to = var(pm, n, c, :q_ne, t_idx)
-    z = var(pm, n, c, :branch_ne, i)
+    z = var(pm, n, :branch_ne, i)
 
     JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2*z^2)
 end
