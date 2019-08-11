@@ -64,7 +64,7 @@ end
 ""
 function constraint_thermal_limit_from_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_idx, rate_a) where T <: AbstractActivePowerFormulation
     p_fr = var(pm, n, c, :p, f_idx)
-    z = var(pm, n, c, :branch_z, i)
+    z = var(pm, n, c, :z_branch, i)
 
     JuMP.@constraint(pm.model, p_fr <=  rate_a*z)
     JuMP.@constraint(pm.model, p_fr >= -rate_a*z)
@@ -73,7 +73,7 @@ end
 ""
 function constraint_thermal_limit_to_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, t_idx, rate_a) where T <: AbstractActivePowerFormulation
     p_to = var(pm, n, c, :p, t_idx)
-    z = var(pm, n, c, :branch_z, i)
+    z = var(pm, n, c, :z_branch, i)
 
     JuMP.@constraint(pm.model, p_to <=  rate_a*z)
     JuMP.@constraint(pm.model, p_to >= -rate_a*z)

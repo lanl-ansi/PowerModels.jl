@@ -39,20 +39,20 @@ end
 
 # Generic on/off thermal limit constraint
 
-"`p[f_idx]^2 + q[f_idx]^2 <= (rate_a * branch_z[i])^2`"
+"`p[f_idx]^2 + q[f_idx]^2 <= (rate_a * z_branch[i])^2`"
 function constraint_thermal_limit_from_on_off(pm::GenericPowerModel, n::Int, c::Int, i, f_idx, rate_a)
     p_fr = var(pm, n, c, :p, f_idx)
     q_fr = var(pm, n, c, :q, f_idx)
-    z = var(pm, n, c, :branch_z, i)
+    z = var(pm, n, c, :z_branch, i)
 
     JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2*z^2)
 end
 
-"`p[t_idx]^2 + q[t_idx]^2 <= (rate_a * branch_z[i])^2`"
+"`p[t_idx]^2 + q[t_idx]^2 <= (rate_a * z_branch[i])^2`"
 function constraint_thermal_limit_to_on_off(pm::GenericPowerModel, n::Int, c::Int, i, t_idx, rate_a)
     p_to = var(pm, n, c, :p, t_idx)
     q_to = var(pm, n, c, :q, t_idx)
-    z = var(pm, n, c, :branch_z, i)
+    z = var(pm, n, c, :z_branch, i)
 
     JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2*z^2)
 end
