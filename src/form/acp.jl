@@ -201,7 +201,7 @@ function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, c::Int
     vm_to = var(pm, n, c, :vm, t_bus)
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
-    z = var(pm, n, c, :z_branch, i)
+    z = var(pm, n, :z_branch, i)
 
     JuMP.@NLconstraint(pm.model, p_fr == z*( (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))) )
     JuMP.@NLconstraint(pm.model, q_fr == z*(-(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))) )
@@ -220,7 +220,7 @@ function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, 
     vm_to = var(pm, n, c, :vm, t_bus)
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
-    z = var(pm, n, c, :z_branch, i)
+    z = var(pm, n, :z_branch, i)
 
     JuMP.@NLconstraint(pm.model, p_to == z*( (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))) )
     JuMP.@NLconstraint(pm.model, q_to == z*(-(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))) )
@@ -269,7 +269,7 @@ function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n:
     i, f_bus, t_bus = f_idx
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
-    z = var(pm, n, c, :z_branch, i)
+    z = var(pm, n, :z_branch, i)
 
     JuMP.@constraint(pm.model, z*(va_fr - va_to) <= angmax)
     JuMP.@constraint(pm.model, z*(va_fr - va_to) >= angmin)

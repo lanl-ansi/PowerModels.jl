@@ -106,7 +106,7 @@ function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, c::Int
     p_fr  = var(pm, n, c,  :p, f_idx)
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
-    z = var(pm, n, c, :z_branch, i)
+    z = var(pm, n, :z_branch, i)
 
     JuMP.@constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_max*(1-z)) )
     JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
@@ -119,7 +119,7 @@ function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n:
 
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
-    z = var(pm, n, c, :z_branch, i)
+    z = var(pm, n, :z_branch, i)
 
     JuMP.@constraint(pm.model, va_fr - va_to <= angmax*z + vad_max*(1-z))
     JuMP.@constraint(pm.model, va_fr - va_to >= angmin*z + vad_min*(1-z))
@@ -306,7 +306,7 @@ function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, 
     p_to  = var(pm, n, c,  :p, t_idx)
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
-    z = var(pm, n, c, :z_branch, i)
+    z = var(pm, n, :z_branch, i)
 
     r = g/(g^2 + b^2)
     t_m = max(abs(vad_min),abs(vad_max))

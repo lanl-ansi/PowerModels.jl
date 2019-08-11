@@ -624,10 +624,10 @@ end
 
 "variable: `0 <= z_branch[l] <= 1` for `l` in `branch`es"
 function variable_branch_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    var(pm, nw, cnd)[:z_branch] = JuMP.@variable(pm.model,
-        [l in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_z_branch",
+    var(pm, nw)[:z_branch] = JuMP.@variable(pm.model,
+        [l in ids(pm, nw, :branch)], base_name="$(nw)_z_branch",
         binary = true,
-        start = comp_start_value(ref(pm, nw, :branch, l), "z_branch_start", cnd, 1.0)
+        start = comp_start_value(ref(pm, nw, :branch, l), "z_branch_start", 1, 1.0)
     )
 end
 
