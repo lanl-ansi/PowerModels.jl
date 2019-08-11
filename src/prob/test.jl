@@ -12,7 +12,7 @@ function _run_cl_opf(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function _post_cl_opf(pm::GenericPowerModel)
+function _post_cl_opf(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_branch_flow(pm)
@@ -51,7 +51,7 @@ function _run_uc_opf(file, model_constructor, solver; kwargs...)
 end
 
 ""
-function _post_uc_opf(pm::GenericPowerModel)
+function _post_uc_opf(pm::AbstractPowerModel)
     variable_voltage(pm)
 
     variable_generation_indicator(pm)
@@ -111,7 +111,7 @@ function _run_uc_mc_opf(file, model_constructor, solver; kwargs...)
 end
 
 ""
-function _post_uc_mc_opf(pm::GenericPowerModel)
+function _post_uc_mc_opf(pm::AbstractPowerModel)
     variable_generation_indicator(pm)
     variable_storage_indicator(pm)
     
@@ -175,7 +175,7 @@ function _post_uc_mc_opf(pm::GenericPowerModel)
 end
 
 ""
-function _solution_uc!(pm::GenericPowerModel, sol::Dict{String,<:Any})
+function _solution_uc!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
     add_setpoint_bus_voltage!(sol, pm)
     add_setpoint_generator_power!(sol, pm)
     add_setpoint_generator_status!(sol, pm)
@@ -195,7 +195,7 @@ function _run_mn_opb(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function _post_mn_opb(pm::GenericPowerModel)
+function _post_mn_opb(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_generation(pm, nw=n)
 
@@ -214,7 +214,7 @@ function _run_mn_pf(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function _post_mn_pf(pm::GenericPowerModel)
+function _post_mn_pf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n, bounded = false)
         variable_generation(pm, nw=n, bounded = false)
@@ -271,7 +271,7 @@ function _run_mc_opf(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function _post_mc_opf(pm::GenericPowerModel)
+function _post_mc_opf(pm::AbstractPowerModel)
     for c in conductor_ids(pm)
         variable_voltage(pm, cnd=c)
         variable_generation(pm, cnd=c)
@@ -314,7 +314,7 @@ function _run_mn_mc_opf(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function _post_mn_mc_opf(pm::GenericPowerModel)
+function _post_mn_mc_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         for c in conductor_ids(pm, nw=n)
             variable_voltage(pm, nw=n, cnd=c)
@@ -359,7 +359,7 @@ function _run_strg_opf(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function _post_strg_opf(pm::GenericPowerModel)
+function _post_strg_opf(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_storage(pm)
@@ -407,7 +407,7 @@ function _run_mn_strg_opf(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function _post_mn_strg_opf(pm::GenericPowerModel)
+function _post_mn_strg_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n)
         variable_generation(pm, nw=n)
@@ -471,7 +471,7 @@ function _run_strg_mi_opf(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function _post_strg_mi_opf(pm::GenericPowerModel)
+function _post_strg_mi_opf(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_storage_mi(pm)
@@ -519,7 +519,7 @@ function _run_mn_mc_strg_opf(file, model_constructor, optimizer; kwargs...)
 end
 
 "warning: this model is not realistic or physically reasonable, it is only for test coverage"
-function _post_mn_mc_strg_opf(pm::GenericPowerModel)
+function _post_mn_mc_strg_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_storage_energy(pm, nw=n)
         variable_storage_charge(pm, nw=n)

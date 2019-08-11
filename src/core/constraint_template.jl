@@ -7,7 +7,7 @@
 # extract the required parameters from a given network data structure and
 # pass the data as named arguments to the Power Flow formulations.
 #
-# Constraint templates should always be defined over "GenericPowerModel"
+# Constraint templates should always be defined over "AbstractPowerModel"
 # and should never refer to model variables
 #
 
@@ -22,7 +22,7 @@ formulation constraints.
 Notable examples include the constraints linking the voltages in the
 ACTPowerModel, constraints linking convex relaxations of voltage variables.
 """
-function constraint_model_voltage(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_model_voltage(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     constraint_model_voltage(pm, nw, cnd)
 end
 
@@ -35,7 +35,7 @@ constraint can be set to zero via an indicator variable
 Notable examples include the constraints linking the voltages in the
 ACTPowerModel, constraints linking convex relaxations of voltage variables.
 """
-function constraint_model_voltage_on_off(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_model_voltage_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     constraint_model_voltage_on_off(pm, nw, cnd)
 end
 
@@ -48,7 +48,7 @@ voltages in this constraint can be set to zero via an indicator variable
 Notable examples include the constraints linking the voltages in the
 ACTPowerModel, constraints linking convex relaxations of voltage variables.
 """
-function constraint_model_voltage_ne(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_model_voltage_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     constraint_model_voltage_ne(pm, nw, cnd)
 end
 
@@ -63,7 +63,7 @@ formulation constraints.
 Notable examples include the constraints linking the current and power
 variables in the BFM models.
 """
-function constraint_model_current(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_model_current(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     constraint_model_current(pm, nw, cnd)
 end
 
@@ -71,18 +71,18 @@ end
 ### Generator Constraints ###
 
 ""
-function constraint_active_gen_setpoint(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_active_gen_setpoint(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     gen = ref(pm, nw, :gen, i)
     constraint_active_gen_setpoint(pm, nw, cnd, gen["index"], gen["pg"][cnd])
 end
 
 ""
-function constraint_reactive_gen_setpoint(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_reactive_gen_setpoint(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     gen = ref(pm, nw, :gen, i)
     constraint_reactive_gen_setpoint(pm, nw, cnd, gen["index"], gen["qg"][cnd])
 end
 
-function constraint_generation_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_generation_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     gen = ref(pm, nw, :gen, i)
 
     constraint_generation_on_off(pm, nw, cnd, i, gen["pmin"][cnd], gen["pmax"][cnd], gen["qmin"][cnd], gen["qmax"][cnd])
@@ -92,12 +92,12 @@ end
 ### Bus - Setpoint Constraints ###
 
 ""
-function constraint_theta_ref(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_theta_ref(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     constraint_theta_ref(pm, nw, cnd, i)
 end
 
 ""
-function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_voltage_magnitude_setpoint(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     bus = ref(pm, nw, :bus, i)
     constraint_voltage_magnitude_setpoint(pm, nw, cnd, bus["index"], bus["vm"][cnd])
 end
@@ -106,7 +106,7 @@ end
 ### Power Balance Constraints ###
 
 "ensures that power generation and demand are balanced"
-function constraint_network_power_balance(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_network_power_balance(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     comp_bus_ids = ref(pm, nw, :components, i)
 
     comp_gen_ids = Set{Int64}()
@@ -147,7 +147,7 @@ end
 ### Bus - KCL Constraints ###
 
 ""
-function constraint_power_balance_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_power_balance_shunt(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     if !haskey(con(pm, nw, cnd), :kcl_p)
         con(pm, nw, cnd)[:kcl_p] = Dict{Int,JuMP.ConstraintRef}()
     end
@@ -172,7 +172,7 @@ function constraint_power_balance_shunt(pm::GenericPowerModel, i::Int; nw::Int=p
 end
 
 ""
-function constraint_power_balance_shunt_storage(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_power_balance_shunt_storage(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     if !haskey(con(pm, nw, cnd), :kcl_p)
         con(pm, nw, cnd)[:kcl_p] = Dict{Int,JuMP.ConstraintRef}()
     end
@@ -198,7 +198,7 @@ function constraint_power_balance_shunt_storage(pm::GenericPowerModel, i::Int; n
 end
 
 ""
-function constraint_power_balance_shunt_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_power_balance_shunt_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     bus = ref(pm, nw, :bus, i)
     bus_arcs = ref(pm, nw, :bus_arcs, i)
     bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
@@ -220,7 +220,7 @@ end
 ### Branch - Ohm's Law Constraints ###
 
 ""
-function constraint_ohms_yt_from(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_ohms_yt_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -238,7 +238,7 @@ end
 
 
 ""
-function constraint_ohms_yt_to(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_ohms_yt_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -256,7 +256,7 @@ end
 
 
 ""
-function constraint_ohms_y_from(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_ohms_y_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -274,7 +274,7 @@ end
 
 
 ""
-function constraint_ohms_y_to(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_ohms_y_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -294,7 +294,7 @@ end
 ### Branch - On/Off Ohm's Law Constraints ###
 
 ""
-function constraint_ohms_yt_from_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_ohms_yt_from_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -315,7 +315,7 @@ end
 
 
 ""
-function constraint_ohms_yt_to_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_ohms_yt_to_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -336,7 +336,7 @@ end
 
 
 ""
-function constraint_ohms_yt_from_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_ohms_yt_from_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :ne_branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -357,7 +357,7 @@ end
 
 
 ""
-function constraint_ohms_yt_to_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_ohms_yt_to_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :ne_branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -381,7 +381,7 @@ end
 ### Branch - Current ###
 
 ""
-function constraint_power_magnitude_sqr(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_power_magnitude_sqr(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -394,7 +394,7 @@ end
 
 
 ""
-function constraint_power_magnitude_sqr_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_power_magnitude_sqr_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -407,7 +407,7 @@ end
 
 
 ""
-function constraint_power_magnitude_link(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_power_magnitude_link(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -427,7 +427,7 @@ end
 
 
 ""
-function constraint_power_magnitude_link_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_power_magnitude_link_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -450,12 +450,12 @@ end
 
 """
 
-    constraint_thermal_limit_from(pm::GenericPowerModel, n::Int, i::Int)
+    constraint_thermal_limit_from(pm::AbstractPowerModel, n::Int, i::Int)
 
 Adds the (upper and lower) thermal limit constraints for the desired branch to the PowerModel.
 
 """
-function constraint_thermal_limit_from(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_thermal_limit_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     if !haskey(con(pm, nw, cnd), :sm_fr)
         con(pm, nw, cnd)[:sm_fr] = Dict{Int,Any}() # note this can be a constraint or a variable bound
     end
@@ -470,7 +470,7 @@ end
 
 
 ""
-function constraint_thermal_limit_to(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_thermal_limit_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     if !haskey(con(pm, nw, cnd), :sm_to)
         con(pm, nw, cnd)[:sm_to] = Dict{Int,Any}() # note this can be a constraint or a variable bound
     end
@@ -485,7 +485,7 @@ end
 
 
 ""
-function constraint_thermal_limit_from_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_thermal_limit_from_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -496,7 +496,7 @@ end
 
 
 ""
-function constraint_thermal_limit_to_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_thermal_limit_to_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -507,7 +507,7 @@ end
 
 
 ""
-function constraint_thermal_limit_from_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_thermal_limit_from_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :ne_branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -518,7 +518,7 @@ end
 
 
 ""
-function constraint_thermal_limit_to_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_thermal_limit_to_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :ne_branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -533,7 +533,7 @@ end
 """
 Adds a current magnitude limit constraint for the desired branch to the PowerModel.
 """
-function constraint_current_limit(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_current_limit(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -546,7 +546,7 @@ end
 ### Branch - Phase Angle Difference Constraints ###
 
 ""
-function constraint_voltage_angle_difference(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_voltage_angle_difference(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -561,7 +561,7 @@ end
 
 
 ""
-function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_voltage_angle_difference_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_idx = (i, branch["f_bus"], branch["t_bus"])
 
@@ -573,7 +573,7 @@ end
 
 
 ""
-function constraint_voltage_angle_difference_ne(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_voltage_angle_difference_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :ne_branch, i)
     f_idx = (i, branch["f_bus"], branch["t_bus"])
 
@@ -587,7 +587,7 @@ end
 ### Branch - Loss Constraints ###
 
 ""
-function constraint_loss_lb(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_loss_lb(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     @assert branch["br_r"] >= 0
     @assert branch["br_x"] >= 0
@@ -606,7 +606,7 @@ function constraint_loss_lb(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::
 end
 
 ""
-function constraint_flow_losses(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_flow_losses(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -621,11 +621,11 @@ function constraint_flow_losses(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, c
     b_sh_fr = branch["b_fr"][cnd]
     b_sh_to = branch["b_to"][cnd]
 
-    constraint_flow_losses(pm::GenericPowerModel, nw, cnd, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
+    constraint_flow_losses(pm::AbstractPowerModel, nw, cnd, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
 end
 
 ""
-function constraint_voltage_magnitude_difference(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_voltage_magnitude_difference(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -646,25 +646,25 @@ end
 ### Storage Constraints ###
 
 ""
-function constraint_storage_thermal_limit(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_storage_thermal_limit(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     storage = ref(pm, nw, :storage, i)
     constraint_storage_thermal_limit(pm, nw, cnd, i, storage["thermal_rating"][cnd])
 end
 
 ""
-function constraint_storage_current_limit(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_storage_current_limit(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     storage = ref(pm, nw, :storage, i)
     constraint_storage_current_limit(pm, nw, cnd, i, storage["storage_bus"], storage["current_rating"][cnd])
 end
 
 
 ""
-function constraint_storage_complementarity_nl(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_storage_complementarity_nl(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     constraint_storage_complementarity_nl(pm, nw, i)
 end
 
 "deprecated: name change to constraint_storage_complementarity_nl( ... )"
-function constraint_storage_complementarity(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_storage_complementarity(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     Memento.warn(_LOGGER, "call to depreciated function constraint_storage_complementarity use constraint_storage_complementarity_nl")
     constraint_storage_complementarity_nl(pm, nw, i)
 end
@@ -672,7 +672,7 @@ end
 
 
 ""
-function constraint_storage_complementarity_mi(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_storage_complementarity_mi(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     storage = ref(pm, nw, :storage, i)
     charge_ub = storage["charge_rating"]
     discharge_ub = storage["discharge_rating"]
@@ -682,14 +682,14 @@ end
 
 
 ""
-function constraint_storage_loss(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_storage_loss(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     storage = ref(pm, nw, :storage, i)
 
     constraint_storage_loss(pm, nw, i, storage["storage_bus"], storage["r"][cnd], storage["x"][cnd], storage["standby_loss"])
 end
 
 ""
-function constraint_storage_state(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_storage_state(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     storage = ref(pm, nw, :storage, i)
 
     if haskey(ref(pm, nw), :time_elapsed)
@@ -703,7 +703,7 @@ function constraint_storage_state(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw)
 end
 
 ""
-function constraint_storage_state(pm::GenericPowerModel, i::Int, nw_1::Int, nw_2::Int)
+function constraint_storage_state(pm::AbstractPowerModel, i::Int, nw_1::Int, nw_2::Int)
     storage = ref(pm, nw_2, :storage, i)
 
     if haskey(pm.data, "time_elapsed")
@@ -717,7 +717,7 @@ function constraint_storage_state(pm::GenericPowerModel, i::Int, nw_1::Int, nw_2
 end
 
 ""
-function constraint_storage_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_storage_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     storage = ref(pm, nw, :storage, i)
     charge_ub = storage["charge_rating"]
     discharge_ub = storage["discharge_rating"]
@@ -734,7 +734,7 @@ end
 ### DC LINES ###
 
 ""
-function constraint_dcline(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_dcline(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     dcline = ref(pm, nw, :dcline, i)
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
@@ -747,7 +747,7 @@ function constraint_dcline(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::I
 end
 
 ""
-function constraint_active_dcline_setpoint(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_active_dcline_setpoint(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     dcline = ref(pm, nw, :dcline, i)
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]

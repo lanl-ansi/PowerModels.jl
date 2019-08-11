@@ -8,7 +8,7 @@ function run_tnep(file, model_constructor, optimizer; kwargs...)
 end
 
 "the general form of the tnep optimization model"
-function post_tnep(pm::GenericPowerModel)
+function post_tnep(pm::AbstractPowerModel)
     variable_branch_ne(pm)
     variable_voltage(pm)
     variable_voltage_ne(pm)
@@ -57,7 +57,7 @@ end
 
 
 "Cost of building branches"
-function objective_tnep_cost(pm::GenericPowerModel)
+function objective_tnep_cost(pm::AbstractPowerModel)
     return JuMP.@objective(pm.model, Min,
         sum(
             sum(
@@ -69,7 +69,7 @@ end
 
 
 ""
-function ref_add_ne_branch!(pm::GenericPowerModel)
+function ref_add_ne_branch!(pm::AbstractPowerModel)
     for (nw, nw_ref) in pm.ref[:nw]
         if !haskey(nw_ref, :ne_branch)
             error(_LOGGER, "required ne_branch data not found")
@@ -95,7 +95,7 @@ end
 
 
 ""
-function add_setpoint_branch_ne_flow!(sol, pm::GenericPowerModel)
+function add_setpoint_branch_ne_flow!(sol, pm::AbstractPowerModel)
     # check the branch flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
         add_setpoint!(sol, pm, "ne_branch", "pf", :p_ne, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
@@ -107,13 +107,13 @@ end
 
 
 ""
-function add_setpoint_branch_ne_built!(sol, pm::GenericPowerModel)
+function add_setpoint_branch_ne_built!(sol, pm::AbstractPowerModel)
     add_setpoint!(sol, pm, "ne_branch", "built", :branch_ne, status_name="br_status", default_value = (item) -> 1)
 end
 
 
 ""
-function solution_tnep!(pm::GenericPowerModel, sol::Dict{String,<:Any})
+function solution_tnep!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
     add_setpoint_bus_voltage!(sol, pm)
     add_setpoint_generator_power!(sol, pm)
     add_setpoint_branch_flow!(sol, pm)

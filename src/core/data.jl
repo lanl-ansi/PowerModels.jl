@@ -1923,8 +1923,6 @@ end
 finds active network buses and branches that are not necessary for the
 computation and sets their status to off.
 
-Works on a PowerModels data dict, so that a it can be used without a GenericPowerModel object
-
 Warning: this implementation has quadratic complexity, in the worst case
 """
 function propagate_topology_status!(data::Dict{String,<:Any})
@@ -2294,7 +2292,7 @@ end
 
 
 """
-performs DFS on a graph
+perModels DFS on a graph
 """
 function _dfs(i, neighbors, component_lookup, touched)
     push!(touched, i)

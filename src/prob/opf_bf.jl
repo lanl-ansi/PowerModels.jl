@@ -1,10 +1,10 @@
 ""
-function run_opf_bf(file, model_constructor, optimizer; kwargs...)
+function run_opf_bf(file, model_constructor::Type{T}, optimizer; kwargs...) where T <: AbstractBFModel
     return run_model(file, model_constructor, optimizer, post_opf_bf; kwargs...)
 end
 
 ""
-function post_opf_bf(pm::GenericPowerModel)
+function post_opf_bf(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_branch_flow(pm)

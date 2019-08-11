@@ -1,7 +1,7 @@
 ### rectangular form of the non-convex AC equations
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...) where T <: AbstractACRForm
+function variable_voltage(pm::AbstractACRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...)
     variable_voltage_real(pm; nw=nw, cnd=cnd, bounded=bounded, kwargs...)
     variable_voltage_imaginary(pm; nw=nw, cnd=cnd, bounded=bounded, kwargs...)
 
@@ -28,7 +28,7 @@ end
 
 
 "`v[i] == vm`"
-function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, i, vm) where T <: AbstractACRForm
+function constraint_voltage_magnitude_setpoint(pm::AbstractACRModel, n::Int, c::Int, i, vm)
     vr = var(pm, n, c, :vr, i)
     vi = var(pm, n, c, :vi, i)
 
@@ -37,12 +37,12 @@ end
 
 
 "reference bus angle constraint"
-function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) where T <: AbstractACRForm
+function constraint_theta_ref(pm::AbstractACRModel, n::Int, c::Int, i::Int)
     JuMP.@constraint(pm.model, var(pm, n, c, :vi)[i] == 0)
 end
 
 
-function constraint_power_balance_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACRForm
+function constraint_power_balance_shunt(pm::AbstractACRModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
     vr = var(pm, n, c, :vr, i)
     vi = var(pm, n, c, :vi, i)
     p  = var(pm, n, c, :p)
@@ -60,7 +60,7 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: AbstractACRForm
+function constraint_ohms_yt_from(pm::AbstractACRModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     p_fr = var(pm, n, c, :p, f_idx)
     q_fr = var(pm, n, c, :q, f_idx)
     vr_fr = var(pm, n, c, :vr, f_bus)
@@ -75,7 +75,7 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm) where T <: AbstractACRForm
+function constraint_ohms_yt_to(pm::AbstractACRModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
     p_to = var(pm, n, c, :p, t_idx)
     q_to = var(pm, n, c, :q, t_idx)
     vr_fr = var(pm, n, c, :vr, f_bus)
@@ -88,7 +88,7 @@ function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, 
 end
 
 
-function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractACRForm
+function constraint_current_limit(pm::AbstractACRModel, n::Int, c::Int, f_idx, c_rating_a)
     l,i,j = f_idx
     t_idx = (l,j,i)
 
@@ -110,7 +110,7 @@ end
 """
 branch voltage angle difference bounds
 """
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, angmin, angmax) where T <: AbstractACRForm
+function constraint_voltage_angle_difference(pm::AbstractACRModel, n::Int, c::Int, f_idx, angmin, angmax)
     i, f_bus, t_bus = f_idx
 
     vr_fr = var(pm, n, c, :vr, f_bus)
@@ -124,7 +124,7 @@ end
 
 
 "extracts voltage set points from rectangular voltage form and converts into polar voltage form"
-function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: AbstractACRForm
+function add_setpoint_bus_voltage!(sol, pm::AbstractACRModel)
     sol_dict = get(sol, "bus", Dict{String,Any}())
 
     if ismultinetwork(pm)

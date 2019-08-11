@@ -1,14 +1,14 @@
 ### the LPAC approximation
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractLPACForm
+function variable_voltage(pm::AbstractLPACModel; kwargs...)
     variable_voltage_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
     variable_cosine(pm; kwargs...)
 end
 
 ""
-function variable_voltage_magnitude(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: AbstractLPACForm
+function variable_voltage_magnitude(pm::AbstractLPACModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     if bounded
         var(pm, nw, cnd)[:phi] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_phi",
@@ -17,17 +17,16 @@ function variable_voltage_magnitude(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cn
             start = comp_start_value(ref(pm, nw, :bus, i), "phi_start", cnd)
         )
     else
-        var(pm, nw, cnd)[:vm] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_vm",
-            lower_bound = -1.0,
+        var(pm, nw, cnd)[:phi] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_phi",
             start = comp_start_value(ref(pm, nw, :bus, i), "phi_start", cnd)
         )
     end
 end
 
 ""
-function constraint_model_voltage(pm::GenericPowerModel{T}, n::Int, c::Int) where T <: AbstractLPACForm
-    _check_missing_keys(var(pm, n, c), [:va,:cs], T)
+function constraint_model_voltage(pm::AbstractLPACModel, n::Int, c::Int)
+    _check_missing_keys(var(pm, n, c), [:va,:cs], typeof(pm))
 
     t = var(pm, n, c, :va)
     cs = var(pm, n, c, :cs)
@@ -41,7 +40,7 @@ end
 
 
 ""
-function constraint_power_balance_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractLPACForm
+function constraint_power_balance_shunt(pm::AbstractLPACCModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
     phi  = var(pm, n, c, :phi, i)
     pg   = var(pm, n, c, :pg)
     qg   = var(pm, n, c, :qg)
@@ -56,7 +55,7 @@ end
 
 
 ""
-function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: AbstractLPACForm
+function constraint_ohms_yt_from(pm::AbstractLPACCModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     p_fr   = var(pm, n, c, :p, f_idx)
     q_fr   = var(pm, n, c, :q, f_idx)
     phi_fr = var(pm, n, c, :phi, f_bus)
@@ -70,7 +69,7 @@ function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus
 end
 
 ""
-function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm) where T <: AbstractLPACForm
+function constraint_ohms_yt_to(pm::AbstractLPACCModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
     p_to   = var(pm, n, c, :p, t_idx)
     q_to   = var(pm, n, c, :q, t_idx)
     phi_fr = var(pm, n, c, :phi, f_bus)
@@ -85,7 +84,7 @@ end
 
 
 ""
-function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: AbstractLPACForm
+function add_setpoint_bus_voltage!(sol, pm::AbstractLPACModel)
     add_setpoint!(sol, pm, "bus", "vm", :phi, status_name="bus_type", inactive_status_value = 4, scale = (x,item,cnd) -> 1.0+x)
     add_setpoint!(sol, pm, "bus", "va", :va, status_name="bus_type", inactive_status_value = 4)
 end

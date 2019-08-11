@@ -1,38 +1,19 @@
 # stuff that is universal to all power models
 
 "root of the power formulation type hierarchy"
-abstract type AbstractPowerFormulation end
+abstract type AbstractPowerModel end
 
-"""
-```
-type GenericPowerModel{T<:AbstractPowerFormulation}
-    model::JuMP.Model
-    data::Dict{String,<:Any}
-    setting::Dict{String,<:Any}
-    solution::Dict{String,<:Any}
-    ref::Dict{Symbol,<:Any} # reference data
-    var::Dict{Symbol,<:Any} # JuMP variables
-    con::Dict{Symbol,<:Any} # JuMP constraint references
-    cnw::Int              # current network index value
-    ccnd::Int             # current conductor index value
-    ext::Dict{Symbol,<:Any} # user extentions
+macro def(name, definition)
+    return quote
+        macro $(esc(name))()
+            esc($(Expr(:quote, definition)))
+        end
+    end
 end
-```
-where
 
-* `data` is the original data, usually from reading in a `.json` or `.m` (patpower) file,
-* `setting` usually looks something like `Dict("output" => Dict("branch_flows" => true))`, and
-* `ref` is a place to store commonly used pre-computed data from of the data dictionary,
-    primarily for converting data-types, filtering out deactivated components, and storing
-    system-wide values that need to be computed globally. See `build_ref(data)` for further details.
 
-Methods on `GenericPowerModel` for defining variables and adding constraints should
-
-* work with the `ref` dict, rather than the original `data` dict,
-* add them to `model::JuMP.Model`, and
-* follow the conventions for variable and constraint names.
-"""
-mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
+""
+@def pm_fields begin
     model::JuMP.Model
 
     data::Dict{String,<:Any}
@@ -52,8 +33,12 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
     ext::Dict{Symbol,<:Any}
 end
 
+
+
+
 # default generic constructor
-function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), jump_model::JuMP.Model=JuMP.Model())
+function InitializePowerModel(PowerModel::DataType, data::Dict{String,<:Any}; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), jump_model::JuMP.Model=JuMP.Model())
+    @assert(PowerModel <: AbstractPowerModel)
 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
@@ -78,7 +63,7 @@ function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Sym
     cnw = minimum([k for k in keys(var[:nw])])
     ccnd = minimum([k for k in keys(var[:nw][cnw][:cnd])])
 
-    pm = GenericPowerModel{T}(
+    pm = PowerModel(
         jump_model,
         data,
         setting,
@@ -96,64 +81,64 @@ end
 
 ### Helper functions for working with multinetworks and multiconductors
 ""
-ismultinetwork(pm::GenericPowerModel) = (length(pm.ref[:nw]) > 1)
+ismultinetwork(pm::AbstractPowerModel) = (length(pm.ref[:nw]) > 1)
 
 ""
-nw_ids(pm::GenericPowerModel) = keys(pm.ref[:nw])
+nw_ids(pm::AbstractPowerModel) = keys(pm.ref[:nw])
 
 ""
-nws(pm::GenericPowerModel) = pm.ref[:nw]
+nws(pm::AbstractPowerModel) = pm.ref[:nw]
 
 ""
-ismulticonductor(pm::GenericPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :conductors)
-ismulticonductor(pm::GenericPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :conductors)
+ismulticonductor(pm::AbstractPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :conductors)
+ismulticonductor(pm::AbstractPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :conductors)
 
 ""
-conductor_ids(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw][:conductor_ids]
-conductor_ids(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:conductor_ids]
+conductor_ids(pm::AbstractPowerModel, nw::Int) = pm.ref[:nw][nw][:conductor_ids]
+conductor_ids(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:conductor_ids]
 
 ""
-ids(pm::GenericPowerModel, nw::Int, key::Symbol) = keys(pm.ref[:nw][nw][key])
-ids(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = keys(pm.ref[:nw][nw][key])
+ids(pm::AbstractPowerModel, nw::Int, key::Symbol) = keys(pm.ref[:nw][nw][key])
+ids(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = keys(pm.ref[:nw][nw][key])
 
 ""
-ref(pm::GenericPowerModel, nw::Int) = pm.ref[:nw][nw]
-ref(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
-ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
-ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
-ref(pm::GenericPowerModel, nw::Int, key::Symbol, idx, param::String, cnd::Int) = pm.ref[:nw][nw][key][idx][param][cnd]
+ref(pm::AbstractPowerModel, nw::Int) = pm.ref[:nw][nw]
+ref(pm::AbstractPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
+ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
+ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
+ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx, param::String, cnd::Int) = pm.ref[:nw][nw][key][idx][param][cnd]
 
-ref(pm::GenericPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
-ref(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
-ref(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
-ref(pm::GenericPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.ref[:nw][nw][key][idx][param][cnd]
+ref(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
+ref(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
+ref(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
+ref(pm::AbstractPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.ref[:nw][nw][key][idx][param][cnd]
 
 
-var(pm::GenericPowerModel, nw::Int) = pm.var[:nw][nw]
-var(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
-var(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
-var(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
-var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
-var(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
+var(pm::AbstractPowerModel, nw::Int) = pm.var[:nw][nw]
+var(pm::AbstractPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
+var(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
+var(pm::AbstractPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
+var(pm::AbstractPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
+var(pm::AbstractPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 
-var(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
-var(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
-var(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
+var(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
+var(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
+var(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 
 ""
-con(pm::GenericPowerModel, nw::Int) = pm.con[:nw][nw]
-con(pm::GenericPowerModel, nw::Int, key::Symbol) = pm.con[:nw][nw][key]
-con(pm::GenericPowerModel, nw::Int, key::Symbol, idx) = pm.con[:nw][nw][key][idx]
-con(pm::GenericPowerModel, nw::Int, cnd::Int) = pm.con[:nw][nw][:cnd][cnd]
-con(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.con[:nw][nw][:cnd][cnd][key]
-con(pm::GenericPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.con[:nw][nw][:cnd][cnd][key][idx]
+con(pm::AbstractPowerModel, nw::Int) = pm.con[:nw][nw]
+con(pm::AbstractPowerModel, nw::Int, key::Symbol) = pm.con[:nw][nw][key]
+con(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.con[:nw][nw][key][idx]
+con(pm::AbstractPowerModel, nw::Int, cnd::Int) = pm.con[:nw][nw][:cnd][cnd]
+con(pm::AbstractPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.con[:nw][nw][:cnd][cnd][key]
+con(pm::AbstractPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.con[:nw][nw][:cnd][cnd][key][idx]
 
-con(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd]
-con(pm::GenericPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key]
-con(pm::GenericPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key][idx]
+con(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd]
+con(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key]
+con(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key][idx]
 
 
-function JuMP.optimize!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory)
+function JuMP.optimize!(pm::AbstractPowerModel, optimizer::JuMP.OptimizerFactory)
     if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
         _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
     else
@@ -199,9 +184,9 @@ end
 function build_model(data::Dict{String,<:Any}, model_constructor, post_method; ref_extensions=[], multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
 
-    start_time = time()
-    pm = model_constructor(data; kwargs...)
-    Memento.debug(_LOGGER, "pm model_constructor time: $(time() - start_time)")
+    #start_time = time()
+    pm = InitializePowerModel(model_constructor, data; kwargs...)
+    #Memento.info(LOGGER, "pm model_constructor time: $(time() - start_time)")
 
     if !multinetwork && ismultinetwork(pm)
         Memento.error(_LOGGER, "attempted to build a single-network model with multi-network data")
@@ -227,7 +212,7 @@ end
 
 
 ""
-function optimize_model!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = solution_opf!)
+function optimize_model!(pm::AbstractPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = solution_opf!)
     start_time = time()
     solve_time = JuMP.optimize!(pm, optimizer)
     Memento.debug(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
@@ -242,7 +227,7 @@ function optimize_model!(pm::GenericPowerModel, optimizer::JuMP.OptimizerFactory
 end
 
 
-"used for building ref without the need to build a GenericPowerModel"
+"used for building ref without the need to build a initialize an AbstractPowerModel"
 function build_ref(data::Dict{String,<:Any}; ref_extensions=[])
     ref = _ref_initialize(data)
     _ref_add_core!(ref[:nw])
@@ -317,7 +302,7 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 
 * `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`.
 """
-function ref_add_core!(pm::GenericPowerModel)
+function ref_add_core!(pm::AbstractPowerModel)
     _ref_add_core!(pm.ref[:nw])
 end
 

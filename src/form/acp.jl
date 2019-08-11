@@ -1,28 +1,28 @@
 ### polar form of the non-convex AC equations
 
 ""
-function variable_voltage(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
+function variable_voltage(pm::AbstractACPModel; kwargs...)
     variable_voltage_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
 end
 
 ""
-function variable_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
+function variable_voltage_ne(pm::AbstractACPModel; kwargs...)
 end
 
 "do nothing, this model does not have complex voltage constraints"
-function constraint_model_voltage_ne(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
+function constraint_model_voltage_ne(pm::AbstractACPModel; kwargs...)
 end
 
 
 "`v[i] == vm`"
-function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, k::Int, i::Int, vm) where T <: AbstractACPForm
+function constraint_voltage_magnitude_setpoint(pm::AbstractACPModel, n::Int, k::Int, i::Int, vm)
     v = var(pm, n, k, :vm, i)
     JuMP.@constraint(pm.model, v == vm)
 end
 
 
-function constraint_current_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, c_rating_a) where T <: AbstractACPForm
+function constraint_current_limit(pm::AbstractACPModel, n::Int, c::Int, f_idx, c_rating_a)
     l,i,j = f_idx
     t_idx = (l,j,i)
 
@@ -45,7 +45,7 @@ sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[
 sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts)*v^2
 ```
 """
-function constraint_power_balance_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACPForm
+function constraint_power_balance_shunt(pm::AbstractACPModel, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
     vm = var(pm, n, c, :vm, i)
     p = var(pm, n, c, :p)
     q = var(pm, n, c, :q)
@@ -60,7 +60,7 @@ end
 
 
 ""
-function constraint_power_balance_shunt_storage(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACPForm
+function constraint_power_balance_shunt_storage(pm::AbstractACPModel, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
     vm = var(pm, n, c, :vm, i)
     p = var(pm, n, c, :p)
     q = var(pm, n, c, :q)
@@ -82,7 +82,7 @@ sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(p_ne
 sum(q[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(q_ne[a] for a in bus_arcs_ne) == sum(qg[g] for g in bus_gens) - sum(qd[d] for d in bus_loads) + sum(bs[s] for s in bus_shunts)*vm^2
 ```
 """
-function constraint_power_balance_shunt_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACPForm
+function constraint_power_balance_shunt_ne(pm::AbstractACPModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
     vm   = var(pm, n, c, :vm, i)
     p    = var(pm, n, c, :p)
     q    = var(pm, n, c, :q)
@@ -105,7 +105,7 @@ p[f_idx] ==  (g+g_fr)/tm*v[f_bus]^2 + (-g*tr+b*ti)/tm*(v[f_bus]*v[t_bus]*cos(t[f
 q[f_idx] == -(b+b_fr)/tm*v[f_bus]^2 - (-b*tr-g*ti)/tm*(v[f_bus]*v[t_bus]*cos(t[f_bus]-t[t_bus])) + (-g*tr+b*ti)/tm*(v[f_bus]*v[t_bus]*sin(t[f_bus]-t[t_bus]))
 ```
 """
-function constraint_ohms_yt_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm) where T <: AbstractACPForm
+function constraint_ohms_yt_from(pm::AbstractACPModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     p_fr  = var(pm, n, c,  :p, f_idx)
     q_fr  = var(pm, n, c,  :q, f_idx)
     vm_fr = var(pm, n, c, :vm, f_bus)
@@ -125,7 +125,7 @@ p[t_idx] ==  (g+g_to)*v[t_bus]^2 + (-g*tr-b*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[t_bu
 q[t_idx] == -(b+b_to)*v[t_bus]^2 - (-b*tr+g*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[f_bus]-t[t_bus])) + (-g*tr-b*ti)/tm*(v[t_bus]*v[f_bus]*sin(t[t_bus]-t[f_bus]))
 ```
 """
-function constraint_ohms_yt_to(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm) where T <: AbstractACPForm
+function constraint_ohms_yt_to(pm::AbstractACPModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
     p_to  = var(pm, n, c,  :p, t_idx)
     q_to  = var(pm, n, c,  :q, t_idx)
     vm_fr = var(pm, n, c, :vm, f_bus)
@@ -145,7 +145,7 @@ p[f_idx] ==  (g+g_fr)*(v[f_bus]/tr)^2 + -g*v[f_bus]/tr*v[t_bus]*cos(t[f_bus]-t[t
 q[f_idx] == -(b+b_fr)*(v[f_bus]/tr)^2 + b*v[f_bus]/tr*v[t_bus]*cos(t[f_bus]-t[t_bus]-as) + -g*v[f_bus]/tr*v[t_bus]*sin(t[f_bus]-t[t_bus]-as)
 ```
 """
-function constraint_ohms_y_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tm, ta) where T <: AbstractACPForm
+function constraint_ohms_y_from(pm::AbstractACPModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tm, ta)
     p_fr  = var(pm, n, c,  :p, f_idx)
     q_fr  = var(pm, n, c,  :q, f_idx)
     vm_fr = var(pm, n, c, :vm, f_bus)
@@ -165,7 +165,7 @@ p[t_idx] == (g+g_to)*v[t_bus]^2 + -g*v[t_bus]*v[f_bus]/tr*cos(t[t_bus]-t[f_bus]+
 q_to == -(b+b_to)*v[t_bus]^2 + b*v[t_bus]*v[f_bus]/tr*cos(t[f_bus]-t[t_bus]+as) + -g*v[t_bus]*v[f_bus]/tr*sin(t[t_bus]-t[f_bus]+as)
 ```
 """
-function constraint_ohms_y_to(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tm, ta) where T <: AbstractACPForm
+function constraint_ohms_y_to(pm::AbstractACPModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tm, ta)
     p_to  = var(pm, n, c,  :p, t_idx)
     q_to  = var(pm, n, c,  :q, t_idx)
     vm_fr = var(pm, n, c, :vm, f_bus)
@@ -179,13 +179,13 @@ end
 
 
 ""
-function variable_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
+function variable_voltage_on_off(pm::AbstractACPModel; kwargs...)
     variable_voltage_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
 end
 
 "do nothing, this model does not have complex voltage constraints"
-function constraint_model_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm
+function constraint_model_voltage_on_off(pm::AbstractACPModel; kwargs...)
 end
 
 """
@@ -194,7 +194,7 @@ p[f_idx] == z*(g/tm*v[f_bus]^2 + (-g*tr+b*ti)/tm*(v[f_bus]*v[t_bus]*cos(t[f_bus]
 q[f_idx] == z*(-(b+c/2)/tm*v[f_bus]^2 - (-b*tr-g*ti)/tm*(v[f_bus]*v[t_bus]*cos(t[f_bus]-t[t_bus])) + (-g*tr+b*ti)/tm*(v[f_bus]*v[t_bus]*sin(t[f_bus]-t[t_bus])))
 ```
 """
-function constraint_ohms_yt_from_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max) where T <: AbstractACPForm
+function constraint_ohms_yt_from_on_off(pm::AbstractACPModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
     p_fr  = var(pm, n, c,  :p, f_idx)
     q_fr  = var(pm, n, c,  :q, f_idx)
     vm_fr = var(pm, n, c, :vm, f_bus)
@@ -213,7 +213,7 @@ p[t_idx] == z*(g*v[t_bus]^2 + (-g*tr-b*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[t_bus]-t[
 q[t_idx] == z*(-(b+c/2)*v[t_bus]^2 - (-b*tr+g*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[f_bus]-t[t_bus])) + (-g*tr-b*ti)/tm*(v[t_bus]*v[f_bus]*sin(t[t_bus]-t[f_bus])))
 ```
 """
-function constraint_ohms_yt_to_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: AbstractACPForm
+function constraint_ohms_yt_to_on_off(pm::AbstractACPModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
     p_to  = var(pm, n, c,  :p, t_idx)
     q_to  = var(pm, n, c,  :q, t_idx)
     vm_fr = var(pm, n, c, :vm, f_bus)
@@ -232,7 +232,7 @@ p_ne[f_idx] == z*(g/tm*v[f_bus]^2 + (-g*tr+b*ti)/tm*(v[f_bus]*v[t_bus]*cos(t[f_b
 q_ne[f_idx] == z*(-(b+c/2)/tm*v[f_bus]^2 - (-b*tr-g*ti)/tm*(v[f_bus]*v[t_bus]*cos(t[f_bus]-t[t_bus])) + (-g*tr+b*ti)/tm*(v[f_bus]*v[t_bus]*sin(t[f_bus]-t[t_bus])))
 ```
 """
-function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max) where T <: AbstractACPForm
+function constraint_ohms_yt_from_ne(pm::AbstractACPModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
     p_fr  = var(pm, n, c, :p_ne, f_idx)
     q_fr  = var(pm, n, c, :q_ne, f_idx)
     vm_fr = var(pm, n, c,   :vm, f_bus)
@@ -251,7 +251,7 @@ p_ne[t_idx] == z*(g*v[t_bus]^2 + (-g*tr-b*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[t_bus]
 q_ne[t_idx] == z*(-(b+c/2)*v[t_bus]^2 - (-b*tr+g*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[f_bus]-t[t_bus])) + (-g*tr-b*ti)/tm*(v[t_bus]*v[f_bus]*sin(t[t_bus]-t[f_bus])))
 ```
 """
-function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max) where T <: AbstractACPForm
+function constraint_ohms_yt_to_ne(pm::AbstractACPModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
     p_to = var(pm, n, c, :p_ne, t_idx)
     q_to = var(pm, n, c, :q_ne, t_idx)
     vm_fr = var(pm, n, c, :vm, f_bus)
@@ -265,7 +265,7 @@ function constraint_ohms_yt_to_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, f
 end
 
 "`angmin <= z_branch[i]*(t[f_bus] - t[t_bus]) <= angmax`"
-function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, angmin, angmax, vad_min, vad_max) where T <: AbstractACPForm
+function constraint_voltage_angle_difference_on_off(pm::AbstractACPModel, n::Int, c::Int, f_idx, angmin, angmax, vad_min, vad_max)
     i, f_bus, t_bus = f_idx
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
@@ -276,7 +276,7 @@ function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n:
 end
 
 "`angmin <= branch_ne[i]*(t[f_bus] - t[t_bus]) <= angmax`"
-function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, angmin, angmax, vad_min, vad_max) where T <: AbstractACPForm
+function constraint_voltage_angle_difference_ne(pm::AbstractACPModel, n::Int, c::Int, f_idx, angmin, angmax, vad_min, vad_max)
     i, f_bus, t_bus = f_idx
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
@@ -292,7 +292,7 @@ p[f_idx] + p[t_idx] >= 0
 q[f_idx] + q[t_idx] >= -c/2*(v[f_bus]^2/tr^2 + v[t_bus]^2)
 ```
 """
-function constraint_loss_lb(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g_fr, b_fr, g_to, b_to, tr) where T <: AbstractACPForm
+function constraint_loss_lb(pm::AbstractACPModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g_fr, b_fr, g_to, b_to, tr)
     vm_fr = var(pm, n, c, :vm, f_bus)
     vm_to = var(pm, n, c, :vm, t_bus)
     p_fr = var(pm, n, c, :p, f_idx)

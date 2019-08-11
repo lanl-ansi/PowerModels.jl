@@ -14,7 +14,7 @@ function run_opf(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function post_opf(pm::GenericPowerModel)
+function post_opf(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_branch_flow(pm)
@@ -55,7 +55,7 @@ function run_mn_opf(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function post_mn_opf(pm::GenericPowerModel)
+function post_mn_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n)
         variable_generation(pm, nw=n)

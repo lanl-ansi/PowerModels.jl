@@ -9,7 +9,7 @@ function run_opb(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function post_opb(pm::GenericPowerModel)
+function post_opb(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_generation(pm)
 
@@ -21,7 +21,7 @@ function post_opb(pm::GenericPowerModel)
 end
 
 
-function ref_add_connected_components!(pm::GenericPowerModel)
+function ref_add_connected_components!(pm::AbstractPowerModel)
     if InfrastructureModels.ismultinetwork(pm.data)
         nws_data = pm.data["nw"]
     else
