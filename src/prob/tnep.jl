@@ -60,9 +60,7 @@ end
 function objective_tnep_cost(pm::AbstractPowerModel)
     return JuMP.@objective(pm.model, Min,
         sum(
-            sum(
-                sum( branch["construction_cost"]*var(pm, n, c, :branch_ne, i) for (i,branch) in nw_ref[:ne_branch] )
-            for c in conductor_ids(pm, n))
+            sum( branch["construction_cost"]*var(pm, n, :branch_ne, i) for (i,branch) in nw_ref[:ne_branch] )
         for (n, nw_ref) in nws(pm))
     )
 end
@@ -108,7 +106,7 @@ end
 
 ""
 function add_setpoint_branch_ne_built!(sol, pm::AbstractPowerModel)
-    add_setpoint!(sol, pm, "ne_branch", "built", :branch_ne, status_name="br_status", default_value = (item) -> 1)
+    add_setpoint!(sol, pm, "ne_branch", "built", :branch_ne, status_name="br_status", conductorless=true, default_value = (item) -> item["br_status"]*1.0)
 end
 
 
