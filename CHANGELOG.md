@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Simplified PowerModel types (#192)
+- Made all component on/off variables conductorless (#390)
 - Fixed naming branch indicator variable (#551)
 
 ### Staged
