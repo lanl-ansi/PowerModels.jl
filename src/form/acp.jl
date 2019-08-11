@@ -271,8 +271,8 @@ function constraint_voltage_angle_difference_on_off(pm::GenericPowerModel{T}, n:
     va_to = var(pm, n, c, :va, t_bus)
     z = var(pm, n, c, :branch_z, i)
 
-    JuMP.@constraint(pm.model, z*(va_fr - va_to) <= angmax)
-    JuMP.@constraint(pm.model, z*(va_fr - va_to) >= angmin)
+    JuMP.@constraint(pm.model, z*(va_fr - va_to) <= z*angmax)
+    JuMP.@constraint(pm.model, z*(va_fr - va_to) >= z*angmin)
 end
 
 "`angmin <= branch_ne[i]*(t[f_bus] - t[t_bus]) <= angmax`"
