@@ -91,7 +91,7 @@ function constraint_model_voltage_on_off(pm::AbstractWRModel, n::Int, c::Int)
     w  = var(pm, n, c, :w)
     wr = var(pm, n, c, :wr)
     wi = var(pm, n, c, :wi)
-    z  = var(pm, n, c, :branch_z)
+    z  = var(pm, n, :z_branch)
 
     w_fr = var(pm, n, c, :w_fr)
     w_to = var(pm, n, c, :w_to)
@@ -148,7 +148,7 @@ function constraint_voltage_magnitude_from_on_off(pm::AbstractWRModel, n::Int, c
     branches = ref(pm, n, :branch)
 
     vm_fr = var(pm, n, c, :vm_fr)
-    z = var(pm, n, c, :branch_z)
+    z = var(pm, n, :z_branch)
 
     for (i, branch) in ref(pm, n, :branch)
         JuMP.@constraint(pm.model, vm_fr[i] <= z[i]*buses[branch["f_bus"]]["vmax"])
@@ -162,7 +162,7 @@ function constraint_voltage_magnitude_to_on_off(pm::AbstractWRModel, n::Int, c::
     branches = ref(pm, n, :branch)
 
     vm_to = var(pm, n, c, :vm_to)
-    z = var(pm, n, c, :branch_z)
+    z = var(pm, n, :z_branch)
 
     for (i, branch) in ref(pm, n, :branch)
         JuMP.@constraint(pm.model, vm_to[i] <= z[i]*buses[branch["t_bus"]]["vmax"])
@@ -177,7 +177,7 @@ function constraint_voltage_magnitude_sqr_from_on_off(pm::AbstractWRModel, n::In
     branches = ref(pm, n, :branch)
 
     w_fr = var(pm, n, c, :w_fr)
-    z = var(pm, n, c, :branch_z)
+    z = var(pm, n, :z_branch)
 
     for (i, branch) in ref(pm, n, :branch)
         JuMP.@constraint(pm.model, w_fr[i] <= z[i]*buses[branch["f_bus"]]["vmax"]^2)
@@ -191,7 +191,7 @@ function constraint_voltage_magnitude_sqr_to_on_off(pm::AbstractWRModel, n::Int,
     branches = ref(pm, n, :branch)
 
     w_to = var(pm, n, c, :w_to)
-    z = var(pm, n, c, :branch_z)
+    z = var(pm, n, :z_branch)
 
     for (i, branch) in ref(pm, n, :branch)
         JuMP.@constraint(pm.model, w_to[i] <= z[i]*buses[branch["t_bus"]]["vmax"]^2)
@@ -207,7 +207,7 @@ function constraint_voltage_product_on_off(pm::AbstractWRModel, n::Int, c::Int)
 
     wr = var(pm, n, c, :wr)
     wi = var(pm, n, c, :wi)
-    z  = var(pm, n, c, :branch_z)
+    z  = var(pm, n, :z_branch)
 
     for b in ids(pm, n, :branch)
         JuMP.@constraint(pm.model, wr[b] <= z[b]*wr_max[bi_bp[b]])
@@ -622,7 +622,7 @@ function constraint_model_voltage_on_off(pm::AbstractQCWRModel, n::Int, c::Int)
     wr = var(pm, n, c, :wr)
     wi = var(pm, n, c, :wi)
 
-    z = var(pm, n, c, :branch_z)
+    z = var(pm, n, :z_branch)
 
     td_lb = ref(pm, n, :off_angmin, c)
     td_ub = ref(pm, n, :off_angmax, c)
@@ -674,7 +674,7 @@ function constraint_power_magnitude_sqr_on_off(pm::AbstractQCWRModel, n::Int, c:
     p_fr = var(pm, n, c, :p, arc_from)
     q_fr = var(pm, n, c, :q, arc_from)
     ccm   = var(pm, n, c, :ccm, i)
-    z    = var(pm, n, c, :branch_z, i)
+    z    = var(pm, n, :z_branch, i)
 
     # TODO see if there is a way to leverage relaxation_complex_product_on_off here
     w_lb, w_ub = InfrastructureModels.variable_domain(w)

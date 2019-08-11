@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Simplify PowerModel types (#192)
+- Simplified PowerModel types (#192)
+- Fixed naming branch indicator variable (#551)
 
 ### Staged
 - Added component status parameter lookup (#565)

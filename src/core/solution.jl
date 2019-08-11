@@ -197,12 +197,12 @@ end
 
 ""
 function add_setpoint_branch_status!(sol, pm::AbstractPowerModel)
-    add_setpoint!(sol, pm, "branch", "br_status", :branch_z, status_name=pm_component_status["branch"], default_value = (item) -> item["br_status"]*1.0)
+    add_setpoint!(sol, pm, "branch", "br_status", :z_branch, status_name=pm_component_status["branch"], conductorless=true, default_value = (item) -> item["br_status"]*1.0)
 end
 
 ""
 function add_setpoint_dcline_status!(sol, pm::AbstractPowerModel)
-    add_setpoint!(sol, pm, "dcline", "br_status", :dcline_z, status_name=pm_component_status["dcline"], default_value = (item) -> item["br_status"]*1.0)
+    add_setpoint!(sol, pm, "dcline", "br_status", :z_dcline, status_name=pm_component_status["dcline"], conductorless=true, default_value = (item) -> item["br_status"]*1.0)
 end
 
 

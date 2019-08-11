@@ -101,25 +101,25 @@ end
 function constraint_model_voltage_on_off(pm::AbstractDCPModel; kwargs...)
 end
 
-"`-b*(t[f_bus] - t[t_bus] + vad_min*(1-branch_z[i])) <= p[f_idx] <= -b*(t[f_bus] - t[t_bus] + vad_max*(1-branch_z[i]))`"
+"`-b*(t[f_bus] - t[t_bus] + vad_min*(1-z_branch[i])) <= p[f_idx] <= -b*(t[f_bus] - t[t_bus] + vad_max*(1-z_branch[i]))`"
 function constraint_ohms_yt_from_on_off(pm::AbstractDCPModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
     p_fr  = var(pm, n, c,  :p, f_idx)
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
-    z = var(pm, n, c, :branch_z, i)
+    z = var(pm, n, :z_branch, i)
 
     JuMP.@constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_max*(1-z)) )
     JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
 end
 
 
-"`angmin*branch_z[i] + vad_min*(1-branch_z[i]) <= t[f_bus] - t[t_bus] <= angmax*branch_z[i] + vad_max*(1-branch_z[i])`"
+"`angmin*z_branch[i] + vad_min*(1-z_branch[i]) <= t[f_bus] - t[t_bus] <= angmax*z_branch[i] + vad_max*(1-z_branch[i])`"
 function constraint_voltage_angle_difference_on_off(pm::AbstractDCPModel, n::Int, c::Int, f_idx, angmin, angmax, vad_min, vad_max)
     i, f_bus, t_bus = f_idx
 
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
-    z = var(pm, n, c, :branch_z, i)
+    z = var(pm, n, :z_branch, i)
 
     JuMP.@constraint(pm.model, va_fr - va_to <= angmax*z + vad_max*(1-z))
     JuMP.@constraint(pm.model, va_fr - va_to >= angmin*z + vad_min*(1-z))
@@ -297,7 +297,7 @@ function constraint_ohms_yt_to_on_off(pm::AbstractDCPLLModel, n::Int, c::Int, i,
     p_to  = var(pm, n, c,  :p, t_idx)
     va_fr = var(pm, n, c, :va, f_bus)
     va_to = var(pm, n, c, :va, t_bus)
-    z = var(pm, n, c, :branch_z, i)
+    z = var(pm, n, :z_branch, i)
 
     r = g/(g^2 + b^2)
     t_m = max(abs(vad_min),abs(vad_max))
