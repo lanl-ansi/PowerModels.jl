@@ -9,7 +9,7 @@ function run_dc_opf(file, optimizer; kwargs...)
 end
 
 ""
-function run_opf(file, model_type, optimizer; kwargs...)
+function run_opf(file, model_type::Type, optimizer; kwargs...)
     return run_model(file, model_type, optimizer, post_opf; kwargs...)
 end
 
@@ -50,7 +50,7 @@ end
 
 
 "a toy example of how to model with multi-networks"
-function run_mn_opf(file, model_type, optimizer; kwargs...)
+function run_mn_opf(file, model_type::Type, optimizer; kwargs...)
     return run_model(file, model_type, optimizer, post_mn_opf; multinetwork=true, kwargs...)
 end
 

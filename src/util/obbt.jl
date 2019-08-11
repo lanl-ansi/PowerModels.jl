@@ -68,16 +68,16 @@ function run_obbt_opf!(file::String, optimizer; kwargs...)
 end
 
 function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
-    model_type = QCWRTriPowerModel,
-    max_iter = 100,
-    time_limit = 3600.0,
-    upper_bound = Inf,
-    upper_bound_constraint = false,
-    rel_gap_tol = Inf,
-    min_bound_width = 1e-2,
-    improvement_tol = 1e-3,
-    precision = 4,
-    termination = :avg,
+    model_type::Type = QCWRTriPowerModel,
+    max_iter::Int = 100,
+    time_limit::Float64 = 3600.0,
+    upper_bound::Float64 = Inf,
+    upper_bound_constraint::Bool = false,
+    rel_gap_tol::Float64 = Inf,
+    min_bound_width::Float64 = 1e-2,
+    improvement_tol::Float64 = 1e-3,
+    precision::Int = 4,
+    termination::Symbol = :avg,
     kwargs...)
 
     Memento.info(_LOGGER, "maximum OBBT iterations set to default value of $max_iter")
@@ -327,7 +327,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
         td = var(model_bt, :td)
 
         # run the qc relaxation for the updated bounds
-        result_relaxation = run_opf(data, model_type, optimizer)
+        result_relaxation = run_opf(data, model_type::Type, optimizer)
 
         if result_relaxation["termination_status"] in status_pass
             current_rel_gap = (upper_bound - result_relaxation["objective"])/upper_bound

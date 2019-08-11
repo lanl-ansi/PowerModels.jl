@@ -1,5 +1,5 @@
 ""
-function run_pf_bf(file, model_type, optimizer; kwargs...)
+function run_pf_bf(file, model_type::Type, optimizer; kwargs...)
     return run_model(file, model_type, optimizer, post_pf_bf; kwargs...)
 end
 

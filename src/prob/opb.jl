@@ -4,7 +4,7 @@ function run_nfa_opb(file, optimizer; kwargs...)
 end
 
 "the optimal power balance problem"
-function run_opb(file, model_type, optimizer; kwargs...)
+function run_opb(file, model_type::Type, optimizer; kwargs...)
     return run_model(file, model_type, optimizer, post_opb; ref_extensions=[ref_add_connected_components!], kwargs...)
 end
 

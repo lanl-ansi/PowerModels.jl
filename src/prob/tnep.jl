@@ -3,7 +3,7 @@
 #
 
 ""
-function run_tnep(file, model_type, optimizer; kwargs...)
+function run_tnep(file, model_type::Type, optimizer; kwargs...)
     return run_model(file, model_type, optimizer, post_tnep; ref_extensions=[ref_add_on_off_va_bounds!,ref_add_ne_branch!], solution_builder = solution_tnep!, kwargs...)
 end
 
