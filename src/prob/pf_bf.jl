@@ -1,6 +1,6 @@
 ""
-function run_pf_bf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, post_pf_bf; kwargs...)
+function run_pf_bf(file, model_type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, post_pf_bf; kwargs...)
 end
 
 ""

@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Simplified PowerModel types (#192)
+- Renamed model_constructor to model_type (#192)
 - Made all component on/off variables conductorless (#390)
 - Fixed naming branch indicator variable (#551)
 

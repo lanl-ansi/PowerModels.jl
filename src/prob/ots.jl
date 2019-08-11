@@ -5,8 +5,8 @@
 #
 
 ""
-function run_ots(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, post_ots; ref_extensions=[ref_add_on_off_va_bounds!], solution_builder = solution_ots!, kwargs...)
+function run_ots(file, model_type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, post_ots; ref_extensions=[ref_add_on_off_va_bounds!], solution_builder = solution_ots!, kwargs...)
 end
 
 ""

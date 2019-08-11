@@ -7,8 +7,8 @@
 
 
 "opf using current limits instead of thermal limits, tests constraint_current_limit"
-function _run_cl_opf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _post_cl_opf; kwargs...)
+function _run_cl_opf(file, model_type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_cl_opf; kwargs...)
 end
 
 ""
@@ -46,8 +46,8 @@ end
 
 
 "opf with unit commitment, tests constraint_current_limit"
-function _run_uc_opf(file, model_constructor, solver; kwargs...)
-    return run_model(file, model_constructor, solver, _post_uc_opf; solution_builder = _solution_uc!, kwargs...)
+function _run_uc_opf(file, model_type, solver; kwargs...)
+    return run_model(file, model_type, solver, _post_uc_opf; solution_builder = _solution_uc!, kwargs...)
 end
 
 ""
@@ -106,8 +106,8 @@ function _post_uc_opf(pm::AbstractPowerModel)
 end
 
 ""
-function _run_uc_mc_opf(file, model_constructor, solver; kwargs...)
-    return run_model(file, model_constructor, solver, _post_uc_mc_opf; solution_builder = _solution_uc!, multiconductor=true, kwargs...)
+function _run_uc_mc_opf(file, model_type, solver; kwargs...)
+    return run_model(file, model_type, solver, _post_uc_mc_opf; solution_builder = _solution_uc!, multiconductor=true, kwargs...)
 end
 
 ""
@@ -190,8 +190,8 @@ end
 
 
 ""
-function _run_mn_opb(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _post_mn_opb; ref_extensions=[ref_add_connected_components!], multinetwork=true, kwargs...)
+function _run_mn_opb(file, model_type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_mn_opb; ref_extensions=[ref_add_connected_components!], multinetwork=true, kwargs...)
 end
 
 ""
@@ -209,8 +209,8 @@ end
 
 
 ""
-function _run_mn_pf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _post_mn_pf; multinetwork=true, kwargs...)
+function _run_mn_pf(file, model_type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_mn_pf; multinetwork=true, kwargs...)
 end
 
 ""
@@ -266,8 +266,8 @@ end
 
 
 ""
-function _run_mc_opf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _post_mc_opf; multiconductor=true, kwargs...)
+function _run_mc_opf(file, model_type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_mc_opf; multiconductor=true, kwargs...)
 end
 
 ""
@@ -309,8 +309,8 @@ end
 
 
 ""
-function _run_mn_mc_opf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _post_mn_mc_opf; multinetwork=true, multiconductor=true, kwargs...)
+function _run_mn_mc_opf(file, model_type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_mn_mc_opf; multinetwork=true, multiconductor=true, kwargs...)
 end
 
 ""
@@ -354,8 +354,8 @@ end
 
 
 "opf with storage"
-function _run_strg_opf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _post_strg_opf; kwargs...)
+function _run_strg_opf(file, model_type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_strg_opf; kwargs...)
 end
 
 ""
@@ -402,8 +402,8 @@ end
 
 
 "multi-network opf with storage"
-function _run_mn_strg_opf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _post_mn_strg_opf; multinetwork=true, kwargs...)
+function _run_mn_strg_opf(file, model_type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_mn_strg_opf; multinetwork=true, kwargs...)
 end
 
 ""
@@ -466,8 +466,8 @@ end
 
 
 "opf with mi storage variables"
-function _run_strg_mi_opf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _post_strg_mi_opf; kwargs...)
+function _run_strg_mi_opf(file, model_type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_strg_mi_opf; kwargs...)
 end
 
 ""
@@ -514,8 +514,8 @@ end
 
 
 ""
-function _run_mn_mc_strg_opf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _post_mn_mc_strg_opf; multinetwork=true, multiconductor=true, kwargs...)
+function _run_mn_mc_strg_opf(file, model_type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_mn_mc_strg_opf; multinetwork=true, multiconductor=true, kwargs...)
 end
 
 "warning: this model is not realistic or physically reasonable, it is only for test coverage"

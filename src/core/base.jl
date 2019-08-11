@@ -155,15 +155,15 @@ function JuMP.optimize!(pm::AbstractPowerModel, optimizer::JuMP.OptimizerFactory
 end
 
 ""
-function run_model(file::String, model_constructor, optimizer, post_method; kwargs...)
+function run_model(file::String, model_type, optimizer, post_method; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_model(data, model_constructor, optimizer, post_method; kwargs...)
+    return run_model(data, model_type, optimizer, post_method; kwargs...)
 end
 
 ""
-function run_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_method; ref_extensions=[], solution_builder=solution_opf!, kwargs...)
+function run_model(data::Dict{String,<:Any}, model_type, optimizer, post_method; ref_extensions=[], solution_builder=solution_opf!, kwargs...)
     #start_time = time()
-    pm = build_model(data, model_constructor, post_method; ref_extensions=ref_extensions, kwargs...)
+    pm = build_model(data, model_type, post_method; ref_extensions=ref_extensions, kwargs...)
     #Memento.debug(_LOGGER, "pm model build time: $(time() - start_time)")
 
     #start_time = time()
@@ -174,18 +174,18 @@ function run_model(data::Dict{String,<:Any}, model_constructor, optimizer, post_
 end
 
 ""
-function build_model(file::String,  model_constructor, post_method; kwargs...)
+function build_model(file::String,  model_type, post_method; kwargs...)
     data = PowerModels.parse_file(file)
-    return build_model(data, model_constructor, post_method; kwargs...)
+    return build_model(data, model_type, post_method; kwargs...)
 end
 
 ""
-function build_model(data::Dict{String,<:Any}, model_constructor, post_method; ref_extensions=[], multinetwork=false, multiconductor=false, kwargs...)
+function build_model(data::Dict{String,<:Any}, model_type, post_method; ref_extensions=[], multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
 
     #start_time = time()
-    pm = InitializePowerModel(model_constructor, data; kwargs...)
-    #Memento.info(LOGGER, "pm model_constructor time: $(time() - start_time)")
+    pm = InitializePowerModel(model_type, data; kwargs...)
+    #Memento.info(LOGGER, "pm model_type time: $(time() - start_time)")
 
     if !multinetwork && ismultinetwork(pm)
         Memento.error(_LOGGER, "attempted to build a single-network model with multi-network data")

@@ -1,6 +1,6 @@
 ""
-function run_opf_bf(file, model_constructor::Type{T}, optimizer; kwargs...) where T <: AbstractBFModel
-    return run_model(file, model_constructor, optimizer, post_opf_bf; kwargs...)
+function run_opf_bf(file, model_type::Type{T}, optimizer; kwargs...) where T <: AbstractBFModel
+    return run_model(file, model_type, optimizer, post_opf_bf; kwargs...)
 end
 
 ""

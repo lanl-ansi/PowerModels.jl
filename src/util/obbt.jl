@@ -27,7 +27,7 @@ Dict{String,Any} with 19 entries:
   "avg_vm_range_init"            => 0.2
   "final_rel_gap_from_ub"        => NaN
   "run_time"                     => 0.832232
-  "model_constructor"            => AbstractPowerModel
+  "model_type"            => AbstractPowerModel
   "avg_td_range_final"           => 0.436166
   "initial_rel_gap_from_ub"      => Inf
   "sim_parallel_run_time"        => 1.13342
@@ -42,7 +42,7 @@ Dict{String,Any} with 19 entries:
 ```
 
 # Keyword Arguments
-* `model_constructor`: relaxation to use for performing bound-tightening.
+* `model_type`: relaxation to use for performing bound-tightening.
     Currently, it supports any relaxation that has explicit voltage magnitude
     and phase-angle difference variables.
 * `max_iter`: maximum number of bound-tightening iterations to perform.
@@ -68,7 +68,7 @@ function run_obbt_opf!(file::String, optimizer; kwargs...)
 end
 
 function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
-    model_constructor = QCWRTriPowerModel,
+    model_type = QCWRTriPowerModel,
     max_iter = 100,
     time_limit = 3600.0,
     upper_bound = Inf,
@@ -83,11 +83,11 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
     Memento.info(_LOGGER, "maximum OBBT iterations set to default value of $max_iter")
     Memento.info(_LOGGER, "maximum time limit for OBBT set to default value of $time_limit seconds")
 
-    model_relaxation = build_model(data, model_constructor, PowerModels.post_opf)
+    model_relaxation = build_model(data, model_type, PowerModels.post_opf)
     (ismultinetwork(model_relaxation)) && (Memento.error(_LOGGER, "OBBT is not supported for multi-networks"))
     (ismulticonductor(model_relaxation)) && (Memento.error(_LOGGER, "OBBT is not supported for multi-phase networks"))
 
-    # check for model_constructor compatability with OBBT
+    # check for model_type compatability with OBBT
     _check_variables(model_relaxation)
 
     # check for other keyword argument consistencies
@@ -118,11 +118,11 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
     end
 
 
-    model_bt = build_model(data, model_constructor, PowerModels.post_opf)
+    model_bt = build_model(data, model_type, PowerModels.post_opf)
     (upper_bound_constraint) && (_constraint_obj_bound(model_bt, upper_bound))
 
     stats = Dict{String,Any}()
-    stats["model_constructor"] = model_constructor
+    stats["model_type"] = model_type
     stats["initial_relaxation_objective"] = current_relaxation_objective
     stats["initial_rel_gap_from_ub"] = current_rel_gap
     stats["upper_bound"] = upper_bound
@@ -321,13 +321,13 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
         # populate the modifications, update the data, and rebuild the bound-tightening model
         modifications = _create_modifications(model_bt, vm_lb, vm_ub, td_lb, td_ub)
         PowerModels.update_data!(data, modifications)
-        model_bt = build_model(data, model_constructor, PowerModels.post_opf)
+        model_bt = build_model(data, model_type, PowerModels.post_opf)
         (upper_bound_constraint) && (_constraint_obj_bound(model_bt, upper_bound))
         vm = var(model_bt, :vm)
         td = var(model_bt, :td)
 
         # run the qc relaxation for the updated bounds
-        result_relaxation = run_opf(data, model_constructor, optimizer)
+        result_relaxation = run_opf(data, model_type, optimizer)
 
         if result_relaxation["termination_status"] in status_pass
             current_rel_gap = (upper_bound - result_relaxation["objective"])/upper_bound
