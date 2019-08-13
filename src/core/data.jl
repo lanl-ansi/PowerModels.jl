@@ -139,6 +139,7 @@ const pm_component_status = Dict(
     "shunt" => "status",
     "gen" => "gen_status",
     "storage" => "status",
+    "switch" => "status",
     "branch" => "br_status",
     "dcline" => "br_status",
 )
@@ -150,6 +151,7 @@ const pm_component_status_inactive = Dict(
     "shunt" => 0,
     "gen" => 0,
     "storage" => 0,
+    "switch" => 0,
     "branch" => 0,
     "dcline" => 0,
 )
