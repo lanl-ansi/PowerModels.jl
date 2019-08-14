@@ -2322,15 +2322,15 @@ function make_multiconductor!(data::Dict{String,<:Any}, conductors::Int)
 end
 
 
-"feild names that should not be multi-conductor values"
+"field names that should not be multi-conductor values"
 const _conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
     "br_status", "gen_bus", "load_bus", "shunt_bus", "storage_bus", "f_bus", "t_bus",
     "transformer", "area", "zone", "base_kv", "energy", "energy_rating", "charge_rating",
     "discharge_rating", "charge_efficiency", "discharge_efficiency", "standby_loss",
     "model", "ncost", "cost", "startup", "shutdown", "name", "source_id", "active_phases"])
 
-"feild names that should become multi-conductor matrix not arrays"
-const _conductor_matrix = Set(["br_r", "br_x"])
+"field names that should become multi-conductor matrix not arrays"
+const _conductor_matrix = Set(["br_r", "br_x", "b_fr", "g_fr", "b_to", "g_to"])
 
 
 ""
