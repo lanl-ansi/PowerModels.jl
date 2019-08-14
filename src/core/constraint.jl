@@ -160,6 +160,14 @@ function constraint_switch_state_open(pm::GenericPowerModel, n::Int, c::Int, f_i
 end
 
 ""
+function constraint_switch_thermal_limit(pm::GenericPowerModel, n::Int, c::Int, f_idx, rating)
+    psw = var(pm, n, c, :psw, f_idx)
+    qsw = var(pm, n, c, :qsw, f_idx)
+
+    JuMP.@constraint(pm.model, psw^2 + qsw^2 <= rating^2)
+end
+
+""
 function constraint_switch_flow_on_off(pm::GenericPowerModel, n::Int, c::Int, i, f_idx)
     psw = var(pm, n, c, :psw, f_idx)
     qsw = var(pm, n, c, :qsw, f_idx)

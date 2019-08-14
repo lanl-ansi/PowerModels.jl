@@ -242,9 +242,9 @@ end
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15053.6; atol = 1e0)
             @test isapprox(result["solution"]["switch"]["1"]["psw"],  5.468, atol=1e-2)
-            @test isapprox(result["solution"]["switch"]["1"]["qsw"], -0.874, atol=1e-2)
+            @test isapprox(result["solution"]["switch"]["1"]["qsw"], -0.836, atol=1e-2)
             @test isapprox(result["solution"]["switch"]["2"]["psw"], -2.426, atol=1e-3)
-            @test isapprox(result["solution"]["switch"]["2"]["qsw"],  1.774, atol=1e-3)
+            @test isapprox(result["solution"]["switch"]["2"]["qsw"],  1.736, atol=1e-3)
 
             @test isapprox(result["solution"]["switch"]["1"]["status"], 1.00, atol=1e-3)
             @test isapprox(result["solution"]["switch"]["2"]["status"], 1.00, atol=1e-3)
@@ -275,9 +275,9 @@ end
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15053.6; atol = 1e0)
             @test isapprox(result["solution"]["switch"]["1"]["psw"],  5.469, atol=1e-2)
-            @test isapprox(result["solution"]["switch"]["1"]["qsw"], -0.874, atol=1e-2)
+            @test isapprox(result["solution"]["switch"]["1"]["qsw"], -0.809, atol=1e-2)
             @test isapprox(result["solution"]["switch"]["2"]["psw"], -2.426, atol=1e-3)
-            @test isapprox(result["solution"]["switch"]["2"]["qsw"],  1.774, atol=1e-3)
+            @test isapprox(result["solution"]["switch"]["2"]["qsw"],  1.710, atol=1e-3)
 
             @test isapprox(result["solution"]["switch"]["1"]["status"], 1.00, atol=1e-3)
             @test isapprox(result["solution"]["switch"]["2"]["status"], 1.00, atol=1e-3)

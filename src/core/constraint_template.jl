@@ -694,6 +694,20 @@ function constraint_switch_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw,
     constraint_switch_voltage_on_off(pm, nw, cnd, i, switch["f_bus"], switch["t_bus"], vad_min, vad_max)
 end
 
+"enforces an mva limit on the power flow over a switch"
+function constraint_switch_thermal_limit(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    switch = ref(pm, nw, :switch, i)
+
+    if haskey(switch, "thermal_rating")
+        f_idx = (i, switch["f_bus"], switch["t_bus"])
+        constraint_switch_thermal_limit(pm, nw, cnd, f_idx, switch["thermal_rating"])
+    end
+end
+
+
+
+
+
 ### Storage Constraints ###
 
 ""

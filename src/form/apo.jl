@@ -100,6 +100,16 @@ end
 
 
 
+""
+function constraint_switch_thermal_limit(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, rating) where T <: AbstractActivePowerFormulation
+    psw = var(pm, n, c, :psw, f_idx)
+
+    JuMP.lower_bound(psw) < -rating && JuMP.set_lower_bound(psw, -rating)
+    JuMP.upper_bound(psw) >  rating && JuMP.set_upper_bound(psw,  rating)
+end
+
+
+
 
 ""
 function constraint_storage_thermal_limit(pm::GenericPowerModel{T}, n::Int, c::Int, i, rating) where T <: AbstractActivePowerFormulation

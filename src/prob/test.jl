@@ -72,6 +72,7 @@ function _post_sw_opf(pm::GenericPowerModel)
 
     for i in ids(pm, :switch)
         constraint_switch_state(pm, i)
+        constraint_switch_thermal_limit(pm, i)
     end
 
     for i in ids(pm, :branch)
@@ -120,6 +121,7 @@ function _post_oswpf(pm::GenericPowerModel)
 
     for i in ids(pm, :switch)
         constraint_switch_on_off(pm, i)
+        constraint_switch_thermal_limit(pm, i)
     end
 
     for i in ids(pm, :branch)
