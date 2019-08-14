@@ -26,7 +26,7 @@ end
 
 const _mp_data_names = ["mpc.version", "mpc.baseMVA", "mpc.bus", "mpc.gen",
     "mpc.branch", "mpc.dcline", "mpc.gencost", "mpc.dclinecost",
-    "mpc.bus_name", "mpc.storage"
+    "mpc.bus_name", "mpc.storage", "mpc.switch"
 ]
 
 const _mp_bus_columns = [
@@ -112,6 +112,13 @@ const _mp_storage_columns = [
     ("qmin", Float64), ("qmax", Float64),
     ("r", Float64), ("x", Float64),
     ("standby_loss", Float64),
+    ("status", Int)
+]
+
+const _mp_switch_columns = [
+    ("f_bus", Int), ("t_bus", Int),
+    ("psw", Float64), ("qsw", Float64), ("state", Int),
+    ("thermal_rating", Float64),
     ("status", Int)
 ]
 
@@ -206,6 +213,16 @@ function _parse_matpower_string(data_string::String)
         case["storage"] = storage
     end
 
+    if haskey(matlab_data, "mpc.switch")
+        switch = []
+        for (i, switch_row) in enumerate(matlab_data["mpc.switch"])
+            switch_data = InfrastructureModels.row_to_typed_dict(switch_row, _mp_switch_columns)
+            switch_data["index"] = i
+            switch_data["source_id"] = ["switch", i]
+            push!(switch, switch_data)
+        end
+        case["switch"] = switch
+    end
 
     if haskey(matlab_data, "mpc.bus_name")
         bus_names = []
@@ -342,6 +359,9 @@ function _matpower_to_powermodels!(mp_data::Dict{String,<:Any})
     end
     if !haskey(pm_data, "storage")
         pm_data["storage"] = []
+    end
+    if !haskey(pm_data, "switch")
+        pm_data["switch"] = []
     end
 
     # translate component models

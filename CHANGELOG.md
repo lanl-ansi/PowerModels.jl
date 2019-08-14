@@ -8,6 +8,7 @@ PowerModels.jl Change Log
 - Fixed naming branch indicator variable (#551)
 
 ### Staged
+- Add switch component (#339)
 - Added component status parameter lookup (#565)
 - Fixed status-based filtering to support fractional values (#564)
 - Fixed `va` default start point

@@ -82,6 +82,7 @@ function solution_opf!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
     add_setpoint_storage!(sol, pm)
     add_setpoint_branch_flow!(sol, pm)
     add_setpoint_dcline_flow!(sol, pm)
+    add_setpoint_switch_flow!(sol, pm)
 
     add_dual_kcl!(sol, pm)
     add_dual_sm!(sol, pm) # Adds the duals of the transmission lines' thermal limits.
@@ -192,6 +193,17 @@ function add_setpoint_dcline_flow!(sol, pm::AbstractPowerModel)
     add_setpoint!(sol, pm, "dcline", "qf", :q_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
     add_setpoint!(sol, pm, "dcline", "pt", :p_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
     add_setpoint!(sol, pm, "dcline", "qt", :q_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+end
+
+""
+function add_setpoint_switch_flow!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "switch", "psw", :psw, var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+    add_setpoint!(sol, pm, "switch", "qsw", :qsw, var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+end
+
+""
+function add_setpoint_switch_status!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "switch", "status", :z_switch, conductorless=true, default_value = (item) -> item["status"]*1.0)
 end
 
 

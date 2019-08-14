@@ -648,6 +648,10 @@ function _psse2pm_storage!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     pm_data["storage"] = []
 end
 
+function _psse2pm_switch!(pm_data::Dict, pti_data::Dict, import_all::Bool)
+    pm_data["switch"] = []
+end
+
 
 """
     _pti_to_powermodels!(pti_data)
@@ -677,6 +681,7 @@ function _pti_to_powermodels!(pti_data::Dict; import_all=false, validate=true)::
     _psse2pm_transformer!(pm_data, pti_data, import_all)
     _psse2pm_dcline!(pm_data, pti_data, import_all)
     _psse2pm_storage!(pm_data, pti_data, import_all)
+    _psse2pm_switch!(pm_data, pti_data, import_all)
 
     _import_remaining!(pm_data, pti_data, import_all; exclude=[
         "CASE IDENTIFICATION", "BUS", "LOAD", "FIXED SHUNT",
