@@ -196,7 +196,7 @@ end
 
 
 ""
-function constraint_switch_state_closed(pm::GenericPowerModel, n::Int, c::Int, f_bus, t_bus)
+function constraint_switch_state_closed(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus) where T <: AbstractACPForm
     vm_fr = var(pm, n, c, :vm, f_bus)
     vm_to = var(pm, n, c, :vm, t_bus)
     va_fr = var(pm, n, c, :va, f_bus)
@@ -207,7 +207,7 @@ function constraint_switch_state_closed(pm::GenericPowerModel, n::Int, c::Int, f
 end
 
 ""
-function constraint_switch_voltage_on_off(pm::GenericPowerModel, n::Int, c::Int, i, f_bus, t_bus, vad_min, vad_max)
+function constraint_switch_voltage_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, vad_min, vad_max) where T <: AbstractACPForm
     vm_fr = var(pm, n, c, :vm, f_bus)
     vm_to = var(pm, n, c, :vm, t_bus)
     va_fr = var(pm, n, c, :va, f_bus)

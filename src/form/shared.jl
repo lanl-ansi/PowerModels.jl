@@ -69,6 +69,22 @@ function constraint_power_balance_shunt(pm::GenericPowerModel{T}, n::Int, c::Int
 end
 
 
+""
+function constraint_power_balance_shunt_switch(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractWForms
+    w    = var(pm, n, c, :w, i)
+    p    = var(pm, n, c, :p)
+    q    = var(pm, n, c, :q)
+    pg   = var(pm, n, c, :pg)
+    qg   = var(pm, n, c, :qg)
+    psw  = var(pm, n, c, :psw)
+    qsw  = var(pm, n, c, :qsw)
+    p_dc = var(pm, n, c, :p_dc)
+    q_dc = var(pm, n, c, :q_dc)
+
+    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(psw[a_sw] for a_sw in bus_arcs_sw) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*w)
+    con(pm, n, c, :kcl_q)[i] = JuMP.@constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) + sum(qsw[a_sw] for a_sw in bus_arcs_sw) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*w)
+end
+
 """
 ```
 sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd[d] for d in bus_loads) - sum(gs[s] for s in bus_shunts)*w[i]
@@ -149,6 +165,34 @@ function constraint_network_power_balance(pm::GenericPowerModel{T}, n::Int, c::I
     JuMP.@constraint(pm.model, sum(pg[g] for g in comp_gen_ids) >= sum(pd for (i,pd) in values(comp_pd)) + sum(gs*w[i] for (i,gs) in values(comp_gs)) + sum(g_fr*w[i]/tm^2 + g_to*w[j] for (i,j,r,x,tm,g_fr,g_to) in values(comp_branch_g)))
     JuMP.@constraint(pm.model, sum(qg[g] for g in comp_gen_ids) >= sum(qd for (i,qd) in values(comp_qd)) - sum(bs*w[i] for (i,bs) in values(comp_bs)) - sum(b_fr*w[i]/tm^2 + b_to*w[j] for (i,j,r,x,tm,b_fr,b_to) in values(comp_branch_b)))
 end
+
+
+""
+function constraint_switch_state_closed(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus) where T <: AbstractWRForms
+    w_fr = var(pm, n, c, :w, f_bus)
+    w_to = var(pm, n, c, :w, t_bus)
+
+    JuMP.@constraint(pm.model, w_fr == w_to)
+end
+
+""
+function constraint_switch_voltage_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, vad_min, vad_max) where T <: AbstractWRForms
+    w_fr = var(pm, n, c, :w, f_bus)
+    w_to = var(pm, n, c, :w, t_bus)
+    z = var(pm, n, :z_switch, i)
+
+    w_fr_lb, w_fr_ub = InfrastructureModels.variable_domain(w_fr)
+    w_to_lb, w_to_ub = InfrastructureModels.variable_domain(w_to)
+
+    @assert w_fr_lb >= 0.0 && w_to_lb >= 0.0
+
+    off_ub = w_fr_ub - w_to_lb
+    off_lb = w_fr_lb - w_to_ub
+
+    JuMP.@constraint(pm.model, 0.0 <= (w_fr - w_to) + off_ub*(1-z))
+    JuMP.@constraint(pm.model, 0.0 >= (w_fr - w_to) + off_lb*(1-z))
+end
+
 
 
 ""

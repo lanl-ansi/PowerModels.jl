@@ -134,3 +134,10 @@ function constraint_storage_on_off(pm::GenericPowerModel{T}, n::Int, i, pmin, pm
     JuMP.@constraint(pm.model, ps >= z_storage*pmin)
 end
 
+
+""
+function add_setpoint_switch_flow!(sol, pm::GenericPowerModel{T}) where T <: AbstractActivePowerFormulation
+    add_setpoint!(sol, pm, "switch", "psw", :psw, var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+    add_setpoint_fixed!(sol, pm, "switch", "qsw")
+end
+
