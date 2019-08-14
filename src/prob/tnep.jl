@@ -27,7 +27,7 @@ function post_tnep(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_power_balance_shunt_ne(pm, i)
+        constraint_power_balance_ne(pm, i)
     end
 
     for i in ids(pm, :branch)
