@@ -27,7 +27,7 @@ function _post_cl_opf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_power_balance_shunt(pm, i)
+        constraint_power_balance(pm, i)
     end
 
     for i in ids(pm, :branch)
@@ -67,7 +67,7 @@ function _post_sw_opf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_power_balance_shunt_switch(pm, i)
+        constraint_power_balance(pm, i)
     end
 
     for i in ids(pm, :switch)
@@ -116,7 +116,7 @@ function _post_oswpf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_power_balance_shunt_switch(pm, i)
+        constraint_power_balance(pm, i)
     end
 
     for i in ids(pm, :switch)
@@ -181,7 +181,7 @@ function _post_oswpf_nb(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_power_balance_shunt_switch(pm, i)
+        constraint_power_balance(pm, i)
     end
 
     for i in ids(pm, :switch)
@@ -285,7 +285,7 @@ function _post_uc_opf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_power_balance_shunt_storage(pm, i)
+        constraint_power_balance(pm, i)
     end
     
     for i in ids(pm, :storage)
@@ -351,7 +351,7 @@ function _post_uc_mc_opf(pm::AbstractPowerModel)
         end
 
         for i in ids(pm, :bus)
-            constraint_power_balance_shunt_storage(pm, i, cnd=c)
+            constraint_power_balance(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
@@ -434,7 +434,7 @@ function _post_mn_pf(pm::AbstractPowerModel)
         end
 
         for (i,bus) in ref(pm, :bus, nw=n)
-            constraint_power_balance_shunt(pm, i, nw=n)
+            constraint_power_balance(pm, i, nw=n)
 
             # PV Bus Constraints
             if length(ref(pm, :bus_gens, i, nw=n)) > 0 && !(i in ids(pm, :ref_buses, nw=n))
@@ -490,7 +490,7 @@ function _post_mc_opf(pm::AbstractPowerModel)
         end
 
         for i in ids(pm, :bus)
-            constraint_power_balance_shunt(pm, i, cnd=c)
+            constraint_power_balance(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
@@ -534,7 +534,7 @@ function _post_mn_mc_opf(pm::AbstractPowerModel)
             end
 
             for i in ids(pm, :bus, nw=n)
-                constraint_power_balance_shunt(pm, i, nw=n, cnd=c)
+                constraint_power_balance(pm, i, nw=n, cnd=c)
             end
 
             for i in ids(pm, :branch, nw=n)
@@ -580,7 +580,7 @@ function _post_strg_opf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_power_balance_shunt_storage(pm, i)
+        constraint_power_balance(pm, i)
     end
 
     for i in ids(pm, :storage)
@@ -627,7 +627,7 @@ function _post_mn_strg_opf(pm::AbstractPowerModel)
         end
 
         for i in ids(pm, :bus, nw=n)
-            constraint_power_balance_shunt_storage(pm, i, nw=n)
+            constraint_power_balance(pm, i, nw=n)
         end
 
         for i in ids(pm, :storage, nw=n)
@@ -692,7 +692,7 @@ function _post_strg_mi_opf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_power_balance_shunt_storage(pm, i)
+        constraint_power_balance(pm, i)
     end
 
     for i in ids(pm, :storage)
@@ -745,7 +745,7 @@ function _post_mn_mc_strg_opf(pm::AbstractPowerModel)
             end
 
             for i in ids(pm, :bus, nw=n)
-                constraint_power_balance_shunt_storage(pm, i, nw=n, cnd=c)
+                constraint_power_balance(pm, i, nw=n, cnd=c)
             end
 
             for i in ids(pm, :storage, nw=n)

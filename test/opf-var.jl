@@ -491,7 +491,7 @@ end
         end
 
         for i in ids(pm,:bus)
-            PMs.constraint_power_balance_shunt(pm, i)
+            PMs.constraint_power_balance(pm, i)
         end
 
         for i in ids(pm,:branch)
