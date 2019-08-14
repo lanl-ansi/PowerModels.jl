@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Add switch component (#339)
 - Added component status parameter lookup (#565)
 - Fixed status-based filtering to support fractional values (#564)
 - Fixed `va` default start point

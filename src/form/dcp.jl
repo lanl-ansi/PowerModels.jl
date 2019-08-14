@@ -48,6 +48,17 @@ function constraint_power_balance_shunt_storage(pm::GenericPowerModel{T}, n::Int
 end
 
 ""
+function constraint_power_balance_shunt_switch(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
+    p = var(pm, n, c, :p)
+    pg = var(pm, n, c, :pg)
+    psw = var(pm, n, c, :psw)
+    p_dc = var(pm, n, c, :p_dc)
+
+    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(psw[a_sw] for a_sw in bus_arcs_sw) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
+end
+
+
+""
 function constraint_power_balance_shunt_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractDCPForm
     pg   = var(pm, n, c, :pg)
     p    = var(pm, n, c, :p)
@@ -83,6 +94,23 @@ function constraint_ohms_yt_from_ne(pm::GenericPowerModel{T}, n::Int, c::Int, i,
     JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
 end
 
+""
+function constraint_switch_state_closed(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus) where T <: AbstractDCPForm
+    va_fr = var(pm, n, c, :va, f_bus)
+    va_to = var(pm, n, c, :va, t_bus)
+
+    JuMP.@constraint(pm.model, va_fr == va_to)
+end
+
+""
+function constraint_switch_voltage_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, vad_min, vad_max) where T <: AbstractDCPForm
+    va_fr = var(pm, n, c, :va, f_bus)
+    va_to = var(pm, n, c, :va, t_bus)
+    z = var(pm, n, :z_switch, i)
+
+    JuMP.@constraint(pm.model, 0 <= (va_fr - va_to) + vad_max*(1-z))
+    JuMP.@constraint(pm.model, 0 >= (va_fr - va_to) + vad_min*(1-z))
+end
 
 
 ""

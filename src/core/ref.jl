@@ -93,6 +93,34 @@ function ref_calc_branch_flow_bounds(branches, buses, conductor::Int=1)
 end
 
 
+"computes flow bounds on switches from ref data"
+function ref_calc_switch_flow_bounds(switches, buses, conductor::Int=1)
+    flow_lb = Dict() 
+    flow_ub = Dict()
+
+    for (i, switch) in switches
+        flow_lb[i] = -Inf
+        flow_ub[i] = Inf
+
+        if haskey(switch, "thermal_rating")
+            flow_lb[i] = max(flow_lb[i], -switch["thermal_rating"][conductor])
+            flow_ub[i] = min(flow_ub[i],  switch["thermal_rating"][conductor])
+        end
+
+        if haskey(switch, "current_rating")
+            fr_vmin = buses[switch["f_bus"]]["vmin"][conductor]
+            to_vmin = buses[switch["t_bus"]]["vmin"][conductor]
+            m_vmin = min(fr_vmin, to_vmin)
+
+            flow_lb[i] = max(flow_lb[i], -switch["current_rating"][conductor]/m_vmin)
+            flow_ub[i] = min(flow_ub[i],  switch["current_rating"][conductor]/m_vmin)
+        end
+    end
+
+    return flow_lb, flow_ub
+end
+
+
 "computes voltage product bounds from ref data"
 function ref_calc_voltage_product_bounds(buspairs, conductor::Int=1)
     wr_min = Dict((bp, -Inf) for bp in keys(buspairs))

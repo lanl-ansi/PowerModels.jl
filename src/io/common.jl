@@ -59,6 +59,7 @@ function correct_network_data!(data::Dict{String,<:Any})
     check_voltage_setpoints(data)
 
     check_storage_parameters(data)
+    check_switch_parameters(data)
 
     gen, dcline = correct_cost_functions!(data)
     mod_gen[:cost_pwl] = gen

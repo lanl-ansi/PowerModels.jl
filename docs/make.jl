@@ -13,6 +13,7 @@ makedocs(
             "Result Data Format" => "result-data.md",
             "Mathematical Model" => "math-model.md",
             "Storage Model" => "storage.md",
+            "Switch Model" => "switch.md",
             "Multi Networks" => "multi-networks.md",
             "Utilities" => "utilities.md"
         ],

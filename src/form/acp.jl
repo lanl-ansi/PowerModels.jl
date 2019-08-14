@@ -60,6 +60,23 @@ end
 
 
 ""
+function constraint_power_balance_shunt_switch(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACPForm
+    vm = var(pm, n, c, :vm, i)
+    p = var(pm, n, c, :p)
+    q = var(pm, n, c, :q)
+    pg = var(pm, n, c, :pg)
+    qg = var(pm, n, c, :qg)
+    psw = var(pm, n, c, :psw)
+    qsw = var(pm, n, c, :qsw)
+    p_dc = var(pm, n, c, :p_dc)
+    q_dc = var(pm, n, c, :q_dc)
+
+    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(psw[a_sw] for a_sw in bus_arcs_sw) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*vm^2)
+    con(pm, n, c, :kcl_q)[i] = JuMP.@constraint(pm.model, sum(q[a] for a in bus_arcs) + sum(q_dc[a_dc] for a_dc in bus_arcs_dc) + sum(qsw[a_sw] for a_sw in bus_arcs_sw) == sum(qg[g] for g in bus_gens) - sum(qd for qd in values(bus_qd)) + sum(bs for bs in values(bus_bs))*vm^2)
+end
+
+
+""
 function constraint_power_balance_shunt_storage(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs) where T <: AbstractACPForm
     vm = var(pm, n, c, :vm, i)
     p = var(pm, n, c, :p)
@@ -177,6 +194,29 @@ function constraint_ohms_y_to(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t
     JuMP.@NLconstraint(pm.model, q_to == -(b+b_to)*vm_to^2 + b*vm_to*vm_fr/tm*cos(va_to-va_fr+ta) + -g*vm_to*vm_fr/tm*sin(va_to-va_fr+ta) )
 end
 
+
+""
+function constraint_switch_state_closed(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus) where T <: AbstractACPForm
+    vm_fr = var(pm, n, c, :vm, f_bus)
+    vm_to = var(pm, n, c, :vm, t_bus)
+    va_fr = var(pm, n, c, :va, f_bus)
+    va_to = var(pm, n, c, :va, t_bus)
+
+    JuMP.@constraint(pm.model, vm_fr == vm_to)
+    JuMP.@constraint(pm.model, va_fr == va_to)
+end
+
+""
+function constraint_switch_voltage_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, vad_min, vad_max) where T <: AbstractACPForm
+    vm_fr = var(pm, n, c, :vm, f_bus)
+    vm_to = var(pm, n, c, :vm, t_bus)
+    va_fr = var(pm, n, c, :va, f_bus)
+    va_to = var(pm, n, c, :va, t_bus)
+    z = var(pm, n, :z_switch, i)
+
+    JuMP.@constraint(pm.model, z*vm_fr == z*vm_to)
+    JuMP.@constraint(pm.model, z*va_fr == z*va_to)
+end
 
 ""
 function variable_voltage_on_off(pm::GenericPowerModel{T}; kwargs...) where T <: AbstractACPForm

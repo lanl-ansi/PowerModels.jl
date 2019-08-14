@@ -458,6 +458,81 @@ end
 
 
 
+function variable_switch_indicator(pm::GenericPowerModel; nw::Int=pm.cnw, relax=false)
+    if !relax
+        var(pm, nw)[:z_switch] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :switch)], base_name="$(nw)_z_switch",
+            binary = true,
+            start = comp_start_value(ref(pm, nw, :switch, i), "z_switch_start", 1, 1.0)
+        )
+    else
+        var(pm, nw)[:z_switch] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :switch)], base_name="$(nw)_z_switch",
+            lower_bound = 0,
+            upper_bound = 1,
+            start = comp_start_value(ref(pm, nw, :switch, i), "z_switch_start", 1, 1.0)
+        )
+    end
+end
+
+
+""
+function variable_switch_flow(pm::GenericPowerModel; kwargs...)
+    variable_active_switch_flow(pm; kwargs...)
+    variable_reactive_switch_flow(pm; kwargs...)
+end
+
+
+"variable: `pws[l,i,j]` for `(l,i,j)` in `arcs_sw`"
+function variable_active_switch_flow(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    if bounded
+        flow_lb, flow_ub = ref_calc_switch_flow_bounds(ref(pm, nw, :switch), ref(pm, nw, :bus), cnd)
+
+        psw = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_$(cnd)_psw",
+            lower_bound = flow_lb[l],
+            upper_bound = flow_ub[l],
+            start = comp_start_value(ref(pm, nw, :switch, l), "psw_start", cnd)
+        )
+    else
+        psw = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_$(cnd)_psw",
+            start = comp_start_value(ref(pm, nw, :switch, l), "psw_start", cnd)
+        )
+    end
+
+    # this explicit type erasure is necessary
+    psw_expr = Dict{Any,Any}( (l,i,j) => psw[(l,i,j)] for (l,i,j) in ref(pm, nw, :arcs_from_sw) )
+    psw_expr = merge(psw_expr, Dict( (l,j,i) => -1.0*psw[(l,i,j)] for (l,i,j) in ref(pm, nw, :arcs_from_sw)))
+    var(pm, nw, cnd)[:psw] = psw_expr
+end
+
+
+"variable: `pws[l,i,j]` for `(l,i,j)` in `arcs_sw`"
+function variable_reactive_switch_flow(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    if bounded
+        flow_lb, flow_ub = ref_calc_switch_flow_bounds(ref(pm, nw, :switch), ref(pm, nw, :bus), cnd)
+
+        qsw = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_$(cnd)_qsw",
+            lower_bound = flow_lb[l],
+            upper_bound = flow_ub[l],
+            start = comp_start_value(ref(pm, nw, :switch, l), "qsw_start", cnd)
+        )
+    else
+        qsw = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_$(cnd)_qsw",
+            start = comp_start_value(ref(pm, nw, :switch, l), "qsw_start", cnd)
+        )
+    end
+
+    # this explicit type erasure is necessary
+    qsw_expr = Dict{Any,Any}( (l,i,j) => qsw[(l,i,j)] for (l,i,j) in ref(pm, nw, :arcs_from_sw) )
+    qsw_expr = merge(qsw_expr, Dict( (l,j,i) => -1.0*qsw[(l,i,j)] for (l,i,j) in ref(pm, nw, :arcs_from_sw)))
+    var(pm, nw, cnd)[:qsw] = qsw_expr
+end
+
+
 
 "variables for modeling storage units, includes grid injection and internal variables"
 function variable_storage(pm::GenericPowerModel; kwargs...)
