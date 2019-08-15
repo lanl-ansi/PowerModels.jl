@@ -36,6 +36,52 @@ function constraint_generation_on_off(pm::AbstractActivePowerModel, n::Int, c::I
 end
 
 
+
+""
+function constraint_power_balance(pm::AbstractActivePowerModel, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+    p    = get(var(pm, n, c),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
+    pg   = get(var(pm, n, c),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
+    ps   = get(var(pm, n, c),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
+    psw  = get(var(pm, n, c),  :psw, Dict()); _check_var_keys(psw, bus_arcs_sw, "active power", "switch")
+    p_dc = get(var(pm, n, c), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
+
+
+    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model,
+        sum(p[a] for a in bus_arcs)
+        + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
+        + sum(psw[a_sw] for a_sw in bus_arcs_sw)
+        ==
+        sum(pg[g] for g in bus_gens)
+        - sum(ps[s] for s in bus_storage)
+        - sum(pd for pd in values(bus_pd))
+        - sum(gs for gs in values(bus_gs))*1.0^2
+    )
+end
+
+
+""
+function constraint_power_balance_ne(pm::AbstractDCPModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+    p    = get(var(pm, n, c),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
+    pg   = get(var(pm, n, c),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
+    ps   = get(var(pm, n, c),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
+    psw  = get(var(pm, n, c),  :psw, Dict()); _check_var_keys(psw, bus_arcs_sw, "active power", "switch")
+    p_dc = get(var(pm, n, c), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
+    p_ne = get(var(pm, n, c), :p_ne, Dict()); _check_var_keys(p_ne, bus_arcs_ne, "active power", "ne_branch")
+
+    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model,
+        sum(p[a] for a in bus_arcs)
+        + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
+        + sum(psw[a_sw] for a_sw in bus_arcs_sw)
+        + sum(p_ne[a] for a in bus_arcs_ne)
+        ==
+        sum(pg[g] for g in bus_gens)
+        - sum(ps[s] for s in bus_storage)
+        - sum(pd for pd in values(bus_pd))
+        - sum(gs for gs in values(bus_gs))*1.0^2
+    )
+end
+
+
 "`-rate_a <= p[f_idx] <= rate_a`"
 function constraint_thermal_limit_from(pm::AbstractActivePowerModel, n::Int, c::Int, f_idx, rate_a)
     p_fr = var(pm, n, c, :p, f_idx)
@@ -99,7 +145,6 @@ end
 
 
 
-
 ""
 function constraint_switch_thermal_limit(pm::AbstractActivePowerModel, n::Int, c::Int, f_idx, rating)
     psw = var(pm, n, c, :psw, f_idx)
@@ -107,7 +152,6 @@ function constraint_switch_thermal_limit(pm::AbstractActivePowerModel, n::Int, c
     JuMP.lower_bound(psw) < -rating && JuMP.set_lower_bound(psw, -rating)
     JuMP.upper_bound(psw) >  rating && JuMP.set_upper_bound(psw,  rating)
 end
-
 
 
 

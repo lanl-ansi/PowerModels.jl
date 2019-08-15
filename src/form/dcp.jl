@@ -26,48 +26,6 @@ function variable_bus_voltage(pm::AbstractDCPModel; kwargs...)
 end
 
 
-""
-function constraint_power_balance_shunt(pm::AbstractDCPModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
-    pg   = var(pm, n, c, :pg)
-    p    = var(pm, n, c, :p)
-    p_dc = var(pm, n, c, :p_dc)
-
-    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
-    # omit reactive constraint
-end
-
-""
-function constraint_power_balance_shunt_storage(pm::AbstractDCPModel, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
-    p = var(pm, n, c, :p)
-    pg = var(pm, n, c, :pg)
-    ps = var(pm, n, c, :ps)
-    p_dc = var(pm, n, c, :p_dc)
-
-    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(ps[s] for s in bus_storage) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
-    # omit reactive constraint
-end
-
-""
-function constraint_power_balance_shunt_switch(pm::AbstractDCPModel, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
-    p = var(pm, n, c, :p)
-    pg = var(pm, n, c, :pg)
-    psw = var(pm, n, c, :psw)
-    p_dc = var(pm, n, c, :p_dc)
-
-    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) + sum(psw[a_sw] for a_sw in bus_arcs_sw) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
-end
-
-
-""
-function constraint_power_balance_shunt_ne(pm::AbstractDCPModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_ne, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
-    pg   = var(pm, n, c, :pg)
-    p    = var(pm, n, c, :p)
-    p_ne = var(pm, n, c, :p_ne)
-    p_dc = var(pm, n, c, :p_dc)
-
-    JuMP.@constraint(pm.model, sum(p[a] for a in bus_arcs) + sum(p_ne[a] for a in bus_arcs_ne) + sum(p_dc[a_dc] for a_dc in bus_arcs_dc) == sum(pg[g] for g in bus_gens) - sum(pd for pd in values(bus_pd)) - sum(gs for gs in values(bus_gs))*1.0^2)
-end
-
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 
