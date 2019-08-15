@@ -225,12 +225,12 @@ function constraint_storage_on_off(pm::AbstractAPLossLessModels, n::Int, i, pmin
 end
 
 ""
-function constraint_storage_loss(pm::AbstractAPLossLessModels, n::Int, i, bus, conductors, r, x, standby_loss)
+function constraint_storage_loss(pm::AbstractAPLossLessModels, n::Int, i, bus, conductors, r, x, p_loss, q_loss)
     ps = Dict(c => var(pm, n, c, :ps, i) for c in conductors)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
 
-    JuMP.@constraint(pm.model, sum(ps[c] for c in conductors) + (sd - sc) == standby_loss)
+    JuMP.@constraint(pm.model, sum(ps[c] for c in conductors) + (sd - sc) == p_loss)
 end
 
 

@@ -190,7 +190,7 @@ const _pm_component_parameter_order = Dict(
     "discharge_rating" => 77.03, "charge_efficiency" => 77.04,
     "discharge_efficiency" => 77.05, "thermal_rating" => 77.06,
     "qmin" => 77.07, "qmax" => 77.08, "qmin" => 77.09, "qmax" => 77.10,
-    "r" => 77.11, "x" => 77.12, "standby_loss" => 77.13,
+    "r" => 77.11, "x" => 77.12, "p_loss" => 77.13, "q_loss" => 77.14,
 
     "status" => 80.0, "gen_status" => 81.0, "br_status" => 82.0,
 
@@ -328,7 +328,8 @@ function _make_per_unit!(data::Dict{String,<:Any}, mva_base::Real)
             _apply_func!(strg, "current_rating", rescale)
             _apply_func!(strg, "qmin", rescale)
             _apply_func!(strg, "qmax", rescale)
-            _apply_func!(strg, "standby_loss", rescale)
+            _apply_func!(strg, "p_loss", rescale)
+            _apply_func!(strg, "q_loss", rescale)
         end
     end
 
@@ -469,7 +470,8 @@ function _make_mixed_units!(data::Dict{String,<:Any}, mva_base::Real)
             _apply_func!(strg, "current_rating", rescale)
             _apply_func!(strg, "qmin", rescale)
             _apply_func!(strg, "qmax", rescale)
-            _apply_func!(strg, "standby_loss", rescale)
+            _apply_func!(strg, "p_loss", rescale)
+            _apply_func!(strg, "q_loss", rescale)
         end
     end
 
@@ -1492,9 +1494,6 @@ function check_storage_parameters(data::Dict{String,<:Any})
         if strg["discharge_rating"] < 0.0
             Memento.error(_LOGGER, "storage unit $(strg["index"]) has a non-positive discharge rating $(strg["energy_rating"])")
         end
-        if strg["standby_loss"] < 0.0
-            Memento.error(_LOGGER, "storage unit $(strg["index"]) has a non-positive standby losses $(strg["standby_loss"])")
-        end
 
         for c in 1:get(data, "conductors", 1)
             if strg["r"][c] < 0.0
@@ -1527,8 +1526,11 @@ function check_storage_parameters(data::Dict{String,<:Any})
             Memento.warn(_LOGGER, "storage unit $(strg["index"]) discharge efficiency of $(strg["discharge_efficiency"]) is out of the valid range (0.0. 1.0]")
         end
 
-        if strg["standby_loss"] > 0.0 && strg["energy"] <= 0.0
-            Memento.warn(_LOGGER, "storage unit $(strg["index"]) has standby losses but zero initial energy.  This can lead to model infeasiblity.")
+        if strg["p_loss"] > 0.0 && strg["energy"] <= 0.0
+            Memento.warn(_LOGGER, "storage unit $(strg["index"]) has positive active power losses but zero initial energy.  This can lead to model infeasiblity.")
+        end
+        if strg["q_loss"] > 0.0 && strg["energy"] <= 0.0
+            Memento.warn(_LOGGER, "storage unit $(strg["index"]) has positive reactive power losses but zero initial energy.  This can lead to model infeasiblity.")
         end
     end
 
@@ -2396,7 +2398,7 @@ end
 const _conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
     "br_status", "gen_bus", "load_bus", "shunt_bus", "storage_bus", "f_bus", "t_bus",
     "transformer", "area", "zone", "base_kv", "energy", "energy_rating", "charge_rating",
-    "discharge_rating", "charge_efficiency", "discharge_efficiency", "standby_loss",
+    "discharge_rating", "charge_efficiency", "discharge_efficiency", "p_loss", "q_loss",
     "model", "ncost", "cost", "startup", "shutdown", "name", "source_id", "active_phases"])
 
 "feild names that should become multi-conductor matrix not arrays"

@@ -702,7 +702,7 @@ end
 function constraint_storage_loss(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, conductors=[pm.ccnd])
     storage = ref(pm, nw, :storage, i)
 
-    constraint_storage_loss(pm, nw, i, storage["storage_bus"], conductors, storage["r"], storage["x"], storage["standby_loss"])
+    constraint_storage_loss(pm, nw, i, storage["storage_bus"], conductors, storage["r"], storage["x"], storage["p_loss"], storage["q_loss"])
 end
 
 ""

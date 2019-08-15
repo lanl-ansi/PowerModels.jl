@@ -250,7 +250,7 @@ function constraint_storage_complementarity_mi(pm::AbstractPowerModel, n::Int, i
 end
 
 ""
-function constraint_storage_loss(pm::AbstractPowerModel, n::Int, i, bus, conductors, r, x, standby_loss)
+function constraint_storage_loss(pm::AbstractPowerModel, n::Int, i, bus, conductors, r, x, p_loss, q_loss)
     vm = Dict(c => var(pm, n, c, :vm, bus) for c in conductors)
     ps = Dict(c => var(pm, n, c, :ps, i) for c in conductors)
     qs = Dict(c => var(pm, n, c, :qs, i) for c in conductors)
@@ -260,13 +260,13 @@ function constraint_storage_loss(pm::AbstractPowerModel, n::Int, i, bus, conduct
     JuMP.@NLconstraint(pm.model, 
         sum(ps[c] for c in conductors) + (sd - sc)
         ==
-        standby_loss + sum(r[c]*(ps[c]^2 + qs[c]^2)/vm[c]^2 for c in conductors)
+        p_loss + sum(r[c]*(ps[c]^2 + qs[c]^2)/vm[c]^2 for c in conductors)
     )
 
     JuMP.@NLconstraint(pm.model, 
         sum(qs[c] for c in conductors)
         ==
-        sum(x[c]*(ps[c]^2 + qs[c]^2)/vm[c]^2 for c in conductors)
+        q_loss + sum(x[c]*(ps[c]^2 + qs[c]^2)/vm[c]^2 for c in conductors)
     )
 end
 
