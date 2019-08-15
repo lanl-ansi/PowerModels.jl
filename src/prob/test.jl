@@ -769,7 +769,7 @@ function _post_mn_mc_strg_opf(pm::AbstractPowerModel)
 
         for i in ids(pm, :storage, nw=n)
             constraint_storage_complementarity_nl(pm, i, nw=n)
-            constraint_storage_loss(pm, i, nw=n)
+            constraint_storage_loss(pm, i, nw=n, conductors=conductor_ids(pm, nw=n))
         end
     end
 

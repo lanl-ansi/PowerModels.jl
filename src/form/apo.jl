@@ -154,7 +154,7 @@ function add_storage_setpoint(sol, pm::AbstractActivePowerModel)
     add_setpoint(sol, pm, "storage", "se", :se, conductorless=true)
 end
 
-function constraint_storage_on_off(pm::AbstractPowerModel, n::Int, c::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
+function constraint_storage_on_off(pm::AbstractActivePowerModel, n::Int, c::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
     z_storage = var(pm, n, :z_storage, i)
     ps = var(pm, n, c, :ps, i)
 
