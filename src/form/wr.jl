@@ -360,7 +360,11 @@ function variable_current_magnitude_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, 
     buspairs = ref(pm, nw, :buspairs)
     ub = Dict()
     for (bp, buspair) in buspairs
-        ub[bp] = ((buspair["rate_a"][cnd]*buspair["tap"][cnd])/buspair["vm_fr_min"][cnd])^2
+        if haskey(buspair, "rate_a")
+            ub[bp] = ((buspair["rate_a"][cnd]*buspair["tap"][cnd])/buspair["vm_fr_min"][cnd])^2
+        else
+            ub[bp] = Inf
+        end
     end
     var(pm, nw, cnd)[:ccm] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_ccm",

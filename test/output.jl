@@ -74,7 +74,9 @@ end
 
 @testset "test dual value output" begin
     settings = Dict("output" => Dict("duals" => true))
-    result = run_dc_opf("../test/data/matpower/case14.m", ipopt_solver, setting = settings)
+    data = PowerModels.parse_file("../test/data/matpower/case14.m")
+    calc_thermal_limits!(data)
+    result = run_dc_opf(data, ipopt_solver, setting = settings)
 
     PowerModels.make_mixed_units!(result["solution"])
     @testset "14 bus - kcl duals" begin
