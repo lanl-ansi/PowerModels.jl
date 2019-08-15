@@ -4,6 +4,14 @@
 # for branches flows and bus flow conservation
 ###############################################################################
 
+"checks if a sufficient number of variables exist for the given keys collection"
+function _check_var_keys(vars, keys, var_name, comp_name)
+    if length(vars) < length(keys)
+        error(_LOGGER, "$(var_name) decision variables appear to be missing for $(comp_name) components")
+    end
+end
+
+
 # Generic thermal limit constraint
 "`p[f_idx]^2 + q[f_idx]^2 <= rate_a^2`"
 function constraint_thermal_limit_from(pm::AbstractPowerModel, n::Int, c::Int, f_idx, rate_a)

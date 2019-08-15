@@ -29,7 +29,7 @@ function post_opf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_power_balance_shunt(pm, i)
+        constraint_power_balance(pm, i)
     end
 
     for i in ids(pm, :branch)
@@ -69,7 +69,7 @@ function post_mn_opf(pm::AbstractPowerModel)
         end
 
         for i in ids(pm, :bus, nw=n)
-            constraint_power_balance_shunt(pm, i, nw=n)
+            constraint_power_balance(pm, i, nw=n)
         end
 
         for i in ids(pm, :branch, nw=n)

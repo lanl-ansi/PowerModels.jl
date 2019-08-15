@@ -241,7 +241,7 @@
         #=
         # base case not yet implemented
         @testset "soc 5-bus storage case" begin
-            result = PowerModels._run_mn_mc_opf(mn_mc_data, SOCWRPowerModel, ipopt_solver)
+            result = PowerModels._run_mn_mc_strg_opf(mn_mc_data, SOCWRPowerModel, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 69827.3; atol = 1e-1)

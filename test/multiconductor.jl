@@ -17,7 +17,7 @@ function post_tp_opf(pm::AbstractPowerModel)
         end
 
         for i in ids(pm, :bus)
-            PowerModels.constraint_power_balance_shunt(pm, i, cnd=c)
+            PowerModels.constraint_power_balance(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
