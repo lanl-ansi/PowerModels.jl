@@ -254,6 +254,12 @@ function constraint_storage_loss(pm::AbstractPowerModel, n::Int, i, bus, conduct
         ==
         standby_loss + sum(r[c]*(ps[c]^2 + qs[c]^2)/vm[c]^2 for c in conductors)
     )
+
+    JuMP.@NLconstraint(pm.model, 
+        sum(qs[c] for c in conductors)
+        ==
+        sum(x[c]*(ps[c]^2 + qs[c]^2)/vm[c]^2 for c in conductors)
+    )
 end
 
 ""

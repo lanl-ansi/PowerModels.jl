@@ -266,7 +266,7 @@ end
             result = PowerModels._run_uc_mc_opf(mp_strg_data, ACPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result["objective"], 52633.4; atol = 1e-1)
+            @test isapprox(result["objective"], 52633.8; atol = 1e-1)
         end
 
 

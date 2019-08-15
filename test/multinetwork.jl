@@ -263,7 +263,7 @@ TESTLOG = Memento.getlogger(PowerModels)
 
             for (n, network) in result["solution"]["nw"]
                 @test isapprox(network["storage"]["1"]["ps"], -0.0447406; atol = 1e-3)
-                @test isapprox(network["storage"]["1"]["qs"], -0.0197284; atol = 1e-3)
+                @test isapprox(network["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
 
                 @test isapprox(network["storage"]["2"]["ps"], -0.0595666; atol = 1e-3)
                 @test isapprox(network["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)

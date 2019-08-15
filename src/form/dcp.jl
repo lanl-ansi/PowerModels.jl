@@ -272,11 +272,8 @@ function constraint_storage_loss(pm::AbstractAPLossLessModels, n::Int, i, bus, c
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
 
-    JuMP.@constraint(pm.model, sum(ps[c] for c in conductors) == sc - sd)
+    JuMP.@constraint(pm.model, sum(ps[c] for c in conductors) + (sd - sc) == standby_loss)
 end
-
-
-
 
 
 
