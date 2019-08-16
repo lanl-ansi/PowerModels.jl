@@ -2,16 +2,20 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Simplified PowerModel types (#192)
-- Improved multi-conductor support in the stotage model (#572)
-- Renamed model_constructor to model_type (#192)
-- Made all component on/off variables conductorless (#390)
-- Fixed naming branch indicator variable (#551)
+- Simplified PowerModel types (#192) (breaking)
+- Improved multi-conductor support in the storage model (#572) (breaking)
+- Renamed model_constructor to model_type (#192) (breaking)
+- Made all component on/off variables conductorless (#390) (breaking)
+- Fixed naming branch indicator variable (#551) (breaking)
 
 ### Staged
+- nothing
+
+### v0.12.3
 - Add switch component (#339)
 - Added component status parameter lookup (#565)
 - Relax JuMP Model type (#582)
+- Fixed conductor semantics in storage devices (breaking)
 - Fixed status-based filtering to support fractional values (#564)
 - Fixed `va` default start point
 
