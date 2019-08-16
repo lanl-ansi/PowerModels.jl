@@ -203,7 +203,7 @@ end
 
 ""
 function constraint_storage_current_limit(pm::AbstractPowerModel, n::Int, c::Int, i, bus, rating)
-    vm = var(pm, n, pm.ccnd, :vm, bus)
+    vm = var(pm, n, c, :vm, bus)
     ps = var(pm, n, c, :ps, i)
     qs = var(pm, n, c, :qs, i)
 
@@ -250,21 +250,31 @@ function constraint_storage_complementarity_mi(pm::AbstractPowerModel, n::Int, i
 end
 
 ""
-function constraint_storage_loss(pm::AbstractPowerModel, n::Int, i, bus, r, x, standby_loss)
-    vm = var(pm, n, pm.ccnd, :vm, bus)
-    ps = var(pm, n, pm.ccnd, :ps, i)
-    qs = var(pm, n, pm.ccnd, :qs, i)
+function constraint_storage_loss(pm::AbstractPowerModel, n::Int, i, bus, conductors, r, x, p_loss, q_loss)
+    vm = Dict(c => var(pm, n, c, :vm, bus) for c in conductors)
+    ps = Dict(c => var(pm, n, c, :ps, i) for c in conductors)
+    qs = Dict(c => var(pm, n, c, :qs, i) for c in conductors)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
 
-    JuMP.@NLconstraint(pm.model, ps + (sd - sc) == standby_loss + r*(ps^2 + qs^2)/vm^2)
+    JuMP.@NLconstraint(pm.model, 
+        sum(ps[c] for c in conductors) + (sd - sc)
+        ==
+        p_loss + sum(r[c]*(ps[c]^2 + qs[c]^2)/vm[c]^2 for c in conductors)
+    )
+
+    JuMP.@NLconstraint(pm.model, 
+        sum(qs[c] for c in conductors)
+        ==
+        q_loss + sum(x[c]*(ps[c]^2 + qs[c]^2)/vm[c]^2 for c in conductors)
+    )
 end
 
 ""
-function constraint_storage_on_off(pm::AbstractPowerModel, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
+function constraint_storage_on_off(pm::AbstractPowerModel, n::Int, c::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
     z_storage = var(pm, n, :z_storage, i)
-    ps = var(pm, n, pm.ccnd, :ps, i)
-    qs = var(pm, n, pm.ccnd, :qs, i)
+    ps = var(pm, n, c, :ps, i)
+    qs = var(pm, n, c, :qs, i)
 
     JuMP.@constraint(pm.model, ps <= z_storage*pmax)
     JuMP.@constraint(pm.model, ps >= z_storage*pmin)
