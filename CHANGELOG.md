@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Add switch component (#339)
 - Added component status parameter lookup (#565)
 - Relax JuMP Model type (#582)
+- Fixed conductor semantics in storage devices (breaking)
 - Fixed status-based filtering to support fractional values (#564)
 - Fixed `va` default start point
 

@@ -194,7 +194,7 @@ end
 
 ""
 function constraint_storage_current_limit(pm::GenericPowerModel, n::Int, c::Int, i, bus, rating)
-    vm = var(pm, n, pm.ccnd, :vm, bus)
+    vm = var(pm, n, c, :vm, bus)
     ps = var(pm, n, c, :ps, i)
     qs = var(pm, n, c, :qs, i)
 
@@ -241,10 +241,10 @@ function constraint_storage_complementarity_mi(pm::GenericPowerModel, n::Int, i,
 end
 
 ""
-function constraint_storage_loss(pm::GenericPowerModel, n::Int, i, bus, r, x, standby_loss)
-    vm = var(pm, n, pm.ccnd, :vm, bus)
-    ps = var(pm, n, pm.ccnd, :ps, i)
-    qs = var(pm, n, pm.ccnd, :qs, i)
+function constraint_storage_loss(pm::GenericPowerModel, n::Int, c::Int, i, bus, r, x, standby_loss)
+    vm = var(pm, n, c, :vm, bus)
+    ps = var(pm, n, c, :ps, i)
+    qs = var(pm, n, c, :qs, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
 
@@ -252,10 +252,10 @@ function constraint_storage_loss(pm::GenericPowerModel, n::Int, i, bus, r, x, st
 end
 
 ""
-function constraint_storage_on_off(pm::GenericPowerModel, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
+function constraint_storage_on_off(pm::GenericPowerModel, n::Int, c::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
     z_storage = var(pm, n, :z_storage, i)
-    ps = var(pm, n, pm.ccnd, :ps, i)
-    qs = var(pm, n, pm.ccnd, :qs, i)
+    ps = var(pm, n, c, :ps, i)
+    qs = var(pm, n, c, :qs, i)
 
     JuMP.@constraint(pm.model, ps <= z_storage*pmax)
     JuMP.@constraint(pm.model, ps >= z_storage*pmin)

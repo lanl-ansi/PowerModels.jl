@@ -166,9 +166,9 @@ function constraint_voltage_angle_difference_ne(pm::GenericPowerModel{T}, n::Int
 end
 
 ""
-function constraint_storage_on_off(pm::GenericPowerModel{T}, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub) where T <: DCPlosslessForm
+function constraint_storage_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub) where T <: DCPlosslessForm
     z_storage = var(pm, n, :z_storage, i)
-    ps = var(pm, n, pm.ccnd, :ps, i)
+    ps = var(pm, n, c, :ps, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
 
@@ -179,8 +179,8 @@ function constraint_storage_on_off(pm::GenericPowerModel{T}, n::Int, i, pmin, pm
 end
 
 ""
-function constraint_storage_loss(pm::GenericPowerModel{T}, n::Int, i, bus, r, x, standby_loss) where T <: DCPlosslessForm
-    ps = var(pm, n, pm.ccnd, :ps, i)
+function constraint_storage_loss(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus, r, x, standby_loss) where T <: DCPlosslessForm
+    ps = var(pm, n, c, :ps, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
     JuMP.@constraint(pm.model, ps == sc - sd)

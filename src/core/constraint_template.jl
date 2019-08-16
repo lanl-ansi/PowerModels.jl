@@ -750,7 +750,7 @@ end
 function constraint_storage_loss(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     storage = ref(pm, nw, :storage, i)
 
-    constraint_storage_loss(pm, nw, i, storage["storage_bus"], storage["r"][cnd], storage["x"][cnd], storage["standby_loss"])
+    constraint_storage_loss(pm, nw, cnd, i, storage["storage_bus"], storage["r"][cnd], storage["x"][cnd], storage["standby_loss"])
 end
 
 ""
@@ -793,7 +793,7 @@ function constraint_storage_on_off(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw
     qmin = max(inj_lb[i], ref(pm, nw, :storage, i, "qmin", cnd))
     qmax = min(inj_ub[i], ref(pm, nw, :storage, i, "qmax", cnd))
 
-    constraint_storage_on_off(pm, nw, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
+    constraint_storage_on_off(pm, nw, cnd, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
 end
 
 ### DC LINES ###

@@ -136,17 +136,17 @@ function constraint_storage_current_limit(pm::GenericPowerModel{T}, n::Int, c::I
 end
 
 ""
-function constraint_storage_loss(pm::GenericPowerModel{T}, n::Int, i, bus, r, x, standby_loss) where T <: AbstractActivePowerFormulation
-    ps = var(pm, n, pm.ccnd, :ps, i)
+function constraint_storage_loss(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus, r, x, standby_loss) where T <: AbstractActivePowerFormulation
+    ps = var(pm, n, c, :ps, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
     JuMP.@constraint(pm.model, ps + (sd - sc) == standby_loss + r*ps^2)
 end
 
 ""
-function constraint_storage_on_off(pm::GenericPowerModel{T}, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub) where T <: AbstractActivePowerFormulation
+function constraint_storage_on_off(pm::GenericPowerModel{T}, n::Int, c::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub) where T <: AbstractActivePowerFormulation
     z_storage = var(pm, n, :z_storage, i)
-    ps = var(pm, n, pm.ccnd, :ps, i)
+    ps = var(pm, n, c, :ps, i)
 
     JuMP.@constraint(pm.model, ps <= z_storage*pmax)
     JuMP.@constraint(pm.model, ps >= z_storage*pmin)
