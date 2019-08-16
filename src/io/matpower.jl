@@ -111,7 +111,7 @@ const _mp_storage_columns = [
     ("thermal_rating", Float64),
     ("qmin", Float64), ("qmax", Float64),
     ("r", Float64), ("x", Float64),
-    ("standby_loss", Float64),
+    ("p_loss", Float64), ("q_loss", Float64),
     ("status", Int)
 ]
 
@@ -837,7 +837,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     if length(storage) > 0
         # Print the storage data
         println(io, "%% storage data")
-        println(io, "%    storage_bus    ps    qs    energy    energy_rating    charge_rating    discharge_rating    charge_efficiency    discharge_efficiency    thermal_rating    qmin    qmax    r    x    standby_loss    status")
+        println(io, "%    storage_bus    ps    qs    energy    energy_rating    charge_rating    discharge_rating    charge_efficiency    discharge_efficiency    thermal_rating    qmin    qmax    r    x    p_loss    q_loss    status")
         println(io, "mpc.storage = [")
         i = 1
         for (idx,strg) in sort(storage)
@@ -858,7 +858,8 @@ function export_matpower(io::IO, data::Dict{String,Any})
                 "\t", _get_default(strg, "qmax"),
                 "\t", _get_default(strg, "r"),
                 "\t", _get_default(strg, "x"),
-                "\t", _get_default(strg, "standby_loss"),
+                "\t", _get_default(strg, "p_loss"),
+                "\t", _get_default(strg, "q_loss"),
                 "\t", _get_default(strg, "status"),
             )
             i = i+1
@@ -1000,7 +1001,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     _export_extra_data(io, data, "gen", Set(["index", "source_id", "gen_bus", "pg", "qg", "qmax", "qmin", "vg", "mbase", "gen_status", "pmax", "pmin", "pc1", "pc2", "qc1min", "qc1max", "qc2min", "qc2max", "ramp_agc", "ramp_10", "ramp_30", "ramp_q", "apf", "ncost", "model", "shutdown", "startup", "cost", "mu_pmax", "mu_pmin", "mu_qmax", "mu_qmin"]); postfix="_data")
 
     # Print the extra storage data
-    _export_extra_data(io, data, "storage", Set(["index", "source_id", "storage_bus", "ps", "qs", "energy", "energy_rating", "charge_rating", "discharge_rating", "charge_efficiency", "discharge_efficiency", "thermal_rating", "qmin", "qmax", "r", "x", "standby_loss", "status"]); postfix="_data")
+    _export_extra_data(io, data, "storage", Set(["index", "source_id", "storage_bus", "ps", "qs", "energy", "energy_rating", "charge_rating", "discharge_rating", "charge_efficiency", "discharge_efficiency", "thermal_rating", "qmin", "qmax", "r", "x", "p_loss", "q_loss", "status"]); postfix="_data")
 
     # Print the extra branch data
     _export_extra_data(io, data, "branch", Set(["index", "source_id", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "g_to", "g_fr", "pf", "qf", "pt", "qt", "mu_sf", "mu_st", "mu_angmin", "mu_angmax"]); postfix="_data")

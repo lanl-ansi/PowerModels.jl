@@ -684,20 +684,12 @@ end
 
 
 ""
-function constraint_storage_complementarity_nl(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_storage_complementarity_nl(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     constraint_storage_complementarity_nl(pm, nw, i)
 end
-
-"deprecated: name change to constraint_storage_complementarity_nl( ... )"
-function constraint_storage_complementarity(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    Memento.warn(_LOGGER, "call to depreciated function constraint_storage_complementarity use constraint_storage_complementarity_nl")
-    constraint_storage_complementarity_nl(pm, nw, i)
-end
-
-
 
 ""
-function constraint_storage_complementarity_mi(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_storage_complementarity_mi(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     storage = ref(pm, nw, :storage, i)
     charge_ub = storage["charge_rating"]
     discharge_ub = storage["discharge_rating"]
@@ -707,10 +699,10 @@ end
 
 
 ""
-function constraint_storage_loss(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_storage_loss(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, conductors=[pm.ccnd])
     storage = ref(pm, nw, :storage, i)
 
-    constraint_storage_loss(pm, nw, i, storage["storage_bus"], storage["r"][cnd], storage["x"][cnd], storage["standby_loss"])
+    constraint_storage_loss(pm, nw, i, storage["storage_bus"], conductors, storage["r"], storage["x"], storage["p_loss"], storage["q_loss"])
 end
 
 ""
@@ -753,7 +745,7 @@ function constraint_storage_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cn
     qmin = max(inj_lb[i], ref(pm, nw, :storage, i, "qmin", cnd))
     qmax = min(inj_ub[i], ref(pm, nw, :storage, i, "qmax", cnd))
 
-    constraint_storage_on_off(pm, nw, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
+    constraint_storage_on_off(pm, nw, cnd, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
 end
 
 ### DC LINES ###
