@@ -13,7 +13,7 @@ end
 
 "a macro for adding the base PowerModels fields to a type definition"
 @_def pm_fields begin
-    model::JuMP.Model
+    model::JuMP.AbstractModel
 
     data::Dict{String,<:Any}
     setting::Dict{String,<:Any}
@@ -36,8 +36,8 @@ end
 
 
 # default generic constructor
-function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), jump_model::JuMP.Model=JuMP.Model())
-    @assert(PowerModel <: AbstractPowerModel)
+function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), jump_model::JuMP.AbstractModel=JuMP.Model())
+    @assert PowerModel <: AbstractPowerModel
 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131

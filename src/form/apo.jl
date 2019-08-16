@@ -6,7 +6,15 @@ function variable_reactive_generation(pm::AbstractActivePowerModel; kwargs...)
 end
 
 "apo models ignore reactive power flows"
+function variable_reactive_generation_on_off(pm::AbstractActivePowerModel; kwargs...)
+end
+
+"apo models ignore reactive power flows"
 function variable_reactive_storage(pm::AbstractActivePowerModel; kwargs...)
+end
+
+"apo models ignore reactive power flows"
+function variable_reactive_storage_on_off(pm::AbstractActivePowerModel; kwargs...)
 end
 
 "apo models ignore reactive power flows"
