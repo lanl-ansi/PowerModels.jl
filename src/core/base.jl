@@ -6,7 +6,7 @@ abstract type AbstractPowerFormulation end
 """
 ```
 type GenericPowerModel{T<:AbstractPowerFormulation}
-    model::JuMP.Model
+    model::JuMP.AbstractModel
     data::Dict{String,<:Any}
     setting::Dict{String,<:Any}
     solution::Dict{String,<:Any}
@@ -29,11 +29,11 @@ where
 Methods on `GenericPowerModel` for defining variables and adding constraints should
 
 * work with the `ref` dict, rather than the original `data` dict,
-* add them to `model::JuMP.Model`, and
+* add them to `model::JuMP.AbstractModel`, and
 * follow the conventions for variable and constraint names.
 """
 mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
-    model::JuMP.Model
+    model::JuMP.AbstractModel
 
     data::Dict{String,<:Any}
     setting::Dict{String,<:Any}
@@ -53,7 +53,7 @@ mutable struct GenericPowerModel{T<:AbstractPowerFormulation}
 end
 
 # default generic constructor
-function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), jump_model::JuMP.Model=JuMP.Model())
+function GenericPowerModel(data::Dict{String,<:Any}, T::DataType; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), jump_model::JuMP.AbstractModel=JuMP.Model())
 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
