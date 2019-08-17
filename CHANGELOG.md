@@ -6,10 +6,15 @@ PowerModels.jl Change Log
 - Improved multi-conductor support in the storage model (#572) (breaking)
 - Renamed model_constructor to model_type (#192) (breaking)
 - Made all component on/off variables conductorless (#390) (breaking)
+- Require an explicit switch section in the data model (breaking)
 - Fixed naming branch indicator variable (#551) (breaking)
 
 ### Staged
 - nothing
+
+### v0.12.4
+- Fixed support for data without an explicit switch section
+- Fixed support for single values in add_setpoint! and add_dual!
 
 ### v0.12.3
 - Add switch component (#339)

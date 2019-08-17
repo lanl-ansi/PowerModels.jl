@@ -250,7 +250,7 @@ function add_setpoint!(
         end
     end
 
-    if !has_variable_symbol || length(variables) == 0
+    if !has_variable_symbol || (!isa(variables, JuMP.VariableRef) && length(variables) == 0)
         add_setpoint_fixed!(sol, pm, dict_name, param_name; index_name=index_name, default_value=default_value, conductorless=conductorless)
         return
     end
@@ -416,7 +416,7 @@ function add_dual!(
         end
     end
 
-    if !has_con_symbol || length(constraints) == 0
+    if !has_con_symbol || (!isa(constraints, JuMP.ConstraintRef) && length(constraints) == 0)
         add_dual_fixed!(sol, pm, dict_name, param_name; index_name=index_name, default_value=default_value, conductorless=conductorless)
         return
     end

@@ -1363,13 +1363,15 @@ function check_connectivity(data::Dict{String,<:Any})
         end
     end
 
-    for (i, switch) in data["switch"]
-        if !(switch["f_bus"] in bus_ids)
-            Memento.error(_LOGGER, "from bus $(switch["f_bus"]) in switch $(i) is not defined")
-        end
+    if haskey(data, "switch")
+        for (i, switch) in data["switch"]
+            if !(switch["f_bus"] in bus_ids)
+                Memento.error(_LOGGER, "from bus $(switch["f_bus"]) in switch $(i) is not defined")
+            end
 
-        if !(switch["t_bus"] in bus_ids)
-            Memento.error(_LOGGER, "to bus $(switch["t_bus"]) in switch $(i) is not defined")
+            if !(switch["t_bus"] in bus_ids)
+                Memento.error(_LOGGER, "to bus $(switch["t_bus"]) in switch $(i) is not defined")
+            end
         end
     end
 
