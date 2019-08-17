@@ -1071,10 +1071,47 @@ function correct_voltage_angle_differences!(data::Dict{String,<:Any}, default_pa
 end
 
 
-"checks that each branch has a reasonable thermal rating-a, if not computes one"
+"checks that each branch has non-negative thermal ratings and removes zero thermal ratings"
 function correct_thermal_limits!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_thermal_limits! does not yet support multinetwork data")
+    end
+
+    modified = Set{Int}()
+
+    branches = [branch for branch in values(data["branch"])]
+    if haskey(data, "ne_branch")
+        append!(branches, values(data["ne_branch"]))
+    end
+
+    conductors = 1:get(data, "conductors", 1)
+
+    for branch in branches
+        for rate_key in ["rate_a", "rate_b", "rate_c"]
+            if haskey(branch, rate_key)
+                rate_value = branch[rate_key]
+                for c in conductors
+                    if rate_value[c] < 0.0
+                        Memento.error(_LOGGER, "negative $(rate_key) value on branch $(branch["index"]), this code only supports non-negative $(rate_key) values")
+                    end
+                end
+                if all(isapprox(rate_value[c], 0.0) for c in conductors)
+                    delete!(branch, rate_key)
+                    Memento.warn(_LOGGER, "removing zero $(rate_key) limit on branch $(branch["index"])")
+                    push!(modified, branch["index"])
+                end
+            end
+        end
+    end
+
+    return modified
+end
+
+
+"checks that each branch has a reasonable thermal rating-a, if not computes one"
+function calc_thermal_limits!(data::Dict{String,<:Any})
+    if InfrastructureModels.ismultinetwork(data)
+        Memento.error(_LOGGER, "calc_thermal_limits! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -1136,10 +1173,46 @@ function correct_thermal_limits!(data::Dict{String,<:Any})
 end
 
 
-"checks that each branch has a reasonable current rating-a, if not computes one"
+"checks that each branch has non-negative current ratings and removes zero current ratings"
 function correct_current_limits!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_current_limits! does not yet support multinetwork data")
+    end
+
+    modified = Set{Int}()
+
+    branches = [branch for branch in values(data["branch"])]
+    if haskey(data, "ne_branch")
+        append!(branches, values(data["ne_branch"]))
+    end
+
+    conductors = 1:get(data, "conductors", 1)
+
+    for branch in branches
+        for rate_key in ["c_rating_a", "c_rating_b", "c_rating_c"]
+            if haskey(branch, rate_key)
+                rate_value = branch[rate_key]
+                for c in conductors
+                    if rate_value[c] < 0.0
+                        Memento.error(_LOGGER, "negative $(rate_key) value on branch $(branch["index"]), this code only supports non-negative $(rate_key) values")
+                    end
+                end
+                if all(isapprox(rate_value[c], 0.0) for c in conductors)
+                    delete!(branch, rate_key)
+                    Memento.warn(_LOGGER, "removing zero $(rate_key) limit on branch $(branch["index"])")
+                    push!(modified, branch["index"])
+                end
+            end
+        end
+    end
+
+    return modified
+end
+
+"checks that each branch has a reasonable current rating-a, if not computes one"
+function calc_current_limits!(data::Dict{String,<:Any})
+    if InfrastructureModels.ismultinetwork(data)
+        Memento.error(_LOGGER, "calc_current_limits! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])

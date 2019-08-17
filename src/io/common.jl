@@ -50,6 +50,7 @@ function correct_network_data!(data::Dict{String,<:Any})
     mod_branch[:xfer_fix] = correct_transformer_parameters!(data)
     mod_branch[:vad_bounds] = correct_voltage_angle_differences!(data)
     mod_branch[:mva_zero] = correct_thermal_limits!(data)
+    mod_branch[:ma_zero] = correct_current_limits!(data)
     mod_branch[:orientation] = correct_branch_directions!(data)
     check_branch_loops(data)
 

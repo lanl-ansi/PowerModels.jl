@@ -679,20 +679,24 @@ end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= p_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
 function variable_active_branch_flow_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :ne_branch), ref(pm, nw, :bus), cnd)
+
     var(pm, nw, cnd)[:p_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs)], base_name="$(nw)_$(cnd)_p_ne",
-        lower_bound = -ref(pm, nw, :ne_branch, l, "rate_a", cnd),
-        upper_bound =  ref(pm, nw, :ne_branch, l, "rate_a", cnd),
+        lower_bound = flow_lb[l],
+        upper_bound = flow_ub[l],
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "p_start", cnd)
     )
 end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= q_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
 function variable_reactive_branch_flow_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :ne_branch), ref(pm, nw, :bus), cnd)
+
     var(pm, nw, cnd)[:q_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs)], base_name="$(nw)_$(cnd)_q_ne",
-        lower_bound = -ref(pm, nw, :ne_branch, l, "rate_a", cnd),
-        upper_bound =  ref(pm, nw, :ne_branch, l, "rate_a", cnd),
+        lower_bound = flow_lb[l],
+        upper_bound = flow_ub[l],
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "q_start", cnd)
     )
 end

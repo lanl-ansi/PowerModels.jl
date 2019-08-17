@@ -44,7 +44,9 @@
         @test isapprox(result["objective"], 8190.09; atol = 1e0)
     end
     @testset "5-bus with only current limit data" begin
-        result = run_ac_opf("../test/data/matpower/case5_clm.m", ipopt_solver)
+        data = PowerModels.parse_file("../test/data/matpower/case5_clm.m")
+        calc_thermal_limits!(data)
+        result = run_ac_opf(data, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 16513.6; atol = 1e0)
@@ -387,7 +389,9 @@ end
         @test isapprox(result["objective"], 8082.54; atol = 1e0)
     end
     @testset "5-bus with only current limit data" begin
-        result = run_opf("../test/data/matpower/case5_clm.m", LPACCPowerModel, ipopt_solver)
+        data = PowerModels.parse_file("../test/data/matpower/case5_clm.m")
+        calc_thermal_limits!(data)
+        result = run_opf(data, LPACCPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 16559.3; atol = 1e0)
@@ -743,12 +747,13 @@ end
     #    @test result["termination_status"] == LOCALLY_SOLVED
     #    @test isapprox(result["objective"], 7291.69; atol = 1e0) # Mosek v8 value
     #end
-    @testset "14-bus case" begin
-        result = run_opf("../test/data/matpower/case14.m", SDPWRMPowerModel, scs_solver)
+    # too slow for unit tests
+    # @testset "14-bus case" begin
+    #     result = run_opf("../test/data/matpower/case14.m", SDPWRMPowerModel, scs_solver)
 
-        @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 8081.52; atol = 1e0)
-    end
+    #     @test result["termination_status"] == OPTIMAL
+    #     @test isapprox(result["objective"], 8081.52; atol = 1e0)
+    # end
     @testset "6-bus case" begin
         result = run_opf("../test/data/matpower/case6.m", SDPWRMPowerModel, scs_solver)
 
@@ -778,12 +783,13 @@ end
         @test result["termination_status"] == OPTIMAL
         @test isapprox(result["objective"], 1005.31; atol = 1e-1)
     end
-    @testset "14-bus case" begin
-        result = run_opf("../test/data/matpower/case14.m", SparseSDPWRMPowerModel, scs_solver)
+    # too slow for unit tests
+    # @testset "14-bus case" begin
+    #     result = run_opf("../test/data/matpower/case14.m", SparseSDPWRMPowerModel, scs_solver)
 
-        @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 8081.5; atol = 1e0)
-    end
+    #     @test result["termination_status"] == OPTIMAL
+    #     @test isapprox(result["objective"], 8081.5; atol = 1e0)
+    # end
 
     # multiple components are not currently supported by this form
     #=
@@ -796,7 +802,9 @@ end
     =#
 
     @testset "passing in decomposition" begin
-        data = PowerModels.parse_file("../test/data/matpower/case14.m")
+        # too slow for unit tests
+        #data = PowerModels.parse_file("../test/data/matpower/case14.m")
+        data = PowerModels.parse_file("../test/data/pti/case5_alc.raw")
         pm = InitializePowerModel(SparseSDPWRMPowerModel, data)
         PowerModels.ref_add_core!(pm)
 
@@ -804,7 +812,7 @@ end
         cliques = PowerModels._maximal_cliques(cadj)
         lookup_bus_index = Dict((reverse(p) for p = pairs(lookup_index)))
         groups = [[lookup_bus_index[gi] for gi in g] for g in cliques]
-        @test PowerModels._problem_size(groups) == 344
+        @test PowerModels._problem_size(groups) == 83
 
         pm.ext[:SDconstraintDecomposition] = PowerModels._SDconstraintDecomposition(groups, lookup_index, sigma)
 
@@ -812,7 +820,7 @@ end
         result = optimize_model!(pm, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 8081.5; atol = 1e0)
+        @test isapprox(result["objective"], 1005.31; atol = 1e0)
     end
 
 end

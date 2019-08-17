@@ -451,7 +451,9 @@ function constraint_thermal_limit_from(pm::AbstractPowerModel, i::Int; nw::Int=p
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
 
-    constraint_thermal_limit_from(pm, nw, cnd, f_idx, branch["rate_a"][cnd])
+    if haskey(branch, "rate_a")
+        constraint_thermal_limit_from(pm, nw, cnd, f_idx, branch["rate_a"][cnd])
+    end
 end
 
 
@@ -466,7 +468,9 @@ function constraint_thermal_limit_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.
     t_bus = branch["t_bus"]
     t_idx = (i, t_bus, f_bus)
 
-    constraint_thermal_limit_to(pm, nw, cnd, t_idx, branch["rate_a"][cnd])
+    if haskey(branch, "rate_a")
+        constraint_thermal_limit_to(pm, nw, cnd, t_idx, branch["rate_a"][cnd])
+    end
 end
 
 
@@ -476,6 +480,10 @@ function constraint_thermal_limit_from_on_off(pm::AbstractPowerModel, i::Int; nw
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
+
+    if !haskey(branch, "rate_a")
+        Memento.error(_LOGGER, "constraint_thermal_limit_from_on_off requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
+    end
 
     constraint_thermal_limit_from_on_off(pm, nw, cnd, i, f_idx, branch["rate_a"][cnd])
 end
@@ -488,6 +496,10 @@ function constraint_thermal_limit_to_on_off(pm::AbstractPowerModel, i::Int; nw::
     t_bus = branch["t_bus"]
     t_idx = (i, t_bus, f_bus)
 
+    if !haskey(branch, "rate_a")
+        Memento.error(_LOGGER, "constraint_thermal_limit_to_on_off requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
+    end
+
     constraint_thermal_limit_to_on_off(pm, nw, cnd, i, t_idx, branch["rate_a"][cnd])
 end
 
@@ -499,6 +511,10 @@ function constraint_thermal_limit_from_ne(pm::AbstractPowerModel, i::Int; nw::In
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
 
+    if !haskey(branch, "rate_a")
+        Memento.error(_LOGGER, "constraint_thermal_limit_from_ne requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
+    end
+
     constraint_thermal_limit_from_ne(pm, nw, cnd, i, f_idx, branch["rate_a"][cnd])
 end
 
@@ -509,6 +525,10 @@ function constraint_thermal_limit_to_ne(pm::AbstractPowerModel, i::Int; nw::Int=
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     t_idx = (i, t_bus, f_bus)
+
+    if !haskey(branch, "rate_a")
+        Memento.error(_LOGGER, "constraint_thermal_limit_to_ne requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
+    end
 
     constraint_thermal_limit_to_ne(pm, nw, cnd, i, t_idx, branch["rate_a"][cnd])
 end
@@ -525,7 +545,9 @@ function constraint_current_limit(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
 
-    constraint_current_limit(pm, nw, cnd, f_idx, branch["c_rating_a"][cnd])
+    if haskey(branch, "c_rating_a")
+        constraint_current_limit(pm, nw, cnd, f_idx, branch["c_rating_a"][cnd])
+    end
 end
 
 

@@ -424,8 +424,8 @@ end
         @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.correct_transformer_parameters!(mp_data_3p))
 
         mp_data_3p["branch"]["1"]["rate_a"][2] = -1.0
-        @test_warn(TESTLOG, "this code only supports positive rate_a values, changing the value on branch 1, conductor 2 to 100.47", PowerModels.correct_thermal_limits!(mp_data_3p))
-        @test isapprox(mp_data_3p["branch"]["1"]["rate_a"][2], 1.0047227335; atol=1e-6)
+        @test_throws(TESTLOG, ErrorException, PowerModels.correct_thermal_limits!(mp_data_3p))
+        mp_data_3p["branch"]["1"]["rate_a"][2] = 1.0
 
         mp_data_3p["branch"]["4"] = deepcopy(mp_data_3p["branch"]["1"])
         mp_data_3p["branch"]["4"]["f_bus"] = mp_data_3p["branch"]["1"]["t_bus"]
