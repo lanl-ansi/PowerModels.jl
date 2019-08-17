@@ -308,10 +308,6 @@ end
 function _ref_add_core!(nw_refs::Dict)
     for (nw, ref) in nw_refs
 
-        if !haskey(ref, :switch)
-                ref[:switch] = Dict{Int,Any}()
-        end
-
         ### filter out inactive components ###
         ref[:bus] = Dict(x for x in ref[:bus] if (x.second["bus_type"] != pm_component_status_inactive["bus"]))
         ref[:load] = Dict(x for x in ref[:load] if (x.second["status"] != pm_component_status_inactive["load"] && x.second["load_bus"] in keys(ref[:bus])))
