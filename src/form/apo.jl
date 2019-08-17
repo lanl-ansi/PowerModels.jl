@@ -155,7 +155,9 @@ end
 
 ""
 function add_setpoint_switch_flow!(sol, pm::GenericPowerModel{T}) where T <: AbstractActivePowerFormulation
-    add_setpoint!(sol, pm, "switch", "psw", :psw, var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-    add_setpoint_fixed!(sol, pm, "switch", "qsw")
+    if haskey(pm.data, "swtich")
+        add_setpoint!(sol, pm, "switch", "psw", :psw, var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint_fixed!(sol, pm, "switch", "qsw")
+    end
 end
 

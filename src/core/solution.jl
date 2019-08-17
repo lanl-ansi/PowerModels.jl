@@ -139,13 +139,17 @@ end
 
 ""
 function add_setpoint_switch_flow!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "switch", "psw", :psw, var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-    add_setpoint!(sol, pm, "switch", "qsw", :qsw, var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+    if haskey(pm.data, "swtich")
+        add_setpoint!(sol, pm, "switch", "psw", :psw, var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "switch", "qsw", :qsw, var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+    end
 end
 
 ""
 function add_setpoint_switch_status!(sol, pm::GenericPowerModel)
-    add_setpoint!(sol, pm, "switch", "status", :z_switch, conductorless=true, default_value = (item) -> item["status"]*1.0)
+    if haskey(pm.data, "swtich")
+        add_setpoint!(sol, pm, "switch", "status", :z_switch, conductorless=true, default_value = (item) -> item["status"]*1.0)
+    end
 end
 
 

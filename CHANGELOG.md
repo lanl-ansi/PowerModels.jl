@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Fixed support for data without an explicit switch section
 - Fixed support for single values in add_setpoint! and add_dual!
 
 ### v0.12.3
