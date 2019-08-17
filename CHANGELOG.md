@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fixed support for single values in add_setpoint! and add_dual!
 
 ### v0.12.3
 - Add switch component (#339)
