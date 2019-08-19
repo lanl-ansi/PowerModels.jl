@@ -709,12 +709,12 @@ end
 
 
 ""
-function variable_voltage_magnitude_product(pm::AbstractQCWRTriModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function variable_voltage_magnitude_product(pm::AbstractQCLSModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     # do nothing - no lifted variables required for voltage variable product
 end
 
 "creates lambda variables for convex combination model"
-function variable_voltage_magnitude_product_multipliers(pm::AbstractQCWRTriModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function variable_voltage_magnitude_product_multipliers(pm::AbstractQCLSModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     var(pm, nw, cnd)[:lambda_wr] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs), i=1:8], base_name="$(nw)_$(cnd)_lambda",
         lower_bound = 0, upper_bound = 1, start = 0.0)
@@ -725,7 +725,7 @@ function variable_voltage_magnitude_product_multipliers(pm::AbstractQCWRTriModel
 end
 
 ""
-function variable_voltage(pm::AbstractQCWRTriModel; kwargs...)
+function variable_voltage(pm::AbstractQCLSModel; kwargs...)
     variable_voltage_angle(pm; kwargs...)
     variable_voltage_magnitude(pm; kwargs...)
 
@@ -742,7 +742,7 @@ end
 
 
 ""
-function constraint_model_voltage(pm::AbstractQCWRTriModel, n::Int, c::Int)
+function constraint_model_voltage(pm::AbstractQCLSModel, n::Int, c::Int)
     _check_missing_keys(var(pm, n, c), [:vm,:va,:td,:si,:cs,:w,:wr,:wi,:lambda_wr,:lambda_wi], typeof(pm))
 
     v = var(pm, n, c, :vm)

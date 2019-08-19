@@ -147,7 +147,7 @@ end
 
 @testset "test qc ots" begin
     @testset "3-bus case" begin
-        result = run_ots("../test/data/matpower/case3.m", QCWRPowerModel, juniper_solver)
+        result = run_ots("../test/data/matpower/case3.m", QCRMPowerModel, juniper_solver)
 
         check_br_status(result["solution"])
 
@@ -155,7 +155,7 @@ end
         @test isapprox(result["objective"], 5746.7; atol = 1e0)
     end
     @testset "5-bus case" begin
-        result = run_ots("../test/data/matpower/case5.m", QCWRPowerModel, juniper_solver)
+        result = run_ots("../test/data/matpower/case5.m", QCRMPowerModel, juniper_solver)
 
         check_br_status(result["solution"])
 
@@ -163,7 +163,7 @@ end
         @test isapprox(result["objective"], 15051.4; atol = 5e1)
     end
     @testset "5-bus asymmetric case" begin
-        result = run_ots("../test/data/matpower/case5_asym.m", QCWRPowerModel, juniper_solver)
+        result = run_ots("../test/data/matpower/case5_asym.m", QCRMPowerModel, juniper_solver)
 
         check_br_status(result["solution"])
 
@@ -171,13 +171,13 @@ end
         @test isapprox(result["objective"], 14999.7; atol = 1e0)
     end
     @testset "5-bus with asymmetric line charge" begin
-        result = run_ots("../test/data/pti/case5_alc.raw", QCWRPowerModel, juniper_solver)
+        result = run_ots("../test/data/pti/case5_alc.raw", QCRMPowerModel, juniper_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 1003.97; atol = 5e0)
     end
     @testset "6-bus case" begin
-        result = run_ots("../test/data/matpower/case6.m", QCWRPowerModel, juniper_solver)
+        result = run_ots("../test/data/matpower/case6.m", QCRMPowerModel, juniper_solver)
 
         check_br_status(result["solution"])
 
