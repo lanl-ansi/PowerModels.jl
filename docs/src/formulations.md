@@ -17,7 +17,7 @@ ACPPowerModel <: AbstractACPForm
 DCPPowerModel <: AbstractDCPForm
 
 SOCWRPowerModel <: AbstractWRForm
-QCWRPowerModel <: AbstractWRForm
+QCRMPowerModel <: AbstractWRForm
 
 SOCBFPowerModel <: AbstractSOCBFModel
 ```

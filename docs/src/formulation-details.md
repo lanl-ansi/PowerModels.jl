@@ -69,8 +69,8 @@ LPACCPowerModel
 ```@docs
 SOCWRPowerModel
 SOCWRConicPowerModel
-QCWRPowerModel
-QCWRTriPowerModel
+QCRMPowerModel
+QCLSPowerModel
 SOCBFPowerModel
 SOCBFConicPowerModel
 ```
