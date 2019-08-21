@@ -3,16 +3,8 @@
 "root of the power formulation type hierarchy"
 abstract type AbstractPowerModel end
 
-macro _def(name, definition)
-    return quote
-        macro $(esc(name))()
-            esc($(Expr(:quote, definition)))
-        end
-    end
-end
-
 "a macro for adding the base PowerModels fields to a type definition"
-@_def pm_fields begin
+InfrastructureModels.@def pm_fields begin
     model::JuMP.AbstractModel
 
     data::Dict{String,<:Any}
