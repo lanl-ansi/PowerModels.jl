@@ -236,8 +236,12 @@ achieved by building application specific methods of building multinetwork
 with minimal data replication.
 """
 function replicate(sn_data::Dict{String,<:Any}, count::Int; global_keys::Set{String}=Set{String}())
-    pm_global_keys = Set(["baseMVA", "per_unit"])
-    return InfrastructureModels.replicate(sn_data, count, global_keys=union(global_keys, pm_global_keys))
+    return InfrastructureModels.replicate(sn_data, count, union(global_keys, _pm_global_keys))
+end
+
+"turns a single network and a time_series data block into a multi-network"
+function make_multinetwork(data::Dict{String, <:Any}; global_keys::Set{String}=Set{String}())
+    return InfrastructureModels.make_multinetwork(data, union(global_keys, _pm_global_keys))
 end
 
 
