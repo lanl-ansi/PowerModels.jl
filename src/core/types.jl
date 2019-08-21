@@ -11,7 +11,7 @@
     # quadratic relaxations
     SOCWRPowerModel, SOCWRConicPowerModel,
     SOCBFPowerModel, SOCBFConicPowerModel,
-    QCWRPowerModel, QCWRTriPowerModel,
+    QCRMPowerModel, QCLSPowerModel,
 
     # sdp relaxations
     SDPWRMPowerModel, SparseSDPWRMPowerModel
@@ -253,8 +253,11 @@ mutable struct SOCWRConicPowerModel <: AbstractSOCWRConicModel @pm_fields end
 ""
 abstract type AbstractQCWRModel <: AbstractWRModel end
 
+abstract type AbstractQCRMPowerModel <: AbstractQCWRModel end
+
 """
-"Quadratic-Convex" relaxation of AC OPF
+The "Quadratic-Convex" relaxation of the AC power flow equations.
+Recursive McCormik relaxations are used for the trilinear terms (i.e. QCRM).
 ```
 @Article{Hijazi2017,
   author="Hijazi, Hassan and Coffrin, Carleton and Hentenryck, Pascal Van",
@@ -271,14 +274,26 @@ abstract type AbstractQCWRModel <: AbstractWRModel end
 }
 ```
 """
-mutable struct QCWRPowerModel <: AbstractQCWRModel @pm_fields end
+mutable struct QCRMPowerModel <: AbstractQCRMPowerModel @pm_fields end
 
 
 ""
-abstract type AbstractQCWRTriModel <: AbstractQCWRModel end
+abstract type AbstractQCLSModel <: AbstractQCWRModel end
 
 """
-"Quadratic-Convex" relaxation of AC OPF with convex hull of triple product
+A strengthened version of the "Quadratic-Convex" relaxation of the AC power flow equations.
+An extreme-point encoding of trilinar terms is used along with a constraint to link the
+lambda variables in multiple trilinar terms (i.e. QCLS).
+```
+@misc{1809.04565,
+  author="Kaarthik Sundar and Harsha Nagarajan and Sidhant Misra and Mowen Lu and Carleton Coffrin and Russell Bent",
+  title="Optimization-Based Bound Tightening using a Strengthened QC-Relaxation of the Optimal Power Flow Problem",
+  year="2018",
+  Eprint = "arXiv:1809.04565",
+}
+```
+
+The original model derivation is available in,
 ```
 @Article{Hijazi2017,
   author="Hijazi, Hassan and Coffrin, Carleton and Hentenryck, Pascal Van",
@@ -295,7 +310,7 @@ abstract type AbstractQCWRTriModel <: AbstractQCWRModel end
 }
 ```
 """
-mutable struct QCWRTriPowerModel <: AbstractQCWRTriModel @pm_fields end
+mutable struct QCLSPowerModel <: AbstractQCLSModel @pm_fields end
 
 
 

@@ -7,7 +7,7 @@ This experiment consists of running the following PowerModels commands,
 ```
 result_ac  = run_opf(case,   ACPPowerModel, with_optimizer(Ipopt.Optimizer, tol=1e-6))
 result_soc = run_opf(case, SOCWRPowerModel, with_optimizer(Ipopt.Optimizer, tol=1e-6))
-result_qc  = run_opf(case,  QCWRPowerModel, with_optimizer(Ipopt.Optimizer, tol=1e-6))
+result_qc  = run_opf(case,  QCRMPowerModel, with_optimizer(Ipopt.Optimizer, tol=1e-6))
 ```
 for each `case` in the NESTA archive. If the value of `result["termination_status"]` is `LOCALLY_SOLVED` then the values of `result["objective"]` and `result["solve_time"]` are reported, otherwise an `err.` or `--` is displayed. A value of `n.d.` indicates that no data was available. The optimality gap is defined as,
 ```

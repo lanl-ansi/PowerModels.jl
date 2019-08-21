@@ -68,7 +68,7 @@ function run_obbt_opf!(file::String, optimizer; kwargs...)
 end
 
 function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
-    model_type::Type = QCWRTriPowerModel,
+    model_type::Type = QCLSPowerModel,
     max_iter::Int = 100,
     time_limit::Float64 = 3600.0,
     upper_bound::Float64 = Inf,

@@ -632,37 +632,37 @@ end
 
 @testset "test qc opf" begin
     @testset "3-bus case" begin
-        result = run_opf("../test/data/matpower/case3.m", QCWRPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case3.m", QCRMPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 5780; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
-        result = run_opf("../test/data/matpower/case5_asym.m", QCWRPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case5_asym.m", QCRMPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 15921; atol = 1e0)
     end
     @testset "5-bus gap case" begin
-        result = run_opf("../test/data/matpower/case5_gap.m", QCWRPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case5_gap.m", QCRMPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], -27659.8; atol = 1e0)
     end
     @testset "5-bus with asymmetric line charge" begin
-        result = run_opf("../test/data/pti/case5_alc.raw", QCWRPowerModel, ipopt_solver)
+        result = run_opf("../test/data/pti/case5_alc.raw", QCRMPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 1005.27; atol = 1e0)
     end
     @testset "5-bus with pwl costs" begin
-        result = run_opf("../test/data/matpower/case5_pwlc.m", QCWRPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case5_pwlc.m", QCRMPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 42895; atol = 1e0)
     end
     @testset "6-bus case" begin
-        result = run_opf("../test/data/matpower/case6.m", QCWRPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case6.m", QCRMPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 11484.2; atol = 1e0)
@@ -670,7 +670,7 @@ end
         @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
     @testset "24-bus rts case" begin
-        result = run_opf("../test/data/matpower/case24.m", QCWRPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case24.m", QCRMPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 76599.9; atol = 1e0)
@@ -679,25 +679,25 @@ end
 
 @testset "test qc opf with trilinear convexhull relaxation" begin
     @testset "3-bus case" begin
-        result = run_opf("../test/data/matpower/case3.m", QCWRTriPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case3.m", QCLSPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 5817.91; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
-        result = run_opf("../test/data/matpower/case5_asym.m", QCWRTriPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case5_asym.m", QCLSPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 15929.2; atol = 1e0)
     end
     @testset "5-bus gap case" begin
-        result = run_opf("../test/data/matpower/case5_gap.m", QCWRTriPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case5_gap.m", QCLSPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], -27659.8; atol = 1e0)
     end
     @testset "6-bus case" begin
-        result = run_opf("../test/data/matpower/case6.m", QCWRTriPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case6.m", QCLSPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 11512.9; atol = 1e0)
@@ -705,7 +705,7 @@ end
         @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
     @testset "24-bus rts case" begin
-        result = run_opf("../test/data/matpower/case24.m", QCWRTriPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case24.m", QCLSPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 76785.4; atol = 1e0)
