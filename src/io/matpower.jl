@@ -348,9 +348,6 @@ function _matpower_to_powermodels!(mp_data::Dict{String,<:Any})
     pm_data = mp_data
 
     # required default values
-    if !haskey(pm_data, "dcline")
-        pm_data["dcline"] = []
-    end
     if !haskey(pm_data, "gencost")
         pm_data["gencost"] = []
     end
@@ -366,10 +363,13 @@ function _matpower_to_powermodels!(mp_data::Dict{String,<:Any})
 
     # translate component models
     _mp2pm_branch!(pm_data)
-    _mp2pm_dcline!(pm_data)
 
-    # translate cost models
-    _add_dcline_costs!(pm_data)
+    if haskey(pm_data, "dcline")
+        _mp2pm_dcline!(pm_data)
+
+        # translate cost models
+        _add_dcline_costs!(pm_data)
+    end
 
     # merge data tables
     _merge_bus_name_data!(pm_data)
@@ -382,7 +382,7 @@ function _matpower_to_powermodels!(mp_data::Dict{String,<:Any})
     # use once available
     InfrastructureModels.arrays_to_dicts!(pm_data)
 
-    for optional in ["dcline", "load", "shunt", "storage"]
+    for optional in ["load", "shunt", "storage", "switch"]
         if length(pm_data[optional]) == 0
             pm_data[optional] = Dict{String,Any}()
         end
@@ -705,8 +705,10 @@ function export_matpower(io::IO, data::Dict{String,Any})
        branches[branch["index"]] = branch
     end
     dclines = Dict{Int, Dict}()
-    for (idx,dcline) in data["dcline"]
-       dclines[dcline["index"]] = dcline
+    if haskey(data, "dcline")
+        for (idx,dcline) in data["dcline"]
+           dclines[dcline["index"]] = dcline
+        end
     end
     ne_branches = Dict{Int, Dict}()
     if haskey(data, "ne_branch")
@@ -1007,7 +1009,9 @@ function export_matpower(io::IO, data::Dict{String,Any})
     _export_extra_data(io, data, "branch", Set(["index", "source_id", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "g_to", "g_fr", "pf", "qf", "pt", "qt", "mu_sf", "mu_st", "mu_angmin", "mu_angmax"]); postfix="_data")
 
     # Print the extra dcline data
-    _export_extra_data(io, data, "dcline", Set(["index", "source_id", "mu_qmaxt", "mu_qmint", "mu_qmaxf", "mu_qminf", "mu_pmax", "mu_pmin", "loss0", "loss1", "qmint", "qmaxt", "pmin", "pmax", "qminf", "qmaxf", "f_bus", "t_bus", "br_status", "pf", "pt", "qf", "qt", "vf", "vt", "ncost", "model", "shutdown", "pmaxt", "startup", "pmint", "cost", "pminf", "pmaxf", "mp_pmax", "mp_pmin"]); postfix="_data")
+    if haskey(data, "dcline")
+        _export_extra_data(io, data, "dcline", Set(["index", "source_id", "mu_qmaxt", "mu_qmint", "mu_qmaxf", "mu_qminf", "mu_pmax", "mu_pmin", "loss0", "loss1", "qmint", "qmaxt", "pmin", "pmax", "qminf", "qmaxf", "f_bus", "t_bus", "br_status", "pf", "pt", "qf", "qt", "vf", "vt", "ncost", "model", "shutdown", "pmaxt", "startup", "pmint", "cost", "pminf", "pmaxf", "mp_pmax", "mp_pmin"]); postfix="_data")
+    end
 
     # Print the extra ne_branch data
     if haskey(data, "ne_branch")

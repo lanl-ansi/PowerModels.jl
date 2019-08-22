@@ -11,12 +11,14 @@ function set_costs!(data::Dict)
         gen["model"] = 2
     end
 
-    for (n, dcline) in data["dcline"]
-        dcline["cost"] = [0., 0., 0.]
-        dcline["ncost"] = 3
-        dcline["startup"] = 0.
-        dcline["shutdown"] = 0.
-        dcline["model"] = 2
+    if haskey(data, "dcline")
+        for (n, dcline) in data["dcline"]
+            dcline["cost"] = [0., 0., 0.]
+            dcline["ncost"] = 3
+            dcline["startup"] = 0.
+            dcline["shutdown"] = 0.
+            dcline["model"] = 2
+        end
     end
 end
 

@@ -641,6 +641,10 @@ function _psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             push!(pm_data["dcline"], sub_data)
         end
     end
+
+    if length(pm_data["dcline"]) == 0
+        delete!(pm_data, "dcline")
+    end
 end
 
 

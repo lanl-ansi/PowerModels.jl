@@ -189,10 +189,12 @@ end
 
 ""
 function add_setpoint_dcline_flow!(sol, pm::AbstractPowerModel)
-    add_setpoint!(sol, pm, "dcline", "pf", :p_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-    add_setpoint!(sol, pm, "dcline", "qf", :q_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-    add_setpoint!(sol, pm, "dcline", "pt", :p_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
-    add_setpoint!(sol, pm, "dcline", "qt", :q_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+    if haskey(pm.data, "dcline")
+        add_setpoint!(sol, pm, "dcline", "pf", :p_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "dcline", "qf", :q_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "dcline", "pt", :p_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+        add_setpoint!(sol, pm, "dcline", "qt", :q_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+    end
 end
 
 ""

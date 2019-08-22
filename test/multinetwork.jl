@@ -326,9 +326,11 @@ TESTLOG = Memento.getlogger(PowerModels)
                 #@test isapprox(opf_result["solution"]["gen"][i]["qg"], pf_result["solution"]["gen"][i]["qg"]; atol = 1e-3)
             end
 
-            for (i,dcline) in nw_data["dcline"]
-                @test isapprox(opf_result["solution"]["nw"][n]["dcline"][i]["pf"], pf_result["solution"]["nw"][n]["dcline"][i]["pf"]; atol = 1e-3)
-                @test isapprox(opf_result["solution"]["nw"][n]["dcline"][i]["pt"], pf_result["solution"]["nw"][n]["dcline"][i]["pt"]; atol = 1e-3)
+            if haskey(nw_data, "dcline")
+                for (i,dcline) in nw_data["dcline"]
+                    @test isapprox(opf_result["solution"]["nw"][n]["dcline"][i]["pf"], pf_result["solution"]["nw"][n]["dcline"][i]["pf"]; atol = 1e-3)
+                    @test isapprox(opf_result["solution"]["nw"][n]["dcline"][i]["pt"], pf_result["solution"]["nw"][n]["dcline"][i]["pt"]; atol = 1e-3)
+                end
             end
         end
 

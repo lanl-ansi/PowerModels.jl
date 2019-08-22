@@ -102,14 +102,16 @@ function _calc_max_cost_index(data::Dict{String,<:Any})
         end
     end
 
-    for (i,dcline) in data["dcline"]
-        if haskey(dcline, "model")
-            if dcline["model"] == 2
-                if haskey(dcline, "cost")
-                    max_index = max(max_index, length(dcline["cost"]))
+    if haskey(data, "dcline")
+        for (i,dcline) in data["dcline"]
+            if haskey(dcline, "model")
+                if dcline["model"] == 2
+                    if haskey(dcline, "cost")
+                        max_index = max(max_index, length(dcline["cost"]))
+                    end
+                else
+                    Memento.warn(_LOGGER, "skipping cost dcline $(i) cost model in calc_cost_order, only model 2 is supported.")
                 end
-            else
-                Memento.warn(_LOGGER, "skipping cost dcline $(i) cost model in calc_cost_order, only model 2 is supported.")
             end
         end
     end
@@ -618,18 +620,20 @@ end
 
 function _calc_dcline_cost(data::Dict{String,<:Any})
     cost = 0.0
-    for (i,dcline) in data["dcline"]
-        if dcline["br_status"] == 1
-            if haskey(dcline, "model")
-                if dcline["model"] == 1
-                    cost += _calc_cost_pwl(dcline, "pf")
-                elseif dcline["model"] == 2
-                    cost += _calc_cost_polynomial(dcline, "pf")
+    if haskey(data, "dcline")
+        for (i,dcline) in data["dcline"]
+            if dcline["br_status"] == 1
+                if haskey(dcline, "model")
+                    if dcline["model"] == 1
+                        cost += _calc_cost_pwl(dcline, "pf")
+                    elseif dcline["model"] == 2
+                        cost += _calc_cost_polynomial(dcline, "pf")
+                    else
+                        Memento.warn(_LOGGER, "dcline $(i) has an unknown cost model $(dcline["model"])")
+                    end
                 else
-                    Memento.warn(_LOGGER, "dcline $(i) has an unknown cost model $(dcline["model"])")
+                    Memento.warn(_LOGGER, "dcline $(i) does not have a cost model")
                 end
-            else
-                Memento.warn(_LOGGER, "dcline $(i) does not have a cost model")
             end
         end
     end
@@ -960,17 +964,19 @@ function _calc_power_balance(data::Dict{String,<:Any})
         end
     end
 
-    for (i,dcline) in data["dcline"]
-        if dcline["br_status"] != 0
-            bus_fr = dcline["f_bus"]
-            bvals_fr = bus_values[bus_fr]
-            bvals_fr["p_dc"] += dcline["pf"]
-            bvals_fr["q_dc"] += dcline["qf"]
+    if haskey(data, "dcline")
+        for (i,dcline) in data["dcline"]
+            if dcline["br_status"] != 0
+                bus_fr = dcline["f_bus"]
+                bvals_fr = bus_values[bus_fr]
+                bvals_fr["p_dc"] += dcline["pf"]
+                bvals_fr["q_dc"] += dcline["qf"]
 
-            bus_to = dcline["t_bus"]
-            bvals_to = bus_values[bus_to]
-            bvals_to["p_dc"] += dcline["pt"]
-            bvals_to["q_dc"] += dcline["qt"]
+                bus_to = dcline["t_bus"]
+                bvals_to = bus_values[bus_to]
+                bvals_to["p_dc"] += dcline["pt"]
+                bvals_to["q_dc"] += dcline["qt"]
+            end
         end
     end
 
@@ -1387,13 +1393,15 @@ function check_connectivity(data::Dict{String,<:Any})
         end
     end
 
-    for (i, dcline) in data["dcline"]
-        if !(dcline["f_bus"] in bus_ids)
-            Memento.error(_LOGGER, "from bus $(dcline["f_bus"]) in dcline $(i) is not defined")
-        end
+    if haskey(data, "dcline")
+        for (i, dcline) in data["dcline"]
+            if !(dcline["f_bus"] in bus_ids)
+                Memento.error(_LOGGER, "from bus $(dcline["f_bus"]) in dcline $(i) is not defined")
+            end
 
-        if !(dcline["t_bus"] in bus_ids)
-            Memento.error(_LOGGER, "to bus $(dcline["t_bus"]) in dcline $(i) is not defined")
+            if !(dcline["t_bus"] in bus_ids)
+                Memento.error(_LOGGER, "to bus $(dcline["t_bus"]) in dcline $(i) is not defined")
+            end
         end
     end
 end
@@ -1441,13 +1449,15 @@ function check_status(data::Dict{String,<:Any})
         end
     end
 
-    for (i, dcline) in data["dcline"]
-        if dcline["br_status"] != 0 && !(dcline["f_bus"] in active_bus_ids)
-            Memento.warn(_LOGGER, "active dcline $(i) is connected to inactive bus $(dcline["f_bus"])")
-        end
+    if haskey(data, "dcline")
+        for (i, dcline) in data["dcline"]
+            if dcline["br_status"] != 0 && !(dcline["f_bus"] in active_bus_ids)
+                Memento.warn(_LOGGER, "active dcline $(i) is connected to inactive bus $(dcline["f_bus"])")
+            end
 
-        if dcline["br_status"] != 0 && !(dcline["t_bus"] in active_bus_ids)
-            Memento.warn(_LOGGER, "active dcline $(i) is connected to inactive bus $(dcline["t_bus"])")
+            if dcline["br_status"] != 0 && !(dcline["t_bus"] in active_bus_ids)
+                Memento.warn(_LOGGER, "active dcline $(i) is connected to inactive bus $(dcline["t_bus"])")
+            end
         end
     end
 end
@@ -1689,57 +1699,59 @@ function correct_dcline_limits!(data::Dict{String,<:Any})
 
     modified = Set{Int}()
 
-    for c in 1:get(data, "conductors", 1)
-        cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
-        for (i, dcline) in data["dcline"]
-            if dcline["loss0"][c] < 0.0
-                new_rate = 0.0
-                Memento.warn(_LOGGER, "this code only supports positive loss0 values, changing the value on dcline $(dcline["index"])$(cnd_str) from $(mva_base*dcline["loss0"][c]) to $(mva_base*new_rate)")
-                if haskey(data, "conductors")
-                    dcline["loss0"][c] = new_rate
-                else
-                    dcline["loss0"] = new_rate
+    if haskey(data, "dcline")
+        for c in 1:get(data, "conductors", 1)
+            cnd_str = haskey(data, "conductors") ? ", conductor $(c)" : ""
+            for (i, dcline) in data["dcline"]
+                if dcline["loss0"][c] < 0.0
+                    new_rate = 0.0
+                    Memento.warn(_LOGGER, "this code only supports positive loss0 values, changing the value on dcline $(dcline["index"])$(cnd_str) from $(mva_base*dcline["loss0"][c]) to $(mva_base*new_rate)")
+                    if haskey(data, "conductors")
+                        dcline["loss0"][c] = new_rate
+                    else
+                        dcline["loss0"] = new_rate
+                    end
+                    push!(modified, dcline["index"])
                 end
-                push!(modified, dcline["index"])
-            end
 
-            if dcline["loss0"][c] >= dcline["pmaxf"][c]*(1-dcline["loss1"][c] )+ dcline["pmaxt"][c]
-                new_rate = 0.0
-                Memento.warn(_LOGGER, "this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"])$(cnd_str) from $(mva_base*dcline["loss0"][c]) to $(mva_base*new_rate)")
-                if haskey(data, "conductors")
-                    dcline["loss0"][c] = new_rate
-                else
-                    dcline["loss0"] = new_rate
+                if dcline["loss0"][c] >= dcline["pmaxf"][c]*(1-dcline["loss1"][c] )+ dcline["pmaxt"][c]
+                    new_rate = 0.0
+                    Memento.warn(_LOGGER, "this code only supports loss0 values which are consistent with the line flow bounds, changing the value on dcline $(dcline["index"])$(cnd_str) from $(mva_base*dcline["loss0"][c]) to $(mva_base*new_rate)")
+                    if haskey(data, "conductors")
+                        dcline["loss0"][c] = new_rate
+                    else
+                        dcline["loss0"] = new_rate
+                    end
+                    push!(modified, dcline["index"])
                 end
-                push!(modified, dcline["index"])
-            end
 
-            if dcline["loss1"][c] < 0.0
-                new_rate = 0.0
-                Memento.warn(_LOGGER, "this code only supports positive loss1 values, changing the value on dcline $(dcline["index"])$(cnd_str) from $(dcline["loss1"][c]) to $(new_rate)")
-                if haskey(data, "conductors")
-                    dcline["loss1"][c] = new_rate
-                else
-                    dcline["loss1"] = new_rate
+                if dcline["loss1"][c] < 0.0
+                    new_rate = 0.0
+                    Memento.warn(_LOGGER, "this code only supports positive loss1 values, changing the value on dcline $(dcline["index"])$(cnd_str) from $(dcline["loss1"][c]) to $(new_rate)")
+                    if haskey(data, "conductors")
+                        dcline["loss1"][c] = new_rate
+                    else
+                        dcline["loss1"] = new_rate
+                    end
+                    push!(modified, dcline["index"])
                 end
-                push!(modified, dcline["index"])
-            end
 
-            if dcline["loss1"][c] >= 1.0
-                new_rate = 0.0
-                Memento.warn(_LOGGER, "this code only supports loss1 values < 1, changing the value on dcline $(dcline["index"])$(cnd_str) from $(dcline["loss1"][c]) to $(new_rate)")
-                if haskey(data, "conductors")
-                    dcline["loss1"][c] = new_rate
-                else
-                    dcline["loss1"] = new_rate
+                if dcline["loss1"][c] >= 1.0
+                    new_rate = 0.0
+                    Memento.warn(_LOGGER, "this code only supports loss1 values < 1, changing the value on dcline $(dcline["index"])$(cnd_str) from $(dcline["loss1"][c]) to $(new_rate)")
+                    if haskey(data, "conductors")
+                        dcline["loss1"][c] = new_rate
+                    else
+                        dcline["loss1"] = new_rate
+                    end
+                    push!(modified, dcline["index"])
                 end
-                push!(modified, dcline["index"])
-            end
 
-            if dcline["pmint"][c] <0.0 && dcline["loss1"][c] > 0.0
-                #new_rate = 0.0
-                Memento.warn(_LOGGER, "the dc line model is not meant to be used bi-directionally when loss1 > 0, be careful interpreting the results as the dc line losses can now be negative. change loss1 to 0 to avoid this warning")
-                #dcline["loss0"] = new_rate
+                if dcline["pmint"][c] <0.0 && dcline["loss1"][c] > 0.0
+                    #new_rate = 0.0
+                    Memento.warn(_LOGGER, "the dc line model is not meant to be used bi-directionally when loss1 > 0, be careful interpreting the results as the dc line losses can now be negative. change loss1 to 0 to avoid this warning")
+                    #dcline["loss0"] = new_rate
+                end
             end
         end
     end
@@ -1764,19 +1776,21 @@ function check_voltage_setpoints(data::Dict{String,<:Any})
             end
         end
 
-        for (i, dcline) in data["dcline"]
-            bus_fr_id = dcline["f_bus"]
-            bus_to_id = dcline["t_bus"]
+        if haskey(data, "dcline")
+            for (i, dcline) in data["dcline"]
+                bus_fr_id = dcline["f_bus"]
+                bus_to_id = dcline["t_bus"]
 
-            bus_fr = data["bus"]["$(bus_fr_id)"]
-            bus_to = data["bus"]["$(bus_to_id)"]
+                bus_fr = data["bus"]["$(bus_fr_id)"]
+                bus_to = data["bus"]["$(bus_to_id)"]
 
-            if dcline["vf"][c] != bus_fr["vm"][c]
-                Memento.warn(_LOGGER, "the $(cnd_str)from bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_fr_id)")
-            end
+                if dcline["vf"][c] != bus_fr["vm"][c]
+                    Memento.warn(_LOGGER, "the $(cnd_str)from bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_fr_id)")
+                end
 
-            if dcline["vt"][c] != bus_to["vm"][c]
-                Memento.warn(_LOGGER, "the $(cnd_str)to bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_to_id)")
+                if dcline["vt"][c] != bus_to["vm"][c]
+                    Memento.warn(_LOGGER, "the $(cnd_str)to bus voltage setpoint on dc line $(i) does not match the value at bus $(bus_to_id)")
+                end
             end
         end
     end
@@ -1798,9 +1812,11 @@ function correct_cost_functions!(data::Dict{String,<:Any})
     end
 
     modified_dcline = Set{Int}()
-    for (i, dcline) in data["dcline"]
-        if _correct_cost_function!(i, dcline, "dcline")
-            push!(modified_dcline, dcline["index"])
+    if haskey(data, "dcline")
+        for (i, dcline) in data["dcline"]
+            if _correct_cost_function!(i, dcline, "dcline")
+                push!(modified_dcline, dcline["index"])
+            end
         end
     end
 
@@ -2134,9 +2150,11 @@ function _propagate_topology_status!(data::Dict{String,<:Any})
     end
 
     incident_dcline = Dict(bus["bus_i"] => [] for (i,bus) in data["bus"])
-    for (i,dcline) in data["dcline"]
-        push!(incident_dcline[dcline["f_bus"]], dcline)
-        push!(incident_dcline[dcline["t_bus"]], dcline)
+    if haskey(data, "dcline")
+        for (i,dcline) in data["dcline"]
+            push!(incident_dcline[dcline["f_bus"]], dcline)
+            push!(incident_dcline[dcline["t_bus"]], dcline)
+        end
     end
 
     updated = true
@@ -2160,15 +2178,17 @@ function _propagate_topology_status!(data::Dict{String,<:Any})
                 end
             end
 
-            for (i,dcline) in data["dcline"]
-                if dcline["br_status"] != 0
-                    f_bus = buses[dcline["f_bus"]]
-                    t_bus = buses[dcline["t_bus"]]
+            if haskey(data, "dcline")
+                for (i,dcline) in data["dcline"]
+                    if dcline["br_status"] != 0
+                        f_bus = buses[dcline["f_bus"]]
+                        t_bus = buses[dcline["t_bus"]]
 
-                    if f_bus["bus_type"] == 4 || t_bus["bus_type"] == 4
-                        Memento.info(_LOGGER, "deactivating dcline $(i):($(dcline["f_bus"]),$(dcline["t_bus"])) due to connecting bus status")
-                        dcline["br_status"] = 0
-                        updated = true
+                        if f_bus["bus_type"] == 4 || t_bus["bus_type"] == 4
+                            Memento.info(_LOGGER, "deactivating dcline $(i):($(dcline["f_bus"]),$(dcline["t_bus"])) due to connecting bus status")
+                            dcline["br_status"] = 0
+                            updated = true
+                        end
                     end
                 end
             end
@@ -2409,7 +2429,7 @@ end
 computes the connected components of the network graph
 returns a set of sets of bus ids, each set is a connected component
 """
-function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "dcline"])
+function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "dcline", "switch"])
     if InfrastructureModels.ismultinetwork(data)
         Memento.error(_LOGGER, "connected_components does not yet support multinetwork data")
     end
