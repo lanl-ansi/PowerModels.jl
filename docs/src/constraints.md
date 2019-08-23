@@ -12,7 +12,7 @@ These templates should be defined over `GenericPowerModel` and should not refer 
 ## Voltage Constraints
 
 ```@docs
-constraint_voltage
+constraint_model_voltage
 constraint_model_voltage_on_off
 constraint_model_voltage_ne
 ```
