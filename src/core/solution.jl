@@ -12,6 +12,7 @@ function build_solution(pm::AbstractPowerModel, solve_time; solution_builder=sol
 
         for (n,nw_data) in pm.data["nw"]
             sol_nw = sol_nws[n] = Dict{String,Any}()
+            sol_nw["baseMVA"] = nw_data["baseMVA"]
             if haskey(nw_data, "conductors")
                 sol_nw["conductors"] = nw_data["conductors"]
             end
@@ -24,6 +25,7 @@ function build_solution(pm::AbstractPowerModel, solve_time; solution_builder=sol
             )
         end
     else
+        sol["baseMVA"] = pm.data["baseMVA"]
         if haskey(pm.data, "conductors")
             sol["conductors"] = pm.data["conductors"]
         end
@@ -53,7 +55,7 @@ end
 
 ""
 function _init_solution(pm::AbstractPowerModel)
-    data_keys = ["per_unit", "baseMVA"]
+    data_keys = ["per_unit"]
     return Dict{String,Any}(key => pm.data[key] for key in data_keys)
 end
 
