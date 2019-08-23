@@ -34,7 +34,7 @@ function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = 
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
 
-    ref = _ref_initialize(data) # refrence data
+    ref = InfrastructureModels.ref_initialize(data, _pm_global_keys) # refrence data
 
     var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
     con = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
@@ -44,6 +44,12 @@ function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = 
 
         nw_var[:cnd] = Dict{Int,Any}()
         nw_con[:cnd] = Dict{Int,Any}()
+
+        if !haskey(nw, :conductors)
+            nw[:conductor_ids] = 1:1
+        else
+            nw[:conductor_ids] = 1:nw[:conductors]
+        end
 
         for cnd_id in nw[:conductor_ids]
             nw_var[:cnd][cnd_id] = Dict{Symbol,Any}()
@@ -220,47 +226,12 @@ end
 
 "used for building ref without the need to build a initialize an AbstractPowerModel"
 function build_ref(data::Dict{String,<:Any}; ref_extensions=[])
-    ref = _ref_initialize(data)
+    ref = InfrastructureModels.ref_initialize(data, _pm_global_keys)
     _ref_add_core!(ref[:nw])
     for ref_ext in ref_extensions
         ref_ext(pm)
     end
     return ref
-end
-
-
-function _ref_initialize(data::Dict{String,<:Any})
-    refs = Dict{Symbol,Any}()
-
-    nws = refs[:nw] = Dict{Int,Any}()
-
-    if InfrastructureModels.ismultinetwork(data)
-        nws_data = data["nw"]
-    else
-        nws_data = Dict("0" => data)
-    end
-
-    for (n, nw_data) in nws_data
-        nw_id = parse(Int, n)
-        ref = nws[nw_id] = Dict{Symbol,Any}()
-
-        for (key, item) in nw_data
-            if isa(item, Dict{String,Any})
-                item_lookup = Dict{Int,Any}([(parse(Int, k), v) for (k,v) in item])
-                ref[Symbol(key)] = item_lookup
-            else
-                ref[Symbol(key)] = item
-            end
-        end
-
-        if !haskey(ref, :conductors)
-            ref[:conductor_ids] = 1:1
-        else
-            ref[:conductor_ids] = 1:ref[:conductors]
-        end
-    end
-
-    return refs
 end
 
 
@@ -299,6 +270,13 @@ end
 
 function _ref_add_core!(nw_refs::Dict)
     for (nw, ref) in nw_refs
+        if !haskey(ref, :conductor_ids)
+            if !haskey(ref, :conductors)
+                ref[:conductor_ids] = 1:1
+            else
+                ref[:conductor_ids] = 1:ref[:conductors]
+            end
+        end
 
         ### filter out inactive components ###
         ref[:bus] = Dict(x for x in ref[:bus] if (x.second["bus_type"] != pm_component_status_inactive["bus"]))
