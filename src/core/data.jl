@@ -261,20 +261,21 @@ end
 function make_per_unit!(data::Dict{String,<:Any})
     if !haskey(data, "per_unit") || data["per_unit"] == false
         data["per_unit"] = true
-        mva_base = data["baseMVA"]
         if InfrastructureModels.ismultinetwork(data)
             for (i,nw_data) in data["nw"]
-                _make_per_unit!(nw_data, mva_base)
+                _make_per_unit!(nw_data)
             end
         else
-            _make_per_unit!(data, mva_base)
+            _make_per_unit!(data)
         end
     end
 end
 
 
 ""
-function _make_per_unit!(data::Dict{String,<:Any}, mva_base::Real)
+function _make_per_unit!(data::Dict{String,<:Any})
+    mva_base = data["baseMVA"]
+
     # to be consistent with matpower's opf.flow_lim= 'I' with current magnitude
     # limit defined in MVA at 1 p.u. voltage
     ka_base = mva_base
@@ -404,20 +405,21 @@ end
 function make_mixed_units!(data::Dict{String,<:Any})
     if haskey(data, "per_unit") && data["per_unit"] == true
         data["per_unit"] = false
-        mva_base = data["baseMVA"]
         if InfrastructureModels.ismultinetwork(data)
             for (i,nw_data) in data["nw"]
-                _make_mixed_units!(nw_data, mva_base)
+                _make_mixed_units!(nw_data)
             end
         else
-             _make_mixed_units!(data, mva_base)
+             _make_mixed_units!(data)
         end
     end
 end
 
 
 ""
-function _make_mixed_units!(data::Dict{String,<:Any}, mva_base::Real)
+function _make_mixed_units!(data::Dict{String,<:Any})
+    mva_base = data["baseMVA"]
+
     # to be consistent with matpower's opf.flow_lim= 'I' with current magnitude
     # limit defined in MVA at 1 p.u. voltage
     ka_base = mva_base

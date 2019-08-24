@@ -29,7 +29,7 @@ function logger_config!(level)
     Memento.config!(Memento.getlogger("PowerModels"), level)
 end
 
-const _pm_global_keys = Set(["time_series", "baseMVA", "per_unit"])
+const _pm_global_keys = Set(["time_series", "per_unit"])
 
 
 include("io/matpower.jl")

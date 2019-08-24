@@ -8,6 +8,7 @@ PowerModels.jl Change Log
 - Made all component on/off variables conductorless (#390) (breaking)
 - Require an explicit switch section in the data model (breaking)
 - Fixed naming branch indicator variable (#551) (breaking)
+- Made baseMVA not a global key in multinetwork models (breaking)
 
 ### Staged
 - nothing
