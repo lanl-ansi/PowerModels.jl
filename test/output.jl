@@ -116,6 +116,28 @@ end
             @test isapprox(branch["mu_sm_to"], 0.0; atol = 1e-2)
         end
     end
+
+
+    result = run_opf("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver, setting = settings)
+    @testset "5 bus - kcl duals soc qp" begin
+        for (i, bus) in result["solution"]["bus"]
+            @test bus["lam_kcl_r"] <= -2900.00
+            @test bus["lam_kcl_r"] >= -3100.00
+            @test bus["lam_kcl_i"] <=  0.001
+            @test bus["lam_kcl_i"] >= -5.000
+        end
+    end
+
+    result = run_opf("../test/data/matpower/case5.m", SOCWRConicPowerModel, scs_solver, setting = settings)
+    @testset "5 bus - kcl duals soc conic" begin
+        for (i, bus) in result["solution"]["bus"]
+            @test bus["lam_kcl_r"] <= -2900.00
+            @test bus["lam_kcl_r"] >= -3100.00
+            @test bus["lam_kcl_i"] <=  0.001
+            @test bus["lam_kcl_i"] >= -5.000
+        end
+    end
+
 end
 
 

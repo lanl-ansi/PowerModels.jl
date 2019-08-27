@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Fixed power balance duals in w-space formulations (#591)
 - Update to InfrastructureModels v0.3
 - Dropped CI on Julia v1.0
 
