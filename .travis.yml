@@ -9,6 +9,7 @@ julia:
 matrix:
   allow_failures:
     - julia: nightly
+codecov: true
 jobs:
   include:
     - stage: "Documentation"
