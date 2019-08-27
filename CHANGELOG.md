@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Update to InfrastructureModels v0.3
+- Dropped CI on Julia v1.0
 
 ### v0.12.4
 - Fixed support for data without an explicit switch section
