@@ -382,7 +382,7 @@ function _matpower_to_powermodels!(mp_data::Dict{String,<:Any})
     # use once available
     InfrastructureModels.arrays_to_dicts!(pm_data)
 
-    for optional in ["dcline", "load", "shunt", "storage"]
+    for optional in ["dcline", "load", "shunt", "storage", "switch"]
         if length(pm_data[optional]) == 0
             pm_data[optional] = Dict{String,Any}()
         end

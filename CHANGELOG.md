@@ -2,8 +2,10 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Update to InfrastructureModels v0.3
-- Update to JuMP v0.20
+- nothing
+
+### v0.12.5
+- Update to InfrastructureModels v0.3 and JuMP v0.20
 - Fixed power balance duals in w-space formulations (#591)
 - Dropped CI on Julia v1.0
 
