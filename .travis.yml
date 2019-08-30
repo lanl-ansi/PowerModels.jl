@@ -3,17 +3,13 @@ os:
   - linux
   - osx
 julia:
-  - 1.0
   - 1.1
+  - 1.2
   - nightly
 matrix:
   allow_failures:
     - julia: nightly
-script:
-  - julia --project -e 'import Pkg; Pkg.build(); Pkg.instantiate()'
-  - julia --project -e 'import Pkg; Pkg.test(coverage=true);'
-after_success:
-  - julia -e 'using Pkg; Pkg.add("Coverage"); using Coverage; Codecov.submit(process_folder())'
+codecov: true
 jobs:
   include:
     - stage: "Documentation"

@@ -7,5 +7,5 @@ This section provides an overview of the some of the utility functions that are 
 To improve the quality of the convex relaxations available in PowerModels and also to obtain tightened bounds on the voltage-magnitude and phase-angle difference variables, an optimization-based bound-tightening algorithm is made available as a function in PowerModels.
 
 ```@docs
-run_obbt_opf
+run_obbt_opf!
 ```

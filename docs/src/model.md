@@ -14,5 +14,5 @@ which utilizes the following (internal) functions:
 
 ```@docs
 build_ref
-buspair_parameters
+buspair_parameters!
 ```

@@ -13,6 +13,11 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.12.5
+- Update to InfrastructureModels v0.3 and JuMP v0.20
+- Fixed power balance duals in w-space formulations (#591)
+- Dropped CI on Julia v1.0
+
 ### v0.12.4
 - Fixed support for data without an explicit switch section
 - Fixed support for single values in add_setpoint! and add_dual!
