@@ -9,6 +9,7 @@ PowerModels.jl Change Log
 - Require an explicit switch section in the data model (breaking)
 - Fixed naming branch indicator variable (#551) (breaking)
 - Made baseMVA not a global key in multinetwork models (breaking)
+- Fixed bug in bus_storage_lookup (#598)
 
 ### Staged
 - nothing
