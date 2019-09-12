@@ -2401,7 +2401,7 @@ end
 function bus_storage_lookup(storage_data::Dict{String,<:Any}, bus_data::Dict{String,<:Any})
     bus_storage = Dict(bus["bus_i"] => [] for (i,bus) in bus_data)
     for (i,storage) in storage_data
-        push!(bus_storage[storage["shunt_bus"]], storage)
+        push!(bus_storage[storage["storage_bus"]], storage)
     end
     return bus_storage
 end
