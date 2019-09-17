@@ -610,11 +610,11 @@ end
 ""
 function variable_storage_complementary_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw)
     var(pm, nw)[:sc_on] = JuMP.@variable(pm.model,
-        [i in ids(pm, nw, :storage)], base_name="$(nw)_sc", Bin,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_sc_on", Bin,
         start = comp_start_value(ref(pm, nw, :storage, i), "sc_on_start", 0)
     )
     var(pm, nw)[:sd_on] = JuMP.@variable(pm.model,
-        [i in ids(pm, nw, :storage)], base_name="$(nw)_sd", Bin,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_sd_on", Bin,
         start = comp_start_value(ref(pm, nw, :storage, i), "sd_on_start", 0)
     )
 end
