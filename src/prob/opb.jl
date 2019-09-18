@@ -4,12 +4,12 @@ function run_nfa_opb(file, optimizer; kwargs...)
 end
 
 "the optimal power balance problem"
-function run_opb(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, post_opb; ref_extensions=[ref_add_connected_components!], kwargs...)
+function run_opb(file, model_type::Type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, post_opb; ref_extensions=[ref_add_connected_components!], kwargs...)
 end
 
 ""
-function post_opb(pm::GenericPowerModel)
+function post_opb(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_generation(pm)
 
@@ -21,7 +21,7 @@ function post_opb(pm::GenericPowerModel)
 end
 
 
-function ref_add_connected_components!(pm::GenericPowerModel)
+function ref_add_connected_components!(pm::AbstractPowerModel)
     if InfrastructureModels.ismultinetwork(pm.data)
         nws_data = pm.data["nw"]
     else

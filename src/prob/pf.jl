@@ -9,12 +9,12 @@ function run_dc_pf(file, optimizer; kwargs...)
 end
 
 ""
-function run_pf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, post_pf; kwargs...)
+function run_pf(file, model_type::Type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, post_pf; kwargs...)
 end
 
 ""
-function post_pf(pm::GenericPowerModel)
+function post_pf(pm::AbstractPowerModel)
     variable_voltage(pm, bounded = false)
     variable_generation(pm, bounded = false)
     variable_branch_flow(pm, bounded = false)
@@ -29,7 +29,7 @@ function post_pf(pm::GenericPowerModel)
     end
 
     for (i,bus) in ref(pm, :bus)
-        constraint_power_balance_shunt(pm, i)
+        constraint_power_balance(pm, i)
 
         # PV Bus Constraints
         if length(ref(pm, :bus_gens, i)) > 0 && !(i in ids(pm,:ref_buses))

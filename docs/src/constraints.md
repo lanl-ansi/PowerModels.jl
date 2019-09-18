@@ -7,7 +7,7 @@ CurrentModule = PowerModels
 ## Constraint Templates
 Constraint templates help simplify data wrangling across multiple Power Flow formulations by providing an abstraction layer between the network data and network constraint definitions. The constraint template's job is to extract the required parameters from a given network data structure and pass the data as named arguments to the Power Flow formulations.
 
-These templates should be defined over `GenericPowerModel` and should not refer to model variables. For more details, see the files: `core/constraint_template.jl` and `core/constraint.jl` (`core/constraint_template.jl` provides higher level APIs, and pulls out index information from the data dictionaries, before calling out to methods defined in `core/constraint.jl`).
+These templates should be defined over `AbstractPowerModel` and should not refer to model variables. For more details, see the files: `core/constraint_template.jl` and `core/constraint.jl` (`core/constraint_template.jl` provides higher level APIs, and pulls out index information from the data dictionaries, before calling out to methods defined in `core/constraint.jl`).
 
 ## Voltage Constraints
 

@@ -2,6 +2,16 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Simplified PowerModel types (#192) (breaking)
+- Improved multi-conductor support in the storage model (#572) (breaking)
+- Renamed model_constructor to model_type (#192) (breaking)
+- Made all component on/off variables conductorless (#390) (breaking)
+- Require an explicit switch section in the data model (breaking)
+- Fixed naming branch indicator variable (#551) (breaking)
+- Made baseMVA not a global key in multinetwork models (breaking)
+- Fixed bug in bus_storage_lookup (#598)
+
+### Staged
 - nothing
 
 ### v0.12.5

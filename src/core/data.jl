@@ -190,7 +190,7 @@ const _pm_component_parameter_order = Dict(
     "discharge_rating" => 77.03, "charge_efficiency" => 77.04,
     "discharge_efficiency" => 77.05, "thermal_rating" => 77.06,
     "qmin" => 77.07, "qmax" => 77.08, "qmin" => 77.09, "qmax" => 77.10,
-    "r" => 77.11, "x" => 77.12, "standby_loss" => 77.13,
+    "r" => 77.11, "x" => 77.12, "p_loss" => 77.13, "q_loss" => 77.14,
 
     "status" => 80.0, "gen_status" => 81.0, "br_status" => 82.0,
 
@@ -236,8 +236,12 @@ achieved by building application specific methods of building multinetwork
 with minimal data replication.
 """
 function replicate(sn_data::Dict{String,<:Any}, count::Int; global_keys::Set{String}=Set{String}())
-    pm_global_keys = Set(["baseMVA", "per_unit"])
-    return InfrastructureModels.replicate(sn_data, count, union(global_keys, pm_global_keys))
+    return InfrastructureModels.replicate(sn_data, count, union(global_keys, _pm_global_keys))
+end
+
+"turns a single network and a time_series data block into a multi-network"
+function make_multinetwork(data::Dict{String, <:Any}; global_keys::Set{String}=Set{String}())
+    return InfrastructureModels.make_multinetwork(data, union(global_keys, _pm_global_keys))
 end
 
 
@@ -257,20 +261,21 @@ end
 function make_per_unit!(data::Dict{String,<:Any})
     if !haskey(data, "per_unit") || data["per_unit"] == false
         data["per_unit"] = true
-        mva_base = data["baseMVA"]
         if InfrastructureModels.ismultinetwork(data)
             for (i,nw_data) in data["nw"]
-                _make_per_unit!(nw_data, mva_base)
+                _make_per_unit!(nw_data)
             end
         else
-            _make_per_unit!(data, mva_base)
+            _make_per_unit!(data)
         end
     end
 end
 
 
 ""
-function _make_per_unit!(data::Dict{String,<:Any}, mva_base::Real)
+function _make_per_unit!(data::Dict{String,<:Any})
+    mva_base = data["baseMVA"]
+
     # to be consistent with matpower's opf.flow_lim= 'I' with current magnitude
     # limit defined in MVA at 1 p.u. voltage
     ka_base = mva_base
@@ -328,7 +333,8 @@ function _make_per_unit!(data::Dict{String,<:Any}, mva_base::Real)
             _apply_func!(strg, "current_rating", rescale)
             _apply_func!(strg, "qmin", rescale)
             _apply_func!(strg, "qmax", rescale)
-            _apply_func!(strg, "standby_loss", rescale)
+            _apply_func!(strg, "p_loss", rescale)
+            _apply_func!(strg, "q_loss", rescale)
         end
     end
 
@@ -399,20 +405,21 @@ end
 function make_mixed_units!(data::Dict{String,<:Any})
     if haskey(data, "per_unit") && data["per_unit"] == true
         data["per_unit"] = false
-        mva_base = data["baseMVA"]
         if InfrastructureModels.ismultinetwork(data)
             for (i,nw_data) in data["nw"]
-                _make_mixed_units!(nw_data, mva_base)
+                _make_mixed_units!(nw_data)
             end
         else
-             _make_mixed_units!(data, mva_base)
+             _make_mixed_units!(data)
         end
     end
 end
 
 
 ""
-function _make_mixed_units!(data::Dict{String,<:Any}, mva_base::Real)
+function _make_mixed_units!(data::Dict{String,<:Any})
+    mva_base = data["baseMVA"]
+
     # to be consistent with matpower's opf.flow_lim= 'I' with current magnitude
     # limit defined in MVA at 1 p.u. voltage
     ka_base = mva_base
@@ -469,7 +476,8 @@ function _make_mixed_units!(data::Dict{String,<:Any}, mva_base::Real)
             _apply_func!(strg, "current_rating", rescale)
             _apply_func!(strg, "qmin", rescale)
             _apply_func!(strg, "qmax", rescale)
-            _apply_func!(strg, "standby_loss", rescale)
+            _apply_func!(strg, "p_loss", rescale)
+            _apply_func!(strg, "q_loss", rescale)
         end
     end
 
@@ -1069,10 +1077,47 @@ function correct_voltage_angle_differences!(data::Dict{String,<:Any}, default_pa
 end
 
 
-"checks that each branch has a reasonable thermal rating-a, if not computes one"
+"checks that each branch has non-negative thermal ratings and removes zero thermal ratings"
 function correct_thermal_limits!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_thermal_limits! does not yet support multinetwork data")
+    end
+
+    modified = Set{Int}()
+
+    branches = [branch for branch in values(data["branch"])]
+    if haskey(data, "ne_branch")
+        append!(branches, values(data["ne_branch"]))
+    end
+
+    conductors = 1:get(data, "conductors", 1)
+
+    for branch in branches
+        for rate_key in ["rate_a", "rate_b", "rate_c"]
+            if haskey(branch, rate_key)
+                rate_value = branch[rate_key]
+                for c in conductors
+                    if rate_value[c] < 0.0
+                        Memento.error(_LOGGER, "negative $(rate_key) value on branch $(branch["index"]), this code only supports non-negative $(rate_key) values")
+                    end
+                end
+                if all(isapprox(rate_value[c], 0.0) for c in conductors)
+                    delete!(branch, rate_key)
+                    Memento.warn(_LOGGER, "removing zero $(rate_key) limit on branch $(branch["index"])")
+                    push!(modified, branch["index"])
+                end
+            end
+        end
+    end
+
+    return modified
+end
+
+
+"checks that each branch has a reasonable thermal rating-a, if not computes one"
+function calc_thermal_limits!(data::Dict{String,<:Any})
+    if InfrastructureModels.ismultinetwork(data)
+        Memento.error(_LOGGER, "calc_thermal_limits! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -1134,10 +1179,46 @@ function correct_thermal_limits!(data::Dict{String,<:Any})
 end
 
 
-"checks that each branch has a reasonable current rating-a, if not computes one"
+"checks that each branch has non-negative current ratings and removes zero current ratings"
 function correct_current_limits!(data::Dict{String,<:Any})
     if InfrastructureModels.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_current_limits! does not yet support multinetwork data")
+    end
+
+    modified = Set{Int}()
+
+    branches = [branch for branch in values(data["branch"])]
+    if haskey(data, "ne_branch")
+        append!(branches, values(data["ne_branch"]))
+    end
+
+    conductors = 1:get(data, "conductors", 1)
+
+    for branch in branches
+        for rate_key in ["c_rating_a", "c_rating_b", "c_rating_c"]
+            if haskey(branch, rate_key)
+                rate_value = branch[rate_key]
+                for c in conductors
+                    if rate_value[c] < 0.0
+                        Memento.error(_LOGGER, "negative $(rate_key) value on branch $(branch["index"]), this code only supports non-negative $(rate_key) values")
+                    end
+                end
+                if all(isapprox(rate_value[c], 0.0) for c in conductors)
+                    delete!(branch, rate_key)
+                    Memento.warn(_LOGGER, "removing zero $(rate_key) limit on branch $(branch["index"])")
+                    push!(modified, branch["index"])
+                end
+            end
+        end
+    end
+
+    return modified
+end
+
+"checks that each branch has a reasonable current rating-a, if not computes one"
+function calc_current_limits!(data::Dict{String,<:Any})
+    if InfrastructureModels.ismultinetwork(data)
+        Memento.error(_LOGGER, "calc_current_limits! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(data) && data["per_unit"])
@@ -1288,15 +1369,13 @@ function check_connectivity(data::Dict{String,<:Any})
         end
     end
 
-    if haskey(data, "switch")
-        for (i, switch) in data["switch"]
-            if !(switch["f_bus"] in bus_ids)
-                Memento.error(_LOGGER, "from bus $(switch["f_bus"]) in switch $(i) is not defined")
-            end
+    for (i, switch) in data["switch"]
+        if !(switch["f_bus"] in bus_ids)
+            Memento.error(_LOGGER, "from bus $(switch["f_bus"]) in switch $(i) is not defined")
+        end
 
-            if !(switch["t_bus"] in bus_ids)
-                Memento.error(_LOGGER, "to bus $(switch["t_bus"]) in switch $(i) is not defined")
-            end
+        if !(switch["t_bus"] in bus_ids)
+            Memento.error(_LOGGER, "to bus $(switch["t_bus"]) in switch $(i) is not defined")
         end
     end
 
@@ -1494,9 +1573,6 @@ function check_storage_parameters(data::Dict{String,<:Any})
         if strg["discharge_rating"] < 0.0
             Memento.error(_LOGGER, "storage unit $(strg["index"]) has a non-positive discharge rating $(strg["energy_rating"])")
         end
-        if strg["standby_loss"] < 0.0
-            Memento.error(_LOGGER, "storage unit $(strg["index"]) has a non-positive standby losses $(strg["standby_loss"])")
-        end
 
         for c in 1:get(data, "conductors", 1)
             if strg["r"][c] < 0.0
@@ -1529,8 +1605,11 @@ function check_storage_parameters(data::Dict{String,<:Any})
             Memento.warn(_LOGGER, "storage unit $(strg["index"]) discharge efficiency of $(strg["discharge_efficiency"]) is out of the valid range (0.0. 1.0]")
         end
 
-        if strg["standby_loss"] > 0.0 && strg["energy"] <= 0.0
-            Memento.warn(_LOGGER, "storage unit $(strg["index"]) has standby losses but zero initial energy.  This can lead to model infeasiblity.")
+        if strg["p_loss"] > 0.0 && strg["energy"] <= 0.0
+            Memento.warn(_LOGGER, "storage unit $(strg["index"]) has positive active power losses but zero initial energy.  This can lead to model infeasiblity.")
+        end
+        if strg["q_loss"] > 0.0 && strg["energy"] <= 0.0
+            Memento.warn(_LOGGER, "storage unit $(strg["index"]) has positive reactive power losses but zero initial energy.  This can lead to model infeasiblity.")
         end
     end
 
@@ -1997,8 +2076,6 @@ end
 finds active network buses and branches that are not necessary for the
 computation and sets their status to off.
 
-Works on a PowerModels data dict, so that a it can be used without a GenericPowerModel object
-
 Warning: this implementation has quadratic complexity, in the worst case
 """
 function propagate_topology_status!(data::Dict{String,<:Any})
@@ -2324,7 +2401,7 @@ end
 function bus_storage_lookup(storage_data::Dict{String,<:Any}, bus_data::Dict{String,<:Any})
     bus_storage = Dict(bus["bus_i"] => [] for (i,bus) in bus_data)
     for (i,storage) in storage_data
-        push!(bus_storage[storage["shunt_bus"]], storage)
+        push!(bus_storage[storage["storage_bus"]], storage)
     end
     return bus_storage
 end
@@ -2368,7 +2445,7 @@ end
 
 
 """
-performs DFS on a graph
+perModels DFS on a graph
 """
 function _dfs(i, neighbors, component_lookup, touched)
     push!(touched, i)
@@ -2400,7 +2477,7 @@ end
 const _conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
     "br_status", "gen_bus", "load_bus", "shunt_bus", "storage_bus", "f_bus", "t_bus",
     "transformer", "area", "zone", "base_kv", "energy", "energy_rating", "charge_rating",
-    "discharge_rating", "charge_efficiency", "discharge_efficiency", "standby_loss",
+    "discharge_rating", "charge_efficiency", "discharge_efficiency", "p_loss", "q_loss",
     "model", "ncost", "cost", "startup", "shutdown", "name", "source_id", "active_phases"])
 
 "feild names that should become multi-conductor matrix not arrays"

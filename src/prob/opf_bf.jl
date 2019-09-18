@@ -1,10 +1,10 @@
 ""
-function run_opf_bf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, post_opf_bf; kwargs...)
+function run_opf_bf(file, model_type::Type{T}, optimizer; kwargs...) where T <: AbstractBFModel
+    return run_model(file, model_type, optimizer, post_opf_bf; kwargs...)
 end
 
 ""
-function post_opf_bf(pm::GenericPowerModel)
+function post_opf_bf(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_branch_flow(pm)
@@ -20,7 +20,7 @@ function post_opf_bf(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_power_balance_shunt(pm, i)
+        constraint_power_balance(pm, i)
     end
 
     for i in ids(pm, :branch)

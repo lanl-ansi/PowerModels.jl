@@ -1,58 +1,43 @@
-# Network Formulations
+# Network Models
 
 ## Type Hierarchy
 We begin with the top of the hierarchy, where we can distinguish between AC and DC power flow models.
 ```julia
-AbstractACPForm <: AbstractPowerFormulation
-AbstractDCPForm <: AbstractPowerFormulation
-AbstractWRForm <: AbstractPowerFormulation
-AbstractWForm <: AbstractPowerFormulation
-```
-
-From there, different forms for ACP and DCP are possible:
-```julia
-StandardACPForm <: AbstractACPForm
-APIACPForm <: AbstractACPForm
-
-DCPlosslessForm <: AbstractDCPForm
-
-SOCWRForm <: AbstractWRForm
-QCWRForm <: AbstractWRForm
-
-SOCBFForm <: AbstractWForm
+AbstractACPModel <: AbstractPowerModel
+AbstractDCPModel <: AbstractPowerModel
+AbstractWRModel <: AbstractPowerModel
+AbstractWModel <: AbstractPowerModel
 ```
 
 ## Power Models
-Each of these forms can be used as the type parameter for a PowerModel:
+Each of these forms can be used as the model parameter for a PowerModel:
 ```julia
-ACPPowerModel = GenericPowerModel{StandardACPForm}
-APIACPPowerModel = GenericPowerModel{APIACPForm}
+ACPPowerModel <: AbstractACPForm
 
-DCPPowerModel = GenericPowerModel{DCPlosslessForm}
+DCPPowerModel <: AbstractDCPForm
 
-SOCWRPowerModel = GenericPowerModel{SOCWRForm}
-QCWRPowerModel = GenericPowerModel{QCWRForm}
+SOCWRPowerModel <: AbstractWRForm
+QCRMPowerModel <: AbstractWRForm
 
-SOCBFPowerModel = GenericPowerModel{SOCBFForm}
+SOCBFPowerModel <: AbstractSOCBFModel
 ```
 
-For details on `GenericPowerModel`, see the section on [Power Model](@ref).
+For details on `AbstractPowerModel`, see the section on [Power Model](@ref).
 
 ## User-Defined Abstractions
 
-Consider the class of conic formulations for power flow models. One way of modelling them in this package is through the following type hierarchy:
+Consider the class of conic Models for power flow models. One way of modelling them in this package is through the following type hierarchy:
 ```julia
-AbstractConicPowerFormulation <: AbstractPowerFormulation
-AbstractWRMForm <: AbstractConicPowerFormulation
+AbstractConicPowerModel <: AbstractPowerModel
+AbstractWRMModel <: AbstractConicPowerModel
 
-SDPWRMForm <: AbstractWRMForm
-SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
+AbstractSDPWRMModel <: AbstractWRMModel
+mutable struct SDPWRMPowerModel <: AbstractSDPWRMModel @pm_fields end
 ```
 
-The user-defined abstractions do not have to begin from the root `AbstractPowerFormulation` abstract type, and can begin from an intermediate abstract type. For example, in the following snippet:
+The user-defined abstractions do not have to begin from the root `AbstractPowerModel` abstract type, and can begin from an intermediate abstract type. For example, in the following snippet:
 ```julia
-AbstractDCPLLForm <: AbstractDCPForm
+AbstractDCPLLModel <: AbstractDCPModel
 
-StandardDCPLLForm <: AbstractDCPLLForm
-DCPLLPowerModel = GenericPowerModel{StandardDCPLLForm}
+mutable struct DCPLLPowerModel <: AbstractDCPLLModel @pm_fields end
 ```

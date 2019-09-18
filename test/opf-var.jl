@@ -3,11 +3,10 @@ TESTLOG = Memento.getlogger(PowerModels)
 
 function build_current_data(base_data)
     c_data = PowerModels.parse_file(base_data)
-    PowerModels.correct_current_limits!(c_data)
+    PowerModels.calc_current_limits!(c_data)
     for (i,branch) in c_data["branch"]
         delete!(branch, "rate_a")
     end
-
     return c_data
 end
 
@@ -22,13 +21,12 @@ end
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15669.8; atol = 1e0)
         end
-        # does not converge in SCS.jl v0.4.0
-        #@testset "5-bus current limit case" begin
-        #    result = PowerModels._run_cl_opf("../test/data/matpower/case5_clm.m", ACPPowerModel, ipopt_solver)
+        @testset "5-bus current limit case" begin
+           result = PowerModels._run_cl_opf("../test/data/matpower/case5_clm.m", ACPPowerModel, ipopt_solver)
 
-        #    @test result["termination_status"] == LOCALLY_SOLVED
-        #    @test isapprox(result["objective"], 17239.3; atol = 1e0)
-        #end
+           @test result["termination_status"] == LOCALLY_SOLVED
+           @test isapprox(result["objective"], 17015.5; atol = 1e0)
+        end
         @testset "14-bus no limits case" begin
             data = build_current_data("../test/data/matpower/case14.m")
             result = PowerModels._run_cl_opf(data, ACPPowerModel, ipopt_solver)
@@ -138,13 +136,15 @@ end
         #    @test result["termination_status"] == OPTIMAL
         #    @test isapprox(result["objective"], 15418.4; atol = 1e0)
         #end
-        @testset "14-bus case" begin
-            data = build_current_data("../test/data/matpower/case14.m")
-            result = PowerModels._run_cl_opf(data, SDPWRMPowerModel, scs_solver)
 
-            @test result["termination_status"] == OPTIMAL
-            @test isapprox(result["objective"], 8081.52; atol = 1e0)
-        end
+        # too slow of unit tests
+        # @testset "14-bus case" begin
+        #     data = build_current_data("../test/data/matpower/case14.m")
+        #     result = PowerModels._run_cl_opf(data, SDPWRMPowerModel, scs_solver)
+
+        #     @test result["termination_status"] == OPTIMAL
+        #     @test isapprox(result["objective"], 8081.52; atol = 1e0)
+        # end
     end
 
 end
@@ -476,7 +476,7 @@ end
 @testset "test ac v+t polar opf" begin
     PMs = PowerModels
 
-    function post_opf_var(pm::GenericPowerModel)
+    function post_opf_var(pm::AbstractPowerModel)
         PMs.variable_voltage(pm)
         PMs.variable_generation(pm)
         PMs.variable_branch_flow(pm)
@@ -491,7 +491,7 @@ end
         end
 
         for i in ids(pm,:bus)
-            PMs.constraint_power_balance_shunt(pm, i)
+            PMs.constraint_power_balance(pm, i)
         end
 
         for i in ids(pm,:branch)

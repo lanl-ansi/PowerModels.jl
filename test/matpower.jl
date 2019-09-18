@@ -89,7 +89,7 @@ end
         @test isapprox(result["objective"], 7642.6; atol = 1e0)
     end
     @testset "QC Model" begin
-        result = run_opf("../test/data/matpower/case14.m", QCWRPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case14.m", QCRMPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 8075.1; atol = 1e0)

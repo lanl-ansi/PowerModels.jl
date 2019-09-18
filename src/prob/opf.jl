@@ -9,12 +9,12 @@ function run_dc_opf(file, optimizer; kwargs...)
 end
 
 ""
-function run_opf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, post_opf; kwargs...)
+function run_opf(file, model_type::Type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, post_opf; kwargs...)
 end
 
 ""
-function post_opf(pm::GenericPowerModel)
+function post_opf(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_branch_flow(pm)
@@ -29,7 +29,7 @@ function post_opf(pm::GenericPowerModel)
     end
 
     for i in ids(pm, :bus)
-        constraint_power_balance_shunt(pm, i)
+        constraint_power_balance(pm, i)
     end
 
     for i in ids(pm, :branch)
@@ -50,12 +50,12 @@ end
 
 
 "a toy example of how to model with multi-networks"
-function run_mn_opf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, post_mn_opf; multinetwork=true, kwargs...)
+function run_mn_opf(file, model_type::Type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, post_mn_opf; multinetwork=true, kwargs...)
 end
 
 ""
-function post_mn_opf(pm::GenericPowerModel)
+function post_mn_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n)
         variable_generation(pm, nw=n)
@@ -69,7 +69,7 @@ function post_mn_opf(pm::GenericPowerModel)
         end
 
         for i in ids(pm, :bus, nw=n)
-            constraint_power_balance_shunt(pm, i, nw=n)
+            constraint_power_balance(pm, i, nw=n)
         end
 
         for i in ids(pm, :branch, nw=n)

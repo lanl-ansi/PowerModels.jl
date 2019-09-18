@@ -11,29 +11,28 @@
     # quadratic relaxations
     SOCWRPowerModel, SOCWRConicPowerModel,
     SOCBFPowerModel, SOCBFConicPowerModel,
-    QCWRPowerModel, QCWRTriPowerModel,
+    QCRMPowerModel, QCLSPowerModel,
 
     # sdp relaxations
     SDPWRMPowerModel, SparseSDPWRMPowerModel
 ================================================#
 
-
 ##### Top Level Abstract Types #####
 
 "active power only models"
-abstract type AbstractActivePowerFormulation <: AbstractPowerFormulation end
+abstract type AbstractActivePowerModel <: AbstractPowerModel end
 
 "variants that target conic solvers"
-abstract type AbstractConicPowerFormulation <: AbstractPowerFormulation end
+abstract type AbstractConicModel <: AbstractPowerModel end
 
 "for branch flow models"
-abstract type AbstractBFForm <: AbstractPowerFormulation end
+abstract type AbstractBFModel <: AbstractPowerModel end
 
 "for variants of branch flow models that target QP or NLP solvers"
-abstract type AbstractBFQPForm <: AbstractBFForm end
+abstract type AbstractBFQPModel <: AbstractBFModel end
 
 "for variants of branch flow models that target conic solvers"
-abstract type AbstractBFConicForm <: AbstractBFForm end
+abstract type AbstractBFConicModel <: AbstractBFModel end
 
 
 
@@ -42,13 +41,10 @@ abstract type AbstractBFConicForm <: AbstractBFForm end
 ##### Exact Non-Convex Models #####
 
 ""
-abstract type AbstractACPForm <: AbstractPowerFormulation end
-
-""
-abstract type StandardACPForm <: AbstractACPForm end
+abstract type AbstractACPModel <: AbstractPowerModel end
 
 """
-AC power flow formulation with polar bus voltage variables.
+AC power flow Model with polar bus voltage variables.
 
 The seminal reference of AC OPF:
 ```
@@ -67,51 +63,40 @@ History and discussion:
 ```
 @techreport{Cain2012,
   author = {Cain, Mary B and {O' Neill}, Richard P and Castillo, Anya},
-  title = {{History of optimal power flow and formulations}},
+  title = {{History of optimal power flow and Models}},
   year = {2012}
   pages = {1--36},
-  url = {https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-formulation-testing.pdf}
+  url = {https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-Model-testing.pdf}
 }
 ```
 """
-const ACPPowerModel = GenericPowerModel{StandardACPForm}
+mutable struct ACPPowerModel <: AbstractACPModel @pm_fields end
 
 ""
-ACPPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, StandardACPForm; kwargs...)
+abstract type AbstractACRModel <: AbstractPowerModel end
 
-
-""
-abstract type AbstractACRForm <: AbstractPowerFormulation end
-
-""
-abstract type StandardACRForm <: AbstractACRForm end
 
 """
-AC power flow formulation with rectangular bus voltage variables.
+AC power flow Model with rectangular bus voltage variables.
 
 ```
 @techreport{Cain2012,
   author = {Cain, Mary B and {O' Neill}, Richard P and Castillo, Anya},
   pages = {1--36},
-  title = {{History of optimal power flow and formulations}},
-  url = {https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-formulation-testing.pdf}
+  title = {{History of optimal power flow and Models}},
+  url = {https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-Model-testing.pdf}
   year = {2012}
 }
 ```
 """
-const ACRPowerModel = GenericPowerModel{StandardACRForm}
+mutable struct ACRPowerModel <: AbstractACRModel @pm_fields end
 
-"default rectangular AC constructor"
-ACRPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, StandardACRForm; kwargs...)
 
 ""
-abstract type AbstractACTForm <: AbstractPowerFormulation end
-
-""
-abstract type StandardACTForm <: AbstractACTForm end
+abstract type AbstractACTModel <: AbstractPowerModel end
 
 """
-AC power flow formulation (nonconvex) with variables for voltage angle, voltage magnitude squared, and real and imaginary part of voltage crossproducts. A tangens constraint is added to represent meshed networks in an exact manner.
+AC power flow Model (nonconvex) with variables for voltage angle, voltage magnitude squared, and real and imaginary part of voltage crossproducts. A tangens constraint is added to represent meshed networks in an exact manner.
 ```
 @ARTICLE{4349090,
   author={R. A. Jabr},
@@ -127,11 +112,7 @@ AC power flow formulation (nonconvex) with variables for voltage angle, voltage 
 }
 ```
 """
-const ACTPowerModel = GenericPowerModel{StandardACTForm}
-
-"default AC constructor"
-ACTPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, StandardACTForm; kwargs...)
-
+mutable struct ACTPowerModel <: AbstractACTModel @pm_fields end
 
 
 
@@ -141,15 +122,12 @@ ACTPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, Sta
 ##### Linear Approximations #####
 
 
-""
-abstract type AbstractDCPForm <: AbstractActivePowerFormulation end
 
-"active power only formulations where p[(i,j)] = -p[(j,i)]"
-abstract type DCPlosslessForm <: AbstractDCPForm end
+abstract type AbstractDCPModel <: AbstractActivePowerModel end
 
 
 """
-Linearized 'DC' power flow formulation with polar voltage variables.
+Linearized 'DC' power flow Model with polar voltage variables.
 
 ```
 @ARTICLE{4956966,
@@ -166,23 +144,15 @@ Linearized 'DC' power flow formulation with polar voltage variables.
 }
 ```
 """
-const DCPPowerModel = GenericPowerModel{DCPlosslessForm}
-
-"default DC constructor"
-DCPPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, DCPlosslessForm; kwargs...)
+mutable struct DCPPowerModel <: AbstractDCPModel @pm_fields end
 
 
-
-abstract type NFAForm <: DCPlosslessForm end
+abstract type AbstractNFAModel <: AbstractDCPModel end
 
 """
 The an active power only network flow approximation, also known as the transportation model.
 """
-const NFAPowerModel = GenericPowerModel{NFAForm}
-
-"default DC constructor"
-NFAPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, NFAForm; kwargs...)
-
+mutable struct NFAPowerModel <: AbstractNFAModel @pm_fields end
 
 
 
@@ -192,29 +162,22 @@ NFAPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, NFA
 
 
 ""
-abstract type AbstractDCPLLForm <: AbstractDCPForm end
+abstract type AbstractDCPLLModel <: AbstractDCPModel end
 
 ""
-abstract type StandardDCPLLForm <: AbstractDCPLLForm end
-
-""
-const DCPLLPowerModel = GenericPowerModel{StandardDCPLLForm}
-
-"default DC constructor"
-DCPLLPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, StandardDCPLLForm; kwargs...)
-
+mutable struct DCPLLPowerModel <: AbstractDCPLLModel @pm_fields end
 
 
 ""
-abstract type AbstractLPACForm <: AbstractPowerFormulation end
+abstract type AbstractLPACModel <: AbstractPowerModel end
 
-abstract type AbstractLPACCForm <: AbstractLPACForm end
+abstract type AbstractLPACCModel <: AbstractLPACModel end
 
 """
 The LPAC Cold-Start AC Power Flow Approximation.
 
 Note that the LPAC Cold-Start model requires the least amount of information
-but is also the least accurate variant of the LPAC formulations.  If a
+but is also the least accurate variant of the LPAC Models.  If a
 nominal AC operating point is available, the LPAC Warm-Start model will provide
 improved accuracy.
 
@@ -227,7 +190,7 @@ constraints.
 @article{doi:10.1287/ijoc.2014.0594,
   author = {Coffrin, Carleton and Van Hentenryck, Pascal},
   title = {A Linear-Programming Approximation of AC Power Flows},
-  journal = {INFORMS Journal on Computing},
+  journal = {INModels Journal on Computing},
   volume = {26},
   number = {4},
   pages = {718-734},
@@ -237,13 +200,7 @@ constraints.
 }
 ```
 """
-const LPACCPowerModel = GenericPowerModel{AbstractLPACCForm}
-
-"default LPACC constructor"
-LPACCPowerModel(data::Dict{String,<:Any}; kwargs...) =
-    GenericPowerModel(data, AbstractLPACCForm; kwargs...)
-
-
+mutable struct LPACCPowerModel <: AbstractLPACCModel @pm_fields end
 
 
 
@@ -251,16 +208,13 @@ LPACCPowerModel(data::Dict{String,<:Any}; kwargs...) =
 ##### Quadratic Relaxations #####
 
 ""
-abstract type AbstractWRForm <: AbstractPowerFormulation end
+abstract type AbstractWRModel <: AbstractPowerModel end
 
 ""
-abstract type AbstractWRConicForm <: AbstractConicPowerFormulation end
+abstract type AbstractWRConicModel <: AbstractConicModel end
 
 ""
-abstract type SOCWRConicForm <: AbstractWRConicForm end
-
-""
-abstract type SOCWRForm <: AbstractWRForm end
+abstract type AbstractSOCWRModel <: AbstractWRModel end
 
 """
 Second-order cone relaxation of bus injection model of AC OPF.
@@ -281,26 +235,29 @@ The implementation casts this as a convex quadratically constrained problem.
 }
 ```
 """
-const SOCWRPowerModel = GenericPowerModel{SOCWRForm}
+mutable struct SOCWRPowerModel <: AbstractSOCWRModel @pm_fields end
+
+
+""
+abstract type AbstractSOCWRConicModel <: AbstractWRConicModel end
 
 """
 Second-order cone relaxation of bus injection model of AC OPF.
 
 This implementation casts the problem as a convex conic problem.
 """
-const SOCWRConicPowerModel = GenericPowerModel{SOCWRConicForm}
+mutable struct SOCWRConicPowerModel <: AbstractSOCWRConicModel @pm_fields end
 
-"default SOC constructor"
-SOCWRPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, SOCWRForm; kwargs...)
-
-SOCWRConicPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, SOCWRConicForm; kwargs...)
 
 
 ""
-abstract type QCWRForm <: AbstractWRForm end
+abstract type AbstractQCWRModel <: AbstractWRModel end
+
+abstract type AbstractQCRMPowerModel <: AbstractQCWRModel end
 
 """
-"Quadratic-Convex" relaxation of AC OPF
+The "Quadratic-Convex" relaxation of the AC power flow equations.
+Recursive McCormik relaxations are used for the trilinear terms (i.e. QCRM).
 ```
 @Article{Hijazi2017,
   author="Hijazi, Hassan and Coffrin, Carleton and Hentenryck, Pascal Van",
@@ -317,18 +274,26 @@ abstract type QCWRForm <: AbstractWRForm end
 }
 ```
 """
-const QCWRPowerModel = GenericPowerModel{QCWRForm}
-
-"default QC constructor"
-QCWRPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, QCWRForm; kwargs...)
-
+mutable struct QCRMPowerModel <: AbstractQCRMPowerModel @pm_fields end
 
 
 ""
-abstract type QCWRTriForm <: QCWRForm end
+abstract type AbstractQCLSModel <: AbstractQCWRModel end
 
 """
-"Quadratic-Convex" relaxation of AC OPF with convex hull of triple product
+A strengthened version of the "Quadratic-Convex" relaxation of the AC power flow equations.
+An extreme-point encoding of trilinar terms is used along with a constraint to link the
+lambda variables in multiple trilinar terms (i.e. QCLS).
+```
+@misc{1809.04565,
+  author="Kaarthik Sundar and Harsha Nagarajan and Sidhant Misra and Mowen Lu and Carleton Coffrin and Russell Bent",
+  title="Optimization-Based Bound Tightening using a Strengthened QC-Relaxation of the Optimal Power Flow Problem",
+  year="2018",
+  Eprint = "arXiv:1809.04565",
+}
+```
+
+The original model derivation is available in,
 ```
 @Article{Hijazi2017,
   author="Hijazi, Hassan and Coffrin, Carleton and Hentenryck, Pascal Van",
@@ -345,15 +310,12 @@ abstract type QCWRTriForm <: QCWRForm end
 }
 ```
 """
-const QCWRTriPowerModel = GenericPowerModel{QCWRTriForm}
-
-"default QC trilinear model constructor"
-QCWRTriPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, QCWRTriForm; kwargs...)
+mutable struct QCLSPowerModel <: AbstractQCLSModel @pm_fields end
 
 
 
 ""
-abstract type SOCBFForm <: AbstractBFQPForm end
+abstract type AbstractSOCBFModel <: AbstractBFQPModel end
 
 """
 Second-order cone relaxation of branch flow model
@@ -382,20 +344,14 @@ Extended as discussed in:
 }
 ```
 """
-const SOCBFPowerModel = GenericPowerModel{SOCBFForm}
-
-"default SOC constructor"
-SOCBFPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, SOCBFForm; kwargs...)
+mutable struct SOCBFPowerModel <: AbstractSOCBFModel @pm_fields end
 
 
 ""
-abstract type SOCBFConicForm <: AbstractBFConicForm end
+abstract type AbstractSOCBFConicModel <: AbstractBFConicModel end
 
 ""
-const SOCBFConicPowerModel = GenericPowerModel{SOCBFConicForm}
-
-"default SOC constructor"
-SOCBFConicPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, SOCBFConicForm; kwargs...)
+mutable struct SOCBFConicPowerModel <: AbstractSOCBFConicModel @pm_fields end
 
 
 
@@ -405,11 +361,11 @@ SOCBFConicPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(da
 ###### SDP Relaxations ######
 
 ""
-abstract type AbstractWRMForm <: AbstractConicPowerFormulation end
+abstract type AbstractWRMModel <: AbstractConicModel end
 
 
 ""
-abstract type SDPWRMForm <: AbstractWRMForm end
+abstract type AbstractSDPWRMModel <: AbstractWRMModel end
 
 """
 Semi-definite relaxation of AC OPF
@@ -443,13 +399,10 @@ First paper to use "W" variables in the BIM of AC OPF:
 }
 ```
 """
-const SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}
-
-""
-SDPWRMPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, SDPWRMForm; kwargs...)
+mutable struct SDPWRMPowerModel <: AbstractSDPWRMModel @pm_fields end
 
 
-abstract type SparseSDPWRMForm <: SDPWRMForm end
+abstract type AbstractSparseSDPWRMModel <: AbstractSDPWRMModel end
 
 """
 Sparsity-exploiting semidefinite relaxation of AC OPF
@@ -485,12 +438,7 @@ Original application to OPF by:
 }
 ```
 """
-const SparseSDPWRMPowerModel = GenericPowerModel{SparseSDPWRMForm}
-
-""
-SparseSDPWRMPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, SparseSDPWRMForm; kwargs...)
-
-
+mutable struct SparseSDPWRMPowerModel <: AbstractSparseSDPWRMModel @pm_fields end
 
 
 
@@ -507,11 +455,12 @@ SparseSDPWRMPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(
 # type hierarchy can resolve the issue instead.
 #
 
-AbstractWRForms = Union{AbstractACTForm, AbstractWRForm, AbstractWRConicForm, AbstractWRMForm}
-AbstractWForms = Union{AbstractWRForms, AbstractBFForm}
-AbstractPForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm, AbstractLPACForm}
+AbstractWRModels = Union{AbstractACTModel, AbstractWRModel, AbstractWRConicModel, AbstractWRMModel}
+AbstractWModels = Union{AbstractWRModels, AbstractBFModel}
 
-"union of all conic form branches"
-AbstractConicForms = Union{AbstractConicPowerFormulation, AbstractBFConicForm}
+AbstractAPLossLessModels = Union{DCPPowerModel, AbstractNFAModel}
 
+AbstractPolarModels = Union{AbstractACPModel, AbstractACTModel, AbstractLPACModel, AbstractDCPModel}
 
+"union of all conic Model branches"
+AbstractConicModels = Union{AbstractConicModel, AbstractBFConicModel}

@@ -2,7 +2,7 @@ name = "PowerModels"
 uuid = "c36e90e8-916a-50a6-bd94-075b64ef4655"
 authors = ["Carleton Coffrin"]
 repo = "https://github.com/lanl-ansi/PowerModels.jl"
-version = "0.12.5"
+version = "0.13.0"
 
 [deps]
 InfrastructureModels = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
@@ -15,7 +15,7 @@ SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
 Cbc = ">= 0.4"
-InfrastructureModels = "~0.3"
+InfrastructureModels = "~0.3.1"
 Ipopt = ">= 0.4"
 JSON = ">= 0.18"
 JuMP = "~0.19.1, ~0.20"

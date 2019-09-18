@@ -263,7 +263,7 @@ TESTLOG = Memento.getlogger(PowerModels)
 
             for (n, network) in result["solution"]["nw"]
                 @test isapprox(network["storage"]["1"]["ps"], -0.0447406; atol = 1e-3)
-                @test isapprox(network["storage"]["1"]["qs"], -0.0197284; atol = 1e-3)
+                @test isapprox(network["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
 
                 @test isapprox(network["storage"]["2"]["ps"], -0.0595666; atol = 1e-3)
                 @test isapprox(network["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
@@ -288,7 +288,9 @@ TESTLOG = Memento.getlogger(PowerModels)
         end
 
         @testset "storage constraint warning" begin
-            delete!(mn_data, "time_elapsed")
+            for (n,network) in mn_data["nw"]
+                delete!(network, "time_elapsed")
+            end
             Memento.setlevel!(TESTLOG, "warn")
             @test_warn(TESTLOG, "network data should specify time_elapsed, using 1.0 as a default", PowerModels._run_mn_strg_opf(mn_data, PowerModels.ACPPowerModel, ipopt_solver))
             Memento.setlevel!(TESTLOG, "error")
