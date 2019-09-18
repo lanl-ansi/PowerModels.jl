@@ -5,13 +5,13 @@ In addition to the standard transmission network components (e.g. bus, load, gen
 
 ## Switch Data Model
 
-When parsing a matpower file with storage information, 
+When parsing a matpower file with switch information, 
 ```julia
 data = PowerModels.parse_file("matpower/case5_sw.m")
 ```
-the switch information can be retrieved via the `"switch"` keyword in the `data` dictionary. They will be correspondingly rendered when `PowerModels.print_summary(data)` or `PowerModels.component_table(data, "storage", <columns>)` is called.
+the switch information can be retrieved via the `"switch"` keyword in the `data` dictionary. They will be correspondingly rendered when `PowerModels.print_summary(data)` or `PowerModels.component_table(data, "switch", <columns>)` is called.
 
-The list of columns for the generic storage model is roughly as follows,
+The list of columns for the generic switch model is roughly as follows,
 ```json
 {
   "index":<int>,
@@ -42,7 +42,7 @@ Note that this Matpower-based format includes the optional `thermal_rating` para
 
 ## Switch Mathematical Model
 
-Switch component have two discrete states open (i.e. 0) and closed (i.e. 1).  When a switch is in the open state no power can flow between the connected buses through the switch.  When the switch is in the closed state power can flow freely between the connected buses (up to the provide flow limits) and the voltage at the two connecting buses should be the same.  The storage component's mathematical model is given by,
+Switch component have two discrete states open (i.e. 0) and closed (i.e. 1).  When a switch is in the open state no power can flow between the connected buses through the switch.  When the switch is in the closed state power can flow freely between the connected buses (up to the provide flow limits) and the voltage at the two connecting buses should be the same.  The switch component's mathematical model is given by,
 
 ```math
 \begin{align}
