@@ -702,12 +702,21 @@ function variable_reactive_branch_flow_ne(pm::AbstractPowerModel; nw::Int=pm.cnw
 end
 
 "variable: `0 <= z_branch[l] <= 1` for `l` in `branch`es"
-function variable_branch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    var(pm, nw)[:z_branch] = JuMP.@variable(pm.model,
-        [l in ids(pm, nw, :branch)], base_name="$(nw)_z_branch",
-        binary = true,
-        start = comp_start_value(ref(pm, nw, :branch, l), "z_branch_start", 1, 1.0)
-    )
+function variable_branch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, relax=false)
+    if relax == false
+        var(pm, nw)[:z_branch] = JuMP.@variable(pm.model,
+            [l in ids(pm, nw, :branch)], base_name="$(nw)_z_branch",
+            binary = true,
+            start = comp_start_value(ref(pm, nw, :branch, l), "z_branch_start", 1, 1.0)
+        )
+    else
+        var(pm, nw)[:z_branch] = JuMP.@variable(pm.model,
+            [l in ids(pm, nw, :branch)], base_name="$(nw)_z_branch",
+            lower_bound = 0.0,
+            upper_bound = 1.0,
+            start = comp_start_value(ref(pm, nw, :branch, l), "z_branch_start", 1, 1.0)
+        )
+    end
 end
 
 "variable: `0 <= branch_ne[l] <= 1` for `l` in `branch`es"
