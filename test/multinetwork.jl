@@ -256,32 +256,72 @@ TESTLOG = Memento.getlogger(PowerModels)
         mn_data = build_mn_data("../test/data/matpower/case5_strg.m", replicates=4)
 
         @testset "test ac polar opf" begin
-            result = PowerModels._run_mn_strg_opf(mn_data, PowerModels.ACPPowerModel, ipopt_solver)
+            result = PowerModels.run_mn_strg_opf(mn_data, PowerModels.ACPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result["objective"], 70434.5; atol = 1e0)
+            @test isapprox(result["objective"], 70435.5; atol = 1e0)
 
-            for (n, network) in result["solution"]["nw"]
-                @test isapprox(network["storage"]["1"]["ps"], -0.0447406; atol = 1e-3)
-                @test isapprox(network["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
 
-                @test isapprox(network["storage"]["2"]["ps"], -0.0595666; atol = 1e-3)
-                @test isapprox(network["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
-            end
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"], -0.0447822; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["ps"], -0.079233; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"], -0.0447822; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["ps"], -0.079233; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"], -0.0447824; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["ps"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"], -0.0447822; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"], -0.079233; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+        end
+
+        @testset "test soc opf" begin
+            result = PowerModels.run_mn_strg_opf(mn_data, PowerModels.SOCWRPowerModel, juniper_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 58853.5; atol = 1e0)
+
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"], -0.0597052; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["ps"], -0.0596959; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"], -0.0597053; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["ps"], -0.0596960; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"], -0.0597056; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["ps"], -0.0596961; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"], -0.0596964; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
         end
 
         @testset "test dc polar opf" begin
-   
             for (n, net) in mn_data["nw"]
                 for (i, gen) in net["gen"]
                     gen["cost"]= prepend!(gen["cost"], 0.01)
                 end
             end
-            
-            result = PowerModels._run_mn_strg_opf(mn_data, PowerModels.DCPPowerModel, ipopt_solver)
+
+            result = PowerModels.run_mn_strg_opf(mn_data, PowerModels.DCPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result["objective"], 69703.07; atol = 1e0)
+            @test isapprox(result["objective"], 69703.10; atol = 1e0)
 
             @test isapprox(sum(network["storage"]["1"]["ps"] for (n, network) in result["solution"]["nw"]), -0.180000; atol=1e-3)
             @test isapprox(sum(network["storage"]["2"]["ps"] for (n, network) in result["solution"]["nw"]), -0.240000; atol=1e-3)
@@ -292,7 +332,7 @@ TESTLOG = Memento.getlogger(PowerModels)
                 delete!(network, "time_elapsed")
             end
             Memento.setlevel!(TESTLOG, "warn")
-            @test_warn(TESTLOG, "network data should specify time_elapsed, using 1.0 as a default", PowerModels._run_mn_strg_opf(mn_data, PowerModels.ACPPowerModel, ipopt_solver))
+            @test_warn(TESTLOG, "network data should specify time_elapsed, using 1.0 as a default", PowerModels.run_mn_strg_opf(mn_data, PowerModels.ACPPowerModel, juniper_solver))
             Memento.setlevel!(TESTLOG, "error")
         end
     end
