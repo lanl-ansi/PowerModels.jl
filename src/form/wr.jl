@@ -329,6 +329,54 @@ function variable_voltage_product_ne(pm::AbstractWRModel; nw::Int=pm.cnw, cnd::I
 end
 
 
+"do nothing by default but some formulations require this"
+function variable_current_storage(pm::AbstractWRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    buses = ref(pm, nw, :bus)
+    ub = Dict()
+    for (i, storage) in ref(pm, nw, :storage)
+        if haskey(storage, "thermal_rating")
+            bus = buses[storage["storage_bus"]]
+            ub[i] = (storage["thermal_rating"][cnd]/bus["vmin"][cnd])^2
+        else
+            ub[i] = Inf
+        end
+    end
+
+    var(pm, nw, cnd)[:ccms] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_$(cnd)_ccms",
+        lower_bound = 0.0,
+        upper_bound = ub[i],
+        start = comp_start_value(ref(pm, nw, :storage, i), "ccms_start", cnd)
+    )
+end
+
+""
+function constraint_storage_loss(pm::AbstractWRModel, n::Int, i, bus, conductors, r, x, p_loss, q_loss)
+    w = Dict(c => var(pm, n, c, :w, bus) for c in conductors)
+    ccms = Dict(c => var(pm, n, c, :ccms, i) for c in conductors)
+    ps = Dict(c => var(pm, n, c, :ps, i) for c in conductors)
+    qs = Dict(c => var(pm, n, c, :qs, i) for c in conductors)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+
+    for c in conductors
+        JuMP.@constraint(pm.model, ps[c]^2 + qs[c]^2 <= w[c]*ccms[c])
+    end
+
+    JuMP.@constraint(pm.model, 
+        sum(ps[c] for c in conductors) + (sd - sc)
+        ==
+        p_loss + sum(r[c]*ccms[c] for c in conductors)
+    )
+
+    JuMP.@constraint(pm.model, 
+        sum(qs[c] for c in conductors)
+        ==
+        q_loss + sum(x[c]*ccms[c] for c in conductors)
+    )
+end
+
+
 
 ###### QC Relaxations ######
 

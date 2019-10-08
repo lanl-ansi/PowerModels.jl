@@ -538,10 +538,23 @@ end
 function variable_storage(pm::AbstractPowerModel; kwargs...)
     variable_active_storage(pm; kwargs...)
     variable_reactive_storage(pm; kwargs...)
+    variable_current_storage(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
     variable_storage_discharge(pm; kwargs...)
 end
+
+"variables for modeling storage units, includes grid injection and internal variables, with mixed int variables for charge/discharge"
+function variable_storage_mi(pm::AbstractPowerModel; kwargs...)
+    variable_active_storage(pm; kwargs...)
+    variable_reactive_storage(pm; kwargs...)
+    variable_current_storage(pm; kwargs...)
+    variable_storage_energy(pm; kwargs...)
+    variable_storage_charge(pm; kwargs...)
+    variable_storage_discharge(pm; kwargs...)
+    variable_storage_complementary_indicator(pm; kwargs...)
+end
+
 
 ""
 function variable_active_storage(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
@@ -566,6 +579,11 @@ function variable_reactive_storage(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::
         start = comp_start_value(ref(pm, nw, :storage, i), "qs_start", cnd)
     )
 end
+
+"do nothing by default but some formulations require this"
+function variable_current_storage(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+end
+
 
 ""
 function variable_storage_energy(pm::AbstractPowerModel; nw::Int=pm.cnw)
@@ -595,16 +613,6 @@ function variable_storage_discharge(pm::AbstractPowerModel; nw::Int=pm.cnw)
         upper_bound = ref(pm, nw, :storage, i, "discharge_rating"),
         start = comp_start_value(ref(pm, nw, :storage, i), "sd_start", 1)
     )
-end
-
-"variables for modeling storage units, includes grid injection and internal variables, with mixed int variables for charge/discharge"
-function variable_storage_mi(pm::AbstractPowerModel; kwargs...)
-    variable_active_storage(pm; kwargs...)
-    variable_reactive_storage(pm; kwargs...)
-    variable_storage_energy(pm; kwargs...)
-    variable_storage_charge(pm; kwargs...)
-    variable_storage_discharge(pm; kwargs...)
-    variable_storage_complementary_indicator(pm; kwargs...)
 end
 
 ""

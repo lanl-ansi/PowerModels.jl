@@ -351,3 +351,36 @@ function constraint_loss_lb(pm::AbstractACPModel, n::Int, c::Int, f_bus, t_bus, 
     JuMP.@constraint(m, p_fr + p_to >= 0)
     JuMP.@constraint(m, q_fr + q_to >= -c/2*(vm_fr^2/tr^2 + vm_to^2))
 end
+
+
+""
+function constraint_storage_current_limit(pm::AbstractACPModel, n::Int, c::Int, i, bus, rating)
+    vm = var(pm, n, c, :vm, bus)
+    ps = var(pm, n, c, :ps, i)
+    qs = var(pm, n, c, :qs, i)
+
+    JuMP.@constraint(pm.model, ps^2 + qs^2 <= rating^2*vm^2)
+end
+
+
+""
+function constraint_storage_loss(pm::AbstractACPModel, n::Int, i, bus, conductors, r, x, p_loss, q_loss)
+    vm = Dict(c => var(pm, n, c, :vm, bus) for c in conductors)
+    ps = Dict(c => var(pm, n, c, :ps, i) for c in conductors)
+    qs = Dict(c => var(pm, n, c, :qs, i) for c in conductors)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+
+    JuMP.@NLconstraint(pm.model, 
+        sum(ps[c] for c in conductors) + (sd - sc)
+        ==
+        p_loss + sum(r[c]*(ps[c]^2 + qs[c]^2)/vm[c]^2 for c in conductors)
+    )
+
+    JuMP.@NLconstraint(pm.model, 
+        sum(qs[c] for c in conductors)
+        ==
+        q_loss + sum(x[c]*(ps[c]^2 + qs[c]^2)/vm[c]^2 for c in conductors)
+    )
+end
+

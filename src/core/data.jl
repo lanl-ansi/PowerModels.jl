@@ -1587,9 +1587,6 @@ function check_storage_parameters(data::Dict{String,<:Any})
             if haskey(strg, "current_rating") && strg["current_rating"][c] < 0.0
                 Memento.error(_LOGGER, "storage unit $(strg["index"]) has a non-positive current rating $(strg["thermal_rating"][c])")
             end
-            if !isapprox(strg["x"][c], 0.0, atol=1e-6, rtol=1e-6)
-                Memento.warn(_LOGGER, "storage unit $(strg["index"]) has a non-zero reactance $(strg["x"][c]), which is currently ignored")
-            end
         end
 
         if strg["charge_efficiency"] < 0.0
