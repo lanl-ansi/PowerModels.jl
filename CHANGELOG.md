@@ -6,6 +6,7 @@ PowerModels.jl Change Log
 
 ### v0.13.0
 - Added SOC formulation of the storage model
+- Added support for optional line flow constraints (#576)
 - Simplified PowerModel types (#192) (breaking)
 - Improved multi-conductor support in the storage model (#572) (breaking)
 - Renamed model_constructor to model_type (#192) (breaking)
