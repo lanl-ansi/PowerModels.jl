@@ -52,6 +52,40 @@ function constraint_ohms_yt_from_ne(pm::AbstractDCPModel, n::Int, c::Int, i, f_b
     JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
 end
 
+
+function constraint_ohms_yt_from_ne(pm::AbstractDCMPPModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
+    p_fr  = var(pm, n, c, :p_ne, f_idx)
+    va_fr = var(pm, n, c,   :va, f_bus)
+    va_to = var(pm, n, c,   :va, t_bus)
+    z = var(pm, n, :branch_ne, i)
+
+    # get b only based on br_x (b = -1 / br_x)
+    r = pinv(sqrt(g^2 + b^2))
+    theta = -atan(b / g)
+    b = pinv(r * sin(theta))
+    # divide by tap 
+    b /= tm
+
+    JuMP.@constraint(pm.model, p_fr <= b*(va_fr - va_to + vad_max*(1-z)) )
+    JuMP.@constraint(pm.model, p_fr >= b*(va_fr - va_to + vad_min*(1-z)) )
+end
+
+function constraint_ohms_yt_from(pm::AbstractDCMPPModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    p_fr  = var(pm, n, c,  :p, f_idx)
+    va_fr = var(pm, n, c, :va, f_bus)
+    va_to = var(pm, n, c, :va, t_bus)
+
+    # get b only based on br_x (b = -1 / br_x)
+    r = pinv(sqrt(g^2 + b^2))
+    theta = -atan(b / g)
+    b = pinv(r * sin(theta))
+    # divide by tap 
+    b /= tm
+    
+    JuMP.@constraint(pm.model, p_fr == b*(va_fr - va_to))
+    # omit reactive constraint
+end
+
 ""
 function constraint_switch_state_closed(pm::AbstractDCPModel, n::Int, c::Int, f_bus, t_bus)
     va_fr = var(pm, n, c, :va, f_bus)

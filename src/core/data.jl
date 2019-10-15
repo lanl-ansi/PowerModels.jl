@@ -718,7 +718,7 @@ end
 
 
 
-"assumes a vaild ac solution is included in the data and computes the branch flow values"
+"assumes a valid ac solution is included in the data and computes the branch flow values"
 function calc_branch_flow_ac(data::Dict{String,<:Any})
     @assert("per_unit" in keys(data) && data["per_unit"])
     @assert(!haskey(data, "conductors"))

@@ -3,7 +3,7 @@
     ACPPowerModel, ACRPowerModel, ACTPowerModel
 
     # linear approximations
-    DCPPowerModel, NFAPowerModel
+    DCPPowerModel, DCMPPowerModel, NFAPowerModel
 
     # quadratic approximations
     DCPLLPowerModel, LPACCPowerModel
@@ -129,11 +129,11 @@ abstract type AbstractDCPModel <: AbstractActivePowerModel end
 """
 Linearized 'DC' power flow Model with polar voltage variables.
 
-The this model is a basic linear active-power-only approximation, which uses branch susceptance values 
+This model is a basic linear active-power-only approximation, which uses branch susceptance values
 `br_b = -br_x / (br_x^2 + br_x^2)` for determining the network phase angles.  Furthermore, transformer
 parameters such as tap ratios and phase shifts are not considered as part of this model.
 
-It is important to note that it is also common for active-power-only approximations to use `1/br_x` for 
+It is important to note that it is also common for active-power-only approximations to use `1/br_x` for
 determining the network phase angles, instead of the `br_b` value that is used here.  Small discrepancies
 in solutions should be expected when comparing active-power-only approximations across multiple tools.
 
@@ -153,6 +153,21 @@ in solutions should be expected when comparing active-power-only approximations 
 ```
 """
 mutable struct DCPPowerModel <: AbstractDCPModel @pm_fields end
+
+
+abstract type AbstractDCMPPModel <: AbstractDCPModel end
+
+"""
+Linearized 'DC' power flow model with polar voltage variables. 
+
+Similar to the DCPPowerModel with the following changes:
+
+- It uses branch susceptance values `br_b = -1 / br_x` for determining the network phase angles.
+- Transformer parameters such as tap ratios and phase shifts are considered.
+
+The results should be equal to the results of matpower calculations.
+"""
+mutable struct DCMPPowerModel <: AbstractDCMPPModel @pm_fields end
 
 
 abstract type AbstractNFAModel <: AbstractDCPModel end
@@ -459,14 +474,14 @@ mutable struct SparseSDPWRMPowerModel <: AbstractSparseSDPWRMModel @pm_fields en
 # https://docs.julialang.org/en/v1/manual/style-guide/#Avoid-strange-type-Unions-1
 # and should be used with discretion.
 #
-# If you are about to add a union type, first double check if refactoring the 
+# If you are about to add a union type, first double check if refactoring the
 # type hierarchy can resolve the issue instead.
 #
 
 AbstractWRModels = Union{AbstractACTModel, AbstractWRModel, AbstractWRConicModel, AbstractWRMModel}
 AbstractWModels = Union{AbstractWRModels, AbstractBFModel}
 
-AbstractAPLossLessModels = Union{DCPPowerModel, AbstractNFAModel}
+AbstractAPLossLessModels = Union{DCPPowerModel, DCMPPowerModel, AbstractNFAModel}
 
 AbstractPolarModels = Union{AbstractACPModel, AbstractACTModel, AbstractLPACModel, AbstractDCPModel}
 
