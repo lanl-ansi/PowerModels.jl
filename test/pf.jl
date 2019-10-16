@@ -170,9 +170,9 @@ end
         @test isapprox(result["solution"]["gen"]["1"]["pg"], 0.025; atol = 1e-3)
         
         @test isapprox(result["solution"]["bus"]["1"]["va"],  0.00000; atol = 1e-7)
-        @test isapprox(result["solution"]["bus"]["2"]["va"],  -0.0040066; atol = 1e-7)
-        @test isapprox(result["solution"]["bus"]["3"]["va"], -0.01049098; atol = 1e-7)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], -0.0143816; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["2"]["va"],  -0.52760538; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["3"]["va"], -0.53408975; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["4"]["va"], -0.53798038; atol = 1e-7)
         
     end
     @testset "4-bus pandapower case with DCP model" begin
