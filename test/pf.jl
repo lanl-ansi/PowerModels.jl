@@ -163,29 +163,16 @@ end
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
-    @testset "4-bus pandapower case with matpower DCMP model" begin
-        result = run_pf("../test/data/matpower/pp_simple4.m", DCMPPowerModel, ipopt_solver)
+    @testset "5-bus case with matpower DCMP model" begin
+        result = run_pf("../test/data/matpower/case5.m", DCMPPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["solution"]["gen"]["1"]["pg"], 0.025; atol = 1e-3)
+  
+        @test isapprox(result["solution"]["bus"]["1"]["va"],  0.0621920; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["2"]["va"],  0.0002623; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["3"]["va"], 0.0088601; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-7)
         
-        @test isapprox(result["solution"]["bus"]["1"]["va"],  0.00000; atol = 1e-7)
-        @test isapprox(result["solution"]["bus"]["2"]["va"],  -0.52760538; atol = 1e-7)
-        @test isapprox(result["solution"]["bus"]["3"]["va"], -0.53408975; atol = 1e-7)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], -0.53798038; atol = 1e-7)
-        
-    end
-    @testset "4-bus pandapower case with DCP model" begin
-        result = run_pf("../test/data/matpower/pp_simple4.m", DCPPowerModel, ipopt_solver)
-
-        @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["solution"]["gen"]["1"]["pg"], 0.025; atol = 1e-3)
-        
-        @test isapprox(result["solution"]["bus"]["1"]["va"],  0.00000; atol = 1e-7)
-        @test isapprox(result["solution"]["bus"]["2"]["va"],  -0.0041931393; atol = 1e-7)
-        @test isapprox(result["solution"]["bus"]["3"]["va"], -0.3986330866; atol = 1e-7)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], -0.6352970550; atol = 1e-7)
-    
     end
 end
 

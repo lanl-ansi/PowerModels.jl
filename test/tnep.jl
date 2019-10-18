@@ -97,19 +97,12 @@ end
         @test isapprox(result["objective"], 1; atol = 1e-2)
     end
     
-    @testset "4-bus pandapower case with matpower DCMP model and TNEP" begin
-    result = run_tnep("../test/data/matpower/pp_simple4_tnep.m", DCMPPowerModel, juniper_solver)
+    @testset "5-bus case with matpower DCMP model and TNEP" begin
+        result = run_tnep("../test/data/matpower/case5_tnep.m", DCMPPowerModel, juniper_solver)
 
-    @test result["termination_status"] == LOCALLY_SOLVED
-    @test isapprox(result["solution"]["gen"]["1"]["pg"], 0.025; atol = 1e-3)
-    
-    @test isapprox(result["solution"]["bus"]["1"]["va"],  0.00000; atol = 1e-5)
-    @test isapprox(result["solution"]["bus"]["2"]["va"],  -0.5276053779; atol = 1e-5)
-    @test isapprox(result["solution"]["bus"]["3"]["va"], -0.5308475654; atol = 1e-5)
-    @test isapprox(result["solution"]["bus"]["4"]["va"], -0.5347366893; atol = 1e-5)
-
-    @test isapprox(result["solution"]["ne_branch"]["1"]["built"], 1.0; atol = 1e-5)
-    @test isapprox(result["solution"]["ne_branch"]["2"]["built"], 0.0; atol = 1e-5)
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["solution"]["ne_branch"]["1"]["built"], 1.0; atol = 1e-5)
+        @test isapprox(result["solution"]["ne_branch"]["2"]["built"], 0.0; atol = 1e-5)
     
     end
 end
