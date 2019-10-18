@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Added DCMPPowerModel for replication of Matpower's DC model (#612)
 
 ### v0.13.0
 - Added SOC formulation of the storage model
