@@ -84,15 +84,13 @@ end
 ### General Assumptions
 
 - if the branch status is `0` in the input, it is out of service and forced to `0` in OTS
-- the network will be maintained as one connected component (i.e. at least `n-1` edges)
 
 ### Variables
 
 ```julia
 variable_branch_indicator(pm)
 variable_voltage_on_off(pm)
-variable_active_generation(pm)
-variable_reactive_generation(pm)
+variable_generation(pm)
 variable_branch_flow(pm)
 variable_dcline_flow(pm)
 ```
