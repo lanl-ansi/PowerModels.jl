@@ -533,26 +533,6 @@ end
 
 
 """
-    add_section_data!(pti_data, section_data, section)
-
-Internal function. Adds `section_data::Dict`, which contains all parsed
-elements of a PTI file section given by `section`, into the parent
-`pti_data::Dict`
-"""
-function _add_section_data!(pti_data::Dict, section_data::Dict, section::AbstractString)
-    try
-        pti_data[section] = append!(pti_data[section], [deepcopy(section_data)])
-    catch message
-        if isa(message, KeyError)
-            pti_data[section] = [deepcopy(section_data)]
-        else
-            Memento.error(_LOGGER, sprint(showerror, message))
-        end
-    end
-end
-
-
-"""
     _get_line_elements(line)
 
 Internal function. Uses regular expressions to extract all separate data
@@ -821,7 +801,12 @@ function _parse_pti_data(data_io::IO)
         if subsection != ""
             Memento.debug(_LOGGER, "appending data")
         end
-        _add_section_data!(pti_data, section_data, section)
+
+        if haskey(pti_data, section)
+            push!(pti_data[section], section_data)
+        else
+            pti_data[section] = [section_data]
+        end
     end
 
     _populate_defaults!(pti_data)
