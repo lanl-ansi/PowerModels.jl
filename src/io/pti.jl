@@ -226,204 +226,254 @@ const _pti_dtypes = Dict{String,Array}(
 )
 
 
-"""
-    _get_component_property(section, ret, search_field, search_value)
 
-Internal function. Finds a component in `section` where `search_field` ==
-`search_value` and returns `ret` from that component.
-"""
-function _get_component_property(section, ret, search_field, search_value)
-    for component in section
-        if component[search_field] == search_value
-            return component[ret]
+const _default_case_identification = Dict("IC" => 0, "SBASE" => 100.0,
+    "REV" => 33, "XFRRAT" => 0, "NXFRAT" => 0, "BASFRQ" => 60)
+
+const _default_bus = Dict("BASKV" => 0.0, "IDE" => 1, "AREA" => 1, "ZONE" => 1,
+    "OWNER" => 1, "VM" => 1.0, "VA" => 0.0, "NVHI" => 1.1, "NVLO" => 0.9,
+    "EVHI" => 1.1, "EVLO" => 0.9, "NAME" => "            ")
+
+const _default_load = Dict("ID" => 1, "STATUS" => 1, "PL" => 0.0, "QL" => 0.0,
+    "IP" => 0.0, "IQ" => 0.0, "YP" => 0.0, "YQ" => 0.0, "SCALE" => 1,
+    "INTRPT" => 0, "AREA" => nothing, "ZONE" => nothing, "OWNER" => nothing)
+
+const _default_fixed_shunt = Dict("ID" => 1, "STATUS" => 1, "GL" => 0.0, "BL" => 0.0)
+
+const _default_generator = Dict("ID" => 1, "PG" => 0.0, "QG" => 0.0, "QT" => 9999.0,
+    "QB" => -9999.0, "VS" => 1.0, "IREG" => 0, "MBASE" => nothing, "ZR" => 0.0,
+    "ZX" => 1.0, "RT" => 0.0, "XT" => 0.0, "GTAP" => 1.0, "STAT" => 1,
+    "RMPCT" => 100.0, "PT" => 9999.0, "PB" => -9999.0, "O1" => nothing,
+    "O2" => 0, "O3" => 0, "O4" => 0, "F1" => 1.0,"F2" => 1.0, "F3" => 1.0,
+    "F4" => 1.0, "WMOD" => 0, "WPF" => 1.0)
+
+const _default_branch = Dict("CKT" => 1, "B" => 0.0, "RATEA" => 0.0,
+    "RATEB" => 0.0, "RATEC" => 0.0, "GI" => 0.0, "BI" => 0.0, "GJ" => 0.0,
+    "BJ" => 0.0, "ST" => 1, "MET" => 1, "LEN" => 0.0, "O1" => nothing,
+    "O2" => 0, "O3" => 0, "O4" => 0, "F1" => 1.0, "F2" => 1.0, "F3" => 1.0,
+    "F4" => 1.0)
+
+const _default_transformer = Dict("K" => 0, "CKT" => 1, "CW" => 1, "CZ" => 1,
+    "CM" => 1, "MAG1" => 0.0, "MAG2" => 0.0, "NMETR" => 2,
+    "NAME" => "            ", "STAT" => 1, "O1" => nothing, "O2" => 0,
+    "O3" => 0, "O4" => 0, "F1" => 1.0, "F2" => 1.0, "F3" => 1.0, "F4" => 1.0,
+    "VECGRP" => "            ", "R1-2" => 0.0, "SBASE1-2" => nothing,
+    "R2-3" => 0.0, "SBASE2-3" => nothing, "R3-1" => 0.0, "SBASE3-1" => nothing,
+    "VMSTAR" => 1.0, "ANSTAR" => 0.0,
+    "WINDV1" => nothing,
+    "NOMV1" => 0.0, "ANG1" => 0.0, "RATA1" => 0.0,
+    "RATB1" => 0.0, "RATC1" => 0.0, "COD1" => 0,
+    "CONT1" => 0, "RMA1" => 1.1, "RMI1" => 0.9,
+    "VMA1" => 1.1, "VMI1" => 0.9, "NTP1" => 33,
+    "TAB1" => 0, "CR1" => 0.0, "CX1" => 0.0, "CNXA1" => 0.0,
+    "WINDV2" => nothing,
+    "NOMV2" => 0.0, "ANG2" => 0.0, "RATA2" => 0.0,
+    "RATB2" => 0.0, "RATC2" => 0.0, "COD2" => 0,
+    "CONT2" => 0, "RMA2" => 1.1, "RMI2" => 0.9,
+    "VMA2" => 1.1, "VMI2" => 0.9, "NTP2" => 33,
+    "TAB2" => 0, "CR2" => 0.0, "CX2" => 0.0,
+    "CNXA2" => 0.0,
+    "WINDV3" => nothing,
+    "NOMV3" => 0.0, "ANG3" => 0.0, "RATA3" => 0.0,
+    "RATB3" => 0.0, "RATC3" => 0.0, "COD3" => 0,
+    "CONT3" => 0, "RMA3" => 1.1, "RMI3" => 0.9,
+    "VMA3" => 1.1, "VMI3" => 0.9, "NTP3" => 33,
+    "TAB3" => 0, "CR3" => 0.0, "CX3" => 0.0,
+    "CNXA3" => 0.0)
+
+const _default_area_interchange = Dict("ISW" => 0, "PDES" => 0.0,
+    "PTOL" => 10.0, "ARNAME" => "            ")
+
+const _default_two_terminal_dc = Dict("MDC" => 0, "VCMOD" => 0.0,
+    "RCOMP" => 0.0, "DELTI" => 0.0, "METER" => "I", "DCVMIN" => 0.0,
+    "CCCITMX" => 20, "CCCACC" => 1.0, "TRR" => 1.0, "TAPR" => 1.0,
+    "TMXR" => 1.5, "TMNR" => 0.51, "STPR" => 0.00625, "ICR" => 0, "IFR" => 0,
+    "ITR" => 0, "IDR" => "1", "XCAPR" => 0.0, "TRI" => 1.0, "TAPI" => 1.0,
+    "TMXI" => 1.5, "TMNI" => 0.51, "STPI" => 0.00625, "ICI" => 0, "IFI" => 0,
+    "ITI" => 0, "IDI" => "1", "XCAPI" => 0.0)
+
+const _default_vsc_dc = Dict("MDC" => 1, "O1" => nothing, "O2" => 0, "O3" => 0,
+    "O4" => 0, "F1" => 1.0, "F2" => 1.0, "F3" => 1.0, "F4" => 1.0,
+    "CONVERTER BUSES" => Dict("MODE" => 1, "ACSET" => 1.0, "ALOSS" => 1.0,
+        "BLOSS" => 0.0, "MINLOSS" => 0.0, "SMAX" => 0.0, "IMAX" => 0.0,
+        "PWF" => 1.0, "MAXQ" => 9999.0, "MINQ" => -9999.0, "REMOT" => 0,
+        "RMPCT" => 100.0)
+    )
+
+const _default_impedance_correction = Dict("T1" => 0.0, "T2" => 0.0, "T3" => 0.0,
+    "T4" => 0.0, "T5" => 0.0, "T6" => 0.0, "T7" => 0.0, "T8" => 0.0, "T9" => 0.0,
+    "T10" => 0.0, "T11" => 0.0, "F1" => 0.0, "F2" => 0.0, "F3" => 0.0,
+    "F4" => 0.0, "F5" => 0.0, "F6" => 0.0, "F7" => 0.0, "F8" => 0.0,
+    "F9" => 0.0, "F10" => 0.0, "F11" => 0.0)
+
+const _default_multi_term_dc = Dict("MDC" => 0, "VCMOD" => 0.0, "VCONVN" => 0,
+    "CONV" => Dict("TR" => 1.0, "TAP" => 1.0, "TPMX" => 1.5, "TPMN" => 0.51,
+        "TSTP" => 0.00625,"DCPF" => 1, "MARG" => 0.0, "CNVCOD" => 1),
+    "DCBS" => Dict("IB" => 0.0, "AREA" => 1, "ZONE" => 1,
+        "DCNAME" => "            ", "IDC2" => 0, "RGRND" => 0.0, "OWNER" => 1),
+    "DCLN" => Dict("DCCKT" => 1, "MET" => 1, "LDC" => 0.0)
+    )
+
+const _default_multi_section = Dict("ID" => "&1", "MET" => 1)
+
+const _default_zone = Dict("ZONAME" => "            ")
+
+const _default_interarea = Dict("TRID" => 1, "PTRAN" => 0.0)
+
+const _default_owner = Dict("OWNAME" => "            ")
+
+const _default_facts = Dict("J" => 0, "MODE" => 1, "PDES" => 0.0, "QDES" => 0.0,
+    "VSET" => 1.0, "SHMX" => 9999.0, "TRMX" => 9999.0, "VTMN" => 0.9,
+    "VTMX" => 1.1, "VSMX" => 1.0, "IMX" => 0.0, "LINX" => 0.05,
+    "RMPCT" => 100.0, "OWNER" => 1, "SET1" => 0.0, "SET2" => 0.0, "VSREF" => 0,
+    "REMOT" => 0, "MNAME" => "")
+
+const _default_switched_shunt = Dict("MODSW" => 1, "ADJM" => 0, "STAT" => 1,
+    "VSWHI" => 1.0, "VSWLO" => 1.0, "SWREM" => 0, "RMPCT" => 100.0,
+    "RMIDNT" => "", "BINIT" => 0.0,
+    "N1" => 0.0, "N2" => 0.0, "N3" => 0.0, "N4" => 0.0, "N5" => 0.0,
+    "N6" => 0.0, "N7" => 0.0, "N8" => 0.0,
+    "B1" => 0.0, "B2" => 0.0, "B3" => 0.0, "B4" => 0.0, "B5" => 0.0,
+    "B6" => 0.0, "B7" => 0.0, "B8" => 0.0)
+
+const _default_gne_device = Dict("NTERM" => 1, "NREAL" => 0, "NINTG" => 0,
+    "NCHAR" => 0, "STATUS" => 1, "OWNER" => nothing, "NMETR" => nothing,
+    "REAL" => 0, "INTG" => nothing,
+    "CHAR" => "1")
+
+const _default_induction_machine = Dict("ID" => 1, "STAT" => 1, "SCODE" => 1,
+    "DCODE" => 2, "AREA" => nothing, "ZONE" => nothing, "OWNER" => nothing,
+    "TCODE" => 1, "BCODE" => 1, "MBASE" => nothing, "RATEKV" => 0.0,
+    "PCODE" => 1, "H" => 1.0, "A" => 1.0, "B" => 1.0, "D" => 1.0, "E" => 1.0,
+    "RA" => 0.0, "XA" => 0.0, "XM" => 2.5, "R1" => 999.0, "X1" => 999.0,
+    "R2" => 999.0, "X2" => 999.0, "X3" => 0.0, "E1" => 1.0, "SE1" => 0.0,
+    "E2" => 1.2, "SE2" => 0.0, "IA1" => 0.0, "IA2" => 0.0, "XAMULT" => 1)
+
+const _pti_defaults = Dict("BUS" => _default_bus,
+    "LOAD" => _default_load,
+    "FIXED SHUNT" => _default_fixed_shunt,
+    "GENERATOR" => _default_generator,
+    "BRANCH" => _default_branch,
+    "TRANSFORMER" => _default_transformer,
+    "AREA INTERCHANGE" => _default_area_interchange,
+    "TWO-TERMINAL DC" => _default_two_terminal_dc,
+    "VOLTAGE SOURCE CONVERTER" => _default_vsc_dc,
+    "IMPEDANCE CORRECTION" => _default_impedance_correction,
+    "MULTI-TERMINAL DC" => _default_multi_term_dc,
+    "MULTI-SECTION LINE" => _default_multi_section,
+    "ZONE" => _default_zone,
+    "INTER-AREA TRANSFER" => _default_interarea,
+    "OWNER" => _default_owner,
+    "FACTS CONTROL DEVICE" => _default_facts,
+    "SWITCHED SHUNT" => _default_switched_shunt,
+    "CASE IDENTIFICATION" => _default_case_identification,
+    "GNE DEVICE" => _default_gne_device,
+    "INDUCTION MACHINE" => _default_induction_machine
+    )
+
+
+
+function _correct_nothing_values!(data::Dict)
+    if !haskey(data, "BUS")
+        return
+    end
+
+    sbase = data["CASE IDENTIFICATION"][1]["SBASE"]
+    bus_lookup = Dict(bus["I"] => bus for bus in data["BUS"])
+
+    if haskey(data, "LOAD")
+        for load in data["LOAD"]
+            load_bus = bus_lookup[load["I"]]
+            if load["AREA"] == nothing
+                load["AREA"] = load_bus["AREA"]
+            end
+            if load["ZONE"] == nothing
+                load["ZONE"] = load_bus["ZONE"]
+            end
+            if load["OWNER"] == nothing
+                load["OWNER"] = load_bus["OWNER"]
+            end
         end
     end
-    Memento.warn(_LOGGER, "cannot find $search_field = $search_value, no return for $ret")
-end
 
+    if haskey(data, "GENERATOR")
+        for gen in data["GENERATOR"]
+            gen_bus = bus_lookup[gen["I"]]
+            if haskey(gen, "OWNER") && gen["OWNER"] == nothing
+                gen["OWNER"] = gen_bus["OWNER"]
+            end
+            if gen["MBASE"] == nothing
+                gen["MBASE"] = sbase
+            end
+        end
+    end
 
-"""
-    _get_pti_default(section, field, data, component)
+    if haskey(data, "BRANCH")
+        for branch in data["BRANCH"]
+            branch_bus = bus_lookup[branch["I"]]
+            if haskey(branch, "OWNER") && branch["OWNER"] == nothing
+                branch["OWNER"] = branch_bus["OWNER"]
+            end
+        end
+    end
 
-Internal function. Returns a default value in `section` for `field` in
-`component` from `data`.
-"""
-function _get_pti_default(section::AbstractString, field::AbstractString, data::Dict, component::Dict; sub_field=nothing)
-    case_identification = Dict{String,Any}("IC" => 0, "SBASE" => 100.0, "REV" => 33,
-                                           "XFRRAT" => 0, "NXFRAT" => 0, "BASFRQ" => 60)
+    if haskey(data, "TRANSFORMER")
+        for transformer in data["TRANSFORMER"]
+            transformer_bus = bus_lookup[transformer["I"]]
+            for base_id in ["SBASE1-2", "SBASE2-3", "SBASE3-1"]
+                if haskey(transformer, base_id) && transformer[base_id] == nothing
+                    transformer[base_id] = sbase
+                end
+            end
+            for winding_id in ["WINDV1", "WINDV2", "WINDV3"]
+                if haskey(transformer, winding_id) &&  transformer[winding_id] == nothing
+                    if transformer["CW"] == 2
+                        transformer[winding_id] = transformer_bus["BASKV"]
+                    else
+                        transformer[winding_id] = 1.0
+                    end
+                end
+            end
+        end
+    end
 
-    bus = Dict{String,Any}("BASKV" => 0.0, "IDE" => 1, "AREA" => 1, "ZONE" => 1,
-                           "OWNER" => 1, "VM" => 1.0, "VA" => 0.0, "NVHI" => 1.1,
-                           "NVLO" => 0.9, "EVHI" => 1.1, "EVLO" => 0.9,
-                           "NAME" => "            ")
+    #=
+    if haskey(data, "VOLTAGE SOURCE CONVERTER")
+        for mdc in data["VOLTAGE SOURCE CONVERTER"]
+            # TODO 
+            # "O1" => Expr(:call, :_get_component_property, data["BUS"], "OWNER", "I", get(get(component, "CONVERTER BUSES", [Dict()])[1], "IBUS", 0)),
+        end
+    end
+    =#
 
-    load = Dict{String,Any}("ID" => 1, "STATUS" => 1, "PL" => 0.0, "QL" => 0.0,
-                            "IP" => 0.0, "IQ" => 0.0, "YP" => 0.0, "YQ" => 0.0,
-                            "SCALE" => 1, "INTRPT" => 0,
-                            "AREA" => Expr(:call, :_get_component_property, data["BUS"], "AREA", "I", get(component, "I", 0)),
-                            "ZONE" => Expr(:call, :_get_component_property, data["BUS"], "ZONE", "I", get(component, "I", 0)),
-                            "OWNER" => Expr(:call, :_get_component_property, data["BUS"], "OWNER", "I", get(component, "I", 0)))
+    if haskey(data, "GNE DEVICE")
+        for gne in data["GNE DEVICE"]
+            gne_bus = bus_lookup[gne["I"]]
+            if haskey(gne, "OWNER") && gne["OWNER"] == nothing
+                gne["OWNER"] = gne_bus["OWNER"]
+            end
+            if haskey(gne, "NMETR") && gne["NMETR"] == nothing
+                gne["NMETR"] = gne_bus["NTERM"]
+            end
+        end
+    end
 
-    fixed_shunt = Dict{String,Any}("ID" => 1, "STATUS" => 1, "GL" => 0.0, "BL" => 0.0)
-
-    generator = Dict{String,Any}("ID" => 1, "PG" => 0.0, "QG" => 0.0, "QT" => 9999.0,
-                                 "QB" => -9999.0, "VS" => 1.0, "IREG" => 0,
-                                 "MBASE" => data["CASE IDENTIFICATION"][1]["SBASE"],
-                                 "ZR" => 0.0, "ZX" => 1.0, "RT" => 0.0, "XT" => 0.0,
-                                 "GTAP" => 1.0, "STAT" => 1, "RMPCT" => 100.0,
-                                 "PT" => 9999.0, "PB" => -9999.0,
-                                 "O1" => Expr(:call, :_get_component_property, data["BUS"], "OWNER", "I", get(component, "I", 0)),
-                                 "O2" => 0, "O3" => 0, "O4" => 0, "F1" => 1.0,"F2" => 1.0, "F3" => 1.0,
-                                 "F4" => 1.0, "WMOD" => 0, "WPF" => 1.0)
-
-    branch = Dict{String,Any}("CKT" => 1, "B" => 0.0, "RATEA" => 0.0, "RATEB" => 0.0,
-                              "RATEC" => 0.0, "GI" => 0.0, "BI" => 0.0, "GJ" => 0.0,
-                              "BJ" => 0.0, "ST" => 1, "MET" => 1, "LEN" => 0.0,
-                              "O1" => Expr(:call, :_get_component_property, data["BUS"], "OWNER", "I", get(component, "I", 0)),
-                              "O2" => 0, "O3" => 0, "O4" => 0, "F1" => 1.0,
-                              "F2" => 1.0, "F3" => 1.0, "F4" => 1.0)
-
-    transformer = Dict{String,Any}("K" => 0, "CKT" => 1, "CW" => 1, "CZ" => 1, "CM" => 1,
-                                   "MAG1" => 0.0, "MAG2" => 0.0, "NMETR" => 2,
-                                   "NAME" => "            ", "STAT" => 1,
-                                   "O1" => Expr(:call, :_get_component_property, data["BUS"], "OWNER", "I", get(component, "I", 0)),
-                                   "O2" => 0, "O3" => 0, "O4" => 0,
-                                   "F1" => 1.0, "F2" => 1.0, "F3" => 1.0, "F4" => 1.0,
-                                   "VECGRP" => "            ", "R1-2" => 0.0,
-                                   "SBASE1-2" => data["CASE IDENTIFICATION"][1]["SBASE"], "R2-3" => 0.0,
-                                   "SBASE2-3" => data["CASE IDENTIFICATION"][1]["SBASE"], "R3-1" => 0.0,
-                                   "SBASE3-1" => data["CASE IDENTIFICATION"][1]["SBASE"], "VMSTAR" => 1.0,
-                                   "ANSTAR" => 0.0,
-                                   "WINDV1" => get(component, "CW", 1) == 2 ? Expr(:call, :_get_component_property, data["BUS"], "BASKV", "I", get(component, "I", 0)) : 1.0,
-                                   "NOMV1" => 0.0, "ANG1" => 0.0, "RATA1" => 0.0,
-                                   "RATB1" => 0.0, "RATC1" => 0.0, "COD1" => 0,
-                                   "CONT1" => 0, "RMA1" => 1.1, "RMI1" => 0.9,
-                                   "VMA1" => 1.1, "VMI1" => 0.9, "NTP1" => 33,
-                                   "TAB1" => 0, "CR1" => 0.0, "CX1" => 0.0, "CNXA1" => 0.0,
-                                   "WINDV2" => get(component, "CW", 1) == 2 ? Expr(:call, :_get_component_property, data["BUS"], "BASKV", "I", get(component, "I", 0)) : 1.0,
-                                   "NOMV2" => 0.0, "ANG2" => 0.0, "RATA2" => 0.0,
-                                   "RATB2" => 0.0, "RATC2" => 0.0, "COD2" => 0,
-                                   "CONT2" => 0, "RMA2" => 1.1, "RMI2" => 0.9,
-                                   "VMA2" => 1.1, "VMI2" => 0.9, "NTP2" => 33,
-                                   "TAB2" => 0, "CR2" => 0.0, "CX2" => 0.0,
-                                   "CNXA2" => 0.0,
-                                   "WINDV3" => get(component, "CW", 1) == 2 ? Expr(:call, :_get_component_property, data["BUS"], "BASKV", "I", get(component, "I", 0)) : 1.0,
-                                   "NOMV3" => 0.0, "ANG3" => 0.0, "RATA3" => 0.0,
-                                   "RATB3" => 0.0, "RATC3" => 0.0, "COD3" => 0,
-                                   "CONT3" => 0, "RMA3" => 1.1, "RMI3" => 0.9,
-                                   "VMA3" => 1.1, "VMI3" => 0.9, "NTP3" => 33,
-                                   "TAB3" => 0, "CR3" => 0.0, "CX3" => 0.0,
-                                   "CNXA3" => 0.0)
-
-    area_interchange = Dict{String,Any}("ISW" => 0, "PDES" => 0.0, "PTOL" => 10.0,
-                                        "ARNAME" => "            ")
-
-    two_terminal_dc = Dict{String,Any}("MDC" => 0, "VCMOD" => 0.0, "RCOMP" => 0.0,
-                                       "DELTI" => 0.0, "METER" => "I", "DCVMIN" => 0.0,
-                                       "CCCITMX" => 20, "CCCACC" => 1.0, "TRR" => 1.0,
-                                       "TAPR" => 1.0, "TMXR" => 1.5, "TMNR" => 0.51,
-                                       "STPR" => 0.00625, "ICR" => 0, "IFR" => 0,
-                                       "ITR" => 0, "IDR" => "1", "XCAPR" => 0.0,
-                                       "TRI" => 1.0,
-                                       "TAPI" => 1.0, "TMXI" => 1.5, "TMNI" => 0.51,
-                                       "STPI" => 0.00625, "ICI" => 0, "IFI" => 0,
-                                       "ITI" => 0, "IDI" => "1", "XCAPI" => 0.0)
-
-    vsc_dc = Dict{String,Any}("MDC" => 1,
-                              "O1" => Expr(:call, :_get_component_property, data["BUS"], "OWNER", "I", get(get(component, "CONVERTER BUSES", [Dict()])[1], "IBUS", 0)),
-                              "O2" => 0, "O3" => 0, "O4" => 0,
-                              "F1" => 1.0, "F2" => 1.0, "F3" => 1.0, "F4" => 1.0,
-                              "CONVERTER BUSES" => Dict{String,Any}("MODE" => 1, "ACSET" => 1.0, "ALOSS" => 1.0, "BLOSS" => 0.0, "MINLOSS" => 0.0,
-                                                                    "SMAX" => 0.0, "IMAX" => 0.0, "PWF" => 1.0, "MAXQ" => 9999.0, "MINQ" => -9999.0,
-                                                                    "REMOT" => 0, "RMPCT" => 100.0))
-
-    impedance_correction = Dict{String,Any}("T1" => 0.0, "T2" => 0.0, "T3" => 0.0,
-                                            "T4" => 0.0, "T5" => 0.0, "T6" => 0.0,
-                                            "T7" => 0.0, "T8" => 0.0, "T9" => 0.0,
-                                            "T10" => 0.0, "T11" => 0.0, "F1" => 0.0,
-                                            "F2" => 0.0, "F3" => 0.0, "F4" => 0.0,
-                                            "F5" => 0.0, "F6" => 0.0, "F7" => 0.0,
-                                            "F8" => 0.0, "F9" => 0.0, "F10" => 0.0,
-                                            "F11" => 0.0)
-
-    multi_term_dc = Dict{String,Any}("MDC" => 0, "VCMOD" => 0.0, "VCONVN" => 0,
-                                     "CONV" => Dict{String,Any}("TR" => 1.0, "TAP" => 1.0, "TPMX" => 1.5, "TPMN" => 0.51, "TSTP" => 0.00625,
-                                                                "DCPF" => 1, "MARG" => 0.0, "CNVCOD" => 1),
-                                     "DCBS" => Dict{String,Any}("IB" => 0.0, "AREA" => 1, "ZONE" => 1, "DCNAME" => "            ", "IDC2" => 0,
-                                                                "RGRND" => 0.0, "OWNER" => 1),
-                                     "DCLN" => Dict{String,Any}("DCCKT" => 1, "MET" => 1, "LDC" => 0.0))
-
-    multi_section = Dict{String,Any}("ID" => "&1", "MET" => 1)
-
-    zone = Dict{String,Any}("ZONAME" => "            ")
-
-    interarea = Dict{String,Any}("TRID" => 1, "PTRAN" => 0.0)
-
-    owner = Dict{String,Any}("OWNAME" => "            ")
-
-    facts = Dict{String,Any}("J" => 0, "MODE" => 1, "PDES" => 0.0, "QDES" => 0.0,
-                             "VSET" => 1.0, "SHMX" => 9999.0, "TRMX" => 9999.0,
-                             "VTMN" => 0.9, "VTMX" => 1.1, "VSMX" => 1.0,
-                             "IMX" => 0.0, "LINX" => 0.05, "RMPCT" => 100.0,
-                             "OWNER" => 1, "SET1" => 0.0, "SET2" => 0.0,
-                             "VSREF" => 0, "REMOT" => 0, "MNAME" => "")
-
-    switched_shunt = Dict{String,Any}("MODSW" => 1, "ADJM" => 0, "STAT" => 1,
-                                      "VSWHI" => 1.0, "VSWLO" => 1.0, "SWREM" => 0,
-                                      "RMPCT" => 100.0, "RMIDNT" => "", "BINIT" => 0.0,
-                                      "N1" => 0.0, "N2" => 0.0, "N3" => 0.0,
-                                      "N4" => 0.0, "N5" => 0.0, "N6" => 0.0,
-                                      "N7" => 0.0, "N8" => 0.0, "B1" => 0.0,
-                                      "B2" => 0.0, "B3" => 0.0, "B4" => 0.0,
-                                      "B5" => 0.0, "B6" => 0.0, "B7" => 0.0,
-                                      "B8" => 0.0)
-
-    gne_device = Dict{String,Any}("NTERM" => 1, "NREAL" => 0, "NINTG" => 0,
-                                  "NCHAR" => 0, "STATUS" => 1,
-                                  "OWNER" => Expr(:call, :_get_component_property, data["BUS"], "OWNER", "I", get(component, "BUS1", 0)),
-                                  "NMETR" => get(component, "NTERM", 1), "REAL" => 0,
-                                  "INTG" => nothing,
-                                  "CHAR" => "1")
-
-    induction_machine = Dict{String,Any}("ID" => 1, "STAT" => 1, "SCODE" => 1, "DCODE" => 2,
-                                         "AREA" => Expr(:call, :_get_component_property, data["BUS"], "AREA", "I", get(component, "I", 0)),
-                                         "ZONE" => Expr(:call, :_get_component_property, data["BUS"], "ZONE", "I", get(component, "I", 0)),
-                                         "OWNER" => Expr(:call, :_get_component_property, data["BUS"], "OWNER", "I", get(component, "I", 0)),
-                                         "TCODE" => 1, "BCODE" => 1,
-                                         "MBASE" => data["CASE IDENTIFICATION"][1]["SBASE"], "RATEKV" => 0.0,
-                                         "PCODE" => 1, "H" => 1.0, "A" => 1.0,
-                                         "B" => 1.0, "D" => 1.0, "E" => 1.0,
-                                         "RA" => 0.0, "XA" => 0.0, "XM" => 2.5,
-                                         "R1" => 999.0, "X1" => 999.0, "R2" => 999.0,
-                                         "X2" => 999.0, "X3" => 0.0, "E1" => 1.0,
-                                         "SE1" => 0.0, "E2" => 1.2, "SE2" => 0.0,
-                                         "IA1" => 0.0, "IA2" => 0.0, "XAMULT" => 1)
-
-    defaults = Dict{String,Dict}("BUS" => bus,
-                                  "LOAD" => load,
-                                  "FIXED SHUNT" => fixed_shunt,
-                                  "GENERATOR" => generator,
-                                  "BRANCH" => branch,
-                                  "TRANSFORMER" => transformer,
-                                  "AREA INTERCHANGE" => area_interchange,
-                                  "TWO-TERMINAL DC" => two_terminal_dc,
-                                  "VOLTAGE SOURCE CONVERTER" => vsc_dc,
-                                  "IMPEDANCE CORRECTION" => impedance_correction,
-                                  "MULTI-TERMINAL DC" => multi_term_dc,
-                                  "MULTI-SECTION LINE" => multi_section,
-                                  "ZONE" => zone,
-                                  "INTER-AREA TRANSFER" => interarea,
-                                  "OWNER" => owner,
-                                  "FACTS CONTROL DEVICE" => facts,
-                                  "SWITCHED SHUNT" => switched_shunt,
-                                  "CASE IDENTIFICATION" => case_identification,
-                                  "GNE DEVICE" => gne_device,
-                                  "INDUCTION MACHINE" => induction_machine)
-
-    if sub_field != nothing
-        return eval(defaults[section][field][sub_field])
-    else
-        return eval(defaults[section][field])
+    if haskey(data, "INDUCTION MACHINE")
+        for indm in data["INDUCTION MACHINE"]
+            indm_bus = bus_lookup[indm["I"]]
+            if indm["AREA"] == nothing
+                indm["AREA"] = indm_bus["AREA"]
+            end
+            if indm["ZONE"] == nothing
+                indm["ZONE"] = indm_bus["ZONE"]
+            end
+            if indm["OWNER"] == nothing
+                indm["OWNER"] = indm_bus["OWNER"]
+            end
+            if indm["MBASE"] == nothing
+                indm["MBASE"] = sbase
+            end
+        end
     end
 end
 
@@ -775,6 +825,7 @@ function _parse_pti_data(data_io::IO)
     end
 
     _populate_defaults!(pti_data)
+    _correct_nothing_values!(pti_data)
 
     return pti_data
 end
@@ -821,18 +872,20 @@ Internal function. Populates empty fields with PSS(R)E PTI v33 default values
 function _populate_defaults!(data::Dict)
     for section in _pti_sections
         if haskey(data, section)
+            component_defaults = _pti_defaults[section]
             section_components = []
             for component in data[section]
                 new_component = deepcopy(component)
                 for (field, field_value) in component
                     if isa(field_value, Array)
+                        sub_component_defaults = component_defaults[field]
                         new_array = []
                         for sub_component in field_value
                             new_sub_component = deepcopy(sub_component)
                             for (sub_field, sub_field_value) in sub_component
                                 if sub_field_value == ""
                                     try
-                                        new_sub_component[sub_field] = _get_pti_default(section, field, data, sub_component; sub_field=sub_field)
+                                        new_sub_component[sub_field] = sub_component_defaults[sub_field]
                                     catch msg
                                         if isa(msg, KeyError)
                                             Memento.warn(_LOGGER, "'$sub_field' in '$field' in '$section' has no default value")
@@ -847,7 +900,7 @@ function _populate_defaults!(data::Dict)
                         new_component[field] = new_array
                     elseif field_value == "" && !(field in ["Comment_Line_1", "Comment_Line_2"]) && !startswith(field, "DUM")
                         try
-                            new_component[field] = _get_pti_default(section, field, data, component)
+                            new_component[field] = component_defaults[field]
                         catch msg
                             if isa(msg, KeyError)
                                 Memento.warn(_LOGGER, "'$field' in '$section' has no default value")
