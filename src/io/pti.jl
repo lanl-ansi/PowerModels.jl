@@ -906,6 +906,7 @@ function parse_pti(io::IO)::Dict
 end
 
 
+
 """
     _populate_defaults!(pti_data)
 
@@ -915,19 +916,15 @@ function _populate_defaults!(data::Dict)
     for section in _pti_sections
         if haskey(data, section)
             component_defaults = _pti_defaults[section]
-            section_components = []
             for component in data[section]
-                new_component = deepcopy(component)
                 for (field, field_value) in component
                     if isa(field_value, Array)
                         sub_component_defaults = component_defaults[field]
-                        new_array = []
                         for sub_component in field_value
-                            new_sub_component = deepcopy(sub_component)
                             for (sub_field, sub_field_value) in sub_component
                                 if sub_field_value == ""
                                     try
-                                        new_sub_component[sub_field] = sub_component_defaults[sub_field]
+                                        sub_component[sub_field] = sub_component_defaults[sub_field]
                                     catch msg
                                         if isa(msg, KeyError)
                                             Memento.warn(_LOGGER, "'$sub_field' in '$field' in '$section' has no default value")
@@ -937,12 +934,10 @@ function _populate_defaults!(data::Dict)
                                     end
                                 end
                             end
-                            push!(new_array, new_sub_component)
                         end
-                        new_component[field] = new_array
                     elseif field_value == "" && !(field in ["Comment_Line_1", "Comment_Line_2"]) && !startswith(field, "DUM")
                         try
-                            new_component[field] = component_defaults[field]
+                            component[field] = component_defaults[field]
                         catch msg
                             if isa(msg, KeyError)
                                 Memento.warn(_LOGGER, "'$field' in '$section' has no default value")
@@ -952,9 +947,9 @@ function _populate_defaults!(data::Dict)
                         end
                     end
                 end
-                push!(section_components, new_component)
             end
-        data[section] = section_components
         end
     end
 end
+
+
