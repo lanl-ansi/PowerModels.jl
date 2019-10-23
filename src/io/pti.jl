@@ -478,6 +478,68 @@ function _correct_nothing_values!(data::Dict)
 end
 
 
+
+"experimental functional method for parsing elements and setting defaults"
+function _parse_elements(elements::Array, dtypes::Array, defaults::Dict, section::AbstractString)
+    data = Dict{String,Any}()
+
+    if length(elements) > length(dtypes)
+        Memento.warn(_LOGGER, "ignoring $(length(elements) - length(dtypes)) extra values in section $section, only $(length(dtypes)) items are defined")
+        elements = elements[1:length(dtypes)]
+    end
+
+    for (i,element) in enumerate(elements)
+        field, dtype = dtypes[i]
+
+        element = strip(element)
+
+        if dtype == String
+            if startswith(element, "'") && endswith(element, "'")
+                data[field] = element[2:end-1]
+            else
+                data[field] = element
+            end
+        else
+            if length(element) <= 0
+                # this will be set to a default in the cleanup phase
+                data[field] = nothing
+            else
+                try
+                    data[field] = parse(dtype, element)
+                catch message
+                    if isa(message, Meta.ParseError)
+                        data[field] = element
+                    else
+                        Memento.error(_LOGGER, "value '$element' for $field in section $section is not of type $dtype.")
+                    end
+                end
+            end
+        end
+    end
+
+    if length(elements) < length(dtypes)
+        for (field, dtype) in dtypes[length(elements):end]
+            data[field] = defaults[field]
+            #=
+            if length(missing_fields) > 0
+                for field in missing_fields
+                    data[field] = ""
+                end
+                missing_str = join(missing_fields, ", ")
+                if !(section == "SWITCHED SHUNT" && startswith(missing_str, "N")) &&
+                    !(section == "MULTI-SECTION LINE" && startswith(missing_str, "DUM")) &&
+                    !(section == "IMPEDANCE CORRECTION" && startswith(missing_str, "T"))
+                    Memento.warn(_LOGGER, "The following fields in $section are missing: $missing_str")
+                end
+            end
+            =#
+        end
+    end
+
+    return data
+end
+
+
 """
     _parse_line_element!(data, elements, section)
 
@@ -590,7 +652,6 @@ function _parse_pti_data(data_io::IO)
 
         if length(elements) != 0 && elements[1] == "Q" && line_number > 3
             break
-
         elseif length(elements) != 0 && elements[1] == "0" && line_number > 3
             if line_number == 4
                 section = popfirst!(sections)
@@ -621,7 +682,11 @@ function _parse_pti_data(data_io::IO)
             Memento.debug(_LOGGER, join(["Section:", section], " "))
             if !(section in ["CASE IDENTIFICATION","TRANSFORMER","VOLTAGE SOURCE CONVERTER","MULTI-TERMINAL DC","TWO-TERMINAL DC","GNE DEVICE"])
                 section_data = Dict{String,Any}()
+
                 try
+                    #dtypes = _pti_dtypes[section]
+                    #defaults = _pti_defaults[section]
+                    #section_data_tmp = _parse_elements(elements, dtypes, defaults, section)
                     _parse_line_element!(section_data, elements, section)
                 catch message
                     throw(Memento.error(_LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
@@ -690,8 +755,6 @@ function _parse_pti_data(data_io::IO)
 
                 elseif skip_sublines > 0
                     skip_sublines -= 1
-
-                    (elements, comment) = _get_line_elements(line)
                     subsection_data = Dict{String,Any}()
 
                     for (field, dtype) in _pti_dtypes["$section SUBLINES"]
@@ -752,7 +815,6 @@ function _parse_pti_data(data_io::IO)
                     skip_sublines -= 1
 
                     subsection_data = Dict{String,Any}()
-
                     try
                         _parse_line_element!(subsection_data, elements, "$section $subsection")
                     catch message
