@@ -532,6 +532,10 @@ function _parse_line_element!(data::Dict, elements::Array, section::AbstractStri
 end
 
 
+
+const _comment_split = r"(?!\B[\'][^\']*)[\/](?![^\']*[\']\B)"
+const _split_string = r",(?=(?:[^']*'[^']*')*[^']*$)"
+
 """
     _get_line_elements(line)
 
@@ -540,24 +544,23 @@ elements from a line of a PTI file and populate them into an `Array{String}`.
 Comments, typically indicated at the end of a line with a `'/'` character,
 are also extracted separately, and `Array{Array{String}, String}` is returned.
 """
-function _get_line_elements(line::AbstractString)::Array
-    if length(collect(eachmatch(r"'", line))) % 2 == 1
+function _get_line_elements(line::AbstractString)
+    if count(i->(i=="'"), line) % 2 == 1
         throw(Memento.error(_LOGGER, "There are an uneven number of single-quotes in \"{line}\", the line cannot be parsed."))
     end
 
-    comment_split = r"(?!\B[\'][^\']*)[\/](?![^\']*[\']\B)"
-    line_comment = split(line, comment_split, limit=2)
+    line_comment = split(line, _comment_split, limit=2)
     line = strip(line_comment[1])
     comment = length(line_comment) > 1 ? strip(line_comment[2]) : ""
 
-    split_string = r",(?=(?:[^']*'[^']*')*[^']*$)"
-    elements = [strip(element) for element in split(line, split_string)]
+    elements = [strip(e) for e in split(line, _split_string)]
 
-    Memento.debug(_LOGGER, "$line")
-    Memento.debug(_LOGGER, "$comment")
-    Memento.debug(_LOGGER, "$elements")
+    # results in a 20% memory overhead
+    #Memento.debug(_LOGGER, "$line")
+    #Memento.debug(_LOGGER, "$comment")
+    #Memento.debug(_LOGGER, "$elements")
 
-    return [elements, comment]
+    return (elements, comment)
 end
 
 
@@ -581,7 +584,7 @@ function _parse_pti_data(data_io::IO)
     section_data = Dict{String,Any}()
 
     for (line_number, line) in enumerate(data_lines)
-        Memento.debug(_LOGGER, "$line_number: $line")
+        #Memento.debug(_LOGGER, "$line_number: $line")
 
         (elements, comment) = _get_line_elements(line)
 
@@ -700,15 +703,11 @@ function _parse_pti_data(data_io::IO)
                         end
                     end
 
-                    try
-                        section_data["CONVERTER BUSES"] = append!(section_data["CONVERTER BUSES"], [deepcopy(subsection_data)])
-                    catch message
-                        if isa(message, KeyError)
-                            section_data["CONVERTER BUSES"] = [deepcopy(subsection_data)]
-                            continue
-                        else
-                            Memento.error(_LOGGER, message)
-                        end
+                    if haskey(section_data, "CONVERTER BUSES")
+                        push!(section_data["CONVERTER BUSES"], subsection_data)
+                    else
+                        section_data["CONVERTER BUSES"] = [subsection_data]
+                        continue
                     end
                 end
 
@@ -760,19 +759,15 @@ function _parse_pti_data(data_io::IO)
                         throw(Memento.error(_LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
                     end
 
-                    try
-                        section_data["$(subsection[2:end])"] = push!(section_data["$(subsection[2:end])"], deepcopy(subsection_data))
+                    if haskey(section_data, "$(subsection[2:end])")
+                        section_data["$(subsection[2:end])"] = push!(section_data["$(subsection[2:end])"], subsection_data)
                         if skip_sublines > 0 && subsection != "NDCLN"
                             continue
                         end
-                    catch message
-                        if isa(message, KeyError)
-                            section_data["$(subsection[2:end])"] = [deepcopy(subsection_data)]
-                            if skip_sublines > 0 && subsection != "NDCLN"
-                                continue
-                            end
-                        else
-                            Memento.error(_LOGGER, sprint(showerror, message))
+                    else
+                        section_data["$(subsection[2:end])"] = [subsection_data]
+                        if skip_sublines > 0 && subsection != "NDCLN"
+                            continue
                         end
                     end
 
