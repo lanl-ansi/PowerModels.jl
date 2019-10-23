@@ -6,18 +6,14 @@
 
 
 """
-    _get_pti_sections()
-
-Internal function. Returns `Array` of the names of the sections, in the order
-that they appear in a PTI file, v33
+A list of data file sections in the order that they appear in a PTI v33 file
 """
-function _get_pti_sections()::Array
-    return ["CASE IDENTIFICATION", "BUS", "LOAD", "FIXED SHUNT", "GENERATOR", "BRANCH", "TRANSFORMER",
-            "AREA INTERCHANGE", "TWO-TERMINAL DC", "VOLTAGE SOURCE CONVERTER", "IMPEDANCE CORRECTION",
-            "MULTI-TERMINAL DC", "MULTI-SECTION LINE", "ZONE", "INTER-AREA TRANSFER", "OWNER",
-            "FACTS CONTROL DEVICE", "SWITCHED SHUNT", "GNE DEVICE", "INDUCTION MACHINE"]
-end
-
+const _pti_sections = ["CASE IDENTIFICATION", "BUS", "LOAD", "FIXED SHUNT",
+    "GENERATOR", "BRANCH", "TRANSFORMER", "AREA INTERCHANGE",
+    "TWO-TERMINAL DC", "VOLTAGE SOURCE CONVERTER", "IMPEDANCE CORRECTION",
+    "MULTI-TERMINAL DC", "MULTI-SECTION LINE", "ZONE", "INTER-AREA TRANSFER",
+    "OWNER", "FACTS CONTROL DEVICE", "SWITCHED SHUNT", "GNE DEVICE",
+    "INDUCTION MACHINE"]
 
 
 const _transaction_dtypes = [("IC", Int64), ("SBASE", Float64), ("REV", Int64),
@@ -542,7 +538,8 @@ Internal function. Parse a PTI raw file into a `Dict`, given the
 `data_string` of the file and a list of the `sections` in the PTI
 file (typically given by default by `get_pti_sections()`.
 """
-function _parse_pti_data(data_io::IO, sections::Array)
+function _parse_pti_data(data_io::IO)
+    sections = deepcopy(_pti_sections)
     data_lines = readlines(data_io)
     skip_lines = 0
     skip_sublines = 0
@@ -805,7 +802,7 @@ Reads PTI data in `io::IO`, returning a `Dict` of the data parsed into the
 proper types.
 """
 function parse_pti(io::IO)::Dict
-    pti_data = _parse_pti_data(io, _get_pti_sections())
+    pti_data = _parse_pti_data(io)
     try
         pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"^\<file\s[\/\\]*(?:.*[\/\\])*(.*)\.raw\>$", lowercase(io.name)).captures[1]
     catch
@@ -822,7 +819,7 @@ end
 Internal function. Populates empty fields with PSS(R)E PTI v33 default values
 """
 function _populate_defaults!(data::Dict)
-    for section in _get_pti_sections()
+    for section in _pti_sections
         if haskey(data, section)
             section_components = []
             for component in data[section]
