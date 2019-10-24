@@ -549,27 +549,24 @@ Elements are parsed into data types given by `section` and saved into `data::Dic
 """
 function _parse_line_element!(data::Dict, elements::Array, section::AbstractString)
     missing_fields = []
-    for (field, dtype) in _pti_dtypes[section]
-        try
-            element = popfirst!(elements)
-        catch message
-            if isa(message, ArgumentError)
-                Memento.debug(_LOGGER, "Have run out of elements in $section at $field")
-                push!(missing_fields, field)
-                continue
-            end
-        end
-
-        if startswith(strip(element), "'") && endswith(strip(element), "'")
-            dtype = String
-            element = chop(reverse(chop(reverse(strip(element)))))
+    for (i, (field, dtype)) in enumerate(_pti_dtypes[section])
+        if i > length(elements)
+            Memento.debug(_LOGGER, "Have run out of elements in $section at $field")
+            push!(missing_fields, field)
+            continue
+        else
+            element = strip(elements[i])
         end
 
         try
             if dtype != String && element != ""
                 data[field] = parse(dtype, element)
             else
-                data[field] = element
+                if dtype == String && startswith(element, "'") && endswith(element, "'")
+                    data[field] = chop(element[nextind(element,1):end])
+                else
+                    data[field] = element
+                end
             end
         catch message
             if isa(message, Meta.ParseError)
@@ -615,7 +612,8 @@ function _get_line_elements(line::AbstractString)
     line = strip(line_comment[1])
     comment = length(line_comment) > 1 ? strip(line_comment[2]) : ""
 
-    elements = [strip(e) for e in split(line, _split_string)]
+    #elements = [strip(e) for e in split(line, _split_string)]
+    elements = split(line, _split_string)
 
     # results in a 20% memory overhead
     #Memento.debug(_LOGGER, "$line")
@@ -650,9 +648,10 @@ function _parse_pti_data(data_io::IO)
 
         (elements, comment) = _get_line_elements(line)
 
-        if length(elements) != 0 && elements[1] == "Q" && line_number > 3
+        first_element = strip(elements[1])
+        if line_number > 3 && length(elements) != 0 && first_element == "Q"
             break
-        elseif length(elements) != 0 && elements[1] == "0" && line_number > 3
+        elseif line_number > 3 && length(elements) != 0 && first_element == "0"
             if line_number == 4
                 section = popfirst!(sections)
             end
