@@ -438,10 +438,10 @@ function _correct_nothing_values!(data::Dict)
     end
 
     #=
+    # TODO update this default value
     if haskey(data, "VOLTAGE SOURCE CONVERTER")
         for mdc in data["VOLTAGE SOURCE CONVERTER"]
-            # TODO 
-            # "O1" => Expr(:call, :_get_component_property, data["BUS"], "OWNER", "I", get(get(component, "CONVERTER BUSES", [Dict()])[1], "IBUS", 0)),
+            mdc["O1"] = Expr(:call, :_get_component_property, data["BUS"], "OWNER", "I", get(get(component, "CONVERTER BUSES", [Dict()])[1], "IBUS", 0))
         end
     end
     =#
@@ -479,7 +479,10 @@ end
 
 
 
-"experimental functional method for parsing elements and setting defaults"
+"""
+This is an experimental method for parsing elements and setting defaults at the same time.
+It is not currently working but would reduce memory allocations if implemented correctly.
+"""
 function _parse_elements(elements::Array, dtypes::Array, defaults::Dict, section::AbstractString)
     data = Dict{String,Any}()
 
@@ -612,13 +615,7 @@ function _get_line_elements(line::AbstractString)
     line = strip(line_comment[1])
     comment = length(line_comment) > 1 ? strip(line_comment[2]) : ""
 
-    #elements = [strip(e) for e in split(line, _split_string)]
     elements = split(line, _split_string)
-
-    # results in a 20% memory overhead
-    #Memento.debug(_LOGGER, "$line")
-    #Memento.debug(_LOGGER, "$comment")
-    #Memento.debug(_LOGGER, "$elements")
 
     return (elements, comment)
 end
@@ -644,8 +641,6 @@ function _parse_pti_data(data_io::IO)
     section_data = Dict{String,Any}()
 
     for (line_number, line) in enumerate(data_lines)
-        #Memento.debug(_LOGGER, "$line_number: $line")
-
         (elements, comment) = _get_line_elements(line)
 
         first_element = strip(elements[1])
@@ -683,9 +678,6 @@ function _parse_pti_data(data_io::IO)
                 section_data = Dict{String,Any}()
 
                 try
-                    #dtypes = _pti_dtypes[section]
-                    #defaults = _pti_defaults[section]
-                    #section_data_tmp = _parse_elements(elements, dtypes, defaults, section)
                     _parse_line_element!(section_data, elements, section)
                 catch message
                     throw(Memento.error(_LOGGER, "Parsing failed at line $line_number: $(sprint(showerror, message))"))
