@@ -723,6 +723,6 @@ end
 "Parses directly from iostream"
 function parse_psse(io::IO; kwargs...)::Dict
     pti_data = parse_pti(io)
-
-    return _pti_to_powermodels!(pti_data; kwargs...)
+    pm = _pti_to_powermodels!(pti_data; kwargs...)
+    return pm
 end
