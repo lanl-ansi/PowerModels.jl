@@ -1,6 +1,6 @@
 #================================================
     # exact non-convex models
-    ACPPowerModel, ACRPowerModel, ACTPowerModel
+    ACPPowerModel, ACRPowerModel, ACTPowerModel, IVRPowerModel
 
     # linear approximations
     DCPPowerModel, DCMPPowerModel, NFAPowerModel
