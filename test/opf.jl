@@ -211,12 +211,13 @@ end
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 1005.31; atol = 1e0)
     end
-    @testset "5-bus with pwl costs" begin
-        result = run_opf_iv("../test/data/matpower/case5_pwlc.m", IVRPowerModel, ipopt_solver)
-
-        @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 42895; atol = 1e0)
-    end
+    #TODO support PWL?
+    # @testset "5-bus with pwl costs" begin
+    #     result = run_opf_iv("../test/data/matpower/case5_pwlc.m", IVRPowerModel, ipopt_solver)
+    #
+    #     @test result["termination_status"] == LOCALLY_SOLVED
+    #     @test isapprox(result["objective"], 42895; atol = 1e0)
+    # end
     @testset "6-bus case" begin
         result = run_opf_iv("../test/data/matpower/case6.m", IVRPowerModel, ipopt_solver)
 
@@ -266,13 +267,12 @@ end
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 1000.0; atol = 1e0)
     end
-    #TODO support PWL?
-    # @testset "5-bus with pwl costs" begin
-    #     result = run_dc_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
-    #
-    #     @test result["termination_status"] == LOCALLY_SOLVED
-    #     @test isapprox(result["objective"], 42565; atol = 1e0)
-    # end
+    @testset "5-bus with pwl costs" begin
+        result = run_dc_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 42565; atol = 1e0)
+    end
     @testset "5-bus with gen lb" begin
         result = run_dc_opf("../test/data/matpower/case5_uc.m", ipopt_solver)
 

@@ -128,7 +128,7 @@ Note that constraints $\eqref{eq_line_losses} - \eqref{eq_ohms_bfm}$ replace $\e
 
 ## AC Optimal Power Flow in Current-Voltage Variables
 A variable $I^{s}_{ij}$, representing the current in the direction $i$ to $j$, through the series part of the pi-section, is used.
-The total current, $I_{ij}$ can be substituted out.
+The total current, $I_{ij}$ can be substituted out in favor of the series current variable.
 The mathematical structure for a current-voltage formulation is conceived as:
 
 ```math
@@ -158,8 +158,6 @@ The mathematical structure for a current-voltage formulation is conceived as:
 %
 \end{align}
 ```
-
-Note that constraints $\eqref{eq_line_losses} - \eqref{eq_ohms_bfm}$ replace $\eqref{eq_power_from} - \eqref{eq_power_to}$ but the remainder of the problem formulation is identical. Furthermore, the problems have the same feasible set.  
 
 ### Mapping to function names
 - Eq. $\eqref{var_load_current}$ a fixed load requires a variable - `variable_load`

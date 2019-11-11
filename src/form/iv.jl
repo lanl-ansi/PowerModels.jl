@@ -283,23 +283,23 @@ function constraint_thermal_limit_from(pm::AbstractIVRModel, n::Int, c::Int, f_i
     csrfr =  var(pm, n, c, :csr, f_idx)
     csifr =  var(pm, n, c, :csi, f_idx)
     #
-    # JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)*(cr^2 + ci^2) <= rate_a^2)
     branch = ref(pm, n, :branch, f_idx[1])
     g_sh = branch["g_fr"][c]
     b_sh = branch["b_fr"][c]
     tr, ti = calc_branch_t(branch)
     tm = branch["tap"][c]
 
-    JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)
-    *(
-      ((tr*csrfr - ti*csifr + g_sh*vr - b_sh*vi)/tm^2)^2
-    + ((tr*csifr + ti*csrfr + g_sh*vi + b_sh*vr)/tm^2)^2
-    ) <= rate_a^2)
+    crf = JuMP.@NLexpression(pm.model, (tr*csrfr - ti*csifr + g_sh*vr - b_sh*vi)/tm^2)
+    cif = JuMP.@NLexpression(pm.model, (tr*csifr + ti*csrfr + g_sh*vi + b_sh*vr)/tm^2)
 
+    #
+    # JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)
+    # *(
+    #   ((tr*csrfr - ti*csifr + g_sh*vr - b_sh*vi)/tm^2)^2
+    # + ((tr*csifr + ti*csrfr + g_sh*vi + b_sh*vr)/tm^2)^2
+    # ) <= rate_a^2)
+    JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)*(crf^2 + cif^2) <= rate_a^2)
 
-
-    # bus = ref(pm, n, :bus, f_bus)
-    # JuMP.@constraint(pm.model, (cr^2 + ci^2) <= (rate_a/bus["vmin"])^2)
 end
 
 "`p[t_idx]^2 + q[t_idx]^2 <= rate_a^2`"
@@ -311,23 +311,25 @@ function constraint_thermal_limit_to(pm::AbstractIVRModel, n::Int, c::Int, t_idx
     g_sh = branch["g_to"][c]
     b_sh = branch["b_to"][c]
 
-
     vr = var(pm, n, c, :vr, t_bus)
     vi = var(pm, n, c, :vi, t_bus)
     csrfr =  var(pm, n, c, :csr, f_idx)
     csifr =  var(pm, n, c, :csi, f_idx)
-    JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)
-    *(
-    (-csrfr + g_sh*vr - b_sh*vi)^2
-    + (-csifr + g_sh*vi + b_sh*vr)^2
-    )
-    <= rate_a^2)
-    # JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)*(cr^2 + ci^2) <= rate_a^2)
-    # cr =  var(pm, n, c, :cr, t_idx)
-    # ci =  var(pm, n, c, :ci, t_idx)
-    # bus = ref(pm, n, :bus, t_bus)
-    # JuMP.@constraint(pm.model, (cr^2 + ci^2) <= (rate_a/bus["vmin"])^2)
+
+    crt = JuMP.@NLexpression(pm.model, -csrfr + g_sh*vr - b_sh*vi)
+    cit = JuMP.@NLexpression(pm.model, -csifr + g_sh*vi + b_sh*vr)
+
+    JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)*(crt^2 + cit^2) <= rate_a^2)
+
+    # JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)
+    # *(
+    # (-csrfr + g_sh*vr - b_sh*vi)^2
+    # + (-csifr + g_sh*vi + b_sh*vr)^2
+    # )
+    # <= rate_a^2)
 end
+
+
 
 function constraint_gen(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     gen = ref(pm, nw, :gen, i)
