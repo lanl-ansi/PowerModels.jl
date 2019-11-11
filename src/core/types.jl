@@ -503,7 +503,7 @@ SparseSDPWRMPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(
 # https://docs.julialang.org/en/v1/manual/style-guide/#Avoid-strange-type-Unions-1
 # and should be used with discretion.
 #
-# If you are about to add a union type, first double check if refactoring the 
+# If you are about to add a union type, first double check if refactoring the
 # type hierarchy can resolve the issue instead.
 #
 
@@ -515,3 +515,14 @@ AbstractPForms = Union{AbstractACPForm, AbstractACTForm, AbstractDCPForm, Abstra
 AbstractConicForms = Union{AbstractConicPowerFormulation, AbstractBFConicForm}
 
 
+""
+abstract type IVRForm <: AbstractBFQPForm end
+
+"""
+Current voltage form
+```
+"""
+const IVRPowerModel = GenericPowerModel{IVRForm}
+
+"default SOC constructor"
+IVRPowerModel(data::Dict{String,<:Any}; kwargs...) = GenericPowerModel(data, IVRForm; kwargs...)
