@@ -277,6 +277,83 @@ function variable_reactive_generation(pm::AbstractPowerModel; nw::Int=pm.cnw, cn
 end
 
 
+"variable: `crg[j]`, `cig[j]` for `j` in `gen`"
+function variable_gen_current_rectangular(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    gen = ref(pm, nw, :gen)
+    bus = ref(pm, nw, :bus)
+
+    if bounded
+        ub = Dict()
+        for (i, g) in gen
+            vmin = bus[g["gen_bus"]]["vmin"]
+            @assert vmin>0
+            s = sqrt(max(abs(g["pmax"]), abs(g["pmin"]))^2 + max(abs(g["qmax"]), abs(g["qmin"]))^2)
+            ub[i] = s/vmin
+        end
+
+        var(pm, nw, cnd)[:crg] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_crg",
+            lower_bound = -ub[i],
+            upper_bound = ub[i],
+            start = comp_start_value(ref(pm, nw, :gen, i), "crg_start", cnd)
+        )
+        var(pm, nw, cnd)[:cig] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_cig",
+            lower_bound = -ub[i],
+            upper_bound = ub[i],
+            start = comp_start_value(ref(pm, nw, :gen, i), "cig_start", cnd)
+        )
+    else
+        var(pm, nw, cnd)[:crg] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_crg",
+            start = comp_start_value(ref(pm, nw, :gen, i), "crg_start", cnd)
+        )
+        var(pm, nw, cnd)[:cig] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_cig",
+            start = comp_start_value(ref(pm, nw, :gen, i), "cig_start", cnd)
+        )
+    end
+end
+
+"variable: `crd[j]`, `cid[j]` ` for `j` in `load`"
+function variable_load_current_rectangular(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    load = ref(pm, nw, :load)
+    bus = ref(pm, nw, :bus)
+
+    if bounded
+        ub = Dict()
+        for (i, l) in load
+            vmin = bus[l["load_bus"]]["vmin"]
+            @assert vmin>0
+            s = sqrt(l["pd"]^2 + l["qd"]^2)
+            ub[i] = s/vmin
+        end
+
+
+        var(pm, nw, cnd)[:crd] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_crd",
+            lower_bound = -ub[i],
+            upper_bound = ub[i],
+            start = comp_start_value(ref(pm, nw, :load, i), "crd_start", cnd)
+        )
+        var(pm, nw, cnd)[:cid] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_cid",
+            lower_bound = -ub[i],
+            upper_bound = ub[i],
+            start = comp_start_value(ref(pm, nw, :load, i), "cid_start", cnd)
+        )
+    else
+        var(pm, nw, cnd)[:crd] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_crd",
+            start = comp_start_value(ref(pm, nw, :load, i), "crd_start", cnd)
+        )
+        var(pm, nw, cnd)[:cid] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_cid",
+            start = comp_start_value(ref(pm, nw, :load, i), "cid_start", cnd)
+        )
+    end
+end
+
 function variable_generation_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax=false)
     if !relax
         var(pm, nw)[:z_gen] = JuMP.@variable(pm.model,
@@ -387,6 +464,106 @@ function variable_reactive_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, c
     end
 end
 
+"variable: `cr[l,i,j] + j ci[l,i,j] ` for `(l,i,j)` in `arcs`"
+function variable_branch_current_rectangular(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    branch = ref(pm, nw, :branch)
+    bus = ref(pm, nw, :bus)
+
+    if bounded
+        ub = Dict()
+            for (l,i,j) in ref(pm, nw, :arcs_from)
+            b = branch[l]
+            rate = b["rate_a"][cnd]*b["tap"][cnd]
+            yfr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
+            yto = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
+            shuntcurrent = max(yfr*bus[i]["vmax"][cnd]^2, yto*bus[j]["vmax"][cnd]^2)
+            seriescurrent = max(rate/bus[i]["vmin"][cnd], rate/bus[j]["vmin"][cnd])
+            ub[l] = seriescurrent + shuntcurrent
+        end
+
+        var(pm, nw, cnd)[:csr] = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_csr",
+            lower_bound = -ub[l],
+            upper_bound = ub[l],
+            start = comp_start_value(branch[l], "csr_start", cnd, 0.0)
+        )
+        var(pm, nw, cnd)[:csi] = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_csi",
+            lower_bound = -ub[l],
+            upper_bound = ub[l],
+            start = comp_start_value(branch[l], "csi_start", cnd, 0.0)
+        )
+    else
+        var(pm, nw, cnd)[:csr] = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_csr",
+            start = comp_start_value(branch[l], "csr_start", cnd, 0.0)
+        )
+        var(pm, nw, cnd)[:csi] = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_csi",
+            start = comp_start_value(branch[l], "csi_start", cnd, 0.0)
+        )
+    end
+    # this defines explicit to and from side total current variables
+    # if bounded
+    #     var(pm, nw, cnd)[:cr] = JuMP.@variable(pm.model,
+    #         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_cr",
+    #         lower_bound = -ub[l],
+    #         upper_bound = ub[l],
+    #         start = comp_start_value(ref(pm, nw, :branch, l), "cr_start", cnd)
+    #     )
+    #     var(pm, nw, cnd)[:ci] = JuMP.@variable(pm.model,
+    #         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_ci",
+    #         lower_bound = -ub[l],
+    #         upper_bound = ub[l],
+    #         start = comp_start_value(ref(pm, nw, :branch, l), "ci_start", cnd)
+    #     )
+    #
+    # else
+    #     var(pm, nw, cnd)[:cr] = JuMP.@variable(pm.model,
+    #         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_cr",
+    #         start = comp_start_value(ref(pm, nw, :branch, l), "cr_start", cnd)
+    #     )
+    #     var(pm, nw, cnd)[:ci] = JuMP.@variable(pm.model,
+    #         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_ci",
+    #         start = comp_start_value(ref(pm, nw, :branch, l), "ci_start", cnd)
+    #     )
+    # end
+
+    # Define total current variables as  expressions
+    cr = Dict()
+    ci = Dict()
+    for (l,i,j) in ref(pm, nw, :arcs_from)
+        vrfr = var(pm, nw, cnd, :vr, i)
+        vifr = var(pm, nw, cnd, :vi, i)
+
+        csrfr =  var(pm, nw, cnd, :csr, (l,i,j))
+        csifr =  var(pm, nw, cnd, :csi, (l,i,j))
+
+        vrto = var(pm, nw, cnd, :vr, j)
+        vito = var(pm, nw, cnd, :vi, j)
+
+        csrto =  -var(pm, nw, cnd, :csr, (l,i,j))
+        csito =  -var(pm, nw, cnd, :csi, (l,i,j))
+
+        tr, ti = calc_branch_t(branch[l])
+        g_sh_fr = branch[l]["g_fr"][cnd]
+        b_sh_fr = branch[l]["b_fr"][cnd]
+        g_sh_to = branch[l]["g_to"][cnd]
+        b_sh_to = branch[l]["b_to"][cnd]
+        tm = branch[l]["tap"][cnd]
+
+        #expressions that define KCL
+        cr[(l,i,j)] = (tr*csrfr - ti*csifr + g_sh_fr*vrfr - b_sh_fr*vifr)/tm^2
+        ci[(l,i,j)] = (tr*csifr + ti*csrfr + g_sh_fr*vifr + b_sh_fr*vrfr)/tm^2
+        cr[(l,j,i)] = csrto + g_sh_to*vrto - b_sh_to*vito
+        ci[(l,j,i)] = csito + g_sh_to*vito + b_sh_to*vrto
+    end
+    #store total current expressions for later use
+    var(pm, nw, cnd)[:cr] = cr
+    var(pm, nw, cnd)[:ci] = ci
+end
+
+
 function variable_dcline_flow(pm::AbstractPowerModel; kwargs...)
     variable_active_dcline_flow(pm; kwargs...)
     variable_reactive_dcline_flow(pm; kwargs...)
@@ -456,7 +633,49 @@ function variable_reactive_dcline_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, c
     end
 end
 
+"variable: `crdc[j]`, `cidc[j]` for `j` in `dcline`"
+function variable_dcline_current_rectangular(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    gen = ref(pm, nw, :gen)
+    bus = ref(pm, nw, :bus)
+    dcline = ref(pm, nw, :dcline)
 
+    if bounded
+        ub = Dict()
+        for (l,i,j) in ref(pm, nw, :arcs_from_dc)
+            vminf = bus[i]["vmin"][cnd]
+            vmint = bus[j]["vmin"][cnd]
+            @assert vminf>0
+            @assert vmint>0
+            sf = sqrt(max(abs(dcline[l]["pmaxf"][cnd]), abs(dcline[l]["pminf"][cnd]))^2 + max(abs(dcline[l]["qmaxf"][cnd]), abs(dcline[l]["qminf"][cnd]))^2)
+            st = sqrt(max(abs(dcline[l]["pmaxt"][cnd]), abs(dcline[l]["pmint"][cnd]))^2 + max(abs(dcline[l]["qmaxt"][cnd]), abs(dcline[l]["qmint"][cnd]))^2)
+            imax = max(sf,st)/ min(vminf, vminf)
+            ub[(l,i,j)] = imax
+            ub[(l,j,i)] = imax
+        end
+
+        var(pm, nw, cnd)[:crdc] = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_crdc",
+            lower_bound = -ub[(l,i,j)],
+            upper_bound = ub[(l,i,j)],
+            start = comp_start_value(ref(pm, nw, :dcline, l), "crdc_start", cnd)
+        )
+        var(pm, nw, cnd)[:cidc] = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_cidc",
+            lower_bound = -ub[(l,i,j)],
+            upper_bound = ub[(l,i,j)],
+            start = comp_start_value(ref(pm, nw, :dcline, l), "cidc_start", cnd)
+        )
+    else
+        var(pm, nw, cnd)[:crdc] = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_crdc",
+            start = comp_start_value(ref(pm, nw, :dcline, l), "crdc_start", cnd)
+        )
+        var(pm, nw, cnd)[:cidc] = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_cidc",
+            start = comp_start_value(ref(pm, nw, :dcline, l), "cidc_start", cnd)
+        )
+    end
+end
 
 function variable_switch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax=false)
     if !relax

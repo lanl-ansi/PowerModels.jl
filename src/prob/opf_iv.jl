@@ -6,7 +6,7 @@ end
 ""
 function post_opf_iv(pm::AbstractPowerModel)
     variable_voltage(pm)
-    variable_current(pm)
+    variable_branch_current(pm)
 
     variable_load(pm)
     variable_gen(pm)
@@ -16,11 +16,11 @@ function post_opf_iv(pm::AbstractPowerModel)
     objective_min_fuel_and_flow_cost(pm)
 
     for i in ids(pm, :load)
-        constraint_load(pm, i)
+        constraint_load_power_setpoint(pm, i)
     end
 
     for i in ids(pm, :gen)
-        constraint_gen(pm, i)
+        constraint_gen_power_limits(pm, i)
     end
 
     for i in ids(pm, :ref_buses)
@@ -46,5 +46,7 @@ function post_opf_iv(pm::AbstractPowerModel)
 
     for i in ids(pm, :dcline)
         constraint_dcline(pm, i)
+        constraint_dcline_power_limits_from(pm, i)
+        constraint_dcline_power_limits_to(pm, i)
     end
 end

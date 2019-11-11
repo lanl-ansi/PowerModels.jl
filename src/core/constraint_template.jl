@@ -52,6 +52,16 @@ function constraint_model_voltage_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd
     constraint_model_voltage_ne(pm, nw, cnd)
 end
 
+"""
+This constraint captures problem agnostic constraints that define limits for
+voltage magnitudes (where variable bounds cannot be used)
+
+Notable examples include IVRPowerModel
+"""
+function constraint_voltage_magnitude(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    bus = ref(pm, nw, :bus, i)
+    constraint_voltage_magnitude(pm, nw, cnd, i, bus["vmin"], bus["vmax"])
+end
 
 ### Current Constraints ###
 
@@ -82,12 +92,27 @@ function constraint_reactive_gen_setpoint(pm::AbstractPowerModel, i::Int; nw::In
     constraint_reactive_gen_setpoint(pm, nw, cnd, gen["index"], gen["qg"][cnd])
 end
 
+""
 function constraint_generation_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     gen = ref(pm, nw, :gen, i)
 
     constraint_generation_on_off(pm, nw, cnd, i, gen["pmin"][cnd], gen["pmax"][cnd], gen["qmin"][cnd], gen["qmax"][cnd])
 end
 
+"defines limits on active and reactive power output of a generator where bounds can't be used"
+function constraint_gen_power_limits(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    gen = ref(pm, nw, :gen, i)
+    bus = gen["gen_bus"]
+    constraint_gen_power_limits(pm, nw, cnd, i, bus, gen["pmax"][cnd], gen["pmin"][cnd], gen["qmax"][cnd], gen["qmin"][cnd])
+end
+
+### Load Constraints ###
+"defines active and reactive power set points for a load where bounds can't be used"
+function constraint_load_power_setpoint(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    load = ref(pm, nw, :load, i)
+    bus = load["load_bus"]
+    constraint_load_power_setpoint(pm, nw, cnd, i, bus, load["pd"][cnd], load["qd"][cnd])
+end
 
 ### Bus - Setpoint Constraints ###
 
@@ -760,7 +785,7 @@ function constraint_storage_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cn
     storage = ref(pm, nw, :storage, i)
     charge_ub = storage["charge_rating"]
     discharge_ub = storage["discharge_rating"]
-    
+
     inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
     pmin = inj_lb[i]
     pmax = inj_ub[i]
@@ -796,4 +821,23 @@ function constraint_active_dcline_setpoint(pm::AbstractPowerModel, i::Int; nw::I
     pt = dcline["pt"][cnd]
 
     constraint_active_dcline_setpoint(pm, nw, cnd, f_idx, t_idx, pf, pt)
+end
+
+
+""
+function constraint_dcline_power_limits_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    dcline = ref(pm, nw, :dcline, i)
+    f_bus = dcline["f_bus"]
+    t_bus = dcline["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    constraint_dcline_power_limits_from(pm, nw, cnd, i, f_bus, f_idx)
+end
+
+""
+function constraint_dcline_power_limits_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    dcline = ref(pm, nw, :dcline, i)
+    f_bus = dcline["f_bus"]
+    t_bus = dcline["t_bus"]
+    t_idx = (i, t_bus, f_bus)
+    constraint_dcline_power_limits_to(pm, nw, cnd, i, t_bus, t_idx)
 end

@@ -6,7 +6,7 @@ end
 ""
 function post_pf_iv(pm::AbstractPowerModel)
     variable_voltage(pm, bounded = false)
-    variable_current(pm, bounded = false)
+    variable_branch_current(pm, bounded = false)
 
     variable_load(pm, bounded = false)
     variable_gen(pm, bounded = false)
@@ -14,11 +14,11 @@ function post_pf_iv(pm::AbstractPowerModel)
 
 
     for i in ids(pm, :load)
-        constraint_load(pm, i)
+        constraint_load_power_setpoint(pm, i)
     end
 
     for i in ids(pm, :gen)
-        constraint_gen(pm, i)
+        constraint_gen_power_limits(pm, i)
     end
 
     for (i,bus) in ref(pm, :ref_buses)
