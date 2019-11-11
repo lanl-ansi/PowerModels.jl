@@ -29,7 +29,7 @@ function post_opf_iv(pm::AbstractPowerModel)
 
     for i in ids(pm, :bus)
         constraint_voltage_magnitude(pm, i)
-        constraint_current_balance_shunt(pm, i)
+        constraint_current_balance(pm, i)
     end
 
     for i in ids(pm, :branch)

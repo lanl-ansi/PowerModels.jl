@@ -28,7 +28,7 @@ function post_pf_iv(pm::AbstractPowerModel)
     end
 
     for (i,bus) in ref(pm, :bus)
-        constraint_current_balance_shunt(pm, i)
+        constraint_current_balance(pm, i)
 
         # PV Bus Constraints
         if length(ref(pm, :bus_gens, i)) > 0 && !(i in ids(pm,:ref_buses))
