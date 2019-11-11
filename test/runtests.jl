@@ -6,10 +6,6 @@ import Memento
 Memento.setlevel!(Memento.getlogger(InfrastructureModels), "error")
 PowerModels.logger_config!("error")
 
-# for checking status codes
-import MathOptInterface
-const MOI = MathOptInterface
-
 import Cbc
 import Ipopt
 import SCS
@@ -26,7 +22,7 @@ ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, print_level=0)
 ipopt_ws_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, mu_init=1e-4, print_level=0)
 
 cbc_solver = JuMP.with_optimizer(Cbc.Optimizer, logLevel=0)
-juniper_solver = JuMP.with_optimizer(Juniper.Optimizer, nl_solver=JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-4, print_level=0), mip_solver=cbc_solver, log_levels=[])
+juniper_solver = JuMP.with_optimizer(Juniper.Optimizer, nl_solver=JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-4, print_level=0), log_levels=[])
 scs_solver = JuMP.with_optimizer(SCS.Optimizer, max_iters=500000, acceleration_lookback=1, verbose=0)
 
 include("common.jl")
@@ -72,5 +68,4 @@ include("common.jl")
     include("warmstart.jl")
 
     include("docs.jl")
-
 end

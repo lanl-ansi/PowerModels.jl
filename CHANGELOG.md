@@ -2,7 +2,38 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Added DCMPPowerModel for replication of Matpower's DC model (#612)
+- Reduced memory allocations during PSSE data parsing (#617)
+- Added IVRForm (rectangular current-voltage formulation)
+
+### v0.13.0
+- Added SOC formulation of the storage model
+- Added support for optional line flow constraints (#576)
+- Simplified PowerModel types (#192) (breaking)
+- Improved multi-conductor support in the storage model (#572) (breaking)
+- Renamed model_constructor to model_type (#192) (breaking)
+- Made all component on/off variables conductorless (#390) (breaking)
+- Require an explicit switch section in the data model (breaking)
+- Fixed naming branch indicator variable (#551) (breaking)
+- Made baseMVA not a global key in multinetwork models (breaking)
+- Fixed bug in bus_storage_lookup (#598)
+
+### v0.12.5
+- Update to InfrastructureModels v0.3 and JuMP v0.20
+- Fixed power balance duals in w-space formulations (#591)
+- Dropped CI on Julia v1.0
+
+### v0.12.4
+- Fixed support for data without an explicit switch section
+- Fixed support for single values in add_setpoint! and add_dual!
+
+### v0.12.3
+- Add switch component (#339)
+- Added component status parameter lookup (#565)
+- Relax JuMP Model type (#582)
+- Fixed conductor semantics in storage devices (breaking)
+- Fixed status-based filtering to support fractional values (#564)
+- Fixed `va` default start point
 
 ### v0.12.2
 - Added function for building pwl objective variables and constraints

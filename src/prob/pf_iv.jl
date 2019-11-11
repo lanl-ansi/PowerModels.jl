@@ -4,7 +4,7 @@ function run_pf_iv(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function post_pf_iv(pm::GenericPowerModel)
+function post_pf_iv(pm::AbstractPowerModel)
     variable_voltage(pm, bounded = false)
     variable_current(pm, bounded = false)
 

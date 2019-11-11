@@ -4,13 +4,13 @@
         result_ac = run_ac_opf("../test/data/matpower/case3.m", ipopt_solver);
         upper_bound = result_ac["objective"]
 
-        data, stats = run_obbt_opf!("../test/data/matpower/case3.m", ipopt_solver, model_constructor=QCWRTriPowerModel);
+        data, stats = run_obbt_opf!("../test/data/matpower/case3.m", ipopt_solver, model_type=QCLSPowerModel);
         @test isapprox(stats["final_relaxation_objective"], 5901.96; atol=1e0)
         @test isnan(stats["final_rel_gap_from_ub"])
         @test stats["iteration_count"] == 5
 
         data, stats = run_obbt_opf!("../test/data/matpower/case3.m", ipopt_solver, 
-            model_constructor = QCWRTriPowerModel,
+            model_type = QCLSPowerModel,
             upper_bound = upper_bound, 
             upper_bound_constraint = true, 
             rel_gap_tol = 1e-3);
@@ -26,13 +26,13 @@ end
         result_ac = run_ac_opf("../test/data/matpower/case3.m", ipopt_solver);
         upper_bound = result_ac["objective"]
 
-        data, stats = run_obbt_opf!("../test/data/matpower/case3.m", ipopt_solver, model_constructor=QCWRPowerModel);
+        data, stats = run_obbt_opf!("../test/data/matpower/case3.m", ipopt_solver, model_type=QCRMPowerModel);
         @test isapprox(stats["final_relaxation_objective"], 5900.04; atol=1e0)
         @test isnan(stats["final_rel_gap_from_ub"])
         @test stats["iteration_count"] == 5
 
         data, stats = run_obbt_opf!("../test/data/matpower/case3.m", ipopt_solver, 
-            model_constructor = QCWRPowerModel,
+            model_type = QCRMPowerModel,
             upper_bound = upper_bound, 
             upper_bound_constraint = true, 
             rel_gap_tol = 1e-3);
@@ -51,7 +51,7 @@ end
         upper_bound = result_ac["objective"]
 
         data, stats = run_obbt_opf!(data, ipopt_solver,
-            model_constructor=QCWRPowerModel,
+            model_type=QCRMPowerModel,
             upper_bound = upper_bound,
             upper_bound_constraint = true);
         @test isapprox(stats["final_relaxation_objective"], 982.216; atol=1e0)

@@ -4,7 +4,7 @@ function run_opf_iv(file, model_constructor, optimizer; kwargs...)
 end
 
 ""
-function post_opf_iv(pm::GenericPowerModel)
+function post_opf_iv(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_current(pm)
 

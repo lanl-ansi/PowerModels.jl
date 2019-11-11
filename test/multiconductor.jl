@@ -1,7 +1,7 @@
 TESTLOG = Memento.getlogger(PowerModels)
 
 "an example of building a multi-phase model in an extention package"
-function post_tp_opf(pm::PowerModels.GenericPowerModel)
+function post_tp_opf(pm::AbstractPowerModel)
     for c in PowerModels.conductor_ids(pm)
         PowerModels.variable_voltage(pm, cnd=c)
         PowerModels.variable_generation(pm, cnd=c)
@@ -17,7 +17,7 @@ function post_tp_opf(pm::PowerModels.GenericPowerModel)
         end
 
         for i in ids(pm, :bus)
-            PowerModels.constraint_power_balance_shunt(pm, i, cnd=c)
+            PowerModels.constraint_power_balance(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
@@ -251,22 +251,38 @@ end
 
 
     @testset "test multi-conductor uc opf variants" begin
-        mp_data = build_mc_data!("../test/data/matpower/case5_uc.m")
+        mp_uc_data = build_mc_data!("../test/data/matpower/case5_uc.m")
+        mp_strg_data = build_mc_data!("../test/data/matpower/case5_strg.m")
 
-        @testset "ac 5-bus case" begin
-            result = PowerModels._run_uc_mc_opf(mp_data, ACPPowerModel, juniper_solver)
+        @testset "ac 5-bus uc case" begin
+            result = PowerModels._run_uc_mc_opf(mp_uc_data, ACPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 54810.0; atol = 1e-1)
             @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0, atol=1e-6)
         end
 
-        @testset "dc 5-bus case" begin
-            result = PowerModels._run_uc_mc_opf(mp_data, DCPPowerModel, cbc_solver)
+        @testset "ac 5-bus storage case" begin
+            result = PowerModels._run_uc_mc_opf(mp_strg_data, ACPPowerModel, juniper_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 52633.8; atol = 1e-1)
+        end
+
+
+        @testset "dc 5-bus uc case" begin
+            result = PowerModels._run_uc_mc_opf(mp_uc_data, DCPPowerModel, cbc_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 52839.6; atol = 1e-1)
             @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0)
+        end
+
+        @testset "dc 5-bus storage case" begin
+            result = PowerModels._run_uc_mc_opf(mp_strg_data, DCPPowerModel, cbc_solver)
+
+            @test result["termination_status"] == OPTIMAL
+            @test isapprox(result["objective"], 52081.3; atol = 1e-1)
         end
 
     end
@@ -408,8 +424,8 @@ end
         @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.correct_transformer_parameters!(mp_data_3p))
 
         mp_data_3p["branch"]["1"]["rate_a"][2] = -1.0
-        @test_warn(TESTLOG, "this code only supports positive rate_a values, changing the value on branch 1, conductor 2 to 100.47", PowerModels.correct_thermal_limits!(mp_data_3p))
-        @test isapprox(mp_data_3p["branch"]["1"]["rate_a"][2], 1.0047227335; atol=1e-6)
+        @test_throws(TESTLOG, ErrorException, PowerModels.correct_thermal_limits!(mp_data_3p))
+        mp_data_3p["branch"]["1"]["rate_a"][2] = 1.0
 
         mp_data_3p["branch"]["4"] = deepcopy(mp_data_3p["branch"]["1"])
         mp_data_3p["branch"]["4"]["f_bus"] = mp_data_3p["branch"]["1"]["t_bus"]

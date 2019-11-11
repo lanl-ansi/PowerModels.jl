@@ -163,6 +163,17 @@ end
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
+    @testset "5-bus case with matpower DCMP model" begin
+        result = run_pf("../test/data/matpower/case5.m", DCMPPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+  
+        @test isapprox(result["solution"]["bus"]["1"]["va"],  0.0621920; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["2"]["va"],  0.0002623; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["3"]["va"], 0.0088601; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-7)
+        
+    end
 end
 
 

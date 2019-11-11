@@ -1,24 +1,25 @@
 ""
-function variable_voltage(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...) where T <: IVRForm
+function variable_voltage(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...)
     variable_voltage_real(pm; nw=nw, cnd=cnd, bounded=bounded, kwargs...)
     variable_voltage_imaginary(pm; nw=nw, cnd=cnd, bounded=bounded, kwargs...)
 end
 ""
-function variable_current(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: IVRForm
+function variable_current(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     branch = ref(pm, nw, :branch)
     bus = ref(pm, nw, :bus)
-    ub = Dict()
-        for (l,i,j) in ref(pm, nw, :arcs_from)
-        b = branch[l]
-        rate = b["rate_a"][cnd]*b["tap"][cnd]
-        yfr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
-        yto = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
-        shuntcurrent = max(yfr*bus[i]["vmax"][cnd]^2, yto*bus[j]["vmax"][cnd]^2)
-        seriescurrent = max(rate/bus[i]["vmin"][cnd], rate/bus[j]["vmin"][cnd])
-        ub[l] = seriescurrent + shuntcurrent
-    end
 
     if bounded
+        ub = Dict()
+            for (l,i,j) in ref(pm, nw, :arcs_from)
+            b = branch[l]
+            rate = b["rate_a"][cnd]*b["tap"][cnd]
+            yfr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
+            yto = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
+            shuntcurrent = max(yfr*bus[i]["vmax"][cnd]^2, yto*bus[j]["vmax"][cnd]^2)
+            seriescurrent = max(rate/bus[i]["vmin"][cnd], rate/bus[j]["vmin"][cnd])
+            ub[l] = seriescurrent + shuntcurrent
+        end
+
         var(pm, nw, cnd)[:csr] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_csr",
             lower_bound = -ub[l],
@@ -31,7 +32,6 @@ function variable_current(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
             upper_bound = ub[l],
             start = comp_start_value(branch[l], "csi_start", cnd, 0.0)
         )
-
     else
         var(pm, nw, cnd)[:csr] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_csr",
@@ -68,6 +68,7 @@ function variable_current(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.
     #     )
     # end
 
+    #Store total current variables as linear expressions
     cr = Dict()
     ci = Dict()
     for (l,i,j) in ref(pm, nw, :arcs_from)
@@ -102,7 +103,7 @@ end
 
 
 "`v[i] == vm`"
-function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, i, vm) where T <: IVRForm
+function constraint_voltage_magnitude_setpoint(pm::AbstractIVRModel, n::Int, c::Int, i, vm)
     vr = var(pm, n, c, :vr, i)
     vi = var(pm, n, c, :vi, i)
 
@@ -110,7 +111,7 @@ function constraint_voltage_magnitude_setpoint(pm::GenericPowerModel{T}, n::Int,
 end
 
 "`vmin <= vm[i] <= vmax`"
-function constraint_voltage_magnitude(pm::GenericPowerModel{T}, n::Int, c::Int, i, vmin, vmax) where T <: IVRForm
+function constraint_voltage_magnitude(pm::AbstractIVRModel, n::Int, c::Int, i, vmin, vmax)
     @assert vmin <= vmax
     vr = var(pm, n, c, :vr, i)
     vi = var(pm, n, c, :vi, i)
@@ -119,14 +120,14 @@ function constraint_voltage_magnitude(pm::GenericPowerModel{T}, n::Int, c::Int, 
     JuMP.@constraint(pm.model, vmax^2 >= (vr^2 + vi^2))
 end
 
-function constraint_voltage_magnitude(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_voltage_magnitude(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     bus = ref(pm, nw, :bus, i)
     constraint_voltage_magnitude(pm, nw, cnd, i, bus["vmin"], bus["vmax"])
 end
 
 
 "reference bus angle constraint"
-function constraint_theta_ref(pm::GenericPowerModel{T}, n::Int, c::Int, i::Int) where T <: IVRForm
+function constraint_theta_ref(pm::AbstractIVRModel, n::Int, c::Int, i::Int)
     JuMP.@constraint(pm.model, var(pm, n, c, :vi)[i] == 0)
 end
 
@@ -164,7 +165,7 @@ end
 
 
 ""
-function constraint_voltage_difference(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_voltage_difference(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -219,7 +220,7 @@ end
 """
 Defines voltage drop over a branch, linking from and to side voltage magnitude
 """
-function constraint_voltage_difference(pm::GenericPowerModel{T}, n::Int, c::Int, i, f_bus, t_bus, f_idx, r, x, tr, ti, tm) where T <: IVRForm
+function constraint_voltage_difference(pm::AbstractIVRModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, r, x, tr, ti, tm)
     vrfr = var(pm, n, c, :vr, f_bus)
     vifr = var(pm, n, c, :vi, f_bus)
 
@@ -235,7 +236,7 @@ end
 
 
 
-function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx,  angmin, angmax) where T <: IVRForm
+function constraint_voltage_angle_difference(pm::AbstractIVRModel, n::Int, c::Int, f_idx,  angmin, angmax)
     i, f_bus, t_bus = f_idx
     t_idx = (i, t_bus, f_bus)
 
@@ -255,7 +256,7 @@ function constraint_voltage_angle_difference(pm::GenericPowerModel{T}, n::Int, c
         )
 end
 
-function constraint_current_balance_shunt(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_gs, bus_bs) where T <: IVRForm
+function constraint_current_balance_shunt(pm::AbstractIVRModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_gs, bus_bs)
     vr = var(pm, n, c, :vr, i)
     vi = var(pm, n, c, :vi, i)
 
@@ -273,7 +274,7 @@ function constraint_current_balance_shunt(pm::GenericPowerModel{T}, n::Int, c::I
 end
 
 "`p[f_idx]^2 + q[f_idx]^2 <= rate_a^2`"
-function constraint_thermal_limit_from(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, rate_a) where T <: IVRForm
+function constraint_thermal_limit_from(pm::AbstractIVRModel, n::Int, c::Int, f_idx, rate_a)
     f_bus = f_idx[2]
     vr = var(pm, n, c, :vr, f_bus)
     vi = var(pm, n, c, :vi, f_bus)
@@ -302,7 +303,7 @@ function constraint_thermal_limit_from(pm::GenericPowerModel{T}, n::Int, c::Int,
 end
 
 "`p[t_idx]^2 + q[t_idx]^2 <= rate_a^2`"
-function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t_idx, rate_a) where T <: IVRForm
+function constraint_thermal_limit_to(pm::AbstractIVRModel, n::Int, c::Int, t_idx, rate_a)
     t_bus = t_idx[2]
     f_idx = (t_idx[1], t_idx[3], t_idx[2])
 
@@ -328,14 +329,14 @@ function constraint_thermal_limit_to(pm::GenericPowerModel{T}, n::Int, c::Int, t
     # JuMP.@constraint(pm.model, (cr^2 + ci^2) <= (rate_a/bus["vmin"])^2)
 end
 
-function constraint_gen(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_gen(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     gen = ref(pm, nw, :gen, i)
     bus = gen["gen_bus"]
     constraint_gen(pm, nw, cnd, i, bus, gen["pmax"], gen["pmin"], gen["qmax"], gen["qmin"])
 
 end
 
-function constraint_load(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_load(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     load = ref(pm, nw, :load, i)
     bus = load["load_bus"]
 
@@ -343,7 +344,7 @@ function constraint_load(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int
 
 end
 
-function constraint_load(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus, pref, qref) where T <: IVRForm
+function constraint_load(pm::AbstractIVRModel, n::Int, c::Int, i, bus, pref, qref)
     vr = var(pm, n, c, :vr, bus)
     vi = var(pm, n, c, :vi, bus)
     cr = var(pm, n, c, :crd, i)
@@ -352,12 +353,10 @@ function constraint_load(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus, pref,
     JuMP.@constraint(pm.model, pref == vr*cr  + vi*ci)
     JuMP.@constraint(pm.model, qref == vi*cr  - vr*ci)
 
-
-
 end
 
 
-function constraint_gen(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus, pmax, pmin, qmax, qmin) where T <: IVRForm
+function constraint_gen(pm::AbstractIVRModel, n::Int, c::Int, i, bus, pmax, pmin, qmax, qmin)
     @assert pmin <= pmax
     @assert qmin <= qmax
 
@@ -366,18 +365,16 @@ function constraint_gen(pm::GenericPowerModel{T}, n::Int, c::Int, i, bus, pmax, 
     cr = var(pm, n, c, :crg, i)
     ci = var(pm, n, c, :cig, i)
 
-
     JuMP.@constraint(pm.model, pmin <= vr*cr  + vi*ci)
     JuMP.@constraint(pm.model, pmax >= vr*cr  + vi*ci)
 
     JuMP.@constraint(pm.model, qmin <= vi*cr  - vr*ci)
     JuMP.@constraint(pm.model, qmax >= vi*cr  - vr*ci)
-
 end
 
 
 "`pg[i] == pg`"
-function constraint_active_gen_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, i, pgref) where T <: IVRForm
+function constraint_active_gen_setpoint(pm::AbstractIVRModel, n::Int, c::Int, i, pgref)
     gen = ref(pm, n, :gen, i)
     bus = gen["gen_bus"]
     vr = var(pm, n, c, :vr, bus)
@@ -389,7 +386,7 @@ function constraint_active_gen_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int
 end
 
 "`qq[i] == qq`"
-function constraint_reactive_gen_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, i, qgref) where T <: IVRForm
+function constraint_reactive_gen_setpoint(pm::AbstractIVRModel, n::Int, c::Int, i, qgref)
     gen = ref(pm, n, :gen, i)
     bus = gen["gen_bus"]
     vr = var(pm, n, c, :vr, bus)
@@ -397,24 +394,10 @@ function constraint_reactive_gen_setpoint(pm::GenericPowerModel{T}, n::Int, c::I
     cr = var(pm, n, c, :crg, i)
     ci = var(pm, n, c, :cig, i)
 
-
     JuMP.@constraint(pm.model, qgref == vi*cr  - vr*ci)
 end
 
-# ""
-# function constraint_dcline(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-#     dcline = ref(pm, nw, :dcline, i)
-#     f_bus = dcline["f_bus"]
-#     t_bus = dcline["t_bus"]
-#     f_idx = (i, f_bus, t_bus)
-#     t_idx = (i, t_bus, f_bus)
-#     loss0 = dcline["loss0"][cnd]
-#     loss1 = dcline["loss1"][cnd]
-#
-#     constraint_dcline(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
-# end
-
-function constraint_dcline(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, loss0, loss1) where T <: IVRForm
+function constraint_dcline(pm::AbstractIVRModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
     vrf = var(pm, n, c, :vr, f_bus)
     vif = var(pm, n, c, :vi, f_bus)
 
@@ -444,21 +427,6 @@ function constraint_dcline(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bu
     pt = vrt*crdct + vit*cidct
     qt = vit*crdct - vrt*cidct
 
-
-    # JuMP.@constraint(pm.model, vrf*crdcf + vif*cidcf + vrt*crdct + vit*cidct == loss0 + loss1*(vrf*crdcf + vif*cidcf ))
-    #
-    # JuMP.@constraint(pm.model, pmaxf >= vrf*crdcf + vif*cidcf)
-    # JuMP.@constraint(pm.model, pminf <= vif*crdcf - vrf*cidcf)
-    # JuMP.@constraint(pm.model, pmaxt >= vrt*crdct + vit*cidct)
-    # JuMP.@constraint(pm.model, pmint <= vrt*crdct + vit*cidct)
-    #
-    # JuMP.@constraint(pm.model, qmaxf >= vif*crdcf - vrf*cidcf)
-    # JuMP.@constraint(pm.model, qminf <= vif*crdcf - vrf*cidcf)
-    # JuMP.@constraint(pm.model, qmaxt >= vit*crdct - vrt*cidct)
-    # JuMP.@constraint(pm.model, qmint <= vit*crdct - vrt*cidct)
-
-
-
     JuMP.@constraint(pm.model, pf + pt == loss0 + loss1*pf )
 
     JuMP.@constraint(pm.model, pmaxf >= pf)
@@ -476,7 +444,7 @@ function constraint_dcline(pm::GenericPowerModel{T}, n::Int, c::Int, f_bus, t_bu
 end
 
 "`pf[i] == pf, pt[i] == pt`"
-function constraint_active_dcline_setpoint(pm::GenericPowerModel{T}, n::Int, c::Int, f_idx, t_idx, pfref, ptref) where T <: IVRForm
+function constraint_active_dcline_setpoint(pm::AbstractIVRModel, n::Int, c::Int, f_idx, t_idx, pfref, ptref)
     (l, f_bus, t_bus) = f_idx
     vrf = var(pm, n, c, :vr, f_bus)
     vif = var(pm, n, c, :vi, f_bus)
@@ -497,127 +465,129 @@ end
 
 
 "variable: `crg[j]`, `cig[j]` for `j` in `gen`"
-function variable_gen(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+function variable_gen(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     gen = ref(pm, nw, :gen)
     bus = ref(pm, nw, :bus)
 
-    ub = Dict()
-    for (i, g) in gen
-        vmin = bus[g["gen_bus"]]["vmin"]
-        @assert vmin>0
-        s = sqrt(max(abs(g["pmax"]), abs(g["pmin"]))^2 + max(abs(g["qmax"]), abs(g["qmin"]))^2)
-        ub[i] = s/vmin
-    end
-
     if bounded
+        ub = Dict()
+        for (i, g) in gen
+            vmin = bus[g["gen_bus"]]["vmin"]
+            @assert vmin>0
+            s = sqrt(max(abs(g["pmax"]), abs(g["pmin"]))^2 + max(abs(g["qmax"]), abs(g["qmin"]))^2)
+            ub[i] = s/vmin
+        end
+
         var(pm, nw, cnd)[:crg] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_crg",
             lower_bound = -ub[i],
             upper_bound = ub[i],
-            start = comp_start_value(ref(pm, nw, :gen, i), "crg_start", cnd, 0)
+            start = comp_start_value(ref(pm, nw, :gen, i), "crg_start", cnd)
         )
         var(pm, nw, cnd)[:cig] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_cig",
             lower_bound = -ub[i],
             upper_bound = ub[i],
-            start = comp_start_value(ref(pm, nw, :gen, i), "cig_start", cnd, 0)
+            start = comp_start_value(ref(pm, nw, :gen, i), "cig_start", cnd)
         )
     else
         var(pm, nw, cnd)[:crg] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_crg",
-            start = comp_start_value(ref(pm, nw, :gen, i), "crg_start", cnd, 0)
+            start = comp_start_value(ref(pm, nw, :gen, i), "crg_start", cnd)
         )
         var(pm, nw, cnd)[:cig] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_cig",
-            start = comp_start_value(ref(pm, nw, :gen, i), "cig_start", cnd, 0)
+            start = comp_start_value(ref(pm, nw, :gen, i), "cig_start", cnd)
         )
     end
 end
+
 "variable: `crd[j]`, `cid[j]` ` for `j` in `load`"
-function variable_load(pm::GenericPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+function variable_load(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     load = ref(pm, nw, :load)
     bus = ref(pm, nw, :bus)
 
-    ub = Dict()
-    for (i, l) in load
-        vmin = bus[l["load_bus"]]["vmin"]
-        @assert vmin>0
-        s = sqrt(l["pd"]^2 + l["qd"]^2)
-        ub[i] = s/vmin
-    end
-
     if bounded
+        ub = Dict()
+        for (i, l) in load
+            vmin = bus[l["load_bus"]]["vmin"]
+            @assert vmin>0
+            s = sqrt(l["pd"]^2 + l["qd"]^2)
+            ub[i] = s/vmin
+        end
+
+
         var(pm, nw, cnd)[:crd] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_crd",
             lower_bound = -ub[i],
             upper_bound = ub[i],
-            start = comp_start_value(ref(pm, nw, :load, i), "crd_start", cnd, 0)
+            start = comp_start_value(ref(pm, nw, :load, i), "crd_start", cnd)
         )
         var(pm, nw, cnd)[:cid] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_cid",
             lower_bound = -ub[i],
             upper_bound = ub[i],
-            start = comp_start_value(ref(pm, nw, :load, i), "cid_start", cnd, 0)
+            start = comp_start_value(ref(pm, nw, :load, i), "cid_start", cnd)
         )
     else
         var(pm, nw, cnd)[:crd] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_crd",
-            start = comp_start_value(ref(pm, nw, :load, i), "crd_start", cnd, 0)
+            start = comp_start_value(ref(pm, nw, :load, i), "crd_start", cnd)
         )
         var(pm, nw, cnd)[:cid] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_cid",
-            start = comp_start_value(ref(pm, nw, :load, i), "cid_start", cnd, 0)
+            start = comp_start_value(ref(pm, nw, :load, i), "cid_start", cnd)
         )
     end
 end
 
 
 "variable: `crdc[j]`, `cidc[j]` for `j` in `dcline`"
-function variable_dcline(pm::GenericPowerModel{T}; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true) where T <: IVRForm
+function variable_dcline(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     gen = ref(pm, nw, :gen)
     bus = ref(pm, nw, :bus)
     dcline = ref(pm, nw, :dcline)
 
-    ub = Dict()
-    for (l,i,j) in ref(pm, nw, :arcs_from_dc)
-        vminf = bus[i]["vmin"]
-        vmint = bus[j]["vmin"]
-        @assert vminf>0
-        @assert vmint>0
-        sf = sqrt(max(abs(dcline[l]["pmaxf"]), abs(dcline[l]["pminf"]))^2 + max(abs(dcline[l]["qmaxf"]), abs(dcline[l]["qminf"]))^2)
-        st = sqrt(max(abs(dcline[l]["pmaxt"]), abs(dcline[l]["pmint"]))^2 + max(abs(dcline[l]["qmaxt"]), abs(dcline[l]["qmint"]))^2)
-        imax = max(sf,st)/ min(vminf, vminf)
-        ub[(l,i,j)] = imax
-        ub[(l,j,i)] = imax
-    end
-
     if bounded
+        ub = Dict()
+        for (l,i,j) in ref(pm, nw, :arcs_from_dc)
+            vminf = bus[i]["vmin"]
+            vmint = bus[j]["vmin"]
+            @assert vminf>0
+            @assert vmint>0
+            sf = sqrt(max(abs(dcline[l]["pmaxf"]), abs(dcline[l]["pminf"]))^2 + max(abs(dcline[l]["qmaxf"]), abs(dcline[l]["qminf"]))^2)
+            st = sqrt(max(abs(dcline[l]["pmaxt"]), abs(dcline[l]["pmint"]))^2 + max(abs(dcline[l]["qmaxt"]), abs(dcline[l]["qmint"]))^2)
+            imax = max(sf,st)/ min(vminf, vminf)
+            ub[(l,i,j)] = imax
+            ub[(l,j,i)] = imax
+        end
+
         var(pm, nw, cnd)[:crdc] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_crdc",
             lower_bound = -ub[(l,i,j)],
             upper_bound = ub[(l,i,j)],
-            start = comp_start_value(ref(pm, nw, :dcline, l), "crdc_start", cnd, 0)
+            start = comp_start_value(ref(pm, nw, :dcline, l), "crdc_start", cnd)
         )
         var(pm, nw, cnd)[:cidc] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_cidc",
             lower_bound = -ub[(l,i,j)],
             upper_bound = ub[(l,i,j)],
-            start = comp_start_value(ref(pm, nw, :dcline, l), "cidc_start", cnd, 0)
+            start = comp_start_value(ref(pm, nw, :dcline, l), "cidc_start", cnd)
         )
     else
         var(pm, nw, cnd)[:crdc] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_crdc",
-            start = comp_start_value(ref(pm, nw, :dcline, l), "crdc_start", cnd, 0)
+            start = comp_start_value(ref(pm, nw, :dcline, l), "crdc_start", cnd)
         )
         var(pm, nw, cnd)[:cidc] = JuMP.@variable(pm.model,
             [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_cidc",
-            start = comp_start_value(ref(pm, nw, :dcline, l), "cidc_start", cnd, 0)
+            start = comp_start_value(ref(pm, nw, :dcline, l), "cidc_start", cnd)
         )
     end
 end
 
 ""
-function constraint_current_balance_shunt(pm::GenericPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_current_balance_shunt(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     if !haskey(con(pm, nw, cnd), :kcl_cr)
         con(pm, nw, cnd)[:kcl_cr] = Dict{Int,JuMP.ConstraintRef}()
     end
@@ -640,7 +610,7 @@ end
 
 
 "extracts voltage set points from rectangular voltage form and converts into polar voltage form"
-function add_setpoint_bus_voltage!(sol, pm::GenericPowerModel{T}) where T <: IVRForm
+function add_setpoint_bus_voltage!(sol, pm::AbstractIVRModel)
     sol_dict = get(sol, "bus", Dict{String,Any}())
 
     if ismultinetwork(pm)
@@ -685,18 +655,18 @@ end
 
 
 ""
-function add_setpoint_generator_current!(sol, pm::GenericPowerModel{T}) where T <: IVRForm
+function add_setpoint_generator_current!(sol, pm::AbstractIVRModel)
     add_setpoint!(sol, pm, "gen", "crg", :crg, status_name="gen_status")
     add_setpoint!(sol, pm, "gen", "cig", :cig, status_name="gen_status")
 end
 
 ""
-function add_setpoint_load_current!(sol, pm::GenericPowerModel{T}) where T <: IVRForm
+function add_setpoint_load_current!(sol, pm::AbstractIVRModel)
     add_setpoint!(sol, pm, "load", "crd", :crd, status_name="status")
     add_setpoint!(sol, pm, "load", "cid", :cid, status_name="status")
 end
 
-function add_setpoint_branch_current!(sol, pm::GenericPowerModel{T}) where T <: IVRForm
+function add_setpoint_branch_current!(sol, pm::AbstractIVRModel)
     # check the branch flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
         add_setpoint!(sol, pm, "branch", "crf", :cr, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
@@ -707,7 +677,7 @@ function add_setpoint_branch_current!(sol, pm::GenericPowerModel{T}) where T <: 
 end
 
 ""
-function solution_opf_iv!(pm::GenericPowerModel, sol::Dict{String,<:Any})
+function solution_opf_iv!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
     add_setpoint_bus_voltage!(sol, pm)
     add_setpoint_branch_current!(sol, pm)
     add_setpoint_load_current!(sol, pm)
@@ -722,7 +692,7 @@ end
 
 
 ""
-function add_setpoint_dcline_flow!(sol, pm::GenericPowerModel{T}) where T <: IVRForm
+function add_setpoint_dcline_flow!(sol, pm::AbstractIVRModel)
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
         add_setpoint!(sol, pm, "dcline", "crf", :crdc, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
         add_setpoint!(sol, pm, "dcline", "cif", :cidc, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
@@ -732,7 +702,7 @@ function add_setpoint_dcline_flow!(sol, pm::GenericPowerModel{T}) where T <: IVR
 end
 
 
-function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::GenericPowerModel{T}) where T <: IVRForm
+function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractIVRModel)
     gen_cost = Dict()
     dcline_cost = Dict()
 
