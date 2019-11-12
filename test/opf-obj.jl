@@ -59,7 +59,7 @@ end
         result = run_ac_opf(data, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 5458.52; atol = 1e0)
+        @test isapprox(result["objective"], 5420.48; atol = 1e0)
     end
 
     @testset "opb objective" begin
@@ -80,7 +80,7 @@ end
         result = run_ac_opf(data, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 18197.2; atol = 1e0)
+        @test isapprox(result["objective"], 18157.2; atol = 1e0)
     end
 
     @testset "qp objective" begin
