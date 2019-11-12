@@ -82,21 +82,6 @@ end
 # end
 
 
-""
-function constraint_voltage_difference(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    branch = ref(pm, nw, :branch, i)
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-
-    tr, ti = calc_branch_t(branch)
-    r = branch["br_r"][cnd]
-    x = branch["br_x"][cnd]
-    tm = branch["tap"][cnd]
-
-    constraint_voltage_difference(pm, nw, cnd, i, f_bus, t_bus, f_idx, r, x, tr, ti, tm)
-end
-
 
 
 # """
@@ -136,9 +121,9 @@ end
 
 
 """
-Defines voltage drop over a branch, linking from and to side voltage magnitude
+Defines voltage drop over a branch, linking from and to side complex voltage
 """
-function constraint_voltage_difference(pm::AbstractIVRModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, r, x, tr, ti, tm)
+function constraint_voltage_drop(pm::AbstractIVRModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, r, x, tr, ti, tm)
     vrfr = var(pm, n, c, :vr, f_bus)
     vifr = var(pm, n, c, :vi, f_bus)
 
@@ -222,10 +207,10 @@ end
 
 "`p[t_idx]^2 + q[t_idx]^2 <= rate_a^2`"
 function constraint_thermal_limit_to(pm::AbstractIVRModel, n::Int, c::Int, t_idx, rate_a)
-    t_bus = t_idx[2]
-    f_idx = (t_idx[1], t_idx[3], t_idx[2])
+    (l, t_bus, f_bus) = t_idx
+    f_idx = (l, f_bus, t_bus)
 
-    branch = ref(pm, n, :branch, t_idx[1])
+    branch = ref(pm, n, :branch, l)
     g_sh = branch["g_to"][c]
     b_sh = branch["b_to"][c]
 
@@ -318,54 +303,39 @@ function constraint_dcline(pm::AbstractIVRModel, n::Int, c::Int, f_bus, t_bus, f
     JuMP.@constraint(pm.model, pf + pt == loss0 + loss1*pf )
 end
 
-function constraint_dcline_power_limits_from(pm::AbstractIVRModel, n::Int, c::Int, i, f_bus, f_idx)
+function constraint_dcline_power_limits_from(pm::AbstractIVRModel, n::Int, c::Int, i, f_bus, f_idx, pmax, pmin, qmax, qmin)
     vrf = var(pm, n, c, :vr, f_bus)
     vif = var(pm, n, c, :vi, f_bus)
 
     crdcf = var(pm, n, c, :crdc, f_idx)
     cidcf = var(pm, n, c, :cidc, f_idx)
 
-    dcline = ref(pm, n, :dcline,i)
-
-    pmaxf = dcline["pmaxf"]
-    pminf = dcline["pminf"]
-
-    qmaxf = dcline["qmaxf"]
-    qminf = dcline["qminf"]
-
     pf = vrf*crdcf + vif*cidcf
     qf = vif*crdcf - vrf*cidcf
 
-    JuMP.@constraint(pm.model, pmaxf >= pf)
-    JuMP.@constraint(pm.model, pminf <= pf)
+    JuMP.@constraint(pm.model, pmax >= pf)
+    JuMP.@constraint(pm.model, pmin <= pf)
 
-    JuMP.@constraint(pm.model, qmaxf >= qf)
-    JuMP.@constraint(pm.model, qminf <= qf)
+    JuMP.@constraint(pm.model, qmax >= qf)
+    JuMP.@constraint(pm.model, qmin <= qf)
 end
 
 
-function constraint_dcline_power_limits_to(pm::AbstractIVRModel, n::Int, c::Int, i, t_bus, t_idx)
+function constraint_dcline_power_limits_to(pm::AbstractIVRModel, n::Int, c::Int, i, t_bus, t_idx, pmax, pmin, qmax, qmin)
     vrt = var(pm, n, c, :vr, t_bus)
     vit = var(pm, n, c, :vi, t_bus)
 
     crdct = var(pm, n, c, :crdc, t_idx)
     cidct = var(pm, n, c, :cidc, t_idx)
 
-    dcline = ref(pm, n, :dcline, i)
-
-    pmaxt = dcline["pmaxt"]
-    pmint = dcline["pmint"]
-    qmaxt = dcline["qmaxt"]
-    qmint = dcline["qmint"]
-
     pt = vrt*crdct + vit*cidct
     qt = vit*crdct - vrt*cidct
 
-    JuMP.@constraint(pm.model, pmaxt >= pt)
-    JuMP.@constraint(pm.model, pmint <= pt)
+    JuMP.@constraint(pm.model, pmax >= pt)
+    JuMP.@constraint(pm.model, pmin <= pt)
 
-    JuMP.@constraint(pm.model, qmaxt >= qt)
-    JuMP.@constraint(pm.model, qmint <= qt)
+    JuMP.@constraint(pm.model, qmax >= qt)
+    JuMP.@constraint(pm.model, qmin <= qt)
 end
 
 "`pf[i] == pf, pt[i] == pt`"
@@ -388,27 +358,7 @@ function constraint_active_dcline_setpoint(pm::AbstractIVRModel, n::Int, c::Int,
 end
 
 
-""
-function constraint_current_balance(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    if !haskey(con(pm, nw, cnd), :kcl_cr)
-        con(pm, nw, cnd)[:kcl_cr] = Dict{Int,JuMP.ConstraintRef}()
-    end
-    if !haskey(con(pm, nw, cnd), :kcl_ci)
-        con(pm, nw, cnd)[:kcl_ci] = Dict{Int,JuMP.ConstraintRef}()
-    end
 
-    bus = ref(pm, nw, :bus, i)
-    bus_arcs = ref(pm, nw, :bus_arcs, i)
-    bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
-    bus_gens = ref(pm, nw, :bus_gens, i)
-    bus_loads = ref(pm, nw, :bus_loads, i)
-    bus_shunts = ref(pm, nw, :bus_shunts, i)
-
-    bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts)
-    bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts)
-
-    constraint_current_balance(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_gs, bus_bs)
-end
 
 
 "extracts voltage set points from rectangular voltage form and converts into polar voltage form"

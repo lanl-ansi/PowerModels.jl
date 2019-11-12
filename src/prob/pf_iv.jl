@@ -46,7 +46,7 @@ function post_pf_iv(pm::AbstractPowerModel)
         # constraint_current_from(pm, i)
         # constraint_current_to(pm, i)
 
-        constraint_voltage_difference(pm, i)
+        constraint_voltage_drop(pm, i)
 
         constraint_voltage_angle_difference(pm, i)
     end

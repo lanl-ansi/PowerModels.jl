@@ -227,6 +227,27 @@ function constraint_power_balance_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.
     constraint_power_balance_ne(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
+""
+function constraint_current_balance(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    if !haskey(con(pm, nw, cnd), :kcl_cr)
+        con(pm, nw, cnd)[:kcl_cr] = Dict{Int,JuMP.ConstraintRef}()
+    end
+    if !haskey(con(pm, nw, cnd), :kcl_ci)
+        con(pm, nw, cnd)[:kcl_ci] = Dict{Int,JuMP.ConstraintRef}()
+    end
+
+    bus = ref(pm, nw, :bus, i)
+    bus_arcs = ref(pm, nw, :bus_arcs, i)
+    bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
+    bus_gens = ref(pm, nw, :bus_gens, i)
+    bus_loads = ref(pm, nw, :bus_loads, i)
+    bus_shunts = ref(pm, nw, :bus_shunts, i)
+
+    bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts)
+    bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts)
+
+    constraint_current_balance(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_gs, bus_bs)
+end
 
 ### Branch - Ohm's Law Constraints ###
 
@@ -387,6 +408,21 @@ function constraint_ohms_yt_to_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw
     constraint_ohms_yt_to_ne(pm, nw, cnd, i, f_bus, t_bus, f_idx, t_idx, g[cnd,cnd], b[cnd,cnd], g_to, b_to, tr[cnd], ti[cnd], tm, vad_min, vad_max)
 end
 
+
+""
+function constraint_voltage_drop(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    branch = ref(pm, nw, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+
+    tr, ti = calc_branch_t(branch)
+    r = branch["br_r"][cnd]
+    x = branch["br_x"][cnd]
+    tm = branch["tap"][cnd]
+
+    constraint_voltage_drop(pm, nw, cnd, i, f_bus, t_bus, f_idx, r, x, tr, ti, tm)
+end
 
 
 ### Branch - Current ###
@@ -830,7 +866,13 @@ function constraint_dcline_power_limits_from(pm::AbstractPowerModel, i::Int; nw:
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
     f_idx = (i, f_bus, t_bus)
-    constraint_dcline_power_limits_from(pm, nw, cnd, i, f_bus, f_idx)
+
+    pmax = dcline["pmaxf"]
+    pmin = dcline["pminf"]
+
+    qmax = dcline["qmaxf"]
+    qmin = dcline["qminf"]
+    constraint_dcline_power_limits_from(pm, nw, cnd, i, f_bus, f_idx, pmax, pmin, qmax, qmin)
 end
 
 ""
@@ -839,5 +881,10 @@ function constraint_dcline_power_limits_to(pm::AbstractPowerModel, i::Int; nw::I
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
     t_idx = (i, t_bus, f_bus)
-    constraint_dcline_power_limits_to(pm, nw, cnd, i, t_bus, t_idx)
+
+    pmax = dcline["pmaxt"]
+    pmin = dcline["pmint"]
+    qmax = dcline["qmaxt"]
+    qmin = dcline["qmint"]
+    constraint_dcline_power_limits_to(pm, nw, cnd, i, t_bus, t_idx, pmax, pmin, qmax, qmin)
 end
