@@ -60,7 +60,7 @@ Notable examples include IVRPowerModel
 """
 function constraint_voltage_magnitude(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     bus = ref(pm, nw, :bus, i)
-    constraint_voltage_magnitude(pm, nw, cnd, i, bus["vmin"], bus["vmax"])
+    constraint_voltage_magnitude(pm, nw, cnd, i, bus["vmin"][cnd], bus["vmax"][cnd])
 end
 
 ### Current Constraints ###
@@ -421,7 +421,7 @@ function constraint_voltage_drop(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw,
     x = branch["br_x"][cnd]
     tm = branch["tap"][cnd]
 
-    constraint_voltage_drop(pm, nw, cnd, i, f_bus, t_bus, f_idx, r, x, tr, ti, tm)
+    constraint_voltage_drop(pm, nw, cnd, i, f_bus, t_bus, f_idx, r, x, tr[cnd], ti[cnd], tm)
 end
 
 
@@ -867,11 +867,11 @@ function constraint_dcline_power_limits_from(pm::AbstractPowerModel, i::Int; nw:
     t_bus = dcline["t_bus"]
     f_idx = (i, f_bus, t_bus)
 
-    pmax = dcline["pmaxf"]
-    pmin = dcline["pminf"]
+    pmax = dcline["pmaxf"][cnd]
+    pmin = dcline["pminf"][cnd]
 
-    qmax = dcline["qmaxf"]
-    qmin = dcline["qminf"]
+    qmax = dcline["qmaxf"][cnd]
+    qmin = dcline["qminf"][cnd]
     constraint_dcline_power_limits_from(pm, nw, cnd, i, f_bus, f_idx, pmax, pmin, qmax, qmin)
 end
 
@@ -882,9 +882,9 @@ function constraint_dcline_power_limits_to(pm::AbstractPowerModel, i::Int; nw::I
     t_bus = dcline["t_bus"]
     t_idx = (i, t_bus, f_bus)
 
-    pmax = dcline["pmaxt"]
-    pmin = dcline["pmint"]
-    qmax = dcline["qmaxt"]
-    qmin = dcline["qmint"]
+    pmax = dcline["pmaxt"][cnd]
+    pmin = dcline["pmint"][cnd]
+    qmax = dcline["qmaxt"][cnd]
+    qmin = dcline["qmint"][cnd]
     constraint_dcline_power_limits_to(pm, nw, cnd, i, t_bus, t_idx, pmax, pmin, qmax, qmin)
 end

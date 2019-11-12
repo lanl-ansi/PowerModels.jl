@@ -193,8 +193,8 @@ function constraint_thermal_limit_from(pm::AbstractIVRModel, n::Int, c::Int, f_i
     tr, ti = calc_branch_t(branch)
     tm = branch["tap"][c]
 
-    crf = JuMP.@NLexpression(pm.model, (tr*csrfr - ti*csifr + g_sh*vr - b_sh*vi)/tm^2)
-    cif = JuMP.@NLexpression(pm.model, (tr*csifr + ti*csrfr + g_sh*vi + b_sh*vr)/tm^2)
+    crf = JuMP.@NLexpression(pm.model, (tr[c]*csrfr - ti[c]*csifr + g_sh*vr - b_sh*vi)/tm^2)
+    cif = JuMP.@NLexpression(pm.model, (tr[c]*csifr + ti[c]*csrfr + g_sh*vi + b_sh*vr)/tm^2)
 
     #
     # JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)

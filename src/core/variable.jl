@@ -285,9 +285,9 @@ function variable_gen_current_rectangular(pm::AbstractPowerModel; nw::Int=pm.cnw
     if bounded
         ub = Dict()
         for (i, g) in gen
-            vmin = bus[g["gen_bus"]]["vmin"]
+            vmin = bus[g["gen_bus"]]["vmin"][cnd]
             @assert vmin>0
-            s = sqrt(max(abs(g["pmax"]), abs(g["pmin"]))^2 + max(abs(g["qmax"]), abs(g["qmin"]))^2)
+            s = sqrt(max(abs(g["pmax"][cnd]), abs(g["pmin"][cnd]))^2 + max(abs(g["qmax"][cnd]), abs(g["qmin"][cnd]))^2)
             ub[i] = s/vmin
         end
 
@@ -323,9 +323,9 @@ function variable_load_current_rectangular(pm::AbstractPowerModel; nw::Int=pm.cn
     if bounded
         ub = Dict()
         for (i, l) in load
-            vmin = bus[l["load_bus"]]["vmin"]
+            vmin = bus[l["load_bus"]]["vmin"][cnd]
             @assert vmin>0
-            s = sqrt(l["pd"]^2 + l["qd"]^2)
+            s = sqrt(l["pd"][cnd]^2 + l["qd"][cnd]^2)
             ub[i] = s/vmin
         end
 
@@ -553,8 +553,8 @@ function variable_branch_current_rectangular(pm::AbstractPowerModel; nw::Int=pm.
         tm = branch[l]["tap"][cnd]
 
         #expressions that define KCL
-        cr[(l,i,j)] = (tr*csrfr - ti*csifr + g_sh_fr*vrfr - b_sh_fr*vifr)/tm^2
-        ci[(l,i,j)] = (tr*csifr + ti*csrfr + g_sh_fr*vifr + b_sh_fr*vrfr)/tm^2
+        cr[(l,i,j)] = (tr[cnd]*csrfr - ti[cnd]*csifr + g_sh_fr*vrfr - b_sh_fr*vifr)/tm^2
+        ci[(l,i,j)] = (tr[cnd]*csifr + ti[cnd]*csrfr + g_sh_fr*vifr + b_sh_fr*vrfr)/tm^2
         cr[(l,j,i)] = csrto + g_sh_to*vrto - b_sh_to*vito
         ci[(l,j,i)] = csito + g_sh_to*vito + b_sh_to*vrto
     end
