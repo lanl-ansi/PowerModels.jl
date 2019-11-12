@@ -28,6 +28,8 @@ This enables the definition of a wide variety of power network formulations and 
 * SDP Relaxation (W-space)
 * SOC Relaxation (W-space)
 * QC Relaxation (W+L-space)
+* IV (rectangular coordinates)
+
 
 **Network Data Formats**
 * Matpower ".m" files
@@ -58,7 +60,7 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 - Hakan Ergun (@hakanergun) KU Leuven, HVDC lines
 - David Fobes (@pseudocubic) LANL, PSS(R)E v33 data support
 - Rory Finnegan (@rofinn) Invenia, Memento Logging
-- Frederik Geth (@frederikgeth) CSIRO, storage modeling advise, Branch Flow formulation
+- Frederik Geth (@frederikgeth) CSIRO, storage modeling advise, Branch Flow and current-voltage formulation
 - Jonas Kersulis (@kersulis) University of Michigan, Sparse SDP formulation
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
@@ -69,13 +71,13 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 
 If you find PowerModels useful in your work, we kindly request that you cite the following [publication](https://ieeexplore.ieee.org/document/8442948/):
 ```
-@inproceedings{8442948, 
-  author = {Carleton Coffrin and Russell Bent and Kaarthik Sundar and Yeesian Ng and Miles Lubin}, 
-  title = {PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations}, 
-  booktitle = {2018 Power Systems Computation Conference (PSCC)}, 
+@inproceedings{8442948,
+  author = {Carleton Coffrin and Russell Bent and Kaarthik Sundar and Yeesian Ng and Miles Lubin},
+  title = {PowerModels.jl: An Open-Source Framework for Exploring Power Flow Formulations},
+  booktitle = {2018 Power Systems Computation Conference (PSCC)},
   year = {2018},
   month = {June},
-  pages = {1-8}, 
+  pages = {1-8},
   doi = {10.23919/PSCC.2018.8442948}
 }
 ```

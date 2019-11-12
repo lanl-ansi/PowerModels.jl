@@ -1,3 +1,6 @@
+# Kirchhoff's circuit laws as defined the current-voltage variable space
+# even though the branch model is linear, the feasible set is non-convex
+# in the context of constant-power loads or generators
 ""
 function variable_voltage(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...)
     variable_voltage_real(pm; nw=nw, cnd=cnd, bounded=bounded, kwargs...)
