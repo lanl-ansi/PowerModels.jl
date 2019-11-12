@@ -47,8 +47,6 @@ function post_pf_iv(pm::AbstractPowerModel)
         # constraint_current_to(pm, i)
 
         constraint_voltage_drop(pm, i)
-
-        constraint_voltage_angle_difference(pm, i)
     end
 
     for (i,dcline) in ref(pm, :dcline)
