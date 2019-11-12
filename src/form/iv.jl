@@ -141,8 +141,6 @@ end
 
 function constraint_voltage_angle_difference(pm::AbstractIVRModel, n::Int, c::Int, f_idx,  angmin, angmax)
     i, f_bus, t_bus = f_idx
-    t_idx = (i, t_bus, f_bus)
-
 
     vrf = var(pm, n, c, :vr, f_bus)
     vif = var(pm, n, c, :vi, f_bus)
