@@ -4,6 +4,7 @@ PowerModels.jl Change Log
 ### Staged
 - Added DCMPPowerModel for replication of Matpower's DC model (#612)
 - Reduced memory allocations during PSSE data parsing (#617)
+- Fixed quadratic terms in nonlinear objectives (#621)
 
 ### v0.13.0
 - Added SOC formulation of the storage model
