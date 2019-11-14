@@ -238,10 +238,13 @@ function constraint_load_power_setpoint(pm::AbstractIVRModel, n::Int, c::Int, i,
     vi = var(pm, n, c, :vi, bus)
     cr = var(pm, n, c, :crd, i)
     ci = var(pm, n, c, :cid, i)
-
-    JuMP.@constraint(pm.model, pref == vr*cr  + vi*ci)
-    JuMP.@constraint(pm.model, qref == vi*cr  - vr*ci)
-
+    if pref == qref == 0
+        JuMP.@constraint(pm.model, cr == 0)
+        JuMP.@constraint(pm.model, ci == 0)        
+    else
+        JuMP.@constraint(pm.model, pref == vr*cr  + vi*ci)
+        JuMP.@constraint(pm.model, qref == vi*cr  - vr*ci)
+    end
 end
 
 function constraint_gen_power_limits(pm::AbstractIVRModel, n::Int, c::Int, i, bus, pmax, pmin, qmax, qmin)
