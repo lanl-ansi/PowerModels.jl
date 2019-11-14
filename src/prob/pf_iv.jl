@@ -18,7 +18,7 @@ function post_pf_iv(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :gen)
-        constraint_gen_power_limits(pm, i)
+        #constraint_gen_power_limits(pm, i) no bounds when solving power flow
     end
 
     for (i,bus) in ref(pm, :ref_buses)

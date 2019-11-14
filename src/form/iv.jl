@@ -239,8 +239,8 @@ function constraint_load_power_setpoint(pm::AbstractIVRModel, n::Int, c::Int, i,
     cr = var(pm, n, c, :crd, i)
     ci = var(pm, n, c, :cid, i)
     if pref == qref == 0
-        JuMP.@constraint(pm.model, cr == 0)
-        JuMP.@constraint(pm.model, ci == 0)        
+        #JuMP.@constraint(pm.model, cr == 0) #taken care of through variable bounds, would be redundant
+        #JuMP.@constraint(pm.model, ci == 0) #taken care of through variable bounds, would be redundant
     else
         JuMP.@constraint(pm.model, pref == vr*cr  + vi*ci)
         JuMP.@constraint(pm.model, qref == vi*cr  - vr*ci)
