@@ -140,8 +140,9 @@ function constraint_voltage_drop(pm::AbstractIVRModel, n::Int, c::Int, i, f_bus,
     JuMP.@constraint(pm.model, vito == (vifr*tr - vrfr*ti)/tm^2 - r*csi - x*csr)
 end
 
-
-
+"""
+Bounds the voltage angle difference between bus pairs
+"""
 function constraint_voltage_angle_difference(pm::AbstractIVRModel, n::Int, c::Int, f_idx,  angmin, angmax)
     i, f_bus, t_bus = f_idx
 
@@ -160,6 +161,10 @@ function constraint_voltage_angle_difference(pm::AbstractIVRModel, n::Int, c::In
         )
 end
 
+"""
+Kirchhoff's current law applied to buses
+`sum(cr + im*ci) = 0`
+"""
 function constraint_current_balance(pm::AbstractIVRModel, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_gs, bus_bs)
     vr = var(pm, n, c, :vr, i)
     vi = var(pm, n, c, :vi, i)
@@ -196,12 +201,6 @@ function constraint_thermal_limit_from(pm::AbstractIVRModel, n::Int, c::Int, f_i
     crf = JuMP.@NLexpression(pm.model, (tr[c]*csrfr - ti[c]*csifr + g_sh*vr - b_sh*vi)/tm^2)
     cif = JuMP.@NLexpression(pm.model, (tr[c]*csifr + ti[c]*csrfr + g_sh*vi + b_sh*vr)/tm^2)
 
-    #
-    # JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)
-    # *(
-    #   ((tr*csrfr - ti*csifr + g_sh*vr - b_sh*vi)/tm^2)^2
-    # + ((tr*csifr + ti*csrfr + g_sh*vi + b_sh*vr)/tm^2)^2
-    # ) <= rate_a^2)
     JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)*(crf^2 + cif^2) <= rate_a^2)
 
 end
@@ -224,15 +223,61 @@ function constraint_thermal_limit_to(pm::AbstractIVRModel, n::Int, c::Int, t_idx
     cit = JuMP.@NLexpression(pm.model, -csifr + g_sh*vi + b_sh*vr)
 
     JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)*(crt^2 + cit^2) <= rate_a^2)
-
-    # JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)
-    # *(
-    # (-csrfr + g_sh*vr - b_sh*vi)^2
-    # + (-csifr + g_sh*vi + b_sh*vr)^2
-    # )
-    # <= rate_a^2)
 end
 
+
+"`p[f_idx]^2 + q[f_idx]^2 <= rate_a^2`"
+function constraint_thermal_limit_from(pm::AbstractIVRModel, n::Int, c::Int, f_idx, rate_a)
+    f_bus = f_idx[2]
+    vr = var(pm, n, c, :vr, f_bus)
+    vi = var(pm, n, c, :vi, f_bus)
+    cr =  var(pm, n, c, :cr, f_idx)
+    ci =  var(pm, n, c, :ci, f_idx)
+    csrfr =  var(pm, n, c, :csr, f_idx)
+    csifr =  var(pm, n, c, :csi, f_idx)
+    #
+    branch = ref(pm, n, :branch, f_idx[1])
+    g_sh = branch["g_fr"][c]
+    b_sh = branch["b_fr"][c]
+    tr, ti = calc_branch_t(branch)
+    tm = branch["tap"][c]
+
+    crf = JuMP.@NLexpression(pm.model, (tr[c]*csrfr - ti[c]*csifr + g_sh*vr - b_sh*vi)/tm^2)
+    cif = JuMP.@NLexpression(pm.model, (tr[c]*csifr + ti[c]*csrfr + g_sh*vi + b_sh*vr)/tm^2)
+
+    #
+    # JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)
+    # *(
+    #   ((tr*csrfr - ti*csifr + g_sh*vr - b_sh*vi)/tm^2)^2
+    # + ((tr*csifr + ti*csrfr + g_sh*vi + b_sh*vr)/tm^2)^2
+    # ) <= rate_a^2)
+    JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)*(crf^2 + cif^2) <= rate_a^2)
+
+end
+
+"""
+Bounds the current magnitude at both from and to side of a branch
+`cr[f_idx]^2 + ci[f_idx]^2 <= c_rating^2`
+`cr[t_idx]^2 + ci[t_idx]^2 <= c_rating^2`
+"""
+function constraint_current_limit(pm::AbstractIVRModel, n::Int, c::Int, f_idx, c_rating)
+    (l, f_bus, t_bus) = f_idx
+    t_idx = (l, t_bus, f_bus)
+
+    crf =  var(pm, n, c, :cr, f_idx)
+    cif =  var(pm, n, c, :ci, f_idx)
+
+    crt =  var(pm, n, c, :cr, t_idx)
+    cit =  var(pm, n, c, :ci, t_idx)
+
+    JuMP.@NLconstraint(pm.model, (crf^2 + cif^2) <= c_rating^2)
+    JuMP.@NLconstraint(pm.model, (crt^2 + cit^2) <= c_rating^2)
+end
+
+"""
+`Re(v*cd') == pref`
+`Im(v*cd') == qref`
+"""
 function constraint_load_power_setpoint(pm::AbstractIVRModel, n::Int, c::Int, i, bus, pref, qref)
     vr = var(pm, n, c, :vr, bus)
     vi = var(pm, n, c, :vi, bus)
@@ -247,6 +292,10 @@ function constraint_load_power_setpoint(pm::AbstractIVRModel, n::Int, c::Int, i,
     end
 end
 
+"""
+`pmin <= Re(v*cg') <= pmax`
+`qmin <= Im(v*cg') <= qmax`
+"""
 function constraint_gen_power_limits(pm::AbstractIVRModel, n::Int, c::Int, i, bus, pmax, pmin, qmax, qmin)
     @assert pmin <= pmax
     @assert qmin <= qmax

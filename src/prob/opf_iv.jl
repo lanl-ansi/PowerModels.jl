@@ -42,6 +42,7 @@ function post_opf_iv(pm::AbstractPowerModel)
 
         constraint_thermal_limit_from(pm, i)
         constraint_thermal_limit_to(pm, i)
+        # constraint_current_limit(pm, i)
     end
 
     for i in ids(pm, :dcline)
