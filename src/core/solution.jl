@@ -21,8 +21,13 @@ function build_solution(pm::AbstractPowerModel, solve_time; solution_builder=sol
             data_nws[n] = Dict(
                 "name" => get(nw_data, "name", "anonymous"),
                 "bus_count" => length(nw_data["bus"]),
-                "branch_count" => length(nw_data["branch"])
+                "branch_count" => length(nw_data["branch"]),
             )
+            if haskey(pm.setting, "output") && haskey(pm.setting["output"], "topo") && pm.setting["output"]["topo"]
+                topo = _get_topology(nw_data)
+                refbus =  _get_angle_reference(nw_data)
+                merge!(data_nws[n], topo, refbus)
+            end
         end
     else
         sol["baseMVA"] = pm.data["baseMVA"]
@@ -32,6 +37,11 @@ function build_solution(pm::AbstractPowerModel, solve_time; solution_builder=sol
         solution_builder(pm, sol)
         data["bus_count"] = length(pm.data["bus"])
         data["branch_count"] = length(pm.data["branch"])
+        if haskey(pm.setting, "output") && haskey(pm.setting["output"], "topo") && pm.setting["output"]["topo"]
+            refbus = _get_angle_reference(pm.data)
+            topo = _get_topology(pm.data)
+            merge!(data, topo, refbus)
+        end
     end
 
     solution = Dict{String,Any}(

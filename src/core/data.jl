@@ -2514,3 +2514,39 @@ function _make_multiconductor!(data::Dict{String,<:Any}, conductors::Real)
         end
     end
 end
+
+
+""
+function _get_topology(data)
+    topo = Dict()
+
+    for unitname in ["load", "gen", "storage", "shunt"]
+        topo[unitname] = Dict()
+        for (i, unit) in data[unitname]
+            topo[unitname][i] = Dict()
+            topo[unitname][i][unitname*"_bus"] = unit[unitname*"_bus"]
+        end
+    end
+
+    for branchname in ["branch", "dcline", "switch"]
+        topo[branchname] = Dict()
+        for (i, branch) in data[branchname]
+            topo[branchname][i] = Dict()
+            topo[branchname][i]["f_bus"] = branch["f_bus"]
+            topo[branchname][i]["t_bus"] = branch["t_bus"]
+        end
+    end
+    return topo
+end
+
+
+function _get_angle_reference(data)
+    refbus = Dict("bus"=> Dict())
+    for (i, bus) in data["bus"]
+        if bus["bus_type"] == 3
+            refbus["bus"][i] = Dict()
+            refbus["bus"][i]["va"] = bus["va"]
+        end
+    end
+    return refbus
+end
