@@ -228,9 +228,9 @@ function _post_oswpf_nb(pm::AbstractPowerModel)
         branch_z = var(pm, pm.cnw, :z_branch, br)
         switch_z = var(pm, pm.cnw, :z_switch)
         for sw in bus_switches
-            JuMP.@NLconstraint(pm.model, branch_z >= switch_z[sw])
+            JuMP.@constraint(pm.model, branch_z >= switch_z[sw])
         end
-        JuMP.@NLconstraint(pm.model, branch_z <= sum(switch_z[sw] for sw in bus_switches))
+        JuMP.@constraint(pm.model, branch_z <= sum(switch_z[sw] for sw in bus_switches))
     end
 end
 
