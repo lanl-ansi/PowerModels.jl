@@ -86,13 +86,6 @@ function ref_calc_branch_flow_bounds(branches, buses, conductor::Int=1)
             flow_lb[i] = max(flow_lb[i], -branch["c_rating_a"][conductor]*m_vmax)
             flow_ub[i] = min(flow_ub[i],  branch["c_rating_a"][conductor]*m_vmax)
         end
-
-        if flow_lb[i] == -Inf
-            flow_lb[i] = NaN
-        end
-        if flow_ub[i] == Inf
-            flow_ub[i] = NaN
-        end
     end
 
     return flow_lb, flow_ub
@@ -120,13 +113,6 @@ function ref_calc_switch_flow_bounds(switches, buses, conductor::Int=1)
 
             flow_lb[i] = max(flow_lb[i], -switch["current_rating"][conductor]*m_vmax)
             flow_ub[i] = min(flow_ub[i],  switch["current_rating"][conductor]*m_vmax)
-        end
-
-        if flow_lb[i] == -Inf
-            flow_lb[i] = NaN
-        end
-        if flow_ub[i] == Inf
-            flow_ub[i] = NaN
         end
     end
 
@@ -167,19 +153,6 @@ function ref_calc_voltage_product_bounds(buspairs, conductor::Int=1)
             wi_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmax"])
             wi_min[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmin"])
         end
-
-        if wr_max[bp] == Inf
-            wr_max[bp] = NaN
-        end
-        if wr_min[bp] == -Inf
-            wr_min[bp] = NaN
-        end
-        if wi_max[bp] == Inf
-            wi_max[bp] = NaN
-        end
-        if wi_min[bp] == -Inf
-            wi_min[bp] = NaN
-        end
     end
 
     return wr_min, wr_max, wi_min, wi_max
@@ -205,13 +178,6 @@ function ref_calc_storage_injection_bounds(storage, buses, conductor::Int=1)
 
             injection_lb[i] = max(injection_lb[i], -strg["current_rating"][conductor]*vmax)
             injection_ub[i] = min(injection_ub[i],  strg["current_rating"][conductor]*vmax)
-        end
-
-        if injection_lb[i] == -Inf
-            injection_lb[i] = NaN
-        end
-        if injection_ub[i] == Inf
-            injection_ub[i] = NaN
         end
     end
 
