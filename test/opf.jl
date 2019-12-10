@@ -505,7 +505,7 @@ end
         result = run_opf("../test/data/matpower/case5.m", SOCWRConicPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 15051.4; atol = 1e0)
+        @test isapprox(result["objective"], 15051.4; atol = 1e1)
     end
     # convergence issue encountered when update to, SCS.jl v0.6.3
     #@testset "5-bus asymmetric case" begin
@@ -618,7 +618,7 @@ end
         result = run_opf_bf("../test/data/matpower/case3.m", SOCBFConicPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 5746.7; atol = 1e1)
+        @test isapprox(result["objective"], 5746.7; atol = 5e1)
     end
     @testset "5-bus transformer swap case" begin
         result = run_opf_bf("../test/data/matpower/case5.m", SOCBFConicPowerModel, scs_solver)
@@ -729,14 +729,14 @@ end
         result = run_opf("../test/data/matpower/case3.m", SDPWRMPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 5851.23; atol = 1e0)
+        @test isapprox(result["objective"], 5851.23; atol = 1e1)
     end
     # TODO see if convergence time can be improved
     @testset "5-bus asymmetric case" begin
         result = run_opf("../test/data/matpower/case5_asym.m", SDPWRMPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 16662.0; atol = 1e0)
+        @test isapprox(result["objective"], 16662.0; atol = 1e1)
     end
     @testset "5-bus gap case" begin
         result = run_opf("../test/data/matpower/case5_gap.m", SDPWRMPowerModel, scs_solver)
@@ -785,7 +785,7 @@ end
         result = run_opf("../test/data/matpower/case3.m", SparseSDPWRMPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 5851.23; atol = 1e0)
+        @test isapprox(result["objective"], 5851.23; atol = 1e1)
     end
     @testset "5-bus with asymmetric line charge" begin
         result = run_opf("../test/data/pti/case5_alc.raw", SparseSDPWRMPowerModel, scs_solver)
