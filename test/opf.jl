@@ -742,7 +742,7 @@ end
         result = run_opf("../test/data/matpower/case5_gap.m", SDPWRMPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], -28236.1; atol = 1e0)
+        @test isapprox(result["objective"], -28236.1; atol = 1e1)
     end
     # convergence issue encounterd when updated to SCS v0.6.3
     #@testset "5-bus with asymmetric line charge" begin
@@ -768,7 +768,7 @@ end
         result = run_opf("../test/data/matpower/case6.m", SDPWRMPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 11580.8; atol = 1e0)
+        @test isapprox(result["objective"], 11580.8; atol = 1e1)
     end
     # TODO replace this with smaller case, way too slow for unit testing
     #@testset "24-bus rts case" begin
@@ -791,7 +791,7 @@ end
         result = run_opf("../test/data/pti/case5_alc.raw", SparseSDPWRMPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 1005.31; atol = 1e-1)
+        @test isapprox(result["objective"], 1005.31; atol = 1e0)
     end
     # too slow for unit tests
     # @testset "14-bus case" begin
