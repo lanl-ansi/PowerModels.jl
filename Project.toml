@@ -22,7 +22,7 @@ JuMP = "~0.19.1, ~0.20"
 Juniper = ">= 0.4"
 MathOptInterface = "~0.8, ~0.9"
 Memento = "~0.10, ~0.11, ~0.12"
-SCS = ">= 0.4"
+SCS = ">= 0.6.3"
 julia = "^1"
 
 [extras]
