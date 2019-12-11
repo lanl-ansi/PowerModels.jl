@@ -4,6 +4,7 @@ PowerModels.jl Change Log
 ### Staged
 - Added DCMPPowerModel for replication of Matpower's DC model (#612)
 - Reduced memory allocations during PSSE data parsing (#617)
+- Updates for SCS v0.6.3 (#634)
 - Fixed quadratic terms in nonlinear objectives (#621)
 - Fixed incorrect flow bounds based on current flow limits (#631)
 
