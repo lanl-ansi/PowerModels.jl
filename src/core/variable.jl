@@ -315,44 +315,44 @@ function variable_gen_current_rectangular(pm::AbstractPowerModel; nw::Int=pm.cnw
     end
 end
 
-"variable: `crd[j]`, `cid[j]` ` for `j` in `load`"
-function variable_load_current_rectangular(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
-    load = ref(pm, nw, :load)
-    bus = ref(pm, nw, :bus)
-
-    if bounded
-        ub = Dict()
-        for (i, l) in load
-            vmin = bus[l["load_bus"]]["vmin"][cnd]
-            @assert vmin>0
-            s = sqrt(l["pd"][cnd]^2 + l["qd"][cnd]^2)
-            ub[i] = s/vmin
-        end
-
-
-        var(pm, nw, cnd)[:crd] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_crd",
-            lower_bound = -ub[i],
-            upper_bound = ub[i],
-            start = comp_start_value(ref(pm, nw, :load, i), "crd_start", cnd)
-        )
-        var(pm, nw, cnd)[:cid] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_cid",
-            lower_bound = -ub[i],
-            upper_bound = ub[i],
-            start = comp_start_value(ref(pm, nw, :load, i), "cid_start", cnd)
-        )
-    else
-        var(pm, nw, cnd)[:crd] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_crd",
-            start = comp_start_value(ref(pm, nw, :load, i), "crd_start", cnd)
-        )
-        var(pm, nw, cnd)[:cid] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_cid",
-            start = comp_start_value(ref(pm, nw, :load, i), "cid_start", cnd)
-        )
-    end
-end
+# "variable: `crd[j]`, `cid[j]` ` for `j` in `load`"
+# function variable_load_current_rectangular(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+#     load = ref(pm, nw, :load)
+#     bus = ref(pm, nw, :bus)
+#
+#     if bounded
+#         ub = Dict()
+#         for (i, l) in load
+#             vmin = bus[l["load_bus"]]["vmin"][cnd]
+#             @assert vmin>0
+#             s = sqrt(l["pd"][cnd]^2 + l["qd"][cnd]^2)
+#             ub[i] = s/vmin
+#         end
+#
+#
+#         var(pm, nw, cnd)[:crd] = JuMP.@variable(pm.model,
+#             [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_crd",
+#             lower_bound = -ub[i],
+#             upper_bound = ub[i],
+#             start = comp_start_value(ref(pm, nw, :load, i), "crd_start", cnd)
+#         )
+#         var(pm, nw, cnd)[:cid] = JuMP.@variable(pm.model,
+#             [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_cid",
+#             lower_bound = -ub[i],
+#             upper_bound = ub[i],
+#             start = comp_start_value(ref(pm, nw, :load, i), "cid_start", cnd)
+#         )
+#     else
+#         var(pm, nw, cnd)[:crd] = JuMP.@variable(pm.model,
+#             [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_crd",
+#             start = comp_start_value(ref(pm, nw, :load, i), "crd_start", cnd)
+#         )
+#         var(pm, nw, cnd)[:cid] = JuMP.@variable(pm.model,
+#             [i in ids(pm, nw, :load)], base_name="$(nw)_$(cnd)_cid",
+#             start = comp_start_value(ref(pm, nw, :load, i), "cid_start", cnd)
+#         )
+#     end
+# end
 
 function variable_generation_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax=false)
     if !relax
@@ -504,63 +504,63 @@ function variable_branch_current_rectangular(pm::AbstractPowerModel; nw::Int=pm.
         )
     end
     # this defines explicit to and from side total current variables
-    # if bounded
-    #     var(pm, nw, cnd)[:cr] = JuMP.@variable(pm.model,
-    #         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_cr",
-    #         lower_bound = -ub[l],
-    #         upper_bound = ub[l],
-    #         start = comp_start_value(ref(pm, nw, :branch, l), "cr_start", cnd)
-    #     )
-    #     var(pm, nw, cnd)[:ci] = JuMP.@variable(pm.model,
-    #         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_ci",
-    #         lower_bound = -ub[l],
-    #         upper_bound = ub[l],
-    #         start = comp_start_value(ref(pm, nw, :branch, l), "ci_start", cnd)
-    #     )
-    #
-    # else
-    #     var(pm, nw, cnd)[:cr] = JuMP.@variable(pm.model,
-    #         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_cr",
-    #         start = comp_start_value(ref(pm, nw, :branch, l), "cr_start", cnd)
-    #     )
-    #     var(pm, nw, cnd)[:ci] = JuMP.@variable(pm.model,
-    #         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_ci",
-    #         start = comp_start_value(ref(pm, nw, :branch, l), "ci_start", cnd)
-    #     )
-    # end
+    if bounded
+        var(pm, nw, cnd)[:cr] = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_cr",
+            lower_bound = -ub[l],
+            upper_bound = ub[l],
+            start = comp_start_value(ref(pm, nw, :branch, l), "cr_start", cnd)
+        )
+        var(pm, nw, cnd)[:ci] = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_ci",
+            lower_bound = -ub[l],
+            upper_bound = ub[l],
+            start = comp_start_value(ref(pm, nw, :branch, l), "ci_start", cnd)
+        )
+
+    else
+        var(pm, nw, cnd)[:cr] = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_cr",
+            start = comp_start_value(ref(pm, nw, :branch, l), "cr_start", cnd)
+        )
+        var(pm, nw, cnd)[:ci] = JuMP.@variable(pm.model,
+            [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_ci",
+            start = comp_start_value(ref(pm, nw, :branch, l), "ci_start", cnd)
+        )
+    end
 
     # Define total current variables as  expressions
-    cr = Dict()
-    ci = Dict()
-    for (l,i,j) in ref(pm, nw, :arcs_from)
-        vrfr = var(pm, nw, cnd, :vr, i)
-        vifr = var(pm, nw, cnd, :vi, i)
-
-        csrfr =  var(pm, nw, cnd, :csr, (l,i,j))
-        csifr =  var(pm, nw, cnd, :csi, (l,i,j))
-
-        vrto = var(pm, nw, cnd, :vr, j)
-        vito = var(pm, nw, cnd, :vi, j)
-
-        csrto =  -var(pm, nw, cnd, :csr, (l,i,j))
-        csito =  -var(pm, nw, cnd, :csi, (l,i,j))
-
-        tr, ti = calc_branch_t(branch[l])
-        g_sh_fr = branch[l]["g_fr"][cnd]
-        b_sh_fr = branch[l]["b_fr"][cnd]
-        g_sh_to = branch[l]["g_to"][cnd]
-        b_sh_to = branch[l]["b_to"][cnd]
-        tm = branch[l]["tap"][cnd]
-
-        #expressions that define KCL
-        cr[(l,i,j)] = (tr[cnd]*csrfr - ti[cnd]*csifr + g_sh_fr*vrfr - b_sh_fr*vifr)/tm^2
-        ci[(l,i,j)] = (tr[cnd]*csifr + ti[cnd]*csrfr + g_sh_fr*vifr + b_sh_fr*vrfr)/tm^2
-        cr[(l,j,i)] = csrto + g_sh_to*vrto - b_sh_to*vito
-        ci[(l,j,i)] = csito + g_sh_to*vito + b_sh_to*vrto
-    end
-    #store total current expressions for later use
-    var(pm, nw, cnd)[:cr] = cr
-    var(pm, nw, cnd)[:ci] = ci
+    # cr = Dict()
+    # ci = Dict()
+    # for (l,i,j) in ref(pm, nw, :arcs_from)
+    #     vrfr = var(pm, nw, cnd, :vr, i)
+    #     vifr = var(pm, nw, cnd, :vi, i)
+    #
+    #     csrfr =  var(pm, nw, cnd, :csr, (l,i,j))
+    #     csifr =  var(pm, nw, cnd, :csi, (l,i,j))
+    #
+    #     vrto = var(pm, nw, cnd, :vr, j)
+    #     vito = var(pm, nw, cnd, :vi, j)
+    #
+    #     csrto =  -var(pm, nw, cnd, :csr, (l,i,j))
+    #     csito =  -var(pm, nw, cnd, :csi, (l,i,j))
+    #
+    #     tr, ti = calc_branch_t(branch[l])
+    #     g_sh_fr = branch[l]["g_fr"][cnd]
+    #     b_sh_fr = branch[l]["b_fr"][cnd]
+    #     g_sh_to = branch[l]["g_to"][cnd]
+    #     b_sh_to = branch[l]["b_to"][cnd]
+    #     tm = branch[l]["tap"][cnd]
+    #
+    #     #expressions that define KCL
+    #     cr[(l,i,j)] = (tr[cnd]*csrfr - ti[cnd]*csifr + g_sh_fr*vrfr - b_sh_fr*vifr)/tm^2
+    #     ci[(l,i,j)] = (tr[cnd]*csifr + ti[cnd]*csrfr + g_sh_fr*vifr + b_sh_fr*vrfr)/tm^2
+    #     cr[(l,j,i)] = csrto + g_sh_to*vrto - b_sh_to*vito
+    #     ci[(l,j,i)] = csito + g_sh_to*vito + b_sh_to*vrto
+    # end
+    # #store total current expressions for later use
+    # var(pm, nw, cnd)[:cr] = cr
+    # var(pm, nw, cnd)[:ci] = ci
 end
 
 

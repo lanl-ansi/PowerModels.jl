@@ -58,9 +58,9 @@ voltage magnitudes (where variable bounds cannot be used)
 
 Notable examples include IVRPowerModel
 """
-function constraint_voltage_magnitude(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_voltage_magnitude_bounds(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     bus = ref(pm, nw, :bus, i)
-    constraint_voltage_magnitude(pm, nw, cnd, i, bus["vmin"][cnd], bus["vmax"][cnd])
+    constraint_voltage_magnitude_bounds(pm, nw, cnd, i, bus["vmin"][cnd], bus["vmax"][cnd])
 end
 
 ### Current Constraints ###
@@ -243,10 +243,14 @@ function constraint_current_balance(pm::AbstractPowerModel, i::Int; nw::Int=pm.c
     bus_loads = ref(pm, nw, :bus_loads, i)
     bus_shunts = ref(pm, nw, :bus_shunts, i)
 
+
+    bus_pd = Dict(k => ref(pm, nw, :load, k, "pd", cnd) for k in bus_loads)
+    bus_qd = Dict(k => ref(pm, nw, :load, k, "qd", cnd) for k in bus_loads)
+
     bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs", cnd) for k in bus_shunts)
     bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs", cnd) for k in bus_shunts)
 
-    constraint_current_balance(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_loads, bus_gs, bus_bs)
+    constraint_current_balance(pm, nw, cnd, i, bus_arcs, bus_arcs_dc, bus_gens, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
 ### Branch - Ohm's Law Constraints ###
@@ -600,14 +604,14 @@ end
 """
 Adds a current magnitude limit constraint for the desired branch to the PowerModel.
 """
-function constraint_current_limit(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_current_limits(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
 
     if haskey(branch, "c_rating_a")
-        constraint_current_limit(pm, nw, cnd, f_idx, branch["c_rating_a"][cnd])
+        constraint_current_limits(pm, nw, cnd, f_idx, branch["c_rating_a"][cnd])
     end
 end
 
