@@ -1,5 +1,5 @@
-# Kirchhoff's circuit laws as defined the current-voltage variable space
-# even though the branch model is linear, the feasible set is non-convex
+# Kirchhoff's circuit laws as defined the current-voltage variable space.
+# Even though the branch model is linear, the feasible set is non-convex
 # in the context of constant-power loads or generators
 ""
 function variable_voltage(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...)
@@ -18,11 +18,6 @@ function variable_branch_current(pm::AbstractIVRModel; kwargs...)
     variable_branch_current_rectangular(pm; kwargs...)
 end
 
-# ""
-# function variable_load(pm::AbstractIVRModel; kwargs...)
-#     variable_load_current_rectangular(pm; kwargs...)
-# end
-
 ""
 function variable_gen(pm::AbstractIVRModel; kwargs...)
     variable_gen_current_rectangular(pm; kwargs...)
@@ -32,8 +27,6 @@ end
 function variable_dcline(pm::AbstractIVRModel; kwargs...)
     variable_dcline_current_rectangular(pm; kwargs...)
 end
-
-
 
 "`v[i] == vm`"
 function constraint_voltage_magnitude_setpoint(pm::AbstractIVRModel, n::Int, c::Int, i, vm)
@@ -56,6 +49,7 @@ end
 "reference bus angle constraint"
 function constraint_theta_ref(pm::AbstractIVRModel, n::Int, c::Int, i::Int)
     JuMP.@constraint(pm.model, var(pm, n, c, :vi)[i] == 0)
+    JuMP.@constraint(pm.model, var(pm, n, c, :vr)[i] >= 0)
 end
 
 ""
@@ -73,7 +67,6 @@ function constraint_current_from(pm::AbstractIVRModel, i::Int; nw::Int=pm.cnw, c
     constraint_current_from(pm, nw, cnd, f_bus, f_idx, g_fr, b_fr, tr[cnd], ti[cnd], tm)
 end
 
-
 ""
 function constraint_current_to(pm::AbstractIVRModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
@@ -90,11 +83,8 @@ function constraint_current_to(pm::AbstractIVRModel, i::Int; nw::Int=pm.cnw, cnd
     constraint_current_to(pm, nw, cnd, t_bus, f_idx, t_idx, g_to, b_to)
 end
 
-
-
-
 """
-Defines branch flow model power flow equations
+Defines how current distributes over series and shunt impedances of a pi-model branch
 """
 function constraint_current_from(pm::AbstractIVRModel, n::Int, c::Int, f_bus, f_idx, g_sh_fr, b_sh_fr, tr, ti, tm)
     vrfr = var(pm, n, c, :vr, f_bus)
@@ -108,11 +98,10 @@ function constraint_current_from(pm::AbstractIVRModel, n::Int, c::Int, f_bus, f_
 
     JuMP.@constraint(pm.model, crfr == (tr*csrfr - ti*csifr + g_sh_fr*vrfr - b_sh_fr*vifr)/tm^2)
     JuMP.@constraint(pm.model, cifr == (tr*csifr + ti*csrfr + g_sh_fr*vifr + b_sh_fr*vrfr)/tm^2)
-
 end
 
 """
-Defines branch flow model power flow equations
+Defines how current distributes over series and shunt impedances of a pi-model branch
 """
 function constraint_current_to(pm::AbstractIVRModel, n::Int, c::Int, t_bus, f_idx, t_idx, g_sh_to, b_sh_to)
     vrto = var(pm, n, c, :vr, t_bus)
@@ -149,7 +138,7 @@ end
 """
 Bounds the voltage angle difference between bus pairs
 """
-function constraint_voltage_angle_difference(pm::AbstractIVRModel, n::Int, c::Int, f_idx,  angmin, angmax)
+function constraint_voltage_angle_difference(pm::AbstractIVRModel, n::Int, c::Int, f_idx, angmin, angmax)
     i, f_bus, t_bus = f_idx
 
     vrf = var(pm, n, c, :vr, f_bus)
@@ -158,13 +147,9 @@ function constraint_voltage_angle_difference(pm::AbstractIVRModel, n::Int, c::In
     vit = var(pm, n, c, :vi, t_bus)
     vvr = vrf*vrt + vif*vit
     vvi = vif*vrt - vrf*vit
-    #TODO are angle limits applied to Pi section part only?
-    JuMP.@constraint(pm.model,
-        tan(angmin)*vvr <= vvi
-        )
-    JuMP.@constraint(pm.model,
-        tan(angmax)*vvr >= vvi
-        )
+
+    JuMP.@constraint(pm.model, tan(angmin)*vvr <= vvi)
+    JuMP.@constraint(pm.model, tan(angmax)*vvr >= vvi)
 end
 
 """
@@ -179,99 +164,55 @@ function constraint_current_balance(pm::AbstractIVRModel, n::Int, c::Int, i, bus
     ci =  var(pm, n, c, :ci)
     crdc = var(pm, n, c, :crdc)
     cidc = var(pm, n, c, :cidc)
-    # crd = var(pm, n, c, :crd)
-    # cid = var(pm, n, c, :cid)
+
     crg = var(pm, n, c, :crg)
     cig = var(pm, n, c, :cig)
 
-    # JuMP.@constraint(pm.model, sum(cr[a] for a in bus_arcs) + sum(crdc[d] for d in bus_arcs_dc) == sum(crg[g] for g in bus_gens) - sum(crd[d] for d in bus_loads) - sum(gs for gs in values(bus_gs))*vr + sum(bs for bs in values(bus_bs))*vi )
-    # JuMP.@constraint(pm.model, sum(ci[a] for a in bus_arcs) + sum(cidc[d] for d in bus_arcs_dc) == sum(cig[g] for g in bus_gens) - sum(cid[d] for d in bus_loads) - sum(gs for gs in values(bus_gs))*vi - sum(bs for bs in values(bus_bs))*vr )
     JuMP.@NLconstraint(pm.model, sum(cr[a] for a in bus_arcs)
                                 + sum(crdc[d] for d in bus_arcs_dc)
                                 ==
                                 sum(crg[g] for g in bus_gens)
-                                - (sum(pd for pd in values(bus_pd))*vr + sum(qd for qd in values(bus_qd))*vi)/(vr^2 + vi^2)
-                                - sum(gs for gs in values(bus_gs))*vr + sum(bs for bs in values(bus_bs))*vi)
+                                - (
+                                      sum(pd for pd in values(bus_pd))*vr
+                                    + sum(qd for qd in values(bus_qd))*vi
+                                    )/(vr^2 + vi^2)
+                                - sum(gs for gs in values(bus_gs))*vr + sum(bs for bs in values(bus_bs))*vi
+                                )
     JuMP.@NLconstraint(pm.model, sum(ci[a] for a in bus_arcs)
                                 + sum(cidc[d] for d in bus_arcs_dc)
                                 ==
                                 sum(cig[g] for g in bus_gens)
-                                - (sum(pd for pd in values(bus_pd))*vi + sum(qd for qd in values(bus_qd))*vr)/(vr^2 + vi^2)
-                                - sum(gs for gs in values(bus_gs))*vi - sum(bs for bs in values(bus_bs))*vr )
+                                - (
+                                      sum(pd for pd in values(bus_pd))*vi
+                                    - sum(qd for qd in values(bus_qd))*vr
+                                    )/(vr^2 + vi^2)
+                                - sum(gs for gs in values(bus_gs))*vi - sum(bs for bs in values(bus_bs))*vr
+                                )
 
 end
 
 "`p[f_idx]^2 + q[f_idx]^2 <= rate_a^2`"
 function constraint_thermal_limit_from(pm::AbstractIVRModel, n::Int, c::Int, f_idx, rate_a)
-    f_bus = f_idx[2]
+    (l, f_bus, t_bus) = f_idx
+
     vr = var(pm, n, c, :vr, f_bus)
     vi = var(pm, n, c, :vi, f_bus)
-    cr =  var(pm, n, c, :cr, f_idx)
-    ci =  var(pm, n, c, :ci, f_idx)
-    csrfr =  var(pm, n, c, :csr, f_idx)
-    csifr =  var(pm, n, c, :csi, f_idx)
-    #
-    branch = ref(pm, n, :branch, f_idx[1])
-    g_sh = branch["g_fr"][c]
-    b_sh = branch["b_fr"][c]
-    tr, ti = calc_branch_t(branch)
-    tm = branch["tap"][c]
-
-    crf = JuMP.@NLexpression(pm.model, (tr[c]*csrfr - ti[c]*csifr + g_sh*vr - b_sh*vi)/tm^2)
-    cif = JuMP.@NLexpression(pm.model, (tr[c]*csifr + ti[c]*csrfr + g_sh*vi + b_sh*vr)/tm^2)
+    crf = var(pm, n, c, :cr, f_idx)
+    cif = var(pm, n, c, :ci, f_idx)
 
     JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)*(crf^2 + cif^2) <= rate_a^2)
-
 end
 
 "`p[t_idx]^2 + q[t_idx]^2 <= rate_a^2`"
 function constraint_thermal_limit_to(pm::AbstractIVRModel, n::Int, c::Int, t_idx, rate_a)
     (l, t_bus, f_bus) = t_idx
-    f_idx = (l, f_bus, t_bus)
-
-    branch = ref(pm, n, :branch, l)
-    g_sh = branch["g_to"][c]
-    b_sh = branch["b_to"][c]
 
     vr = var(pm, n, c, :vr, t_bus)
     vi = var(pm, n, c, :vi, t_bus)
-    csrfr =  var(pm, n, c, :csr, f_idx)
-    csifr =  var(pm, n, c, :csi, f_idx)
-
-    crt = JuMP.@NLexpression(pm.model, -csrfr + g_sh*vr - b_sh*vi)
-    cit = JuMP.@NLexpression(pm.model, -csifr + g_sh*vi + b_sh*vr)
+    crt = var(pm, n, c, :cr, t_idx)
+    cit = var(pm, n, c, :ci, t_idx)
 
     JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)*(crt^2 + cit^2) <= rate_a^2)
-end
-
-
-"`p[f_idx]^2 + q[f_idx]^2 <= rate_a^2`"
-function constraint_thermal_limit_from(pm::AbstractIVRModel, n::Int, c::Int, f_idx, rate_a)
-    f_bus = f_idx[2]
-    vr = var(pm, n, c, :vr, f_bus)
-    vi = var(pm, n, c, :vi, f_bus)
-    cr =  var(pm, n, c, :cr, f_idx)
-    ci =  var(pm, n, c, :ci, f_idx)
-    csrfr =  var(pm, n, c, :csr, f_idx)
-    csifr =  var(pm, n, c, :csi, f_idx)
-    #
-    branch = ref(pm, n, :branch, f_idx[1])
-    g_sh = branch["g_fr"][c]
-    b_sh = branch["b_fr"][c]
-    tr, ti = calc_branch_t(branch)
-    tm = branch["tap"][c]
-
-    crf = JuMP.@NLexpression(pm.model, (tr[c]*csrfr - ti[c]*csifr + g_sh*vr - b_sh*vi)/tm^2)
-    cif = JuMP.@NLexpression(pm.model, (tr[c]*csifr + ti[c]*csrfr + g_sh*vi + b_sh*vr)/tm^2)
-
-    #
-    # JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)
-    # *(
-    #   ((tr*csrfr - ti*csifr + g_sh*vr - b_sh*vi)/tm^2)^2
-    # + ((tr*csifr + ti*csrfr + g_sh*vi + b_sh*vr)/tm^2)^2
-    # ) <= rate_a^2)
-    JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)*(crf^2 + cif^2) <= rate_a^2)
-
 end
 
 """
@@ -279,7 +220,7 @@ Bounds the current magnitude at both from and to side of a branch
 `cr[f_idx]^2 + ci[f_idx]^2 <= c_rating^2`
 `cr[t_idx]^2 + ci[t_idx]^2 <= c_rating^2`
 """
-function constraint_current_limits(pm::AbstractIVRModel, n::Int, c::Int, f_idx, c_rating)
+function constraint_current_limit(pm::AbstractIVRModel, n::Int, c::Int, f_idx, c_rating)
     (l, f_bus, t_bus) = f_idx
     t_idx = (l, t_bus, f_bus)
 
@@ -289,35 +230,25 @@ function constraint_current_limits(pm::AbstractIVRModel, n::Int, c::Int, f_idx, 
     crt =  var(pm, n, c, :cr, t_idx)
     cit =  var(pm, n, c, :ci, t_idx)
 
-    JuMP.@NLconstraint(pm.model, (crf^2 + cif^2) <= c_rating^2)
-    JuMP.@NLconstraint(pm.model, (crt^2 + cit^2) <= c_rating^2)
+    JuMP.@constraint(pm.model, (crf^2 + cif^2) <= c_rating^2)
+    JuMP.@constraint(pm.model, (crt^2 + cit^2) <= c_rating^2)
 end
 
-# """
-# `Re(v*cd') == pref`
-# `Im(v*cd') == qref`
-# """
-# function constraint_load_power_setpoint(pm::AbstractIVRModel, n::Int, c::Int, i, bus, pref, qref)
-#     vr = var(pm, n, c, :vr, bus)
-#     vi = var(pm, n, c, :vi, bus)
-#     cr = var(pm, n, c, :crd, i)
-#     ci = var(pm, n, c, :cid, i)
-#     if pref == qref == 0
-#         #JuMP.@constraint(pm.model, cr == 0) #taken care of through variable bounds, would be redundant
-#         #JuMP.@constraint(pm.model, ci == 0) #taken care of through variable bounds, would be redundant
-#     else
-#         JuMP.@constraint(pm.model, pref == vr*cr  + vi*ci)
-#         JuMP.@constraint(pm.model, qref == vi*cr  - vr*ci)
-#     end
-# end
 
 """
 `pmin <= Re(v*cg') <= pmax`
 `qmin <= Im(v*cg') <= qmax`
 """
 function constraint_gen_power_limits(pm::AbstractIVRModel, n::Int, c::Int, i, bus, pmax, pmin, qmax, qmin)
+    constraint_gen_active_power_limits(  pm, n, c, i, bus, pmax, pmin)
+    constraint_gen_reactive_power_limits(pm, n, c, i, bus, qmax, qmin)
+end
+
+"""
+`pmin <= Re(v*cg') <= pmax`
+"""
+function constraint_gen_active_power_limits(pm::AbstractIVRModel, n::Int, c::Int, i, bus, pmax, pmin)
     @assert pmin <= pmax
-    @assert qmin <= qmax
 
     vr = var(pm, n, c, :vr, bus)
     vi = var(pm, n, c, :vi, bus)
@@ -326,11 +257,22 @@ function constraint_gen_power_limits(pm::AbstractIVRModel, n::Int, c::Int, i, bu
 
     JuMP.@constraint(pm.model, pmin <= vr*cr  + vi*ci)
     JuMP.@constraint(pm.model, pmax >= vr*cr  + vi*ci)
+end
+
+"""
+`qmin <= Im(v*cg') <= qmax`
+"""
+function constraint_gen_reactive_power_limits(pm::AbstractIVRModel, n::Int, c::Int, i, bus, qmax, qmin)
+    @assert qmin <= qmax
+
+    vr = var(pm, n, c, :vr, bus)
+    vi = var(pm, n, c, :vi, bus)
+    cr = var(pm, n, c, :crg, i)
+    ci = var(pm, n, c, :cig, i)
 
     JuMP.@constraint(pm.model, qmin <= vi*cr  - vr*ci)
     JuMP.@constraint(pm.model, qmax >= vi*cr  - vr*ci)
 end
-
 
 "`pg[i] == pg`"
 function constraint_active_gen_setpoint(pm::AbstractIVRModel, n::Int, c::Int, i, pgref)
@@ -372,7 +314,7 @@ function constraint_dcline(pm::AbstractIVRModel, n::Int, c::Int, f_bus, t_bus, f
     pf = vrf*crdcf + vif*cidcf
     pt = vrt*crdct + vit*cidct
 
-    JuMP.@constraint(pm.model, pf + pt == loss0 + loss1*pf )
+    JuMP.@constraint(pm.model, pf + pt == loss0 + loss1*pf)
 end
 
 function constraint_dcline_power_limits_from(pm::AbstractIVRModel, n::Int, c::Int, i, f_bus, f_idx, pmax, pmin, qmax, qmin)
@@ -410,7 +352,7 @@ function constraint_dcline_power_limits_to(pm::AbstractIVRModel, n::Int, c::Int,
     JuMP.@constraint(pm.model, qmin <= qt)
 end
 
-"`pf[i] == pf, pt[i] == pt`"
+"`pf[i] == pfref, pt[i] == ptref`"
 function constraint_active_dcline_setpoint(pm::AbstractIVRModel, n::Int, c::Int, f_idx, t_idx, pfref, ptref)
     (l, f_bus, t_bus) = f_idx
     vrf = var(pm, n, c, :vr, f_bus)
@@ -428,10 +370,6 @@ function constraint_active_dcline_setpoint(pm::AbstractIVRModel, n::Int, c::Int,
     JuMP.@constraint(pm.model, pfref == vrf*crdcf + vif*cidcf)
     JuMP.@constraint(pm.model, ptref == vrt*crdct + vit*cidct)
 end
-
-
-
-
 
 "extracts voltage set points from rectangular voltage form and converts into polar voltage form"
 function add_setpoint_bus_voltage!(sol, pm::AbstractIVRModel)
@@ -484,11 +422,6 @@ function add_setpoint_generator_current!(sol, pm::AbstractIVRModel)
     add_setpoint!(sol, pm, "gen", "cig", :cig, status_name="gen_status")
 end
 
-# ""
-# function add_setpoint_load_current!(sol, pm::AbstractIVRModel)
-#     add_setpoint!(sol, pm, "load", "crd", :crd, status_name="status")
-#     add_setpoint!(sol, pm, "load", "cid", :cid, status_name="status")
-# end
 
 function add_setpoint_branch_current!(sol, pm::AbstractIVRModel)
     # check the branch flows were requested
@@ -504,10 +437,13 @@ end
 function solution_opf_iv!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
     add_setpoint_bus_voltage!(sol, pm)
     add_setpoint_branch_current!(sol, pm)
-    # add_setpoint_load_current!(sol, pm)
+    add_setpoint_branch_flow!(sol, pm)
+
     add_setpoint_generator_current!(sol, pm)
+    add_setpoint_generator_power!(sol, pm)
 
     add_setpoint_dcline_flow!(sol, pm)
+    add_setpoint_dcline_current!(sol, pm)
     # add_setpoint_storage!(sol, pm)
 
     # add_dual_kcl!(sol, pm)
@@ -516,7 +452,7 @@ end
 
 
 ""
-function add_setpoint_dcline_flow!(sol, pm::AbstractIVRModel)
+function add_setpoint_dcline_current!(sol, pm::AbstractIVRModel)
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
         add_setpoint!(sol, pm, "dcline", "crf", :crdc, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
         add_setpoint!(sol, pm, "dcline", "cif", :cidc, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
@@ -533,23 +469,17 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractIVRMod
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
             bus = gen["gen_bus"]
-            # vr = var(pm, n, c, :vr, bus)
-            # crg = var(pm, n, c, :crg, i)
-            # vi = var(pm, n, c, :vi, bus)
-            # cig = var(pm, n, c, :cig, i)
-            # pg = JuMP.@NLexpression(pm.model, sum(vr*crg + vi*cig for c in conductor_ids(pm, n) ))
-            vr = var(pm, n, 1, :vr, bus) #TODO multinetwork
-            vi = var(pm, n, 1, :vi, bus)
-            crg = var(pm, n, 1, :crg, i)
-            cig = var(pm, n, 1, :cig, i)
-            pg = JuMP.@NLexpression(pm.model, vr*crg + vi*cig)
+
+            #to avoid function calls inside of @NLconstraint:
+            pg = [var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)]
+            nc = length(conductor_ids(pm, n))
 
             if length(gen["cost"]) == 1
                 gen_cost[(n,i)] = gen["cost"][1]
             elseif length(gen["cost"]) == 2
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, gen["cost"][1]*pg + gen["cost"][2])
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, gen["cost"][1]*sum(pg[c] for c in 1:nc) + gen["cost"][2])
             elseif length(gen["cost"]) == 3
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, gen["cost"][1]*pg^2 + gen["cost"][2]*pg + gen["cost"][3])
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, gen["cost"][1]*sum(pg[c] for c in 1:nc)^2 + gen["cost"][2]*sum(pg[c] for c in 1:nc) + gen["cost"][3])
             else
                 gen_cost[(n,i)] = 0.0
             end
@@ -558,20 +488,16 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractIVRMod
         from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
         for (i,dcline) in nw_ref[:dcline]
             bus = dcline["f_bus"]
-
-            # p_dc = JuMP.@NLexpression(pm.model, sum( var(pm, n, c, :vr, bus)*var(pm, n, c, :crdc, from_idx[i])+var(pm, n, c, :vi, bus)*var(pm, n, c, :cidc, from_idx[i]) for c in conductor_ids(pm, n) ))
-            vr = var(pm, n, 1, :vr, bus) #TODO multinetwork
-            vi = var(pm, n, 1, :vi, bus)
-            crdc = var(pm, n, 1, :crdc, from_idx[i])
-            cidc = var(pm, n, 1, :cidc, from_idx[i])
-            p_dc = JuMP.@NLexpression(pm.model, vr*crdc+vi*cidc )
+            #to avoid function calls inside of @NLconstraint:
+            p_dc = [var(pm, n, c, :p_dc, from_idx[i]) for c in conductor_ids(pm, n)]
+            nc = length(conductor_ids(pm, n))
 
             if length(dcline["cost"]) == 1
                 dcline_cost[(n,i)] = dcline["cost"][1]
             elseif length(dcline["cost"]) == 2
-                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, dcline["cost"][1]*p_dc + dcline["cost"][2])
+                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, dcline["cost"][1]*sum(p_dc[c] for c in 1:nc) + dcline["cost"][2])
             elseif length(dcline["cost"]) == 3
-                dcline_cost[(n,i)]  = JuMP.@NLexpression(pm.model, dcline["cost"][1]*p_dc^2 + dcline["cost"][2]*p_dc + dcline["cost"][3])
+                dcline_cost[(n,i)]  = JuMP.@NLexpression(pm.model, dcline["cost"][1]*sum(p_dc[c] for c in 1:nc)^2 + dcline["cost"][2]*sum(p_dc[c] for c in 1:nc) + dcline["cost"][3])
             else
                 dcline_cost[(n,i)] = 0.0
             end
@@ -584,4 +510,50 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractIVRMod
             + sum( dcline_cost[(n,i)] for (i,dcline) in nw_ref[:dcline] )
         for (n, nw_ref) in nws(pm))
     )
+end
+
+
+"adds pg_cost variables and constraints"
+function objective_variable_pg_cost(pm::AbstractIVRModel)
+    for (n, nw_ref) in nws(pm)
+        gen_lines = calc_cost_pwl_lines(nw_ref[:gen])
+
+        #to avoid function calls inside of @NLconstraint
+        pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
+            [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost",
+        )
+        nc = length(conductor_ids(pm, n))
+
+        # gen pwl cost
+        for (i, gen) in nw_ref[:gen]
+            pg = [var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)]
+            for line in gen_lines[i]
+                JuMP.@NLconstraint(pm.model, pg_cost[i] >= line.slope*sum(pg[c] for c in 1:nc) + line.intercept)
+            end
+        end
+    end
+end
+
+
+"adds p_dc_cost variables and constraints"
+function objective_variable_dc_cost(pm::AbstractIVRModel)
+    for (n, nw_ref) in nws(pm)
+        dcline_lines = calc_cost_pwl_lines(nw_ref[:dcline])
+
+        dc_p_cost = var(pm, n)[:p_dc_cost] = JuMP.@variable(pm.model,
+            [i in ids(pm, n, :dcline)], base_name="$(n)_dc_p_cost",
+        )
+        #to avoid function calls inside of @NLconstraint:
+        nc = length(conductor_ids(pm, n))
+        # dcline pwl cost
+        for (i, dcline) in nw_ref[:dcline]
+            arc = (i, dcline["f_bus"], dcline["t_bus"])
+            for line in dcline_lines[i]
+                #to avoid function calls inside of @NLconstraint:
+                p_dc = [var(pm, n, c, :p_dc, arc) for c in conductor_ids(pm, n)]
+
+                JuMP.@NLconstraint(pm.model, dc_p_cost[i] >= line.slope*sum(p_dc[c] for c in 1:nc)  + line.intercept)
+            end
+        end
+    end
 end

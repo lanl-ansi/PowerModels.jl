@@ -525,13 +525,8 @@ function _post_mc_opf_iv(pm::AbstractPowerModel)
         variable_voltage(pm, cnd=c)
         variable_branch_current(pm, cnd=c)
 
-        variable_load(pm, cnd=c)
         variable_gen(pm, cnd=c)
         variable_dcline(pm, cnd=c)
-
-        for i in ids(pm, :load)
-            constraint_load_power_setpoint(pm, i, cnd=c)
-        end
 
         for i in ids(pm, :gen)
             constraint_gen_power_limits(pm, i, cnd=c)
@@ -542,13 +537,12 @@ function _post_mc_opf_iv(pm::AbstractPowerModel)
         end
 
         for i in ids(pm, :bus)
-            constraint_voltage_magnitude(pm, i, cnd=c)
             constraint_current_balance(pm, i, cnd=c)
         end
 
         for i in ids(pm, :branch)
-            # constraint_current_from(pm, i, cnd=c)
-            # constraint_current_to(pm, i, cnd=c)
+            constraint_current_from(pm, i, cnd=c)
+            constraint_current_to(pm, i, cnd=c)
 
             constraint_voltage_drop(pm, i, cnd=c)
 

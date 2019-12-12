@@ -8,18 +8,8 @@ function post_pf_iv(pm::AbstractPowerModel)
     variable_voltage(pm, bounded = false)
     variable_branch_current(pm, bounded = false)
 
-    # variable_load(pm, bounded = false)
     variable_gen(pm, bounded = false)
     variable_dcline(pm, bounded = false)
-
-
-    # for i in ids(pm, :load)
-    #     constraint_load_power_setpoint(pm, i)
-    # end
-
-    for i in ids(pm, :gen)
-        #constraint_gen_power_limits(pm, i) no bounds when solving power flow
-    end
 
     for (i,bus) in ref(pm, :ref_buses)
         @assert bus["bus_type"] == 3
@@ -43,8 +33,8 @@ function post_pf_iv(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :branch)
-        # constraint_current_from(pm, i)
-        # constraint_current_to(pm, i)
+        constraint_current_from(pm, i)
+        constraint_current_to(pm, i)
 
         constraint_voltage_drop(pm, i)
     end

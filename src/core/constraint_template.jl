@@ -604,14 +604,14 @@ end
 """
 Adds a current magnitude limit constraint for the desired branch to the PowerModel.
 """
-function constraint_current_limits(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function constraint_current_limit(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
 
     if haskey(branch, "c_rating_a")
-        constraint_current_limits(pm, nw, cnd, f_idx, branch["c_rating_a"][cnd])
+        constraint_current_limit(pm, nw, cnd, f_idx, branch["c_rating_a"][cnd])
     end
 end
 

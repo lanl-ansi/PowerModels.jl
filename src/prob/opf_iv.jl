@@ -1,6 +1,7 @@
 ""
 function run_opf_iv(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, post_opf_iv, solution_builder=solution_opf_iv!; kwargs...)
+    # return run_model(file, model_constructor, optimizer, post_opf_iv, solution_builder=solution_opf_iv!; kwargs...)
+    return run_model(file, model_constructor, optimizer, post_opf_iv; kwargs...)
 end
 
 ""
@@ -15,10 +16,6 @@ function post_opf_iv(pm::AbstractPowerModel)
 
     objective_min_fuel_and_flow_cost(pm)
 
-    # for i in ids(pm, :load)
-    #     constraint_load_power_setpoint(pm, i)
-    # end
-
     for i in ids(pm, :gen)
         constraint_gen_power_limits(pm, i)
     end
@@ -28,7 +25,6 @@ function post_opf_iv(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :bus)
-        # constraint_voltage_magnitude_bounds(pm, i)
         constraint_current_balance(pm, i)
     end
 
@@ -42,7 +38,6 @@ function post_opf_iv(pm::AbstractPowerModel)
 
         constraint_thermal_limit_from(pm, i)
         constraint_thermal_limit_to(pm, i)
-        # constraint_current_limits(pm, i)
     end
 
     for i in ids(pm, :dcline)
