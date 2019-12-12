@@ -528,9 +528,6 @@ function _post_mc_opf_iv(pm::AbstractPowerModel)
         variable_gen(pm, cnd=c)
         variable_dcline(pm, cnd=c)
 
-        for i in ids(pm, :gen)
-            constraint_gen_power_limits(pm, i, cnd=c)
-        end
 
         for i in ids(pm, :ref_buses)
             constraint_theta_ref(pm, i, cnd=c)
@@ -545,7 +542,6 @@ function _post_mc_opf_iv(pm::AbstractPowerModel)
             constraint_current_to(pm, i, cnd=c)
 
             constraint_voltage_drop(pm, i, cnd=c)
-
             constraint_voltage_angle_difference(pm, i, cnd=c)
 
             constraint_thermal_limit_from(pm, i, cnd=c)

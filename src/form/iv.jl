@@ -1,17 +1,6 @@
 # Kirchhoff's circuit laws as defined the current-voltage variable space.
 # Even though the branch model is linear, the feasible set is non-convex
 # in the context of constant-power loads or generators
-""
-function variable_voltage(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...)
-    variable_voltage_real(pm; nw=nw, cnd=cnd, bounded=bounded, kwargs...)
-    variable_voltage_imaginary(pm; nw=nw, cnd=cnd, bounded=bounded, kwargs...)
-
-    if bounded
-        for (i,bus) in ref(pm, nw, :bus)
-            constraint_voltage_magnitude_bounds(pm, i)
-        end
-    end
-end
 
 ""
 function variable_branch_current(pm::AbstractIVRModel; kwargs...)
@@ -19,68 +8,19 @@ function variable_branch_current(pm::AbstractIVRModel; kwargs...)
 end
 
 ""
-function variable_gen(pm::AbstractIVRModel; kwargs...)
-    variable_gen_current_rectangular(pm; kwargs...)
+function variable_gen(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...)
+    variable_gen_current_rectangular(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
+    if bounded
+        for (i,gen) in ref(pm, nw, :gen)
+            constraint_gen_active_power_limits(pm, i, cnd=cnd, nw=nw)
+            constraint_gen_reactive_power_limits(pm, i, cnd=cnd, nw=nw)
+        end
+    end
 end
 
 ""
 function variable_dcline(pm::AbstractIVRModel; kwargs...)
     variable_dcline_current_rectangular(pm; kwargs...)
-end
-
-"`v[i] == vm`"
-function constraint_voltage_magnitude_setpoint(pm::AbstractIVRModel, n::Int, c::Int, i, vm)
-    vr = var(pm, n, c, :vr, i)
-    vi = var(pm, n, c, :vi, i)
-
-    JuMP.@constraint(pm.model, (vr^2 + vi^2) == vm^2)
-end
-
-"`vmin <= vm[i] <= vmax`"
-function constraint_voltage_magnitude_bounds(pm::AbstractIVRModel, n::Int, c::Int, i, vmin, vmax)
-    @assert vmin <= vmax
-    vr = var(pm, n, c, :vr, i)
-    vi = var(pm, n, c, :vi, i)
-
-    JuMP.@constraint(pm.model, vmin^2 <= (vr^2 + vi^2))
-    JuMP.@constraint(pm.model, vmax^2 >= (vr^2 + vi^2))
-end
-
-"reference bus angle constraint"
-function constraint_theta_ref(pm::AbstractIVRModel, n::Int, c::Int, i::Int)
-    JuMP.@constraint(pm.model, var(pm, n, c, :vi)[i] == 0)
-    JuMP.@constraint(pm.model, var(pm, n, c, :vr)[i] >= 0)
-end
-
-""
-function constraint_current_from(pm::AbstractIVRModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    branch = ref(pm, nw, :branch, i)
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-
-    tr, ti = calc_branch_t(branch)
-    g_fr = branch["g_fr"][cnd]
-    b_fr = branch["b_fr"][cnd]
-    tm = branch["tap"][cnd]
-
-    constraint_current_from(pm, nw, cnd, f_bus, f_idx, g_fr, b_fr, tr[cnd], ti[cnd], tm)
-end
-
-""
-function constraint_current_to(pm::AbstractIVRModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    branch = ref(pm, nw, :branch, i)
-    f_bus = branch["f_bus"]
-    t_bus = branch["t_bus"]
-    f_idx = (i, f_bus, t_bus)
-    t_idx = (i, t_bus, f_bus)
-
-    tr, ti = calc_branch_t(branch)
-    g_to = branch["g_to"][cnd]
-    b_to = branch["b_to"][cnd]
-    tm = branch["tap"][cnd]
-
-    constraint_current_to(pm, nw, cnd, t_bus, f_idx, t_idx, g_to, b_to)
 end
 
 """
@@ -172,23 +112,16 @@ function constraint_current_balance(pm::AbstractIVRModel, n::Int, c::Int, i, bus
                                 + sum(crdc[d] for d in bus_arcs_dc)
                                 ==
                                 sum(crg[g] for g in bus_gens)
-                                - (
-                                      sum(pd for pd in values(bus_pd))*vr
-                                    + sum(qd for qd in values(bus_qd))*vi
-                                    )/(vr^2 + vi^2)
+                                - (sum(pd for pd in values(bus_pd))*vr + sum(qd for qd in values(bus_qd))*vi)/(vr^2 + vi^2)
                                 - sum(gs for gs in values(bus_gs))*vr + sum(bs for bs in values(bus_bs))*vi
                                 )
     JuMP.@NLconstraint(pm.model, sum(ci[a] for a in bus_arcs)
                                 + sum(cidc[d] for d in bus_arcs_dc)
                                 ==
                                 sum(cig[g] for g in bus_gens)
-                                - (
-                                      sum(pd for pd in values(bus_pd))*vi
-                                    - sum(qd for qd in values(bus_qd))*vr
-                                    )/(vr^2 + vi^2)
+                                - (sum(pd for pd in values(bus_pd))*vi - sum(qd for qd in values(bus_qd))*vr)/(vr^2 + vi^2)
                                 - sum(gs for gs in values(bus_gs))*vi - sum(bs for bs in values(bus_bs))*vr
                                 )
-
 end
 
 "`p[f_idx]^2 + q[f_idx]^2 <= rate_a^2`"
@@ -232,16 +165,6 @@ function constraint_current_limit(pm::AbstractIVRModel, n::Int, c::Int, f_idx, c
 
     JuMP.@constraint(pm.model, (crf^2 + cif^2) <= c_rating^2)
     JuMP.@constraint(pm.model, (crt^2 + cit^2) <= c_rating^2)
-end
-
-
-"""
-`pmin <= Re(v*cg') <= pmax`
-`qmin <= Im(v*cg') <= qmax`
-"""
-function constraint_gen_power_limits(pm::AbstractIVRModel, n::Int, c::Int, i, bus, pmax, pmin, qmax, qmin)
-    constraint_gen_active_power_limits(  pm, n, c, i, bus, pmax, pmin)
-    constraint_gen_reactive_power_limits(pm, n, c, i, bus, qmax, qmin)
 end
 
 """
@@ -371,58 +294,13 @@ function constraint_active_dcline_setpoint(pm::AbstractIVRModel, n::Int, c::Int,
     JuMP.@constraint(pm.model, ptref == vrt*crdct + vit*cidct)
 end
 
-"extracts voltage set points from rectangular voltage form and converts into polar voltage form"
-function add_setpoint_bus_voltage!(sol, pm::AbstractIVRModel)
-    sol_dict = get(sol, "bus", Dict{String,Any}())
-
-    if ismultinetwork(pm)
-        bus_dict = pm.data["nw"]["$(pm.cnw)"]["bus"]
-    else
-        bus_dict = pm.data["bus"]
-    end
-
-    if length(bus_dict) > 0
-        sol["bus"] = sol_dict
-    end
-
-    for (i,item) in bus_dict
-        idx = Int(item["bus_i"])
-        sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
-
-        num_conductors = length(conductor_ids(pm))
-        cnd_idx = 1
-        sol_item["vm"] = MultiConductorVector{Real}([NaN for i in 1:num_conductors])
-        sol_item["va"] = MultiConductorVector{Real}([NaN for i in 1:num_conductors])
-        for c in conductor_ids(pm)
-            try
-                vr = JuMP.value(var(pm, :vr, cnd=c)[idx])
-                vi = JuMP.value(var(pm, :vi, cnd=c)[idx])
-
-                vm = sqrt(vr^2 + vi^2)
-
-                sol_item["vm"][c] = vm
-                sol_item["va"][c] = atan(vi, vr)
-
-            catch
-            end
-        end
-
-        # remove MultiConductorValue, if it was not a ismulticonductor network
-        if !ismulticonductor(pm)
-            sol_item["vm"] = sol_item["vm"][1]
-            sol_item["va"] = sol_item["va"][1]
-        end
-    end
-end
-
-
 ""
 function add_setpoint_generator_current!(sol, pm::AbstractIVRModel)
     add_setpoint!(sol, pm, "gen", "crg", :crg, status_name="gen_status")
     add_setpoint!(sol, pm, "gen", "cig", :cig, status_name="gen_status")
 end
 
-
+""
 function add_setpoint_branch_current!(sol, pm::AbstractIVRModel)
     # check the branch flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
@@ -432,24 +310,6 @@ function add_setpoint_branch_current!(sol, pm::AbstractIVRModel)
         add_setpoint!(sol, pm, "branch", "cit", :ci, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
     end
 end
-
-""
-function solution_opf_iv!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
-    add_setpoint_bus_voltage!(sol, pm)
-    add_setpoint_branch_current!(sol, pm)
-    add_setpoint_branch_flow!(sol, pm)
-
-    add_setpoint_generator_current!(sol, pm)
-    add_setpoint_generator_power!(sol, pm)
-
-    add_setpoint_dcline_flow!(sol, pm)
-    add_setpoint_dcline_current!(sol, pm)
-    # add_setpoint_storage!(sol, pm)
-
-    # add_dual_kcl!(sol, pm)
-    # add_dual_sm!(sol, pm) # Adds the duals of the transmission lines' thermal limits.
-end
-
 
 ""
 function add_setpoint_dcline_current!(sol, pm::AbstractIVRModel)

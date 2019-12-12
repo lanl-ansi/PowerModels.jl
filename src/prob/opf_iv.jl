@@ -9,16 +9,10 @@ function post_opf_iv(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_branch_current(pm)
 
-    # variable_load(pm)
     variable_gen(pm)
     variable_dcline(pm)
 
-
     objective_min_fuel_and_flow_cost(pm)
-
-    for i in ids(pm, :gen)
-        constraint_gen_power_limits(pm, i)
-    end
 
     for i in ids(pm, :ref_buses)
         constraint_theta_ref(pm, i)

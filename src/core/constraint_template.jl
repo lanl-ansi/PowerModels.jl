@@ -56,7 +56,7 @@ end
 This constraint captures problem agnostic constraints that define limits for
 voltage magnitudes (where variable bounds cannot be used)
 
-Notable examples include IVRPowerModel
+Notable examples include IVRPowerModel and ACRPowerModel
 """
 function constraint_voltage_magnitude_bounds(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     bus = ref(pm, nw, :bus, i)
@@ -99,19 +99,18 @@ function constraint_generation_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm
     constraint_generation_on_off(pm, nw, cnd, i, gen["pmin"][cnd], gen["pmax"][cnd], gen["qmin"][cnd], gen["qmax"][cnd])
 end
 
-"defines limits on active and reactive power output of a generator where bounds can't be used"
-function constraint_gen_power_limits(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+"defines limits on active power output of a generator where bounds can't be used"
+function constraint_gen_active_power_limits(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
     gen = ref(pm, nw, :gen, i)
     bus = gen["gen_bus"]
-    constraint_gen_power_limits(pm, nw, cnd, i, bus, gen["pmax"][cnd], gen["pmin"][cnd], gen["qmax"][cnd], gen["qmin"][cnd])
+    constraint_gen_active_power_limits(pm, nw, cnd, i, bus, gen["pmax"][cnd], gen["pmin"][cnd])
 end
 
-### Load Constraints ###
-"defines active and reactive power set points for a load where bounds can't be used"
-function constraint_load_power_setpoint(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    load = ref(pm, nw, :load, i)
-    bus = load["load_bus"]
-    constraint_load_power_setpoint(pm, nw, cnd, i, bus, load["pd"][cnd], load["qd"][cnd])
+"defines limits on reactive power output of a generator where bounds can't be used"
+function constraint_gen_reactive_power_limits(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    gen = ref(pm, nw, :gen, i)
+    bus = gen["gen_bus"]
+    constraint_gen_reactive_power_limits(pm, nw, cnd, i, bus, gen["qmax"][cnd], gen["qmin"][cnd])
 end
 
 ### Bus - Setpoint Constraints ###
@@ -325,6 +324,39 @@ function constraint_ohms_y_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cn
 
     constraint_ohms_y_to(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, g[cnd,cnd], b[cnd,cnd], g_to, b_to, tm, ta)
 end
+
+
+""
+function constraint_current_from(pm::AbstractIVRModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    branch = ref(pm, nw, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+
+    tr, ti = calc_branch_t(branch)
+    g_fr = branch["g_fr"][cnd]
+    b_fr = branch["b_fr"][cnd]
+    tm = branch["tap"][cnd]
+
+    constraint_current_from(pm, nw, cnd, f_bus, f_idx, g_fr, b_fr, tr[cnd], ti[cnd], tm)
+end
+
+""
+function constraint_current_to(pm::AbstractIVRModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    branch = ref(pm, nw, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    tr, ti = calc_branch_t(branch)
+    g_to = branch["g_to"][cnd]
+    b_to = branch["b_to"][cnd]
+    tm = branch["tap"][cnd]
+
+    constraint_current_to(pm, nw, cnd, t_bus, f_idx, t_idx, g_to, b_to)
+end
+
 
 
 ### Branch - On/Off Ohm's Law Constraints ###

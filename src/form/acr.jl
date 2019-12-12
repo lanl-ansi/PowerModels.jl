@@ -6,11 +6,8 @@ function variable_voltage(pm::AbstractACRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd
     variable_voltage_imaginary(pm; nw=nw, cnd=cnd, bounded=bounded, kwargs...)
 
     if bounded
-        vr = var(pm, nw, cnd, :vr)
-        vi = var(pm, nw, cnd, :vi)
         for (i,bus) in ref(pm, nw, :bus)
-            JuMP.@constraint(pm.model, bus["vmin"][cnd]^2 <= (vr[i]^2 + vi[i]^2))
-            JuMP.@constraint(pm.model, bus["vmax"][cnd]^2 >= (vr[i]^2 + vi[i]^2))
+            constraint_voltage_magnitude_bounds(pm, i, cnd=cnd, nw=nw)
         end
 
         # does not seem to improve convergence
@@ -26,6 +23,16 @@ function variable_voltage(pm::AbstractACRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd
     end
 end
 
+
+"`vmin <= vm[i] <= vmax`"
+function constraint_voltage_magnitude_bounds(pm::AbstractACRModel, n::Int, c::Int, i, vmin, vmax)
+    @assert vmin <= vmax
+    vr = var(pm, n, c, :vr, i)
+    vi = var(pm, n, c, :vi, i)
+
+    JuMP.@constraint(pm.model, vmin^2 <= (vr^2 + vi^2))
+    JuMP.@constraint(pm.model, vmax^2 >= (vr^2 + vi^2))
+end
 
 "`v[i] == vm`"
 function constraint_voltage_magnitude_setpoint(pm::AbstractACRModel, n::Int, c::Int, i, vm)

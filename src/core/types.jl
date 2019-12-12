@@ -118,7 +118,7 @@ mutable struct ACTPowerModel <: AbstractACTModel @pm_fields end
 
 
 ""
-abstract type AbstractIVRModel <: AbstractBFQPModel end
+abstract type AbstractIVRModel <: AbstractACRModel end
 
 """
 Current voltage formulation of AC OPF. The formulation uses rectangular
