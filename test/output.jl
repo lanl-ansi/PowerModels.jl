@@ -135,7 +135,7 @@ end
         for (i, bus) in result["solution"]["bus"]
             @test bus["lam_kcl_r"] <= -2900.00
             @test bus["lam_kcl_r"] >= -3100.00
-            @test bus["lam_kcl_i"] <=  0.001
+            @test bus["lam_kcl_i"] <=  0.1
             @test bus["lam_kcl_i"] >= -5.000
         end
     end

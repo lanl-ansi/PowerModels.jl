@@ -23,7 +23,7 @@ ipopt_ws_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, mu_init=1e-4, p
 
 cbc_solver = JuMP.with_optimizer(Cbc.Optimizer, logLevel=0)
 juniper_solver = JuMP.with_optimizer(Juniper.Optimizer, nl_solver=JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-4, print_level=0), log_levels=[])
-scs_solver = JuMP.with_optimizer(SCS.Optimizer, max_iters=500000, acceleration_lookback=1, verbose=0)
+scs_solver = JuMP.with_optimizer(SCS.Optimizer, max_iters=100000, eps=1e-4, verbose=0)
 
 include("common.jl")
 

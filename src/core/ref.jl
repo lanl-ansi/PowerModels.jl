@@ -79,12 +79,12 @@ function ref_calc_branch_flow_bounds(branches, buses, conductor::Int=1)
         end
 
         if haskey(branch, "c_rating_a")
-            fr_vmin = buses[branch["f_bus"]]["vmin"][conductor]
-            to_vmin = buses[branch["t_bus"]]["vmin"][conductor]
-            m_vmin = min(fr_vmin, to_vmin)
+            fr_vmax = buses[branch["f_bus"]]["vmax"][conductor]
+            to_vmax = buses[branch["t_bus"]]["vmax"][conductor]
+            m_vmax = max(fr_vmax, to_vmax)
 
-            flow_lb[i] = max(flow_lb[i], -branch["c_rating_a"][conductor]/m_vmin)
-            flow_ub[i] = min(flow_ub[i],  branch["c_rating_a"][conductor]/m_vmin)
+            flow_lb[i] = max(flow_lb[i], -branch["c_rating_a"][conductor]*m_vmax)
+            flow_ub[i] = min(flow_ub[i],  branch["c_rating_a"][conductor]*m_vmax)
         end
 
     end
@@ -108,12 +108,12 @@ function ref_calc_switch_flow_bounds(switches, buses, conductor::Int=1)
         end
 
         if haskey(switch, "current_rating")
-            fr_vmin = buses[switch["f_bus"]]["vmin"][conductor]
-            to_vmin = buses[switch["t_bus"]]["vmin"][conductor]
-            m_vmin = min(fr_vmin, to_vmin)
+            fr_vmax = buses[branch["f_bus"]]["vmax"][conductor]
+            to_vmax = buses[branch["t_bus"]]["vmax"][conductor]
+            m_vmax = max(fr_vmax, to_vmax)
 
-            flow_lb[i] = max(flow_lb[i], -switch["current_rating"][conductor]/m_vmin)
-            flow_ub[i] = min(flow_ub[i],  switch["current_rating"][conductor]/m_vmin)
+            flow_lb[i] = max(flow_lb[i], -switch["current_rating"][conductor]*m_vmax)
+            flow_ub[i] = min(flow_ub[i],  switch["current_rating"][conductor]*m_vmax)
         end
     end
 
@@ -176,10 +176,10 @@ function ref_calc_storage_injection_bounds(storage, buses, conductor::Int=1)
         end
 
         if haskey(strg, "current_rating")
-            vmin = buses[strg["storage_bus"]]["vmin"][conductor]
+            vmax = buses[strg["storage_bus"]]["vmax"][conductor]
 
-            injection_lb[i] = max(injection_lb[i], -strg["current_rating"][conductor]/vmin)
-            injection_ub[i] = min(injection_ub[i],  strg["current_rating"][conductor]/vmin)
+            injection_lb[i] = max(injection_lb[i], -strg["current_rating"][conductor]*vmax)
+            injection_ub[i] = min(injection_ub[i],  strg["current_rating"][conductor]*vmax)
         end
     end
 

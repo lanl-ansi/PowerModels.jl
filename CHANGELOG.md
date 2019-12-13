@@ -2,10 +2,16 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.13.1
 - Added DCMPPowerModel for replication of Matpower's DC model (#612)
 - Reduced memory allocations during PSSE data parsing (#617)
-- Added IVRForm (rectangular current-voltage formulation) (PR #622)
+- Updates for SCS v0.6.3 (#634)
 - Fixed quadratic terms in nonlinear objectives (#621)
+- Fixed incorrect flow bounds based on current flow limits (#631)
+- Added IVRForm (rectangular current-voltage formulation) (#622)
+
 
 ### v0.13.0
 - Added SOC formulation of the storage model
