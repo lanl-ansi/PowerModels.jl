@@ -36,7 +36,5 @@ function post_opf_iv(pm::AbstractPowerModel)
 
     for i in ids(pm, :dcline)
         constraint_dcline(pm, i)
-        constraint_dcline_power_limits_from(pm, i)
-        constraint_dcline_power_limits_to(pm, i)
     end
 end

@@ -550,8 +550,6 @@ function _post_mc_opf_iv(pm::AbstractPowerModel)
 
         for i in ids(pm, :dcline)
             constraint_dcline(pm, i, cnd=c)
-            constraint_dcline_power_limits_from(pm, i, cnd=c)
-            constraint_dcline_power_limits_to(pm, i, cnd=c)
         end
     end
 

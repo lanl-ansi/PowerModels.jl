@@ -19,8 +19,14 @@ function variable_gen(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bo
 end
 
 ""
-function variable_dcline(pm::AbstractIVRModel; kwargs...)
-    variable_dcline_current_rectangular(pm; kwargs...)
+function variable_dcline(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...)
+    variable_dcline_current_rectangular(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
+    if bounded
+        for (i,dcline) in ref(pm, nw, :dcline)
+            constraint_dcline_power_limits_from(pm, i, cnd=cnd, nw=nw)
+            constraint_dcline_power_limits_to(pm, i, cnd=cnd, nw=nw)
+        end
+    end
 end
 
 """
@@ -411,7 +417,6 @@ function objective_variable_dc_cost(pm::AbstractIVRModel)
             for line in dcline_lines[i]
                 #to avoid function calls inside of @NLconstraint:
                 p_dc = [var(pm, n, c, :p_dc, arc) for c in conductor_ids(pm, n)]
-
                 JuMP.@NLconstraint(pm.model, dc_p_cost[i] >= line.slope*sum(p_dc[c] for c in 1:nc)  + line.intercept)
             end
         end
