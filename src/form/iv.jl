@@ -5,6 +5,7 @@
 ""
 function variable_branch_current(pm::AbstractIVRModel; kwargs...)
     variable_branch_current_rectangular(pm; kwargs...)
+    variable_branch_series_current_rectangular(pm; kwargs...)
 end
 
 ""
