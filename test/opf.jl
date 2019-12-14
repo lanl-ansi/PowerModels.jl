@@ -501,20 +501,18 @@ end
         @test result["termination_status"] == OPTIMAL
         @test isapprox(result["objective"], 5746.61; atol = 2e0)
     end
-    @testset "5-bus transformer swap case" begin
-        result = run_opf("../test/data/matpower/case5.m", SOCWRConicPowerModel, scs_solver)
+#    @testset "5-bus transformer swap case" begin
+#        result = run_opf("../test/data/matpower/case5.m", SOCWRConicPowerModel, scs_solver)
+
+#        @test result["termination_status"] == OPTIMAL
+#        @test isapprox(result["objective"], 15051.4; atol = 1e1)
+#    end
+    @testset "5-bus asymmetric case" begin
+        result = run_opf("../test/data/matpower/case5_asym.m", SOCWRConicPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 15051.4; atol = 1e1)
+        @test isapprox(result["objective"], 14999.9; atol = 1e0)
     end
-    # convergence issue encountered when update to, SCS.jl v0.6.3
-    #@testset "5-bus asymmetric case" begin
-    #    result = run_opf("../test/data/matpower/case5_asym.m", SOCWRConicPowerModel, scs_solver)
-
-    #    @test result["termination_status"] == OPTIMAL
-    #    @test isapprox(result["objective"], 14999.7; atol = 1e0)
-    #end
-    # convergence issue encountered when linear objective used, SCS.jl v0.4.1
     @testset "5-bus gap case" begin
         result = run_opf("../test/data/matpower/case5_gap.m", SOCWRConicPowerModel, scs_solver)
 
@@ -552,7 +550,7 @@ end
         result = run_opf("../test/data/matpower/case24.m", SOCWRConicPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 70688.5; atol = 1e0)
+        @test isapprox(result["objective"], 70690.8; atol = 1e0)
     end
 end
 
@@ -745,12 +743,12 @@ end
         @test isapprox(result["objective"], -28236.1; atol = 1e1)
     end
     # convergence issue encounterd when updated to SCS v0.6.3
-    #@testset "5-bus with asymmetric line charge" begin
-    #    result = run_opf("../test/data/pti/case5_alc.raw", SDPWRMPowerModel, scs_solver)
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf("../test/data/pti/case5_alc.raw", SDPWRMPowerModel, scs_solver)
 
-    #    @test result["termination_status"] == OPTIMAL
-    #    @test isapprox(result["objective"], 1005.31; atol = 1e-1)
-    #end
+        @test result["termination_status"] == OPTIMAL
+        @test isapprox(result["objective"], 1005.31; atol = 1e-1)
+    end
     @testset "5-bus with negative generators" begin
         result = run_opf("../test/data/matpower/case5_npg.m", SDPWRMPowerModel, scs_solver)
 
@@ -775,7 +773,7 @@ end
     #    result = run_opf("../test/data/matpower/case24.m", SDPWRMPowerModel, scs_solver)
 
     #    @test result["termination_status"] == OPTIMAL
-    #    @test isapprox(result["objective"], 75153; atol = 1e0)
+    #    @test isapprox(result["objective"], 76535.5; atol = 1e0)
     #end
 end
 
