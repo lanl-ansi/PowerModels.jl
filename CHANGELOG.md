@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Bugfix (#637)
 
 ### v0.13.1
 - Added DCMPPowerModel for replication of Matpower's DC model (#612)
