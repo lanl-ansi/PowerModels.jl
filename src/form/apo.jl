@@ -192,20 +192,6 @@ function constraint_storage_loss(pm::AbstractActivePowerModel, n::Int, i, bus, c
     )
 end
 
-
-""
-function add_generator_power_setpoint(sol, pm::AbstractActivePowerModel)
-    add_setpoint!(sol, pm, "gen", "pg", :pg)
-    add_setpoint_fixed!(sol, pm, "gen", "qg")
-end
-
-""
-function add_storage_setpoint(sol, pm::AbstractActivePowerModel)
-    add_setpoint!(sol, pm, "storage", "ps", :ps)
-    add_setpoint_fixed!(sol, pm, "storage", "qs")
-    add_setpoint!(sol, pm, "storage", "se", :se, conductorless=true)
-end
-
 function constraint_storage_on_off(pm::AbstractActivePowerModel, n::Int, c::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
     z_storage = var(pm, n, :z_storage, i)
     ps = var(pm, n, c, :ps, i)
