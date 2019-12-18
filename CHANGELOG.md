@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Bugfix add_setpoint! (#637)
+- Bugfix add_setpoint! (breaking) (#637) 
 
 ### v0.13.1
 - Added DCMPPowerModel for replication of Matpower's DC model (#612)
