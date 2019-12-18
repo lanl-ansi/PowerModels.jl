@@ -196,7 +196,7 @@ end
 ""
 function add_generator_power_setpoint(sol, pm::AbstractActivePowerModel)
     add_setpoint!(sol, pm, "gen", "pg", :pg)
-    add_setpoint_fixed(sol, pm, "gen", "qg")
+    add_setpoint_fixed!(sol, pm, "gen", "qg")
 end
 
 ""
