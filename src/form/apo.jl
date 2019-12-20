@@ -185,25 +185,11 @@ function constraint_storage_loss(pm::AbstractActivePowerModel, n::Int, i, bus, c
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
 
-    JuMP.@constraint(pm.model, 
+    JuMP.@constraint(pm.model,
         sum(ps[c] for c in conductors) + (sd - sc)
         ==
         p_loss + sum(r[c]*ps[c]^2 for c in conductors)
     )
-end
-
-
-""
-function add_generator_power_setpoint(sol, pm::AbstractActivePowerModel)
-    add_setpoint(sol, pm, "gen", "pg", :pg)
-    add_setpoint_fixed(sol, pm, "gen", "qg")
-end
-
-""
-function add_storage_setpoint(sol, pm::AbstractActivePowerModel)
-    add_setpoint(sol, pm, "storage", "ps", :ps)
-    add_setpoint_fixed(sol, pm, "storage", "qs")
-    add_setpoint(sol, pm, "storage", "se", :se, conductorless=true)
 end
 
 function constraint_storage_on_off(pm::AbstractActivePowerModel, n::Int, c::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
@@ -220,4 +206,3 @@ function add_setpoint_switch_flow!(sol, pm::AbstractActivePowerModel)
     add_setpoint!(sol, pm, "switch", "psw", :psw, var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
     add_setpoint_fixed!(sol, pm, "switch", "qsw")
 end
-

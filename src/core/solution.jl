@@ -60,24 +60,6 @@ function _init_solution(pm::AbstractPowerModel)
 end
 
 ""
-function get_solution(pm::AbstractPowerModel, sol::Dict{String,<:Any})
-    add_bus_voltage_setpoint(sol, pm)
-    add_generator_power_setpoint(sol, pm)
-    add_storage_setpoint(sol, pm)
-    add_branch_flow_setpoint(sol, pm)
-    add_dcline_flow_setpoint(sol, pm)
-
-    add_kcl_duals(sol, pm)
-    add_sm_duals(sol, pm) # Adds the duals of the transmission lines' thermal limits.
-end
-
-""
-function add_bus_voltage_setpoint(sol, pm::AbstractPowerModel)
-    add_setpoint(sol, pm, "bus", "vm", :vm)
-    add_setpoint(sol, pm, "bus", "va", :va)
-end
-
-""
 function solution_opf!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
     add_setpoint_bus_voltage!(sol, pm)
     add_setpoint_generator_power!(sol, pm)
@@ -110,46 +92,6 @@ function add_dual_sm!(sol, pm::AbstractPowerModel)
         add_dual!(sol, pm, "branch", "mu_sm_fr", :sm_fr, status_name=pm_component_status["branch"])
         add_dual!(sol, pm, "branch", "mu_sm_to", :sm_to, status_name=pm_component_status["branch"])
     end
-end
-
-""
-function add_generator_power_setpoint(sol, pm::AbstractPowerModel)
-    add_setpoint(sol, pm, "gen", "pg", :pg)
-    add_setpoint(sol, pm, "gen", "qg", :qg)
-end
-
-""
-function add_generator_status_setpoint(sol, pm::AbstractPowerModel)
-    add_setpoint(sol, pm, "gen", "gen_status", :z_gen; conductorless=true, default_value = (item) -> item["gen_status"]*1.0)
-end
-
-""
-function add_storage_setpoint(sol, pm::AbstractPowerModel)
-    add_setpoint(sol, pm, "storage", "ps", :ps)
-    add_setpoint(sol, pm, "storage", "qs", :qs)
-    add_setpoint(sol, pm, "storage", "se", :se, conductorless=true)
-    # useful for model debugging
-    #add_setpoint(sol, pm, "storage", "sc", :sc, conductorless=true)
-    #add_setpoint(sol, pm, "storage", "sd", :sd, conductorless=true)
-end
-
-""
-function add_branch_flow_setpoint(sol, pm::AbstractPowerModel)
-    # check the branch flows were requested
-    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
-        add_setpoint(sol, pm, "branch", "pf", :p; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch", "qf", :q; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-        add_setpoint(sol, pm, "branch", "pt", :p; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-        add_setpoint(sol, pm, "branch", "qt", :q; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-    end
-end
-
-""
-function add_dcline_flow_setpoint(sol, pm::AbstractPowerModel)
-    add_setpoint(sol, pm, "dcline", "pf", :p_dc; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-    add_setpoint(sol, pm, "dcline", "qf", :q_dc; extract_var = (var,idx,item) -> var[(idx, item["f_bus"], item["t_bus"])])
-    add_setpoint(sol, pm, "dcline", "pt", :p_dc; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
-    add_setpoint(sol, pm, "dcline", "qt", :q_dc; extract_var = (var,idx,item) -> var[(idx, item["t_bus"], item["f_bus"])])
 end
 
 ""

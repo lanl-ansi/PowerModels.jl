@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Removal of unused functions in `solution.jl`: `get_solution`, `add_generator_power_setpoint`, `add_storage_setpoint`, `add_branch_flow_setpoint`, `add_dcline_flow_setpoint` (breaking) (#637) 
 
 ### v0.13.1
 - Added DCMPPowerModel for replication of Matpower's DC model (#612)
