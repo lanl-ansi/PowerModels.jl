@@ -158,19 +158,23 @@ end
 
 ""
 function variable_active_branch_flow(pm::AbstractAPLossLessModels; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_p",
+        start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
+    )
+
     if bounded
         flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
-        p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
-            [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_p",
-            lower_bound = flow_lb[l],
-            upper_bound = flow_ub[l],
-            start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
-        )
-    else
-        p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
-            [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_p",
-            start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
-        )
+
+        for arc in ref(pm, nw, :arcs_from)
+            l,i,j = arc
+            if !isinf(flow_lb[l])
+                JuMP.set_lower_bound(p[arc], flow_lb[l])
+            end
+            if !isinf(flow_ub[l])
+                JuMP.set_upper_bound(p[arc], flow_ub[l])
+            end
+        end
     end
 
     for (l,branch) in ref(pm, nw, :branch)

@@ -188,30 +188,25 @@ end
 
 ""
 function variable_voltage_product(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    wr = var(pm, nw, cnd)[:wr] = JuMP.@variable(pm.model,
+        [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_wr",
+        start = comp_start_value(ref(pm, nw, :buspairs, bp), "wr_start", cnd, 1.0)
+    )
+    wi = var(pm, nw, cnd)[:wi] = JuMP.@variable(pm.model,
+        [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_wi",
+        start = comp_start_value(ref(pm, nw, :buspairs, bp), "wi_start", cnd)
+    )
+
     if bounded
         wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
 
-        var(pm, nw, cnd)[:wr] = JuMP.@variable(pm.model,
-            [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_wr",
-            lower_bound = wr_min[bp],
-            upper_bound = wr_max[bp],
-            start = comp_start_value(ref(pm, nw, :buspairs, bp), "wr_start", cnd, 1.0)
-        )
-        var(pm, nw, cnd)[:wi] = JuMP.@variable(pm.model,
-            [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_wi",
-            lower_bound = wi_min[bp],
-            upper_bound = wi_max[bp],
-            start = comp_start_value(ref(pm, nw, :buspairs, bp), "wi_start", cnd)
-        )
-    else
-        var(pm, nw, cnd)[:wr] = JuMP.@variable(pm.model,
-            [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_wr",
-            start = comp_start_value(ref(pm, nw, :buspairs, bp), "wr_start", cnd, 1.0)
-        )
-        var(pm, nw, cnd)[:wi] = JuMP.@variable(pm.model,
-            [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_wi",
-            start = comp_start_value(ref(pm, nw, :buspairs, bp), "wi_start", cnd)
-        )
+        for bp in ids(pm, nw, :buspairs)
+            JuMP.set_lower_bound(wr[bp], wr_min[bp])
+            JuMP.set_upper_bound(wr[bp], wr_max[bp])
+
+            JuMP.set_lower_bound(wi[bp], wi_min[bp])
+            JuMP.set_upper_bound(wi[bp], wi_max[bp])
+        end
     end
 end
 
@@ -329,20 +324,23 @@ end
 
 "variable: `p[l,i,j]` for `(l,i,j)` in `arcs`"
 function variable_active_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_p",
+        start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
+    )
+
     if bounded
         flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
 
-        p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
-            [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_p",
-            lower_bound = flow_lb[l],
-            upper_bound = flow_ub[l],
-            start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
-        )
-    else
-        p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
-            [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_p",
-            start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
-        )
+        for arc in ref(pm, nw, :arcs)
+            l,i,j = arc
+            if !isinf(flow_lb[l])
+                JuMP.set_lower_bound(p[arc], flow_lb[l])
+            end
+            if !isinf(flow_ub[l])
+                JuMP.set_upper_bound(p[arc], flow_ub[l])
+            end
+        end
     end
 
     for (l,branch) in ref(pm, nw, :branch)
@@ -359,20 +357,23 @@ end
 
 "variable: `q[l,i,j]` for `(l,i,j)` in `arcs`"
 function variable_reactive_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    q = var(pm, nw, cnd)[:q] = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_q",
+        start = comp_start_value(ref(pm, nw, :branch, l), "q_start", cnd)
+    )
+
     if bounded
         flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
 
-        q = var(pm, nw, cnd)[:q] = JuMP.@variable(pm.model,
-            [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_q",
-            lower_bound = flow_lb[l],
-            upper_bound = flow_ub[l],
-            start = comp_start_value(ref(pm, nw, :branch, l), "q_start", cnd)
-        )
-    else
-        q = var(pm, nw, cnd)[:q] = JuMP.@variable(pm.model,
-            [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_q",
-            start = comp_start_value(ref(pm, nw, :branch, l), "q_start", cnd)
-        )
+        for arc in ref(pm, nw, :arcs)
+            l,i,j = arc
+            if !isinf(flow_lb[l])
+                JuMP.set_lower_bound(q[arc], flow_lb[l])
+            end
+            if !isinf(flow_ub[l])
+                JuMP.set_upper_bound(q[arc], flow_ub[l])
+            end
+        end
     end
 
     for (l,branch) in ref(pm, nw, :branch)
@@ -485,20 +486,23 @@ end
 
 "variable: `pws[l,i,j]` for `(l,i,j)` in `arcs_sw`"
 function variable_active_switch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    psw = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_$(cnd)_psw",
+        start = comp_start_value(ref(pm, nw, :switch, l), "psw_start", cnd)
+    )
+
     if bounded
         flow_lb, flow_ub = ref_calc_switch_flow_bounds(ref(pm, nw, :switch), ref(pm, nw, :bus), cnd)
 
-        psw = JuMP.@variable(pm.model,
-            [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_$(cnd)_psw",
-            lower_bound = flow_lb[l],
-            upper_bound = flow_ub[l],
-            start = comp_start_value(ref(pm, nw, :switch, l), "psw_start", cnd)
-        )
-    else
-        psw = JuMP.@variable(pm.model,
-            [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_$(cnd)_psw",
-            start = comp_start_value(ref(pm, nw, :switch, l), "psw_start", cnd)
-        )
+        for arc in ref(pm, nw, :arcs_from_sw)
+            l,i,j = arc
+            if !isinf(flow_lb[l])
+                JuMP.set_lower_bound(psw[arc], flow_lb[l])
+            end
+            if !isinf(flow_ub[l])
+                JuMP.set_upper_bound(psw[arc], flow_ub[l])
+            end
+        end
     end
 
     # this explicit type erasure is necessary
@@ -510,20 +514,23 @@ end
 
 "variable: `pws[l,i,j]` for `(l,i,j)` in `arcs_sw`"
 function variable_reactive_switch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    qsw = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_$(cnd)_qsw",
+        start = comp_start_value(ref(pm, nw, :switch, l), "qsw_start", cnd)
+    )
+
     if bounded
         flow_lb, flow_ub = ref_calc_switch_flow_bounds(ref(pm, nw, :switch), ref(pm, nw, :bus), cnd)
 
-        qsw = JuMP.@variable(pm.model,
-            [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_$(cnd)_qsw",
-            lower_bound = flow_lb[l],
-            upper_bound = flow_ub[l],
-            start = comp_start_value(ref(pm, nw, :switch, l), "qsw_start", cnd)
-        )
-    else
-        qsw = JuMP.@variable(pm.model,
-            [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_$(cnd)_qsw",
-            start = comp_start_value(ref(pm, nw, :switch, l), "qsw_start", cnd)
-        )
+        for arc in ref(pm, nw, :arcs_from_sw)
+            l,i,j = arc
+            if !isinf(flow_lb[l])
+                JuMP.set_lower_bound(qsw[arc], flow_lb[l])
+            end
+            if !isinf(flow_ub[l])
+                JuMP.set_upper_bound(qsw[arc], flow_ub[l])
+            end
+        end
     end
 
     # this explicit type erasure is necessary
@@ -558,14 +565,21 @@ end
 
 ""
 function variable_active_storage(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
-
-    var(pm, nw, cnd)[:ps] = JuMP.@variable(pm.model,
+    ps = var(pm, nw, cnd)[:ps] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_$(cnd)_ps",
-        lower_bound = inj_lb[i],
-        upper_bound = inj_ub[i],
         start = comp_start_value(ref(pm, nw, :storage, i), "ps_start", cnd)
     )
+
+    inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
+
+    for i in ids(pm, nw, :storage)
+        if !isinf(inj_lb[i])
+            JuMP.set_lower_bound(ps[i], inj_lb[i])
+        end
+        if !isinf(inj_ub[i])
+            JuMP.set_upper_bound(ps[i], inj_ub[i])
+        end
+    end
 end
 
 ""
@@ -637,14 +651,21 @@ function variable_storage_mi_on_off(pm::AbstractPowerModel; kwargs...)
 end
 
 function variable_active_storage_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
-
-    var(pm, nw, cnd)[:ps] = JuMP.@variable(pm.model,
+    ps = var(pm, nw, cnd)[:ps] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_$(cnd)_ps",
-        lower_bound = min(0, inj_lb[i]),
-        upper_bound = max(0, inj_ub[i]),
         start = comp_start_value(ref(pm, nw, :storage, i), "ps_start", cnd)
     )
+
+    inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
+
+    for i in ids(pm, nw, :storage)
+        if !isinf(inj_lb[i])
+            JuMP.set_lower_bound(ps[i], min(0, inj_lb[i]))
+        end
+        if !isinf(inj_lb[i])
+            JuMP.set_upper_bound(ps[i], max(0, inj_ub[i]))
+        end
+    end
 end
 
 function variable_reactive_storage_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
@@ -687,26 +708,42 @@ end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= p_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
 function variable_active_branch_flow_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :ne_branch), ref(pm, nw, :bus), cnd)
-
-    var(pm, nw, cnd)[:p_ne] = JuMP.@variable(pm.model,
+    p_ne = var(pm, nw, cnd)[:p_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs)], base_name="$(nw)_$(cnd)_p_ne",
-        lower_bound = flow_lb[l],
-        upper_bound = flow_ub[l],
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "p_start", cnd)
     )
+
+    flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :ne_branch), ref(pm, nw, :bus), cnd)
+
+    for arc in ref(pm, nw, :ne_arcs)
+        l,i,j = arc
+        if !isinf(flow_lb[l])
+            JuMP.set_lower_bound(p_ne[arc], flow_lb[l])
+        end
+        if !isinf(flow_ub[l])
+            JuMP.set_upper_bound(p_ne[arc], flow_ub[l])
+        end
+    end
 end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= q_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
 function variable_reactive_branch_flow_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
-    flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :ne_branch), ref(pm, nw, :bus), cnd)
-
-    var(pm, nw, cnd)[:q_ne] = JuMP.@variable(pm.model,
+    q_ne = var(pm, nw, cnd)[:q_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs)], base_name="$(nw)_$(cnd)_q_ne",
-        lower_bound = flow_lb[l],
-        upper_bound = flow_ub[l],
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "q_start", cnd)
     )
+
+    flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :ne_branch), ref(pm, nw, :bus), cnd)
+
+    for arc in ref(pm, nw, :ne_arcs)
+        l,i,j = arc
+        if !isinf(flow_lb[l])
+            JuMP.set_lower_bound(q_ne[arc], flow_lb[l])
+        end
+        if !isinf(flow_ub[l])
+            JuMP.set_upper_bound(q_ne[arc], flow_ub[l])
+        end
+    end
 end
 
 "variable: `0 <= z_branch[l] <= 1` for `l` in `branch`es"
