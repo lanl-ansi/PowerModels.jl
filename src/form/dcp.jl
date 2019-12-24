@@ -168,10 +168,10 @@ function variable_active_branch_flow(pm::AbstractAPLossLessModels; nw::Int=pm.cn
 
         for arc in ref(pm, nw, :arcs_from)
             l,i,j = arc
-            if flow_lb[l] != -Inf
+            if !isinf(flow_lb[l])
                 JuMP.set_lower_bound(p[arc], flow_lb[l])
             end
-            if flow_ub[l] != -Inf
+            if !isinf(flow_ub[l])
                 JuMP.set_upper_bound(p[arc], flow_ub[l])
             end
         end

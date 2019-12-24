@@ -404,22 +404,29 @@ end
 
 
 ""
-function variable_current_magnitude_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+function variable_current_magnitude_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true)
     buspairs = ref(pm, nw, :buspairs)
-    ub = Dict()
-    for (bp, buspair) in buspairs
-        if haskey(buspair, "rate_a")
-            ub[bp] = ((buspair["rate_a"][cnd]*buspair["tap"][cnd])/buspair["vm_fr_min"][cnd])^2
-        else
-            ub[bp] = Inf
-        end
-    end
-    var(pm, nw, cnd)[:ccm] = JuMP.@variable(pm.model,
+    ccm = var(pm, nw, cnd)[:ccm] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_$(cnd)_ccm",
-        lower_bound = 0,
-        upper_bound = ub[bp],
         start = comp_start_value(buspairs[bp], "ccm_start", cnd)
     )
+    if bounded
+        ub = Dict()
+        for (bp, buspair) in buspairs
+            if haskey(buspair, "rate_a")
+                ub[bp] = ((buspair["rate_a"][cnd]*buspair["tap"][cnd])/buspair["vm_fr_min"][cnd])^2
+            else
+                ub[bp] = Inf
+            end
+        end
+
+        for (bp, buspair) in buspairs
+            JuMP.set_lower_bound(ccm[bp], 0.0)
+            if !isinf(ub[bp])
+                JuMP.set_upper_bound(ccm[bp], ub[bp])
+            end
+        end
+    end
 end
 
 ""

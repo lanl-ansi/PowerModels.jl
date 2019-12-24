@@ -80,3 +80,24 @@ function build_mn_mc_data!(base_data_1, base_data_2; conductors_1::Int=3, conduc
 
     return mn_data
 end
+
+
+"checks that no bounds are in Inf"
+function check_variable_bounds(model)
+    for v in JuMP.all_variables(model)
+        #println(v)
+        if JuMP.has_lower_bound(v)
+            if isinf(JuMP.lower_bound(v))
+                println(v, JuMP.lower_bound(v))
+                return false
+            end
+        end
+        if JuMP.has_upper_bound(v)
+            if isinf(JuMP.upper_bound(v))
+                println(v, JuMP.upper_bound(v))
+                return false
+            end
+        end
+    end
+    return true
+end

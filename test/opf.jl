@@ -83,6 +83,11 @@
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 79805; atol = 1e0)
     end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", ACPPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
+    end
 end
 
 
@@ -135,6 +140,11 @@ end
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 79805; atol = 1e0)
     end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", ACRPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
+    end
 end
 
 
@@ -182,6 +192,11 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 79804; atol = 1e0)
+    end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", ACTPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
     end
 end
 
@@ -261,6 +276,11 @@ end
     #    @test result["termination_status"] == LOCALLY_SOLVED
     #    @test isapprox(result["objective"], 79804; atol = 1e0)
     #end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", DCPPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
+    end
 end
 
 @testset "test nfa opf" begin
@@ -305,6 +325,11 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 61001.2; atol = 1e0)
+    end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", NFAPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
     end
 end
 
@@ -352,6 +377,11 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 82240; atol = 1e0)
+    end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", DCPLLPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
     end
 end
 
@@ -428,6 +458,11 @@ end
     #    @test result["termination_status"] == LOCALLY_SOLVED
     #    @test isapprox(result["objective"], 79805; atol = 1e0)
     #end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", LPACCPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
+    end
 end
 
 
@@ -492,6 +527,11 @@ end
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 70690.7; atol = 1e0)
     end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", SOCWRPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
+    end
 end
 
 @testset "test soc conic form opf" begin
@@ -554,6 +594,11 @@ end
         @test result["termination_status"] == OPTIMAL
         @test isapprox(result["objective"], 70688.5; atol = 1e0)
     end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", SOCWRConicPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
+    end
 end
 
 @testset "test soc distflow opf_bf" begin
@@ -611,6 +656,11 @@ end
         result = run_opf_bf(mp_data, SOCBFPowerModel, ipopt_solver)
         @test result["termination_status"] == LOCALLY_SOLVED
     end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", SOCBFPowerModel, PowerModels.post_opf_bf, jump_model=m)
+        @test check_variable_bounds(m)
+    end
 end
 
 @testset "test soc conic distflow opf_bf" begin
@@ -637,6 +687,11 @@ end
 
         @test result["termination_status"] == OPTIMAL
         @test isapprox(result["objective"], 3593.0; atol = 1e1)
+    end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", SOCBFConicPowerModel, PowerModels.post_opf_bf, jump_model=m)
+        @test check_variable_bounds(m)
     end
 end
 
@@ -686,6 +741,11 @@ end
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 76599.9; atol = 1e0)
     end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", QCRMPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
+    end
 end
 
 @testset "test qc opf with trilinear convexhull relaxation" begin
@@ -720,6 +780,11 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 76785.4; atol = 1e0)
+    end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", QCLSPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
     end
 end
 
@@ -777,6 +842,11 @@ end
     #    @test result["termination_status"] == OPTIMAL
     #    @test isapprox(result["objective"], 75153; atol = 1e0)
     #end
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", SDPWRMPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
+    end
 end
 
 
@@ -810,6 +880,11 @@ end
         @test isapprox(result["objective"], 11578.8; atol = 1e0)
     end
     =#
+    @testset "14-bus variable bounds" begin
+        m = JuMP.Model()
+        build_model("../test/data/matpower/case14.m", SparseSDPWRMPowerModel, PowerModels.post_opf, jump_model=m)
+        @test check_variable_bounds(m)
+    end
 
     @testset "passing in decomposition" begin
         # too slow for unit tests

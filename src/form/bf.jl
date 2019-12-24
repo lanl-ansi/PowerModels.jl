@@ -3,25 +3,29 @@
 ""
 function variable_current_magnitude_sqr(pm::AbstractBFModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     branch = ref(pm, nw, :branch)
-    bus = ref(pm, nw, :bus)
-    ub = Dict()
-    for (i, b) in branch
-        ub[i] = ((b["rate_a"][cnd]*b["tap"][cnd])/(bus[b["f_bus"]]["vmin"][cnd]))^2
-    end
+
+    ccm = var(pm, nw, cnd)[:ccm] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_ccm",
+        start = comp_start_value(branch[i], "ccm_start", cnd)
+    )
 
     if bounded
-        var(pm, nw, cnd)[:ccm] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_ccm",
-            lower_bound = 0,
-            upper_bound = ub[i],
-            start = comp_start_value(branch[i], "ccm_start", cnd)
-        )
-    else
-        var(pm, nw, cnd)[:ccm] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_ccm",
-            lower_bound = 0,
-            start = comp_start_value(branch[i], "ccm_start", cnd)
-        )
+        bus = ref(pm, nw, :bus)
+        ub = Dict()
+        for (i, b) in branch
+            rate_a = Inf
+            if haskey(b, "rate_a")
+                rate_a = b["rate_a"]
+            end
+            ub[i] = ((rate_a[cnd]*b["tap"][cnd])/(bus[b["f_bus"]]["vmin"][cnd]))^2
+        end
+
+        for i in ids(pm, nw, :branch)
+            JuMP.set_lower_bound(ccm[i], 0.0)
+            if !isinf(ub[i])
+                JuMP.set_upper_bound(ccm[i], ub[i])
+            end
+        end
     end
 end
 

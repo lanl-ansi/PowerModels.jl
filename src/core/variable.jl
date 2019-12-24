@@ -334,10 +334,10 @@ function variable_active_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd
 
         for arc in ref(pm, nw, :arcs)
             l,i,j = arc
-            if flow_lb[l] != -Inf
+            if !isinf(flow_lb[l])
                 JuMP.set_lower_bound(p[arc], flow_lb[l])
             end
-            if flow_ub[l] != -Inf
+            if !isinf(flow_ub[l])
                 JuMP.set_upper_bound(p[arc], flow_ub[l])
             end
         end
@@ -367,10 +367,10 @@ function variable_reactive_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, c
 
         for arc in ref(pm, nw, :arcs)
             l,i,j = arc
-            if flow_lb[l] != -Inf
+            if !isinf(flow_lb[l])
                 JuMP.set_lower_bound(q[arc], flow_lb[l])
             end
-            if flow_ub[l] != -Inf
+            if !isinf(flow_ub[l])
                 JuMP.set_upper_bound(q[arc], flow_ub[l])
             end
         end
@@ -496,10 +496,10 @@ function variable_active_switch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd
 
         for arc in ref(pm, nw, :arcs_from_sw)
             l,i,j = arc
-            if flow_lb[l] != -Inf
+            if !isinf(flow_lb[l])
                 JuMP.set_lower_bound(psw[arc], flow_lb[l])
             end
-            if flow_ub[l] != -Inf
+            if !isinf(flow_ub[l])
                 JuMP.set_upper_bound(psw[arc], flow_ub[l])
             end
         end
@@ -524,10 +524,10 @@ function variable_reactive_switch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, c
 
         for arc in ref(pm, nw, :arcs_from_sw)
             l,i,j = arc
-            if flow_lb[l] != -Inf
+            if !isinf(flow_lb[l])
                 JuMP.set_lower_bound(qsw[arc], flow_lb[l])
             end
-            if flow_ub[l] != -Inf
+            if !isinf(flow_ub[l])
                 JuMP.set_upper_bound(qsw[arc], flow_ub[l])
             end
         end
@@ -573,10 +573,10 @@ function variable_active_storage(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::In
     inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
 
     for i in ids(pm, nw, :storage)
-        if inj_lb[i] != -Inf
+        if !isinf(inj_lb[i])
             JuMP.set_lower_bound(ps[i], inj_lb[i])
         end
-        if inj_ub[i] != -Inf
+        if !isinf(inj_ub[i])
             JuMP.set_upper_bound(ps[i], inj_ub[i])
         end
     end
@@ -659,10 +659,10 @@ function variable_active_storage_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, 
     inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus), cnd)
 
     for i in ids(pm, nw, :storage)
-        if inj_lb[i] != -Inf
+        if !isinf(inj_lb[i])
             JuMP.set_lower_bound(ps[i], min(0, inj_lb[i]))
         end
-        if inj_ub[i] != -Inf
+        if !isinf(inj_lb[i])
             JuMP.set_upper_bound(ps[i], max(0, inj_ub[i]))
         end
     end
@@ -717,10 +717,10 @@ function variable_active_branch_flow_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, 
 
     for arc in ref(pm, nw, :ne_arcs)
         l,i,j = arc
-        if flow_lb[l] != -Inf
+        if !isinf(flow_lb[l])
             JuMP.set_lower_bound(p_ne[arc], flow_lb[l])
         end
-        if flow_ub[l] != -Inf
+        if !isinf(flow_ub[l])
             JuMP.set_upper_bound(p_ne[arc], flow_ub[l])
         end
     end
@@ -737,10 +737,10 @@ function variable_reactive_branch_flow_ne(pm::AbstractPowerModel; nw::Int=pm.cnw
 
     for arc in ref(pm, nw, :ne_arcs)
         l,i,j = arc
-        if flow_lb[l] != -Inf
+        if !isinf(flow_lb[l])
             JuMP.set_lower_bound(q_ne[arc], flow_lb[l])
         end
-        if flow_ub[l] != -Inf
+        if !isinf(flow_ub[l])
             JuMP.set_upper_bound(q_ne[arc], flow_ub[l])
         end
     end
