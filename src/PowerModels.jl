@@ -48,6 +48,7 @@ include("core/relaxation_scheme.jl")
 include("core/objective.jl")
 include("core/solution.jl")
 include("core/multiconductor.jl")
+include("core/admittance_matrix.jl")
 
 include("io/json.jl")
 
