@@ -333,7 +333,7 @@ end
         for (i,bus) in data["bus"]
             opt_val = result["solution"]["bus"][i]["va"]
             lin_val = native["bus"][i]["va"]
-            @test isapprox(opt_val, lin_val)
+            @test isapprox(opt_val, lin_val; atol = 1e-10)
         end
     end
     @testset "5-bus asymmetric case" begin
@@ -344,7 +344,7 @@ end
         for (i,bus) in data["bus"]
             opt_val = result["solution"]["bus"][i]["va"]
             lin_val = native["bus"][i]["va"]
-            @test isapprox(opt_val, lin_val)
+            @test isapprox(opt_val, lin_val; atol = 1e-10)
         end
     end
     # solve_dc_pf does not yet support multiple slack buses
@@ -367,7 +367,7 @@ end
         for (i,bus) in data["bus"]
             opt_val = result["solution"]["bus"][i]["va"]
             lin_val = native["bus"][i]["va"]
-            @test isapprox(opt_val, lin_val)
+            @test isapprox(opt_val, lin_val; atol = 1e-10)
         end
     end
 end
