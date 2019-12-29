@@ -48,6 +48,13 @@ Base.show(io::IO, x::PowerTransferDistributionFactors{<:Any}) = print(io, "Power
 
 "data should be a PowerModels network data model"
 function calc_susceptance_matrix(data::Dict{String,<:Any})
+    if length(data["dcline"]) > 0
+        Memento.error(_LOGGER, "calc_susceptance_matrix does not support data with dclines")
+    end
+    if length(data["switch"]) > 0
+        Memento.error(_LOGGER, "calc_susceptance_matrix does not support data with switches")
+    end
+
     buses = [x.second for x in data["bus"] if (x.second[pm_component_status["bus"]] != pm_component_status_inactive["bus"])]
     sort!(buses, by=x->x["index"])
 
@@ -96,6 +103,13 @@ computes the power injection of each bus in the network
 data should be a PowerModels network data model
 """
 function calc_bus_injection(data::Dict{String,<:Any})
+    if length(data["dcline"]) > 0
+        Memento.error(_LOGGER, "calc_bus_injection does not support data with dclines")
+    end
+    if length(data["switch"]) > 0
+        Memento.error(_LOGGER, "calc_bus_injection does not support data with switches")
+    end
+
     bus_values = Dict(bus["index"] => Dict{String,Float64}() for (i,bus) in data["bus"])
 
     for (i,bus) in data["bus"]
@@ -113,9 +127,6 @@ function calc_bus_injection(data::Dict{String,<:Any})
 
         bvals["pg"] = 0.0
         bvals["qg"] = 0.0
-
-        bvals["psw"] = 0.0
-        bvals["qsw"] = 0.0
     end
 
     for (i,load) in data["load"]
@@ -150,27 +161,13 @@ function calc_bus_injection(data::Dict{String,<:Any})
         end
     end
 
-    for (i,switch) in data["switch"]
-        if switch["status"] != 0
-            bus_fr = switch["f_bus"]
-            bvals_fr = bus_values[bus_fr]
-            bvals_fr["psw"] += switch["psw"]
-            bvals_fr["qsw"] += switch["qsw"]
-
-            bus_to = switch["t_bus"]
-            bvals_to = bus_values[bus_to]
-            bvals_to["psw"] -= switch["psw"]
-            bvals_to["qsw"] -= switch["qsw"]
-        end
-    end
-
     p_deltas = Dict{Int,Float64}()
     q_deltas = Dict{Int,Float64}()
     for (i,bus) in data["bus"]
         if bus["bus_type"] != 4
             bvals = bus_values[bus["index"]]
-            p_delta = bvals["psw"] - bvals["pg"] + bvals["ps"] + bvals["pd"] + bvals["gs"]*(bvals["vm"]^2)
-            q_delta = bvals["qsw"] - bvals["qg"] + bvals["qs"] + bvals["qd"] - bvals["bs"]*(bvals["vm"]^2)
+            p_delta = - bvals["pg"] + bvals["ps"] + bvals["pd"] + bvals["gs"]*(bvals["vm"]^2)
+            q_delta = - bvals["qg"] + bvals["qs"] + bvals["qd"] - bvals["bs"]*(bvals["vm"]^2)
         else
             p_delta = NaN
             q_delta = NaN
