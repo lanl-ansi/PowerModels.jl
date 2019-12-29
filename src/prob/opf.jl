@@ -153,3 +153,9 @@ function post_mn_strg_opf(pm::AbstractPowerModel)
     objective_min_fuel_and_flow_cost(pm)
 end
 
+
+""
+function ref_add_ptdf!(pm::AbstractPowerModel)
+    Memento.error(_LOGGER, "ref_add_ptdf! is only valid for DCPPowerModels")
+end
+

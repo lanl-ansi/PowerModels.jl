@@ -93,7 +93,19 @@ calc_ptdf_matrix(data::Dict{String,<:Any}) = calc_ptdf_matrix(calc_susceptance_m
 function calc_ptdf_matrix(am::AdmittanceMatrix)
     m = Matrix(am.matrix)
     ptdf = pinv(m)
+    #println(ptdf)
     return PowerTransferDistributionFactors(am.idx_to_bus, am.bus_to_idx, ptdf)
+end
+
+function injection_factors(ptdf::PowerTransferDistributionFactors, bus_id::Int)
+    bus_idx = ptdf.bus_to_idx[bus_id]
+
+    injection_factors = Dict(
+        ptdf.idx_to_bus[i] => ptdf.matrix[bus_idx,i]
+        for i in 1:length(ptdf.idx_to_bus)
+    )
+
+    return injection_factors
 end
 
 
