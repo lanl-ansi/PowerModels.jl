@@ -85,16 +85,25 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
     return AdmittanceMatrix(idx_to_bus, bus_to_idx, m)
 end
 
-
 "note, data should be a PowerModels network data model"
-calc_ptdf_matrix(data::Dict{String,<:Any}) = calc_ptdf_matrix(calc_susceptance_matrix(data))
+function calc_ptdf_matrix(data::Dict{String,<:Any})
+    #TODO check single connected component
+
+    ref_bus = reference_bus(data)
+    sm = calc_susceptance_matrix(data)
+    return calc_ptdf_matrix(sm, sm.bus_to_idx[ref_bus["index"]])
+end
 
 "calculates a PTDF matrix"
-function calc_ptdf_matrix(am::AdmittanceMatrix)
-    m = Matrix(am.matrix)
-    ptdf = pinv(m)
-    #println(ptdf)
-    return PowerTransferDistributionFactors(am.idx_to_bus, am.bus_to_idx, ptdf)
+function calc_ptdf_matrix(am::AdmittanceMatrix, ref_idx::Int)
+    M = Matrix(am.matrix)
+
+    num_buses = length(am.idx_to_bus)
+    nonref_buses = Int64[i for i in 1:num_buses if i != ref_idx]
+    inv_M = zeros(Float64, num_buses, num_buses)
+    inv_M[nonref_buses, nonref_buses] = inv(M[nonref_buses, nonref_buses])
+
+    return PowerTransferDistributionFactors(am.idx_to_bus, am.bus_to_idx, inv_M)
 end
 
 function injection_factors(ptdf::PowerTransferDistributionFactors, bus_id::Int)
@@ -201,13 +210,7 @@ computes a dc power flow based on the susceptance matrix of the network data
 function solve_dc_pf(data::Dict{String,<:Any})
     #TODO check single connected component
 
-    ref_bus = [bus["index"] for (i,bus) in data["bus"] if bus["bus_type"] == 3]
-
-    if length(ref_bus) != 1
-        Memento.error(_LOGGER, "exactly one refrence bus is required when solving a dc power flow, given $(length(ref_bus))")
-    end
-    ref_bus = ref_bus[1]
-    #println(ref_bus)
+    ref_bus = reference_bus(data)["index"]
 
     sm = calc_susceptance_matrix(data)
     bi = calc_bus_injection_active(data)

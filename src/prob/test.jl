@@ -69,9 +69,9 @@ function _post_ptdf_opf(pm::AbstractPowerModel)
 
     constraint_model_voltage(pm)
 
-    #for i in ids(pm, :ref_buses)
-    #    constraint_theta_ref(pm, i)
-    #end
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
+    end
 
     for i in ids(pm, :components)
         constraint_network_power_balance(pm, i)

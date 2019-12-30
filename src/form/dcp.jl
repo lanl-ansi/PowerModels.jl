@@ -190,9 +190,7 @@ function ref_add_ptdf!(pm::AbstractDCPModel)
         nw_id = parse(Int, n)
         nw_ref = ref(pm, nw_id)
 
-        sm = calc_susceptance_matrix(nw_data)
-        ptdf = calc_ptdf_matrix(sm)
-        nw_ref[:ptdf] = ptdf
+        nw_ref[:ptdf] = calc_ptdf_matrix(nw_data)
     end
 end
 

@@ -12,7 +12,7 @@
 
 "`t[ref_bus] == 0`"
 function constraint_theta_ref(pm::AbstractPolarModels, n::Int, c::Int, i::Int)
-    con = JuMP.@constraint(pm.model, var(pm, n, c, :va)[i] == 0)
+    JuMP.@constraint(pm.model, var(pm, n, c, :va)[i] == 0)
 end
 
 """

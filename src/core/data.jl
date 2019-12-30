@@ -1454,6 +1454,17 @@ function check_status(data::Dict{String,<:Any})
     end
 end
 
+"get the reference bus in a network dataset"
+function reference_bus(data::Dict{String,<:Any})
+    ref_buses = [bus for (i,bus) in data["bus"] if bus["bus_type"] == 3]
+
+    if length(ref_buses) != 1
+        Memento.error(_LOGGER, "exactly one refrence bus in data is required when calling reference_bus, given $(length(ref_buses))")
+    end
+    ref_buses = ref_buses[1]
+
+    return ref_buses
+end
 
 "checks that contains at least one refrence bus"
 function check_reference_bus(data::Dict{String,<:Any})
