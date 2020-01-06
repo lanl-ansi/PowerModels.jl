@@ -6,7 +6,7 @@
 Stores metadata related to an Admittance Matirx
 
 Designed to work with both complex (i.e. Y) and real-valued (e.g. b) valued
-admittance matirices.
+admittance matrices.
 
 Typically the matrix will be sparse, but supports dense matricies as well.
 """
@@ -29,7 +29,7 @@ Base.show(io::IO, x::AdmittanceMatrix{<:SparseArrays.AbstractSparseMatrix}) = pr
 Stores metadata related to an PTDF Matirx
 
 Designed to work with the inverse of both complex (i.e. Y) and real-valued (e.g. b) valued
-admittance matirices.
+admittance matrices.
 
 Typically the matrix will be dense.
 """

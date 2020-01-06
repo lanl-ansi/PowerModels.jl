@@ -1,7 +1,7 @@
-### Solvers where line flow limit cuts are added iterativly ###
+### Solvers where line flow limit cuts are added iteratively ###
 
 """
-Solves the OPF problem by iterativly adding line flow constraints based on 
+Solves the OPF problem by iteratively adding line flow constraints based on 
 constraint violations
 
 # Keyword Arguments
