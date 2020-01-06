@@ -34,34 +34,34 @@ end
 Defines how current distributes over series and shunt impedances of a pi-model branch
 """
 function constraint_current_from(pm::AbstractIVRModel, n::Int, c::Int, f_bus, f_idx, g_sh_fr, b_sh_fr, tr, ti, tm)
-    vrfr = var(pm, n, c, :vr, f_bus)
-    vifr = var(pm, n, c, :vi, f_bus)
+    vr_fr = var(pm, n, c, :vr, f_bus)
+    vi_fr = var(pm, n, c, :vi, f_bus)
 
-    csrfr =  var(pm, n, c, :csr, f_idx)
-    csifr =  var(pm, n, c, :csi, f_idx)
+    csr_fr =  var(pm, n, c, :csr, f_idx)
+    csi_fr =  var(pm, n, c, :csi, f_idx)
 
-    crfr =  var(pm, n, c, :cr, f_idx)
-    cifr =  var(pm, n, c, :ci, f_idx)
+    cr_fr =  var(pm, n, c, :cr, f_idx)
+    ci_fr =  var(pm, n, c, :ci, f_idx)
 
-    JuMP.@constraint(pm.model, crfr == (tr*csrfr - ti*csifr + g_sh_fr*vrfr - b_sh_fr*vifr)/tm^2)
-    JuMP.@constraint(pm.model, cifr == (tr*csifr + ti*csrfr + g_sh_fr*vifr + b_sh_fr*vrfr)/tm^2)
+    JuMP.@constraint(pm.model, cr_fr == (tr*csr_fr - ti*csi_fr + g_sh_fr*vr_fr - b_sh_fr*vi_fr)/tm^2)
+    JuMP.@constraint(pm.model, ci_fr == (tr*csi_fr + ti*csr_fr + g_sh_fr*vi_fr + b_sh_fr*vr_fr)/tm^2)
 end
 
 """
 Defines how current distributes over series and shunt impedances of a pi-model branch
 """
 function constraint_current_to(pm::AbstractIVRModel, n::Int, c::Int, t_bus, f_idx, t_idx, g_sh_to, b_sh_to)
-    vrto = var(pm, n, c, :vr, t_bus)
-    vito = var(pm, n, c, :vi, t_bus)
+    vr_to = var(pm, n, c, :vr, t_bus)
+    vi_to = var(pm, n, c, :vi, t_bus)
 
-    csrto =  -var(pm, n, c, :csr, f_idx)
-    csito =  -var(pm, n, c, :csi, f_idx)
+    csr_to =  -var(pm, n, c, :csr, f_idx)
+    csi_to =  -var(pm, n, c, :csi, f_idx)
 
-    crto =  var(pm, n, c, :cr, t_idx)
-    cito =  var(pm, n, c, :ci, t_idx)
+    cr_to =  var(pm, n, c, :cr, t_idx)
+    ci_to =  var(pm, n, c, :ci, t_idx)
 
-    JuMP.@constraint(pm.model, crto == csrto + g_sh_to*vrto - b_sh_to*vito)
-    JuMP.@constraint(pm.model, cito == csito + g_sh_to*vito + b_sh_to*vrto)
+    JuMP.@constraint(pm.model, cr_to == csr_to + g_sh_to*vr_to - b_sh_to*vi_to)
+    JuMP.@constraint(pm.model, ci_to == csi_to + g_sh_to*vi_to + b_sh_to*vr_to)
 end
 
 
@@ -69,17 +69,17 @@ end
 Defines voltage drop over a branch, linking from and to side complex voltage
 """
 function constraint_voltage_drop(pm::AbstractIVRModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, r, x, tr, ti, tm)
-    vrfr = var(pm, n, c, :vr, f_bus)
-    vifr = var(pm, n, c, :vi, f_bus)
+    vr_fr = var(pm, n, c, :vr, f_bus)
+    vi_fr = var(pm, n, c, :vi, f_bus)
 
-    vrto = var(pm, n, c, :vr, t_bus)
-    vito = var(pm, n, c, :vi, t_bus)
+    vr_to = var(pm, n, c, :vr, t_bus)
+    vi_to = var(pm, n, c, :vi, t_bus)
 
-    csr =  var(pm, n, c, :csr, f_idx)
-    csi =  var(pm, n, c, :csi, f_idx)
+    csr_fr =  var(pm, n, c, :csr, f_idx)
+    csi_fr =  var(pm, n, c, :csi, f_idx)
 
-    JuMP.@constraint(pm.model, vrto == (vrfr*tr + vifr*ti)/tm^2 - r*csr + x*csi)
-    JuMP.@constraint(pm.model, vito == (vifr*tr - vrfr*ti)/tm^2 - r*csi - x*csr)
+    JuMP.@constraint(pm.model, vr_to == (vr_fr*tr + vi_fr*ti)/tm^2 - r*csr_fr + x*csi_fr)
+    JuMP.@constraint(pm.model, vi_to == (vi_fr*tr - vr_fr*ti)/tm^2 - r*csi_fr - x*csr_fr)
 end
 
 """
@@ -88,12 +88,12 @@ Bounds the voltage angle difference between bus pairs
 function constraint_voltage_angle_difference(pm::AbstractIVRModel, n::Int, c::Int, f_idx, angmin, angmax)
     i, f_bus, t_bus = f_idx
 
-    vrf = var(pm, n, c, :vr, f_bus)
-    vif = var(pm, n, c, :vi, f_bus)
-    vrt = var(pm, n, c, :vr, t_bus)
-    vit = var(pm, n, c, :vi, t_bus)
-    vvr = vrf*vrt + vif*vit
-    vvi = vif*vrt - vrf*vit
+    vr_fr = var(pm, n, c, :vr, f_bus)
+    vi_fr = var(pm, n, c, :vi, f_bus)
+    vr_to = var(pm, n, c, :vr, t_bus)
+    vit_to = var(pm, n, c, :vi, t_bus)
+    vvr = vr_fr*vr_to + vi_fr*vi_to
+    vvi = vi_fr*vr_to - vr_fr*vi_to
 
     JuMP.@constraint(pm.model, tan(angmin)*vvr <= vvi)
     JuMP.@constraint(pm.model, tan(angmax)*vvr >= vvi)
@@ -170,8 +170,8 @@ function constraint_current_limit(pm::AbstractIVRModel, n::Int, c::Int, f_idx, c
     crt =  var(pm, n, c, :cr, t_idx)
     cit =  var(pm, n, c, :ci, t_idx)
 
-    JuMP.@constraint(pm.model, (crf^2 + cif^2) <= c_rating^2)
-    JuMP.@constraint(pm.model, (crt^2 + cit^2) <= c_rating^2)
+    JuMP.@constraint(pm.model, crf^2 + cif^2 <= c_rating^2)
+    JuMP.@constraint(pm.model, crt^2 + cit^2 <= c_rating^2)
 end
 
 """
