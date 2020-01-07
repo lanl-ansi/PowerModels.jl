@@ -1,0 +1,50 @@
+
+@testset "injection factor computation" begin
+    # degenerate due to no slack bus
+    # @testset "3-bus case" begin
+    #    data = PowerModels.parse_file("../test/data/matpower/case3.m")
+    # end
+    @testset "5-bus case" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        sm = calc_susceptance_matrix(data)
+        ptdf = calc_ptdf_matrix(data)
+
+        ref_bus = reference_bus(data)
+        for (i,bus) in data["bus"]
+            sm_injection_factors = injection_factors(sm, ref_bus["index"], bus["index"])
+            ptdf_injection_factors = injection_factors(ptdf, bus["index"])
+
+            @test all(isapprox(sm_injection_factors[j], v) for (j,v) in ptdf_injection_factors)
+        end
+    end
+    @testset "14-bus pti case" begin
+        data = PowerModels.parse_file("../test/data/pti/case14.raw")
+        sm = calc_susceptance_matrix(data)
+        ptdf = calc_ptdf_matrix(data)
+
+        ref_bus = reference_bus(data)
+        for (i,bus) in data["bus"]
+            sm_injection_factors = injection_factors(sm, ref_bus["index"], bus["index"])
+            ptdf_injection_factors = injection_factors(ptdf, bus["index"])
+
+            @test all(isapprox(sm_injection_factors[j], v) for (j,v) in ptdf_injection_factors)
+        end
+    end
+    # solve_dc_pf does not yet support multiple slack buses
+    # @testset "6-bus case" begin
+    #     data = PowerModels.parse_file("../test/data/matpower/case6.m")
+    # end
+    @testset "24-bus rts case" begin
+        data = PowerModels.parse_file("../test/data/matpower/case24.m")
+        sm = calc_susceptance_matrix(data)
+        ptdf = calc_ptdf_matrix(data)
+
+        ref_bus = reference_bus(data)
+        for (i,bus) in data["bus"]
+            sm_injection_factors = injection_factors(sm, ref_bus["index"], bus["index"])
+            ptdf_injection_factors = injection_factors(ptdf, bus["index"])
+
+            @test all(isapprox(sm_injection_factors[j], v) for (j,v) in ptdf_injection_factors)
+        end
+    end
+end

@@ -43,6 +43,8 @@ include("common.jl")
 
     include("model.jl")
 
+    include("am.jl")
+
     include("opb.jl")
 
     include("pf.jl")
