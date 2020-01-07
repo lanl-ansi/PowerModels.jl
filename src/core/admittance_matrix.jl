@@ -118,6 +118,55 @@ function injection_factors(ptdf::PowerTransferDistributionFactors, bus_id::Int)
 end
 
 
+"Computes voltage angle injection factors implicitly by solving a system of linear equations."
+function injection_factors(am::AdmittanceMatrix, ref_bus::Int, bus_id::Int)
+    # this row is all zeros, an empty Dict is also a reasonable option
+    if ref_bus == bus_id
+        return Dict(am.idx_to_bus[i] => 0.0 for i in 1:length(am.idx_to_bus))
+    end
+
+    ref_bus_idx = am.bus_to_idx[ref_bus]
+    bus_idx = am.bus_to_idx[bus_id]
+
+    # need to remap the indexes to omit the ref_bus id
+    # a reverse lookup is also required
+    idx2_to_idx1 = Int64[]
+    for i in 1:length(am.idx_to_bus)
+        if i != ref_bus_idx
+            push!(idx2_to_idx1, i)
+        end
+    end
+    idx1_to_idx2 = Dict(v => i for (i,v) in enumerate(idx2_to_idx1))
+
+    # rebuild the sparse version of the AdmittanceMatrix without the reference bus
+    I = Int64[]
+    J = Int64[]
+    V = Float64[]
+
+    I_src, J_src, V_src = findnz(am.matrix)
+    for k in 1:length(V_src)
+        if I_src[k] != ref_bus_idx && J_src[k] != ref_bus_idx
+            push!(I, idx1_to_idx2[I_src[k]])
+            push!(J, idx1_to_idx2[J_src[k]])
+            push!(V, V_src[k])
+        end
+    end
+    M = sparse(I,J,V)
+
+    # a vector to select which bus injection factors to compute
+    va_vect = zeros(Float64, length(idx2_to_idx1))
+    va_vect[idx1_to_idx2[bus_idx]] = 1.0
+
+    if_vect = M \ va_vect
+
+    # map injection factors back to original bus ids
+    injection_factors = Dict(am.idx_to_bus[idx2_to_idx1[i]] => v for (i,v) in enumerate(if_vect))
+    injection_factors[ref_bus] = 0.0
+
+    return injection_factors
+end
+
+
 """
 computes the power injection of each bus in the network
 
