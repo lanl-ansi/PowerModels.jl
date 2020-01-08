@@ -11,9 +11,10 @@
 
         ref_bus = reference_bus(data)
         for (i,bus) in data["bus"]
-            sm_injection_factors = injection_factors(sm, ref_bus["index"], bus["index"])
+            sm_injection_factors = injection_factors(sm, bus["index"])
             sm_inv_injection_factors = injection_factors(sm_inv, bus["index"])
 
+            @test length(sm_injection_factors) == length(sm_inv_injection_factors)
             @test all(isapprox(sm_injection_factors[j], v) for (j,v) in sm_inv_injection_factors)
         end
     end
@@ -24,9 +25,10 @@
 
         ref_bus = reference_bus(data)
         for (i,bus) in data["bus"]
-            sm_injection_factors = injection_factors(sm, ref_bus["index"], bus["index"])
+            sm_injection_factors = injection_factors(sm, bus["index"])
             sm_inv_injection_factors = injection_factors(sm_inv, bus["index"])
 
+            @test length(sm_injection_factors) == length(sm_inv_injection_factors)
             @test all(isapprox(sm_injection_factors[j], v) for (j,v) in sm_inv_injection_factors)
         end
     end
@@ -41,9 +43,10 @@
 
         ref_bus = reference_bus(data)
         for (i,bus) in data["bus"]
-            sm_injection_factors = injection_factors(sm, ref_bus["index"], bus["index"])
+            sm_injection_factors = injection_factors(sm, bus["index"])
             sm_inv_injection_factors = injection_factors(sm_inv, bus["index"])
 
+            @test length(sm_injection_factors) == length(sm_inv_injection_factors)
             @test all(isapprox(sm_injection_factors[j], v) for (j,v) in sm_inv_injection_factors)
         end
     end

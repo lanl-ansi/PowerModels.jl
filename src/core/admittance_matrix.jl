@@ -13,13 +13,14 @@ Typically the matrix will be sparse, but supports dense matricies as well.
 struct AdmittanceMatrix{T}
     idx_to_bus::Vector{Int}
     bus_to_idx::Dict{Int,Int}
+    ref_idx::Int
     matrix::SparseArrays.SparseMatrixCSC{T,Int}
 end
 
 Base.show(io::IO, x::AdmittanceMatrix{<:Number}) = print(io, "AdmittanceMatrix($(length(x.idx_to_bus)) buses, $(length(nonzeros(x.matrix))) entries)")
 
 
-"data should be a PowerModels network data model"
+"data should be a PowerModels network data model; only supports networks with exactly one refrence bus"
 function calc_susceptance_matrix(data::Dict{String,<:Any})
     if length(data["dcline"]) > 0
         Memento.error(_LOGGER, "calc_susceptance_matrix does not support data with dclines")
@@ -29,6 +30,9 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
     end
 
     #TODO check single connected component
+
+    # NOTE currently exactly one refrence bus is required
+    ref_bus = reference_bus(data)
 
     buses = [x.second for x in data["bus"] if (x.second[pm_component_status["bus"]] != pm_component_status_inactive["bus"])]
     sort!(buses, by=x->x["index"])
@@ -57,7 +61,7 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
     m = sparse(I,J,V)
     #println(m)
 
-    return AdmittanceMatrix(idx_to_bus, bus_to_idx, m)
+    return AdmittanceMatrix(idx_to_bus, bus_to_idx, bus_to_idx[ref_bus["index"]], m)
 end
 
 
@@ -72,40 +76,41 @@ Typically the matrix will be dense.
 struct AdmittanceMatrixInverse{T}
     idx_to_bus::Vector{Int}
     bus_to_idx::Dict{Int,Int}
+    ref_idx::Int
     matrix::Matrix{T}
 end
 
 Base.show(io::IO, x::AdmittanceMatrixInverse{<:Number}) = print(io, "AdmittanceMatrixInverse($(length(x.idx_to_bus)) buses, $(length(x.matrix)) entries)")
 
 
-"note, data should be a PowerModels network data model"
+"note, data should be a PowerModels network data model; only supports networks with exactly one refrence bus"
 function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     #TODO check single connected component
 
-    ref_bus = reference_bus(data)
     sm = calc_susceptance_matrix(data)
-    sm_inv = calc_admittance_matrix_inv(sm, sm.bus_to_idx[ref_bus["index"]])
+    sm_inv = calc_admittance_matrix_inv(sm)
 
     return sm_inv
 end
 
 "calculates the inverse of the susceptance matrix"
-function calc_admittance_matrix_inv(am::AdmittanceMatrix, ref_idx::Int)
+function calc_admittance_matrix_inv(am::AdmittanceMatrix)
     M = Matrix(am.matrix)
 
     num_buses = length(am.idx_to_bus)
-    nonref_buses = Int64[i for i in 1:num_buses if i != ref_idx]
+    nonref_buses = Int64[i for i in 1:num_buses if i != am.ref_idx]
     am_inv = zeros(Float64, num_buses, num_buses)
     am_inv[nonref_buses, nonref_buses] = inv(M[nonref_buses, nonref_buses])
 
-    return AdmittanceMatrixInverse(am.idx_to_bus, am.bus_to_idx, am_inv)
+    return AdmittanceMatrixInverse(am.idx_to_bus, am.bus_to_idx, am.ref_idx, am_inv)
 end
 
 
-function injection_factors(am_inv::AdmittanceMatrixInverse{T}, bus_id::Int)::Dict{Int,T} where T
+"extracts voltage angle injection factors implicitly by solving a system of linear equations."
+function injection_factors(am_inv::AdmittanceMatrixInverse, bus_id::Int)
     bus_idx = am_inv.bus_to_idx[bus_id]
 
-    injection_factors = Dict{Int,T}(
+    injection_factors = Dict(
         am_inv.idx_to_bus[i] => am_inv.matrix[bus_idx,i]
         for i in 1:length(am_inv.idx_to_bus)
     )
@@ -114,21 +119,26 @@ function injection_factors(am_inv::AdmittanceMatrixInverse{T}, bus_id::Int)::Dic
 end
 
 
-"Computes voltage angle injection factors implicitly by solving a system of linear equations."
-function injection_factors(am::AdmittanceMatrix{T}, ref_bus::Int, bus_id::Int)::Dict{Int,T} where T
+"computes voltage angle injection factors implicitly by solving a system of linear equations."
+function injection_factors(am::AdmittanceMatrix, bus_id::Int; ref_bus::Int=typemin(Int))
     # this row is all zeros, an empty Dict is also a reasonable option
+
+    if ref_bus == typemin(Int)
+        ref_bus = am.idx_to_bus[am.ref_idx]
+    end
+
     if ref_bus == bus_id
         return Dict(am.idx_to_bus[i] => 0.0 for i in 1:length(am.idx_to_bus))
     end
 
-    ref_bus_idx = am.bus_to_idx[ref_bus]
+    ref_idx = am.bus_to_idx[ref_bus]
     bus_idx = am.bus_to_idx[bus_id]
 
     # need to remap the indexes to omit the ref_bus id
     # a reverse lookup is also required
     idx2_to_idx1 = Int64[]
     for i in 1:length(am.idx_to_bus)
-        if i != ref_bus_idx
+        if i != ref_idx
             push!(idx2_to_idx1, i)
         end
     end
@@ -141,7 +151,7 @@ function injection_factors(am::AdmittanceMatrix{T}, ref_bus::Int, bus_id::Int)::
 
     I_src, J_src, V_src = findnz(am.matrix)
     for k in 1:length(V_src)
-        if I_src[k] != ref_bus_idx && J_src[k] != ref_bus_idx
+        if I_src[k] != ref_idx && J_src[k] != ref_idx
             push!(I, idx1_to_idx2[I_src[k]])
             push!(J, idx1_to_idx2[J_src[k]])
             push!(V, V_src[k])
@@ -156,7 +166,7 @@ function injection_factors(am::AdmittanceMatrix{T}, ref_bus::Int, bus_id::Int)::
     if_vect = M \ va_vect
 
     # map injection factors back to original bus ids
-    injection_factors = Dict{Int,T}(am.idx_to_bus[idx2_to_idx1[i]] => v for (i,v) in enumerate(if_vect))
+    injection_factors = Dict(am.idx_to_bus[idx2_to_idx1[i]] => v for (i,v) in enumerate(if_vect))
     injection_factors[ref_bus] = 0.0
 
     return injection_factors
@@ -255,13 +265,11 @@ computes a dc power flow based on the susceptance matrix of the network data
 function solve_dc_pf(data::Dict{String,<:Any})
     #TODO check single connected component
 
-    ref_bus = reference_bus(data)["index"]
-
     sm = calc_susceptance_matrix(data)
     bi = calc_bus_injection_active(data)
 
     bi_idx = [bi[bus_id] for bus_id in sm.idx_to_bus]
-    theta_idx = solve_theta(sm, bi_idx, sm.bus_to_idx[ref_bus])
+    theta_idx = solve_theta(sm, bi_idx)
 
     bus_assignment= Dict{String,Any}()
     for (i,bus) in data["bus"]
@@ -277,9 +285,9 @@ end
 
 
 """
-solves a DC power flow
+solves a DC power flow, assumes a single slack power variable at the refrence bus
 """
-function solve_theta(am::AdmittanceMatrix, bus_injection::Vector{Float64}, ref_idx::Int)
+function solve_theta(am::AdmittanceMatrix, bus_injection::Vector{Float64})
     #println(am.matrix)
     #println(bus_injection)
 
@@ -287,19 +295,16 @@ function solve_theta(am::AdmittanceMatrix, bus_injection::Vector{Float64}, ref_i
     bi = deepcopy(bus_injection)
 
     for i in 1:length(am.idx_to_bus)
-        if i == ref_idx
+        if i == am.ref_idx
             # TODO improve scaling of this value
             m[i,i] = 1.0
         else
-            if !iszero(m[ref_idx,i])
-                m[ref_idx,i] = 0.0
+            if !iszero(m[am.ref_idx,i])
+                m[am.ref_idx,i] = 0.0
             end
         end
     end
-    bi[ref_idx] = 0.0
-
-    #println(m)
-    #println(bi)
+    bi[am.ref_idx] = 0.0
 
     theta = m \ -bi
 
