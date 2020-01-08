@@ -106,21 +106,21 @@ function calc_admittance_matrix_inv(am::AdmittanceMatrix)
 end
 
 
-"extracts voltage angle injection factors implicitly by solving a system of linear equations."
-function injection_factors(am_inv::AdmittanceMatrixInverse, bus_id::Int)
+"extracts a mapping from bus injections to voltage angles from the inverse of an admittance matrix."
+function injection_factors_va(am_inv::AdmittanceMatrixInverse{T}, bus_id::Int)::Dict{Int,T} where T
     bus_idx = am_inv.bus_to_idx[bus_id]
 
     injection_factors = Dict(
         am_inv.idx_to_bus[i] => am_inv.matrix[bus_idx,i]
-        for i in 1:length(am_inv.idx_to_bus)
+        for i in 1:length(am_inv.idx_to_bus) if !isapprox(am_inv.matrix[bus_idx,i], 0.0)
     )
 
     return injection_factors
 end
 
 
-"computes voltage angle injection factors implicitly by solving a system of linear equations."
-function injection_factors(am::AdmittanceMatrix, bus_id::Int; ref_bus::Int=typemin(Int))
+"computes a mapping from bus injections to voltage angles implicitly by solving a system of linear equations."
+function injection_factors_va(am::AdmittanceMatrix{T}, bus_id::Int; ref_bus::Int=typemin(Int))::Dict{Int,T} where T
     # this row is all zeros, an empty Dict is also a reasonable option
 
     if ref_bus == typemin(Int)
@@ -128,7 +128,7 @@ function injection_factors(am::AdmittanceMatrix, bus_id::Int; ref_bus::Int=typem
     end
 
     if ref_bus == bus_id
-        return Dict(am.idx_to_bus[i] => 0.0 for i in 1:length(am.idx_to_bus))
+        return Dict{Int,T}()
     end
 
     ref_idx = am.bus_to_idx[ref_bus]
@@ -166,8 +166,7 @@ function injection_factors(am::AdmittanceMatrix, bus_id::Int; ref_bus::Int=typem
     if_vect = M \ va_vect
 
     # map injection factors back to original bus ids
-    injection_factors = Dict(am.idx_to_bus[idx2_to_idx1[i]] => v for (i,v) in enumerate(if_vect))
-    injection_factors[ref_bus] = 0.0
+    injection_factors = Dict(am.idx_to_bus[idx2_to_idx1[i]] => v for (i,v) in enumerate(if_vect) if !isapprox(v, 0.0))
 
     return injection_factors
 end

@@ -170,11 +170,15 @@ end
 
 ""
 function expression_voltage(pm::AbstractPowerModel, n::Int, c::Int, i, am_inv::AdmittanceMatrixInverse)
-    inj_factors = injection_factors(am_inv, i)
+    inj_factors = injection_factors_va(am_inv, i)
 
     inj_p = var(pm, n, c, :inj_p)
 
-    var(pm, n, c, :va)[i] = sum(f*inj_p[j] for (j,f) in inj_factors)
+    if length(inj_factors) > 0
+        var(pm, n, c, :va)[i] = sum(f*inj_p[j] for (j,f) in inj_factors)
+    else
+        var(pm, n, c, :va)[i] = 0.0*inj_p[i]
+    end
 end
 
 
