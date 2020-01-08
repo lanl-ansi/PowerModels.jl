@@ -13,37 +13,10 @@ Typically the matrix will be sparse, but supports dense matricies as well.
 struct AdmittanceMatrix{T}
     idx_to_bus::Vector{Int}
     bus_to_idx::Dict{Int,Int}
-    matrix::T
-    # TODO should this include a RHS?
+    matrix::SparseArrays.SparseMatrixCSC{T,Int}
 end
 
-# Generic Case (e.g. with Dense Array Case)
-Base.show(io::IO, x::AdmittanceMatrix{<:Any}) = print(io, "AdmittanceMatrix($(length(x.idx_to_bus)) buses, $(length(x.matrix)) entries)")
-
-# Typical Sparse Array Case
-Base.show(io::IO, x::AdmittanceMatrix{<:SparseArrays.AbstractSparseMatrix}) = print(io, "AdmittanceMatrix($(length(x.idx_to_bus)) buses, $(length(nonzeros(x.matrix))) entries)")
-
-
-
-"""
-Stores metadata related to an PTDF Matirx
-
-Designed to work with the inverse of both complex (i.e. Y) and real-valued (e.g. b) valued
-admittance matrices.
-
-Typically the matrix will be dense.
-"""
-struct PowerTransferDistributionFactors{T}
-    idx_to_bus::Vector{Int}
-    bus_to_idx::Dict{Int,Int}
-    matrix::T
-    # TODO should this include a RHS?
-end
-
-# Generic Case (e.g. with Dense Array Case)
-Base.show(io::IO, x::PowerTransferDistributionFactors{<:Any}) = print(io, "PowerTransferDistributionFactors($(length(x.idx_to_bus)) buses, $(length(x.matrix)) entries)")
-
-
+Base.show(io::IO, x::AdmittanceMatrix{<:Number}) = print(io, "AdmittanceMatrix($(length(x.idx_to_bus)) buses, $(length(nonzeros(x.matrix))) entries)")
 
 
 "data should be a PowerModels network data model"
@@ -54,6 +27,8 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
     if length(data["switch"]) > 0
         Memento.error(_LOGGER, "calc_susceptance_matrix does not support data with switches")
     end
+
+    #TODO check single connected component
 
     buses = [x.second for x in data["bus"] if (x.second[pm_component_status["bus"]] != pm_component_status_inactive["bus"])]
     sort!(buses, by=x->x["index"])
@@ -85,33 +60,54 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
     return AdmittanceMatrix(idx_to_bus, bus_to_idx, m)
 end
 
+
+"""
+Stores metadata related to an inverse of an Matirx
+
+Designed to work with the inverse of both complex (i.e. Y) and real-valued (e.g. b) valued
+admittance matrices.
+
+Typically the matrix will be dense.
+"""
+struct AdmittanceMatrixInverse{T}
+    idx_to_bus::Vector{Int}
+    bus_to_idx::Dict{Int,Int}
+    matrix::Matrix{T}
+end
+
+Base.show(io::IO, x::AdmittanceMatrixInverse{<:Number}) = print(io, "AdmittanceMatrixInverse($(length(x.idx_to_bus)) buses, $(length(x.matrix)) entries)")
+
+
 "note, data should be a PowerModels network data model"
-function calc_ptdf_matrix(data::Dict{String,<:Any})
+function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     #TODO check single connected component
 
     ref_bus = reference_bus(data)
     sm = calc_susceptance_matrix(data)
-    return calc_ptdf_matrix(sm, sm.bus_to_idx[ref_bus["index"]])
+    sm_inv = calc_admittance_matrix_inv(sm, sm.bus_to_idx[ref_bus["index"]])
+
+    return sm_inv
 end
 
-"calculates a PTDF matrix"
-function calc_ptdf_matrix(am::AdmittanceMatrix, ref_idx::Int)
+"calculates the inverse of the susceptance matrix"
+function calc_admittance_matrix_inv(am::AdmittanceMatrix, ref_idx::Int)
     M = Matrix(am.matrix)
 
     num_buses = length(am.idx_to_bus)
     nonref_buses = Int64[i for i in 1:num_buses if i != ref_idx]
-    inv_M = zeros(Float64, num_buses, num_buses)
-    inv_M[nonref_buses, nonref_buses] = inv(M[nonref_buses, nonref_buses])
+    am_inv = zeros(Float64, num_buses, num_buses)
+    am_inv[nonref_buses, nonref_buses] = inv(M[nonref_buses, nonref_buses])
 
-    return PowerTransferDistributionFactors(am.idx_to_bus, am.bus_to_idx, inv_M)
+    return AdmittanceMatrixInverse(am.idx_to_bus, am.bus_to_idx, am_inv)
 end
 
-function injection_factors(ptdf::PowerTransferDistributionFactors, bus_id::Int)
-    bus_idx = ptdf.bus_to_idx[bus_id]
 
-    injection_factors = Dict(
-        ptdf.idx_to_bus[i] => ptdf.matrix[bus_idx,i]
-        for i in 1:length(ptdf.idx_to_bus)
+function injection_factors(am_inv::AdmittanceMatrixInverse{T}, bus_id::Int)::Dict{Int,T} where T
+    bus_idx = am_inv.bus_to_idx[bus_id]
+
+    injection_factors = Dict{Int,T}(
+        am_inv.idx_to_bus[i] => am_inv.matrix[bus_idx,i]
+        for i in 1:length(am_inv.idx_to_bus)
     )
 
     return injection_factors
@@ -119,7 +115,7 @@ end
 
 
 "Computes voltage angle injection factors implicitly by solving a system of linear equations."
-function injection_factors(am::AdmittanceMatrix, ref_bus::Int, bus_id::Int)
+function injection_factors(am::AdmittanceMatrix{T}, ref_bus::Int, bus_id::Int)::Dict{Int,T} where T
     # this row is all zeros, an empty Dict is also a reasonable option
     if ref_bus == bus_id
         return Dict(am.idx_to_bus[i] => 0.0 for i in 1:length(am.idx_to_bus))
@@ -160,7 +156,7 @@ function injection_factors(am::AdmittanceMatrix, ref_bus::Int, bus_id::Int)
     if_vect = M \ va_vect
 
     # map injection factors back to original bus ids
-    injection_factors = Dict(am.idx_to_bus[idx2_to_idx1[i]] => v for (i,v) in enumerate(if_vect))
+    injection_factors = Dict{Int,T}(am.idx_to_bus[idx2_to_idx1[i]] => v for (i,v) in enumerate(if_vect))
     injection_factors[ref_bus] = 0.0
 
     return injection_factors

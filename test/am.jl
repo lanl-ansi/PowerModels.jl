@@ -7,27 +7,27 @@
     @testset "5-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         sm = calc_susceptance_matrix(data)
-        ptdf = calc_ptdf_matrix(data)
+        sm_inv = calc_susceptance_matrix_inv(data)
 
         ref_bus = reference_bus(data)
         for (i,bus) in data["bus"]
             sm_injection_factors = injection_factors(sm, ref_bus["index"], bus["index"])
-            ptdf_injection_factors = injection_factors(ptdf, bus["index"])
+            sm_inv_injection_factors = injection_factors(sm_inv, bus["index"])
 
-            @test all(isapprox(sm_injection_factors[j], v) for (j,v) in ptdf_injection_factors)
+            @test all(isapprox(sm_injection_factors[j], v) for (j,v) in sm_inv_injection_factors)
         end
     end
     @testset "14-bus pti case" begin
         data = PowerModels.parse_file("../test/data/pti/case14.raw")
         sm = calc_susceptance_matrix(data)
-        ptdf = calc_ptdf_matrix(data)
+        sm_inv = calc_susceptance_matrix_inv(data)
 
         ref_bus = reference_bus(data)
         for (i,bus) in data["bus"]
             sm_injection_factors = injection_factors(sm, ref_bus["index"], bus["index"])
-            ptdf_injection_factors = injection_factors(ptdf, bus["index"])
+            sm_inv_injection_factors = injection_factors(sm_inv, bus["index"])
 
-            @test all(isapprox(sm_injection_factors[j], v) for (j,v) in ptdf_injection_factors)
+            @test all(isapprox(sm_injection_factors[j], v) for (j,v) in sm_inv_injection_factors)
         end
     end
     # solve_dc_pf does not yet support multiple slack buses
@@ -37,14 +37,14 @@
     @testset "24-bus rts case" begin
         data = PowerModels.parse_file("../test/data/matpower/case24.m")
         sm = calc_susceptance_matrix(data)
-        ptdf = calc_ptdf_matrix(data)
+        sm_inv = calc_susceptance_matrix_inv(data)
 
         ref_bus = reference_bus(data)
         for (i,bus) in data["bus"]
             sm_injection_factors = injection_factors(sm, ref_bus["index"], bus["index"])
-            ptdf_injection_factors = injection_factors(ptdf, bus["index"])
+            sm_inv_injection_factors = injection_factors(sm_inv, bus["index"])
 
-            @test all(isapprox(sm_injection_factors[j], v) for (j,v) in ptdf_injection_factors)
+            @test all(isapprox(sm_injection_factors[j], v) for (j,v) in sm_inv_injection_factors)
         end
     end
 end

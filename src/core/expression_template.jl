@@ -29,8 +29,8 @@ function expression_voltage(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd:
         var(pm, nw, cnd)[:vm] = Dict{Int,Any}()
     end
 
-    ptdf = ref(pm, nw, :ptdf)
-    expression_voltage(pm, nw, cnd, i, ptdf)
+    am_inv = ref(pm, nw, :am_inv)
+    expression_voltage(pm, nw, cnd, i, am_inv)
 end
 
 

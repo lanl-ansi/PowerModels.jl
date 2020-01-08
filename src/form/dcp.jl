@@ -169,8 +169,8 @@ end
 
 
 ""
-function expression_voltage(pm::AbstractPowerModel, n::Int, c::Int, i, ptdf)
-    inj_factors = injection_factors(ptdf, i)
+function expression_voltage(pm::AbstractPowerModel, n::Int, c::Int, i, am_inv::AdmittanceMatrixInverse)
+    inj_factors = injection_factors(am_inv, i)
 
     inj_p = var(pm, n, c, :inj_p)
 
@@ -179,7 +179,7 @@ end
 
 
 ""
-function ref_add_ptdf!(pm::AbstractDCPModel)
+function ref_add_sm_inv!(pm::AbstractDCPModel)
     if InfrastructureModels.ismultinetwork(pm.data)
         nws_data = pm.data["nw"]
     else
@@ -190,7 +190,7 @@ function ref_add_ptdf!(pm::AbstractDCPModel)
         nw_id = parse(Int, n)
         nw_ref = ref(pm, nw_id)
 
-        nw_ref[:ptdf] = calc_ptdf_matrix(nw_data)
+        nw_ref[:am_inv] = calc_susceptance_matrix_inv(nw_data)
     end
 end
 

@@ -158,7 +158,7 @@ end
 
 "opf using ptdf with no explicit voltage or line flow variables"
 function run_ptdf_opf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, post_ptdf_opf; ref_extensions=[ref_add_connected_components!,ref_add_ptdf!], kwargs...)
+    return run_model(file, model_type, optimizer, post_ptdf_opf; ref_extensions=[ref_add_connected_components!,ref_add_sm_inv!], kwargs...)
 end
 
 ""
