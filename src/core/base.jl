@@ -136,6 +136,8 @@ con(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) 
 
 
 function JuMP.optimize!(pm::AbstractPowerModel, optimizer::JuMP.OptimizerFactory)
+    Memento.warn(_LOGGER, "PowerModels overload of JuMP.optimize! is deprecated")
+
     if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
         _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
     else
@@ -209,9 +211,46 @@ end
 
 
 ""
+function optimize_model!(pm::AbstractPowerModel; solution_builder = solution_opf!)
+    start_time = time()
+    if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
+        Memento.error(_LOGGER, "Model does not contain an optimizer factory, one should be passed to `optimize_model!` or `solve_generic_model`")
+    end
+
+    _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
+
+    try
+        solve_time = _MOI.get(pm.model, _MOI.SolveTime())
+    catch
+        Memento.warn(_LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
+    end
+    Memento.debug(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
+
+    start_time = time()
+    result = build_solution(pm, solve_time; solution_builder = solution_builder)
+    Memento.debug(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
+
+    pm.solution = result["solution"]
+
+    return result
+end
+
+
+""
 function optimize_model!(pm::AbstractPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = solution_opf!)
     start_time = time()
-    solve_time = JuMP.optimize!(pm, optimizer)
+    if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
+        _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
+    else
+        Memento.warn(_LOGGER, "Model already contains optimizer factory, cannot use optimizer specified in `solve_generic_model`")
+        _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
+    end
+
+    try
+        solve_time = _MOI.get(pm.model, _MOI.SolveTime())
+    catch
+        Memento.warn(_LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
+    end
     Memento.debug(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
 
     start_time = time()

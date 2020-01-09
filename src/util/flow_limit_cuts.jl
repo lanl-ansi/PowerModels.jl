@@ -102,9 +102,20 @@ function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
         end
     end
 
+    ref_extensions = Any[ref_add_connected_components!]
+
+    if full_inverse
+        push!(ref_extensions, ref_add_sm_inv!)
+    else
+        push!(ref_extensions, ref_add_sm!)
+    end
+
     start_time = time()
 
-    result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
+
+    #result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
+    pm = build_model(data, DCPPowerModel, post_ptdf_opf; ref_extensions=ref_extensions)
+    result = optimize_model!(pm, optimizer; solution_builder=solution_ptdf_opf!)
     update_data!(data, result["solution"])
 
     solution = solve_dc_pf(data)
@@ -132,8 +143,16 @@ function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
                 if mva_fr > rate_a || mva_to > rate_a
                     Memento.info(_LOGGER, "activate rate_a on branch $(branch["index"])")
 
+                    # update data model
                     branch["rate_a"] = branch["rate_a_inactive"]
                     delete!(branch, "rate_a_inactive")
+
+                    idx = branch["index"]
+                    expression_branch_flow_from(pm, idx)
+                    expression_branch_flow_to(pm, idx)
+                    constraint_thermal_limit_from(pm, idx)
+                    constraint_thermal_limit_to(pm, idx)
+
                     violated = true
                 end
             end
@@ -142,7 +161,9 @@ function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
         if violated
             iteration += 1
 
-            result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
+            #result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
+            result = optimize_model!(pm; solution_builder=solution_ptdf_opf!)
+
             update_data!(data, result["solution"])
 
             solution = solve_dc_pf(data)
