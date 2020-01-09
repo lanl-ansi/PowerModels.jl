@@ -174,15 +174,12 @@ function expression_voltage(pm::AbstractPowerModel, n::Int, c::Int, i, am::Union
 
     inj_p = var(pm, n, c, :inj_p)
 
-    expr = JuMP.GenericAffExpr{Float64,JuMP.VariableRef}() #0.0*inj_p[i]
-    for (j,f) in inj_factors
-        if isa(inj_p[j], Real)
-            expr.constant += f*inj_p[j]
-        else
-            JuMP.add_to_expression!(expr, f, inj_p[j])
-        end
+    if length(inj_factors) == 0
+        # this can be removed once, JuMP.jl/issues/2120 is resolved
+        var(pm, n, c, :va)[i] = 0.0
+    else
+        var(pm, n, c, :va)[i] = JuMP.@expression(pm.model, sum(f*inj_p[j] for (j,f) in inj_factors))
     end
-    var(pm, n, c, :va)[i] = expr
 end
 
 
