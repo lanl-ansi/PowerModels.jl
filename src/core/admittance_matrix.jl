@@ -279,7 +279,7 @@ function solve_dc_pf(data::Dict{String,<:Any})
         bus_assignment[i] = Dict("va" => va)
     end
 
-    return Dict("bus" => bus_assignment)
+    return Dict("per_unit" => data["per_unit"], "bus" => bus_assignment)
 end
 
 

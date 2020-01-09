@@ -169,18 +169,38 @@ end
 
 
 ""
-function expression_voltage(pm::AbstractPowerModel, n::Int, c::Int, i, am_inv::AdmittanceMatrixInverse)
-    inj_factors = injection_factors_va(am_inv, i)
+function expression_voltage(pm::AbstractPowerModel, n::Int, c::Int, i, am::Union{AdmittanceMatrix,AdmittanceMatrixInverse})
+    inj_factors = injection_factors_va(am, i)
 
     inj_p = var(pm, n, c, :inj_p)
 
-    if length(inj_factors) > 0
-        var(pm, n, c, :va)[i] = sum(f*inj_p[j] for (j,f) in inj_factors)
-    else
-        var(pm, n, c, :va)[i] = 0.0*inj_p[i]
+    expr = JuMP.GenericAffExpr{Float64,JuMP.VariableRef}() #0.0*inj_p[i]
+    for (j,f) in inj_factors
+        if isa(inj_p[j], Real)
+            expr.constant += f*inj_p[j]
+        else
+            JuMP.add_to_expression!(expr, f, inj_p[j])
+        end
     end
+    var(pm, n, c, :va)[i] = expr
 end
 
+
+""
+function ref_add_sm!(pm::AbstractDCPModel)
+    if InfrastructureModels.ismultinetwork(pm.data)
+        nws_data = pm.data["nw"]
+    else
+        nws_data = Dict("0" => pm.data)
+    end
+
+    for (n, nw_data) in nws_data
+        nw_id = parse(Int, n)
+        nw_ref = ref(pm, nw_id)
+
+        nw_ref[:sm] = calc_susceptance_matrix(nw_data)
+    end
+end
 
 ""
 function ref_add_sm_inv!(pm::AbstractDCPModel)
@@ -194,7 +214,7 @@ function ref_add_sm_inv!(pm::AbstractDCPModel)
         nw_id = parse(Int, n)
         nw_ref = ref(pm, nw_id)
 
-        nw_ref[:am_inv] = calc_susceptance_matrix_inv(nw_data)
+        nw_ref[:sm] = calc_susceptance_matrix_inv(nw_data)
     end
 end
 

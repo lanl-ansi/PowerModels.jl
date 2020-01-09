@@ -92,7 +92,7 @@ function run_ptdf_opf_flow_cuts(file::String, optimizer; kwargs...)
     return run_ptdf_opf_flow_cuts!(data, optimizer; kwargs...)
 end
 
-function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::Int = 100, time_limit::Float64 = 3600.0)
+function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::Int = 100, time_limit::Float64 = 3600.0, full_inverse = false)
     Memento.info(_LOGGER, "maximum cut iterations set to value of $max_iter")
 
     for (i,branch) in data["branch"]
@@ -104,9 +104,14 @@ function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
 
     start_time = time()
 
-    result = run_ptdf_opf(data, DCPPowerModel, optimizer; setting = Dict("output" => Dict("branch_flows" => true)))
-    #update_data(data, result["solution"])
-    #print_summary(result["solution"])
+    result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
+    update_data!(data, result["solution"])
+
+    solution = solve_dc_pf(data)
+    update_data!(data, solution)
+
+    flow = calc_branch_flow_dc(data)
+    update_data!(data, flow)
 
     iteration = 1
     violated = true
@@ -115,17 +120,14 @@ function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
         for (i,branch) in data["branch"]
             if haskey(branch, "rate_a_inactive")
                 rate_a = branch["rate_a_inactive"]
-                branch_sol = result["solution"]["branch"][i]
 
-                mva_fr = abs(branch_sol["pf"])
-                mva_to = abs(branch_sol["pt"])
+                mva_fr = abs(branch["pf"])
+                mva_to = abs(branch["pt"])
 
-                if !isnan(branch_sol["qf"]) && !isnan(branch_sol["qt"])
-                    mva_fr = sqrt(branch_sol["pf"]^2 + branch_sol["qf"]^2)
-                    mva_to = sqrt(branch_sol["pt"]^2 + branch_sol["qt"]^2)
+                if !isnan(branch["qf"]) && !isnan(branch["qt"])
+                    mva_fr = sqrt(branch["pf"]^2 + branch["qf"]^2)
+                    mva_to = sqrt(branch["pt"]^2 + branch["qt"]^2)
                 end
-
-                #println(branch["index"], rate_a, mva_fr, mva_to)
 
                 if mva_fr > rate_a || mva_to > rate_a
                     Memento.info(_LOGGER, "activate rate_a on branch $(branch["index"])")
@@ -139,8 +141,16 @@ function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
 
         if violated
             iteration += 1
-            result = run_ptdf_opf(data, DCPPowerModel, optimizer; setting = Dict("output" => Dict("branch_flows" => true)))
-            #update_data(data, result["solution"])
+
+            result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
+            update_data!(data, result["solution"])
+
+            solution = solve_dc_pf(data)
+            update_data!(data, solution)
+
+            flow = calc_branch_flow_dc(data)
+            update_data!(data, flow)
+
             #print_summary(result["solution"])
         else
             Memento.info(_LOGGER, "flow cuts converged in $iteration iterations")

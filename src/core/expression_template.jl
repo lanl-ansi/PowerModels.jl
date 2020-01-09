@@ -73,6 +73,13 @@ function expression_branch_flow_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.
         var(pm, nw, cnd)[:q] = Dict{Tuple{Int,Int,Int},Any}()
     end
 
+    if !haskey(var(pm, nw, cnd), :va)
+        var(pm, nw, cnd)[:va] = Dict{Int,Any}()
+    end
+    if !haskey(var(pm, nw, cnd), :vm)
+        var(pm, nw, cnd)[:vm] = Dict{Int,Any}()
+    end
+
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -85,7 +92,14 @@ function expression_branch_flow_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.
     b_fr = branch["b_fr"][cnd]
     tm = branch["tap"][cnd]
 
-    expression_branch_flow_from(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, g[cnd,cnd], b[cnd,cnd], g_fr, b_fr, tr[cnd], ti[cnd], tm)
+    if haskey(branch, "rate_a")
+        #sm_inv = ref(pm, nw, :sm_inv)
+        sm = ref(pm, nw, :sm)
+        expression_voltage(pm, nw, cnd, f_bus, sm)
+        expression_voltage(pm, nw, cnd, t_bus, sm)
+
+        expression_branch_flow_from(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, g[cnd,cnd], b[cnd,cnd], g_fr, b_fr, tr[cnd], ti[cnd], tm)
+    end
 end
 
 
@@ -96,6 +110,13 @@ function expression_branch_flow_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cn
     end
     if !haskey(var(pm, nw, cnd), :q)
         var(pm, nw, cnd)[:q] = Dict{Tuple{Int,Int,Int},Any}()
+    end
+
+    if !haskey(var(pm, nw, cnd), :va)
+        var(pm, nw, cnd)[:va] = Dict{Int,Any}()
+    end
+    if !haskey(var(pm, nw, cnd), :vm)
+        var(pm, nw, cnd)[:vm] = Dict{Int,Any}()
     end
 
     branch = ref(pm, nw, :branch, i)
@@ -110,5 +131,12 @@ function expression_branch_flow_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cn
     b_to = branch["b_to"][cnd]
     tm = branch["tap"][cnd]
 
-    expression_branch_flow_to(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, g[cnd,cnd], b[cnd,cnd], g_to, b_to, tr[cnd], ti[cnd], tm)
+    if haskey(branch, "rate_a")
+        #sm_inv = ref(pm, nw, :sm_inv)
+        sm = ref(pm, nw, :sm)
+        expression_voltage(pm, nw, cnd, f_bus, sm)
+        expression_voltage(pm, nw, cnd, t_bus, sm)
+
+        expression_branch_flow_to(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, g[cnd,cnd], b[cnd,cnd], g_to, b_to, tr[cnd], ti[cnd], tm)
+    end
 end

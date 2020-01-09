@@ -10,8 +10,8 @@ TESTLOG = Memento.getlogger(PowerModels)
         @test result_va["termination_status"] == OPTIMAL
         @test result_pg["termination_status"] == OPTIMAL
         @test isapprox(result_va["objective"], result_pg["objective"])
-        for (i,bus) in data["bus"]
-            @test isapprox(result_va["solution"]["bus"][i]["va"], result_pg["solution"]["bus"][i]["va"]; atol = 1e-8)
+        for (i,gen) in data["gen"]
+            @test isapprox(result_va["solution"]["gen"][i]["pg"], result_pg["solution"]["gen"][i]["pg"]; atol = 1e-8)
         end
     end
     @testset "5-bus gap case" begin
@@ -22,8 +22,8 @@ TESTLOG = Memento.getlogger(PowerModels)
         @test result_va["termination_status"] == LOCALLY_SOLVED
         @test result_pg["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result_va["objective"], result_pg["objective"])
-        for (i,bus) in data["bus"]
-            @test isapprox(result_va["solution"]["bus"][i]["va"], result_pg["solution"]["bus"][i]["va"]; atol = 1e-8)
+        for (i,gen) in data["gen"]
+            @test isapprox(result_va["solution"]["gen"][i]["pg"], result_pg["solution"]["gen"][i]["pg"]; atol = 1e-8)
         end
     end
     @testset "5-bus with pwl costs" begin
@@ -35,8 +35,8 @@ TESTLOG = Memento.getlogger(PowerModels)
         @test result_va["termination_status"] == LOCALLY_SOLVED
         @test result_pg["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result_va["objective"], result_pg["objective"])
-        for (i,bus) in data["bus"]
-            @test isapprox(result_va["solution"]["bus"][i]["va"], result_pg["solution"]["bus"][i]["va"]; atol = 1e-8)
+        for (i,gen) in data["gen"]
+            @test isapprox(result_va["solution"]["gen"][i]["pg"], result_pg["solution"]["gen"][i]["pg"]; atol = 1e-8)
         end
     end
     @testset "14-bus case" begin
@@ -47,8 +47,8 @@ TESTLOG = Memento.getlogger(PowerModels)
         @test result_va["termination_status"] == LOCALLY_SOLVED
         @test result_pg["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result_va["objective"], result_pg["objective"])
-        for (i,bus) in data["bus"]
-            @test isapprox(result_va["solution"]["bus"][i]["va"], result_pg["solution"]["bus"][i]["va"]; atol = 1e-8)
+        for (i,gen) in data["gen"]
+            @test isapprox(result_va["solution"]["gen"][i]["pg"], result_pg["solution"]["gen"][i]["pg"]; atol = 1e-8)
         end
     end
 
