@@ -284,7 +284,7 @@ function constraint_thermal_limit_to(pm::AbstractAPLossLessModels, n::Int, c::In
     # NOTE correct?
     l,i,j = t_idx
     p_fr = var(pm, n, c, :p, (l,j,i))
-    if isa(p_fr, JuMP.VariableRef)
+    if isa(p_fr, JuMP.VariableRef) && JuMP.has_upper_bound(p_fr)
         con(pm, n, c, :sm_to)[l] = JuMP.UpperBoundRef(p_fr)
     else
         p_to = var(pm, n, c, :p, t_idx)

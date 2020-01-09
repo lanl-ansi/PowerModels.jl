@@ -70,8 +70,8 @@ end
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result_base["objective"], result_cuts["objective"])
         for (i,bus) in result_base["solution"]["bus"]
-            @test isapprox(result_base["solution"]["bus"][i]["vm"], result_cuts["solution"]["bus"][i]["vm"]; atol = 1e-8)
-            @test isapprox(result_base["solution"]["bus"][i]["va"], result_cuts["solution"]["bus"][i]["va"]; atol = 1e-8)
+            @test isapprox(result_base["solution"]["bus"][i]["vm"], result_cuts["solution"]["bus"][i]["vm"]; atol = 1e-7)
+            @test isapprox(result_base["solution"]["bus"][i]["va"], result_cuts["solution"]["bus"][i]["va"]; atol = 1e-7)
         end
     end
     @testset "ac 14-bus case" begin

@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Added native DC Power Flow solver and AdmittanceMatrix data structure
+- Added native DC Power Flow solver and AdmittanceMatrix data structures
 - Added PTDF-based OPF problem specification
 - Added iterative flow limit cut OPF solvers (#619)
 - Removed `Inf` bounds from variables (#630)

@@ -26,8 +26,10 @@ function run_opf_flow_cuts!(data::Dict{String,<:Any}, model_type::Type, optimize
 
     start_time = time()
 
-    result = run_opf(data, model_type, optimizer; setting = Dict("output" => Dict("branch_flows" => true)))
-    #update_data(data, result["solution"])
+    #result = run_opf(data, model_type, optimizer; setting = Dict("output" => Dict("branch_flows" => true)))
+    pm = build_model(data, model_type, post_opf; setting = Dict("output" => Dict("branch_flows" => true)))
+    result = optimize_model!(pm, optimizer)
+
     #print_summary(result["solution"])
 
     iteration = 1
@@ -54,6 +56,11 @@ function run_opf_flow_cuts!(data::Dict{String,<:Any}, model_type::Type, optimize
 
                     branch["rate_a"] = branch["rate_a_inactive"]
                     delete!(branch, "rate_a_inactive")
+
+                    idx = branch["index"]
+                    constraint_thermal_limit_from(pm, idx)
+                    constraint_thermal_limit_to(pm, idx)
+
                     violated = true
                 end
             end
@@ -61,8 +68,9 @@ function run_opf_flow_cuts!(data::Dict{String,<:Any}, model_type::Type, optimize
 
         if violated
             iteration += 1
-            result = run_opf(data, model_type, optimizer; setting = Dict("output" => Dict("branch_flows" => true)))
-            #update_data(data, result["solution"])
+            #result = run_opf(data, model_type, optimizer; setting = Dict("output" => Dict("branch_flows" => true)))
+            result = optimize_model!(pm)
+
             #print_summary(result["solution"])
         else
             Memento.info(_LOGGER, "flow cuts converged in $iteration iterations")
@@ -86,6 +94,8 @@ supporting the PTDF problem specification at this time.
 # Keyword Arguments
 * `max_iter`: maximum number of flow iterations to perform.
 * `time_limit`: maximum amount of time (sec) for the algorithm.
+* `full_inverse`: compute the complete admittance matrix inverse, instead of a
+branch by branch computation.
 """
 function run_ptdf_opf_flow_cuts(file::String, optimizer; kwargs...)
     data = PowerModels.parse_file(file)

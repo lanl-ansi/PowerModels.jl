@@ -122,10 +122,12 @@ end
 "`-rate_a <= p[f_idx] <= rate_a`"
 function constraint_thermal_limit_from(pm::AbstractActivePowerModel, n::Int, c::Int, f_idx, rate_a)
     p_fr = var(pm, n, c, :p, f_idx)
-    if isa(p_fr, JuMP.VariableRef)
+    if isa(p_fr, JuMP.VariableRef) && JuMP.has_lower_bound(p_fr)
         con(pm, n, c, :sm_fr)[f_idx[1]] = JuMP.LowerBoundRef(p_fr)
         JuMP.lower_bound(p_fr) < -rate_a && JuMP.set_lower_bound(p_fr, -rate_a)
-        JuMP.upper_bound(p_fr) >  rate_a && JuMP.set_upper_bound(p_fr,  rate_a)
+        if JuMP.has_upper_bound(p_fr)
+            JuMP.upper_bound(p_fr) > rate_a && JuMP.set_upper_bound(p_fr, rate_a)
+        end
     else
         con(pm, n, c, :sm_fr)[f_idx[1]] = JuMP.@constraint(pm.model, p_fr <= rate_a)
     end
@@ -134,10 +136,12 @@ end
 ""
 function constraint_thermal_limit_to(pm::AbstractActivePowerModel, n::Int, c::Int, t_idx, rate_a)
     p_to = var(pm, n, c, :p, t_idx)
-    if isa(p_to, JuMP.VariableRef)
+    if isa(p_to, JuMP.VariableRef) && JuMP.has_lower_bound(p_to)
         con(pm, n, c, :sm_to)[t_idx[1]] = JuMP.LowerBoundRef(p_to)
         JuMP.lower_bound(p_to) < -rate_a && JuMP.set_lower_bound(p_to, -rate_a)
-        JuMP.upper_bound(p_to) >  rate_a && JuMP.set_upper_bound(p_to,  rate_a)
+        if JuMP.has_upper_bound(p_to)
+            JuMP.upper_bound(p_to) >  rate_a && JuMP.set_upper_bound(p_to,  rate_a)
+        end
     else
         con(pm, n, c, :sm_to)[t_idx[1]] = JuMP.@constraint(pm.model, p_to <= rate_a)
     end
