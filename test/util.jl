@@ -118,7 +118,7 @@ end
         @test result_cuts["termination_status"] == OPTIMAL
         @test isapprox(result_base["objective"], result_cuts["objective"])
         for (i,bus) in result_base["solution"]["bus"]
-            @test isapprox(result_base["solution"]["bus"][i]["vm"], result_cuts["solution"]["bus"][i]["vm"]; atol = 1e-8)
+            @test isapprox(result_base["solution"]["bus"][i]["va"], result_cuts["solution"]["bus"][i]["va"]; atol = 1e-8)
         end
     end
     @testset "dc 14-bus case" begin
@@ -129,7 +129,7 @@ end
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result_base["objective"], result_cuts["objective"])
         for (i,bus) in result_base["solution"]["bus"]
-            @test isapprox(result_base["solution"]["bus"][i]["vm"], result_cuts["solution"]["bus"][i]["vm"]; atol = 1e-8)
+            @test isapprox(result_base["solution"]["bus"][i]["va"], result_cuts["solution"]["bus"][i]["va"]; atol = 1e-8)
         end
     end
 end
@@ -143,8 +143,8 @@ end
         @test result_base["termination_status"] == OPTIMAL
         @test result_cuts["termination_status"] == OPTIMAL
         @test isapprox(result_base["objective"], result_cuts["objective"])
-        for (i,bus) in result_base["solution"]["bus"]
-            @test isapprox(result_base["solution"]["bus"][i]["vm"], result_cuts["solution"]["bus"][i]["vm"]; atol = 1e-8)
+        for (i,gen) in result_base["solution"]["gen"]
+            @test isapprox(result_base["solution"]["gen"][i]["pg"], result_cuts["solution"]["gen"][i]["pg"]; atol = 1e-8)
         end
     end
     @testset "dc 14-bus case" begin
@@ -154,8 +154,8 @@ end
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result_base["objective"], result_cuts["objective"])
-        for (i,bus) in result_base["solution"]["bus"]
-            @test isapprox(result_base["solution"]["bus"][i]["vm"], result_cuts["solution"]["bus"][i]["vm"]; atol = 1e-8)
+        for (i,gen) in result_base["solution"]["gen"]
+            @test isapprox(result_base["solution"]["gen"][i]["pg"], result_cuts["solution"]["gen"][i]["pg"]; atol = 1e-8)
         end
     end
 end
