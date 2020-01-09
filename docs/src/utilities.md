@@ -9,3 +9,13 @@ To improve the quality of the convex relaxations available in PowerModels and al
 ```@docs
 run_obbt_opf!
 ```
+
+
+## Lazy Line Flow Limits
+
+The following functions are meta-algorithms for solving OPF problems where line flow limit constraints are added iteratively to exploit the property that the majority of line flows constraints will be inactive in the optimal solution.
+
+```@docs
+run_opf_flow_cuts
+run_ptdf_opf_flow_cuts
+```

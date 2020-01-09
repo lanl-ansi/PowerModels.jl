@@ -42,6 +42,24 @@ function constraint_ohms_yt_from(pm::AbstractDCPModel, n::Int, c::Int, f_bus, t_
     # omit reactive constraint
 end
 
+""
+function expression_branch_flow_from(pm::AbstractDCPModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    va_fr = var(pm, n, c, :va, f_bus)
+    va_to = var(pm, n, c, :va, t_bus)
+
+    var(pm, n, c, :p)[f_idx] = -b*(va_fr - va_to)
+    # omit reactive constraint
+end
+
+""
+function expression_branch_flow_to(pm::AbstractDCPModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    va_fr = var(pm, n, c, :va, f_bus)
+    va_to = var(pm, n, c, :va, t_bus)
+
+    var(pm, n, c, :p)[t_idx] = -b*(va_to - va_fr)
+    # omit reactive constraint
+end
+
 function constraint_ohms_yt_from_ne(pm::AbstractDCPModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
     p_fr  = var(pm, n, c, :p_ne, f_idx)
     va_fr = var(pm, n, c,   :va, f_bus)
@@ -150,6 +168,54 @@ function constraint_voltage_angle_difference_ne(pm::AbstractDCPModel, n::Int, c:
 end
 
 
+""
+function expression_voltage(pm::AbstractPowerModel, n::Int, c::Int, i, am::Union{AdmittanceMatrix,AdmittanceMatrixInverse})
+    inj_factors = injection_factors_va(am, i)
+
+    inj_p = var(pm, n, c, :inj_p)
+
+    if length(inj_factors) == 0
+        # this can be removed once, JuMP.jl/issues/2120 is resolved
+        var(pm, n, c, :va)[i] = 0.0
+    else
+        var(pm, n, c, :va)[i] = JuMP.@expression(pm.model, sum(f*inj_p[j] for (j,f) in inj_factors))
+    end
+end
+
+
+""
+function ref_add_sm!(pm::AbstractDCPModel)
+    if InfrastructureModels.ismultinetwork(pm.data)
+        nws_data = pm.data["nw"]
+    else
+        nws_data = Dict("0" => pm.data)
+    end
+
+    for (n, nw_data) in nws_data
+        nw_id = parse(Int, n)
+        nw_ref = ref(pm, nw_id)
+
+        nw_ref[:sm] = calc_susceptance_matrix(nw_data)
+    end
+end
+
+""
+function ref_add_sm_inv!(pm::AbstractDCPModel)
+    if InfrastructureModels.ismultinetwork(pm.data)
+        nws_data = pm.data["nw"]
+    else
+        nws_data = Dict("0" => pm.data)
+    end
+
+    for (n, nw_data) in nws_data
+        nw_id = parse(Int, n)
+        nw_ref = ref(pm, nw_id)
+
+        nw_ref[:sm] = calc_susceptance_matrix_inv(nw_data)
+    end
+end
+
+
 
 
 
@@ -218,7 +284,12 @@ function constraint_thermal_limit_to(pm::AbstractAPLossLessModels, n::Int, c::In
     # NOTE correct?
     l,i,j = t_idx
     p_fr = var(pm, n, c, :p, (l,j,i))
-    con(pm, n, c, :sm_to)[l] = JuMP.UpperBoundRef(p_fr)
+    if isa(p_fr, JuMP.VariableRef) && JuMP.has_upper_bound(p_fr)
+        con(pm, n, c, :sm_to)[l] = JuMP.UpperBoundRef(p_fr)
+    else
+        p_to = var(pm, n, c, :p, t_idx)
+        con(pm, n, c, :sm_to)[t_idx[1]] = JuMP.@constraint(pm.model, p_to <= rate_a)
+    end
 end
 
 "nothing to do, this model is symetric"

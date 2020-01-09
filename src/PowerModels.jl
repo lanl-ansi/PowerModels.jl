@@ -44,10 +44,12 @@ include("core/types.jl")
 include("core/variable.jl")
 include("core/constraint_template.jl")
 include("core/constraint.jl")
+include("core/expression_template.jl")
 include("core/relaxation_scheme.jl")
 include("core/objective.jl")
 include("core/solution.jl")
 include("core/multiconductor.jl")
+include("core/admittance_matrix.jl")
 
 include("io/json.jl")
 
@@ -72,6 +74,7 @@ include("prob/tnep.jl")
 include("prob/test.jl")
 
 include("util/obbt.jl")
+include("util/flow_limit_cuts.jl")
 
 
 # this must come last to support automated export
