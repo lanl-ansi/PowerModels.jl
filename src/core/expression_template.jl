@@ -95,8 +95,12 @@ function expression_branch_flow_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.
     if haskey(branch, "rate_a")
         #sm_inv = ref(pm, nw, :sm_inv)
         sm = ref(pm, nw, :sm)
-        expression_voltage(pm, nw, cnd, f_bus, sm)
-        expression_voltage(pm, nw, cnd, t_bus, sm)
+        if !haskey(var(pm, nw, cnd, :va), f_bus)
+            expression_voltage(pm, nw, cnd, f_bus, sm)
+        end
+        if !haskey(var(pm, nw, cnd, :va), t_bus)
+            expression_voltage(pm, nw, cnd, t_bus, sm)
+        end
 
         expression_branch_flow_from(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, g[cnd,cnd], b[cnd,cnd], g_fr, b_fr, tr[cnd], ti[cnd], tm)
     end
@@ -134,8 +138,12 @@ function expression_branch_flow_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cn
     if haskey(branch, "rate_a")
         #sm_inv = ref(pm, nw, :sm_inv)
         sm = ref(pm, nw, :sm)
-        expression_voltage(pm, nw, cnd, f_bus, sm)
-        expression_voltage(pm, nw, cnd, t_bus, sm)
+        if !haskey(var(pm, nw, cnd, :va), f_bus)
+            expression_voltage(pm, nw, cnd, f_bus, sm)
+        end
+        if !haskey(var(pm, nw, cnd, :va), t_bus)
+            expression_voltage(pm, nw, cnd, t_bus, sm)
+        end
 
         expression_branch_flow_to(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, g[cnd,cnd], b[cnd,cnd], g_to, b_to, tr[cnd], ti[cnd], tm)
     end
