@@ -196,7 +196,7 @@ end
 function optimize_model!(pm::AbstractPowerModel; optimizer::Union{JuMP.OptimizerFactory,Nothing}=nothing, solution_builder = solution_opf!)
     start_time = time()
 
-    if isnothing(optimizer)
+    if optimizer == nothing
         if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
             Memento.error(_LOGGER, "no optimizer specified in `optimize_model!` or the given JuMP model.")
         else
