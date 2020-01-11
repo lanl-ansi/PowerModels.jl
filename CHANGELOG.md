@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Added native DC Power Flow solver and AdmittanceMatrix data structures
 - Added PTDF-based OPF problem specification
 - Added iterative flow limit cut OPF solvers (#619)
+- Improved connected components computation time (#504)
 - Removed `Inf` bounds from variables (#630)
 - Removal of unused functions in `solution.jl`: `get_solution`, `add_generator_power_setpoint`, `add_storage_setpoint`, `add_branch_flow_setpoint`, `add_dcline_flow_setpoint` (breaking) (#637) 
 
