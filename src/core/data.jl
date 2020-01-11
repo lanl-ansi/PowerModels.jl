@@ -2419,7 +2419,7 @@ end
 computes the connected components of the network graph
 returns a set of sets of bus ids, each set is a connected component
 """
-function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "dcline"])
+function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "dcline", "switch"])
     if InfrastructureModels.ismultinetwork(data)
         Memento.error(_LOGGER, "connected_components does not yet support multinetwork data")
     end
@@ -2427,22 +2427,24 @@ function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "d
     active_bus = Dict(x for x in data["bus"] if x.second["bus_type"] != 4)
     active_bus_ids = Set{Int64}([bus["bus_i"] for (i,bus) in active_bus])
 
-    neighbors = Dict(i => [] for i in active_bus_ids)
-    for line_type in edges
-        for line in values(get(data, line_type, Dict()))
-            if get(line, "br_status", 1) != 0 && line["f_bus"] in active_bus_ids && line["t_bus"] in active_bus_ids
-                push!(neighbors[line["f_bus"]], line["t_bus"])
-                push!(neighbors[line["t_bus"]], line["f_bus"])
+    neighbors = Dict(i => Int[] for i in active_bus_ids)
+    for comp_type in edges
+        status_key = get(pm_component_status, comp_type, "status")
+        status_inactive = get(pm_component_status_inactive, comp_type, 0)
+        for edge in values(get(data, comp_type, Dict()))
+            if get(edge, status_key, 1) != status_inactive && edge["f_bus"] in active_bus_ids && edge["t_bus"] in active_bus_ids
+                push!(neighbors[edge["f_bus"]], edge["t_bus"])
+                push!(neighbors[edge["t_bus"]], edge["f_bus"])
             end
         end
     end
 
-    component_lookup = Dict(i => Set{Int64}([i]) for i in active_bus_ids)
+    component_lookup = Dict(i => Set{Int}([i]) for i in active_bus_ids)
     touched = Set{Int64}()
 
     for i in active_bus_ids
         if !(i in touched)
-            _dfs(i, neighbors, component_lookup, touched)
+            _cc_dfs(i, neighbors, component_lookup, touched)
         end
     end
 
@@ -2453,17 +2455,19 @@ end
 
 
 """
-perModels DFS on a graph
+DFS on a graph
 """
-function _dfs(i, neighbors, component_lookup, touched)
+function _cc_dfs(i, neighbors, component_lookup, touched)
     push!(touched, i)
     for j in neighbors[i]
         if !(j in touched)
-            new_comp = union(component_lookup[i], component_lookup[j])
-            for k in new_comp
-                component_lookup[k] = new_comp
+            for k in  component_lookup[j]
+                push!(component_lookup[i], k)
             end
-            _dfs(j, neighbors, component_lookup, touched)
+            for k in component_lookup[j]
+                component_lookup[k] = component_lookup[i]
+            end
+            _cc_dfs(j, neighbors, component_lookup, touched)
         end
     end
 end
