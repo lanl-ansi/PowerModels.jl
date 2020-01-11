@@ -135,25 +135,6 @@ con(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.
 con(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key][idx]
 
 
-function JuMP.optimize!(pm::AbstractPowerModel, optimizer::JuMP.OptimizerFactory)
-    Memento.warn(_LOGGER, "PowerModels overload of JuMP.optimize! is deprecated")
-
-    if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
-        _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
-    else
-        Memento.warn(_LOGGER, "Model already contains optimizer factory, cannot use optimizer specified in `solve_generic_model`")
-        _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
-    end
-
-    try
-        solve_time = _MOI.get(pm.model, _MOI.SolveTime())
-    catch
-        Memento.warn(_LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
-    end
-
-    return solve_time
-end
-
 ""
 function run_model(file::String, model_type::Type, optimizer, post_method; kwargs...)
     data = PowerModels.parse_file(file)
