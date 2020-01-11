@@ -28,7 +28,7 @@ function run_opf_flow_cuts!(data::Dict{String,<:Any}, model_type::Type, optimize
 
     #result = run_opf(data, model_type, optimizer; setting = Dict("output" => Dict("branch_flows" => true)))
     pm = build_model(data, model_type, post_opf; setting = Dict("output" => Dict("branch_flows" => true)))
-    result = optimize_model!(pm, optimizer)
+    result = optimize_model!(pm, optimizer=optimizer)
 
     #print_summary(result["solution"])
 
@@ -125,7 +125,7 @@ function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
 
     #result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
     pm = build_model(data, DCPPowerModel, post_ptdf_opf; ref_extensions=ref_extensions)
-    result = optimize_model!(pm, optimizer; solution_builder=solution_ptdf_opf!)
+    result = optimize_model!(pm, optimizer=optimizer, solution_builder=solution_ptdf_opf!)
     update_data!(data, result["solution"])
 
     solution = solve_dc_pf(data)

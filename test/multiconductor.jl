@@ -171,7 +171,7 @@ end
         @testset "3-bus 3-conductor case with theta_ref=pi" begin
             mp_data = build_mc_data!("../test/data/matpower/case3.m", conductors=3)
             pm = PowerModels.build_model(mp_data, ACRPowerModel, PowerModels._post_mc_opf, multiconductor=true)
-            result = PowerModels.optimize_model!(pm, ipopt_solver)
+            result = PowerModels.optimize_model!(pm, optimizer=ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 47267.9; atol = 1e-1)

@@ -106,7 +106,7 @@ pm = build_model("matpower/case3.m", ACPPowerModel, PowerModels.post_opf)
 
 print(pm.model)
 
-result = optimize_model!(pm, IpoptSolver())
+result = optimize_model!(pm, optimizer=with_optimizer(Ipopt.Optimizer))
 ```
 
 Alternatively, you can further break it up by parsing a file into a network data dictionary, before passing it on to `build_model()` like so
@@ -118,5 +118,5 @@ pm = build_model(network_data, ACPPowerModel, PowerModels.post_opf)
 
 print(pm.model)
 
-result = optimize_model!(pm, with_optimizer(Ipopt.Optimizer))
+result = optimize_model!(pm, optimizer=with_optimizer(Ipopt.Optimizer))
 ```

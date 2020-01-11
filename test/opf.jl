@@ -902,7 +902,7 @@ end
         pm.ext[:SDconstraintDecomposition] = PowerModels._SDconstraintDecomposition(groups, lookup_index, sigma)
 
         PowerModels.post_opf(pm)
-        result = optimize_model!(pm, scs_solver)
+        result = optimize_model!(pm, optimizer=scs_solver)
 
         @test result["termination_status"] == OPTIMAL
         @test isapprox(result["objective"], 1005.31; atol = 1e0)

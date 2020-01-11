@@ -100,7 +100,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
     status_pass = [_MOI.LOCALLY_SOLVED, _MOI.OPTIMAL]
 
     # compute initial relative gap between relaxation objective and upper_bound
-    result_relaxation = optimize_model!(model_relaxation, optimizer)
+    result_relaxation = optimize_model!(model_relaxation, optimizer=optimizer)
     current_relaxation_objective = result_relaxation["objective"]
     if upper_bound < current_relaxation_objective
         Memento.error(_LOGGER, "the upper bound provided to OBBT is not a valid ACOPF upper bound")
@@ -185,7 +185,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
             # vm lower bound solve
             lb = NaN
             JuMP.@objective(model_bt.model, Min, vm[bus])
-            result_bt = optimize_model!(model_bt, optimizer)
+            result_bt = optimize_model!(model_bt, optimizer=optimizer)
             if (result_bt["termination_status"] == _MOI.LOCALLY_SOLVED || result_bt["termination_status"] == _MOI.OPTIMAL)
                 nlb = floor(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nlb > vm_lb[bus]) && (lb = nlb)
@@ -197,7 +197,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
             #vm upper bound solve
             ub = NaN
             JuMP.@objective(model_bt.model, Max, vm[bus])
-            result_bt = optimize_model!(model_bt, optimizer)
+            result_bt = optimize_model!(model_bt, optimizer=optimizer)
             if (result_bt["termination_status"] == _MOI.LOCALLY_SOLVED || result_bt["termination_status"] == _MOI.OPTIMAL)
                 nub = ceil(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nub < vm_ub[bus]) && (ub = nub)
@@ -253,7 +253,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
             # td lower bound solve
             lb = NaN
             JuMP.@objective(model_bt.model, Min, td[bp])
-            result_bt = optimize_model!(model_bt, optimizer)
+            result_bt = optimize_model!(model_bt, optimizer=optimizer)
             if (result_bt["termination_status"] == _MOI.LOCALLY_SOLVED || result_bt["termination_status"] == _MOI.OPTIMAL)
                 nlb = floor(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nlb > td_lb[bp]) && (lb = nlb)
@@ -265,7 +265,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
             # td upper bound solve
             ub = NaN
             JuMP.@objective(model_bt.model, Max, td[bp])
-            result_bt = optimize_model!(model_bt, optimizer)
+            result_bt = optimize_model!(model_bt, optimizer=optimizer)
             if (result_bt["termination_status"] == _MOI.LOCALLY_SOLVED || result_bt["termination_status"] == _MOI.OPTIMAL)
                 nub = ceil(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nub < td_ub[bp]) && (ub = nub)

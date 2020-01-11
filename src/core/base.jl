@@ -148,11 +148,12 @@ function run_model(data::Dict{String,<:Any}, model_type::Type, optimizer, post_m
     #Memento.debug(_LOGGER, "pm model build time: $(time() - start_time)")
 
     #start_time = time()
-    result = optimize_model!(pm, optimizer; solution_builder=solution_builder)
+    result = optimize_model!(pm, optimizer=optimizer, solution_builder=solution_builder)
     #Memento.debug(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
 
     return result
 end
+
 
 ""
 function build_model(file::String, model_type::Type, post_method; kwargs...)
@@ -192,39 +193,22 @@ end
 
 
 ""
-function optimize_model!(pm::AbstractPowerModel; solution_builder = solution_opf!)
+function optimize_model!(pm::AbstractPowerModel; optimizer::Union{JuMP.OptimizerFactory,Nothing}=nothing, solution_builder = solution_opf!)
     start_time = time()
-    if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
-        Memento.error(_LOGGER, "Model does not contain an optimizer factory, one should be passed to `optimize_model!` or `solve_generic_model`")
-    end
 
-    _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
-
-    try
-        solve_time = _MOI.get(pm.model, _MOI.SolveTime())
-    catch
-        Memento.warn(_LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
-    end
-    Memento.debug(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
-
-    start_time = time()
-    result = build_solution(pm, solve_time; solution_builder = solution_builder)
-    Memento.debug(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
-
-    pm.solution = result["solution"]
-
-    return result
-end
-
-
-""
-function optimize_model!(pm::AbstractPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = solution_opf!)
-    start_time = time()
-    if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
-        _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
+    if isnothing(optimizer)
+        if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
+            Memento.error(_LOGGER, "no optimizer specified in `optimize_model!` or the given JuMP model.")
+        else
+            _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
+        end
     else
-        Memento.warn(_LOGGER, "Model already contains optimizer factory, cannot use optimizer specified in `solve_generic_model`")
-        _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
+        if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
+            _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
+        else
+            Memento.warn(_LOGGER, "Model already contains optimizer factory, cannot use optimizer specified in `solve_generic_model`")
+            _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
+        end
     end
 
     try
