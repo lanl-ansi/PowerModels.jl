@@ -296,76 +296,78 @@ function constraint_reactive_gen_setpoint(pm::AbstractIVRModel, n::Int, c::Int, 
 end
 
 function constraint_dcline(pm::AbstractIVRModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
-    vrf = var(pm, n, c, :vr, f_bus)
-    vif = var(pm, n, c, :vi, f_bus)
+    vr_fr = var(pm, n, c, :vr, f_bus)
+    vi_fr = var(pm, n, c, :vi, f_bus)
 
-    vrt = var(pm, n, c, :vr, t_bus)
-    vit = var(pm, n, c, :vi, t_bus)
+    vr_to = var(pm, n, c, :vr, t_bus)
+    vi_to = var(pm, n, c, :vi, t_bus)
 
-    crdcf = var(pm, n, c, :crdc, f_idx)
-    cidcf = var(pm, n, c, :cidc, f_idx)
+    crdc_fr = var(pm, n, c, :crdc, f_idx)
+    cidc_fr = var(pm, n, c, :cidc, f_idx)
 
-    crdct = var(pm, n, c, :crdc, t_idx)
-    cidct = var(pm, n, c, :cidc, t_idx)
+    crdc_to = var(pm, n, c, :crdc, t_idx)
+    cidc_to = var(pm, n, c, :cidc, t_idx)
 
-    pf = vrf*crdcf + vif*cidcf
-    pt = vrt*crdct + vit*cidct
+    p_fr = vr_fr*crdc_fr + vi_fr*cidc_fr
+    p_to = vr_to*crdc_to + vi_to*cidc_to
 
-    JuMP.@constraint(pm.model, pf + pt == loss0 + loss1*pf)
+    JuMP.@constraint(pm.model, p_fr + p_to == loss0 + loss1*p_fr)
 end
 
+"`pmin <= p_fr <= pmax, qmin <= q_fr <= qmax, `"
 function constraint_dcline_power_limits_from(pm::AbstractIVRModel, n::Int, c::Int, i, f_bus, f_idx, pmax, pmin, qmax, qmin)
-    vrf = var(pm, n, c, :vr, f_bus)
-    vif = var(pm, n, c, :vi, f_bus)
+    vr_fr = var(pm, n, c, :vr, f_bus)
+    vi_fr = var(pm, n, c, :vi, f_bus)
 
-    crdcf = var(pm, n, c, :crdc, f_idx)
-    cidcf = var(pm, n, c, :cidc, f_idx)
+    crdc_fr = var(pm, n, c, :crdc, f_idx)
+    cidc_fr = var(pm, n, c, :cidc, f_idx)
 
-    pf = vrf*crdcf + vif*cidcf
-    qf = vif*crdcf - vrf*cidcf
+    p_fr = vr_fr*crdc_fr + vi_fr*cidc_fr
+    q_fr = vi_fr*crdc_fr - vr_fr*cidc_fr
 
-    JuMP.@constraint(pm.model, pmax >= pf)
-    JuMP.@constraint(pm.model, pmin <= pf)
+    JuMP.@constraint(pm.model, pmax >= p_fr)
+    JuMP.@constraint(pm.model, pmin <= p_fr)
 
-    JuMP.@constraint(pm.model, qmax >= qf)
-    JuMP.@constraint(pm.model, qmin <= qf)
+    JuMP.@constraint(pm.model, qmax >= q_fr)
+    JuMP.@constraint(pm.model, qmin <= q_fr)
 end
 
 
+"`pmin <= p_to <= pmax, qmin <= q_to <= qmax, `"
 function constraint_dcline_power_limits_to(pm::AbstractIVRModel, n::Int, c::Int, i, t_bus, t_idx, pmax, pmin, qmax, qmin)
-    vrt = var(pm, n, c, :vr, t_bus)
-    vit = var(pm, n, c, :vi, t_bus)
+    vr_to = var(pm, n, c, :vr, t_bus)
+    vi_to = var(pm, n, c, :vi, t_bus)
 
-    crdct = var(pm, n, c, :crdc, t_idx)
-    cidct = var(pm, n, c, :cidc, t_idx)
+    crdc_to = var(pm, n, c, :crdc, t_idx)
+    cidc_to = var(pm, n, c, :cidc, t_idx)
 
-    pt = vrt*crdct + vit*cidct
-    qt = vit*crdct - vrt*cidct
+    p_to = vr_to*crdc_to + vi_to*cidc_to
+    q_to = vi_to*crdc_to - vr_to*cidc_to
 
-    JuMP.@constraint(pm.model, pmax >= pt)
-    JuMP.@constraint(pm.model, pmin <= pt)
+    JuMP.@constraint(pm.model, pmax >= p_to)
+    JuMP.@constraint(pm.model, pmin <= p_to)
 
-    JuMP.@constraint(pm.model, qmax >= qt)
-    JuMP.@constraint(pm.model, qmin <= qt)
+    JuMP.@constraint(pm.model, qmax >= q_to)
+    JuMP.@constraint(pm.model, qmin <= q_to)
 end
 
-"`pf[i] == pfref, pt[i] == ptref`"
-function constraint_active_dcline_setpoint(pm::AbstractIVRModel, n::Int, c::Int, f_idx, t_idx, pfref, ptref)
+"`p_fr[i] == pref_fr, p_to[i] == pref_to`"
+function constraint_active_dcline_setpoint(pm::AbstractIVRModel, n::Int, c::Int, f_idx, t_idx, pref_fr, pref_to)
     (l, f_bus, t_bus) = f_idx
-    vrf = var(pm, n, c, :vr, f_bus)
-    vif = var(pm, n, c, :vi, f_bus)
+    vr_fr = var(pm, n, c, :vr, f_bus)
+    vi_fr = var(pm, n, c, :vi, f_bus)
 
-    vrt = var(pm, n, c, :vr, t_bus)
-    vit = var(pm, n, c, :vi, t_bus)
+    vr_to = var(pm, n, c, :vr, t_bus)
+    vi_to = var(pm, n, c, :vi, t_bus)
 
-    crdcf = var(pm, n, c, :crdc, f_idx)
-    cidcf = var(pm, n, c, :cidc, f_idx)
+    crdc_fr = var(pm, n, c, :crdc, f_idx)
+    cidc_fr = var(pm, n, c, :cidc, f_idx)
 
-    crdct = var(pm, n, c, :crdc, t_idx)
-    cidct = var(pm, n, c, :cidc, t_idx)
+    crdc_to = var(pm, n, c, :crdc, t_idx)
+    cidc_to = var(pm, n, c, :cidc, t_idx)
 
-    JuMP.@constraint(pm.model, pfref == vrf*crdcf + vif*cidcf)
-    JuMP.@constraint(pm.model, ptref == vrt*crdct + vit*cidct)
+    JuMP.@constraint(pm.model, pref_fr == vr_fr*crdc_fr + vi_fr*cidc_fr)
+    JuMP.@constraint(pm.model, pref_to == vr_to*crdc_to + vi_to*cidc_to)
 end
 
 ""
@@ -378,20 +380,20 @@ end
 function add_setpoint_branch_current!(sol, pm::AbstractIVRModel)
     # check the branch flows were requested
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
-        add_setpoint!(sol, pm, "branch", "crf", :cr, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint!(sol, pm, "branch", "cif", :ci, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint!(sol, pm, "branch", "crt", :cr, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
-        add_setpoint!(sol, pm, "branch", "cit", :ci, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+        add_setpoint!(sol, pm, "branch", "cr_fr", :cr, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "branch", "ci_fr", :ci, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "branch", "cr_to", :cr, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+        add_setpoint!(sol, pm, "branch", "ci_to", :ci, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
     end
 end
 
 ""
 function add_setpoint_dcline_current!(sol, pm::AbstractIVRModel)
     if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
-        add_setpoint!(sol, pm, "dcline", "crf", :crdc, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint!(sol, pm, "dcline", "cif", :cidc, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint!(sol, pm, "dcline", "crt", :crdc, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
-        add_setpoint!(sol, pm, "dcline", "cit", :cidc, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+        add_setpoint!(sol, pm, "dcline", "cr_fr", :crdc, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "dcline", "ci_fr", :cidc, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
+        add_setpoint!(sol, pm, "dcline", "cr_to", :crdc, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
+        add_setpoint!(sol, pm, "dcline", "ci_to", :cidc, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
     end
 end
 
@@ -407,7 +409,9 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractIVRMod
             #to avoid function calls inside of @NLconstraint:
             pg = [var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)]
             nc = length(conductor_ids(pm, n))
-
+            print(pg)
+            print(gen["cost"][1])
+            print
             if length(gen["cost"]) == 1
                 gen_cost[(n,i)] = gen["cost"][1]
             elseif length(gen["cost"]) == 2

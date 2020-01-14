@@ -453,8 +453,8 @@ function constraint_voltage_drop(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw,
     f_idx = (i, f_bus, t_bus)
 
     tr, ti = calc_branch_t(branch)
-    r = branch["br_r"][cnd]
-    x = branch["br_x"][cnd]
+    r = branch["br_r"][cnd,cnd]
+    x = branch["br_x"][cnd,cnd]
     tm = branch["tap"][cnd]
 
     constraint_voltage_drop(pm, nw, cnd, i, f_bus, t_bus, f_idx, r, x, tr[cnd], ti[cnd], tm)
@@ -718,8 +718,8 @@ function constraint_flow_losses(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, 
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
 
-    r = branch["br_r"][cnd]
-    x = branch["br_x"][cnd]
+    r = branch["br_r"][cnd,cnd]
+    x = branch["br_x"][cnd,cnd]
     tm = branch["tap"][cnd]
     g_sh_fr = branch["g_fr"][cnd]
     g_sh_to = branch["g_to"][cnd]
@@ -737,8 +737,8 @@ function constraint_voltage_magnitude_difference(pm::AbstractPowerModel, i::Int;
     f_idx = (i, f_bus, t_bus)
     t_idx = (i, t_bus, f_bus)
 
-    r = branch["br_r"][cnd]
-    x = branch["br_x"][cnd]
+    r = branch["br_r"][cnd,cnd]
+    x = branch["br_x"][cnd,cnd]
     g_sh_fr = branch["g_fr"][cnd]
     b_sh_fr = branch["b_fr"][cnd]
     tm = branch["tap"][cnd]
