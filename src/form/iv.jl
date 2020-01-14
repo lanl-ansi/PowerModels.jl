@@ -12,19 +12,19 @@ function variable_branch_current(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=
     q = Dict()
 
     for (l,i,j) in ref(pm, nw, :arcs_from)
-        vrf = var(pm, nw, cnd, :vr, i)
-        vif = var(pm, nw, cnd, :vi, i)
-        crf = var(pm, nw, cnd, :cr, (l,i,j))
-        cif = var(pm, nw, cnd, :ci, (l,i,j))
+        vr_fr = var(pm, nw, cnd, :vr, i)
+        vi_fr = var(pm, nw, cnd, :vi, i)
+        cr_fr = var(pm, nw, cnd, :cr, (l,i,j))
+        ci_fr = var(pm, nw, cnd, :ci, (l,i,j))
 
-        vrt = var(pm, nw, cnd, :vr, j)
-        vit = var(pm, nw, cnd, :vi, j)
-        crt = var(pm, nw, cnd, :cr, (l,j,i))
-        cit = var(pm, nw, cnd, :ci, (l,j,i))
-        p[(l,i,j)] = vrf*crf  + vif*cif
-        q[(l,i,j)] = vif*crf  - vrf*cif
-        p[(l,j,i)] = vrt*crt  + vit*cit
-        q[(l,j,i)] = vit*crt  - vrt*cit
+        vr_to = var(pm, nw, cnd, :vr, j)
+        vi_to = var(pm, nw, cnd, :vi, j)
+        cr_to = var(pm, nw, cnd, :cr, (l,j,i))
+        ci_to = var(pm, nw, cnd, :ci, (l,j,i))
+        p[(l,i,j)] = vr_fr*cr_fr  + vi_fr*ci_fr
+        q[(l,i,j)] = vi_fr*cr_fr  - vr_fr*ci_fr
+        p[(l,j,i)] = vr_to*cr_to  + vi_to*ci_to
+        q[(l,j,i)] = vi_to*cr_to  - vr_to*ci_to
     end
     var(pm, nw, cnd)[:p] = p
     var(pm, nw, cnd)[:q] = q
@@ -70,20 +70,20 @@ function variable_dcline(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd,
     q = Dict()
 
     for (l,i,j) in ref(pm, nw, :arcs_from_dc)
-        vrf = var(pm, nw, cnd, :vr, i)
-        vif = var(pm, nw, cnd, :vi, i)
-        crf = var(pm, nw, cnd, :crdc, (l,i,j))
-        cif = var(pm, nw, cnd, :cidc, (l,i,j))
+        vr_fr = var(pm, nw, cnd, :vr, i)
+        vi_fr = var(pm, nw, cnd, :vi, i)
+        cr_fr = var(pm, nw, cnd, :crdc, (l,i,j))
+        ci_fr = var(pm, nw, cnd, :cidc, (l,i,j))
 
-        vrt = var(pm, nw, cnd, :vr, j)
-        vit = var(pm, nw, cnd, :vi, j)
-        crt = var(pm, nw, cnd, :crdc, (l,j,i))
-        cit = var(pm, nw, cnd, :cidc, (l,j,i))
+        vr_to = var(pm, nw, cnd, :vr, j)
+        vi_to = var(pm, nw, cnd, :vi, j)
+        cr_to = var(pm, nw, cnd, :crdc, (l,j,i))
+        ci_to = var(pm, nw, cnd, :cidc, (l,j,i))
 
-        p[(l,i,j)] = JuMP.@NLexpression(pm.model, vrf*crf  + vif*cif)
-        q[(l,i,j)] = JuMP.@NLexpression(pm.model, vif*crf  - vrf*cif)
-        p[(l,j,i)] = JuMP.@NLexpression(pm.model, vrt*crt  + vit*cit)
-        q[(l,j,i)] = JuMP.@NLexpression(pm.model, vit*crt  - vrt*cit)
+        p[(l,i,j)] = JuMP.@NLexpression(pm.model, vr_fr*cr_fr  + vi_fr*ci_fr)
+        q[(l,i,j)] = JuMP.@NLexpression(pm.model, vi_fr*cr_fr  - vr_fr*ci_fr)
+        p[(l,j,i)] = JuMP.@NLexpression(pm.model, vr_to*cr_to  + vi_to*ci_to)
+        q[(l,j,i)] = JuMP.@NLexpression(pm.model, vi_to*cr_to  - vr_to*ci_to)
     end
 
     var(pm, nw, cnd)[:p_dc] = p
