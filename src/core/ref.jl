@@ -86,7 +86,6 @@ function ref_calc_branch_flow_bounds(branches, buses, conductor::Int=1)
             flow_lb[i] = max(flow_lb[i], -branch["c_rating_a"][conductor]*m_vmax)
             flow_ub[i] = min(flow_ub[i],  branch["c_rating_a"][conductor]*m_vmax)
         end
-
     end
 
     return flow_lb, flow_ub
@@ -154,7 +153,6 @@ function ref_calc_voltage_product_bounds(buspairs, conductor::Int=1)
             wi_max[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmax"])
             wi_min[bp] = buspair["vm_fr_max"]*buspair["vm_to_max"]*sin(buspair["angmin"])
         end
-
     end
 
     return wr_min, wr_max, wi_min, wi_max
@@ -163,7 +161,7 @@ end
 
 "computes storage bounds"
 function ref_calc_storage_injection_bounds(storage, buses, conductor::Int=1)
-    injection_lb = Dict() 
+    injection_lb = Dict()
     injection_ub = Dict()
 
     for (i, strg) in storage
