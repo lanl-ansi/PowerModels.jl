@@ -7,7 +7,8 @@ PowerModels.jl Change Log
 - Added iterative flow limit cut OPF solvers (#619)
 - Improved connected components computation time (#504)
 - Removed `Inf` bounds from variables (#630)
-- Removal of unused functions in `solution.jl`: `get_solution`, `add_generator_power_setpoint`, `add_storage_setpoint`, `add_branch_flow_setpoint`, `add_dcline_flow_setpoint` (breaking) (#637) 
+- Removal of unused functions in `solution.jl`: `get_solution`, `add_generator_power_setpoint`, `add_storage_setpoint`, `add_branch_flow_setpoint`, `add_dcline_flow_setpoint` (breaking) (#637)
+- Fixed a solution reporting bug when the optimizer result count is zero
 
 ### v0.13.1
 - Added DCMPPowerModel for replication of Matpower's DC model (#612)
