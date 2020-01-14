@@ -409,9 +409,6 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractIVRMod
             #to avoid function calls inside of @NLconstraint:
             pg = [var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)]
             nc = length(conductor_ids(pm, n))
-            print(pg)
-            print(gen["cost"][1])
-            print
             if length(gen["cost"]) == 1
                 gen_cost[(n,i)] = gen["cost"][1]
             elseif length(gen["cost"]) == 2

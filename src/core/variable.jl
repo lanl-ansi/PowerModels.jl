@@ -453,9 +453,15 @@ function variable_branch_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, cn
         ub = Dict()
         for (l,i,j) in ref(pm, nw, :arcs_from)
             b = branch[l]
-            rate_fr = b["rate_a"][cnd]*b["tap"][cnd]
-            rate_to = b["rate_a"][cnd]
-            ub[l]  = max(rate_fr/bus[i]["vmin"][cnd], rate_to/bus[j]["vmin"][cnd])
+            ub[l] = Inf
+            if haskey(b, "rate_a")
+                rate_fr = b["rate_a"][cnd]*b["tap"][cnd]
+                rate_to = b["rate_a"][cnd]
+                ub[l]  = max(rate_fr/bus[i]["vmin"][cnd], rate_to/bus[j]["vmin"][cnd])
+            end
+            if haskey(b, "c_rating_a")
+                ub[l] = b["c_rating_a"][cnd]
+            end
         end
 
         for (l,i,j) in ref(pm, nw, :arcs)
@@ -480,9 +486,15 @@ function variable_branch_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cn
         ub = Dict()
         for (l,i,j) in ref(pm, nw, :arcs_from)
             b = branch[l]
-            rate_fr = b["rate_a"][cnd]*b["tap"][cnd]
-            rate_to = b["rate_a"][cnd]
-            ub[l]  = max(rate_fr/bus[i]["vmin"][cnd], rate_to/bus[j]["vmin"][cnd])
+            ub[l] = Inf
+            if haskey(b, "rate_a")
+                rate_fr = b["rate_a"][cnd]*b["tap"][cnd]
+                rate_to = b["rate_a"][cnd]
+                ub[l]  = max(rate_fr/bus[i]["vmin"][cnd], rate_to/bus[j]["vmin"][cnd])
+            end
+            if haskey(b, "c_rating_a")
+                ub[l] = b["c_rating_a"][cnd]
+            end
         end
 
         for (l,i,j) in ref(pm, nw, :arcs)
@@ -507,12 +519,22 @@ function variable_branch_series_current_real(pm::AbstractPowerModel; nw::Int=pm.
         ub = Dict()
         for (l,i,j) in ref(pm, nw, :arcs_from)
             b = branch[l]
-            rate = b["rate_a"][cnd]*b["tap"][cnd]
-            y_fr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
-            y_to = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
-            shuntcurrent = max(y_fr*bus[i]["vmax"][cnd]^2, y_to*bus[j]["vmax"][cnd]^2)
-            seriescurrent = max(rate/bus[i]["vmin"][cnd], rate/bus[j]["vmin"][cnd])
-            ub[l] = seriescurrent + shuntcurrent
+            ub[l] = Inf
+            if haskey(b, "rate_a")
+                rate = b["rate_a"][cnd]*b["tap"][cnd]
+                y_fr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
+                y_to = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
+                shuntcurrent = max(y_fr*bus[i]["vmax"][cnd]^2, y_to*bus[j]["vmax"][cnd]^2)
+                seriescurrent = max(rate/bus[i]["vmin"][cnd], rate/bus[j]["vmin"][cnd])
+                ub[l] = seriescurrent + shuntcurrent
+            end
+            if haskey(b, "c_rating_a")
+                totalcurrent = b["c_rating_a"][cnd]
+                y_fr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
+                y_to = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
+                shuntcurrent = max(y_fr*bus[i]["vmax"][cnd]^2, y_to*bus[j]["vmax"][cnd]^2)
+                ub[l] = totalcurrent + shuntcurrent
+            end
         end
 
         for (l,i,j) in ref(pm, nw, :arcs_from)
@@ -535,12 +557,22 @@ function variable_branch_series_current_imaginary(pm::AbstractPowerModel; nw::In
         ub = Dict()
         for (l,i,j) in ref(pm, nw, :arcs_from)
             b = branch[l]
-            rate = b["rate_a"][cnd]*b["tap"][cnd]
-            y_fr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
-            y_to = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
-            shuntcurrent = max(y_fr*bus[i]["vmax"][cnd]^2, y_to*bus[j]["vmax"][cnd]^2)
-            seriescurrent = max(rate/bus[i]["vmin"][cnd], rate/bus[j]["vmin"][cnd])
-            ub[l] = seriescurrent + shuntcurrent
+            ub[l] = Inf
+            if haskey(b, "rate_a")
+                rate = b["rate_a"][cnd]*b["tap"][cnd]
+                y_fr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
+                y_to = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
+                shuntcurrent = max(y_fr*bus[i]["vmax"][cnd]^2, y_to*bus[j]["vmax"][cnd]^2)
+                seriescurrent = max(rate/bus[i]["vmin"][cnd], rate/bus[j]["vmin"][cnd])
+                ub[l] = seriescurrent + shuntcurrent
+            end
+            if haskey(b, "c_rating_a")
+                totalcurrent = b["c_rating_a"][cnd]
+                y_fr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
+                y_to = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
+                shuntcurrent = max(y_fr*bus[i]["vmax"][cnd]^2, y_to*bus[j]["vmax"][cnd]^2)
+                ub[l] = totalcurrent + shuntcurrent
+            end
         end
 
         for (l,i,j) in ref(pm, nw, :arcs_from)
