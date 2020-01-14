@@ -219,7 +219,7 @@ function optimize_model!(pm::AbstractPowerModel; optimizer::Union{JuMP.Optimizer
     Memento.debug(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
 
     start_time = time()
-    result = build_solution(pm, solve_time; solution_builder = solution_builder)
+    result = build_result(pm, solve_time; solution_builder = solution_builder)
     Memento.debug(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
 
     pm.solution = result["solution"]
