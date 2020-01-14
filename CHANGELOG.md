@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Updated core function names to instantiate_model and build_result (breaking)
 - Made problem naming more consistent (#644) (breaking)
 - Cleaned up model optimization functions (#643) (breaking)
 
