@@ -3,9 +3,9 @@
 # in the context of constant-power loads or generators
 
 ""
-function variable_branch_current(pm::AbstractIVRModel; kwargs...)
-    variable_branch_current_real(pm; kwargs...)
-    variable_branch_current_imaginary(pm; kwargs...)
+function variable_branch_current(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...)
+    variable_branch_current_real(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
+    variable_branch_current_imaginary(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
 
     # store expressions in rectangular power variable space
     p = Dict()
@@ -63,7 +63,8 @@ end
 
 ""
 function variable_dcline(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...)
-    variable_dcline_current_rectangular(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
+    variable_dcline_current_real(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
+    variable_dcline_current_imaginary(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
     # store expressions in rectangular power variable space
     p = Dict()
     q = Dict()
@@ -87,7 +88,7 @@ function variable_dcline(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd,
 
     var(pm, nw, cnd)[:p_dc] = p
     var(pm, nw, cnd)[:q_dc] = q
-    
+
     if bounded
         for (i,dcline) in ref(pm, nw, :dcline)
             constraint_dcline_power_limits_from(pm, i, cnd=cnd, nw=nw)
@@ -157,7 +158,7 @@ function constraint_voltage_angle_difference(pm::AbstractIVRModel, n::Int, c::In
     vr_fr = var(pm, n, c, :vr, f_bus)
     vi_fr = var(pm, n, c, :vi, f_bus)
     vr_to = var(pm, n, c, :vr, t_bus)
-    vit_to = var(pm, n, c, :vi, t_bus)
+    vi_to = var(pm, n, c, :vi, t_bus)
     vvr = vr_fr*vr_to + vi_fr*vi_to
     vvi = vi_fr*vr_to - vr_fr*vi_to
 
