@@ -29,8 +29,8 @@ function variable_branch_current(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=
     var(pm, nw, cnd)[:p] = p
     var(pm, nw, cnd)[:q] = q
 
-    variable_branch_series_current_real(pm; kwargs...)
-    variable_branch_series_current_imaginary(pm; kwargs...)
+    variable_branch_series_current_real(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
+    variable_branch_series_current_imaginary(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
 end
 
 ""
