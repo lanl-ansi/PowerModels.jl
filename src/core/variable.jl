@@ -453,9 +453,9 @@ function variable_branch_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, cn
         ub = Dict()
         for (l,i,j) in ref(pm, nw, :arcs_from)
             b = branch[l]
-            ratefr = b["rate_a"][cnd]*b["tap"][cnd]
-            rateto = b["rate_a"][cnd]
-            ub[l]  = max(ratefr/bus[i]["vmin"][cnd], rateto/bus[j]["vmin"][cnd])
+            rate_fr = b["rate_a"][cnd]*b["tap"][cnd]
+            rate_to = b["rate_a"][cnd]
+            ub[l]  = max(rate_fr/bus[i]["vmin"][cnd], rate_to/bus[j]["vmin"][cnd])
         end
 
         for (l,i,j) in ref(pm, nw, :arcs)
@@ -480,9 +480,9 @@ function variable_branch_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cn
         ub = Dict()
         for (l,i,j) in ref(pm, nw, :arcs_from)
             b = branch[l]
-            ratefr = b["rate_a"][cnd]*b["tap"][cnd]
-            rateto = b["rate_a"][cnd]
-            ub[l]  = max(ratefr/bus[i]["vmin"][cnd], rateto/bus[j]["vmin"][cnd])
+            rate_fr = b["rate_a"][cnd]*b["tap"][cnd]
+            rate_to = b["rate_a"][cnd]
+            ub[l]  = max(rate_fr/bus[i]["vmin"][cnd], rate_to/bus[j]["vmin"][cnd])
         end
 
         for (l,i,j) in ref(pm, nw, :arcs)
@@ -508,9 +508,9 @@ function variable_branch_series_current_real(pm::AbstractPowerModel; nw::Int=pm.
         for (l,i,j) in ref(pm, nw, :arcs_from)
             b = branch[l]
             rate = b["rate_a"][cnd]*b["tap"][cnd]
-            yfr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
-            yto = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
-            shuntcurrent = max(yfr*bus[i]["vmax"][cnd]^2, yto*bus[j]["vmax"][cnd]^2)
+            y_fr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
+            y_to = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
+            shuntcurrent = max(y_fr*bus[i]["vmax"][cnd]^2, y_to*bus[j]["vmax"][cnd]^2)
             seriescurrent = max(rate/bus[i]["vmin"][cnd], rate/bus[j]["vmin"][cnd])
             ub[l] = seriescurrent + shuntcurrent
         end
@@ -536,9 +536,9 @@ function variable_branch_series_current_imaginary(pm::AbstractPowerModel; nw::In
         for (l,i,j) in ref(pm, nw, :arcs_from)
             b = branch[l]
             rate = b["rate_a"][cnd]*b["tap"][cnd]
-            yfr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
-            yto = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
-            shuntcurrent = max(yfr*bus[i]["vmax"][cnd]^2, yto*bus[j]["vmax"][cnd]^2)
+            y_fr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
+            y_to = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
+            shuntcurrent = max(y_fr*bus[i]["vmax"][cnd]^2, y_to*bus[j]["vmax"][cnd]^2)
             seriescurrent = max(rate/bus[i]["vmin"][cnd], rate/bus[j]["vmin"][cnd])
             ub[l] = seriescurrent + shuntcurrent
         end
@@ -633,13 +633,13 @@ function variable_dcline_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, cn
     if bounded
         ub = Dict()
         for (l,i,j) in ref(pm, nw, :arcs_from_dc)
-            vminf = bus[i]["vmin"][cnd]
-            vmint = bus[j]["vmin"][cnd]
-            @assert vminf>0
-            @assert vmint>0
-            sf = sqrt(max(abs(dcline[l]["pmaxf"][cnd]), abs(dcline[l]["pminf"][cnd]))^2 + max(abs(dcline[l]["qmaxf"][cnd]), abs(dcline[l]["qminf"][cnd]))^2)
-            st = sqrt(max(abs(dcline[l]["pmaxt"][cnd]), abs(dcline[l]["pmint"][cnd]))^2 + max(abs(dcline[l]["qmaxt"][cnd]), abs(dcline[l]["qmint"][cnd]))^2)
-            imax = max(sf,st)/ min(vminf, vminf)
+            vmin_fr = bus[i]["vmin"][cnd]
+            vmin_to = bus[j]["vmin"][cnd]
+            @assert vmin_fr>0
+            @assert vmin_to>0
+            s_fr = sqrt(max(abs(dcline[l]["pmaxf"][cnd]), abs(dcline[l]["pminf"][cnd]))^2 + max(abs(dcline[l]["qmaxf"][cnd]), abs(dcline[l]["qminf"][cnd]))^2)
+            s_to = sqrt(max(abs(dcline[l]["pmaxt"][cnd]), abs(dcline[l]["pmint"][cnd]))^2 + max(abs(dcline[l]["qmaxt"][cnd]), abs(dcline[l]["qmint"][cnd]))^2)
+            imax = max(s_fr,s_to)/ min(vmin_fr, vmin_to)
             ub[(l,i,j)] = imax
             ub[(l,j,i)] = imax
         end
@@ -664,13 +664,13 @@ function variable_dcline_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cn
     if bounded
         ub = Dict()
         for (l,i,j) in ref(pm, nw, :arcs_from_dc)
-            vminf = bus[i]["vmin"][cnd]
-            vmint = bus[j]["vmin"][cnd]
-            @assert vminf>0
-            @assert vmint>0
-            sf = sqrt(max(abs(dcline[l]["pmaxf"][cnd]), abs(dcline[l]["pminf"][cnd]))^2 + max(abs(dcline[l]["qmaxf"][cnd]), abs(dcline[l]["qminf"][cnd]))^2)
-            st = sqrt(max(abs(dcline[l]["pmaxt"][cnd]), abs(dcline[l]["pmint"][cnd]))^2 + max(abs(dcline[l]["qmaxt"][cnd]), abs(dcline[l]["qmint"][cnd]))^2)
-            imax = max(sf,st)/ min(vminf, vminf)
+            vmin_fr = bus[i]["vmin"][cnd]
+            vmin_to = bus[j]["vmin"][cnd]
+            @assert vmin_fr>0
+            @assert vmin_to>0
+            s_fr = sqrt(max(abs(dcline[l]["pmaxf"][cnd]), abs(dcline[l]["pminf"][cnd]))^2 + max(abs(dcline[l]["qmaxf"][cnd]), abs(dcline[l]["qminf"][cnd]))^2)
+            s_to = sqrt(max(abs(dcline[l]["pmaxt"][cnd]), abs(dcline[l]["pmint"][cnd]))^2 + max(abs(dcline[l]["qmaxt"][cnd]), abs(dcline[l]["qmint"][cnd]))^2)
+            imax = max(s_fr,s_to)/ min(vmin_fr, vmin_to)
             ub[(l,i,j)] = imax
             ub[(l,j,i)] = imax
         end
