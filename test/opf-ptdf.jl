@@ -5,7 +5,7 @@ TESTLOG = Memento.getlogger(PowerModels)
     @testset "5-bus case, LP solver" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         result_va = PowerModels.run_opf(data, DCPPowerModel, cbc_solver)
-        result_pg = PowerModels.run_ptdf_opf(data, DCPPowerModel, cbc_solver)
+        result_pg = PowerModels.run_opf_ptdf(data, DCPPowerModel, cbc_solver)
 
         @test result_va["termination_status"] == OPTIMAL
         @test result_pg["termination_status"] == OPTIMAL
@@ -17,7 +17,7 @@ TESTLOG = Memento.getlogger(PowerModels)
     @testset "5-bus gap case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_gap.m")
         result_va = PowerModels.run_opf(data, DCPPowerModel, ipopt_solver)
-        result_pg = PowerModels.run_ptdf_opf(data, DCPPowerModel, ipopt_solver)
+        result_pg = PowerModels.run_opf_ptdf(data, DCPPowerModel, ipopt_solver)
 
         @test result_va["termination_status"] == LOCALLY_SOLVED
         @test result_pg["termination_status"] == LOCALLY_SOLVED
@@ -30,7 +30,7 @@ TESTLOG = Memento.getlogger(PowerModels)
         data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
         data["dcline"] = Dict()
         result_va = PowerModels.run_opf(data, DCPPowerModel, ipopt_solver)
-        result_pg = PowerModels.run_ptdf_opf(data, DCPPowerModel, ipopt_solver)
+        result_pg = PowerModels.run_opf_ptdf(data, DCPPowerModel, ipopt_solver)
 
         @test result_va["termination_status"] == LOCALLY_SOLVED
         @test result_pg["termination_status"] == LOCALLY_SOLVED
@@ -42,7 +42,7 @@ TESTLOG = Memento.getlogger(PowerModels)
     @testset "14-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case14.m")
         result_va = PowerModels.run_opf(data, DCPPowerModel, ipopt_solver)
-        result_pg = PowerModels.run_ptdf_opf(data, DCPPowerModel, ipopt_solver)
+        result_pg = PowerModels.run_opf_ptdf(data, DCPPowerModel, ipopt_solver)
 
         @test result_va["termination_status"] == LOCALLY_SOLVED
         @test result_pg["termination_status"] == LOCALLY_SOLVED
@@ -55,19 +55,19 @@ TESTLOG = Memento.getlogger(PowerModels)
     @testset "no support for zero reference buses" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["bus"]["4"]["bus_type"] = 2
-        @test_throws(TESTLOG, ErrorException, PowerModels.run_ptdf_opf(data, DCPPowerModel, ipopt_solver))
+        @test_throws(TESTLOG, ErrorException, PowerModels.run_opf_ptdf(data, DCPPowerModel, ipopt_solver))
     end
 
     @testset "no support for multiple connected components" begin
-        @test_throws(TESTLOG, ErrorException, PowerModels.run_ptdf_opf("../test/data/matpower/case6.m", DCPPowerModel, ipopt_solver))
+        @test_throws(TESTLOG, ErrorException, PowerModels.run_opf_ptdf("../test/data/matpower/case6.m", DCPPowerModel, ipopt_solver))
     end
 
     @testset "no support for dclines" begin
-        @test_throws(TESTLOG, ErrorException, PowerModels.run_ptdf_opf("../test/data/matpower/case3.m", DCPPowerModel, ipopt_solver))
+        @test_throws(TESTLOG, ErrorException, PowerModels.run_opf_ptdf("../test/data/matpower/case3.m", DCPPowerModel, ipopt_solver))
     end
 
     @testset "no support for switches" begin
-        @test_throws(TESTLOG, ErrorException, PowerModels.run_ptdf_opf("../test/data/matpower/case5_sw.m", DCPPowerModel, ipopt_solver))
+        @test_throws(TESTLOG, ErrorException, PowerModels.run_opf_ptdf("../test/data/matpower/case5_sw.m", DCPPowerModel, ipopt_solver))
     end
 
 end

@@ -97,12 +97,12 @@ supporting the PTDF problem specification at this time.
 * `full_inverse`: compute the complete admittance matrix inverse, instead of a
 branch by branch computation.
 """
-function run_ptdf_opf_flow_cuts(file::String, optimizer; kwargs...)
+function run_opf_ptdf_flow_cuts(file::String, optimizer; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_ptdf_opf_flow_cuts!(data, optimizer; kwargs...)
+    return run_opf_ptdf_flow_cuts!(data, optimizer; kwargs...)
 end
 
-function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::Int = 100, time_limit::Float64 = 3600.0, full_inverse = false)
+function run_opf_ptdf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::Int = 100, time_limit::Float64 = 3600.0, full_inverse = false)
     Memento.info(_LOGGER, "maximum cut iterations set to value of $max_iter")
 
     for (i,branch) in data["branch"]
@@ -124,8 +124,8 @@ function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
 
 
     #result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
-    pm = build_model(data, DCPPowerModel, post_ptdf_opf; ref_extensions=ref_extensions)
-    result = optimize_model!(pm, optimizer=optimizer, solution_builder=solution_ptdf_opf!)
+    pm = build_model(data, DCPPowerModel, post_opf_ptdf; ref_extensions=ref_extensions)
+    result = optimize_model!(pm, optimizer=optimizer, solution_builder=solution_opf_ptdf!)
     update_data!(data, result["solution"])
 
     solution = solve_dc_pf(data)
@@ -172,7 +172,7 @@ function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
             iteration += 1
 
             #result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
-            result = optimize_model!(pm; solution_builder=solution_ptdf_opf!)
+            result = optimize_model!(pm; solution_builder=solution_opf_ptdf!)
 
             update_data!(data, result["solution"])
 

@@ -256,7 +256,7 @@ TESTLOG = Memento.getlogger(PowerModels)
         mn_data = build_mn_data("../test/data/matpower/case5_strg.m", replicates=4)
 
         @testset "test ac polar opf" begin
-            result = PowerModels.run_mn_strg_opf(mn_data, PowerModels.ACPPowerModel, juniper_solver)
+            result = PowerModels.run_mn_opf_strg(mn_data, PowerModels.ACPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 70435.5; atol = 1e0)
@@ -285,7 +285,7 @@ TESTLOG = Memento.getlogger(PowerModels)
         end
 
         @testset "test soc opf" begin
-            result = PowerModels.run_mn_strg_opf(mn_data, PowerModels.SOCWRPowerModel, juniper_solver)
+            result = PowerModels.run_mn_opf_strg(mn_data, PowerModels.SOCWRPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 58853.5; atol = 1e0)
@@ -318,7 +318,7 @@ TESTLOG = Memento.getlogger(PowerModels)
                 end
             end
 
-            result = PowerModels.run_mn_strg_opf(mn_data, PowerModels.DCPPowerModel, juniper_solver)
+            result = PowerModels.run_mn_opf_strg(mn_data, PowerModels.DCPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 69703.10; atol = 1e0)
@@ -332,7 +332,7 @@ TESTLOG = Memento.getlogger(PowerModels)
                 delete!(network, "time_elapsed")
             end
             Memento.setlevel!(TESTLOG, "warn")
-            @test_warn(TESTLOG, "network data should specify time_elapsed, using 1.0 as a default", PowerModels.run_mn_strg_opf(mn_data, PowerModels.ACPPowerModel, juniper_solver))
+            @test_warn(TESTLOG, "network data should specify time_elapsed, using 1.0 as a default", PowerModels.run_mn_opf_strg(mn_data, PowerModels.ACPPowerModel, juniper_solver))
             Memento.setlevel!(TESTLOG, "error")
         end
     end

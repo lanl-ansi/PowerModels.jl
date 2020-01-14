@@ -7,12 +7,12 @@
 
 
 "opf using current limits instead of thermal limits, tests constraint_current_limit"
-function _run_cl_opf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, _post_cl_opf; kwargs...)
+function _run_opf_cl(file, model_type::Type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_opf_cl; kwargs...)
 end
 
 ""
-function _post_cl_opf(pm::AbstractPowerModel)
+function _post_opf_cl(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_branch_flow(pm)
@@ -46,12 +46,12 @@ end
 
 
 "opf with fixed switches"
-function _run_sw_opf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _post_sw_opf; kwargs...)
+function _run_opf_sw(file, model_constructor, optimizer; kwargs...)
+    return run_model(file, model_constructor, optimizer, _post_opf_sw; kwargs...)
 end
 
 ""
-function _post_sw_opf(pm::AbstractPowerModel)
+function _post_opf_sw(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_switch_flow(pm)
@@ -251,12 +251,12 @@ end
 
 
 "opf with unit commitment, tests constraint_current_limit"
-function _run_uc_opf(file, model_type::Type, solver; kwargs...)
-    return run_model(file, model_type, solver, _post_uc_opf; solution_builder = _solution_uc!, kwargs...)
+function _run_ucopf(file, model_type::Type, solver; kwargs...)
+    return run_model(file, model_type, solver, _post_ucopf; solution_builder = _solution_uc!, kwargs...)
 end
 
 ""
-function _post_uc_opf(pm::AbstractPowerModel)
+function _post_ucopf(pm::AbstractPowerModel)
     variable_voltage(pm)
 
     variable_generation_indicator(pm)
@@ -311,12 +311,12 @@ function _post_uc_opf(pm::AbstractPowerModel)
 end
 
 ""
-function _run_uc_mc_opf(file, model_type::Type, solver; kwargs...)
-    return run_model(file, model_type, solver, _post_uc_mc_opf; solution_builder = _solution_uc!, multiconductor=true, kwargs...)
+function _run_mc_ucopf(file, model_type::Type, solver; kwargs...)
+    return run_model(file, model_type, solver, _post_mc_ucopf; solution_builder = _solution_uc!, multiconductor=true, kwargs...)
 end
 
 ""
-function _post_uc_mc_opf(pm::AbstractPowerModel)
+function _post_mc_ucopf(pm::AbstractPowerModel)
     variable_generation_indicator(pm)
 
     variable_storage_indicator(pm)
@@ -559,12 +559,12 @@ end
 
 
 "opf with storage"
-function _run_strg_opf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, _post_strg_opf; kwargs...)
+function _run_opf_strg(file, model_type::Type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_opf_strg; kwargs...)
 end
 
 ""
-function _post_strg_opf(pm::AbstractPowerModel)
+function _post_opf_strg(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_storage(pm)
@@ -607,12 +607,12 @@ end
 
 
 "opf with mi storage variables"
-function _run_strg_mi_opf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, _post_strg_mi_opf; kwargs...)
+function _run_opf_strg_mi(file, model_type::Type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_opf_strg_mi; kwargs...)
 end
 
 ""
-function _post_strg_mi_opf(pm::AbstractPowerModel)
+function _post_opf_strg_mi(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_storage_mi(pm)
@@ -655,12 +655,12 @@ end
 
 
 ""
-function _run_mn_mc_strg_opf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, _post_mn_mc_strg_opf; multinetwork=true, multiconductor=true, kwargs...)
+function _run_mn_mc_opf_strg(file, model_type::Type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_mn_mc_opf_strg; multinetwork=true, multiconductor=true, kwargs...)
 end
 
 "warning: this model is not realistic or physically reasonable, it is only for test coverage"
-function _post_mn_mc_strg_opf(pm::AbstractPowerModel)
+function _post_mn_mc_opf_strg(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_storage_energy(pm, nw=n)
         variable_storage_charge(pm, nw=n)
