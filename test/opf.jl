@@ -85,7 +85,7 @@
     end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", ACPPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", ACPPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -142,7 +142,7 @@ end
     end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", ACRPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", ACRPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -195,7 +195,7 @@ end
     end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", ACTPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", ACTPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -278,7 +278,7 @@ end
     #end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", DCPPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", DCPPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -328,7 +328,7 @@ end
     end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", NFAPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", NFAPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -380,7 +380,7 @@ end
     end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", DCPLLPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", DCPLLPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -460,7 +460,7 @@ end
     #end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", LPACCPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", LPACCPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -529,7 +529,7 @@ end
     end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", SOCWRPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", SOCWRPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -596,7 +596,7 @@ end
     end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", SOCWRConicPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", SOCWRConicPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -658,7 +658,7 @@ end
     end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", SOCBFPowerModel, PowerModels.post_opf_bf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", SOCBFPowerModel, PowerModels.build_opf_bf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -690,7 +690,7 @@ end
     end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", SOCBFConicPowerModel, PowerModels.post_opf_bf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", SOCBFConicPowerModel, PowerModels.build_opf_bf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -743,7 +743,7 @@ end
     end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", QCRMPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", QCRMPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -783,7 +783,7 @@ end
     end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", QCLSPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", QCLSPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -844,7 +844,7 @@ end
     #end
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", SDPWRMPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", SDPWRMPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 end
@@ -882,7 +882,7 @@ end
     =#
     @testset "14-bus variable bounds" begin
         m = JuMP.Model()
-        instantiate_model("../test/data/matpower/case14.m", SparseSDPWRMPowerModel, PowerModels.post_opf, jump_model=m)
+        instantiate_model("../test/data/matpower/case14.m", SparseSDPWRMPowerModel, PowerModels.build_opf, jump_model=m)
         @test check_variable_bounds(m)
     end
 
@@ -901,7 +901,7 @@ end
 
         pm.ext[:SDconstraintDecomposition] = PowerModels._SDconstraintDecomposition(groups, lookup_index, sigma)
 
-        PowerModels.post_opf(pm)
+        PowerModels.build_opf(pm)
         result = optimize_model!(pm, optimizer=scs_solver)
 
         @test result["termination_status"] == OPTIMAL

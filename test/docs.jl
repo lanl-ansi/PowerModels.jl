@@ -25,7 +25,7 @@
     end
 
     @testset "README.md - JuMP Model Inspection" begin
-        pm = instantiate_model("../test/data/matpower/case3.m", ACPPowerModel, PowerModels.post_opf)
+        pm = instantiate_model("../test/data/matpower/case3.m", ACPPowerModel, PowerModels.build_opf)
 
         #pretty print the model to the terminal
         #print(pm.model)

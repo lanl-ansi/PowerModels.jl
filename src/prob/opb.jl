@@ -5,11 +5,11 @@ end
 
 "the optimal power balance problem"
 function run_opb(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, post_opb; ref_extensions=[ref_add_connected_components!], kwargs...)
+    return run_model(file, model_type, optimizer, build_opb; ref_extensions=[ref_add_connected_components!], kwargs...)
 end
 
 ""
-function post_opb(pm::AbstractPowerModel)
+function build_opb(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_generation(pm)
 

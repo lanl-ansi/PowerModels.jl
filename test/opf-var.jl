@@ -476,7 +476,7 @@ end
 @testset "test ac v+t polar opf" begin
     PMs = PowerModels
 
-    function post_opf_var(pm::AbstractPowerModel)
+    function build_opf_var(pm::AbstractPowerModel)
         PMs.variable_voltage(pm)
         PMs.variable_generation(pm)
         PMs.variable_branch_flow(pm)
@@ -511,31 +511,31 @@ end
     end
 
     @testset "3-bus case" begin
-        result = run_model("../test/data/matpower/case3.m", ACPPowerModel, ipopt_solver, post_opf_var)
+        result = run_model("../test/data/matpower/case3.m", ACPPowerModel, ipopt_solver, build_opf_var)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 5907; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
-        result = run_model("../test/data/matpower/case5_asym.m", ACPPowerModel, ipopt_solver, post_opf_var)
+        result = run_model("../test/data/matpower/case5_asym.m", ACPPowerModel, ipopt_solver, build_opf_var)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 17551; atol = 1e0)
     end
     @testset "5-bus gap case" begin
-        result = run_model("../test/data/matpower/case5_gap.m", ACPPowerModel, ipopt_solver, post_opf_var)
+        result = run_model("../test/data/matpower/case5_gap.m", ACPPowerModel, ipopt_solver, build_opf_var)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], -27497.7; atol = 1e0)
     end
     @testset "5-bus with dcline costs" begin
-        result = run_model("../test/data/matpower/case5_dc.m", ACPPowerModel, ipopt_solver, post_opf_var)
+        result = run_model("../test/data/matpower/case5_dc.m", ACPPowerModel, ipopt_solver, build_opf_var)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 18156.2; atol = 1e0)
     end
     @testset "6-bus case" begin
-        result = run_model("../test/data/matpower/case6.m", ACPPowerModel, ipopt_solver, post_opf_var)
+        result = run_model("../test/data/matpower/case6.m", ACPPowerModel, ipopt_solver, build_opf_var)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 11625.3; atol = 1e0)
@@ -543,7 +543,7 @@ end
         @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
     @testset "24-bus rts case" begin
-        result = run_model("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver, post_opf_var)
+        result = run_model("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver, build_opf_var)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 79805; atol = 1e0)

@@ -1,7 +1,7 @@
 TESTLOG = Memento.getlogger(PowerModels)
 
 "an example of building a multi-phase model in an extention package"
-function post_tp_opf(pm::AbstractPowerModel)
+function build_tp_opf(pm::AbstractPowerModel)
     for c in PowerModels.conductor_ids(pm)
         PowerModels.variable_voltage(pm, cnd=c)
         PowerModels.variable_generation(pm, cnd=c)
@@ -170,7 +170,7 @@ end
 
         @testset "3-bus 3-conductor case with theta_ref=pi" begin
             mp_data = build_mc_data!("../test/data/matpower/case3.m", conductors=3)
-            pm = PowerModels.instantiate_model(mp_data, ACRPowerModel, PowerModels._post_mc_opf, multiconductor=true)
+            pm = PowerModels.instantiate_model(mp_data, ACRPowerModel, PowerModels._build_mc_opf, multiconductor=true)
             result = PowerModels.optimize_model!(pm, optimizer=ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
@@ -457,7 +457,7 @@ end
 
     @testset "multiconductor extensions" begin
         mp_data = build_mc_data!("../test/data/matpower/case3.m")
-        pm = instantiate_model(mp_data, PowerModels.ACPPowerModel, post_tp_opf; multiconductor=true)
+        pm = instantiate_model(mp_data, PowerModels.ACPPowerModel, build_tp_opf; multiconductor=true)
 
         @test haskey(var(pm, pm.cnw), :cnd)
         @test length(var(pm, pm.cnw)) == 1
