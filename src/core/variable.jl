@@ -645,11 +645,12 @@ function variable_dcline_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, cn
         end
 
         for (l,i,j) in ref(pm, nw, :arcs_dc)
-            JuMP.set_lower_bound(crdc[(l,i,j)], -ub[l])
-            JuMP.set_upper_bound(crdc[(l,i,j)], ub[l])
+            JuMP.set_lower_bound(crdc[(l,i,j)], -ub[(l,i,j)])
+            JuMP.set_upper_bound(crdc[(l,i,j)], ub[(l,i,j)])
         end
     end
 end
+
 "variable:  `cidc[j]` for `j` in `dcline`"
 function variable_dcline_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     bus = ref(pm, nw, :bus)
@@ -675,8 +676,8 @@ function variable_dcline_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cn
         end
 
         for (l,i,j) in ref(pm, nw, :arcs_dc)
-            JuMP.set_lower_bound(cidc[(l,i,j)], -ub[l])
-            JuMP.set_upper_bound(cidc[(l,i,j)], ub[l])
+            JuMP.set_lower_bound(cidc[(l,i,j)], -ub[(l,i,j)])
+            JuMP.set_upper_bound(cidc[(l,i,j)], ub[(l,i,j)])
         end
     end
 end
