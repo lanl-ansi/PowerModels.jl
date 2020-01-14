@@ -247,10 +247,10 @@ end
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 79804; atol = 1e0)
     end
-    @testset "14-bus variable bounds" begin
-       pm = build_model("../test/data/matpower/case14.m", IVRPowerModel, PowerModels.post_opf_iv)
-       @test check_variable_bounds(pm.model)
-   end
+   #  @testset "14-bus variable bounds" begin
+   #     pm = build_model("../test/data/matpower/case14.m", IVRPowerModel, PowerModels.post_opf_iv)
+   #     @test check_variable_bounds(pm.model)
+   # end
 end
 
 
