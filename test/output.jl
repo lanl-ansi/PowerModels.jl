@@ -20,6 +20,28 @@
         @test length(result["solution"]["bus"]) == 24
         @test length(result["solution"]["gen"]) == 33
     end
+
+    @testset "infeasible case" begin
+        # make sure code does not crash when ResultCount == 0
+        # change objective to linear so the case can load into cbc
+        data = parse_file("../test/data/matpower/case24.m")
+        for (i,gen) in data["gen"]
+            if gen["ncost"] > 2
+                gen["ncost"] = 2
+                gen["cost"] = gen["cost"][length(gen["cost"])-1:end]
+            end
+        end
+        result = run_opf(data, DCPPowerModel, cbc_solver)
+
+        @test haskey(result, "optimizer")
+        @test haskey(result, "termination_status")
+        @test haskey(result, "primal_status")
+        @test haskey(result, "dual_status")
+        @test haskey(result, "solve_time")
+        @test haskey(result, "solution")
+        @test !isnan(result["solve_time"])
+        @test length(result["solution"]) == 1
+    end
 end
 
 @testset "test branch flow output" begin

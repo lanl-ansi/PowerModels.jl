@@ -8,6 +8,7 @@ PowerModels.jl Change Log
 - Improved connected components computation time (#504)
 - Removed `Inf` bounds from variables (#630)
 - Removal of unused functions in `solution.jl`: `get_solution`, `add_generator_power_setpoint`, `add_storage_setpoint`, `add_branch_flow_setpoint`, `add_dcline_flow_setpoint` (breaking) (#637)
+- Fixed a solution reporting bug when the optimizer result count is zero
 - Added IVRForm (rectangular current-voltage formulation) (#622)
 
 

@@ -1,23 +1,46 @@
 ""
 function build_solution(pm::AbstractPowerModel, solve_time; solution_builder=solution_opf!)
-    # TODO @assert that the model is solved
-
     sol = _init_solution(pm)
-    data = Dict{String,Any}("name" => pm.data["name"])
 
+    # TODO replace with JuMP.result_count(pm.model) after version v0.21
+    # try-catch is needed until solvers reliably support ResultCount()
+    result_count = 1
+    try
+        result_count = _MOI.get(pm.model, _MOI.ResultCount())
+    catch
+        Memento.warn(_LOGGER, "the given optimizer does not provide the ResultCount() attribute, assuming the solver returned a solution which may be incorrect.");
+    end
+
+    if result_count > 0
+        if InfrastructureModels.ismultinetwork(pm.data)
+            sol["multinetwork"] = true
+            sol_nws = sol["nw"] = Dict{String,Any}()
+
+            for (n,nw_data) in pm.data["nw"]
+                sol_nw = sol_nws[n] = Dict{String,Any}()
+                sol_nw["baseMVA"] = nw_data["baseMVA"]
+                if haskey(nw_data, "conductors")
+                    sol_nw["conductors"] = nw_data["conductors"]
+                end
+                pm.cnw = parse(Int, n)
+                solution_builder(pm, sol_nw)
+            end
+        else
+            sol["baseMVA"] = pm.data["baseMVA"]
+            if haskey(pm.data, "conductors")
+                sol["conductors"] = pm.data["conductors"]
+            end
+            solution_builder(pm, sol)
+        end
+    else
+        Memento.warn(_LOGGER, "model has no results, solution cannot be built")
+    end
+
+    data = Dict{String,Any}("name" => pm.data["name"])
     if InfrastructureModels.ismultinetwork(pm.data)
-        sol["multinetwork"] = true
-        sol_nws = sol["nw"] = Dict{String,Any}()
         data_nws = data["nw"] = Dict{String,Any}()
 
         for (n,nw_data) in pm.data["nw"]
-            sol_nw = sol_nws[n] = Dict{String,Any}()
-            sol_nw["baseMVA"] = nw_data["baseMVA"]
-            if haskey(nw_data, "conductors")
-                sol_nw["conductors"] = nw_data["conductors"]
-            end
-            pm.cnw = parse(Int, n)
-            solution_builder(pm, sol_nw)
             data_nws[n] = Dict(
                 "name" => get(nw_data, "name", "anonymous"),
                 "bus_count" => length(nw_data["bus"]),
@@ -25,11 +48,6 @@ function build_solution(pm::AbstractPowerModel, solve_time; solution_builder=sol
             )
         end
     else
-        sol["baseMVA"] = pm.data["baseMVA"]
-        if haskey(pm.data, "conductors")
-            sol["conductors"] = pm.data["conductors"]
-        end
-        solution_builder(pm, sol)
         data["bus_count"] = length(pm.data["bus"])
         data["branch_count"] = length(pm.data["branch"])
     end
