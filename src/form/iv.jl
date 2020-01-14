@@ -4,13 +4,55 @@
 
 ""
 function variable_branch_current(pm::AbstractIVRModel; kwargs...)
-    variable_branch_current_rectangular(pm; kwargs...)
-    variable_branch_series_current_rectangular(pm; kwargs...)
+    variable_branch_current_real(pm; kwargs...)
+    variable_branch_current_imaginary(pm; kwargs...)
+
+    # store expressions in rectangular power variable space
+    p = Dict()
+    q = Dict()
+
+    for (l,i,j) in ref(pm, nw, :arcs_from)
+        vrf = var(pm, nw, cnd, :vr, i)
+        vif = var(pm, nw, cnd, :vi, i)
+        crf = var(pm, nw, cnd, :cr, (l,i,j))
+        cif = var(pm, nw, cnd, :ci, (l,i,j))
+
+        vrt = var(pm, nw, cnd, :vr, j)
+        vit = var(pm, nw, cnd, :vi, j)
+        crt = var(pm, nw, cnd, :cr, (l,j,i))
+        cit = var(pm, nw, cnd, :ci, (l,j,i))
+        p[(l,i,j)] = vrf*crf  + vif*cif
+        q[(l,i,j)] = vif*crf  - vrf*cif
+        p[(l,j,i)] = vrt*crt  + vit*cit
+        q[(l,j,i)] = vit*crt  - vrt*cit
+    end
+    var(pm, nw, cnd)[:p] = p
+    var(pm, nw, cnd)[:q] = q
+
+    variable_branch_series_current_real(pm; kwargs...)
+    variable_branch_series_current_imaginary(pm; kwargs...)
 end
 
 ""
 function variable_gen(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...)
-    variable_gen_current_rectangular(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
+    variable_gen_current_real(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
+    variable_gen_current_imaginary(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
+
+    # store active and reactive power expressions for use in objective + post processing
+    pg = Dict()
+    qg = Dict()
+    for (i,gen) in ref(pm, nw, :gen)
+        busid = gen["gen_bus"]
+        vr = var(pm, nw, cnd, :vr, busid)
+        vi = var(pm, nw, cnd, :vi, busid)
+        crg = var(pm, nw, cnd, :crg, i)
+        cig = var(pm, nw, cnd, :cig, i)
+        pg[i] = JuMP.@NLexpression(pm.model, vr*crg  + vi*cig)
+        qg[i] = JuMP.@NLexpression(pm.model, vi*crg  - vr*cig)
+    end
+    var(pm, nw, cnd)[:pg] = pg
+    var(pm, nw, cnd)[:qg] = qg
+
     if bounded
         for (i,gen) in ref(pm, nw, :gen)
             constraint_gen_active_power_limits(pm, i, cnd=cnd, nw=nw)
@@ -22,6 +64,30 @@ end
 ""
 function variable_dcline(pm::AbstractIVRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...)
     variable_dcline_current_rectangular(pm, cnd=cnd, nw=nw, bounded=bounded; kwargs...)
+    # store expressions in rectangular power variable space
+    p = Dict()
+    q = Dict()
+
+    for (l,i,j) in ref(pm, nw, :arcs_from_dc)
+        vrf = var(pm, nw, cnd, :vr, i)
+        vif = var(pm, nw, cnd, :vi, i)
+        crf = var(pm, nw, cnd, :crdc, (l,i,j))
+        cif = var(pm, nw, cnd, :cidc, (l,i,j))
+
+        vrt = var(pm, nw, cnd, :vr, j)
+        vit = var(pm, nw, cnd, :vi, j)
+        crt = var(pm, nw, cnd, :crdc, (l,j,i))
+        cit = var(pm, nw, cnd, :cidc, (l,j,i))
+
+        p[(l,i,j)] = JuMP.@NLexpression(pm.model, vrf*crf  + vif*cif)
+        q[(l,i,j)] = JuMP.@NLexpression(pm.model, vif*crf  - vrf*cif)
+        p[(l,j,i)] = JuMP.@NLexpression(pm.model, vrt*crt  + vit*cit)
+        q[(l,j,i)] = JuMP.@NLexpression(pm.model, vit*crt  - vrt*cit)
+    end
+
+    var(pm, nw, cnd)[:p_dc] = p
+    var(pm, nw, cnd)[:q_dc] = q
+    
     if bounded
         for (i,dcline) in ref(pm, nw, :dcline)
             constraint_dcline_power_limits_from(pm, i, cnd=cnd, nw=nw)
