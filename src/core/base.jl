@@ -135,52 +135,34 @@ con(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.
 con(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key][idx]
 
 
-function JuMP.optimize!(pm::AbstractPowerModel, optimizer::JuMP.OptimizerFactory)
-    Memento.warn(_LOGGER, "PowerModels overload of JuMP.optimize! is deprecated")
-
-    if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
-        _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
-    else
-        Memento.warn(_LOGGER, "Model already contains optimizer factory, cannot use optimizer specified in `solve_generic_model`")
-        _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
-    end
-
-    try
-        solve_time = _MOI.get(pm.model, _MOI.SolveTime())
-    catch
-        Memento.warn(_LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
-    end
-
-    return solve_time
-end
-
 ""
-function run_model(file::String, model_type::Type, optimizer, post_method; kwargs...)
+function run_model(file::String, model_type::Type, optimizer, build_method; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_model(data, model_type, optimizer, post_method; kwargs...)
+    return run_model(data, model_type, optimizer, build_method; kwargs...)
 end
 
 ""
-function run_model(data::Dict{String,<:Any}, model_type::Type, optimizer, post_method; ref_extensions=[], solution_builder=solution_opf!, kwargs...)
+function run_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method; ref_extensions=[], solution_builder=solution_opf!, kwargs...)
     #start_time = time()
-    pm = build_model(data, model_type, post_method; ref_extensions=ref_extensions, kwargs...)
+    pm = instantiate_model(data, model_type, build_method; ref_extensions=ref_extensions, kwargs...)
     #Memento.debug(_LOGGER, "pm model build time: $(time() - start_time)")
 
     #start_time = time()
-    result = optimize_model!(pm, optimizer; solution_builder=solution_builder)
+    result = optimize_model!(pm, optimizer=optimizer, solution_builder=solution_builder)
     #Memento.debug(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
 
     return result
 end
 
+
 ""
-function build_model(file::String, model_type::Type, post_method; kwargs...)
+function instantiate_model(file::String, model_type::Type, build_method; kwargs...)
     data = PowerModels.parse_file(file)
-    return build_model(data, model_type, post_method; kwargs...)
+    return instantiate_model(data, model_type, build_method; kwargs...)
 end
 
 ""
-function build_model(data::Dict{String,<:Any}, model_type::Type, post_method; ref_extensions=[], multinetwork=false, multiconductor=false, kwargs...)
+function instantiate_model(data::Dict{String,<:Any}, model_type::Type, build_method; ref_extensions=[], multinetwork=false, multiconductor=false, kwargs...)
     # NOTE, this model constructor will build the ref dict using the latest info from the data
 
     #start_time = time()
@@ -203,47 +185,30 @@ function build_model(data::Dict{String,<:Any}, model_type::Type, post_method; re
     Memento.debug(_LOGGER, "pm build ref time: $(time() - start_time)")
 
     start_time = time()
-    post_method(pm)
-    Memento.debug(_LOGGER, "pm post_method time: $(time() - start_time)")
+    build_method(pm)
+    Memento.debug(_LOGGER, "pm build_method time: $(time() - start_time)")
 
     return pm
 end
 
 
 ""
-function optimize_model!(pm::AbstractPowerModel; solution_builder = solution_opf!)
+function optimize_model!(pm::AbstractPowerModel; optimizer::Union{JuMP.OptimizerFactory,Nothing}=nothing, solution_builder = solution_opf!)
     start_time = time()
-    if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
-        Memento.error(_LOGGER, "Model does not contain an optimizer factory, one should be passed to `optimize_model!` or `solve_generic_model`")
-    end
 
-    _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
-
-    try
-        solve_time = _MOI.get(pm.model, _MOI.SolveTime())
-    catch
-        Memento.warn(_LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
-    end
-    Memento.debug(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
-
-    start_time = time()
-    result = build_solution(pm, solve_time; solution_builder = solution_builder)
-    Memento.debug(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
-
-    pm.solution = result["solution"]
-
-    return result
-end
-
-
-""
-function optimize_model!(pm::AbstractPowerModel, optimizer::JuMP.OptimizerFactory; solution_builder = solution_opf!)
-    start_time = time()
-    if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
-        _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
+    if optimizer == nothing
+        if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
+            Memento.error(_LOGGER, "no optimizer specified in `optimize_model!` or the given JuMP model.")
+        else
+            _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
+        end
     else
-        Memento.warn(_LOGGER, "Model already contains optimizer factory, cannot use optimizer specified in `solve_generic_model`")
-        _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
+        if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
+            _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
+        else
+            Memento.warn(_LOGGER, "Model already contains optimizer factory, cannot use optimizer specified in `solve_generic_model`")
+            _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
+        end
     end
 
     try
@@ -254,7 +219,7 @@ function optimize_model!(pm::AbstractPowerModel, optimizer::JuMP.OptimizerFactor
     Memento.debug(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
 
     start_time = time()
-    result = build_solution(pm, solve_time; solution_builder = solution_builder)
+    result = build_result(pm, solve_time; solution_builder = solution_builder)
     Memento.debug(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
 
     pm.solution = result["solution"]

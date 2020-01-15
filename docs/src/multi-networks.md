@@ -16,7 +16,7 @@ PowerModels.ismultinetwork
 For example, we can do the following:
 ```@example powermodels
 network_data = PowerModels.parse_file(case3file)
-pm = build_model(network_data, ACPPowerModel, PowerModels.post_opf)
+pm = instantiate_model(network_data, ACPPowerModel, PowerModels.build_opf)
 
 PowerModels.ismultinetwork(pm)
 ```
@@ -30,9 +30,9 @@ network_data3 = PowerModels.replicate(network_data, 3)
 ```
 Observe that the structure of `network_data3` is different from that of `network_data`, since it is a multi-network. The user can then modify each replicate of the network to vary in the corresponding parameter of interest. See [`test/common.jl`](https://github.com/lanl-ansi/PowerModels.jl/blob/master/test/common.jl) for examples on setting up valid Multi-Network data.
 
-To build a PowerModel from a multinetwork data dictionary (see [Building PowerModels from Network Data Dictionaries](@ref)), we supply `multinetwork=true` during the call to `build_generic_model` and replace `post_opf` with `post_mn_opf`,
+To build a PowerModel from a multinetwork data dictionary (see [Building PowerModels from Network Data Dictionaries](@ref)), we supply `multinetwork=true` during the call to `build_generic_model` and replace `build_opf` with `build_mn_opf`,
 ```@example powermodels
-pm3 = PowerModels.build_model(network_data3, ACPPowerModel, PowerModels.post_mn_opf, multinetwork=true)
+pm3 = PowerModels.instantiate_model(network_data3, ACPPowerModel, PowerModels.build_mn_opf, multinetwork=true)
 
 PowerModels.ismultinetwork(pm3)
 ```
@@ -43,7 +43,7 @@ PowerModels.ismultinetwork(pm3)
     ```julia
     data33 = PowerModels.replicate(data3, 3)
     ```
-    will result in an error. Moreover, `build_model()` (see )
+    will result in an error. Moreover, `instantiate_model()` (see )
 
 Because this is a common pattern of usage, we provide corresponding calls to `run_mn_opf` (which behaves analogously to `run_opf`, but for multinetwork data).
 

@@ -10,11 +10,11 @@ end
 
 ""
 function run_opf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, post_opf; kwargs...)
+    return run_model(file, model_type, optimizer, build_opf; kwargs...)
 end
 
 ""
-function post_opf(pm::AbstractPowerModel)
+function build_opf(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_branch_flow(pm)
@@ -51,11 +51,11 @@ end
 
 "a toy example of how to model with multi-networks"
 function run_mn_opf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, post_mn_opf; multinetwork=true, kwargs...)
+    return run_model(file, model_type, optimizer, build_mn_opf; multinetwork=true, kwargs...)
 end
 
 ""
-function post_mn_opf(pm::AbstractPowerModel)
+function build_mn_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n)
         variable_generation(pm, nw=n)
@@ -92,12 +92,12 @@ end
 
 
 "a toy example of how to model with multi-networks and storage"
-function run_mn_strg_opf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, post_mn_strg_opf; multinetwork=true, kwargs...)
+function run_mn_opf_strg(file, model_type::Type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, build_mn_opf_strg; multinetwork=true, kwargs...)
 end
 
 ""
-function post_mn_strg_opf(pm::AbstractPowerModel)
+function build_mn_opf_strg(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n)
         variable_generation(pm, nw=n)
@@ -162,16 +162,16 @@ Solves an opf using ptdfs with no explicit voltage or line flow variables.
 This formulation is most often used when a small subset of the line flow
 constraints are active in the data model.
 """
-function run_ptdf_opf(file, model_type::Type, optimizer; full_inverse=false, kwargs...)
+function run_opf_ptdf(file, model_type::Type, optimizer; full_inverse=false, kwargs...)
     if !full_inverse
-        return run_model(file, model_type, optimizer, post_ptdf_opf; ref_extensions=[ref_add_connected_components!,ref_add_sm!], solution_builder=solution_ptdf_opf!, kwargs...)
+        return run_model(file, model_type, optimizer, build_opf_ptdf; ref_extensions=[ref_add_connected_components!,ref_add_sm!], solution_builder=solution_opf_ptdf!, kwargs...)
     else
-        return run_model(file, model_type, optimizer, post_ptdf_opf; ref_extensions=[ref_add_connected_components!,ref_add_sm_inv!], solution_builder=solution_ptdf_opf!, kwargs...)
+        return run_model(file, model_type, optimizer, build_opf_ptdf; ref_extensions=[ref_add_connected_components!,ref_add_sm_inv!], solution_builder=solution_opf_ptdf!, kwargs...)
     end
 end
 
 ""
-function post_ptdf_opf(pm::AbstractPowerModel)
+function build_opf_ptdf(pm::AbstractPowerModel)
     variable_generation(pm)
 
     for i in ids(pm, :bus)
@@ -205,7 +205,7 @@ function post_ptdf_opf(pm::AbstractPowerModel)
 end
 
 ""
-function solution_ptdf_opf!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
+function solution_opf_ptdf!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
     add_setpoint_generator_power!(sol, pm)
 end
 

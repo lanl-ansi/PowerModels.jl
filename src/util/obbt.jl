@@ -83,7 +83,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
     Memento.info(_LOGGER, "maximum OBBT iterations set to default value of $max_iter")
     Memento.info(_LOGGER, "maximum time limit for OBBT set to default value of $time_limit seconds")
 
-    model_relaxation = build_model(data, model_type, PowerModels.post_opf)
+    model_relaxation = instantiate_model(data, model_type, PowerModels.build_opf)
     (ismultinetwork(model_relaxation)) && (Memento.error(_LOGGER, "OBBT is not supported for multi-networks"))
     (ismulticonductor(model_relaxation)) && (Memento.error(_LOGGER, "OBBT is not supported for multi-phase networks"))
 
@@ -100,7 +100,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
     status_pass = [_MOI.LOCALLY_SOLVED, _MOI.OPTIMAL]
 
     # compute initial relative gap between relaxation objective and upper_bound
-    result_relaxation = optimize_model!(model_relaxation, optimizer)
+    result_relaxation = optimize_model!(model_relaxation, optimizer=optimizer)
     current_relaxation_objective = result_relaxation["objective"]
     if upper_bound < current_relaxation_objective
         Memento.error(_LOGGER, "the upper bound provided to OBBT is not a valid ACOPF upper bound")
@@ -118,7 +118,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
     end
 
 
-    model_bt = build_model(data, model_type, PowerModels.post_opf)
+    model_bt = instantiate_model(data, model_type, PowerModels.build_opf)
     (upper_bound_constraint) && (_constraint_obj_bound(model_bt, upper_bound))
 
     stats = Dict{String,Any}()
@@ -185,7 +185,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
             # vm lower bound solve
             lb = NaN
             JuMP.@objective(model_bt.model, Min, vm[bus])
-            result_bt = optimize_model!(model_bt, optimizer)
+            result_bt = optimize_model!(model_bt, optimizer=optimizer)
             if (result_bt["termination_status"] == _MOI.LOCALLY_SOLVED || result_bt["termination_status"] == _MOI.OPTIMAL)
                 nlb = floor(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nlb > vm_lb[bus]) && (lb = nlb)
@@ -197,7 +197,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
             #vm upper bound solve
             ub = NaN
             JuMP.@objective(model_bt.model, Max, vm[bus])
-            result_bt = optimize_model!(model_bt, optimizer)
+            result_bt = optimize_model!(model_bt, optimizer=optimizer)
             if (result_bt["termination_status"] == _MOI.LOCALLY_SOLVED || result_bt["termination_status"] == _MOI.OPTIMAL)
                 nub = ceil(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nub < vm_ub[bus]) && (ub = nub)
@@ -253,7 +253,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
             # td lower bound solve
             lb = NaN
             JuMP.@objective(model_bt.model, Min, td[bp])
-            result_bt = optimize_model!(model_bt, optimizer)
+            result_bt = optimize_model!(model_bt, optimizer=optimizer)
             if (result_bt["termination_status"] == _MOI.LOCALLY_SOLVED || result_bt["termination_status"] == _MOI.OPTIMAL)
                 nlb = floor(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nlb > td_lb[bp]) && (lb = nlb)
@@ -265,7 +265,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
             # td upper bound solve
             ub = NaN
             JuMP.@objective(model_bt.model, Max, td[bp])
-            result_bt = optimize_model!(model_bt, optimizer)
+            result_bt = optimize_model!(model_bt, optimizer=optimizer)
             if (result_bt["termination_status"] == _MOI.LOCALLY_SOLVED || result_bt["termination_status"] == _MOI.OPTIMAL)
                 nub = ceil(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nub < td_ub[bp]) && (ub = nub)
@@ -321,7 +321,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
         # populate the modifications, update the data, and rebuild the bound-tightening model
         modifications = _create_modifications(model_bt, vm_lb, vm_ub, td_lb, td_ub)
         PowerModels.update_data!(data, modifications)
-        model_bt = build_model(data, model_type, PowerModels.post_opf)
+        model_bt = instantiate_model(data, model_type, PowerModels.build_opf)
         (upper_bound_constraint) && (_constraint_obj_bound(model_bt, upper_bound))
         vm = var(model_bt, :vm)
         td = var(model_bt, :td)

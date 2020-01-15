@@ -6,11 +6,11 @@
 
 ""
 function run_ots(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, post_ots; ref_extensions=[ref_add_on_off_va_bounds!], solution_builder = solution_ots!, kwargs...)
+    return run_model(file, model_type, optimizer, build_ots; ref_extensions=[ref_add_on_off_va_bounds!], solution_builder = solution_ots!, kwargs...)
 end
 
 ""
-function post_ots(pm::AbstractPowerModel)
+function build_ots(pm::AbstractPowerModel)
     variable_branch_indicator(pm)
     variable_voltage_on_off(pm)
     variable_generation(pm)

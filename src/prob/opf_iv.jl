@@ -1,10 +1,10 @@
 ""
 function run_opf_iv(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, post_opf_iv; kwargs...)
+    return run_model(file, model_constructor, optimizer, build_opf_iv; kwargs...)
 end
 
 ""
-function post_opf_iv(pm::AbstractPowerModel)
+function build_opf_iv(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_branch_current(pm)
 

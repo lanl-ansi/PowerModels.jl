@@ -25,7 +25,7 @@
     end
 
     @testset "README.md - JuMP Model Inspection" begin
-        pm = build_model("../test/data/matpower/case3.m", ACPPowerModel, PowerModels.post_opf)
+        pm = instantiate_model("../test/data/matpower/case3.m", ACPPowerModel, PowerModels.build_opf)
 
         #pretty print the model to the terminal
         #print(pm.model)
@@ -33,7 +33,7 @@
         @test JuMP.num_nl_constraints(pm.model) == 12
         @test JuMP.num_variables(pm.model) == 28
 
-        result = optimize_model!(pm, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
+        result = optimize_model!(pm, optimizer=JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 5906.88; atol = 1e0)

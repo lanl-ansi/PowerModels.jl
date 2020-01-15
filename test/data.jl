@@ -396,14 +396,14 @@ end
 
 @testset "test user ext init" begin
     @testset "3-bus case" begin
-        pm = build_model("../test/data/matpower/case3.m", ACPPowerModel, PowerModels.post_opf, ext = Dict(:some_data => "bloop"))
+        pm = instantiate_model("../test/data/matpower/case3.m", ACPPowerModel, PowerModels.build_opf, ext = Dict(:some_data => "bloop"))
 
         #println(pm.ext)
 
         @test haskey(pm.ext, :some_data)
         @test pm.ext[:some_data] == "bloop"
 
-        result = optimize_model!(pm, JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
+        result = optimize_model!(pm, optimizer=JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 5907; atol = 1e0)
@@ -592,7 +592,7 @@ end
      @testset "5-bus ac polar balance with storage" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
         data["branch"]["4"]["br_status"] = 0
-        result = PowerModels._run_strg_opf(data, ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = PowerModels._run_opf_strg(data, ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
         PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)
@@ -606,7 +606,7 @@ end
      @testset "5-bus dc balance with storage" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
         data["branch"]["4"]["br_status"] = 0
-        result = PowerModels._run_strg_opf(data, DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = PowerModels._run_opf_strg(data, DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
         PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)

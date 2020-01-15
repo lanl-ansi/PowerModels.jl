@@ -1,7 +1,7 @@
 TESTLOG = Memento.getlogger(PowerModels)
 
 "an example of building a multi-phase model in an extention package"
-function post_tp_opf(pm::AbstractPowerModel)
+function build_tp_opf(pm::AbstractPowerModel)
     for c in PowerModels.conductor_ids(pm)
         PowerModels.variable_voltage(pm, cnd=c)
         PowerModels.variable_generation(pm, cnd=c)
@@ -170,8 +170,8 @@ end
 
         @testset "3-bus 3-conductor case with theta_ref=pi" begin
             mp_data = build_mc_data!("../test/data/matpower/case3.m", conductors=3)
-            pm = PowerModels.build_model(mp_data, ACRPowerModel, PowerModels._post_mc_opf, multiconductor=true)
-            result = PowerModels.optimize_model!(pm, ipopt_solver)
+            pm = PowerModels.instantiate_model(mp_data, ACRPowerModel, PowerModels._build_mc_opf, multiconductor=true)
+            result = PowerModels.optimize_model!(pm, optimizer=ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 47267.9; atol = 1e-1)
@@ -267,7 +267,7 @@ end
         mp_strg_data = build_mc_data!("../test/data/matpower/case5_strg.m")
 
         @testset "ac 5-bus uc case" begin
-            result = PowerModels._run_uc_mc_opf(mp_uc_data, ACPPowerModel, juniper_solver)
+            result = PowerModels._run_mc_ucopf(mp_uc_data, ACPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 54810.0; atol = 1e-1)
@@ -275,7 +275,7 @@ end
         end
 
         @testset "ac 5-bus storage case" begin
-            result = PowerModels._run_uc_mc_opf(mp_strg_data, ACPPowerModel, juniper_solver)
+            result = PowerModels._run_mc_ucopf(mp_strg_data, ACPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 52633.8; atol = 1e-1)
@@ -283,7 +283,7 @@ end
 
 
         @testset "dc 5-bus uc case" begin
-            result = PowerModels._run_uc_mc_opf(mp_uc_data, DCPPowerModel, cbc_solver)
+            result = PowerModels._run_mc_ucopf(mp_uc_data, DCPPowerModel, cbc_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 52839.6; atol = 1e-1)
@@ -291,7 +291,7 @@ end
         end
 
         @testset "dc 5-bus storage case" begin
-            result = PowerModels._run_uc_mc_opf(mp_strg_data, DCPPowerModel, cbc_solver)
+            result = PowerModels._run_mc_ucopf(mp_strg_data, DCPPowerModel, cbc_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 52081.3; atol = 1e-1)
@@ -469,7 +469,7 @@ end
 
     @testset "multiconductor extensions" begin
         mp_data = build_mc_data!("../test/data/matpower/case3.m")
-        pm = build_model(mp_data, PowerModels.ACPPowerModel, post_tp_opf; multiconductor=true)
+        pm = instantiate_model(mp_data, PowerModels.ACPPowerModel, build_tp_opf; multiconductor=true)
 
         @test haskey(var(pm, pm.cnw), :cnd)
         @test length(var(pm, pm.cnw)) == 1

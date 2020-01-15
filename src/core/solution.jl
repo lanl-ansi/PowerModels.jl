@@ -1,5 +1,5 @@
 ""
-function build_solution(pm::AbstractPowerModel, solve_time; solution_builder=solution_opf!)
+function build_result(pm::AbstractPowerModel, solve_time; solution_builder=solution_opf!)
     sol = _init_solution(pm)
 
     # TODO replace with JuMP.result_count(pm.model) after version v0.21
