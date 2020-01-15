@@ -465,8 +465,10 @@ function variable_branch_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, cn
         end
 
         for (l,i,j) in ref(pm, nw, :arcs)
-            JuMP.set_lower_bound(cr[(l,i,j)], -ub[l])
-            JuMP.set_upper_bound(cr[(l,i,j)], ub[l])
+            if !isinf(ub[l])
+                JuMP.set_lower_bound(cr[(l,i,j)], -ub[l])
+                JuMP.set_upper_bound(cr[(l,i,j)], ub[l])
+            end
         end
     end
 end
@@ -498,8 +500,10 @@ function variable_branch_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cn
         end
 
         for (l,i,j) in ref(pm, nw, :arcs)
-            JuMP.set_lower_bound(ci[(l,i,j)], -ub[l])
-            JuMP.set_upper_bound(ci[(l,i,j)], ub[l])
+            if !isinf(ub[l])
+                JuMP.set_lower_bound(ci[(l,i,j)], -ub[l])
+                JuMP.set_upper_bound(ci[(l,i,j)], ub[l])
+            end
         end
     end
 end
@@ -538,8 +542,10 @@ function variable_branch_series_current_real(pm::AbstractPowerModel; nw::Int=pm.
         end
 
         for (l,i,j) in ref(pm, nw, :arcs_from)
-            JuMP.set_lower_bound(csr[(l,i,j)], -ub[l])
-            JuMP.set_upper_bound(csr[(l,i,j)], ub[l])
+            if !isinf(ub[l])
+                JuMP.set_lower_bound(csr[(l,i,j)], -ub[l])
+                JuMP.set_upper_bound(csr[(l,i,j)], ub[l])
+            end
         end
     end
 end
@@ -576,8 +582,10 @@ function variable_branch_series_current_imaginary(pm::AbstractPowerModel; nw::In
         end
 
         for (l,i,j) in ref(pm, nw, :arcs_from)
-            JuMP.set_lower_bound(csi[(l,i,j)], -ub[l])
-            JuMP.set_upper_bound(csi[(l,i,j)], ub[l])
+            if !isinf(ub[l])
+                JuMP.set_lower_bound(csi[(l,i,j)], -ub[l])
+                JuMP.set_upper_bound(csi[(l,i,j)], ub[l])
+            end
         end
     end
 end
