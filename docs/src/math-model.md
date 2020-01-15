@@ -124,3 +124,42 @@ Note that constraints $\eqref{eq_line_losses} - \eqref{eq_ohms_bfm}$ replace $\e
 - Eq. $\eqref{eq_series_power_flow}$ - implicit, substituted out before implementation
 - Eq. $\eqref{eq_complex_power_definition}$ - `constraint_model_voltage` in `constraint_template.jl`
 - Eq. $\eqref{eq_ohms_bfm}$ - `constraint_voltage_magnitude_difference` in `constraint_template.jl`
+
+
+## AC Optimal Power Flow in Current-Voltage Variables
+A variable $I^{s}_{ij}$, representing the current in the direction $i$ to $j$, through the series part of the pi-section, is used.
+The mathematical structure for a current-voltage formulation is conceived as:
+
+```math
+\begin{align}
+%
+\mbox{variables: } & \nonumber \\
+& I^g_k \;\; \forall k\in G \nonumber \\
+& V_i \;\; \forall i\in N \nonumber \\
+& I^{s}_{ij} \;\; \forall (i,j) \in E \cup E^R  \mbox{ - branch complex (series) current}\\
+& I_{ij} \;\; \forall (i,j) \in E \cup E^R  \mbox{ - branch complex (total) current} \label{var_total_current}\\
+%
+\mbox{minimize: } & \sum_{k \in G} c_{2k} (\Re(S^g_k))^2 + c_{1k}\Re(S^g_k) + c_{0k} \nonumber\\
+%
+\mbox{subject to: } & \nonumber \\
+& \angle V_{r} = 0  \;\; \forall r \in R \nonumber \\
+& S^{gl}_k \leq \Re(V_i (I^g_k)^*) + j \Im(V_i (I^g_k)^*) \leq S^{gu}_k \;\; \forall k \in G   \label{eq_complex_power_definition_gen}\\
+& v^l_i \leq |V_i| \leq v^u_i \;\; \forall i \in N \nonumber\\
+& \sum_{\substack{k \in G_i}} I^g_k - \sum_{\substack{k \in L_i}} (S^d_k/V_i)^{*} - \sum_{\substack{k \in S_i}} Y^s_k V_i = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} I_{ij} \;\; \forall i\in N  \label{eq_kcl_current} \\
+& I_{ij} =  \frac{I^{s}_{ij}}{T_{ij}^*} + Y^c_{ij} \frac{V_i}{|T_{ij}|^2}  \;\; \forall (i,j)\in E \label{eq_current_from} \\
+& I_{ji} = -I^{s}_{ij} + Y^c_{ji} V_j  \;\; \forall (i,j)\in E \label{eq_current_to} \\
+& \frac{V_i}{{T}_{ij}} = V_j + z_{ij} I^{s}_{ij}  \;\; \forall (i,j) \in E \label{eq_ohms_iv} \\
+& |S_{ij}| = |V_{i}| |I_{ij}| \leq s^u_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber\\
+& |I_{ij}| \leq i^u_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber\\
+& \theta^{\Delta l}_{ij} \leq \angle (V_i V^*_j) \leq \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \nonumber
+%
+\end{align}
+```
+
+### Mapping to function names
+- Eq. $\eqref{var_total_current}$ - total current flow into a branch on either end `variable_branch_current`
+- Eq. $\eqref{eq_complex_power_definition_gen}$  - models active and reactive power range of a generator `constraint_gen`
+- Eq. $\eqref{eq_kcl_current}$  - Kirchhoff's current law in current variables  `constraint_current_balance`
+- Eq. $\eqref{eq_current_from}$  - branch from-side current constraint in `constraint_current_from`
+- Eq. $\eqref{eq_current_to}$  - branch to-side current constraint in `constraint_current_to`
+- Eq. $\eqref{eq_ohms_iv}$  - Ohm's law `constraint_voltage_difference`

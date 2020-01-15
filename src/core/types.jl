@@ -1,6 +1,6 @@
 #================================================
     # exact non-convex models
-    ACPPowerModel, ACRPowerModel, ACTPowerModel
+    ACPPowerModel, ACRPowerModel, ACTPowerModel, IVRPowerModel
 
     # linear approximations
     DCPPowerModel, DCMPPowerModel, NFAPowerModel
@@ -117,6 +117,26 @@ mutable struct ACTPowerModel <: AbstractACTModel @pm_fields end
 
 
 
+""
+abstract type AbstractIVRModel <: AbstractACRModel end
+
+"""
+Current voltage formulation of AC OPF. The formulation uses rectangular
+coordinates for both current and voltage.
+Note that, even though Kirchhoff's circuit laws are linear in current and
+voltage, this formulation is nonconvex due to constants power loads/generators
+and apparent power limits.
+
+
+@techreport{ONeill2012,
+    author = {{O' Neill}, Richard P and Castillo, Anya and Cain, Mary B},
+    pages = {1--18},
+    title = {{The IV formulation and linear approximations of the ac optimal power flow problem}},
+    year = {2012}
+}
+```
+"""
+mutable struct IVRPowerModel <: AbstractIVRModel @pm_fields end
 
 
 ##### Linear Approximations #####
@@ -158,7 +178,7 @@ mutable struct DCPPowerModel <: AbstractDCPModel @pm_fields end
 abstract type AbstractDCMPPModel <: AbstractDCPModel end
 
 """
-Linearized 'DC' power flow model with polar voltage variables. 
+Linearized 'DC' power flow model with polar voltage variables.
 
 Similar to the DCPPowerModel with the following changes:
 

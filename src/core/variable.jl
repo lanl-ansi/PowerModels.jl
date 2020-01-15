@@ -271,6 +271,57 @@ function variable_reactive_generation(pm::AbstractPowerModel; nw::Int=pm.cnw, cn
     end
 end
 
+"variable: `crg[j]` for `j` in `gen`"
+function variable_gen_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    gen = ref(pm, nw, :gen)
+    bus = ref(pm, nw, :bus)
+
+    crg = var(pm, nw, cnd)[:crg] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_crg",
+        start = comp_start_value(ref(pm, nw, :gen, i), "crg_start", cnd)
+    )
+
+    if bounded
+        ub = Dict()
+        for (i, g) in gen
+            vmin = bus[g["gen_bus"]]["vmin"][cnd]
+            @assert vmin>0
+            s = sqrt(max(abs(g["pmax"][cnd]), abs(g["pmin"][cnd]))^2 + max(abs(g["qmax"][cnd]), abs(g["qmin"][cnd]))^2)
+            ub[i] = s/vmin
+        end
+
+        for (i, g) in gen
+            JuMP.set_lower_bound(crg[i], -ub[i])
+            JuMP.set_upper_bound(crg[i], ub[i])
+        end
+    end
+end
+
+"variable: `cig[j]` for `j` in `gen`"
+function variable_gen_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    gen = ref(pm, nw, :gen)
+    bus = ref(pm, nw, :bus)
+
+    cig = var(pm, nw, cnd)[:cig] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_cig",
+        start = comp_start_value(ref(pm, nw, :gen, i), "cig_start", cnd)
+    )
+
+    if bounded
+        ub = Dict()
+        for (i, g) in gen
+            vmin = bus[g["gen_bus"]]["vmin"][cnd]
+            @assert vmin>0
+            s = sqrt(max(abs(g["pmax"][cnd]), abs(g["pmin"][cnd]))^2 + max(abs(g["qmax"][cnd]), abs(g["qmin"][cnd]))^2)
+            ub[i] = s/vmin
+        end
+
+        for (i, g) in gen
+            JuMP.set_lower_bound(cig[i], -ub[i])
+            JuMP.set_upper_bound(cig[i], ub[i])
+        end
+    end
+end
 
 function variable_generation_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax=false)
     if !relax
@@ -388,6 +439,158 @@ function variable_reactive_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, c
     end
 end
 
+"variable: `cr[l,i,j]` for `(l,i,j)` in `arcs`"
+function variable_branch_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    branch = ref(pm, nw, :branch)
+    bus = ref(pm, nw, :bus)
+
+    cr = var(pm, nw, cnd)[:cr] = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_cr",
+        start = comp_start_value(ref(pm, nw, :branch, l), "cr_start", cnd)
+    )
+
+    if bounded
+        ub = Dict()
+        for (l,i,j) in ref(pm, nw, :arcs_from)
+            b = branch[l]
+            ub[l] = Inf
+            if haskey(b, "rate_a")
+                rate_fr = b["rate_a"][cnd]*b["tap"][cnd]
+                rate_to = b["rate_a"][cnd]
+                ub[l]  = max(rate_fr/bus[i]["vmin"][cnd], rate_to/bus[j]["vmin"][cnd])
+            end
+            if haskey(b, "c_rating_a")
+                ub[l] = b["c_rating_a"][cnd]
+            end
+        end
+
+        for (l,i,j) in ref(pm, nw, :arcs)
+            if !isinf(ub[l])
+                JuMP.set_lower_bound(cr[(l,i,j)], -ub[l])
+                JuMP.set_upper_bound(cr[(l,i,j)], ub[l])
+            end
+        end
+    end
+end
+
+
+"variable: `ci[l,i,j] ` for `(l,i,j)` in `arcs`"
+function variable_branch_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    branch = ref(pm, nw, :branch)
+    bus = ref(pm, nw, :bus)
+
+    ci = var(pm, nw, cnd)[:ci] = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_ci",
+        start = comp_start_value(ref(pm, nw, :branch, l), "ci_start", cnd)
+    )
+
+    if bounded
+        ub = Dict()
+        for (l,i,j) in ref(pm, nw, :arcs_from)
+            b = branch[l]
+            ub[l] = Inf
+            if haskey(b, "rate_a")
+                rate_fr = b["rate_a"][cnd]*b["tap"][cnd]
+                rate_to = b["rate_a"][cnd]
+                ub[l]  = max(rate_fr/bus[i]["vmin"][cnd], rate_to/bus[j]["vmin"][cnd])
+            end
+            if haskey(b, "c_rating_a")
+                ub[l] = b["c_rating_a"][cnd]
+            end
+        end
+
+        for (l,i,j) in ref(pm, nw, :arcs)
+            if !isinf(ub[l])
+                JuMP.set_lower_bound(ci[(l,i,j)], -ub[l])
+                JuMP.set_upper_bound(ci[(l,i,j)], ub[l])
+            end
+        end
+    end
+end
+
+
+"variable: `csr[l,i,j]` for `(l,i,j)` in `arcs_from`"
+function variable_branch_series_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    branch = ref(pm, nw, :branch)
+    bus = ref(pm, nw, :bus)
+
+    csr = var(pm, nw, cnd)[:csr] = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_csr",
+        start = comp_start_value(branch[l], "csr_start", cnd, 0.0)
+    )
+
+    if bounded
+        ub = Dict()
+        for (l,i,j) in ref(pm, nw, :arcs_from)
+            b = branch[l]
+            ub[l] = Inf
+            if haskey(b, "rate_a")
+                rate = b["rate_a"][cnd]*b["tap"][cnd]
+                y_fr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
+                y_to = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
+                shuntcurrent = max(y_fr*bus[i]["vmax"][cnd]^2, y_to*bus[j]["vmax"][cnd]^2)
+                seriescurrent = max(rate/bus[i]["vmin"][cnd], rate/bus[j]["vmin"][cnd])
+                ub[l] = seriescurrent + shuntcurrent
+            end
+            if haskey(b, "c_rating_a")
+                totalcurrent = b["c_rating_a"][cnd]
+                y_fr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
+                y_to = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
+                shuntcurrent = max(y_fr*bus[i]["vmax"][cnd]^2, y_to*bus[j]["vmax"][cnd]^2)
+                ub[l] = totalcurrent + shuntcurrent
+            end
+        end
+
+        for (l,i,j) in ref(pm, nw, :arcs_from)
+            if !isinf(ub[l])
+                JuMP.set_lower_bound(csr[(l,i,j)], -ub[l])
+                JuMP.set_upper_bound(csr[(l,i,j)], ub[l])
+            end
+        end
+    end
+end
+
+"variable: `csi[l,i,j] ` for `(l,i,j)` in `arcs_from`"
+function variable_branch_series_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    branch = ref(pm, nw, :branch)
+    bus = ref(pm, nw, :bus)
+    csi = var(pm, nw, cnd)[:csi] = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_$(cnd)_csi",
+        start = comp_start_value(branch[l], "csi_start", cnd, 0.0)
+    )
+
+    if bounded
+        ub = Dict()
+        for (l,i,j) in ref(pm, nw, :arcs_from)
+            b = branch[l]
+            ub[l] = Inf
+            if haskey(b, "rate_a")
+                rate = b["rate_a"][cnd]*b["tap"][cnd]
+                y_fr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
+                y_to = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
+                shuntcurrent = max(y_fr*bus[i]["vmax"][cnd]^2, y_to*bus[j]["vmax"][cnd]^2)
+                seriescurrent = max(rate/bus[i]["vmin"][cnd], rate/bus[j]["vmin"][cnd])
+                ub[l] = seriescurrent + shuntcurrent
+            end
+            if haskey(b, "c_rating_a")
+                totalcurrent = b["c_rating_a"][cnd]
+                y_fr = abs(b["g_fr"][cnd] + im*b["b_fr"][cnd])
+                y_to = abs(b["g_to"][cnd] + im*b["b_to"][cnd])
+                shuntcurrent = max(y_fr*bus[i]["vmax"][cnd]^2, y_to*bus[j]["vmax"][cnd]^2)
+                ub[l] = totalcurrent + shuntcurrent
+            end
+        end
+
+        for (l,i,j) in ref(pm, nw, :arcs_from)
+            if !isinf(ub[l])
+                JuMP.set_lower_bound(csi[(l,i,j)], -ub[l])
+                JuMP.set_upper_bound(csi[(l,i,j)], ub[l])
+            end
+        end
+    end
+end
+
+
 function variable_dcline_flow(pm::AbstractPowerModel; kwargs...)
     variable_active_dcline_flow(pm; kwargs...)
     variable_reactive_dcline_flow(pm; kwargs...)
@@ -457,7 +660,67 @@ function variable_reactive_dcline_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, c
     end
 end
 
+"variable: `crdc[j]` for `j` in `dcline`"
+function variable_dcline_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    bus = ref(pm, nw, :bus)
+    dcline = ref(pm, nw, :dcline)
 
+    crdc = var(pm, nw, cnd)[:crdc] = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_crdc",
+        start = comp_start_value(ref(pm, nw, :dcline, l), "crdc_start", cnd)
+    )
+
+    if bounded
+        ub = Dict()
+        for (l,i,j) in ref(pm, nw, :arcs_from_dc)
+            vmin_fr = bus[i]["vmin"][cnd]
+            vmin_to = bus[j]["vmin"][cnd]
+            @assert vmin_fr>0
+            @assert vmin_to>0
+            s_fr = sqrt(max(abs(dcline[l]["pmaxf"][cnd]), abs(dcline[l]["pminf"][cnd]))^2 + max(abs(dcline[l]["qmaxf"][cnd]), abs(dcline[l]["qminf"][cnd]))^2)
+            s_to = sqrt(max(abs(dcline[l]["pmaxt"][cnd]), abs(dcline[l]["pmint"][cnd]))^2 + max(abs(dcline[l]["qmaxt"][cnd]), abs(dcline[l]["qmint"][cnd]))^2)
+            imax = max(s_fr,s_to)/ min(vmin_fr, vmin_to)
+            ub[(l,i,j)] = imax
+            ub[(l,j,i)] = imax
+        end
+
+        for (l,i,j) in ref(pm, nw, :arcs_dc)
+            JuMP.set_lower_bound(crdc[(l,i,j)], -ub[(l,i,j)])
+            JuMP.set_upper_bound(crdc[(l,i,j)], ub[(l,i,j)])
+        end
+    end
+end
+
+"variable:  `cidc[j]` for `j` in `dcline`"
+function variable_dcline_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+    bus = ref(pm, nw, :bus)
+    dcline = ref(pm, nw, :dcline)
+
+    cidc = var(pm, nw, cnd)[:cidc] = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_cidc",
+        start = comp_start_value(ref(pm, nw, :dcline, l), "cidc_start", cnd)
+    )
+
+    if bounded
+        ub = Dict()
+        for (l,i,j) in ref(pm, nw, :arcs_from_dc)
+            vmin_fr = bus[i]["vmin"][cnd]
+            vmin_to = bus[j]["vmin"][cnd]
+            @assert vmin_fr>0
+            @assert vmin_to>0
+            s_fr = sqrt(max(abs(dcline[l]["pmaxf"][cnd]), abs(dcline[l]["pminf"][cnd]))^2 + max(abs(dcline[l]["qmaxf"][cnd]), abs(dcline[l]["qminf"][cnd]))^2)
+            s_to = sqrt(max(abs(dcline[l]["pmaxt"][cnd]), abs(dcline[l]["pmint"][cnd]))^2 + max(abs(dcline[l]["qmaxt"][cnd]), abs(dcline[l]["qmint"][cnd]))^2)
+            imax = max(s_fr,s_to)/ min(vmin_fr, vmin_to)
+            ub[(l,i,j)] = imax
+            ub[(l,j,i)] = imax
+        end
+
+        for (l,i,j) in ref(pm, nw, :arcs_dc)
+            JuMP.set_lower_bound(cidc[(l,i,j)], -ub[(l,i,j)])
+            JuMP.set_upper_bound(cidc[(l,i,j)], ub[(l,i,j)])
+        end
+    end
+end
 
 function variable_switch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax=false)
     if !relax

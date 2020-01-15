@@ -225,6 +225,18 @@ end
             end
         end
 
+
+        @testset "iv 5-bus case" begin
+            result = PowerModels._run_mc_opf_iv(mp_data, IVRPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 54468.5; atol = 1e-1)
+            for c in 1:mp_data["conductors"]
+                @test isapprox(result["solution"]["gen"]["1"]["pg"][c],  0.4; atol = 1e-3)
+                @test isapprox(result["solution"]["bus"]["2"]["va"][c], -0.0139117; atol = 1e-4)
+            end
+        end
+
         @testset "dc 5-bus case" begin
             result = PowerModels._run_mc_opf(mp_data, DCPPowerModel, ipopt_solver)
 

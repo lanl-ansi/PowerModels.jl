@@ -236,7 +236,7 @@ TESTLOG = Memento.getlogger(PowerModels)
             @test isapprox(result["objective"], 87886.5; atol = 1e0)
         end
 
-        @testset "test ac polar opf" begin
+        @testset "test ac rectangular opf" begin
             result = PowerModels.run_mn_opf(mn_data, ACRPowerModel, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED

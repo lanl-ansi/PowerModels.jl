@@ -2,18 +2,22 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.14.0
 - Changed post_* function names to build_* (#611) (breaking)
 - Updated core function names to instantiate_model and build_result (breaking)
 - Made problem naming more consistent (#644) (breaking)
 - Cleaned up model optimization functions (#643) (breaking)
 
-### Staged
+### v0.13.2
 - Added native DC Power Flow solver and AdmittanceMatrix data structures
 - Added PTDF-based OPF problem specification
 - Added iterative flow limit cut OPF solvers (#619)
+- Added IVRPowerModel (rectangular current-voltage formulation) (#622)
 - Improved connected components computation time (#504)
 - Removed `Inf` bounds from variables (#630)
-- Removal of unused functions in `solution.jl`: `get_solution`, `add_generator_power_setpoint`, `add_storage_setpoint`, `add_branch_flow_setpoint`, `add_dcline_flow_setpoint` (breaking) (#637)
+- Removed unused functions in `solution.jl`: `get_solution`, `add_generator_power_setpoint`, `add_storage_setpoint`, `add_branch_flow_setpoint`, `add_dcline_flow_setpoint` (breaking) (#637)
 - Fixed a solution reporting bug when the optimizer result count is zero
 
 ### v0.13.1
