@@ -1,10 +1,10 @@
 ""
 function run_pf_bf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, post_pf_bf; kwargs...)
+    return run_model(file, model_type, optimizer, build_pf_bf; kwargs...)
 end
 
 ""
-function post_pf_bf(pm::AbstractPowerModel)
+function build_pf_bf(pm::AbstractPowerModel)
     variable_voltage(pm, bounded = false)
     variable_generation(pm, bounded = false)
     variable_branch_flow(pm, bounded = false)

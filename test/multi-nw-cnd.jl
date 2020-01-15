@@ -225,7 +225,7 @@
         mn_mc_data = build_mn_mc_data!("../test/data/matpower/case5_strg.m")
 
         @testset "ac 5-bus storage case" begin
-            result = PowerModels._run_mn_mc_strg_opf(mn_mc_data, PowerModels.ACPPowerModel, ipopt_solver)
+            result = PowerModels._run_mn_mc_opf_strg(mn_mc_data, PowerModels.ACPPowerModel, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 1.59445e5; atol = 1e2)
@@ -234,7 +234,7 @@
         #=
         # numerical error on linux
         @testset "dc 5-bus storage case" begin
-            result = PowerModels._run_mn_mc_strg_opf(mn_mc_data, PowerModels.DCPPowerModel, ipopt_solver)
+            result = PowerModels._run_mn_mc_opf_strg(mn_mc_data, PowerModels.DCPPowerModel, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 1.57804e5; atol = 1e2)
@@ -244,7 +244,7 @@
         #=
         # base case not yet implemented
         @testset "soc 5-bus storage case" begin
-            result = PowerModels._run_mn_mc_strg_opf(mn_mc_data, SOCWRPowerModel, ipopt_solver)
+            result = PowerModels._run_mn_mc_opf_strg(mn_mc_data, SOCWRPowerModel, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 69827.3; atol = 1e-1)
@@ -252,7 +252,7 @@
         =#
 
         @testset "nfa 5 bus storage case" begin
-            result = PowerModels._run_mn_mc_strg_opf(mn_mc_data, PowerModels.NFAPowerModel, ipopt_solver)
+            result = PowerModels._run_mn_mc_opf_strg(mn_mc_data, PowerModels.NFAPowerModel, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 132030.0; atol = 1e2)
