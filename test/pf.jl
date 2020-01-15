@@ -407,7 +407,7 @@ end
     # @testset "3-bus case" begin
     #     data = PowerModels.parse_file("../test/data/matpower/case3.m")
     #     result = run_dc_pf(data, ipopt_solver)
-    #     native = solve_dc_pf(data)
+    #     native = compute_dc_pf(data)
 
     #     for (i,bus) in data["bus"]
     #         opt_val = result["solution"]["bus"][i]["va"]
@@ -418,7 +418,7 @@ end
     @testset "5-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         result = run_dc_pf(data, ipopt_solver)
-        native = solve_dc_pf(data)
+        native = compute_dc_pf(data)
 
         for (i,bus) in data["bus"]
             opt_val = result["solution"]["bus"][i]["va"]
@@ -429,7 +429,7 @@ end
     @testset "5-bus asymmetric case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_asym.m")
         result = run_dc_pf(data, ipopt_solver)
-        native = solve_dc_pf(data)
+        native = compute_dc_pf(data)
 
         for (i,bus) in data["bus"]
             opt_val = result["solution"]["bus"][i]["va"]
@@ -441,7 +441,7 @@ end
     # @testset "6-bus case" begin
     #     data = PowerModels.parse_file("../test/data/matpower/case6.m")
     #     result = run_dc_pf(data, ipopt_solver)
-    #     native = solve_dc_pf(data)
+    #     native = compute_dc_pf(data)
 
     #     for (i,bus) in data["bus"]
     #         opt_val = result["solution"]["bus"][i]["va"]
@@ -452,7 +452,7 @@ end
     @testset "24-bus rts case" begin
         data = PowerModels.parse_file("../test/data/matpower/case24.m")
         result = run_dc_pf(data, ipopt_solver)
-        native = solve_dc_pf(data)
+        native = compute_dc_pf(data)
 
         for (i,bus) in data["bus"]
             opt_val = result["solution"]["bus"][i]["va"]

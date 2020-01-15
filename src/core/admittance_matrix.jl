@@ -261,7 +261,7 @@ calc_bus_injection_active(data::Dict{String,<:Any}) = calc_bus_injection(data)[1
 """
 computes a dc power flow based on the susceptance matrix of the network data
 """
-function solve_dc_pf(data::Dict{String,<:Any})
+function compute_dc_pf(data::Dict{String,<:Any})
     #TODO check single connected component
 
     sm = calc_susceptance_matrix(data)

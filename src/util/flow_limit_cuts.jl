@@ -128,7 +128,7 @@ function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
     result = optimize_model!(pm, optimizer; solution_builder=solution_ptdf_opf!)
     update_data!(data, result["solution"])
 
-    solution = solve_dc_pf(data)
+    solution = compute_dc_pf(data)
     update_data!(data, solution)
 
     flow = calc_branch_flow_dc(data)
@@ -176,7 +176,7 @@ function run_ptdf_opf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
 
             update_data!(data, result["solution"])
 
-            solution = solve_dc_pf(data)
+            solution = compute_dc_pf(data)
             update_data!(data, solution)
 
             flow = calc_branch_flow_dc(data)
