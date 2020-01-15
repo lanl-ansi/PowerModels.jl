@@ -264,7 +264,7 @@ function _post_uc_opf(pm::AbstractPowerModel)
 
     variable_storage_indicator(pm)
     variable_storage_mi_on_off(pm)
-    
+
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
 
@@ -287,7 +287,7 @@ function _post_uc_opf(pm::AbstractPowerModel)
     for i in ids(pm, :bus)
         constraint_power_balance(pm, i)
     end
-    
+
     for i in ids(pm, :storage)
         constraint_storage_state(pm, i)
         constraint_storage_complementarity_mi(pm, i)
@@ -327,12 +327,12 @@ function _post_uc_mc_opf(pm::AbstractPowerModel)
 
     for c in conductor_ids(pm)
         variable_voltage(pm, cnd=c)
-        
+
         variable_generation_on_off(pm, cnd=c)
-        
+
         variable_active_storage(pm, cnd=c)
         variable_reactive_storage(pm, cnd=c)
-        
+
         variable_branch_flow(pm, cnd=c)
         variable_dcline_flow(pm, cnd=c)
 
@@ -513,6 +513,51 @@ end
 
 
 
+
+""
+function _run_mc_opf_iv(file, model_type::Type, optimizer; kwargs...)
+    return run_model(file, model_type, optimizer, _post_mc_opf_iv; multiconductor=true, kwargs...)
+end
+
+""
+function _post_mc_opf_iv(pm::AbstractPowerModel)
+    for c in conductor_ids(pm)
+        variable_voltage(pm, cnd=c)
+        variable_branch_current(pm, cnd=c)
+
+        variable_gen(pm, cnd=c)
+        variable_dcline(pm, cnd=c)
+
+
+        for i in ids(pm, :ref_buses)
+            constraint_theta_ref(pm, i, cnd=c)
+        end
+
+        for i in ids(pm, :bus)
+            constraint_current_balance(pm, i, cnd=c)
+        end
+
+        for i in ids(pm, :branch)
+            constraint_current_from(pm, i, cnd=c)
+            constraint_current_to(pm, i, cnd=c)
+
+            constraint_voltage_drop(pm, i, cnd=c)
+            constraint_voltage_angle_difference(pm, i, cnd=c)
+
+            constraint_thermal_limit_from(pm, i, cnd=c)
+            constraint_thermal_limit_to(pm, i, cnd=c)
+        end
+
+        for i in ids(pm, :dcline)
+            constraint_dcline(pm, i, cnd=c)
+        end
+    end
+
+    objective_min_fuel_and_flow_cost(pm)
+end
+
+
+
 ""
 function _run_mn_mc_opf(file, model_type::Type, optimizer; kwargs...)
     return run_model(file, model_type, optimizer, _post_mn_mc_opf; multinetwork=true, multiconductor=true, kwargs...)
@@ -618,7 +663,7 @@ function _post_strg_mi_opf(pm::AbstractPowerModel)
     variable_storage_mi(pm)
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
-    
+
     objective_min_fuel_and_flow_cost(pm)
 
     constraint_model_voltage(pm)

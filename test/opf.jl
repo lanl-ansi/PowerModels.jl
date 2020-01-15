@@ -174,7 +174,7 @@ end
         @test isapprox(result["objective"], 1005.31; atol = 1e0)
     end
     @testset "5-bus with pwl costs" begin
-        result = run_ac_opf("../test/data/matpower/case5_pwlc.m", ipopt_solver)
+        result = run_opf("../test/data/matpower/case5_pwlc.m", ACTPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 42895; atol = 1e0)
@@ -199,6 +199,60 @@ end
         @test check_variable_bounds(m)
     end
 end
+
+
+@testset "test iv opf" begin
+    @testset "3-bus case" begin
+        result = run_opf_iv("../test/data/matpower/case3.m", IVRPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 5907; atol = 1e0)
+    end
+    @testset "5-bus asymmetric case" begin
+        result = run_opf_iv("../test/data/matpower/case5_asym.m", IVRPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 17551; atol = 1e0)
+    end
+    @testset "5-bus gap case" begin
+        result = run_opf_iv("../test/data/matpower/case5_gap.m", IVRPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], -27497.7; atol = 1e2) #numerically challenging , returns 27438.7
+    end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf_iv("../test/data/pti/case5_alc.raw", IVRPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 1005.31; atol = 1e0)
+    end
+
+    @testset "5-bus with pwl costs" begin
+        result = run_opf_iv("../test/data/matpower/case5_pwlc.m", IVRPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 42895; atol = 1e0)
+    end
+    @testset "6-bus case" begin
+        result = run_opf_iv("../test/data/matpower/case6.m", IVRPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 11625.3; atol = 1e0)
+        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
+    end
+    @testset "24-bus rts case" begin
+        result = run_opf_iv("../test/data/matpower/case24.m", IVRPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 79804; atol = 1e0)
+    end
+    @testset "14-bus variable bounds" begin
+       pm = build_model("../test/data/matpower/case14.m", IVRPowerModel, PowerModels.post_opf_iv)
+       @test check_variable_bounds(pm.model)
+   end
+end
+
 
 
 @testset "test dc opf" begin
@@ -267,7 +321,7 @@ end
         @test isapprox(result["solution"]["bus"]["2"]["va"],  0.0017285; atol = 1e-7)
         @test isapprox(result["solution"]["bus"]["3"]["va"], 0.0120486; atol = 1e-7)
         @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-7)
-    
+
     end
     # TODO verify this is really infeasible
     #@testset "24-bus rts case" begin
@@ -909,4 +963,3 @@ end
     end
 
 end
-

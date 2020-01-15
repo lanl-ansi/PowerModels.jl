@@ -187,7 +187,7 @@ end
 
 
 
-@testset "test opf with swtiches" begin
+@testset "test opf with switches" begin
 
     @testset "test ac opf" begin
         @testset "5-bus sw case" begin
@@ -549,4 +549,3 @@ end
         @test isapprox(result["objective"], 79805; atol = 1e0)
     end
 end
-

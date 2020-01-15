@@ -9,6 +9,8 @@ PowerModels.jl Change Log
 - Removed `Inf` bounds from variables (#630)
 - Removal of unused functions in `solution.jl`: `get_solution`, `add_generator_power_setpoint`, `add_storage_setpoint`, `add_branch_flow_setpoint`, `add_dcline_flow_setpoint` (breaking) (#637)
 - Fixed a solution reporting bug when the optimizer result count is zero
+- Added IVRForm (rectangular current-voltage formulation) (#622)
+
 
 ### v0.13.1
 - Added DCMPPowerModel for replication of Matpower's DC model (#612)
@@ -16,6 +18,7 @@ PowerModels.jl Change Log
 - Updates for SCS v0.6.3 (#634)
 - Fixed quadratic terms in nonlinear objectives (#621)
 - Fixed incorrect flow bounds based on current flow limits (#631)
+
 
 ### v0.13.0
 - Added SOC formulation of the storage model

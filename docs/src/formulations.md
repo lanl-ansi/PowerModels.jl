@@ -7,6 +7,7 @@ AbstractACPModel <: AbstractPowerModel
 AbstractDCPModel <: AbstractPowerModel
 AbstractWRModel <: AbstractPowerModel
 AbstractWModel <: AbstractPowerModel
+AbstractIVRModel <: AbstractPowerModel
 ```
 
 ## Power Models
@@ -15,6 +16,8 @@ Each of these forms can be used as the model parameter for a PowerModel:
 ACPPowerModel <: AbstractACPForm
 
 DCPPowerModel <: AbstractDCPForm
+
+IVRPowerModel <: AbstractIVRModel
 
 SOCWRPowerModel <: AbstractWRForm
 QCRMPowerModel <: AbstractWRForm
