@@ -40,21 +40,21 @@ end
 
 
 ""
-function constraint_power_balance(pm::AbstractACPModel, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
-    vm   = var(pm, n, c, :vm, i)
-    p    = get(var(pm, n, c),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
-    q    = get(var(pm, n, c),    :q, Dict()); _check_var_keys(q, bus_arcs, "reactive power", "branch")
-    pg   = get(var(pm, n, c),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
-    qg   = get(var(pm, n, c),   :qg, Dict()); _check_var_keys(qg, bus_gens, "reactive power", "generator")
-    ps   = get(var(pm, n, c),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
-    qs   = get(var(pm, n, c),   :qs, Dict()); _check_var_keys(qs, bus_storage, "reactive power", "storage")
-    psw  = get(var(pm, n, c),  :psw, Dict()); _check_var_keys(psw, bus_arcs_sw, "active power", "switch")
-    qsw  = get(var(pm, n, c),  :qsw, Dict()); _check_var_keys(qsw, bus_arcs_sw, "reactive power", "switch")
-    p_dc = get(var(pm, n, c), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
-    q_dc = get(var(pm, n, c), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
+function constraint_power_balance(pm::AbstractACPModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+    vm   = var(pm, n, :vm, i)
+    p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
+    q    = get(var(pm, n),    :q, Dict()); _check_var_keys(q, bus_arcs, "reactive power", "branch")
+    pg   = get(var(pm, n),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
+    qg   = get(var(pm, n),   :qg, Dict()); _check_var_keys(qg, bus_gens, "reactive power", "generator")
+    ps   = get(var(pm, n),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
+    qs   = get(var(pm, n),   :qs, Dict()); _check_var_keys(qs, bus_storage, "reactive power", "storage")
+    psw  = get(var(pm, n),  :psw, Dict()); _check_var_keys(psw, bus_arcs_sw, "active power", "switch")
+    qsw  = get(var(pm, n),  :qsw, Dict()); _check_var_keys(qsw, bus_arcs_sw, "reactive power", "switch")
+    p_dc = get(var(pm, n), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
+    q_dc = get(var(pm, n), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
 
 
-    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model,
+    con(pm, n, :kcl_p)[i] = JuMP.@constraint(pm.model,
         sum(p[a] for a in bus_arcs)
         + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(psw[a_sw] for a_sw in bus_arcs_sw)
@@ -64,7 +64,7 @@ function constraint_power_balance(pm::AbstractACPModel, n::Int, c::Int, i::Int, 
         - sum(pd for pd in values(bus_pd))
         - sum(gs for gs in values(bus_gs))*vm^2
     )
-    con(pm, n, c, :kcl_q)[i] = JuMP.@constraint(pm.model,
+    con(pm, n, :kcl_q)[i] = JuMP.@constraint(pm.model,
         sum(q[a] for a in bus_arcs)
         + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
@@ -126,13 +126,13 @@ p[f_idx] ==  (g+g_fr)/tm*v[f_bus]^2 + (-g*tr+b*ti)/tm*(v[f_bus]*v[t_bus]*cos(t[f
 q[f_idx] == -(b+b_fr)/tm*v[f_bus]^2 - (-b*tr-g*ti)/tm*(v[f_bus]*v[t_bus]*cos(t[f_bus]-t[t_bus])) + (-g*tr+b*ti)/tm*(v[f_bus]*v[t_bus]*sin(t[f_bus]-t[t_bus]))
 ```
 """
-function constraint_ohms_yt_from(pm::AbstractACPModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
-    p_fr  = var(pm, n, c,  :p, f_idx)
-    q_fr  = var(pm, n, c,  :q, f_idx)
-    vm_fr = var(pm, n, c, :vm, f_bus)
-    vm_to = var(pm, n, c, :vm, t_bus)
-    va_fr = var(pm, n, c, :va, f_bus)
-    va_to = var(pm, n, c, :va, t_bus)
+function constraint_ohms_yt_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    p_fr  = var(pm, n,  :p, f_idx)
+    q_fr  = var(pm, n,  :q, f_idx)
+    vm_fr = var(pm, n, :vm, f_bus)
+    vm_to = var(pm, n, :vm, t_bus)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
 
     JuMP.@NLconstraint(pm.model, p_fr ==  (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
     JuMP.@NLconstraint(pm.model, q_fr == -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
@@ -146,13 +146,13 @@ p[t_idx] ==  (g+g_to)*v[t_bus]^2 + (-g*tr-b*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[t_bu
 q[t_idx] == -(b+b_to)*v[t_bus]^2 - (-b*tr+g*ti)/tm*(v[t_bus]*v[f_bus]*cos(t[f_bus]-t[t_bus])) + (-g*tr-b*ti)/tm*(v[t_bus]*v[f_bus]*sin(t[t_bus]-t[f_bus]))
 ```
 """
-function constraint_ohms_yt_to(pm::AbstractACPModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
-    p_to  = var(pm, n, c,  :p, t_idx)
-    q_to  = var(pm, n, c,  :q, t_idx)
-    vm_fr = var(pm, n, c, :vm, f_bus)
-    vm_to = var(pm, n, c, :vm, t_bus)
-    va_fr = var(pm, n, c, :va, f_bus)
-    va_to = var(pm, n, c, :va, t_bus)
+function constraint_ohms_yt_to(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
+    p_to  = var(pm, n,  :p, t_idx)
+    q_to  = var(pm, n,  :q, t_idx)
+    vm_fr = var(pm, n, :vm, f_bus)
+    vm_to = var(pm, n, :vm, t_bus)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
 
     JuMP.@NLconstraint(pm.model, p_to ==  (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
     JuMP.@NLconstraint(pm.model, q_to == -(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )

@@ -14,17 +14,17 @@ end
 
 # Generic thermal limit constraint
 "`p[f_idx]^2 + q[f_idx]^2 <= rate_a^2`"
-function constraint_thermal_limit_from(pm::AbstractPowerModel, n::Int, c::Int, f_idx, rate_a)
-    p_fr = var(pm, n, c, :p, f_idx)
-    q_fr = var(pm, n, c, :q, f_idx)
+function constraint_thermal_limit_from(pm::AbstractPowerModel, n::Int, f_idx, rate_a)
+    p_fr = var(pm, n, :p, f_idx)
+    q_fr = var(pm, n, :q, f_idx)
 
     JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2)
 end
 
 "`p[t_idx]^2 + q[t_idx]^2 <= rate_a^2`"
-function constraint_thermal_limit_to(pm::AbstractPowerModel, n::Int, c::Int, t_idx, rate_a)
-    p_to = var(pm, n, c, :p, t_idx)
-    q_to = var(pm, n, c, :q, t_idx)
+function constraint_thermal_limit_to(pm::AbstractPowerModel, n::Int, t_idx, rate_a)
+    p_to = var(pm, n, :p, t_idx)
+    q_to = var(pm, n, :q, t_idx)
 
     JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2)
 end

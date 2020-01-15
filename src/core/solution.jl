@@ -197,19 +197,11 @@ function add_setpoint!(
     inactive_status_value = 0,
 )
 
-    if conductorless
-        has_variable_symbol = haskey(var(pm, pm.cnw), variable_symbol)
-    else
-        has_variable_symbol = haskey(var(pm, pm.cnw, pm.ccnd), variable_symbol)
-    end
+    has_variable_symbol = haskey(var(pm, pm.cnw), variable_symbol)
 
     variables = []
     if has_variable_symbol
-        if conductorless
-            variables = var(pm, pm.cnw, variable_symbol)
-        else
-            variables = var(pm, pm.cnw, pm.ccnd, variable_symbol)
-        end
+        variables = var(pm, pm.cnw, variable_symbol)
     end
 
     if !has_variable_symbol || (!isa(variables, JuMP.VariableRef) && length(variables) == 0)

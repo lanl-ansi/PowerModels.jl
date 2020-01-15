@@ -4,36 +4,32 @@
 ################################################################################
 
 
-function comp_start_value(comp::Dict{String,<:Any}, key::String, conductor::Int, default=0.0)
-    if haskey(comp, key)
-        vals = comp[key]
-        return conductor_value(vals, conductor)
-    end
-    return default
+function comp_start_value(comp::Dict{String,<:Any}, key::String, default=0.0)
+    return get(comp, key, default)
 end
 
 
 "variable: `t[i]` for `i` in `bus`es"
-function variable_voltage_angle(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool = true)
-    var(pm, nw, cnd)[:va] = JuMP.@variable(pm.model,
-        [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_va",
-        start = comp_start_value(ref(pm, nw, :bus, i), "va_start", cnd)
+function variable_voltage_angle(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool = true)
+    var(pm, nw)[:va] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :bus)], base_name="$(nw)_va",
+        start = comp_start_value(ref(pm, nw, :bus, i), "va_start")
     )
 end
 
 "variable: `v[i]` for `i` in `bus`es"
-function variable_voltage_magnitude(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+function variable_voltage_magnitude(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded = true)
     if bounded
-        var(pm, nw, cnd)[:vm] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_vm",
-            lower_bound = ref(pm, nw, :bus, i, "vmin", cnd),
-            upper_bound = ref(pm, nw, :bus, i, "vmax", cnd),
-            start = comp_start_value(ref(pm, nw, :bus, i), "vm_start", cnd, 1.0)
+        var(pm, nw)[:vm] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :bus)], base_name="$(nw)_vm",
+            lower_bound = ref(pm, nw, :bus, i, "vmin"),
+            upper_bound = ref(pm, nw, :bus, i, "vmax"),
+            start = comp_start_value(ref(pm, nw, :bus, i), "vm_start", 1.0)
         )
     else
-        var(pm, nw, cnd)[:vm] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :bus)], base_name="$(nw)_$(cnd)_vm",
-            start = comp_start_value(ref(pm, nw, :bus, i), "vm_start", cnd, 1.0)
+        var(pm, nw)[:vm] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :bus)], base_name="$(nw)_vm",
+            start = comp_start_value(ref(pm, nw, :bus, i), "vm_start", 1.0)
         )
     end
 end
@@ -238,35 +234,35 @@ end
 
 
 "variable: `pg[j]` for `j` in `gen`"
-function variable_active_generation(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+function variable_active_generation(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded = true)
     if bounded
-        var(pm, nw, cnd)[:pg] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_pg",
-            lower_bound = ref(pm, nw, :gen, i, "pmin", cnd),
-            upper_bound = ref(pm, nw, :gen, i, "pmax", cnd),
-            start = comp_start_value(ref(pm, nw, :gen, i), "pg_start", cnd)
+        var(pm, nw)[:pg] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :gen)], base_name="$(nw)_pg",
+            lower_bound = ref(pm, nw, :gen, i, "pmin"),
+            upper_bound = ref(pm, nw, :gen, i, "pmax"),
+            start = comp_start_value(ref(pm, nw, :gen, i), "pg_start")
         )
     else
-        var(pm, nw, cnd)[:pg] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_pg",
-            start = comp_start_value(ref(pm, nw, :gen, i), "pg_start", cnd)
+        var(pm, nw)[:pg] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :gen)], base_name="$(nw)_pg",
+            start = comp_start_value(ref(pm, nw, :gen, i), "pg_start")
         )
     end
 end
 
 "variable: `qq[j]` for `j` in `gen`"
-function variable_reactive_generation(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+function variable_reactive_generation(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded = true)
     if bounded
-        var(pm, nw, cnd)[:qg] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_qg",
-            lower_bound = ref(pm, nw, :gen, i, "qmin", cnd),
-            upper_bound = ref(pm, nw, :gen, i, "qmax", cnd),
-            start = comp_start_value(ref(pm, nw, :gen, i), "qg_start", cnd)
+        var(pm, nw)[:qg] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :gen)], base_name="$(nw)_qg",
+            lower_bound = ref(pm, nw, :gen, i, "qmin"),
+            upper_bound = ref(pm, nw, :gen, i, "qmax"),
+            start = comp_start_value(ref(pm, nw, :gen, i), "qg_start")
         )
     else
-        var(pm, nw, cnd)[:qg] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :gen)], base_name="$(nw)_$(cnd)_qg",
-            start = comp_start_value(ref(pm, nw, :gen, i), "qg_start", cnd)
+        var(pm, nw)[:qg] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :gen)], base_name="$(nw)_qg",
+            start = comp_start_value(ref(pm, nw, :gen, i), "qg_start")
         )
     end
 end
@@ -374,14 +370,14 @@ end
 
 
 "variable: `p[l,i,j]` for `(l,i,j)` in `arcs`"
-function variable_active_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
-    p = var(pm, nw, cnd)[:p] = JuMP.@variable(pm.model,
-        [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_p",
-        start = comp_start_value(ref(pm, nw, :branch, l), "p_start", cnd)
+function variable_active_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded = true)
+    p = var(pm, nw)[:p] = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_p",
+        start = comp_start_value(ref(pm, nw, :branch, l), "p_start")
     )
 
     if bounded
-        flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
+        flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus))
 
         for arc in ref(pm, nw, :arcs)
             l,i,j = arc
@@ -407,14 +403,14 @@ function variable_active_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd
 end
 
 "variable: `q[l,i,j]` for `(l,i,j)` in `arcs`"
-function variable_reactive_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
-    q = var(pm, nw, cnd)[:q] = JuMP.@variable(pm.model,
-        [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_$(cnd)_q",
-        start = comp_start_value(ref(pm, nw, :branch, l), "q_start", cnd)
+function variable_reactive_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded = true)
+    q = var(pm, nw)[:q] = JuMP.@variable(pm.model,
+        [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_q",
+        start = comp_start_value(ref(pm, nw, :branch, l), "q_start")
     )
 
     if bounded
-        flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus), cnd)
+        flow_lb, flow_ub = ref_calc_branch_flow_bounds(ref(pm, nw, :branch), ref(pm, nw, :bus))
 
         for arc in ref(pm, nw, :arcs)
             l,i,j = arc
@@ -597,9 +593,9 @@ function variable_dcline_flow(pm::AbstractPowerModel; kwargs...)
 end
 
 "variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
-function variable_active_dcline_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
-    p_dc = var(pm, nw, cnd)[:p_dc] = JuMP.@variable(pm.model,
-        [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_p_dc",
+function variable_active_dcline_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded = true)
+    p_dc = var(pm, nw)[:p_dc] = JuMP.@variable(pm.model,
+        [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_p_dc",
     )
 
     if bounded
@@ -629,9 +625,9 @@ function variable_active_dcline_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd
 end
 
 "variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
-function variable_reactive_dcline_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
-    q_dc = var(pm, nw, cnd)[:q_dc] = JuMP.@variable(pm.model,
-        [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_$(cnd)_q_dc",
+function variable_reactive_dcline_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded = true)
+    q_dc = var(pm, nw)[:q_dc] = JuMP.@variable(pm.model,
+        [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_q_dc",
     )
 
     if bounded

@@ -103,36 +103,28 @@ ref(pm::AbstractPowerModel, nw::Int) = pm.ref[:nw][nw]
 ref(pm::AbstractPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
 ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
 ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
-ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx, param::String, cnd::Int) = pm.ref[:nw][nw][key][idx][param][cnd]
 
 ref(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
 ref(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
 ref(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
-ref(pm::AbstractPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.ref[:nw][nw][key][idx][param][cnd]
 
 
 var(pm::AbstractPowerModel, nw::Int) = pm.var[:nw][nw]
 var(pm::AbstractPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
 var(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
-var(pm::AbstractPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
-var(pm::AbstractPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
-var(pm::AbstractPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 
-var(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
-var(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
-var(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
+var(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.var[:nw][nw]
+var(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.var[:nw][nw][key]
+var(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.var[:nw][nw][key][idx]
 
 ""
 con(pm::AbstractPowerModel, nw::Int) = pm.con[:nw][nw]
 con(pm::AbstractPowerModel, nw::Int, key::Symbol) = pm.con[:nw][nw][key]
 con(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.con[:nw][nw][key][idx]
-con(pm::AbstractPowerModel, nw::Int, cnd::Int) = pm.con[:nw][nw][:cnd][cnd]
-con(pm::AbstractPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.con[:nw][nw][:cnd][cnd][key]
-con(pm::AbstractPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.con[:nw][nw][:cnd][cnd][key][idx]
 
-con(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd]
-con(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key]
-con(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key][idx]
+con(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.con[:nw][nw]
+con(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.con[:nw][nw][key]
+con(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.con[:nw][nw][key][idx]
 
 
 ""
