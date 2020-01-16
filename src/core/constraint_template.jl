@@ -849,7 +849,12 @@ function constraint_storage_state(pm::AbstractPowerModel, i::Int, nw_1::Int, nw_
         time_elapsed = 1.0
     end
 
-    constraint_storage_state(pm, nw_1, nw_2, i, storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
+    if haskey(ref(pm, nw_1, :storage), i)
+        constraint_storage_state(pm, nw_1, nw_2, i, storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
+    else 
+        # if the storage device has status=0 in nw_1, then the stored energy variable will not exist. Initialize storage from data model instead.
+        constraint_storage_state_initial(pm, nw_2, i, storage["energy"], storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
+    end
 end
 
 ""

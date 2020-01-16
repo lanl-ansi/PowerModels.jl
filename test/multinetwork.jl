@@ -331,6 +331,9 @@ TESTLOG = Memento.getlogger(PowerModels)
             for (n,network) in mn_data["nw"]
                 delete!(network, "time_elapsed")
             end
+
+            mn_data["nw"]["1"]["storage"]["1"]["status"] = 0  # verify that storage activation does not cause error
+
             Memento.setlevel!(TESTLOG, "warn")
             @test_warn(TESTLOG, "network data should specify time_elapsed, using 1.0 as a default", PowerModels.run_mn_opf_strg(mn_data, PowerModels.ACPPowerModel, juniper_solver))
             Memento.setlevel!(TESTLOG, "error")
