@@ -85,7 +85,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
 
     model_relaxation = instantiate_model(data, model_type, PowerModels.build_opf)
     (ismultinetwork(model_relaxation)) && (Memento.error(_LOGGER, "OBBT is not supported for multi-networks"))
-    (ismulticonductor(model_relaxation)) && (Memento.error(_LOGGER, "OBBT is not supported for multi-phase networks"))
+    (ismulticonductor(model_relaxation)) && (Memento.error(_LOGGER, "OBBT is not supported for multi-conductor networks"))
 
     # check for model_type compatability with OBBT
     _check_variables(model_relaxation)
