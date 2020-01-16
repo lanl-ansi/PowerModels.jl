@@ -15,7 +15,6 @@ InfrastructureModels.@def pm_fields begin
     var::Dict{Symbol,<:Any}
     con::Dict{Symbol,<:Any}
     cnw::Int
-    ccnd::Int
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -42,23 +41,14 @@ function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = 
         nw_var = var[:nw][nw_id] = Dict{Symbol,Any}()
         nw_con = con[:nw][nw_id] = Dict{Symbol,Any}()
 
-        nw_var[:cnd] = Dict{Int,Any}()
-        nw_con[:cnd] = Dict{Int,Any}()
-
         if !haskey(nw, :conductors)
             nw[:conductor_ids] = 1:1
         else
             nw[:conductor_ids] = 1:nw[:conductors]
         end
-
-        for cnd_id in nw[:conductor_ids]
-            nw_var[:cnd][cnd_id] = Dict{Symbol,Any}()
-            nw_con[:cnd][cnd_id] = Dict{Symbol,Any}()
-        end
     end
 
     cnw = minimum([k for k in keys(var[:nw])])
-    ccnd = minimum([k for k in keys(var[:nw][cnw][:cnd])])
 
     pm = PowerModel(
         jump_model,
@@ -69,14 +59,14 @@ function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = 
         var,
         con,
         cnw,
-        ccnd,
         ext
     )
 
     return pm
 end
 
-### Helper functions for working with multinetworks and multiconductors
+
+### Helper functions for working with multinetworks
 ""
 ismultinetwork(pm::AbstractPowerModel) = (length(pm.ref[:nw]) > 1)
 
@@ -107,6 +97,7 @@ ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:
 ref(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
 ref(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
 ref(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
+ref(pm::AbstractPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx][param]
 
 
 var(pm::AbstractPowerModel, nw::Int) = pm.var[:nw][nw]
@@ -361,7 +352,7 @@ function _ref_add_core!(nw_refs::Dict)
 
         ### aggregate info for pairs of connected buses ###
         if !haskey(ref, :buspairs)
-            ref[:buspairs] = calc_buspair_parameters(ref[:bus], ref[:branch], ref[:conductor_ids], haskey(ref, :conductors))
+            ref[:buspairs] = calc_buspair_parameters(ref[:bus], ref[:branch])
         end
     end
 end

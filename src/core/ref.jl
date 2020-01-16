@@ -2,7 +2,7 @@
 
 
 "compute bus pair level data, can be run on data or ref data structures"
-function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcutor)
+function calc_buspair_parameters(buses, branches)
     bus_lookup = Dict(bus["index"] => bus for (i,bus) in buses if bus["bus_type"] != 4)
 
     branch_lookup = Dict(branch["index"] => branch for (i,branch) in branches if branch["br_status"] == 1 && haskey(bus_lookup, branch["f_bus"]) && haskey(bus_lookup, branch["t_bus"]))
@@ -11,28 +11,15 @@ function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcuto
 
     bp_branch = Dict((bp, typemax(Int64)) for bp in buspair_indexes)
 
-    if ismulticondcutor
-        bp_angmin = Dict((bp, MultiConductorVector([-Inf for c in conductor_ids])) for bp in buspair_indexes)
-        bp_angmax = Dict((bp, MultiConductorVector([ Inf for c in conductor_ids])) for bp in buspair_indexes)
-    else
-        @assert(length(conductor_ids) == 1)
-        bp_angmin = Dict((bp, -Inf) for bp in buspair_indexes)
-        bp_angmax = Dict((bp,  Inf) for bp in buspair_indexes)
-    end
+    bp_angmin = Dict((bp, -Inf) for bp in buspair_indexes)
+    bp_angmax = Dict((bp,  Inf) for bp in buspair_indexes)
 
     for (l,branch) in branch_lookup
         i = branch["f_bus"]
         j = branch["t_bus"]
 
-        if ismulticondcutor
-            for c in conductor_ids
-                bp_angmin[(i,j)][c] = max(bp_angmin[(i,j)][c], branch["angmin"][c])
-                bp_angmax[(i,j)][c] = min(bp_angmax[(i,j)][c], branch["angmax"][c])
-            end
-        else
-            bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
-            bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
-        end
+        bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
+        bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
 
         bp_branch[(i,j)] = min(bp_branch[(i,j)], l)
     end
@@ -129,7 +116,7 @@ function ref_calc_voltage_product_bounds(buspairs, conductor::Int=1)
 
     buspairs_conductor = Dict()
     for (bp, buspair) in buspairs
-        buspairs_conductor[bp] = Dict((k, conductor_value(v, conductor)) for (k,v) in buspair)
+        buspairs_conductor[bp] = Dict( k => v[conductor] for (k,v) in buspair)
     end
 
     for (bp, buspair) in buspairs_conductor

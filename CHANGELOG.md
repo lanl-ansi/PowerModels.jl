@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Moved multi-conductor support into PowerModelsDistribution
 
 ### v0.14.0
 - Changed post_* function names to build_* (#611) (breaking)

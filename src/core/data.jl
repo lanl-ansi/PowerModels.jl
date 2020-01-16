@@ -62,8 +62,8 @@ function calc_theta_delta_bounds(data::Dict{String,<:Any})
     end
 
     if haskey(data, "conductors")
-        amin = MultiConductorVector(angle_min)
-        amax = MultiConductorVector(angle_max)
+        #amin = MultiConductorVector(angle_min)
+        #amax = MultiConductorVector(angle_max)
         return amin, amax
     else
         return angle_min[1], angle_max[1]
@@ -248,11 +248,11 @@ end
 ""
 function _apply_func!(data::Dict{String,<:Any}, key::String, func)
     if haskey(data, key)
-        if isa(data[key], MultiConductorVector)
-            data[key] = MultiConductorVector([func(v) for v in data[key]])
-        else
-            data[key] = func(data[key])
-        end
+        #if isa(data[key], MultiConductorVector)
+        #    data[key] = MultiConductorVector([func(v) for v in data[key]])
+        #else
+            data[key] = func.(data[key])
+        #end
     end
 end
 
@@ -1133,7 +1133,8 @@ function calc_thermal_limits!(data::Dict{String,<:Any})
     for branch in branches
         if !haskey(branch, "rate_a")
             if haskey(data, "conductors")
-                branch["rate_a"] = MultiConductorVector(0.0, data["conductors"])
+                #TODO
+                #branch["rate_a"] = MultiConductorVector(0.0, data["conductors"])
             else
                 branch["rate_a"] = 0.0
             end
@@ -1235,7 +1236,8 @@ function calc_current_limits!(data::Dict{String,<:Any})
 
         if !haskey(branch, "c_rating_a")
             if haskey(data, "conductors")
-                branch["c_rating_a"] = MultiConductorVector(0.0, data["conductors"])
+                #TODO
+                #branch["c_rating_a"] = MultiConductorVector(0.0, data["conductors"])
             else
                 branch["c_rating_a"] = 0.0
             end
@@ -1529,7 +1531,8 @@ function correct_transformer_parameters!(data::Dict{String,<:Any})
         if !haskey(branch, "tap")
             Memento.warn(_LOGGER, "branch found without tap value, setting a tap to 1.0")
             if haskey(data, "conductors")
-                branch["tap"] = MultiConductorVector{Float64}(ones(data["conductors"]))
+                #TODO
+                #branch["tap"] = MultiConductorVector{Float64}(ones(data["conductors"]))
             else
                 branch["tap"] = 1.0
             end
@@ -1551,7 +1554,8 @@ function correct_transformer_parameters!(data::Dict{String,<:Any})
         if !haskey(branch, "shift")
             Memento.warn(_LOGGER, "branch found without shift value, setting a shift to 0.0")
             if haskey(data, "conductors")
-                branch["shift"] = MultiConductorVector{Float64}(zeros(data["conductors"]))
+                #TODO
+                #branch["shift"] = MultiConductorVector{Float64}(zeros(data["conductors"]))
             else
                 branch["shift"] = 0.0
             end
@@ -2468,64 +2472,6 @@ function _cc_dfs(i, neighbors, component_lookup, touched)
                 component_lookup[k] = component_lookup[i]
             end
             _cc_dfs(j, neighbors, component_lookup, touched)
-        end
-    end
-end
-
-
-"Transforms single-conductor network data into multi-conductor data"
-function make_multiconductor!(data::Dict{String,<:Any}, conductors::Int)
-    if InfrastructureModels.ismultinetwork(data)
-        for (i,nw_data) in data["nw"]
-            _make_multiconductor!(nw_data, conductors)
-        end
-    else
-         _make_multiconductor!(data, conductors)
-    end
-end
-
-
-"feild names that should not be multi-conductor values"
-const _conductorless = Set(["index", "bus_i", "bus_type", "status", "gen_status",
-    "br_status", "gen_bus", "load_bus", "shunt_bus", "storage_bus", "f_bus", "t_bus",
-    "transformer", "area", "zone", "base_kv", "energy", "energy_rating", "charge_rating",
-    "discharge_rating", "charge_efficiency", "discharge_efficiency", "p_loss", "q_loss",
-    "model", "ncost", "cost", "startup", "shutdown", "name", "source_id", "active_phases"])
-
-"feild names that should become multi-conductor matrix not arrays"
-const _conductor_matrix = Set(["br_r", "br_x"])
-
-
-""
-function _make_multiconductor!(data::Dict{String,<:Any}, conductors::Real)
-    if haskey(data, "conductors")
-        Memento.warn(_LOGGER, "skipping network that is already multiconductor")
-        return
-    end
-
-    data["conductors"] = conductors
-
-    for (key, item) in data
-        if isa(item, Dict{String,Any})
-            for (item_id, item_data) in item
-                if isa(item_data, Dict{String,Any})
-                    item_ref_data = Dict{String,Any}()
-                    for (param, value) in item_data
-                        if param in _conductorless
-                            item_ref_data[param] = value
-                        else
-                            if param in _conductor_matrix
-                                item_ref_data[param] = MultiConductorMatrix(value, conductors)
-                            else
-                                item_ref_data[param] = MultiConductorVector(value, conductors)
-                            end
-                        end
-                    end
-                    item[item_id] = item_ref_data
-                end
-            end
-        else
-            #root non-dict items
         end
     end
 end

@@ -423,22 +423,6 @@ end
     g,b  = PowerModels.calc_branch_y(branch)
     @test isapprox(g, 0)
     @test isapprox(b, 0)
-
-    branch["br_r"] = PowerModels.MultiConductorMatrix([1 2;3 4])
-    branch["br_x"] = PowerModels.MultiConductorMatrix([1 2;3 4])
-    g,b  = PowerModels.calc_branch_y(branch)
-
-    @test typeof(g) <: PowerModels.MultiConductorMatrix
-    @test isapprox(g.values, [-1.0 0.5; 0.75 -0.25])
-    @test isapprox(b.values, [1.0 -0.5; -0.75 0.25])
-
-    branch["br_r"] = PowerModels.MultiConductorMatrix([1 2 0;3 4 0; 0 0 0])
-    branch["br_x"] = PowerModels.MultiConductorMatrix([1 2 0;3 4 0; 0 0 0])
-    g,b  = PowerModels.calc_branch_y(branch)
-
-    @test typeof(g) <: PowerModels.MultiConductorMatrix
-    @test isapprox(g.values, [-1.0 0.5 0; 0.75 -0.25 0; 0 0 0])
-    @test isapprox(b.values, [1.0 -0.5 0; -0.75 0.25 0; 0 0 0])
 end
 
 
@@ -447,7 +431,7 @@ end
      @testset "5-bus test" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
-        data["buspairs"] = PowerModels.calc_buspair_parameters(data["bus"], data["branch"], 1:1, haskey(data, "conductors"))
+        data["buspairs"] = PowerModels.calc_buspair_parameters(data["bus"], data["branch"])
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED

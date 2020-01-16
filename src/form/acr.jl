@@ -1,13 +1,13 @@
 ### rectangular form of the non-convex AC equations
 
 ""
-function variable_voltage(pm::AbstractACRModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded::Bool=true, kwargs...)
-    variable_voltage_real(pm; nw=nw, cnd=cnd, bounded=bounded, kwargs...)
-    variable_voltage_imaginary(pm; nw=nw, cnd=cnd, bounded=bounded, kwargs...)
+function variable_voltage(pm::AbstractACRModel; nw::Int=pm.cnw, bounded::Bool=true, kwargs...)
+    variable_voltage_real(pm; nw=nw, bounded=bounded, kwargs...)
+    variable_voltage_imaginary(pm; nw=nw, bounded=bounded, kwargs...)
 
     if bounded
         for (i,bus) in ref(pm, nw, :bus)
-            constraint_voltage_magnitude_bounds(pm, i, cnd=cnd, nw=nw)
+            constraint_voltage_magnitude_bounds(pm, i, nw=nw)
         end
 
         # does not seem to improve convergence
@@ -25,46 +25,46 @@ end
 
 
 "`vmin <= vm[i] <= vmax`"
-function constraint_voltage_magnitude_bounds(pm::AbstractACRModel, n::Int, c::Int, i, vmin, vmax)
+function constraint_voltage_magnitude_bounds(pm::AbstractACRModel, n::Int, i, vmin, vmax)
     @assert vmin <= vmax
-    vr = var(pm, n, c, :vr, i)
-    vi = var(pm, n, c, :vi, i)
+    vr = var(pm, n, :vr, i)
+    vi = var(pm, n, :vi, i)
 
     JuMP.@constraint(pm.model, vmin^2 <= (vr^2 + vi^2))
     JuMP.@constraint(pm.model, vmax^2 >= (vr^2 + vi^2))
 end
 
 "`v[i] == vm`"
-function constraint_voltage_magnitude_setpoint(pm::AbstractACRModel, n::Int, c::Int, i, vm)
-    vr = var(pm, n, c, :vr, i)
-    vi = var(pm, n, c, :vi, i)
+function constraint_voltage_magnitude_setpoint(pm::AbstractACRModel, n::Int, i, vm)
+    vr = var(pm, n, :vr, i)
+    vi = var(pm, n, :vi, i)
 
     JuMP.@constraint(pm.model, (vr^2 + vi^2) == vm^2)
 end
 
 
 "reference bus angle constraint"
-function constraint_theta_ref(pm::AbstractACRModel, n::Int, c::Int, i::Int)
-    JuMP.@constraint(pm.model, var(pm, n, c, :vi)[i] == 0)
+function constraint_theta_ref(pm::AbstractACRModel, n::Int, i::Int)
+    JuMP.@constraint(pm.model, var(pm, n, :vi)[i] == 0)
 end
 
 
-function constraint_power_balance(pm::AbstractACRModel, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
-    vr = var(pm, n, c, :vr, i)
-    vi = var(pm, n, c, :vi, i)
-    p    = get(var(pm, n, c),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
-    q    = get(var(pm, n, c),    :q, Dict()); _check_var_keys(q, bus_arcs, "reactive power", "branch")
-    pg   = get(var(pm, n, c),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
-    qg   = get(var(pm, n, c),   :qg, Dict()); _check_var_keys(qg, bus_gens, "reactive power", "generator")
-    ps   = get(var(pm, n, c),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
-    qs   = get(var(pm, n, c),   :qs, Dict()); _check_var_keys(qs, bus_storage, "reactive power", "storage")
-    psw  = get(var(pm, n, c),  :psw, Dict()); _check_var_keys(psw, bus_arcs_sw, "active power", "switch")
-    qsw  = get(var(pm, n, c),  :qsw, Dict()); _check_var_keys(qsw, bus_arcs_sw, "reactive power", "switch")
-    p_dc = get(var(pm, n, c), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
-    q_dc = get(var(pm, n, c), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
+function constraint_power_balance(pm::AbstractACRModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+    vr = var(pm, n, :vr, i)
+    vi = var(pm, n, :vi, i)
+    p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
+    q    = get(var(pm, n),    :q, Dict()); _check_var_keys(q, bus_arcs, "reactive power", "branch")
+    pg   = get(var(pm, n),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
+    qg   = get(var(pm, n),   :qg, Dict()); _check_var_keys(qg, bus_gens, "reactive power", "generator")
+    ps   = get(var(pm, n),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
+    qs   = get(var(pm, n),   :qs, Dict()); _check_var_keys(qs, bus_storage, "reactive power", "storage")
+    psw  = get(var(pm, n),  :psw, Dict()); _check_var_keys(psw, bus_arcs_sw, "active power", "switch")
+    qsw  = get(var(pm, n),  :qsw, Dict()); _check_var_keys(qsw, bus_arcs_sw, "reactive power", "switch")
+    p_dc = get(var(pm, n), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
+    q_dc = get(var(pm, n), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
 
 
-    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model,
+    con(pm, n, :kcl_p)[i] = JuMP.@constraint(pm.model,
         sum(p[a] for a in bus_arcs)
         + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(psw[a_sw] for a_sw in bus_arcs_sw)
@@ -74,7 +74,7 @@ function constraint_power_balance(pm::AbstractACRModel, n::Int, c::Int, i::Int, 
         - sum(pd for pd in values(bus_pd))
         - sum(gs for gs in values(bus_gs))*(vr^2 + vi^2)
     )
-    con(pm, n, c, :kcl_q)[i] = JuMP.@constraint(pm.model,
+    con(pm, n, :kcl_q)[i] = JuMP.@constraint(pm.model,
         sum(q[a] for a in bus_arcs)
         + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
@@ -90,13 +90,13 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_from(pm::AbstractACRModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
-    p_fr = var(pm, n, c, :p, f_idx)
-    q_fr = var(pm, n, c, :q, f_idx)
-    vr_fr = var(pm, n, c, :vr, f_bus)
-    vr_to = var(pm, n, c, :vr, t_bus)
-    vi_fr = var(pm, n, c, :vi, f_bus)
-    vi_to = var(pm, n, c, :vi, t_bus)
+function constraint_ohms_yt_from(pm::AbstractACRModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    p_fr = var(pm, n, :p, f_idx)
+    q_fr = var(pm, n, :q, f_idx)
+    vr_fr = var(pm, n, :vr, f_bus)
+    vr_to = var(pm, n, :vr, t_bus)
+    vi_fr = var(pm, n, :vi, f_bus)
+    vi_to = var(pm, n, :vi, t_bus)
 
     JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*(vr_fr^2 + vi_fr^2) + (-g*tr+b*ti)/tm^2*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr-g*ti)/tm^2*(vi_fr*vr_to - vr_fr*vi_to) )
     JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*(vr_fr^2 + vi_fr^2) - (-b*tr-g*ti)/tm^2*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr+b*ti)/tm^2*(vi_fr*vr_to - vr_fr*vi_to) )
@@ -105,34 +105,34 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_to(pm::AbstractACRModel, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
-    p_to = var(pm, n, c, :p, t_idx)
-    q_to = var(pm, n, c, :q, t_idx)
-    vr_fr = var(pm, n, c, :vr, f_bus)
-    vr_to = var(pm, n, c, :vr, t_bus)
-    vi_fr = var(pm, n, c, :vi, f_bus)
-    vi_to = var(pm, n, c, :vi, t_bus)
+function constraint_ohms_yt_to(pm::AbstractACRModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
+    p_to = var(pm, n, :p, t_idx)
+    q_to = var(pm, n, :q, t_idx)
+    vr_fr = var(pm, n, :vr, f_bus)
+    vr_to = var(pm, n, :vr, t_bus)
+    vi_fr = var(pm, n, :vi, f_bus)
+    vi_to = var(pm, n, :vi, t_bus)
 
     JuMP.@constraint(pm.model, p_to ==  (g+g_to)*(vr_to^2 + vi_to^2) + (-g*tr-b*ti)/tm^2*(vr_fr*vr_to + vi_fr*vi_to) + (-b*tr+g*ti)/tm^2*(-(vi_fr*vr_to - vr_fr*vi_to)) )
     JuMP.@constraint(pm.model, q_to == -(b+b_to)*(vr_to^2 + vi_to^2) - (-b*tr+g*ti)/tm^2*(vr_fr*vr_to + vi_fr*vi_to) + (-g*tr-b*ti)/tm^2*(-(vi_fr*vr_to - vr_fr*vi_to)) )
 end
 
 
-function constraint_current_limit(pm::AbstractACRModel, n::Int, c::Int, f_idx, c_rating_a)
+function constraint_current_limit(pm::AbstractACRModel, n::Int, f_idx, c_rating_a)
     l,i,j = f_idx
     t_idx = (l,j,i)
 
-    vr_fr = var(pm, n, c, :vr, i)
-    vr_to = var(pm, n, c, :vr, j)
-    vi_fr = var(pm, n, c, :vi, i)
-    vi_to = var(pm, n, c, :vi, j)
+    vr_fr = var(pm, n, :vr, i)
+    vr_to = var(pm, n, :vr, j)
+    vi_fr = var(pm, n, :vi, i)
+    vi_to = var(pm, n, :vi, j)
 
-    p_fr = var(pm, n, c, :p, f_idx)
-    q_fr = var(pm, n, c, :q, f_idx)
+    p_fr = var(pm, n, :p, f_idx)
+    q_fr = var(pm, n, :q, f_idx)
     JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= (vr_fr^2 + vi_fr^2)*c_rating_a^2)
 
-    p_to = var(pm, n, c, :p, t_idx)
-    q_to = var(pm, n, c, :q, t_idx)
+    p_to = var(pm, n, :p, t_idx)
+    q_to = var(pm, n, :q, t_idx)
     JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= (vr_to^2 + vi_to^2)*c_rating_a^2)
 end
 
@@ -140,13 +140,13 @@ end
 """
 branch voltage angle difference bounds
 """
-function constraint_voltage_angle_difference(pm::AbstractACRModel, n::Int, c::Int, f_idx, angmin, angmax)
+function constraint_voltage_angle_difference(pm::AbstractACRModel, n::Int, f_idx, angmin, angmax)
     i, f_bus, t_bus = f_idx
 
-    vr_fr = var(pm, n, c, :vr, f_bus)
-    vr_to = var(pm, n, c, :vr, t_bus)
-    vi_fr = var(pm, n, c, :vi, f_bus)
-    vi_to = var(pm, n, c, :vi, t_bus)
+    vr_fr = var(pm, n, :vr, f_bus)
+    vr_to = var(pm, n, :vr, t_bus)
+    vi_fr = var(pm, n, :vi, f_bus)
+    vi_to = var(pm, n, :vi, t_bus)
 
     JuMP.@constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) <= tan(angmax)*(vr_fr*vr_to + vi_fr*vi_to))
     JuMP.@constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to))
@@ -156,12 +156,7 @@ end
 "extracts voltage set points from rectangular voltage form and converts into polar voltage form"
 function add_setpoint_bus_voltage!(sol, pm::AbstractACRModel)
     sol_dict = get(sol, "bus", Dict{String,Any}())
-
-    if ismultinetwork(pm)
-        bus_dict = pm.data["nw"]["$(pm.cnw)"]["bus"]
-    else
-        bus_dict = pm.data["bus"]
-    end
+    bus_dict = ref(pm, :bus)
 
     if length(bus_dict) > 0
         sol["bus"] = sol_dict
@@ -169,29 +164,19 @@ function add_setpoint_bus_voltage!(sol, pm::AbstractACRModel)
 
     for (i,item) in bus_dict
         idx = Int(item["bus_i"])
-        sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
+        sol_item = sol_dict["$(i)"] = get(sol_dict, "$(i)", Dict{String,Any}())
+        sol_item["vm"] = NaN
+        sol_item["va"] = NaN
 
-        num_conductors = length(conductor_ids(pm))
-        cnd_idx = 1
-        sol_item["vm"] = MultiConductorVector{Real}([NaN for i in 1:num_conductors])
-        sol_item["va"] = MultiConductorVector{Real}([NaN for i in 1:num_conductors])
-        for c in conductor_ids(pm)
-            try
-                vr = JuMP.value(var(pm, :vr, cnd=c)[idx])
-                vi = JuMP.value(var(pm, :vi, cnd=c)[idx])
+        try
+            vr = JuMP.value(var(pm, :vr, idx))
+            vi = JuMP.value(var(pm, :vi, idx))
 
-                vm = sqrt(vr^2 + vi^2)
+            vm = sqrt(vr^2 + vi^2)
 
-                sol_item["vm"][c] = vm
-                sol_item["va"][c] = atan(vi, vr)
-            catch
-            end
-        end
-
-        # remove MultiConductorValue, if it was not a ismulticonductor network
-        if !ismulticonductor(pm)
-            sol_item["vm"] = sol_item["vm"][1]
-            sol_item["va"] = sol_item["va"][1]
+            sol_item["vm"] = vm
+            sol_item["va"] = atan(vi, vr)
+        catch
         end
     end
 end

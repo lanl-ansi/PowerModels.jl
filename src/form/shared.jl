@@ -38,8 +38,8 @@ function variable_bus_voltage(pm::AbstractWModels; kwargs...)
 end
 
 ""
-function constraint_voltage_magnitude_setpoint(pm::AbstractWModels, n::Int, c::Int, i, vm)
-    w = var(pm, n, c, :w, i)
+function constraint_voltage_magnitude_setpoint(pm::AbstractWModels, n::Int, i, vm)
+    w = var(pm, n, :w, i)
 
     JuMP.@constraint(pm.model, w == vm^2)
 end
@@ -50,21 +50,21 @@ end
 
 
 ""
-function constraint_power_balance(pm::AbstractWModels, n::Int, c::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
-    w    = var(pm, n, c, :w, i)
-    p    = get(var(pm, n, c),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
-    q    = get(var(pm, n, c),    :q, Dict()); _check_var_keys(q, bus_arcs, "reactive power", "branch")
-    pg   = get(var(pm, n, c),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
-    qg   = get(var(pm, n, c),   :qg, Dict()); _check_var_keys(qg, bus_gens, "reactive power", "generator")
-    ps   = get(var(pm, n, c),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
-    qs   = get(var(pm, n, c),   :qs, Dict()); _check_var_keys(qs, bus_storage, "reactive power", "storage")
-    psw  = get(var(pm, n, c),  :psw, Dict()); _check_var_keys(psw, bus_arcs_sw, "active power", "switch")
-    qsw  = get(var(pm, n, c),  :qsw, Dict()); _check_var_keys(qsw, bus_arcs_sw, "reactive power", "switch")
-    p_dc = get(var(pm, n, c), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
-    q_dc = get(var(pm, n, c), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
+function constraint_power_balance(pm::AbstractWModels, n::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+    w    = var(pm, n, :w, i)
+    p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
+    q    = get(var(pm, n),    :q, Dict()); _check_var_keys(q, bus_arcs, "reactive power", "branch")
+    pg   = get(var(pm, n),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
+    qg   = get(var(pm, n),   :qg, Dict()); _check_var_keys(qg, bus_gens, "reactive power", "generator")
+    ps   = get(var(pm, n),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
+    qs   = get(var(pm, n),   :qs, Dict()); _check_var_keys(qs, bus_storage, "reactive power", "storage")
+    psw  = get(var(pm, n),  :psw, Dict()); _check_var_keys(psw, bus_arcs_sw, "active power", "switch")
+    qsw  = get(var(pm, n),  :qsw, Dict()); _check_var_keys(qsw, bus_arcs_sw, "reactive power", "switch")
+    p_dc = get(var(pm, n), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
+    q_dc = get(var(pm, n), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
 
 
-    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model,
+    con(pm, n, :kcl_p)[i] = JuMP.@constraint(pm.model,
         sum(p[a] for a in bus_arcs)
         + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(psw[a_sw] for a_sw in bus_arcs_sw)
@@ -74,7 +74,7 @@ function constraint_power_balance(pm::AbstractWModels, n::Int, c::Int, i, bus_ar
         - sum(pd for pd in values(bus_pd))
         - sum(gs for gs in values(bus_gs))*w
     )
-    con(pm, n, c, :kcl_q)[i] = JuMP.@constraint(pm.model,
+    con(pm, n, :kcl_q)[i] = JuMP.@constraint(pm.model,
         sum(q[a] for a in bus_arcs)
         + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
@@ -88,23 +88,23 @@ end
 
 
 ""
-function constraint_power_balance_ne(pm::AbstractWModels, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
-    w    = var(pm, n, c, :w, i)
-    p    = get(var(pm, n, c),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
-    q    = get(var(pm, n, c),    :q, Dict()); _check_var_keys(q, bus_arcs, "reactive power", "branch")
-    pg   = get(var(pm, n, c),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
-    qg   = get(var(pm, n, c),   :qg, Dict()); _check_var_keys(qg, bus_gens, "reactive power", "generator")
-    ps   = get(var(pm, n, c),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
-    qs   = get(var(pm, n, c),   :qs, Dict()); _check_var_keys(qs, bus_storage, "reactive power", "storage")
-    psw  = get(var(pm, n, c),  :psw, Dict()); _check_var_keys(psw, bus_arcs_sw, "active power", "switch")
-    qsw  = get(var(pm, n, c),  :qsw, Dict()); _check_var_keys(qsw, bus_arcs_sw, "reactive power", "switch")
-    p_dc = get(var(pm, n, c), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
-    q_dc = get(var(pm, n, c), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
-    p_ne = get(var(pm, n, c), :p_ne, Dict()); _check_var_keys(p_ne, bus_arcs_ne, "active power", "ne_branch")
-    q_ne = get(var(pm, n, c), :q_ne, Dict()); _check_var_keys(q_ne, bus_arcs_ne, "reactive power", "ne_branch")
+function constraint_power_balance_ne(pm::AbstractWModels, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+    w    = var(pm, n, :w, i)
+    p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
+    q    = get(var(pm, n),    :q, Dict()); _check_var_keys(q, bus_arcs, "reactive power", "branch")
+    pg   = get(var(pm, n),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
+    qg   = get(var(pm, n),   :qg, Dict()); _check_var_keys(qg, bus_gens, "reactive power", "generator")
+    ps   = get(var(pm, n),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
+    qs   = get(var(pm, n),   :qs, Dict()); _check_var_keys(qs, bus_storage, "reactive power", "storage")
+    psw  = get(var(pm, n),  :psw, Dict()); _check_var_keys(psw, bus_arcs_sw, "active power", "switch")
+    qsw  = get(var(pm, n),  :qsw, Dict()); _check_var_keys(qsw, bus_arcs_sw, "reactive power", "switch")
+    p_dc = get(var(pm, n), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
+    q_dc = get(var(pm, n), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
+    p_ne = get(var(pm, n), :p_ne, Dict()); _check_var_keys(p_ne, bus_arcs_ne, "active power", "ne_branch")
+    q_ne = get(var(pm, n), :q_ne, Dict()); _check_var_keys(q_ne, bus_arcs_ne, "reactive power", "ne_branch")
 
 
-    con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model,
+    con(pm, n, :kcl_p)[i] = JuMP.@constraint(pm.model,
         sum(p[a] for a in bus_arcs)
         + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(psw[a_sw] for a_sw in bus_arcs_sw)
@@ -115,7 +115,7 @@ function constraint_power_balance_ne(pm::AbstractWModels, n::Int, c::Int, i::Int
         - sum(pd for pd in values(bus_pd))
         - sum(gs for gs in values(bus_gs))*w
     )
-    con(pm, n, c, :kcl_q)[i] = JuMP.@constraint(pm.model,
+    con(pm, n, :kcl_q)[i] = JuMP.@constraint(pm.model,
         sum(q[a] for a in bus_arcs)
         + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
@@ -132,12 +132,12 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_from(pm::AbstractWRModels, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
-    p_fr = var(pm, n, c, :p, f_idx)
-    q_fr = var(pm, n, c, :q, f_idx)
-    w_fr = var(pm, n, c, :w, f_bus)
-    wr   = var(pm, n, c, :wr, (f_bus, t_bus))
-    wi   = var(pm, n, c, :wi, (f_bus, t_bus))
+function constraint_ohms_yt_from(pm::AbstractWRModels, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    p_fr = var(pm, n, :p, f_idx)
+    q_fr = var(pm, n, :q, f_idx)
+    w_fr = var(pm, n, :w, f_bus)
+    wr   = var(pm, n, :wr, (f_bus, t_bus))
+    wi   = var(pm, n, :wi, (f_bus, t_bus))
 
     JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi )
     JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi )
@@ -147,12 +147,12 @@ end
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
-function constraint_ohms_yt_to(pm::AbstractWRModels, n::Int, c::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
-    q_to = var(pm, n, c, :q, t_idx)
-    p_to = var(pm, n, c, :p, t_idx)
-    w_to = var(pm, n, c, :w, t_bus)
-    wr   = var(pm, n, c, :wr, (f_bus, t_bus))
-    wi   = var(pm, n, c, :wi, (f_bus, t_bus))
+function constraint_ohms_yt_to(pm::AbstractWRModels, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
+    q_to = var(pm, n, :q, t_idx)
+    p_to = var(pm, n, :p, t_idx)
+    w_to = var(pm, n, :w, t_bus)
+    wr   = var(pm, n, :wr, (f_bus, t_bus))
+    wi   = var(pm, n, :wi, (f_bus, t_bus))
 
     JuMP.@constraint(pm.model, p_to ==  (g+g_to)*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi )
     JuMP.@constraint(pm.model, q_to == -(b+b_to)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
@@ -160,13 +160,13 @@ end
 
 
 ""
-function constraint_voltage_angle_difference(pm::AbstractWModels, n::Int, c::Int, f_idx, angmin, angmax)
+function constraint_voltage_angle_difference(pm::AbstractWModels, n::Int, f_idx, angmin, angmax)
     i, f_bus, t_bus = f_idx
 
-    w_fr = var(pm, n, c, :w, f_bus)
-    w_to = var(pm, n, c, :w, t_bus)
-    wr   = var(pm, n, c, :wr, (f_bus, t_bus))
-    wi   = var(pm, n, c, :wi, (f_bus, t_bus))
+    w_fr = var(pm, n, :w, f_bus)
+    w_to = var(pm, n, :w, t_bus)
+    wr   = var(pm, n, :wr, (f_bus, t_bus))
+    wi   = var(pm, n, :wi, (f_bus, t_bus))
 
     JuMP.@constraint(pm.model, wi <= tan(angmax)*wr)
     JuMP.@constraint(pm.model, wi >= tan(angmin)*wr)
@@ -175,14 +175,14 @@ end
 
 
 ""
-function constraint_network_power_balance(pm::AbstractWModels, n::Int, c::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b)
+function constraint_network_power_balance(pm::AbstractWModels, n::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b)
     for (i,(i,j,r,x,tm,g_fr,g_to)) in comp_branch_g
         @assert(r >= 0 && x >= 0) # requirement for the relaxation property
     end
 
-    pg = var(pm, n, c, :pg)
-    qg = var(pm, n, c, :qg)
-    w = var(pm, n, c, :w)
+    pg = var(pm, n, :pg)
+    qg = var(pm, n, :qg)
+    w = var(pm, n, :w)
 
     JuMP.@constraint(pm.model, sum(pg[g] for g in comp_gen_ids) >= sum(pd for (i,pd) in values(comp_pd)) + sum(gs*w[i] for (i,gs) in values(comp_gs)) + sum(g_fr*w[i]/tm^2 + g_to*w[j] for (i,j,r,x,tm,g_fr,g_to) in values(comp_branch_g)))
     JuMP.@constraint(pm.model, sum(qg[g] for g in comp_gen_ids) >= sum(qd for (i,qd) in values(comp_qd)) - sum(bs*w[i] for (i,bs) in values(comp_bs)) - sum(b_fr*w[i]/tm^2 + b_to*w[j] for (i,j,r,x,tm,b_fr,b_to) in values(comp_branch_b)))
@@ -190,17 +190,17 @@ end
 
 
 ""
-function constraint_switch_state_closed(pm::AbstractWModels, n::Int, c::Int, f_bus, t_bus)
-    w_fr = var(pm, n, c, :w, f_bus)
-    w_to = var(pm, n, c, :w, t_bus)
+function constraint_switch_state_closed(pm::AbstractWModels, n::Int, f_bus, t_bus)
+    w_fr = var(pm, n, :w, f_bus)
+    w_to = var(pm, n, :w, t_bus)
 
     JuMP.@constraint(pm.model, w_fr == w_to)
 end
 
 ""
-function constraint_switch_voltage_on_off(pm::AbstractWModels, n::Int, c::Int, i, f_bus, t_bus, vad_min, vad_max)
-    w_fr = var(pm, n, c, :w, f_bus)
-    w_to = var(pm, n, c, :w, t_bus)
+function constraint_switch_voltage_on_off(pm::AbstractWModels, n::Int, i, f_bus, t_bus, vad_min, vad_max)
+    w_fr = var(pm, n, :w, f_bus)
+    w_to = var(pm, n, :w, t_bus)
     z = var(pm, n, :z_switch, i)
 
     w_fr_lb, w_fr_ub = InfrastructureModels.variable_domain(w_fr)
@@ -218,19 +218,19 @@ end
 
 
 ""
-function constraint_current_limit(pm::AbstractWModels, n::Int, c::Int, f_idx, c_rating_a)
+function constraint_current_limit(pm::AbstractWModels, n::Int, f_idx, c_rating_a)
     l,i,j = f_idx
     t_idx = (l,j,i)
 
-    w_fr = var(pm, n, c, :w, i)
-    w_to = var(pm, n, c, :w, j)
+    w_fr = var(pm, n, :w, i)
+    w_to = var(pm, n, :w, j)
 
-    p_fr = var(pm, n, c, :p, f_idx)
-    q_fr = var(pm, n, c, :q, f_idx)
+    p_fr = var(pm, n, :p, f_idx)
+    q_fr = var(pm, n, :q, f_idx)
     JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w_fr*c_rating_a^2)
 
-    p_to = var(pm, n, c, :p, t_idx)
-    q_to = var(pm, n, c, :q, t_idx)
+    p_to = var(pm, n, :p, t_idx)
+    q_to = var(pm, n, :q, t_idx)
     JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= w_to*c_rating_a^2)
 end
 

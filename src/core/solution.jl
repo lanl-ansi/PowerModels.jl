@@ -290,13 +290,13 @@ function add_setpoint_fixed!(
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
 
-        if conductorless
+        #if conductorless
             sol_item[param_name] = default_value(item)
-        else
-            num_conductors = length(conductor_ids(pm))
-            cnd_idx = 1
-            sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
-        end
+        #else
+        #    num_conductors = length(conductor_ids(pm))
+        #    cnd_idx = 1
+        #    sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
+        #end
 
         # remove MultiConductorValue, if it was not a ismulticonductor network
         if !ismulticonductor(pm)
@@ -356,18 +356,10 @@ function add_dual!(
 
 
     constraints = []
-    if conductorless
-        has_con_symbol = haskey(con(pm, pm.cnw), con_symbol)
-    else
-        has_con_symbol = haskey(con(pm, pm.cnw, pm.ccnd), con_symbol)
-    end
+    has_con_symbol = haskey(con(pm, pm.cnw), con_symbol)
 
     if has_con_symbol
-        if conductorless
-            constraints = con(pm, pm.cnw, con_symbol)
-        else
-            constraints = con(pm, pm.cnw, pm.ccnd, con_symbol)
-        end
+        constraints = con(pm, pm.cnw, con_symbol)
     end
 
     if !has_con_symbol || (!isa(constraints, JuMP.ConstraintRef) && length(constraints) == 0)
@@ -450,13 +442,13 @@ function add_dual_fixed!(
         idx = Int(item[index_name])
         sol_item = sol_dict[i] = get(sol_dict, i, Dict{String,Any}())
 
-        if conductorless
+        #if conductorless
             sol_item[param_name] = default_value(item)
-        else
-            num_conductors = length(conductor_ids(pm))
-            cnd_idx = 1
-            sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
-        end
+        #else
+        #    num_conductors = length(conductor_ids(pm))
+        #    cnd_idx = 1
+        #    sol_item[param_name] = MultiConductorVector{Real}([default_value(item) for i in 1:num_conductors])
+        #end
 
         # remove MultiConductorValue, if it was not a ismulticonductor network
         if !ismulticonductor(pm)
