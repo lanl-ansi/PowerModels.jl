@@ -3,7 +3,7 @@
 
 
 ""
-function build_result(pm::AbstractPowerModel, solve_time; solution_builder=solution_opf!)
+function build_result(pm::AbstractPowerModel, solve_time; solution_processors=[])
 
     # TODO replace with JuMP.result_count(pm.model) after version v0.21
     # try-catch is needed until solvers reliably support ResultCount()
@@ -16,7 +16,7 @@ function build_result(pm::AbstractPowerModel, solve_time; solution_builder=solut
 
     sol = Dict{String,Any}()
     if result_count > 0
-        sol = build_solution(pm)
+        sol = build_solution(pm, post_processors=solution_processors)
     else
         Memento.warn(_LOGGER, "model has no results, solution cannot be built")
     end
@@ -510,6 +510,16 @@ function _build_solution_values(var::JuMP.GenericAffExpr)
 end
 
 ""
+function _build_solution_values(var::JuMP.GenericQuadExpr)
+    return JuMP.value(var)
+end
+
+""
+function _build_solution_values(var::JuMP.NonlinearExpression)
+    return JuMP.value(var)
+end
+
+""
 function _build_solution_values(var::JuMP.ConstraintRef)
     return JuMP.dual(var)
 end
@@ -564,10 +574,6 @@ function build_solution(pm::AbstractPowerModel; post_processors=[])
     #     end
     # end
 
-    for post_processor in post_processors
-        post_processor(pm, sol)
-    end
-
     sol["per_unit"] = pm.data["per_unit"]
     for (nw_id, nw_ref) in nws(pm)
         sol["nw"]["$(nw_id)"]["baseMVA"] = nw_ref[:baseMVA]
@@ -580,5 +586,49 @@ function build_solution(pm::AbstractPowerModel; post_processors=[])
         delete!(sol, "nw")
     end
 
+    for post_processor in post_processors
+        post_processor(pm, sol)
+    end
+
     return sol
+end
+
+function sol_vr_to_vm!(pm::AbstractPowerModel, solution::Dict)
+    if haskey(solution, "nw")
+        nws_data = solution["nw"]
+    else
+        nws_data = Dict("0" => solution)
+    end
+
+    for (n, nw_data) in nws_data
+        if haskey(nw_data, "bus")
+            for (i,bus) in nw_data["bus"]
+                if haskey(bus, "vr") && haskey(bus, "vi")
+                    vm = sqrt(bus["vr"]^2 + bus["vi"]^2)
+
+                    bus["vm"] = vm
+                    bus["va"] = atan(bus["vi"], bus["vr"])
+                end
+            end
+        end
+    end
+end
+
+
+function sol_w_to_vm!(pm::AbstractPowerModel, solution::Dict)
+    if haskey(solution, "nw")
+        nws_data = solution["nw"]
+    else
+        nws_data = Dict("0" => solution)
+    end
+
+    for (n, nw_data) in nws_data
+        if haskey(nw_data, "bus")
+            for (i,bus) in nw_data["bus"]
+                if haskey(bus, "w")
+                    bus["vm"] = sqrt(bus["w"])
+                end
+            end
+        end
+    end
 end

@@ -154,13 +154,13 @@ function run_model(file::String, model_type::Type, optimizer, build_method; kwar
 end
 
 ""
-function run_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method; ref_extensions=[], solution_builder=solution_opf!, kwargs...)
+function run_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method; ref_extensions=[], solution_processors=[], kwargs...)
     #start_time = time()
     pm = instantiate_model(data, model_type, build_method; ref_extensions=ref_extensions, kwargs...)
     #Memento.debug(_LOGGER, "pm model build time: $(time() - start_time)")
 
     #start_time = time()
-    result = optimize_model!(pm, optimizer=optimizer, solution_builder=solution_builder)
+    result = optimize_model!(pm, optimizer=optimizer, solution_processors=solution_processors)
     #Memento.debug(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
 
     return result
@@ -205,7 +205,7 @@ end
 
 
 ""
-function optimize_model!(pm::AbstractPowerModel; optimizer::Union{JuMP.OptimizerFactory,Nothing}=nothing, solution_builder = solution_opf!)
+function optimize_model!(pm::AbstractPowerModel; optimizer::Union{JuMP.OptimizerFactory,Nothing}=nothing, solution_processors=[])
     start_time = time()
 
     if optimizer == nothing
@@ -231,7 +231,7 @@ function optimize_model!(pm::AbstractPowerModel; optimizer::Union{JuMP.Optimizer
     Memento.debug(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
 
     start_time = time()
-    result = build_result(pm, solve_time; solution_builder = solution_builder)
+    result = build_result(pm, solve_time; solution_processors=solution_processors)
     Memento.debug(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
 
     pm.solution = result["solution"]
