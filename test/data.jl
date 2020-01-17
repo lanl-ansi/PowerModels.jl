@@ -432,7 +432,7 @@ end
      @testset "5-bus test" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
-        data["buspairs"] = PowerModels.calc_buspair_parameters(data["bus"], data["branch"])
+        data["buspairs"] = PowerModels.calc_buspair_parameters(data["bus"], data["branch"], 1:1, false)
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED

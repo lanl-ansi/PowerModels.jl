@@ -378,10 +378,9 @@ function _ref_add_core!(nw_refs::Dict)
             Memento.warn(_LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
         end
 
-
         ### aggregate info for pairs of connected buses ###
         if !haskey(ref, :buspairs)
-            ref[:buspairs] = calc_buspair_parameters(ref[:bus], ref[:branch])
+            ref[:buspairs] = calc_buspair_parameters(ref[:bus], ref[:branch], ref[:conductor_ids], haskey(ref, :conductors))
         end
     end
 end
