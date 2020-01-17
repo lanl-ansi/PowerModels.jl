@@ -63,10 +63,3 @@ function ref_add_on_off_va_bounds!(pm::AbstractPowerModel)
     end
 end
 
-""
-function solution_ots!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
-    add_setpoint_bus_voltage!(sol, pm)
-    add_setpoint_generator_power!(sol, pm)
-    add_setpoint_branch_flow!(sol, pm)
-    add_setpoint_branch_status!(sol, pm)
-end

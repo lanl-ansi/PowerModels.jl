@@ -157,31 +157,3 @@ function constraint_voltage_angle_difference(pm::AbstractACRModel, n::Int, f_idx
     JuMP.@constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to))
 end
 
-
-"extracts voltage set points from rectangular voltage form and converts into polar voltage form"
-function add_setpoint_bus_voltage!(sol, pm::AbstractACRModel)
-    sol_dict = get(sol, "bus", Dict{String,Any}())
-    bus_dict = ref(pm, :bus)
-
-    if length(bus_dict) > 0
-        sol["bus"] = sol_dict
-    end
-
-    for (i,item) in bus_dict
-        idx = Int(item["bus_i"])
-        sol_item = sol_dict["$(i)"] = get(sol_dict, "$(i)", Dict{String,Any}())
-        sol_item["vm"] = NaN
-        sol_item["va"] = NaN
-
-        try
-            vr = JuMP.value(var(pm, :vr, idx))
-            vi = JuMP.value(var(pm, :vi, idx))
-
-            vm = sqrt(vr^2 + vi^2)
-
-            sol_item["vm"] = vm
-            sol_item["va"] = atan(vi, vr)
-        catch
-        end
-    end
-end

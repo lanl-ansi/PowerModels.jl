@@ -90,31 +90,3 @@ function ref_add_ne_branch!(pm::AbstractPowerModel)
         end
     end
 end
-
-
-""
-function add_setpoint_branch_ne_flow!(sol, pm::AbstractPowerModel)
-    # check the branch flows were requested
-    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
-        add_setpoint!(sol, pm, "ne_branch", "pf", :p_ne, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint!(sol, pm, "ne_branch", "qf", :q_ne, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint!(sol, pm, "ne_branch", "pt", :p_ne, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
-        add_setpoint!(sol, pm, "ne_branch", "qt", :q_ne, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
-    end
-end
-
-
-""
-function add_setpoint_branch_ne_built!(sol, pm::AbstractPowerModel)
-    add_setpoint!(sol, pm, "ne_branch", "built", :branch_ne, status_name="br_status", conductorless=true, default_value = (item) -> item["br_status"]*1.0)
-end
-
-
-""
-function solution_tnep!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
-    add_setpoint_bus_voltage!(sol, pm)
-    add_setpoint_generator_power!(sol, pm)
-    add_setpoint_branch_flow!(sol, pm)
-    add_setpoint_branch_ne_flow!(sol, pm)
-    add_setpoint_branch_ne_built!(sol, pm)
-end

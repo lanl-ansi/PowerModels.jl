@@ -122,13 +122,6 @@ end
 
 
 ""
-function add_setpoint_bus_voltage!(sol, pm::AbstractDCPModel)
-    add_setpoint_fixed!(sol, pm, "bus", "vm"; default_value = (item) -> 1)
-    add_setpoint!(sol, pm, "bus", "va", :va, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
-end
-
-
-""
 function variable_voltage_on_off(pm::AbstractDCPModel; kwargs...)
     variable_voltage_angle(pm; kwargs...)
 end

@@ -204,11 +204,6 @@ function build_opf_ptdf(pm::AbstractPowerModel)
     end
 end
 
-""
-function solution_opf_ptdf!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
-    add_setpoint_generator_power!(sol, pm)
-end
-
 
 ""
 function ref_add_sm!(pm::AbstractPowerModel)

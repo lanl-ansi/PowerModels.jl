@@ -112,10 +112,3 @@ function constraint_ohms_yt_to(pm::AbstractLPACCModel, n::Int, f_bus, t_bus, f_i
     JuMP.@constraint(pm.model, q_to == -(b+b_to)*(1.0 + 2*phi_to) - (-b*tr+g*ti)/tm^2*(cs + phi_fr + phi_to) + (-g*tr-b*ti)/tm^2*-(va_fr-va_to) )
 end
 
-
-""
-function add_setpoint_bus_voltage!(sol, pm::AbstractLPACModel)
-    add_setpoint!(sol, pm, "bus", "vm", :phi, status_name="bus_type", inactive_status_value = 4, scale = (x,item,cnd) -> 1.0+x)
-    add_setpoint!(sol, pm, "bus", "va", :va, status_name="bus_type", inactive_status_value = 4)
-end
-

@@ -377,33 +377,6 @@ function constraint_active_dcline_setpoint(pm::AbstractIVRModel, n::Int, f_idx, 
     JuMP.@constraint(pm.model, pref_to == vr_to*crdc_to + vi_to*cidc_to)
 end
 
-""
-function add_setpoint_generator_current!(sol, pm::AbstractIVRModel)
-    add_setpoint!(sol, pm, "gen", "crg", :crg, status_name="gen_status")
-    add_setpoint!(sol, pm, "gen", "cig", :cig, status_name="gen_status")
-end
-
-""
-function add_setpoint_branch_current!(sol, pm::AbstractIVRModel)
-    # check the branch flows were requested
-    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
-        add_setpoint!(sol, pm, "branch", "cr_fr", :cr, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint!(sol, pm, "branch", "ci_fr", :ci, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint!(sol, pm, "branch", "cr_to", :cr, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
-        add_setpoint!(sol, pm, "branch", "ci_to", :ci, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
-    end
-end
-
-""
-function add_setpoint_dcline_current!(sol, pm::AbstractIVRModel)
-    if haskey(pm.setting, "output") && haskey(pm.setting["output"], "branch_flows") && pm.setting["output"]["branch_flows"] == true
-        add_setpoint!(sol, pm, "dcline", "cr_fr", :crdc, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint!(sol, pm, "dcline", "ci_fr", :cidc, status_name="br_status", var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
-        add_setpoint!(sol, pm, "dcline", "cr_to", :crdc, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
-        add_setpoint!(sol, pm, "dcline", "ci_to", :cidc, status_name="br_status", var_key = (idx,item) -> (idx, item["t_bus"], item["f_bus"]))
-    end
-end
-
 
 function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractIVRModel; report::Bool=true)
     gen_cost = Dict()

@@ -42,10 +42,3 @@ function constraint_voltage_angle_difference(pm::AbstractACTModel, n::Int, f_idx
     JuMP.@constraint(pm.model, va_fr - va_to <= angmax)
     JuMP.@constraint(pm.model, va_fr - va_to >= angmin)
 end
-
-
-""
-function add_bus_voltage_setpoint(sol, pm::AbstractACTModel)
-    add_setpoint!(sol, pm, "bus", "vm", :w, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"], scale = (x,item,cnd) -> sqrt(x))
-    add_setpoint!(sol, pm, "bus", "va", :va, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
-end

@@ -139,21 +139,6 @@ function _build_oswpf(pm::AbstractPowerModel)
     end
 end
 
-""
-function _solution_osw!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
-    add_setpoint_bus_voltage!(sol, pm)
-    add_setpoint_generator_power!(sol, pm)
-    add_setpoint_storage!(sol, pm)
-    add_setpoint_branch_flow!(sol, pm)
-    add_setpoint_dcline_flow!(sol, pm)
-    add_setpoint_switch_flow!(sol, pm)
-    add_setpoint_switch_status!(sol, pm)
-
-    add_dual_kcl!(sol, pm)
-    add_dual_sm!(sol, pm) # Adds the duals of the transmission lines' thermal limits.
-end
-
-
 
 "opf with controlable switches, node breaker"
 function _run_oswpf_nb(file, model_constructor, optimizer; kwargs...)
@@ -234,21 +219,6 @@ function _build_oswpf_nb(pm::AbstractPowerModel)
     end
 end
 
-""
-function _solution_osw_nb!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
-    add_setpoint_bus_voltage!(sol, pm)
-    add_setpoint_generator_power!(sol, pm)
-    add_setpoint_storage!(sol, pm)
-    add_setpoint_branch_flow!(sol, pm)
-    add_setpoint_branch_status!(sol, pm)
-    add_setpoint_dcline_flow!(sol, pm)
-    add_setpoint_switch_flow!(sol, pm)
-    add_setpoint_switch_status!(sol, pm)
-
-    add_dual_kcl!(sol, pm)
-    add_dual_sm!(sol, pm) # Adds the duals of the transmission lines' thermal limits.
-end
-
 
 "opf with unit commitment, tests constraint_current_limit"
 function _run_ucopf(file, model_type::Type, solver; kwargs...)
@@ -308,21 +278,6 @@ function _build_ucopf(pm::AbstractPowerModel)
     for i in ids(pm, :dcline)
         constraint_dcline(pm, i)
     end
-end
-
-
-""
-function _solution_uc!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
-    add_setpoint_bus_voltage!(sol, pm)
-    add_setpoint_generator_power!(sol, pm)
-    add_setpoint_generator_status!(sol, pm)
-    add_setpoint_storage!(sol, pm)
-    add_setpoint_storage_status!(sol, pm)
-    add_setpoint_branch_flow!(sol, pm)
-    add_setpoint_dcline_flow!(sol, pm)
-
-    add_dual_kcl!(sol, pm)
-    add_dual_sm!(sol, pm) # Adds the duals of the transmission lines' thermal limits.
 end
 
 

@@ -244,10 +244,3 @@ function constraint_current_limit(pm::AbstractWModels, n::Int, f_idx, c_rating_a
     JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= w_to*c_rating_a^2)
 end
 
-
-""
-function add_setpoint_bus_voltage!(sol, pm::AbstractWModels)
-    add_setpoint!(sol, pm, "bus", "vm", :w, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"], scale = (x,item,cnd) -> sqrt(x))
-    # What should the default value be?
-    add_setpoint!(sol, pm, "bus", "va", :va, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
-end

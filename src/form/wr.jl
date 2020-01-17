@@ -562,13 +562,6 @@ function constraint_voltage_angle_difference(pm::AbstractQCWRModel, n::Int, f_id
     cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 end
 
-""
-function add_setpoint_bus_voltage!(sol, pm::AbstractQCWRModel)
-    add_setpoint!(sol, pm, "bus", "vm", :vm, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
-    add_setpoint!(sol, pm, "bus", "va", :va, status_name=pm_component_status["bus"], inactive_status_value = pm_component_status_inactive["bus"])
-end
-
-
 
 ""
 function variable_voltage_on_off(pm::AbstractQCWRModel; kwargs...)
