@@ -494,6 +494,10 @@ function _build_solution_values(var::LinearAlgebra.Symmetric{T,Array{T,2}}) wher
     return [_build_solution_values(var[i,j]) for i in 1:size(var,1), j in 1:size(var,2)]
 end
 
+""
+function _build_solution_values(var::Number)
+    return var
+end
 
 ""
 function _build_solution_values(var::JuMP.VariableRef)
@@ -503,6 +507,11 @@ end
 ""
 function _build_solution_values(var::JuMP.GenericAffExpr)
     return JuMP.value(var)
+end
+
+""
+function _build_solution_values(var::JuMP.ConstraintRef)
+    return JuMP.dual(var)
 end
 
 ""
@@ -557,6 +566,11 @@ function build_solution(pm::AbstractPowerModel; post_processors=[])
 
     for post_processor in post_processors
         post_processor(pm, sol)
+    end
+
+    sol["per_unit"] = pm.data["per_unit"]
+    for (nw_id, nw_ref) in nws(pm)
+        sol["nw"]["$(nw_id)"]["baseMVA"] = nw_ref[:baseMVA]
     end
 
     if !ismultinetwork(pm)

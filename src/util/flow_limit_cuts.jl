@@ -26,8 +26,8 @@ function run_opf_flow_cuts!(data::Dict{String,<:Any}, model_type::Type, optimize
 
     start_time = time()
 
-    #result = run_opf(data, model_type, optimizer; setting = Dict("output" => Dict("branch_flows" => true)))
-    pm = instantiate_model(data, model_type, build_opf; setting = Dict("output" => Dict("branch_flows" => true)))
+    #result = run_opf(data, model_type, optimizer)
+    pm = instantiate_model(data, model_type, build_opf)
     result = optimize_model!(pm, optimizer=optimizer)
 
     #print_summary(result["solution"])
@@ -68,7 +68,7 @@ function run_opf_flow_cuts!(data::Dict{String,<:Any}, model_type::Type, optimize
 
         if violated
             iteration += 1
-            #result = run_opf(data, model_type, optimizer; setting = Dict("output" => Dict("branch_flows" => true)))
+            #result = run_opf(data, model_type, optimizer)
             result = optimize_model!(pm)
 
             #print_summary(result["solution"])

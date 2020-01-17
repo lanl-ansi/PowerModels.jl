@@ -172,13 +172,6 @@ end
 
 ""
 function constraint_power_balance(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
-    if !haskey(con(pm, nw), :kcl_p)
-        con(pm, nw)[:kcl_p] = Dict{Int,JuMP.ConstraintRef}()
-    end
-    if !haskey(con(pm, nw), :kcl_q)
-        con(pm, nw)[:kcl_q] = Dict{Int,JuMP.ConstraintRef}()
-    end
-
     bus = ref(pm, nw, :bus, i)
     bus_arcs = ref(pm, nw, :bus_arcs, i)
     bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
@@ -200,13 +193,6 @@ end
 
 ""
 function constraint_power_balance_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
-    if !haskey(con(pm, nw), :kcl_p)
-        con(pm, nw)[:kcl_p] = Dict{Int,JuMP.ConstraintRef}()
-    end
-    if !haskey(con(pm, nw), :kcl_q)
-        con(pm, nw)[:kcl_q] = Dict{Int,JuMP.ConstraintRef}()
-    end
-
     bus = ref(pm, nw, :bus, i)
     bus_arcs = ref(pm, nw, :bus_arcs, i)
     bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
@@ -539,10 +525,6 @@ Adds the (upper and lower) thermal limit constraints for the desired branch to t
 
 """
 function constraint_thermal_limit_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
-    if !haskey(con(pm, nw), :sm_fr)
-        con(pm, nw)[:sm_fr] = Dict{Int,Any}() # note this can be a constraint or a variable bound
-    end
-
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -556,10 +538,6 @@ end
 
 ""
 function constraint_thermal_limit_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
-    if !haskey(con(pm, nw), :sm_to)
-        con(pm, nw)[:sm_to] = Dict{Int,Any}() # note this can be a constraint or a variable bound
-    end
-
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]

@@ -6,6 +6,12 @@
 ""
 function variable_voltage(pm::AbstractDCPModel; kwargs...)
     variable_voltage_angle(pm; kwargs...)
+    variable_voltage_magnitude(pm; kwargs...)
+end
+
+""
+function variable_voltage_magnitude(pm::AbstractDCPModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+    report && sol_component_fixed(pm, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
 end
 
 "nothing to add, there are no voltage variables on branches"
@@ -289,10 +295,14 @@ function constraint_thermal_limit_to(pm::AbstractAPLossLessModels, n::Int, t_idx
     l,i,j = t_idx
     p_fr = var(pm, n, :p, (l,j,i))
     if isa(p_fr, JuMP.VariableRef) && JuMP.has_upper_bound(p_fr)
-        con(pm, n, :sm_to)[l] = JuMP.UpperBoundRef(p_fr)
+        cstr = JuMP.UpperBoundRef(p_fr)
     else
         p_to = var(pm, n, :p, t_idx)
-        con(pm, n, :sm_to)[t_idx[1]] = JuMP.@constraint(pm.model, p_to <= rate_a)
+        cstr = JuMP.@constraint(pm.model, p_to <= rate_a)
+    end
+
+    if report_duals(pm)
+        sol(pm, n, :branch, t_idx[1])[:mu_sm_to] = cstr
     end
 end
 

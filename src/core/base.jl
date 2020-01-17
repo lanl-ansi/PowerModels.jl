@@ -77,6 +77,8 @@ function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = 
 end
 
 
+report_duals(pm::AbstractPowerModel) = haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
+
 ### Helper functions for working with multinetworks
 ""
 ismultinetwork(pm::AbstractPowerModel) = (length(pm.ref[:nw]) > 1)

@@ -64,7 +64,7 @@ function constraint_power_balance(pm::AbstractWModels, n::Int, i, bus_arcs, bus_
     q_dc = get(var(pm, n), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
 
 
-    con(pm, n, :kcl_p)[i] = JuMP.@constraint(pm.model,
+    cstr_p = JuMP.@constraint(pm.model,
         sum(p[a] for a in bus_arcs)
         + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(psw[a_sw] for a_sw in bus_arcs_sw)
@@ -74,7 +74,7 @@ function constraint_power_balance(pm::AbstractWModels, n::Int, i, bus_arcs, bus_
         - sum(pd for pd in values(bus_pd))
         - sum(gs for gs in values(bus_gs))*w
     )
-    con(pm, n, :kcl_q)[i] = JuMP.@constraint(pm.model,
+    cstr_q = JuMP.@constraint(pm.model,
         sum(q[a] for a in bus_arcs)
         + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
@@ -84,6 +84,11 @@ function constraint_power_balance(pm::AbstractWModels, n::Int, i, bus_arcs, bus_
         - sum(qd for qd in values(bus_qd))
         + sum(bs for bs in values(bus_bs))*w
     )
+
+    if report_duals(pm)
+        sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
+        sol(pm, n, :bus, i)[:lam_kcl_i] = cstr_q
+    end
 end
 
 
@@ -104,7 +109,7 @@ function constraint_power_balance_ne(pm::AbstractWModels, n::Int, i::Int, bus_ar
     q_ne = get(var(pm, n), :q_ne, Dict()); _check_var_keys(q_ne, bus_arcs_ne, "reactive power", "ne_branch")
 
 
-    con(pm, n, :kcl_p)[i] = JuMP.@constraint(pm.model,
+    cstr_p = JuMP.@constraint(pm.model,
         sum(p[a] for a in bus_arcs)
         + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(psw[a_sw] for a_sw in bus_arcs_sw)
@@ -115,7 +120,7 @@ function constraint_power_balance_ne(pm::AbstractWModels, n::Int, i::Int, bus_ar
         - sum(pd for pd in values(bus_pd))
         - sum(gs for gs in values(bus_gs))*w
     )
-    con(pm, n, :kcl_q)[i] = JuMP.@constraint(pm.model,
+    cstr_q = JuMP.@constraint(pm.model,
         sum(q[a] for a in bus_arcs)
         + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
@@ -126,6 +131,11 @@ function constraint_power_balance_ne(pm::AbstractWModels, n::Int, i::Int, bus_ar
         - sum(qd for qd in values(bus_qd))
         + sum(bs for bs in values(bus_bs))*w
     )
+
+    if report_duals(pm)
+        sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
+        sol(pm, n, :bus, i)[:lam_kcl_i] = cstr_q
+    end
 end
 
 
