@@ -14,6 +14,10 @@ InfrastructureModels.@def pm_fields begin
     ref::Dict{Symbol,<:Any}
     var::Dict{Symbol,<:Any}
     con::Dict{Symbol,<:Any}
+
+    sol::Dict{Symbol,<:Any}
+    sol_proc::Dict{Symbol,<:Any}
+
     cnw::Int
 
     # Extension dictionary
@@ -37,9 +41,14 @@ function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = 
 
     var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
     con = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
+    sol = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
+    sol_proc = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
+
     for (nw_id, nw) in ref[:nw]
         nw_var = var[:nw][nw_id] = Dict{Symbol,Any}()
         nw_con = con[:nw][nw_id] = Dict{Symbol,Any}()
+        nw_sol = sol[:nw][nw_id] = Dict{Symbol,Any}()
+        nw_sol_proc = sol_proc[:nw][nw_id] = Dict{Symbol,Any}()
 
         if !haskey(nw, :conductors)
             nw[:conductor_ids] = 1:1
@@ -58,6 +67,8 @@ function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = 
         ref,
         var,
         con,
+        sol,
+        sol_proc,
         cnw,
         ext
     )
@@ -116,6 +127,22 @@ con(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.con[:nw][nw][key][id
 con(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.con[:nw][nw]
 con(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.con[:nw][nw][key]
 con(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.con[:nw][nw][key][idx]
+
+
+""
+sol(pm::AbstractPowerModel, nw::Int, args...) = _sol(pm.sol[:nw][nw], args...)
+sol(pm::AbstractPowerModel, args...; nw::Int=pm.cnw) = _sol(pm.sol[:nw][nw], args...)
+
+function _sol(sol::Dict, args...)
+    for arg in args
+        if haskey(sol, arg)
+            sol = sol[arg]
+        else
+            sol = sol[arg] = Dict()
+        end
+    end
+    return sol
+end
 
 
 ""

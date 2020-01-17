@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Update solution building infrastructure (#77)
 - Moved multi-conductor support into PowerModelsDistribution
 
 ### v0.14.0

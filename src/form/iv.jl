@@ -398,7 +398,7 @@ function add_setpoint_dcline_current!(sol, pm::AbstractIVRModel)
 end
 
 
-function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractIVRModel)
+function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractIVRModel; report::Bool=true)
     gen_cost = Dict()
     dcline_cost = Dict()
 
@@ -449,7 +449,7 @@ end
 
 
 "adds pg_cost variables and constraints"
-function objective_variable_pg_cost(pm::AbstractIVRModel)
+function objective_variable_pg_cost(pm::AbstractIVRModel; report::Bool=true)
     for (n, nw_ref) in nws(pm)
         gen_lines = calc_cost_pwl_lines(nw_ref[:gen])
 
@@ -457,6 +457,8 @@ function objective_variable_pg_cost(pm::AbstractIVRModel)
         pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
             [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost",
         )
+        report && sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
+
         nc = length(conductor_ids(pm, n))
 
         # gen pwl cost
@@ -471,13 +473,15 @@ end
 
 
 "adds p_dc_cost variables and constraints"
-function objective_variable_dc_cost(pm::AbstractIVRModel)
+function objective_variable_dc_cost(pm::AbstractIVRModel; report::Bool=true)
     for (n, nw_ref) in nws(pm)
         dcline_lines = calc_cost_pwl_lines(nw_ref[:dcline])
 
         dc_p_cost = var(pm, n)[:p_dc_cost] = JuMP.@variable(pm.model,
             [i in ids(pm, n, :dcline)], base_name="$(n)_dc_p_cost",
         )
+        report && sol_component_value(pm, n, :dcline, :p_dc_cost, ids(pm, n, :dcline), dc_p_cost)
+
         #to avoid function calls inside of @NLconstraint:
         nc = length(conductor_ids(pm, n))
         # dcline pwl cost

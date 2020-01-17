@@ -1,7 +1,7 @@
 # this file contains (balanced) convexified DistFlow formulation, in W space
 
 ""
-function variable_current_magnitude_sqr(pm::AbstractBFModel; nw::Int=pm.cnw, bounded = true)
+function variable_current_magnitude_sqr(pm::AbstractBFModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     branch = ref(pm, nw, :branch)
 
     ccm = var(pm, nw)[:ccm] = JuMP.@variable(pm.model,
@@ -27,6 +27,8 @@ function variable_current_magnitude_sqr(pm::AbstractBFModel; nw::Int=pm.cnw, bou
             end
         end
     end
+
+    report && sol_component_value(pm, nw, :branch, :ccm, ids(pm, nw, :branch), ccm)
 end
 
 ""

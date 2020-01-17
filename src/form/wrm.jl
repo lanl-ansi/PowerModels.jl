@@ -33,7 +33,7 @@ end
 
 
 ""
-function variable_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, bounded = true)
+function variable_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs))
     bus_ids = ids(pm, nw, :bus)
 
@@ -45,9 +45,16 @@ function variable_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, bounded = true)
     WR = var(pm, nw)[:WR] = JuMP.@variable(pm.model,
         [i=1:length(bus_ids), j=1:length(bus_ids)], Symmetric, base_name="$(nw)_WR", start=WR_start[i,j]
     )
+    if report
+        sol(pm, nw)[:WR] = WR
+    end
+
     WI = var(pm, nw)[:WI] = JuMP.@variable(pm.model,
         [1:length(bus_ids), 1:length(bus_ids)], base_name="$(nw)_WI", start=0.0
     )
+    if report
+        sol(pm, nw)[:WI] = WI
+    end
 
     # bounds on diagonal
     for (i, bus) in ref(pm, nw, :bus)
@@ -121,7 +128,7 @@ function ==(d1::_SDconstraintDecomposition, d2::_SDconstraintDecomposition)
     return eq
 end
 
-function variable_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, bounded=true)
+function variable_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
 
     if haskey(pm.ext, :SDconstraintDecomposition)
         decomp = pm.ext[:SDconstraintDecomposition]
@@ -144,15 +151,21 @@ function variable_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, bounded
         n = length(group)
         wr_start = zeros(n, n) + I
         voltage_product_groups[gidx] = Dict()
-        voltage_product_groups[gidx][:WR] =
+        WR = voltage_product_groups[gidx][:WR] =
             var(pm, nw)[:voltage_product_groups][gidx][:WR] =
             JuMP.@variable(pm.model, [i=1:n, j=1:n], Symmetric,
                 base_name="$(nw)_$(gidx)_WR", start=wr_start[i,j])
+        if report
+            sol(pm, nw, :w_group, gidx)[:WR] = WR
+        end
 
-        voltage_product_groups[gidx][:WI] =
+        WI = voltage_product_groups[gidx][:WI] =
             var(pm, nw)[:voltage_product_groups][gidx][:WI] =
             JuMP.@variable(pm.model, [1:n, 1:n],
                 base_name="$(nw)_$(gidx)_WI", start=0.0)
+        if report
+            sol(pm, nw, :w_group, gidx)[:WI] = WI
+        end
     end
 
     # voltage product bounds

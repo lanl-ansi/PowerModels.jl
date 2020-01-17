@@ -223,7 +223,7 @@ end
 ######## Lossless Models ########
 
 ""
-function variable_active_branch_flow(pm::AbstractAPLossLessModels; nw::Int=pm.cnw, bounded = true)
+function variable_active_branch_flow(pm::AbstractAPLossLessModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     p = var(pm, nw)[:p] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_p",
         start = comp_start_value(ref(pm, nw, :branch, l), "p_start")
@@ -254,10 +254,12 @@ function variable_active_branch_flow(pm::AbstractAPLossLessModels; nw::Int=pm.cn
     p_expr = Dict{Any,Any}( ((l,i,j), p[(l,i,j)]) for (l,i,j) in ref(pm, nw, :arcs_from) )
     p_expr = merge(p_expr, Dict( ((l,j,i), -1.0*p[(l,i,j)]) for (l,i,j) in ref(pm, nw, :arcs_from)))
     var(pm, nw)[:p] = p_expr
+
+    report && sol_component_value_edge(pm, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p_expr)
 end
 
 ""
-function variable_active_branch_flow_ne(pm::AbstractAPLossLessModels; nw::Int=pm.cnw)
+function variable_active_branch_flow_ne(pm::AbstractAPLossLessModels; nw::Int=pm.cnw, report::Bool=true)
     var(pm, nw)[:p_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs_from)], base_name="$(nw)_p_ne",
         lower_bound = -ref(pm, nw, :ne_branch, l, "rate_a"),
@@ -269,6 +271,8 @@ function variable_active_branch_flow_ne(pm::AbstractAPLossLessModels; nw::Int=pm
     p_ne_expr = Dict{Any,Any}([((l,i,j), 1.0*var(pm, nw, :p_ne, (l,i,j))) for (l,i,j) in ref(pm, nw, :ne_arcs_from)])
     p_ne_expr = merge(p_ne_expr, Dict(((l,j,i), -1.0*var(pm, nw, :p_ne, (l,i,j))) for (l,i,j) in ref(pm, nw, :ne_arcs_from)))
     var(pm, nw)[:p_ne] = p_ne_expr
+
+    report && sol_component_value_edge(pm, nw, :ne_branch, :p_ne_fr, :p_ne_to, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne)
 end
 
 ""

@@ -8,20 +8,22 @@ function variable_voltage(pm::AbstractLPACModel; kwargs...)
 end
 
 ""
-function variable_voltage_magnitude(pm::AbstractLPACModel; nw::Int=pm.cnw, bounded = true)
+function variable_voltage_magnitude(pm::AbstractLPACModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     if bounded
-        var(pm, nw)[:phi] = JuMP.@variable(pm.model,
+        phi = var(pm, nw)[:phi] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :bus)], base_name="$(nw)_phi",
             lower_bound = ref(pm, nw, :bus, i, "vmin") - 1.0,
             upper_bound = ref(pm, nw, :bus, i, "vmax") - 1.0,
             start = comp_start_value(ref(pm, nw, :bus, i), "phi_start")
         )
     else
-        var(pm, nw)[:phi] = JuMP.@variable(pm.model,
+        phi = var(pm, nw)[:phi] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :bus)], base_name="$(nw)_phi",
             start = comp_start_value(ref(pm, nw, :bus, i), "phi_start")
         )
     end
+
+    report && sol_component_value(pm, nw, :bus, :phi, ids(pm, nw, :bus), phi)
 end
 
 ""

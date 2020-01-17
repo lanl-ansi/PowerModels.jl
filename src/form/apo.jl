@@ -2,31 +2,41 @@
 
 
 "apo models ignore reactive power flows"
-function variable_reactive_generation(pm::AbstractActivePowerModel; kwargs...)
+function variable_reactive_generation(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
+    report && sol_component_fixed(pm, nw, :gen, :qg, ids(pm, nw, :gen), NaN)
 end
 
 "apo models ignore reactive power flows"
-function variable_reactive_generation_on_off(pm::AbstractActivePowerModel; kwargs...)
+function variable_reactive_generation_on_off(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
+    #report && sol_component_fixed(pm, nw, :gen, :qg, ids(pm, nw, :gen), NaN)
 end
 
 "apo models ignore reactive power flows"
-function variable_reactive_storage(pm::AbstractActivePowerModel; kwargs...)
+function variable_reactive_storage(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
+    #report && sol_component_fixed(pm, nw, :storage, :qs, ids(pm, nw, :storage), NaN)
 end
 
 "apo models ignore reactive power flows"
-function variable_reactive_storage_on_off(pm::AbstractActivePowerModel; kwargs...)
+function variable_reactive_storage_on_off(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
+    #report && sol_component_fixed(pm, nw, :storage, :qs, ids(pm, nw, :storage), NaN)
 end
 
 "apo models ignore reactive power flows"
-function variable_reactive_branch_flow(pm::AbstractActivePowerModel; kwargs...)
+function variable_reactive_branch_flow(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
+    #report && sol_component_fixed(pm, nw, :branch, :qf, ids(pm, nw, :branch), NaN)
+    #report && sol_component_fixed(pm, nw, :branch, :qt, ids(pm, nw, :branch), NaN)
 end
 
 "apo models ignore reactive power flows"
-function variable_reactive_branch_flow_ne(pm::AbstractActivePowerModel; kwargs...)
+function variable_reactive_branch_flow_ne(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
+    #report && sol_component_fixed(pm, nw, :ne_branch, :q_ne_fr, ids(pm, nw, :ne_branch), NaN)
+    #report && sol_component_fixed(pm, nw, :ne_branch, :q_ne_to, ids(pm, nw, :ne_branch), NaN)
 end
 
 "apo models ignore reactive power flows"
-function variable_reactive_dcline_flow(pm::AbstractActivePowerModel; kwargs...)
+function variable_reactive_dcline_flow(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
+    #report && sol_component_fixed(pm, nw, :dcline, :qf, ids(pm, nw, :dcline), NaN)
+    #report && sol_component_fixed(pm, nw, :dcline, :qt, ids(pm, nw, :dcline), NaN)
 end
 
 "do nothing, apo models do not have reactive variables"
