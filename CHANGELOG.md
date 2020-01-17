@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - nothing
 
 ### v0.14.0
+- Made storage state constraints more robust in multinetwork data (#653)
 - Changed post_* function names to build_* (#611) (breaking)
 - Updated core function names to instantiate_model and build_result (breaking)
 - Made problem naming more consistent (#644) (breaking)
