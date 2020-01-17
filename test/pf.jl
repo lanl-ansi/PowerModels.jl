@@ -133,7 +133,7 @@ end
 
 @testset "test iv pf" begin
     @testset "3-bus case" begin
-        result = run_pf_iv("../test/data/matpower/case3.m", IVRPowerModel, ipopt_solver, solution_processors=[sol_vr_to_vm!])
+        result = run_pf_iv("../test/data/matpower/case3.m", IVRPowerModel, ipopt_solver, solution_processors=[sol_vr_to_vp!])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -152,7 +152,7 @@ end
         # @test isapprox(result["solution"]["dcline"]["1"]["qt"],  0.0647562; atol = 1e-5) #no reason to expect this is unique
     end
     @testset "5-bus case with hvdc line" begin
-        result = run_pf_iv("../test/data/matpower/case5_dc.m", IVRPowerModel, ipopt_solver, solution_processors=[sol_vr_to_vm!])
+        result = run_pf_iv("../test/data/matpower/case5_dc.m", IVRPowerModel, ipopt_solver, solution_processors=[sol_vr_to_vp!])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)

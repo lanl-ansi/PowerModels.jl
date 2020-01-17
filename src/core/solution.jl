@@ -85,43 +85,6 @@ function build_solution(pm::AbstractPowerModel; post_processors=[])
 
     sol = _build_solution_values(pm.sol)
 
-    # for (nw_id,nw_ref) in nws(pm)
-    #     sol_nw = sol["nw"]["$(nw_id)"]
-    #     sol_post_nw = sol_post(pm, nw_id)
-
-    #     for (comp_key,comp_dict) in sol_nw
-    #         if comp_key != "cnd"
-    #             comp_key_symbol = Symbol(comp_key)
-    #             if haskey(sol_post_nw, comp_key_symbol)
-    #                 sol_post_comps = sol_post_nw[comp_key_symbol]
-    #                 for (comp_id, sol_comp) in comp_dict
-    #                     for (sol_post_comp_id, sol_post_comp) in sol_post_comps
-    #                         sol_post_comp(pm, nw_id, sol_comp)
-    #                     end
-    #                 end
-    #             end
-    #         end
-    #     end
-
-    #     for cnd_id in conductor_ids(pm)
-    #         sol_nw_cnd = sol_nw["cnd"]["$(cnd_id)"]
-    #         sol_post_nw_cnd = sol_post(pm, nw_id, cnd_id)
-
-    #         for (comp_key,comp_dict) in sol_nw_cnd
-    #             comp_key_symbol = Symbol(comp_key)
-    #             if haskey(sol_post_nw_cnd, comp_key_symbol)
-    #                 sol_post_comps = sol_post_nw_cnd[comp_key_symbol]
-    #                 for (comp_id, sol_comp) in comp_dict
-    #                     for (sol_post_comp_id, sol_post_comp) in sol_post_comps
-    #                         sol_post_comp(pm, nw_id, cnd_id, sol_comp)
-    #                     end
-    #                 end
-    #             end
-    #         end
-
-    #     end
-    # end
-
     sol["per_unit"] = pm.data["per_unit"]
     for (nw_id, nw_ref) in nws(pm)
         sol["nw"]["$(nw_id)"]["baseMVA"] = nw_ref[:baseMVA]
@@ -203,8 +166,8 @@ function _build_solution_values(var::Any)
 end
 
 
-
-function sol_vr_to_vm!(pm::AbstractPowerModel, solution::Dict)
+"converts vr,vi solution values at buses into vm,va"
+function sol_vr_to_vp!(pm::AbstractPowerModel, solution::Dict)
     if haskey(solution, "nw")
         nws_data = solution["nw"]
     else
@@ -225,7 +188,7 @@ function sol_vr_to_vm!(pm::AbstractPowerModel, solution::Dict)
     end
 end
 
-
+"converts w solution values at buses into vm"
 function sol_w_to_vm!(pm::AbstractPowerModel, solution::Dict)
     if haskey(solution, "nw")
         nws_data = solution["nw"]
@@ -238,6 +201,25 @@ function sol_w_to_vm!(pm::AbstractPowerModel, solution::Dict)
             for (i,bus) in nw_data["bus"]
                 if haskey(bus, "w")
                     bus["vm"] = sqrt(bus["w"])
+                end
+            end
+        end
+    end
+end
+
+"converts phi solution values at buses into vm"
+function sol_phi_to_vm!(pm::AbstractPowerModel, solution::Dict)
+    if haskey(solution, "nw")
+        nws_data = solution["nw"]
+    else
+        nws_data = Dict("0" => solution)
+    end
+
+    for (n, nw_data) in nws_data
+        if haskey(nw_data, "bus")
+            for (i,bus) in nw_data["bus"]
+                if haskey(bus, "phi")
+                    bus["vm"] = 1.0 + bus["phi"]
                 end
             end
         end

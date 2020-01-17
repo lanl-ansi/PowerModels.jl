@@ -210,6 +210,39 @@ end
 end
 
 
+@testset "test solution processors" begin
+    @testset "sol_vr_to_vp" begin
+        result = run_opf("../test/data/matpower/case5.m", ACRPowerModel, ipopt_solver, solution_processors=[sol_vr_to_vp!])
+
+        for (i,bus) in result["solution"]["bus"]
+            if bus["bus_type"] != 4
+                @test haskey(bus, "vm") && haskey(bus, "va")
+            end
+        end
+    end
+
+    @testset "sol_vr_to_vp" begin
+        result = run_opf("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver, solution_processors=[sol_w_to_vm!])
+
+        for (i,bus) in result["solution"]["bus"]
+            if bus["bus_type"] != 4
+                @test haskey(bus, "vm")
+            end
+        end
+    end
+
+    @testset "sol_vr_to_vp" begin
+        result = run_opf("../test/data/matpower/case5.m", LPACCPowerModel, ipopt_solver, solution_processors=[sol_phi_to_vm!])
+
+        for (i,bus) in result["solution"]["bus"]
+            if bus["bus_type"] != 4
+                @test haskey(bus, "vm")
+            end
+        end
+    end
+end
+
+
 # recommended by @lroald
 @testset "test solution feedback" begin
 
