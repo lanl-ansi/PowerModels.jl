@@ -93,7 +93,7 @@ end
 
 "opf with controlable switches"
 function _run_oswpf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _build_oswpf; ref_extensions=[ref_add_on_off_va_bounds!], solution_builder = _solution_osw!, kwargs...)
+    return run_model(file, model_constructor, optimizer, _build_oswpf; ref_extensions=[ref_add_on_off_va_bounds!], kwargs...)
 end
 
 ""
@@ -157,7 +157,7 @@ end
 
 "opf with controlable switches, node breaker"
 function _run_oswpf_nb(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _build_oswpf_nb; ref_extensions=[ref_add_on_off_va_bounds!], solution_builder = _solution_osw_nb!, kwargs...)
+    return run_model(file, model_constructor, optimizer, _build_oswpf_nb; ref_extensions=[ref_add_on_off_va_bounds!], kwargs...)
 end
 
 ""
@@ -252,7 +252,7 @@ end
 
 "opf with unit commitment, tests constraint_current_limit"
 function _run_ucopf(file, model_type::Type, solver; kwargs...)
-    return run_model(file, model_type, solver, _build_ucopf; solution_builder = _solution_uc!, kwargs...)
+    return run_model(file, model_type, solver, _build_ucopf; kwargs...)
 end
 
 ""

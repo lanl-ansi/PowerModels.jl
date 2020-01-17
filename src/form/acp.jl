@@ -98,7 +98,7 @@ function constraint_power_balance_ne(pm::AbstractACPModel, n::Int, i::Int, bus_a
     p_ne = get(var(pm, n), :p_ne, Dict()); _check_var_keys(p_ne, bus_arcs_ne, "active power", "ne_branch")
     q_ne = get(var(pm, n), :q_ne, Dict()); _check_var_keys(q_ne, bus_arcs_ne, "reactive power", "ne_branch")
 
-    con(pm, n, :kcl_p)[i] = JuMP.@constraint(pm.model,
+    JuMP.@constraint(pm.model,
         sum(p[a] for a in bus_arcs)
         + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(psw[a_sw] for a_sw in bus_arcs_sw)
@@ -109,7 +109,7 @@ function constraint_power_balance_ne(pm::AbstractACPModel, n::Int, i::Int, bus_a
         - sum(pd for pd in values(bus_pd))
         - sum(gs for gs in values(bus_gs))*vm^2
     )
-    con(pm, n, :kcl_q)[i] = JuMP.@constraint(pm.model,
+    JuMP.@constraint(pm.model,
         sum(q[a] for a in bus_arcs)
         + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(qsw[a_sw] for a_sw in bus_arcs_sw)

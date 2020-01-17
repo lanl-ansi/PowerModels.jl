@@ -6,7 +6,7 @@
 
 ""
 function run_ots(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, build_ots; ref_extensions=[ref_add_on_off_va_bounds!], solution_builder = solution_ots!, kwargs...)
+    return run_model(file, model_type, optimizer, build_ots; ref_extensions=[ref_add_on_off_va_bounds!], kwargs...)
 end
 
 ""

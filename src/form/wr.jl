@@ -294,7 +294,7 @@ function variable_voltage_magnitude_sqr_from_ne(pm::AbstractWRModel; nw::Int=pm.
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["f_bus"]), "w_fr_start", 1.001)
     )
 
-    report && sol_component_value(pm, nw, :branch, :w_fr_ne, ids(pm, nw, :branch), w_fr_ne)
+    report && sol_component_value(pm, nw, :ne_branch, :w_fr, ids(pm, nw, :ne_branch), w_fr_ne)
 end
 
 ""
@@ -309,7 +309,7 @@ function variable_voltage_magnitude_sqr_to_ne(pm::AbstractWRModel; nw::Int=pm.cn
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["t_bus"]), "w_to_start", 1.001)
     )
 
-    report && sol_component_value(pm, nw, :branch, :w_to_ne, ids(pm, nw, :branch), w_to_ne)
+    report && sol_component_value(pm, nw, :ne_branch, :w_to, ids(pm, nw, :ne_branch), w_to_ne)
 end
 
 ""
@@ -331,15 +331,8 @@ function variable_voltage_product_ne(pm::AbstractWRModel; nw::Int=pm.cnw, report
         start = comp_start_value(ref(pm, nw, :ne_buspairs, bi_bp[b]), "wi_start")
     )
 
-    if report
-        for bp in ids(pm, nw, :ne_branch)
-            buspair = ref(pm, n, :ne_buspairs, bp)
-            l = buspair["branch"]
-            @assert !haskey(sol(pm, n, :ne_branch, l), field_name)
-            sol(pm, n, :ne_branch, l)[:wr_ne] = wr_ne[bp]
-            sol(pm, n, :ne_branch, l)[:wi_ne] = wi_ne[bp]
-        end
-    end
+    report && sol_component_value(pm, nw, :ne_branch, :wr, ids(pm, nw, :ne_branch), wr_ne)
+    report && sol_component_value(pm, nw, :ne_branch, :wi, ids(pm, nw, :ne_branch), wi_ne)
 end
 
 

@@ -125,7 +125,7 @@ function run_opf_ptdf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
 
     #result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
     pm = instantiate_model(data, DCPPowerModel, build_opf_ptdf; ref_extensions=ref_extensions)
-    result = optimize_model!(pm, optimizer=optimizer, solution_builder=solution_opf_ptdf!)
+    result = optimize_model!(pm, optimizer=optimizer)
     update_data!(data, result["solution"])
 
     solution = compute_dc_pf(data)
@@ -172,7 +172,7 @@ function run_opf_ptdf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
             iteration += 1
 
             #result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
-            result = optimize_model!(pm; solution_builder=solution_opf_ptdf!)
+            result = optimize_model!(pm)
 
             update_data!(data, result["solution"])
 

@@ -212,8 +212,8 @@ TESTLOG = Memento.getlogger(PowerModels)
                 for (i, bus) in nw_data["bus"]
                     @test haskey(bus, "lam_kcl_r")
                     @test bus["lam_kcl_r"] >= -4000 && bus["lam_kcl_r"] <= 0
-                    @test haskey(bus, "lam_kcl_i")
-                    @test isnan(bus["lam_kcl_i"])
+                    #@test haskey(bus, "lam_kcl_i")
+                    #@test isnan(bus["lam_kcl_i"])
                 end
                 for (i, branch) in nw_data["branch"]
                     @test haskey(branch, "mu_sm_fr")

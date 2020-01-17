@@ -4,7 +4,7 @@
 
 ""
 function run_tnep(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, build_tnep; ref_extensions=[ref_add_on_off_va_bounds!,ref_add_ne_branch!], solution_builder = solution_tnep!, kwargs...)
+    return run_model(file, model_type, optimizer, build_tnep; ref_extensions=[ref_add_on_off_va_bounds!,ref_add_ne_branch!], kwargs...)
 end
 
 "the general form of the tnep optimization model"

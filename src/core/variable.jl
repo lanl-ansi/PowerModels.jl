@@ -1119,7 +1119,7 @@ function variable_active_branch_flow_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, 
         end
     end
 
-    report && sol_component_value_edge(pm, nw, :ne_branch, :p_ne_fr, :p_ne_to, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne)
+    report && sol_component_value_edge(pm, nw, :ne_branch, :pf, :pt, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne)
 end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= q_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
@@ -1141,7 +1141,7 @@ function variable_reactive_branch_flow_ne(pm::AbstractPowerModel; nw::Int=pm.cnw
         end
     end
 
-    report && sol_component_value_edge(pm, nw, :ne_branch, :q_ne_fr, :q_ne_to, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), q_ne)
+    report && sol_component_value_edge(pm, nw, :ne_branch, :qf, :qt, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), q_ne)
 end
 
 "variable: `0 <= z_branch[l] <= 1` for `l` in `branch`es"
@@ -1172,5 +1172,5 @@ function variable_branch_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "branch_tnep_start", 1.0)
     )
 
-    report && sol_component_value(pm, nw, :branch_ne, :status, ids(pm, nw, :branch_ne), z_branch_ne)
+    report && sol_component_value(pm, nw, :ne_branch, :built, ids(pm, nw, :ne_branch), z_branch_ne)
 end

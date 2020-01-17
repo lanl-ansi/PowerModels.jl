@@ -164,9 +164,9 @@ constraints are active in the data model.
 """
 function run_opf_ptdf(file, model_type::Type, optimizer; full_inverse=false, kwargs...)
     if !full_inverse
-        return run_model(file, model_type, optimizer, build_opf_ptdf; ref_extensions=[ref_add_connected_components!,ref_add_sm!], solution_builder=solution_opf_ptdf!, kwargs...)
+        return run_model(file, model_type, optimizer, build_opf_ptdf; ref_extensions=[ref_add_connected_components!,ref_add_sm!], kwargs...)
     else
-        return run_model(file, model_type, optimizer, build_opf_ptdf; ref_extensions=[ref_add_connected_components!,ref_add_sm_inv!], solution_builder=solution_opf_ptdf!, kwargs...)
+        return run_model(file, model_type, optimizer, build_opf_ptdf; ref_extensions=[ref_add_connected_components!,ref_add_sm_inv!], kwargs...)
     end
 end
 
