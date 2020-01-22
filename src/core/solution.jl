@@ -88,6 +88,9 @@ function build_solution(pm::AbstractPowerModel; post_processors=[])
     sol["per_unit"] = pm.data["per_unit"]
     for (nw_id, nw_ref) in nws(pm)
         sol["nw"]["$(nw_id)"]["baseMVA"] = nw_ref[:baseMVA]
+        if ismulticonductor(pm, nw_id)
+            sol["nw"]["$(nw_id)"]["conductors"] = nw_ref[:conductors]
+        end
     end
 
     if !ismultinetwork(pm)
