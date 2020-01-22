@@ -285,7 +285,7 @@ function _adjacency_matrix(pm::AbstractPowerModel, nw::Int=pm.cnw)
     f = [lookup_index[bp[1]] for bp in keys(buspairs)]
     t = [lookup_index[bp[2]] for bp in keys(buspairs)]
 
-    return sparse([f;t], [t;f], trues(2nl), nb, nb), lookup_index
+    return sparse([f;t], [t;f], ones(2nl), nb, nb), lookup_index
 end
 
 
@@ -302,7 +302,7 @@ function _chordal_extension(pm::AbstractPowerModel, nw::Int=pm.cnw)
     adj, lookup_index = _adjacency_matrix(pm, nw)
     nb = size(adj, 1)
     diag_el = sum(adj, dims=1)[:]
-    W = Hermitian(adj + spdiagm(0 => diag_el))
+    W = Hermitian(-adj + spdiagm(0 => diag_el .+ 1))
 
     F = cholesky(W)
     L = sparse(F.L)
@@ -311,7 +311,7 @@ function _chordal_extension(pm::AbstractPowerModel, nw::Int=pm.cnw)
 
     Rchol = L - spdiagm(0 => diag(L))
     f_idx, t_idx, V = findnz(Rchol)
-    cadj = sparse([f_idx;t_idx], [t_idx;f_idx], trues(2*length(f_idx)), nb, nb)
+    cadj = sparse([f_idx;t_idx], [t_idx;f_idx], ones(2*length(f_idx)), nb, nb)
     cadj = cadj[q, q] # revert to original bus ordering (invert cholfact permutation)
     return cadj, lookup_index, p
 end
