@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fixed PSD bug in cholesky factorization in sparse SDP formulation (#641)
 
 ### v0.14.0
 - Made storage state constraints more robust in multinetwork data (#653)
