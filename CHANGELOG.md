@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Update to InfrastructureModels v0.4
 - Fixed PSD bug in cholesky factorization in sparse SDP formulation (#641)
 
 ### v0.14.0
