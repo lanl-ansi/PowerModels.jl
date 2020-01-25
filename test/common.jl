@@ -101,3 +101,39 @@ function check_variable_bounds(model)
     end
     return true
 end
+
+
+function all_loads_on(result; atol=1e-5)
+    # tolerance of 1e-5 is needed for SCS tests to pass
+    return !haskey(result["solution"], "load") || all(isapprox(load["status"], 1.0, atol=atol) for (i,load) in result["solution"]["load"])
+end
+
+function all_shunts_on(result; atol=1e-5)
+    # tolerance of 1e-5 is needed for SCS tests to pass
+    return !haskey(result["solution"], "shunt") ||all(isapprox(shunt["status"], 1.0, atol=atol) for (i,shunt) in result["solution"]["shunt"])
+end
+
+""
+function load_status(result, nw_id, load_id)
+    return result["solution"]["nw"][nw_id]["load"][load_id]["status"]
+end
+
+""
+function load_status(result, load_id)
+    return result["solution"]["load"][load_id]["status"]
+end
+
+""
+function shunt_status(result, nw_id, shunt_id)
+    return result["solution"]["nw"][nw_id]["shunt"][shunt_id]["status"]
+end
+
+""
+function shunt_status(result, shunt_id)
+    return result["solution"]["shunt"][shunt_id]["status"]
+end
+
+""
+function active_power_served(result)
+    return sum([load["pd"] for (i,load) in result["solution"]["load"]])
+end

@@ -124,6 +124,20 @@ function add_setpoint_generator_status!(sol, pm::AbstractPowerModel)
 end
 
 ""
+function add_setpoint_load!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "load", "pd", :z_demand; conductorless=true, scale = (x,item,i) -> x*item["pd"][i])
+    add_setpoint!(sol, pm, "load", "qd", :z_demand; conductorless=true, scale = (x,item,i) -> x*item["qd"][i])
+    add_setpoint!(sol, pm, "load", "status", :z_demand; conductorless=true, default_value = (item) -> if (item["status"] == 0) 0.0 else 1.0 end)
+end
+
+""
+function add_setpoint_shunt!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "shunt", "gs", :z_shunt; conductorless=true, scale = (x,item,i) -> x*item["gs"][i])
+    add_setpoint!(sol, pm, "shunt", "bs", :z_shunt; conductorless=true, scale = (x,item,i) -> x*item["bs"][i])
+    add_setpoint!(sol, pm, "shunt", "status", :z_shunt; conductorless=true, default_value = (item) -> if (item["status"] == 0) 0.0 else 1.0 end)
+end
+
+""
 function add_setpoint_storage!(sol, pm::AbstractPowerModel)
     add_setpoint!(sol, pm, "storage", "ps", :ps)
     add_setpoint!(sol, pm, "storage", "qs", :qs)

@@ -2,6 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Add support for constant power factor load and shunt decision variables
+- Update to InfrastructureModels v0.4
 - Fixed PSD bug in cholesky factorization in sparse SDP formulation (#641)
 
 ### v0.14.0

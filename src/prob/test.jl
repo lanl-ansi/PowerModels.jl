@@ -250,6 +250,57 @@ function _solution_osw_nb!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
 end
 
 
+# a simple maximum loadability problem
+function _run_mld(file, model_constructor, solver; kwargs...)
+    return run_model(file, model_constructor, solver, _build_mld; solution_builder = _solution_mld!, kwargs...)
+end
+
+function _build_mld(pm::AbstractPowerModel)
+    variable_voltage(pm)
+    variable_generation(pm)
+    variable_branch_flow(pm)
+    variable_dcline_flow(pm)
+
+    variable_demand_factor(pm, relax=true)
+    variable_shunt_factor(pm, relax=true)
+
+    objective_max_loadability(pm)
+
+    constraint_model_voltage(pm)
+
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
+    end
+
+    for i in ids(pm, :bus)
+        constraint_power_balance_ls(pm, i)
+    end
+
+    for i in ids(pm, :branch)
+        constraint_ohms_yt_from(pm, i)
+        constraint_ohms_yt_to(pm, i)
+
+        constraint_voltage_angle_difference(pm, i)
+
+        constraint_thermal_limit_from(pm, i)
+        constraint_thermal_limit_to(pm, i)
+    end
+
+    for i in ids(pm, :dcline)
+        constraint_dcline(pm, i)
+    end
+end
+
+""
+function _solution_mld!(pm::AbstractPowerModel, sol::Dict{String,Any})
+    add_setpoint_bus_voltage!(sol, pm)
+    add_setpoint_generator_power!(sol, pm)
+    add_setpoint_branch_flow!(sol, pm)
+    add_setpoint_load!(sol, pm)
+    add_setpoint_shunt!(sol, pm)
+end
+
+
 "opf with unit commitment, tests constraint_current_limit"
 function _run_ucopf(file, model_type::Type, solver; kwargs...)
     return run_model(file, model_type, solver, _build_ucopf; solution_builder = _solution_uc!, kwargs...)
