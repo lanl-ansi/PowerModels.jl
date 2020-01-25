@@ -53,7 +53,6 @@ function constraint_power_balance(pm::AbstractACPModel, n::Int, c::Int, i::Int, 
     p_dc = get(var(pm, n, c), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
     q_dc = get(var(pm, n, c), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
 
-
     con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model,
         sum(p[a] for a in bus_arcs)
         + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
@@ -61,8 +60,8 @@ function constraint_power_balance(pm::AbstractACPModel, n::Int, c::Int, i::Int, 
         ==
         sum(pg[g] for g in bus_gens)
         - sum(ps[s] for s in bus_storage)
-        - sum(pd for pd in values(bus_pd))
-        - sum(gs for gs in values(bus_gs))*vm^2
+        - sum(pd for (i,pd) in bus_pd)
+        - sum(gs for (i,gs) in bus_gs)*vm^2
     )
     con(pm, n, c, :kcl_q)[i] = JuMP.@constraint(pm.model,
         sum(q[a] for a in bus_arcs)
@@ -71,9 +70,72 @@ function constraint_power_balance(pm::AbstractACPModel, n::Int, c::Int, i::Int, 
         ==
         sum(qg[g] for g in bus_gens)
         - sum(qs[s] for s in bus_storage)
-        - sum(qd for qd in values(bus_qd))
-        + sum(bs for bs in values(bus_bs))*vm^2
+        - sum(qd for (i,qd) in bus_qd)
+        + sum(bs for (i,bs) in bus_bs)*vm^2
     )
+end
+
+""
+function constraint_power_balance_ls(pm::AbstractACPModel, n::Int, c::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+    vm   = var(pm, n, c, :vm, i)
+    p    = get(var(pm, n, c),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
+    q    = get(var(pm, n, c),    :q, Dict()); _check_var_keys(q, bus_arcs, "reactive power", "branch")
+    pg   = get(var(pm, n, c),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
+    qg   = get(var(pm, n, c),   :qg, Dict()); _check_var_keys(qg, bus_gens, "reactive power", "generator")
+    ps   = get(var(pm, n, c),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
+    qs   = get(var(pm, n, c),   :qs, Dict()); _check_var_keys(qs, bus_storage, "reactive power", "storage")
+    psw  = get(var(pm, n, c),  :psw, Dict()); _check_var_keys(psw, bus_arcs_sw, "active power", "switch")
+    qsw  = get(var(pm, n, c),  :qsw, Dict()); _check_var_keys(qsw, bus_arcs_sw, "reactive power", "switch")
+    p_dc = get(var(pm, n, c), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
+    q_dc = get(var(pm, n, c), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
+
+    z_demand = get(var(pm, n), :z_demand, Dict()); _check_var_keys(z_demand, keys(bus_pd), "power factor", "load")
+    z_shunt = get(var(pm, n), :z_shunt, Dict()); _check_var_keys(z_shunt, keys(bus_gs), "power factor", "shunt")
+
+    # this is required for improved performance in NLP models
+    if length(z_shunt) <= 0
+        con(pm, n, c, :kcl_p)[i] = JuMP.@constraint(pm.model,
+            sum(p[a] for a in bus_arcs)
+            + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
+            + sum(psw[a_sw] for a_sw in bus_arcs_sw)
+            ==
+            sum(pg[g] for g in bus_gens)
+            - sum(ps[s] for s in bus_storage)
+            - sum(pd*z_demand[i] for (i,pd) in bus_pd)
+            - sum(gs*z_shunt[i] for (i,gs) in bus_gs)*vm^2
+        )
+        con(pm, n, c, :kcl_q)[i] = JuMP.@constraint(pm.model,
+            sum(q[a] for a in bus_arcs)
+            + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
+            + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
+            ==
+            sum(qg[g] for g in bus_gens)
+            - sum(qs[s] for s in bus_storage)
+            - sum(qd*z_demand[i] for (i,qd) in bus_qd)
+            + sum(bs*z_shunt[i] for (i,bs) in bus_bs)*vm^2
+        )
+    else
+        con(pm, n, c, :kcl_p)[i] = JuMP.@NLconstraint(pm.model,
+            sum(p[a] for a in bus_arcs)
+            + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
+            + sum(psw[a_sw] for a_sw in bus_arcs_sw)
+            ==
+            sum(pg[g] for g in bus_gens)
+            - sum(ps[s] for s in bus_storage)
+            - sum(pd*z_demand[i] for (i,pd) in bus_pd)
+            - sum(gs*z_shunt[i] for (i,gs) in bus_gs)*vm^2
+        )
+        con(pm, n, c, :kcl_q)[i] = JuMP.@NLconstraint(pm.model,
+            sum(q[a] for a in bus_arcs)
+            + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
+            + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
+            ==
+            sum(qg[g] for g in bus_gens)
+            - sum(qs[s] for s in bus_storage)
+            - sum(qd*z_demand[i] for (i,qd) in bus_qd)
+            + sum(bs*z_shunt[i] for (i,bs) in bus_bs)*vm^2
+        )
+    end
 end
 
 

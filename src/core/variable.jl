@@ -1035,3 +1035,41 @@ function variable_branch_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "branch_tnep_start", 1, 1.0)
     )
 end
+
+
+""
+function variable_demand_factor(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, relax::Bool=false)
+    if relax == true
+        var(pm, nw)[:z_demand] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :load)], base_name="$(nw)_z_demand", 
+            upper_bound = 1, 
+            lower_bound = 0,
+            start = comp_start_value(ref(pm, nw, :load, i), "z_demand_start", 1, 1.0)
+        )
+    else
+        var(pm, nw)[:z_demand] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :load)], base_name="$(nw)_z_demand", 
+        binary = true,
+        start = comp_start_value(ref(pm, nw, :load, i), "z_demand_start", 1, 1.0)
+    )
+    end
+end
+
+
+""
+function variable_shunt_factor(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, relax::Bool=false)
+    if relax == true
+        var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt", 
+            upper_bound = 1, 
+            lower_bound = 0,
+            start = comp_start_value(ref(pm, nw, :shunt, i), "z_shunt_start", 1, 1.0)
+        )
+    else
+        var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt", 
+            binary = true,
+            start = comp_start_value(ref(pm, nw, :shunt, i), "z_shunt_start", 1, 1.0)
+        )
+    end
+end

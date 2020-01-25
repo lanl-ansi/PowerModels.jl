@@ -464,3 +464,32 @@ function objective_min_fuel_cost_pwl(pm::AbstractPowerModel)
     )
 end
 
+
+
+function objective_max_loadability(pm::AbstractPowerModel)
+    nws = nw_ids(pm)
+
+    @assert all(!ismulticonductor(pm, n) for n in nws)
+
+    z_demand = Dict(n => var(pm, n, :z_demand) for n in nws)
+    z_shunt = Dict(n => var(pm, n, :z_shunt) for n in nws)
+    time_elapsed = Dict(n => get(ref(pm, n), :time_elapsed, 1) for n in nws)
+
+    load_weight = Dict(n =>
+        Dict(i => get(load, "weight", 1.0) for (i,load) in ref(pm, n, :load)) 
+    for n in nws)
+
+    #println(load_weight)
+
+    return JuMP.@objective(pm.model, Max,
+        sum( 
+            ( 
+            time_elapsed[n]*(
+                sum(z_shunt[n][i] for (i,shunt) in ref(pm, n, :shunt)) +
+                sum(load_weight[n][i]*abs(load["pd"])*z_demand[n][i] for (i,load) in ref(pm, n, :load))
+                )
+            )
+            for n in nws)
+        )
+end
+
