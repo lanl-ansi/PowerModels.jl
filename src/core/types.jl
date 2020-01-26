@@ -500,6 +500,7 @@ mutable struct SparseSDPWRMPowerModel <: AbstractSparseSDPWRMModel @pm_fields en
 
 AbstractWRModels = Union{AbstractACTModel, AbstractWRModel, AbstractWRConicModel, AbstractWRMModel}
 AbstractWModels = Union{AbstractWRModels, AbstractBFModel}
+AbstractWConvexModels = Union{AbstractWRModel, AbstractWRConicModel, AbstractWRMModel, AbstractBFModel}
 
 AbstractAPLossLessModels = Union{DCPPowerModel, DCMPPowerModel, AbstractNFAModel}
 

@@ -190,6 +190,25 @@ function constraint_power_balance(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw
     constraint_power_balance(pm, nw, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
+"nodal power balance with constant power factor load and shunt shedding"
+function constraint_power_balance_ls(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+    bus = ref(pm, nw, :bus, i)
+    bus_arcs = ref(pm, nw, :bus_arcs, i)
+    bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
+    bus_arcs_sw = ref(pm, nw, :bus_arcs_sw, i)
+    bus_gens = ref(pm, nw, :bus_gens, i)
+    bus_loads = ref(pm, nw, :bus_loads, i)
+    bus_shunts = ref(pm, nw, :bus_shunts, i)
+    bus_storage = ref(pm, nw, :bus_storage, i)
+
+    bus_pd = Dict(k => ref(pm, nw, :load, k, "pd") for k in bus_loads)
+    bus_qd = Dict(k => ref(pm, nw, :load, k, "qd") for k in bus_loads)
+
+    bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs") for k in bus_shunts)
+    bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs") for k in bus_shunts)
+
+    constraint_power_balance_ls(pm, nw, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+end
 
 ""
 function constraint_power_balance_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)

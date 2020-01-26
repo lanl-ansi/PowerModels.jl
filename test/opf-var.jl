@@ -150,6 +150,180 @@ end
 end
 
 
+
+@testset "test mld" begin
+
+    @testset "test ac polar mld" begin
+        @testset "5-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case5.m", ACPPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 10.0; atol = 1e-2)
+            @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
+            @test all_loads_on(result)
+            @test all_shunts_on(result)
+        end
+        @testset "14-bus current" begin
+            result = PowerModels._run_mld("../test/data/matpower/case14.m", ACPPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 3.59; atol = 1e-2)
+            @test isapprox(active_power_served(result), 2.59; atol = 1e-2)
+            @test all_loads_on(result)
+            @test all_shunts_on(result)
+        end
+    end
+
+    @testset "test ac rect mld" begin
+        @testset "5-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case5.m", ACRPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 10.0; atol = 1e-2)
+            @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
+            @test all_loads_on(result)
+            @test all_shunts_on(result)
+        end
+        @testset "14-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case14.m", ACRPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 3.59; atol = 1e-2)
+            @test isapprox(active_power_served(result), 2.59; atol = 1e-2)
+            @test all_loads_on(result)
+            @test all_shunts_on(result)
+        end
+    end
+
+    @testset "test ac tan mld" begin
+        @testset "5-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case5.m", ACTPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 10.0; atol = 1e-2)
+            @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
+            @test all_loads_on(result)
+            @test all_shunts_on(result)
+        end
+        @testset "14-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case14.m", ACTPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 3.59; atol = 1e-2)
+            @test isapprox(active_power_served(result), 2.59; atol = 1e-2)
+            @test all_loads_on(result)
+            @test all_shunts_on(result)
+        end
+    end
+
+    @testset "test nfa mld" begin
+        @testset "5-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case5.m", NFAPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 10.0; atol = 1e-2)
+            @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
+            @test all_loads_on(result)
+            @test all_shunts_on(result)
+        end
+        @testset "14-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case14.m", NFAPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 3.59; atol = 1e-2)
+            @test isapprox(active_power_served(result), 2.59; atol = 1e-2)
+            @test all_loads_on(result)
+            @test all_shunts_on(result)
+        end
+    end
+
+    @testset "test dc mld" begin
+        @testset "5-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case5.m", DCPPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 10.0; atol = 1e-2)
+            @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
+            @test all_loads_on(result)
+            @test all_shunts_on(result)
+        end
+        @testset "14-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case14.m", DCPPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 3.59; atol = 1e-2)
+            @test isapprox(active_power_served(result), 2.59; atol = 1e-2)
+            @test all_loads_on(result)
+            @test all_shunts_on(result)
+        end
+    end
+
+    @testset "test soc (BIM) mld" begin
+        @testset "5-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 10.0; atol = 1e-2)
+            @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
+            @test all_loads_on(result)
+            @test all_shunts_on(result)
+        end
+        @testset "14-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case14.m", SOCWRPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 3.59; atol = 1e-2)
+            @test isapprox(active_power_served(result), 2.59; atol = 1e-2)
+            @test all_loads_on(result)
+            @test all_shunts_on(result)
+        end
+    end
+
+    @testset "test soc conic (BIM) mld" begin
+        @testset "5-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case5.m", SOCWRConicPowerModel, scs_solver)
+
+            @test result["termination_status"] == OPTIMAL
+            @test isapprox(result["objective"], 10.0; atol = 1e-2)
+            @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
+            @test all_loads_on(result; atol=1e-4)
+            @test all_shunts_on(result)
+        end
+        @testset "14-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case14.m", SOCWRConicPowerModel, scs_solver)
+
+            @test result["termination_status"] == OPTIMAL
+            @test isapprox(result["objective"], 3.59; atol = 1e-2)
+            @test isapprox(active_power_served(result), 2.59; atol = 1e-2)
+            @test all_loads_on(result; atol=1e-4)
+            @test all_shunts_on(result; atol=1e-4)
+        end
+    end
+
+    @testset "test sdp mld" begin
+        @testset "5-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case5.m", SOCWRConicPowerModel, scs_solver)
+
+            @test result["termination_status"] == OPTIMAL
+            @test isapprox(result["objective"], 10.0; atol = 1e-2)
+            @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
+            @test all_loads_on(result; atol=1e-4)
+            @test all_shunts_on(result)
+        end
+        @testset "14-bus case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case14.m", SOCWRConicPowerModel, scs_solver)
+
+            @test result["termination_status"] == OPTIMAL
+            @test isapprox(result["objective"], 3.59; atol = 1e-2)
+            @test isapprox(active_power_served(result), 2.59; atol = 1e-2)
+            @test all_loads_on(result, atol=1e-4)
+            @test all_shunts_on(result, atol=1e-4)
+        end
+    end
+
+end
+
+
 @testset "test unit commitment opf" begin
 
     @testset "test ac opf" begin

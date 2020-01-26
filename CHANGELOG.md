@@ -5,6 +5,11 @@ PowerModels.jl Change Log
 - Update solution building infrastructure (#77)
 - Moved multi-conductor support into PowerModelsDistribution
 
+### Staged
+- Add support for constant power factor load and shunt decision variables
+- Update to InfrastructureModels v0.4
+- Fixed PSD bug in cholesky factorization in sparse SDP formulation (#641)
+
 ### v0.14.0
 - Made storage state constraints more robust in multinetwork data (#653)
 - Changed post_* function names to build_* (#611) (breaking)

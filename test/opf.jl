@@ -903,6 +903,12 @@ end
         @test result["termination_status"] == OPTIMAL
         @test isapprox(result["objective"], 1005.31; atol = 1e0)
     end
+    @testset "9-bus cholesky PosDefException" begin
+        result = run_opf("../test/data/matpower/case9.m", SparseSDPWRMPowerModel, scs_solver)
+
+        @test result["termination_status"] == OPTIMAL
+        @test isapprox(result["objective"], 347.746; atol = 1e0)
+    end
     # too slow for unit tests
     # @testset "14-bus case" begin
     #     result = run_opf("../test/data/matpower/case14.m", SparseSDPWRMPowerModel, scs_solver)

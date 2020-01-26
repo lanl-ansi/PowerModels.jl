@@ -77,9 +77,37 @@ function constraint_power_balance(pm::AbstractActivePowerModel, n::Int, i::Int, 
 
     if report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr
+        sol(pm, n, :bus, i)[:lam_kcl_i] = NaN
     end
 end
 
+""
+function constraint_power_balance_ls(pm::AbstractActivePowerModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+    p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
+    pg   = get(var(pm, n),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
+    ps   = get(var(pm, n),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
+    psw  = get(var(pm, n),  :psw, Dict()); _check_var_keys(psw, bus_arcs_sw, "active power", "switch")
+    p_dc = get(var(pm, n), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
+
+    z_demand = get(var(pm, n), :z_demand, Dict()); _check_var_keys(z_demand, keys(bus_pd), "power factor", "load")
+    z_shunt = get(var(pm, n), :z_shunt, Dict()); _check_var_keys(z_shunt, keys(bus_gs), "power factor", "shunt")
+
+    cstr = JuMP.@constraint(pm.model,
+        sum(p[a] for a in bus_arcs)
+        + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
+        + sum(psw[a_sw] for a_sw in bus_arcs_sw)
+        ==
+        sum(pg[g] for g in bus_gens)
+        - sum(ps[s] for s in bus_storage)
+        - sum(pd*z_demand[i] for (i,pd) in bus_pd)
+        - sum(gs*z_shunt[i] for (i,gs) in bus_gs)*1.0^2
+    )
+
+    if report_duals(pm)
+        sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
+        sol(pm, n, :bus, i)[:lam_kcl_i] = NaN
+    end
+end
 
 ""
 function constraint_power_balance_ne(pm::AbstractDCPModel, n::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)

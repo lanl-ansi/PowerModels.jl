@@ -1174,3 +1174,57 @@ function variable_branch_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool
 
     report && sol_component_value(pm, nw, :ne_branch, :built, ids(pm, nw, :ne_branch), z_branch_ne)
 end
+
+
+""
+function variable_demand_factor(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+    if relax == true
+        z_demand = var(pm, nw)[:z_demand] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :load)], base_name="$(nw)_z_demand", 
+            upper_bound = 1, 
+            lower_bound = 0,
+            start = comp_start_value(ref(pm, nw, :load, i), "z_demand_start", 1.0)
+        )
+    else
+        z_demand = var(pm, nw)[:z_demand] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :load)], base_name="$(nw)_z_demand", 
+            binary = true,
+            start = comp_start_value(ref(pm, nw, :load, i), "z_demand_start", 1.0)
+        )
+    end
+
+    if report
+        sol_component_value(pm, nw, :load, :status, ids(pm, nw, :load), z_demand)
+        sol_pd = Dict(i => z_demand[i]*ref(pm, nw, :load, i)["pd"] for i in ids(pm, nw, :load))
+        sol_component_value(pm, nw, :load, :pd, ids(pm, nw, :load), sol_pd)
+        sol_qd = Dict(i => z_demand[i]*ref(pm, nw, :load, i)["pd"] for i in ids(pm, nw, :load))
+        sol_component_value(pm, nw, :load, :qd, ids(pm, nw, :load), sol_qd)
+    end
+end
+
+
+""
+function variable_shunt_factor(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+    if relax == true
+        z_shunt = var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt", 
+            upper_bound = 1, 
+            lower_bound = 0,
+            start = comp_start_value(ref(pm, nw, :shunt, i), "z_shunt_start", 1.0)
+        )
+    else
+        z_shunt = var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
+            [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt", 
+            binary = true,
+            start = comp_start_value(ref(pm, nw, :shunt, i), "z_shunt_start", 1.0)
+        )
+    end
+
+    if report
+        sol_component_value(pm, nw, :shunt, :status, ids(pm, nw, :shunt), z_shunt)
+        sol_gs = Dict(i => z_shunt[i]*ref(pm, nw, :shunt, i)["gs"] for i in ids(pm, nw, :shunt))
+        sol_component_value(pm, nw, :shunt, :gs, ids(pm, nw, :shunt), sol_gs)
+        sol_bs = Dict(i => z_shunt[i]*ref(pm, nw, :shunt, i)["bs"] for i in ids(pm, nw, :shunt))
+        sol_component_value(pm, nw, :shunt, :bs, ids(pm, nw, :shunt), sol_bs)
+    end
+end
