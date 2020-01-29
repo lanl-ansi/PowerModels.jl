@@ -728,7 +728,7 @@ end
 
     @testset "test ac polar opf" begin
         @testset "3-bus case with fixed phase shift / tap" begin
-            file = "test/data/matpower/case3_tap_shift.m"
+            file = "../test/data/matpower/case3_tap_shift.m"
             data = PowerModels.parse_file(file)
             result = PowerModels.run_op(data, ACPPowerModel, ipopt_solver)
 
@@ -737,7 +737,7 @@ end
         end
 
         @testset "3-bus case with optimal phase shifting / tap changing" begin
-            file = "test/data/matpower/case3_tap_shift.m"
+            file = "../test/data/matpower/case3_tap_shift.m"
             data = PowerModels.parse_file(file)
             result = PowerModels.run_opf_tap_shift(data, ACPPowerModel, ipopt_solver)
 
@@ -756,8 +756,8 @@ end
         end
 
 
-        @testset "3-bus case with optimal phase shifting / tap changing with eq lb/ub" begin
-            file = "test/data/matpower/case3_tap_shift.m"
+        @testset "3-bus case with optimal phase shifting / tap changing with equal lb/ub" begin
+            file = "../test/data/matpower/case3_tap_shift.m"
             data = PowerModels.parse_file(file)
             for (i, branch) in data["branch"]
                 branch["shift_min"] = branch["shift"]*180/pi
