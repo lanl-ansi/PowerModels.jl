@@ -723,3 +723,60 @@ end
         @test isapprox(result["objective"], 79805; atol = 1e0)
     end
 end
+
+@testset "test opf with phase shifting / tap changing optimisation" begin
+
+    @testset "test ac polar opf" begin
+        @testset "3-bus case with fixed phase shift / tap" begin
+            file = "test/data/matpower/case3_tap_shift.m"
+            data = PowerModels.parse_file(file)
+            result = PowerModels.run_op(data, ACPPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 5820.1; atol = 1e0)
+        end
+
+        @testset "3-bus case with optimal phase shifting / tap changing" begin
+            file = "test/data/matpower/case3_tap_shift.m"
+            data = PowerModels.parse_file(file)
+            result = PowerModels.run_opf_tap_shift(data, ACPPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 5738.6; atol = 1e0)
+
+            @test haskey(result["branch"]["1"], "tm")
+            @test haskey(result["branch"]["1"], "ta")
+
+            @test isapprox(result["branch"]["1"]["tm"], 0.948; atol = 1e-2)
+            @test isapprox(result["branch"]["1"]["ta"], 0.000; atol = 1e-3)
+            @test isapprox(result["branch"]["2"]["tm"], 1.100; atol = 1e-3)
+            @test isapprox(result["branch"]["2"]["ta"], 0.000; atol = 1e-3)
+            @test isapprox(result["branch"]["3"]["tm"], 1.000; atol = 1e-3)
+            @test isapprox(result["branch"]["3"]["ta"], 15.0; atol = 1e-1)
+        end
+
+
+        @testset "3-bus case with optimal phase shifting / tap changing with eq lb/ub" begin
+            file = "test/data/matpower/case3_tap_shift.m"
+            data = PowerModels.parse_file(file)
+            for (i, branch) in data["branch"]
+                branch["shift_min"] = branch["shift"]*180/pi
+                branch["shift_max"] = branch["shift"]*180/pi
+                branch["tap_min"] = branch["tap"]
+                branch["tap_max"] = branch["tap"]
+            end
+            result = PowerModels.run_opf_tap_shift(data, ACPPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 5820.1; atol = 1e0)
+
+            @test isapprox(result["branch"]["1"]["tm"], 1.00; atol = 1e-2)
+            @test isapprox(result["branch"]["1"]["ta"], 0.000; atol = 1e-3)
+            @test isapprox(result["branch"]["2"]["tm"], 1.000; atol = 1e-3)
+            @test isapprox(result["branch"]["2"]["ta"], 0.000; atol = 1e-3)
+            @test isapprox(result["branch"]["3"]["tm"], 1.000; atol = 1e-3)
+            @test isapprox(result["branch"]["3"]["ta"], 5.0; atol = 1e-1)
+
+        end
+    end
+end
