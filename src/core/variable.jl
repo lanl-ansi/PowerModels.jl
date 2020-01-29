@@ -547,7 +547,7 @@ function variable_transformer_shift(pm::AbstractPowerModel; nw::Int=pm.cnw, repo
         start = comp_start_value(ref(pm, nw, :branch, i), "ta_start", 1.0)
     )
 
-    report && sol_component_value(pm, nw, :branch, :ta, ids(pm, nw, :branch), ta)
+    report && sol_component_value(pm, nw, :branch, :ta, ids(pm, nw, :branch), ta*180/pi)
 end
 
 "variable: `cr[l,i,j]` for `(l,i,j)` in `arcs`"
