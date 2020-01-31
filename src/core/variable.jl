@@ -519,15 +519,21 @@ function variable_reactive_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, b
     report && sol_component_value_edge(pm, nw, :branch, :qf, :qt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), q)
 end
 
+
+function variable_transformer(pm::AbstractPolarModels; kwargs...)
+    variable_transformer_tm(pm; kwargs...)
+    variable_transformer_ta(pm; kwargs...)
+end
+
 "variable: `0 <= tm[l]` for `l` in `branch`es"
-function variable_transformer_tap(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_transformer_tm(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
     tm = var(pm, nw)[:tm] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :branch)], base_name="$(nw)_tm",
-        lower_bound = branches[i]["tap_min"],
-        upper_bound = branches[i]["tap_max"],
+        lower_bound = branches[i]["tm_min"],
+        upper_bound = branches[i]["tm_max"],
         start = comp_start_value(ref(pm, nw, :branch, i), "tm_start", 1.0)
     )
 
@@ -536,18 +542,18 @@ end
 
 
 "variable: `ta[l]` for `l` in `branch`es"
-function variable_transformer_shift(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_transformer_ta(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
     ta = var(pm, nw)[:ta] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :branch)], base_name="$(nw)_ta",
-        lower_bound = branches[i]["shift_min"]/180*pi,
-        upper_bound = branches[i]["shift_max"]/180*pi,
+        lower_bound = branches[i]["ta_min"],
+        upper_bound = branches[i]["ta_max"],
         start = comp_start_value(ref(pm, nw, :branch, i), "ta_start", 1.0)
     )
 
-    report && sol_component_value(pm, nw, :branch, :ta, ids(pm, nw, :branch), ta*180/pi)
+    report && sol_component_value(pm, nw, :branch, :ta, ids(pm, nw, :branch), ta)
 end
 
 "variable: `cr[l,i,j]` for `(l,i,j)` in `arcs`"

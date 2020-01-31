@@ -451,7 +451,7 @@ end
 
 
 ""
-function constraint_ohms_tap_shift_yt_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_ohms_y_oltc_pst_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -462,12 +462,12 @@ function constraint_ohms_tap_shift_yt_from(pm::AbstractPowerModel, i::Int; nw::I
     g_fr = branch["g_fr"]
     b_fr = branch["b_fr"]
 
-    constraint_ohms_tap_shift_yt_from(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr)
+    constraint_ohms_y_oltc_pst_from(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr)
 end
 
 
 ""
-function constraint_ohms_tap_shift_yt_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_ohms_y_oltc_pst_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -478,7 +478,7 @@ function constraint_ohms_tap_shift_yt_to(pm::AbstractPowerModel, i::Int; nw::Int
     g_to = branch["g_to"]
     b_to = branch["b_to"]
 
-    constraint_ohms_tap_shift_yt_to(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to)
+    constraint_ohms_y_oltc_pst_to(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to)
 end
 
 ""

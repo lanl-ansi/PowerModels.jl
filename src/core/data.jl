@@ -376,6 +376,9 @@ function _make_per_unit!(data::Dict{String,<:Any})
 
         _apply_func!(branch, "mu_sm_fr", rescale_dual)
         _apply_func!(branch, "mu_sm_to", rescale_dual)
+
+        _apply_func!(branch, "ta_max", deg2rad)
+        _apply_func!(branch, "ta_min", deg2rad)
     end
 
     if haskey(data, "dcline")

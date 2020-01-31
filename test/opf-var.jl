@@ -739,7 +739,7 @@ end
         @testset "3-bus case with optimal phase shifting / tap changing" begin
             file = "../test/data/matpower/case3_tap_shift.m"
             data = PowerModels.parse_file(file)
-            result = PowerModels.run_opf_tap_shift(data, ACPPowerModel, ipopt_solver)
+            result = PowerModels._run_opf_tap_shift(data, ACPPowerModel, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 5738.6; atol = 1e0)
@@ -752,7 +752,7 @@ end
             @test isapprox(result["solution"]["branch"]["2"]["tm"], 1.100; atol = 1e-3)
             @test isapprox(result["solution"]["branch"]["2"]["ta"], 0.000; atol = 1e-3)
             @test isapprox(result["solution"]["branch"]["3"]["tm"], 1.000; atol = 1e-3)
-            @test isapprox(result["solution"]["branch"]["3"]["ta"], 15.0; atol = 1e-1)
+            @test isapprox(result["solution"]["branch"]["3"]["ta"], 15.0/180*pi; atol = 1e-1)
         end
 
 
@@ -760,12 +760,12 @@ end
             file = "../test/data/matpower/case3_tap_shift.m"
             data = PowerModels.parse_file(file)
             for (i, branch) in data["branch"]
-                branch["shift_min"] = branch["shift"]*180/pi
-                branch["shift_max"] = branch["shift"]*180/pi
-                branch["tap_min"] = branch["tap"]
-                branch["tap_max"] = branch["tap"]
+                branch["ta_min"] = branch["shift"]
+                branch["ta_max"] = branch["shift"]
+                branch["tm_min"] = branch["tap"]
+                branch["tm_max"] = branch["tap"]
             end
-            result = PowerModels.run_opf_tap_shift(data, ACPPowerModel, ipopt_solver)
+            result = PowerModels._run_opf_tap_shift(data, ACPPowerModel, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 5820.1; atol = 1e0)
@@ -775,7 +775,7 @@ end
             @test isapprox(result["solution"]["branch"]["2"]["tm"], 1.000; atol = 1e-3)
             @test isapprox(result["solution"]["branch"]["2"]["ta"], 0.000; atol = 1e-3)
             @test isapprox(result["solution"]["branch"]["3"]["tm"], 1.000; atol = 1e-3)
-            @test isapprox(result["solution"]["branch"]["3"]["ta"], 5.0; atol = 1e-1)
+            @test isapprox(result["solution"]["branch"]["3"]["ta"], 5.0/180*pi; atol = 1e-1)
         end
     end
 end
