@@ -470,6 +470,37 @@ function constraint_ohms_yt_to_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw
     constraint_ohms_yt_to_ne(pm, nw, cnd, i, f_bus, t_bus, f_idx, t_idx, g[cnd,cnd], b[cnd,cnd], g_to, b_to, tr[cnd], ti[cnd], tm, vad_min, vad_max)
 end
 
+""
+function constraint_ohms_y_oltc_pst_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    branch = ref(pm, nw, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    g, b = calc_branch_y(branch)
+    g_fr = branch["g_fr"][cnd]
+    b_fr = branch["b_fr"][cnd]
+
+    constraint_ohms_y_oltc_pst_from(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr)
+end
+
+
+""
+function constraint_ohms_y_oltc_pst_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
+    branch = ref(pm, nw, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    f_idx = (i, f_bus, t_bus)
+    t_idx = (i, t_bus, f_bus)
+
+    g, b = calc_branch_y(branch)
+    g_to = branch["g_to"][cnd]
+    b_to = branch["b_to"][cnd]
+
+    constraint_ohms_y_oltc_pst_to(pm, nw, cnd, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to)
+end
+
 
 ""
 function constraint_voltage_drop(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw, cnd::Int=pm.ccnd)
@@ -877,7 +908,7 @@ function constraint_storage_state(pm::AbstractPowerModel, i::Int, nw_1::Int, nw_
 
     if haskey(ref(pm, nw_1, :storage), i)
         constraint_storage_state(pm, nw_1, nw_2, i, storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
-    else 
+    else
         # if the storage device has status=0 in nw_1, then the stored energy variable will not exist. Initialize storage from data model instead.
         Memento.warn(_LOGGER, "storage component $(i) was not found in network $(nw_1) while building constraint_storage_state between networks $(nw_1) and $(nw_2). Using the energy value from the storage component in network $(nw_2) instead")
         constraint_storage_state_initial(pm, nw_2, i, storage["energy"], storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)

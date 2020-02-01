@@ -164,6 +164,13 @@ function add_setpoint_branch_flow!(sol, pm::AbstractPowerModel)
 end
 
 ""
+function add_setpoint_transformer!(sol, pm::AbstractPowerModel)
+    add_setpoint!(sol, pm, "branch", "ta", :ta, status_name=pm_component_status["branch"])
+    add_setpoint!(sol, pm, "branch", "tm", :tm, status_name=pm_component_status["branch"])
+end
+
+
+""
 function add_setpoint_dcline_flow!(sol, pm::AbstractPowerModel)
     add_setpoint!(sol, pm, "dcline", "pf", :p_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
     add_setpoint!(sol, pm, "dcline", "qf", :q_dc, status_name=pm_component_status["dcline"], var_key = (idx,item) -> (idx, item["f_bus"], item["t_bus"]))
