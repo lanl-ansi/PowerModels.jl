@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Add support for constant power factor load and shunt decision variables
+- Add basic support for OPF with OLTC and PST variables
 - Update to InfrastructureModels v0.4
 - Fixed PSD bug in cholesky factorization in sparse SDP formulation (#641)
 

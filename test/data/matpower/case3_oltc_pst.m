@@ -38,7 +38,7 @@ mpc.dcline = [
 
 % add new columns to "branch" matrix
 %column_names%	tm_min	tm_max	ta_min	ta_max
-mpc.branch_limit = [
+mpc.branch_oltc_pst = [
 	0.9 1.1	0 0;
 	0.9 1.1	0.0 0.0;
 	1.0 1.0	-15.0 15.0;
