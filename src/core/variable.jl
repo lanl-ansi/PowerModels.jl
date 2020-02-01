@@ -439,6 +439,42 @@ function variable_reactive_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, c
     end
 end
 
+function variable_transformer(pm::AbstractPolarModels; kwargs...)
+    variable_transformer_tm(pm; kwargs...)
+    variable_transformer_ta(pm; kwargs...)
+end
+
+"variable: `0 <= tm[l]` for `l` in `branch`es"
+function variable_transformer_tm(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, report::Bool=true)
+    buses = ref(pm, nw, :bus)
+    branches = ref(pm, nw, :branch)
+
+    tm = var(pm, nw, cnd)[:tm] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_tm",
+        lower_bound = branches[i]["tm_min"],
+        upper_bound = branches[i]["tm_max"],
+        start = comp_start_value(ref(pm, nw, :branch, i), "tm_start", cnd)
+    )
+
+    # report && sol_component_value(pm, nw, :branch, :tm, ids(pm, nw, :branch), tm)
+end
+
+
+"variable: `ta[l]` for `l` in `branch`es"
+function variable_transformer_ta(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, report::Bool=true)
+    buses = ref(pm, nw, :bus)
+    branches = ref(pm, nw, :branch)
+
+    ta = var(pm, nw, cnd)[:ta] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_ta",
+        lower_bound = branches[i]["ta_min"],
+        upper_bound = branches[i]["ta_max"],
+        start = comp_start_value(ref(pm, nw, :branch, i), "ta_start", cnd)
+    )
+
+    # report && sol_component_value(pm, nw, :branch, :ta, ids(pm, nw, :branch), ta)
+end
+
 "variable: `cr[l,i,j]` for `(l,i,j)` in `arcs`"
 function variable_branch_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
     branch = ref(pm, nw, :branch)
@@ -1041,14 +1077,14 @@ end
 function variable_demand_factor(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, relax::Bool=false)
     if relax == true
         var(pm, nw)[:z_demand] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :load)], base_name="$(nw)_z_demand", 
-            upper_bound = 1, 
+            [i in ids(pm, nw, :load)], base_name="$(nw)_z_demand",
+            upper_bound = 1,
             lower_bound = 0,
             start = comp_start_value(ref(pm, nw, :load, i), "z_demand_start", 1, 1.0)
         )
     else
         var(pm, nw)[:z_demand] = JuMP.@variable(pm.model,
-        [i in ids(pm, nw, :load)], base_name="$(nw)_z_demand", 
+        [i in ids(pm, nw, :load)], base_name="$(nw)_z_demand",
         binary = true,
         start = comp_start_value(ref(pm, nw, :load, i), "z_demand_start", 1, 1.0)
     )
@@ -1060,14 +1096,14 @@ end
 function variable_shunt_factor(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, relax::Bool=false)
     if relax == true
         var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt", 
-            upper_bound = 1, 
+            [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt",
+            upper_bound = 1,
             lower_bound = 0,
             start = comp_start_value(ref(pm, nw, :shunt, i), "z_shunt_start", 1, 1.0)
         )
     else
         var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt", 
+            [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt",
             binary = true,
             start = comp_start_value(ref(pm, nw, :shunt, i), "z_shunt_start", 1, 1.0)
         )
