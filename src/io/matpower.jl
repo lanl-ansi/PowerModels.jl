@@ -708,6 +708,10 @@ function export_matpower(io::IO, data::Dict{String,Any})
     for (idx,dcline) in data["dcline"]
        dclines[dcline["index"]] = dcline
     end
+    switches = Dict{Int, Dict}()
+    for (idx,switch) in data["switch"]
+       switches[switch["index"]] = switch
+    end
     ne_branches = Dict{Int, Dict}()
     if haskey(data, "ne_branch")
         for (idx,branch) in data["ne_branch"]
@@ -871,7 +875,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
 
     # Print the branch data
     println(io, "%% branch data")
-    println(io, "%    fbus    tbus    r    x    b    rateA    rateB    rateC    ratio    angle    status    angmin    angmax")
+    println(io, "%    f_bus    t_bus    r    x    b    rateA    rateB    rateC    ratio    angle    status    angmin    angmax")
     println(io, "mpc.branch = [")
     i = 1
     for (idx,branch) in sort(branches)
@@ -910,7 +914,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     if length(dclines) > 0 
         # print the dcline data
         println(io, "%% dcline data")
-        println(io, "%	fbus	tbus	status	Pf	Pt	Qf	Qt	Vf	Vt	Pmin	Pmax	QminF	QmaxF	QminT	QmaxT	loss0	loss1")
+        println(io, "%    f_bus    t_bus    status    Pf    Pt    Qf    Qt    Vf    Vt    Pmin    Pmax    QminF    QmaxF    QminT    QmaxT    loss0    loss1")
         println(io, "mpc.dcline = [")
         for (idx, dcline) in sort(dclines)
             println(io,
@@ -943,6 +947,28 @@ function export_matpower(io::IO, data::Dict{String,Any})
         println(io)
     end
 
+
+    if length(switches) > 0
+        # print the switch data
+        println(io, "%% switch data")
+        println(io, "%  f_bus    t_bus    psw    qsw    state    thermal_rating    status")
+        println(io, "mpc.switch = [")
+        for (idx, switch) in sort(switches)
+            println(io,
+                "\t", _get_default(switch, "f_bus"),
+                "\t", _get_default(switch, "t_bus"),
+                "\t", _get_default(switch, "psw"),
+                "\t", _get_default(switch, "qsw"),
+                "\t", _get_default(switch, "state"),
+                "\t", _get_default(switch, "thermal_rating"),
+                "\t", _get_default(switch, "status")
+            )
+        end
+        println(io, "];")
+        println(io)
+    end
+
+
     # Print the gen cost data
     _export_cost_data(io, generators, "mpc.gencost")
 
@@ -952,7 +978,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     # ne branch is not part of the matpower specs. However, it is treated as a special case by the matpower parser
     # for example, br_b is converted into b_to and b_fr
     if haskey(data, "ne_branch")
-        println(io, "%column_names%	f_bus	t_bus	br_r	br_x	br_b	rate_a	rate_b	rate_c	tap	shift	br_status	angmin	angmax	construction_cost")
+        println(io, "%column_names%    f_bus    t_bus    br_r    br_x    br_b    rate_a    rate_b    rate_c    tap    shift    br_status    angmin    angmax    construction_cost")
         println(io, "mpc.ne_branch = [")
         i = 1
         for (idx,branch) in sort(ne_branches)
@@ -1009,6 +1035,10 @@ function export_matpower(io::IO, data::Dict{String,Any})
     # Print the extra dcline data
     _export_extra_data(io, data, "dcline", Set(["index", "source_id", "mu_qmaxt", "mu_qmint", "mu_qmaxf", "mu_qminf", "mu_pmax", "mu_pmin", "loss0", "loss1", "qmint", "qmaxt", "pmin", "pmax", "qminf", "qmaxf", "f_bus", "t_bus", "br_status", "pf", "pt", "qf", "qt", "vf", "vt", "ncost", "model", "shutdown", "pmaxt", "startup", "pmint", "cost", "pminf", "pmaxf", "mp_pmax", "mp_pmin"]); postfix="_data")
 
+    # Print the extra switch data
+    _export_extra_data(io, data, "switch", Set(["index", "source_id", "f_bus", "t_bus", "psw", "qsw", "state", "thermal_rating", "status"]); postfix="_data")
+
+
     # Print the extra ne_branch data
     if haskey(data, "ne_branch")
         _export_extra_data(io, data, "ne_branch", Set(["index", "source_id", "f_bus", "t_bus", "br_r", "br_x", "br_b", "b_to", "b_fr", "rate_a", "rate_b", "rate_c", "tap", "shift", "br_status", "angmin", "angmax", "transformer", "construction_cost", "g_to", "g_fr"]); postfix="_data")
@@ -1022,7 +1052,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
 
     # print the extra component data
     for (key, value) in data
-        if key != "bus" && key != "gen" && key != "branch" && key != "load" && key != "shunt" && key != "storage" && key != "dcline" && key != "ne_branch" && key != "version" && key != "baseMVA" && key != "per_unit" && key != "name" && key != "source_type" && key != "source_version"
+        if key != "bus" && key != "gen" && key != "branch" && key != "load" && key != "shunt" && key != "storage" && key != "dcline" && key != "switch" && key != "ne_branch" && key != "version" && key != "baseMVA" && key != "per_unit" && key != "name" && key != "source_type" && key != "source_version"
             _export_extra_data(io, data, key)
         end
     end

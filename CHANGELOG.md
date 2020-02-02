@@ -7,7 +7,10 @@ PowerModels.jl Change Log
 
 ### Staged
 - Add support for constant power factor load and shunt decision variables
+- Add basic support for OPF with OLTC and PST variables
 - Update to InfrastructureModels v0.4
+- Add support for switches in propagate_topology_status! (#587) and export_matpower
+- Added storage status to propagate_topology_status! (#662)
 - Fixed PSD bug in cholesky factorization in sparse SDP formulation (#641)
 
 ### v0.14.0
