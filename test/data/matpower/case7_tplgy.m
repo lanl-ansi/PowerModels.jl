@@ -55,3 +55,14 @@ mpc.dcline = [
 	7	4	1	10	9.0	99.0	-10.0	1.0000	1.0000	 -200	  0	-100	100	-100 100	10.00	0.00;
 ];
 
+%% storage data
+%   storage_bus ps qs energy  energy_rating charge_rating  discharge_rating  charge_efficiency  discharge_efficiency  thermal_rating  qmin  qmax  r  x  p_loss  q_loss  status
+mpc.storage = [
+	 6	 0.0	 0.0	 20.0	 100.0	 50.0	 70.0	 0.8	 0.9	 100.0	 -50.0	 70.0	 0.1	 0.0	 0.0	 0.0	 1;
+];
+
+%% switch data
+%	f_bus	t_bus	psw	qsw	state	thermal_rating	status
+mpc.switch = [
+	1	 6	 0.0	 0.00	 1	 1000.0	 0;
+];
