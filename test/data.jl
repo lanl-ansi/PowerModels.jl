@@ -236,6 +236,16 @@ end
         @test cc2 == cc
     end
 
+    @testset "connecected components with switches" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw_nb.m")
+        cc = PowerModels.calc_connected_components(data)
+
+        cc_ordered = sort(collect(cc); by=length)
+
+        @test length(cc_ordered) == 1
+        @test length(cc_ordered[1]) == 19
+    end
+
     @testset "connecected components with propagate topology status" begin
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
         PowerModels.propagate_topology_status!(data)
