@@ -168,10 +168,6 @@ function _build_solution_values(var::Any)
     return var
 end
 
-function Base.haskey(cont::JuMP.Containers.DenseAxisArray, key)
-    return isassigned(cont,key)
-end
-
 "converts vr,vi solution values at buses into vm,va"
 function sol_vr_to_vp!(pm::AbstractPowerModel, solution::Dict)
     if haskey(solution, "nw")
