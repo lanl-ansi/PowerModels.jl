@@ -211,6 +211,15 @@ end
 
 end
 
+@testset "test solution builder inconsistent status" begin
+    # test case where generator status is 1 but the gen_bus status is 0
+    data = parse_file("../test/data/matpower/case5.m")
+    data["bus"]["4"]["bus_type"] = 4
+    result = run_ac_opf(data, ipopt_solver)
+
+    @test result["termination_status"] == LOCALLY_SOLVED
+    @test isapprox(result["objective"], 10128.6; atol = 1e0)
+end
 
 # recommended by @lroald
 @testset "test solution feedback" begin

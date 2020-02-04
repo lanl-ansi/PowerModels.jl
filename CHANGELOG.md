@@ -4,6 +4,9 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.14.2
+- Fixed solution reporting bug when component status did not match bus status
+
 ### v0.14.1
 - Add support for constant power factor load and shunt decision variables
 - Add basic support for OPF with OLTC and PST variables

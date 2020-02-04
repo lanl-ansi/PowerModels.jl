@@ -200,6 +200,9 @@ function add_setpoint_dcline_status!(sol, pm::AbstractPowerModel)
     add_setpoint!(sol, pm, "dcline", "br_status", :z_dcline, status_name=pm_component_status["dcline"], conductorless=true, default_value = (item) -> item["br_status"]*1.0)
 end
 
+function Base.haskey(cont::JuMP.Containers.DenseAxisArray, key)
+    return isassigned(cont,key)
+end
 
 "adds values based on JuMP variables"
 function add_setpoint!(
@@ -259,15 +262,20 @@ function add_setpoint!(
             if item[status_name] != inactive_status_value
                 var_id = var_key(idx, item)
                 variables = var(pm, pm.cnw, variable_symbol)
-                sol_item[param_name] = scale(JuMP.value(variables[var_id]), item, 1)
+                if haskey(variables, var_id)
+                    v = JuMP.value(variables[var_id])
+                    sol_item[param_name] = scale(v, item, 1)
+                end
             end
         elseif !mc
             sol_item[param_name] = default_value(item)
 
             if item[status_name] != inactive_status_value
                 var_id = var_key(idx, item)
-                variables = var(pm, variable_symbol)
-                sol_item[param_name] = scale(JuMP.value(variables[var_id]), item, 1)
+                if haskey(variables, var_id)
+                    v = JuMP.value(variables[var_id])
+                    sol_item[param_name] = scale(v, item, 1)
+                end
             end
         else
             num_conductors = length(conductor_ids(pm))
@@ -278,7 +286,10 @@ function add_setpoint!(
                 for conductor in conductor_ids(pm)
                     var_id = var_key(idx, item)
                     variables = var(pm, variable_symbol, cnd=conductor)
-                    sol_item[param_name][cnd_idx] = scale(JuMP.value(variables[var_id]), item, conductor)
+                    if haskey(variables, var_id)
+                        v = JuMP.value(variables[var_id])
+                        sol_item[param_name][cnd_idx] = scale(v, item, conductor)
+                    end
                     cnd_idx += 1
                 end
             end
