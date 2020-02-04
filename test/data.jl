@@ -493,7 +493,7 @@ end
     @testset "5-bus ac rect flow" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, ACRPowerModel, ipopt_solver, solution_processors=[sol_vr_to_vp!])
+        result = run_opf(data, ACRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
         PowerModels.update_data!(data, result["solution"])
 
         ac_flows = PowerModels.calc_branch_flow_ac(data)

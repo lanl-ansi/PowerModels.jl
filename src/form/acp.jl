@@ -7,6 +7,12 @@ function variable_voltage(pm::AbstractACPModel; kwargs...)
 end
 
 ""
+function sol_data_model!(pm::AbstractACPModel, solution::Dict)
+    # nothing to do, this is in the data model space by default
+end
+
+
+""
 function variable_voltage_ne(pm::AbstractACPModel; kwargs...)
 end
 

@@ -14,6 +14,12 @@ function variable_voltage_magnitude(pm::AbstractDCPModel; nw::Int=pm.cnw, bounde
     report && sol_component_fixed(pm, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
 end
 
+""
+function sol_data_model!(pm::AbstractDCPModel, solution::Dict)
+    # nothing to do, this is in the data model space by default
+end
+
+
 "nothing to add, there are no voltage variables on branches"
 function variable_voltage_ne(pm::AbstractDCPModel; kwargs...)
 end

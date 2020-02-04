@@ -223,7 +223,7 @@ end
 
 @testset "test solution processors" begin
     @testset "sol_vr_to_vp" begin
-        result = run_opf("../test/data/matpower/case5.m", ACRPowerModel, ipopt_solver, solution_processors=[sol_vr_to_vp!])
+        result = run_opf("../test/data/matpower/case5.m", ACRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         for (i,bus) in result["solution"]["bus"]
             if haskey(bus, "vr") && haskey(bus, "vi")
@@ -233,7 +233,7 @@ end
     end
 
     @testset "sol_w_to_vm" begin
-        result = run_opf("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver, solution_processors=[sol_w_to_vm!])
+        result = run_opf("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         for (i,bus) in result["solution"]["bus"]
             if haskey(bus, "w")
@@ -243,7 +243,7 @@ end
     end
 
     @testset "sol_phi_to_vm" begin
-        result = run_opf("../test/data/matpower/case5.m", LPACCPowerModel, ipopt_solver, solution_processors=[sol_phi_to_vm!])
+        result = run_opf("../test/data/matpower/case5.m", LPACCPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         for (i,bus) in result["solution"]["bus"]
             if haskey(bus, "phi")
