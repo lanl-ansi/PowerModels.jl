@@ -6,6 +6,9 @@ PowerModels.jl Change Log
 - Moved multi-conductor support into PowerModelsDistribution
 
 ### Staged
+- nothing
+
+### v0.14.1
 - Add support for constant power factor load and shunt decision variables
 - Add basic support for OPF with OLTC and PST variables
 - Update to InfrastructureModels v0.4
