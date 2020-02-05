@@ -174,12 +174,22 @@ end
         active_buses = Set(["2", "4", "5", "7"])
         active_branches = Set(["8"])
         active_dclines = Set(["3"])
+        active_storage = Set([])
+        active_switches = Set([])
 
         for (i,bus) in data["bus"]
             if i in active_buses
                 @test bus["bus_type"] != 4
             else
                 @test bus["bus_type"] == 4
+            end
+        end
+
+        for (i,strg) in data["storage"]
+            if i in active_storage
+                @test strg["status"] != 0
+            else
+                @test strg["status"] == 0
             end
         end
 
@@ -196,6 +206,14 @@ end
                 @test dcline["br_status"] == 1
             else
                 @test dcline["br_status"] == 0
+            end
+        end
+
+        for (i,switch) in data["switch"]
+            if i in active_switches
+                @test switch["status"] == 1
+            else
+                @test switch["status"] == 0
             end
         end
     end
@@ -217,6 +235,16 @@ end
 
         cc2 = PowerModels.calc_connected_components(data; edges=["branch", "trans"])
         @test cc2 == cc
+    end
+
+    @testset "connecected components with switches" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw_nb.m")
+        cc = PowerModels.calc_connected_components(data)
+
+        cc_ordered = sort(collect(cc); by=length)
+
+        @test length(cc_ordered) == 1
+        @test length(cc_ordered[1]) == 19
     end
 
     @testset "connecected components with propagate topology status" begin
@@ -465,7 +493,7 @@ end
     @testset "5-bus ac rect flow" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, ACRPowerModel, ipopt_solver, solution_processors=[sol_vr_to_vp!])
+        result = run_opf(data, ACRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
         PowerModels.update_data!(data, result["solution"])
 
         ac_flows = PowerModels.calc_branch_flow_ac(data)

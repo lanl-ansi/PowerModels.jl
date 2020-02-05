@@ -226,3 +226,27 @@ function constraint_voltage_angle_difference(pm::AbstractACRModel, n::Int, f_idx
     JuMP.@constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to))
 end
 
+
+""
+function sol_data_model!(pm::AbstractACRModel, solution::Dict)
+    if haskey(solution, "nw")
+        nws_data = solution["nw"]
+    else
+        nws_data = Dict("0" => solution)
+    end
+
+    for (n, nw_data) in nws_data
+        if haskey(nw_data, "bus")
+            for (i,bus) in nw_data["bus"]
+                if haskey(bus, "vr") && haskey(bus, "vi")
+                    bus["vm"] = sqrt(bus["vr"]^2 + bus["vi"]^2)
+                    bus["va"] = atan(bus["vi"], bus["vr"])
+
+                    delete!(bus, "vr")
+                    delete!(bus, "vi")
+                end
+            end
+        end
+    end
+end
+

@@ -77,6 +77,26 @@ end
 function constraint_theta_ref(pm::AbstractWModels, n::Int, ref_bus::Int)
 end
 
+""
+function sol_data_model!(pm::AbstractWModels, solution::Dict)
+    if haskey(solution, "nw")
+        nws_data = solution["nw"]
+    else
+        nws_data = Dict("0" => solution)
+    end
+
+    for (n, nw_data) in nws_data
+        if haskey(nw_data, "bus")
+            for (i,bus) in nw_data["bus"]
+                if haskey(bus, "w")
+                    bus["vm"] = sqrt(bus["w"])
+                    delete!(bus, "w")
+                end
+            end
+        end
+    end
+end
+
 
 ""
 function constraint_power_balance(pm::AbstractWModels, n::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)

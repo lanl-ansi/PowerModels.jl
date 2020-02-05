@@ -130,7 +130,7 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractPowerM
 
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
-            pg = var(pm, n, :pg, i)
+            pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n) )
 
             if length(gen["cost"]) == 1
                 gen_cost[(n,i)] = gen["cost"][1]

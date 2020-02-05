@@ -169,62 +169,8 @@ function _build_solution_values(var::Any)
 end
 
 
-"converts vr,vi solution values at buses into vm,va"
-function sol_vr_to_vp!(pm::AbstractPowerModel, solution::Dict)
-    if haskey(solution, "nw")
-        nws_data = solution["nw"]
-    else
-        nws_data = Dict("0" => solution)
-    end
-
-    for (n, nw_data) in nws_data
-        if haskey(nw_data, "bus")
-            for (i,bus) in nw_data["bus"]
-                if haskey(bus, "vr") && haskey(bus, "vi")
-                    vm = sqrt(bus["vr"]^2 + bus["vi"]^2)
-
-                    bus["vm"] = vm
-                    bus["va"] = atan(bus["vi"], bus["vr"])
-                end
-            end
-        end
-    end
+"converts the solution data into the data model's standard space, polar voltages and rectangular power"
+function sol_data_model!(pm::AbstractPowerModel, solution::Dict)
+    Memento.warn(_LOGGER, "sol_data_model! not defined for power model of type $(typeof(pm))")
 end
 
-"converts w solution values at buses into vm"
-function sol_w_to_vm!(pm::AbstractPowerModel, solution::Dict)
-    if haskey(solution, "nw")
-        nws_data = solution["nw"]
-    else
-        nws_data = Dict("0" => solution)
-    end
-
-    for (n, nw_data) in nws_data
-        if haskey(nw_data, "bus")
-            for (i,bus) in nw_data["bus"]
-                if haskey(bus, "w")
-                    bus["vm"] = sqrt(bus["w"])
-                end
-            end
-        end
-    end
-end
-
-"converts phi solution values at buses into vm"
-function sol_phi_to_vm!(pm::AbstractPowerModel, solution::Dict)
-    if haskey(solution, "nw")
-        nws_data = solution["nw"]
-    else
-        nws_data = Dict("0" => solution)
-    end
-
-    for (n, nw_data) in nws_data
-        if haskey(nw_data, "bus")
-            for (i,bus) in nw_data["bus"]
-                if haskey(bus, "phi")
-                    bus["vm"] = 1.0 + bus["phi"]
-                end
-            end
-        end
-    end
-end

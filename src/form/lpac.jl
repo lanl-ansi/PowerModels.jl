@@ -27,6 +27,26 @@ function variable_voltage_magnitude(pm::AbstractLPACModel; nw::Int=pm.cnw, bound
 end
 
 ""
+function sol_data_model!(pm::AbstractLPACModel, solution::Dict)
+    if haskey(solution, "nw")
+        nws_data = solution["nw"]
+    else
+        nws_data = Dict("0" => solution)
+    end
+
+    for (n, nw_data) in nws_data
+        if haskey(nw_data, "bus")
+            for (i,bus) in nw_data["bus"]
+                if haskey(bus, "phi")
+                    bus["vm"] = 1.0 + bus["phi"]
+                    delete!(bus, "phi")
+                end
+            end
+        end
+    end
+end
+
+""
 function constraint_model_voltage(pm::AbstractLPACModel, n::Int)
     _check_missing_keys(var(pm, n), [:va,:cs], typeof(pm))
 

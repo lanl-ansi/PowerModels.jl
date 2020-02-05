@@ -6,8 +6,20 @@ PowerModels.jl Change Log
 - Moved multi-conductor support into PowerModelsDistribution
 
 ### Staged
+- nothing
+
+### v0.14.3
+- Fixed solution reporting bug with individual variables
+
+### v0.14.2
+- Fixed solution reporting bug when component status did not match bus status
+
+### v0.14.1
 - Add support for constant power factor load and shunt decision variables
+- Add basic support for OPF with OLTC and PST variables
 - Update to InfrastructureModels v0.4
+- Add support for switches in propagate_topology_status! (#587) and export_matpower
+- Added storage status to propagate_topology_status! (#662)
 - Fixed PSD bug in cholesky factorization in sparse SDP formulation (#641)
 
 ### v0.14.0

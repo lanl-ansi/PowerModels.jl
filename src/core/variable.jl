@@ -519,6 +519,36 @@ function variable_reactive_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, b
     report && sol_component_value_edge(pm, nw, :branch, :qf, :qt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), q)
 end
 
+function variable_transformer(pm::AbstractPolarModels; kwargs...)
+    variable_transformer_tm(pm; kwargs...)
+    variable_transformer_ta(pm; kwargs...)
+end
+
+"variable: `0 <= tm[l]` for `l` in `branch`es"
+function variable_transformer_tm(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+    tm = var(pm, nw)[:tm] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :branch)], base_name="$(nw)_tm",
+        lower_bound = ref(pm, nw, :branch, i)["tm_min"],
+        upper_bound = ref(pm, nw, :branch, i)["tm_max"],
+        start = comp_start_value(ref(pm, nw, :branch, i), "tm_start")
+    )
+
+    report && sol_component_value(pm, nw, :branch, :tm, ids(pm, nw, :branch), tm)
+end
+
+
+"variable: `ta[l]` for `l` in `branch`es"
+function variable_transformer_ta(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+    ta = var(pm, nw)[:ta] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :branch)], base_name="$(nw)_ta",
+        lower_bound = ref(pm, nw, :branch, i)["ta_min"],
+        upper_bound = ref(pm, nw, :branch, i)["ta_max"],
+        start = comp_start_value(ref(pm, nw, :branch, i), "ta_start")
+    )
+
+    report && sol_component_value(pm, nw, :branch, :ta, ids(pm, nw, :branch), ta)
+end
+
 "variable: `cr[l,i,j]` for `(l,i,j)` in `arcs`"
 function variable_branch_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     branch = ref(pm, nw, :branch)

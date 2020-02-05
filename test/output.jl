@@ -210,9 +210,20 @@ end
 end
 
 
+@testset "test solution builder inconsistent status" begin
+    # test case where generator status is 1 but the gen_bus status is 0
+    data = parse_file("../test/data/matpower/case5.m")
+    data["bus"]["4"]["bus_type"] = 4
+    result = run_ac_opf(data, ipopt_solver)
+
+    @test result["termination_status"] == LOCALLY_SOLVED
+    @test isapprox(result["objective"], 10128.6; atol = 1e0)
+end
+
+
 @testset "test solution processors" begin
     @testset "sol_vr_to_vp" begin
-        result = run_opf("../test/data/matpower/case5.m", ACRPowerModel, ipopt_solver, solution_processors=[sol_vr_to_vp!])
+        result = run_opf("../test/data/matpower/case5.m", ACRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         for (i,bus) in result["solution"]["bus"]
             if haskey(bus, "vr") && haskey(bus, "vi")
@@ -222,7 +233,7 @@ end
     end
 
     @testset "sol_w_to_vm" begin
-        result = run_opf("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver, solution_processors=[sol_w_to_vm!])
+        result = run_opf("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         for (i,bus) in result["solution"]["bus"]
             if haskey(bus, "w")
@@ -232,7 +243,7 @@ end
     end
 
     @testset "sol_phi_to_vm" begin
-        result = run_opf("../test/data/matpower/case5.m", LPACCPowerModel, ipopt_solver, solution_processors=[sol_phi_to_vm!])
+        result = run_opf("../test/data/matpower/case5.m", LPACCPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         for (i,bus) in result["solution"]["bus"]
             if haskey(bus, "phi")
