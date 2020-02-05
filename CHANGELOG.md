@@ -4,6 +4,9 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.14.3
+- Fixed solution reporting bug with individual variables
+
 ### v0.14.2
 - Fixed solution reporting bug when component status did not match bus status
 

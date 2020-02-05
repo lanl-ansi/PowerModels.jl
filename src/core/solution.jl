@@ -204,6 +204,10 @@ function Base.haskey(cont::JuMP.Containers.DenseAxisArray, key)
     return isassigned(cont,key)
 end
 
+function Base.haskey(cont::JuMP.VariableRef, key::Int)
+    return (key == 1)
+end
+
 "adds values based on JuMP variables"
 function add_setpoint!(
     sol,
