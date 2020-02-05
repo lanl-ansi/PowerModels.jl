@@ -111,8 +111,8 @@ function constraint_current_from(pm::AbstractIVRModel, n::Int, f_bus, f_idx, g_s
     vr_fr = var(pm, n, :vr, f_bus)
     vi_fr = var(pm, n, :vi, f_bus)
 
-    csr_fr =  var(pm, n, :csr, f_idx)
-    csi_fr =  var(pm, n, :csi, f_idx)
+    csr_fr =  var(pm, n, :csr, f_idx[1])
+    csi_fr =  var(pm, n, :csi, f_idx[1])
 
     cr_fr =  var(pm, n, :cr, f_idx)
     ci_fr =  var(pm, n, :ci, f_idx)
@@ -128,8 +128,8 @@ function constraint_current_to(pm::AbstractIVRModel, n::Int, t_bus, f_idx, t_idx
     vr_to = var(pm, n, :vr, t_bus)
     vi_to = var(pm, n, :vi, t_bus)
 
-    csr_to =  -var(pm, n, :csr, f_idx)
-    csi_to =  -var(pm, n, :csi, f_idx)
+    csr_to =  -var(pm, n, :csr, f_idx[1])
+    csi_to =  -var(pm, n, :csi, f_idx[1])
 
     cr_to =  var(pm, n, :cr, t_idx)
     ci_to =  var(pm, n, :ci, t_idx)
@@ -149,8 +149,8 @@ function constraint_voltage_drop(pm::AbstractIVRModel, n::Int, i, f_bus, t_bus, 
     vr_to = var(pm, n, :vr, t_bus)
     vi_to = var(pm, n, :vi, t_bus)
 
-    csr_fr =  var(pm, n, :csr, f_idx)
-    csi_fr =  var(pm, n, :csi, f_idx)
+    csr_fr =  var(pm, n, :csr, f_idx[1])
+    csi_fr =  var(pm, n, :csi, f_idx[1])
 
     JuMP.@constraint(pm.model, vr_to == (vr_fr*tr + vi_fr*ti)/tm^2 - r*csr_fr + x*csi_fr)
     JuMP.@constraint(pm.model, vi_to == (vi_fr*tr - vr_fr*ti)/tm^2 - r*csi_fr - x*csr_fr)
