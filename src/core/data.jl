@@ -62,8 +62,6 @@ function calc_theta_delta_bounds(data::Dict{String,<:Any})
     end
 
     if haskey(data, "conductors")
-        #amin = MultiConductorVector(angle_min)
-        #amax = MultiConductorVector(angle_max)
         return amin, amax
     else
         return angle_min[1], angle_max[1]
@@ -248,11 +246,7 @@ end
 ""
 function _apply_func!(data::Dict{String,<:Any}, key::String, func)
     if haskey(data, key)
-        #if isa(data[key], MultiConductorVector)
-        #    data[key] = MultiConductorVector([func(v) for v in data[key]])
-        #else
-            data[key] = func.(data[key])
-        #end
+        data[key] = func.(data[key])
     end
 end
 
@@ -1138,8 +1132,7 @@ function calc_thermal_limits!(data::Dict{String,<:Any})
     for branch in branches
         if !haskey(branch, "rate_a")
             if haskey(data, "conductors")
-                #TODO
-                #branch["rate_a"] = MultiConductorVector(0.0, data["conductors"])
+                branch["rate_a"] = [0.0 for i in 1:data["conductors"]]
             else
                 branch["rate_a"] = 0.0
             end
@@ -1241,8 +1234,7 @@ function calc_current_limits!(data::Dict{String,<:Any})
 
         if !haskey(branch, "c_rating_a")
             if haskey(data, "conductors")
-                #TODO
-                #branch["c_rating_a"] = MultiConductorVector(0.0, data["conductors"])
+                branch["c_rating_a"] = [0.0 for i in 1:data["conductors"]]
             else
                 branch["c_rating_a"] = 0.0
             end
@@ -1536,8 +1528,7 @@ function correct_transformer_parameters!(data::Dict{String,<:Any})
         if !haskey(branch, "tap")
             Memento.warn(_LOGGER, "branch found without tap value, setting a tap to 1.0")
             if haskey(data, "conductors")
-                #TODO
-                #branch["tap"] = MultiConductorVector{Float64}(ones(data["conductors"]))
+                branch["tap"] = [1.0 for i in 1:data["conductors"]]
             else
                 branch["tap"] = 1.0
             end
@@ -1559,8 +1550,7 @@ function correct_transformer_parameters!(data::Dict{String,<:Any})
         if !haskey(branch, "shift")
             Memento.warn(_LOGGER, "branch found without shift value, setting a shift to 0.0")
             if haskey(data, "conductors")
-                #TODO
-                #branch["shift"] = MultiConductorVector{Float64}(zeros(data["conductors"]))
+                branch["shift"] = [0.0 for i in 1:data["conductors"]]
             else
                 branch["shift"] = 0.0
             end

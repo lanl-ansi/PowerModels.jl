@@ -70,7 +70,7 @@ function variable_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, bounded::Bool=tr
             #JuMP.set_lower_bound(wi_ii, 0)
             #JuMP.set_upper_bound(wi_ii, 0)
         else
-             JuMP.set_lower_bound(wr_ii, 0)
+            JuMP.set_lower_bound(wr_ii, 0)
         end
     end
 

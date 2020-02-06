@@ -13,17 +13,17 @@
 
 ""
 function variable_shunt_factor(pm::AbstractWConvexModels; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
-    if relax == true
+    if !relax
         z_shunt = var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt", 
-            upper_bound = 1, 
-            lower_bound = 0,
+            binary = true,
             start = comp_start_value(ref(pm, nw, :shunt, i), "z_shunt_start", 1.0)
         )
     else
         z_shunt = var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt", 
-            binary = true,
+            upper_bound = 1, 
+            lower_bound = 0,
             start = comp_start_value(ref(pm, nw, :shunt, i), "z_shunt_start", 1.0)
         )
     end

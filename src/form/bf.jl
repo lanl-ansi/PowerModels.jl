@@ -11,19 +11,16 @@ function variable_current_magnitude_sqr(pm::AbstractBFModel; nw::Int=pm.cnw, bou
 
     if bounded
         bus = ref(pm, nw, :bus)
-        ub = Dict()
         for (i, b) in branch
             rate_a = Inf
             if haskey(b, "rate_a")
                 rate_a = b["rate_a"]
             end
-            ub[i] = ((rate_a*b["tap"])/(bus[b["f_bus"]]["vmin"]))^2
-        end
+            ub = ((rate_a*b["tap"])/(bus[b["f_bus"]]["vmin"]))^2
 
-        for i in ids(pm, nw, :branch)
             JuMP.set_lower_bound(ccm[i], 0.0)
-            if !isinf(ub[i])
-                JuMP.set_upper_bound(ccm[i], ub[i])
+            if !isinf(ub)
+                JuMP.set_upper_bound(ccm[i], ub)
             end
         end
     end

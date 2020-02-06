@@ -264,13 +264,19 @@ function variable_active_branch_flow(pm::AbstractAPLossLessModels; nw::Int=pm.cn
 end
 
 ""
-function variable_active_branch_flow_ne(pm::AbstractAPLossLessModels; nw::Int=pm.cnw, report::Bool=true)
+function variable_active_branch_flow_ne(pm::AbstractAPLossLessModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     p_ne = var(pm, nw)[:p_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs_from)], base_name="$(nw)_p_ne",
-        lower_bound = -ref(pm, nw, :ne_branch, l, "rate_a"),
-        upper_bound =  ref(pm, nw, :ne_branch, l, "rate_a"),
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "p_start")
     )
+
+    if bounded
+        ne_branch = ref(pm, nw, :ne_branch)
+        for (l,i,j) in ref(pm, nw, :ne_arcs_from)
+            JuMP.set_lower_bound(p_ne[(l,i,j)], -ne_branch[l]["rate_a"])
+            JuMP.set_upper_bound(p_ne[(l,i,j)],  ne_branch[l]["rate_a"])
+        end
+    end
 
     # this explicit type erasure is necessary
     p_ne_expr = Dict{Any,Any}([((l,i,j), 1.0*var(pm, nw, :p_ne, (l,i,j))) for (l,i,j) in ref(pm, nw, :ne_arcs_from)])

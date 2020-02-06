@@ -337,24 +337,27 @@ end
 
 
 "do nothing by default but some formulations require this"
-function variable_current_storage(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
-    buses = ref(pm, nw, :bus)
-    ub = Dict()
-    for (i, storage) in ref(pm, nw, :storage)
-        if haskey(storage, "thermal_rating")
-            bus = buses[storage["storage_bus"]]
-            ub[i] = (storage["thermal_rating"]/bus["vmin"])^2
-        else
-            ub[i] = Inf
-        end
-    end
-
+function variable_current_storage(pm::AbstractWRModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     ccms = var(pm, nw)[:ccms] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_ccms",
-        lower_bound = 0.0,
-        upper_bound = ub[i],
         start = comp_start_value(ref(pm, nw, :storage, i), "ccms_start")
     )
+
+    if bounded
+        bus = ref(pm, nw, :bus)
+        for (i, storage) in ref(pm, nw, :storage)
+            ub = Inf
+            if haskey(storage, "thermal_rating")
+                sb = bus[storage["storage_bus"]]
+                ub = (storage["thermal_rating"]/sb["vmin"])^2
+            end
+
+            JuMP.set_lower_bound(ccms[i], 0.0)
+            if !isinf(ub)
+                JuMP.set_upper_bound(ccms[i], ub)
+            end
+        end
+    end
 
     report && sol_component_value(pm, nw, :storage, :ccms, ids(pm, nw, :storage), ccms)
 end
@@ -391,26 +394,36 @@ end
 
 
 "Creates variables associated with differences in voltage angles"
-function variable_voltage_angle_difference(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_voltage_angle_difference(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     td = var(pm, nw)[:td] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_td",
-        lower_bound = ref(pm, nw, :buspairs, bp, "angmin"),
-        upper_bound = ref(pm, nw, :buspairs, bp, "angmax"),
         start = comp_start_value(ref(pm, nw, :buspairs, bp), "td_start")
     )
+
+    if bounded
+        for (bp, buspair) in ref(pm, nw, :buspairs)
+            JuMP.set_lower_bound(td[bp], buspair["angmin"])
+            JuMP.set_upper_bound(td[bp], buspair["angmax"])
+        end
+    end
 
     report && sol_component_value_buspair(pm, nw, :buspairs, :td, ids(pm, nw, :buspairs), td)
 end
 
 "Creates the voltage magnitude product variables"
-function variable_voltage_magnitude_product(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_voltage_magnitude_product(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     buspairs = ref(pm, nw, :buspairs)
     vv = var(pm, nw)[:vv] = JuMP.@variable(pm.model,
         [bp in keys(buspairs)], base_name="$(nw)_vv",
-        lower_bound = buspairs[bp]["vm_fr_min"]*buspairs[bp]["vm_to_min"],
-        upper_bound = buspairs[bp]["vm_fr_max"]*buspairs[bp]["vm_to_max"],
         start = comp_start_value(buspairs[bp], "vv_start", 1.0)
     )
+
+    if bounded
+        for (bp, buspair) in ref(pm, nw, :buspairs)
+            JuMP.set_lower_bound(vv[bp], buspair["vm_fr_min"]*buspair["vm_to_min"])
+            JuMP.set_upper_bound(vv[bp], buspair["vm_fr_max"]*buspair["vm_to_max"])
+        end
+    end
 
     report && sol_component_value_buspair(pm, nw, :buspairs, :vv, ids(pm, nw, :buspairs), vv)
 end
@@ -418,26 +431,21 @@ end
 
 ""
 function variable_current_magnitude_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
-    buspairs = ref(pm, nw, :buspairs)
     ccm = var(pm, nw)[:ccm] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_ccm",
-        start = comp_start_value(buspairs[bp], "ccm_start")
+        start = comp_start_value(ref(pm, nw, :buspairs, bp), "ccm_start")
     )
 
     if bounded
-        ub = Dict()
-        for (bp, buspair) in buspairs
+        for (bp, buspair) in ref(pm, nw, :buspairs)
+            ub = Inf
             if haskey(buspair, "rate_a")
-                ub[bp] = ((buspair["rate_a"]*buspair["tap"])/buspair["vm_fr_min"])^2
-            else
-                ub[bp] = Inf
+                ub = ((buspair["rate_a"]*buspair["tap"])/buspair["vm_fr_min"])^2
             end
-        end
 
-        for (bp, buspair) in buspairs
             JuMP.set_lower_bound(ccm[bp], 0.0)
-            if !isinf(ub[bp])
-                JuMP.set_upper_bound(ccm[bp], ub[bp])
+            if !isinf(ub)
+                JuMP.set_upper_bound(ccm[bp], ub)
             end
         end
     end
