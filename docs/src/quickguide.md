@@ -43,12 +43,12 @@ For example, the following dictionary comprehension can be used to inspect the b
 Dict(name => data["va"] for (name, data) in result["solution"]["bus"])
 ```
 
-For more information about PowerModels result data see the [PowerModels Result Data Format](@ref) section.
+The `print_summary(result["solution"])` function can be used show an table-like overview of the solution data.  For more information about PowerModels result data see the [PowerModels Result Data Format](@ref) section.
 
 
 ## Accessing Different Formulations
 
-The function "run_ac_opf" and "run_dc_opf" are shorthands for a more general formulation-independent OPF execution, "run_opf".
+The function `run_ac_opf` and `run_dc_opf` are shorthands for a more general formulation-independent OPF execution, "run_opf".
 For example, `run_ac_opf` is equivalent to,
 
 ```julia
@@ -84,9 +84,9 @@ network_data = PowerModels.parse_file("pti/case3.raw"; import_all=true)
 This network data can be modified in the same way as the previous Matpower `.m` file example. For additional details about the network data, see the [PowerModels Network Data Format](@ref) section.
 
 ## Inspecting AC and DC branch flow results
-The flow AC and DC branch results are not written to the result by default. To inspect the flow results, pass a Dict in through the `setting` keyword:
+The flow AC and DC branch results are written to the result by default. The following can be used to inspect the flow results:
 ```julia
-result = run_opf("matpower/case3_dc.m", ACPPowerModel, with_optimizer(Ipopt.Optimizer), setting = Dict("output" => Dict("branch_flows" => true)))
+result = run_opf("matpower/case3_dc.m", ACPPowerModel, with_optimizer(Ipopt.Optimizer))
 result["solution"]["dcline"]["1"]
 result["solution"]["branch"]["2"]
 ```

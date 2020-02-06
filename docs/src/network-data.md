@@ -98,6 +98,20 @@ The network data dictionary structure is roughly as follows:
     "2":{...},
     ...
 },
+"switch":{
+    "1":{
+        "index":<int>,
+        "f_bus":<int>,
+        "t_bus":<int>,
+        "psw":<float>,
+        "qsw":<float>,
+        "state":<int>,
+        "thermal_rating":<float>,
+        ...
+    },
+    "2":{...},
+    ...
+},
 ...
 }
 ```
