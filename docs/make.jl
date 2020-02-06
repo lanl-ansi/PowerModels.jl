@@ -2,7 +2,7 @@ using Documenter, PowerModels
 
 makedocs(
     modules = [PowerModels],
-    format = Documenter.HTML(analytics = "UA-367975-10"),
+    format = Documenter.HTML(analytics = "UA-367975-10", mathengine = Documenter.MathJax()),
     sitename = "PowerModels",
     authors = "Carleton Coffrin, Russell Bent, and contributors.",
     pages = [
