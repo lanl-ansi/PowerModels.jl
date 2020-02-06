@@ -2,13 +2,13 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.15.0
 - Standardized use of bounded parameter in variable creation (#651)
 - Simplified branch series current variable indexing (breaking)
 - Update solution building infrastructure (#77,#566,#627) (breaking)
 - Moved multi-conductor support into PowerModelsDistribution (breaking)
-
-### Staged
-- nothing
 
 ### v0.14.3
 - Fixed solution reporting bug with individual variables
