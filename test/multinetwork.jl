@@ -212,8 +212,8 @@ TESTLOG = Memento.getlogger(PowerModels)
                 for (i, bus) in nw_data["bus"]
                     @test haskey(bus, "lam_kcl_r")
                     @test bus["lam_kcl_r"] >= -4000 && bus["lam_kcl_r"] <= 0
-                    @test haskey(bus, "lam_kcl_i")
-                    @test isnan(bus["lam_kcl_i"])
+                    #@test haskey(bus, "lam_kcl_i")
+                    #@test isnan(bus["lam_kcl_i"])
                 end
                 for (i, branch) in nw_data["branch"]
                     @test haskey(branch, "mu_sm_fr")
@@ -396,8 +396,6 @@ TESTLOG = Memento.getlogger(PowerModels)
 
         Memento.setlevel!(TESTLOG, "warn")
         @test_nowarn PowerModels.correct_reference_buses!(mn_data)
-        @test_nowarn PowerModels.make_multiconductor!(mn_data, 3)
-        @test_nowarn PowerModels.check_conductors(mn_data)
         Memento.setlevel!(TESTLOG, "error")
 
         @test_throws(TESTLOG, ErrorException, PowerModels.run_ac_opf(mn_data, ipopt_solver))

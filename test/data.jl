@@ -34,10 +34,11 @@ TESTLOG = Memento.getlogger(PowerModels)
         output = sprint(PowerModels.summary, result["solution"])
 
         line_count = count(c -> c == '\n', output)
-        @test line_count >= 20 && line_count <= 30
+        @test line_count >= 30 && line_count <= 40
         @test occursin("baseMVA: 100.0", output)
         @test occursin("Table: bus", output)
         @test occursin("Table: gen", output)
+        @test occursin("Table: branch", output)
     end
 
 end
@@ -127,7 +128,7 @@ end
         @test InfrastructureModels.compare_dict(result, result_base)
     end
     @testset "5-bus case solution" begin
-        result = run_ac_opf("../test/data/matpower/case5_asym.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_ac_opf("../test/data/matpower/case5_asym.m", ipopt_solver)
         result_base = deepcopy(result)
 
         PowerModels.make_mixed_units!(result["solution"])
@@ -136,7 +137,7 @@ end
         @test InfrastructureModels.compare_dict(result, result_base)
     end
     @testset "24-bus case solution" begin
-        result = run_ac_opf("../test/data/matpower/case24.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_ac_opf("../test/data/matpower/case24.m", ipopt_solver)
         result_base = deepcopy(result)
 
         PowerModels.make_mixed_units!(result["solution"])
@@ -323,7 +324,7 @@ end
             if i in active_buses
                 @test !isequal(solution["bus"][i]["va"], NaN)
             else
-                @test isequal(solution["bus"][i]["va"], NaN)
+                #@test isequal(solution["bus"][i]["va"], NaN)
             end
         end
 
@@ -331,7 +332,7 @@ end
             if i in active_gens
                 @test !isequal(solution["gen"][i]["pg"], NaN)
             else
-                @test isequal(solution["gen"][i]["pg"], NaN)
+                #@test isequal(solution["gen"][i]["pg"], NaN)
             end
         end
     end
@@ -451,22 +452,6 @@ end
     g,b  = PowerModels.calc_branch_y(branch)
     @test isapprox(g, 0)
     @test isapprox(b, 0)
-
-    branch["br_r"] = PowerModels.MultiConductorMatrix([1 2;3 4])
-    branch["br_x"] = PowerModels.MultiConductorMatrix([1 2;3 4])
-    g,b  = PowerModels.calc_branch_y(branch)
-
-    @test typeof(g) <: PowerModels.MultiConductorMatrix
-    @test isapprox(g.values, [-1.0 0.5; 0.75 -0.25])
-    @test isapprox(b.values, [1.0 -0.5; -0.75 0.25])
-
-    branch["br_r"] = PowerModels.MultiConductorMatrix([1 2 0;3 4 0; 0 0 0])
-    branch["br_x"] = PowerModels.MultiConductorMatrix([1 2 0;3 4 0; 0 0 0])
-    g,b  = PowerModels.calc_branch_y(branch)
-
-    @test typeof(g) <: PowerModels.MultiConductorMatrix
-    @test isapprox(g.values, [-1.0 0.5 0; 0.75 -0.25 0; 0 0 0])
-    @test isapprox(b.values, [1.0 -0.5 0; -0.75 0.25 0; 0 0 0])
 end
 
 
@@ -475,7 +460,7 @@ end
      @testset "5-bus test" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
-        data["buspairs"] = PowerModels.calc_buspair_parameters(data["bus"], data["branch"], 1:1, haskey(data, "conductors"))
+        data["buspairs"] = PowerModels.calc_buspair_parameters(data["bus"], data["branch"], 1:1, false)
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
@@ -490,15 +475,17 @@ end
      @testset "5-bus ac polar flow" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_opf(data, ACPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
         ac_flows = PowerModels.calc_branch_flow_ac(data)
 
         for (i,branch) in data["branch"]
-            branch_flow = ac_flows["branch"][i]
-            for k in ["pf","pt","qf","qt"]
-                @test (isnan(branch[k]) && isnan(branch_flow[k])) || isapprox(branch[k], branch_flow[k]; atol=1e-6)
+            if branch["br_status"] != 0
+                branch_flow = ac_flows["branch"][i]
+                for k in ["pf","pt","qf","qt"]
+                    @test (isnan(branch[k]) && isnan(branch_flow[k])) || isapprox(branch[k], branch_flow[k]; atol=1e-6)
+                end
             end
         end
     end
@@ -506,15 +493,17 @@ end
     @testset "5-bus ac rect flow" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, ACRPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_opf(data, ACRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
         PowerModels.update_data!(data, result["solution"])
 
         ac_flows = PowerModels.calc_branch_flow_ac(data)
 
         for (i,branch) in data["branch"]
-            branch_flow = ac_flows["branch"][i]
-            for k in ["pf","pt","qf","qt"]
-                @test (isnan(branch[k]) && isnan(branch_flow[k])) || isapprox(branch[k], branch_flow[k]; atol=1e-6)
+            if branch["br_status"] != 0
+                branch_flow = ac_flows["branch"][i]
+                for k in ["pf","pt","qf","qt"]
+                    @test (isnan(branch[k]) && isnan(branch_flow[k])) || isapprox(branch[k], branch_flow[k]; atol=1e-6)
+                end
             end
         end
     end
@@ -522,15 +511,17 @@ end
     @testset "5-bus dc flow" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_opf(data, DCPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
         dc_flows = PowerModels.calc_branch_flow_dc(data)
 
         for (i,branch) in data["branch"]
-            branch_flow = dc_flows["branch"][i]
-            for k in ["pf","pt"]
-                @test (isnan(branch[k]) && isnan(branch_flow[k])) || isapprox(branch[k], branch_flow[k]; atol=1e-6)
+            if branch["br_status"] != 0
+                branch_flow = dc_flows["branch"][i]
+                for k in ["pf","pt"]
+                    @test (isnan(branch[k]) && isnan(branch_flow[k])) || isapprox(branch[k], branch_flow[k]; atol=1e-6)
+                end
             end
         end
     end
@@ -591,7 +582,7 @@ end
      @testset "5-bus ac polar balance" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_opf(data, ACPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)
@@ -605,7 +596,7 @@ end
      @testset "5-bus dc balance" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_opf(data, DCPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)
@@ -620,7 +611,7 @@ end
      @testset "5-bus ac polar balance with storage" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
         data["branch"]["4"]["br_status"] = 0
-        result = PowerModels._run_opf_strg(data, ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = PowerModels._run_opf_strg(data, ACPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)
@@ -634,7 +625,7 @@ end
      @testset "5-bus dc balance with storage" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
         data["branch"]["4"]["br_status"] = 0
-        result = PowerModels._run_opf_strg(data, DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = PowerModels._run_opf_strg(data, DCPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)

@@ -1,40 +1,40 @@
 ### sdp relaxations in the rectangular W-space
-import LinearAlgebra: Hermitian, cholesky, Symmetric, diag
+import LinearAlgebra: Hermitian, cholesky, Symmetric, diag, I
 import SparseArrays: SparseMatrixCSC, sparse, spdiagm, findnz, spzeros, nonzeros
 
 ""
-function constraint_current_limit(pm::AbstractWRMModel, n::Int, c::Int, f_idx, c_rating_a)
+function constraint_current_limit(pm::AbstractWRMModel, n::Int, f_idx, c_rating_a)
     l,i,j = f_idx
     t_idx = (l,j,i)
 
-    w_fr = var(pm, n, c, :w, i)
-    w_to = var(pm, n, c, :w, j)
+    w_fr = var(pm, n, :w, i)
+    w_to = var(pm, n, :w, j)
 
-    p_fr = var(pm, n, c, :p, f_idx)
-    q_fr = var(pm, n, c, :q, f_idx)
+    p_fr = var(pm, n, :p, f_idx)
+    q_fr = var(pm, n, :q, f_idx)
     JuMP.@constraint(pm.model, [w_fr*c_rating_a^2+1, 2*p_fr, 2*q_fr, w_fr*c_rating_a^2-1] in JuMP.SecondOrderCone())
 
-    p_to = var(pm, n, c, :p, t_idx)
-    q_to = var(pm, n, c, :q, t_idx)
+    p_to = var(pm, n, :p, t_idx)
+    q_to = var(pm, n, :q, t_idx)
     JuMP.@constraint(pm.model, [w_to*c_rating_a^2+1, 2*p_to, 2*q_to, w_to*c_rating_a^2-1] in JuMP.SecondOrderCone())
 end
 
 
 
 ""
-function constraint_model_voltage(pm::AbstractWRMModel, n::Int, c::Int)
-    _check_missing_keys(var(pm, n, c), [:WR,:WI], typeof(pm))
+function constraint_model_voltage(pm::AbstractWRMModel, n::Int)
+    _check_missing_keys(var(pm, n), [:WR,:WI], typeof(pm))
 
-    WR = var(pm, n, c)[:WR]
-    WI = var(pm, n, c)[:WI]
+    WR = var(pm, n)[:WR]
+    WI = var(pm, n)[:WI]
 
     JuMP.@constraint(pm.model, [WR WI; -WI WR] in JuMP.PSDCone())
 end
 
 
 ""
-function variable_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
-    wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
+function variable_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+    wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs))
     bus_ids = ids(pm, nw, :bus)
 
     w_index = 1:length(bus_ids)
@@ -42,12 +42,19 @@ function variable_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd
 
     WR_start = zeros(length(bus_ids), length(bus_ids)) + I
 
-    WR = var(pm, nw, cnd)[:WR] = JuMP.@variable(pm.model,
-        [i=1:length(bus_ids), j=1:length(bus_ids)], Symmetric, base_name="$(nw)_$(cnd)_WR", start=WR_start[i,j]
+    WR = var(pm, nw)[:WR] = JuMP.@variable(pm.model,
+        [i=1:length(bus_ids), j=1:length(bus_ids)], Symmetric, base_name="$(nw)_WR", start=WR_start[i,j]
     )
-    WI = var(pm, nw, cnd)[:WI] = JuMP.@variable(pm.model,
-        [1:length(bus_ids), 1:length(bus_ids)], base_name="$(nw)_$(cnd)_WI", start=0.0
+    if report
+        sol(pm, nw)[:WR] = WR
+    end
+
+    WI = var(pm, nw)[:WI] = JuMP.@variable(pm.model,
+        [1:length(bus_ids), 1:length(bus_ids)], base_name="$(nw)_WI", start=0.0
     )
+    if report
+        sol(pm, nw)[:WI] = WI
+    end
 
     # bounds on diagonal
     for (i, bus) in ref(pm, nw, :bus)
@@ -56,14 +63,14 @@ function variable_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd
         wi_ii = WR[w_idx,w_idx]
 
         if bounded
-            JuMP.set_lower_bound(wr_ii, (bus["vmin"][cnd])^2)
-            JuMP.set_upper_bound(wr_ii, (bus["vmax"][cnd])^2)
+            JuMP.set_lower_bound(wr_ii, (bus["vmin"])^2)
+            JuMP.set_upper_bound(wr_ii, (bus["vmax"])^2)
 
             #this breaks SCS on the 3 bus exmple
             #JuMP.set_lower_bound(wi_ii, 0)
             #JuMP.set_upper_bound(wi_ii, 0)
         else
-             JuMP.set_lower_bound(wr_ii, 0)
+            JuMP.set_lower_bound(wr_ii, 0)
         end
     end
 
@@ -81,20 +88,21 @@ function variable_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd
         end
     end
 
-    var(pm, nw, cnd)[:w] = Dict{Int,Any}()
+    var(pm, nw)[:w] = Dict{Int,Any}()
     for (i, bus) in ref(pm, nw, :bus)
         w_idx = lookup_w_index[i]
-        var(pm, nw, cnd, :w)[i] = WR[w_idx,w_idx]
+        var(pm, nw, :w)[i] = WR[w_idx,w_idx]
     end
+    report && sol_component_value(pm, nw, :bus, :w, ids(pm, nw, :bus), var(pm, nw)[:w])
 
-    var(pm, nw, cnd)[:wr] = Dict{Tuple{Int,Int},Any}()
-    var(pm, nw, cnd)[:wi] = Dict{Tuple{Int,Int},Any}()
+    var(pm, nw)[:wr] = Dict{Tuple{Int,Int},Any}()
+    var(pm, nw)[:wi] = Dict{Tuple{Int,Int},Any}()
     for (i,j) in ids(pm, nw, :buspairs)
         w_fr_index = lookup_w_index[i]
         w_to_index = lookup_w_index[j]
 
-        var(pm, nw, cnd, :wr)[(i,j)] = WR[w_fr_index, w_to_index]
-        var(pm, nw, cnd, :wi)[(i,j)] = WI[w_fr_index, w_to_index]
+        var(pm, nw, :wr)[(i,j)] = WR[w_fr_index, w_to_index]
+        var(pm, nw, :wi)[(i,j)] = WI[w_fr_index, w_to_index]
     end
 end
 
@@ -121,7 +129,7 @@ function ==(d1::_SDconstraintDecomposition, d2::_SDconstraintDecomposition)
     return eq
 end
 
-function variable_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded=true)
+function variable_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
 
     if haskey(pm.ext, :SDconstraintDecomposition)
         decomp = pm.ext[:SDconstraintDecomposition]
@@ -137,31 +145,37 @@ function variable_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, cnd::In
     end
 
     voltage_product_groups =
-        var(pm, nw, cnd)[:voltage_product_groups] =
+        var(pm, nw)[:voltage_product_groups] =
         Vector{Dict{Symbol, Array{JuMP.VariableRef,2}}}(undef, length(groups))
 
     for (gidx, group) in enumerate(groups)
         n = length(group)
         wr_start = zeros(n, n) + I
         voltage_product_groups[gidx] = Dict()
-        voltage_product_groups[gidx][:WR] =
-            var(pm, nw, cnd)[:voltage_product_groups][gidx][:WR] =
+        WR = voltage_product_groups[gidx][:WR] =
+            var(pm, nw)[:voltage_product_groups][gidx][:WR] =
             JuMP.@variable(pm.model, [i=1:n, j=1:n], Symmetric,
-                base_name="$(nw)_$(cnd)_$(gidx)_WR", start=wr_start[i,j])
+                base_name="$(nw)_$(gidx)_WR", start=wr_start[i,j])
+        if report
+            sol(pm, nw, :w_group, gidx)[:WR] = WR
+        end
 
-        voltage_product_groups[gidx][:WI] =
-            var(pm, nw, cnd)[:voltage_product_groups][gidx][:WI] =
+        WI = voltage_product_groups[gidx][:WI] =
+            var(pm, nw)[:voltage_product_groups][gidx][:WI] =
             JuMP.@variable(pm.model, [1:n, 1:n],
-                base_name="$(nw)_$(cnd)_$(gidx)_WI", start=0.0)
+                base_name="$(nw)_$(gidx)_WI", start=0.0)
+        if report
+            sol(pm, nw, :w_group, gidx)[:WI] = WI
+        end
     end
 
     # voltage product bounds
     visited_buses = []
     visited_buspairs = []
-    var(pm, nw, cnd)[:w] = Dict{Int,Any}()
-    var(pm, nw, cnd)[:wr] = Dict{Tuple{Int,Int},Any}()
-    var(pm, nw, cnd)[:wi] = Dict{Tuple{Int,Int},Any}()
-    wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs), cnd)
+    var(pm, nw)[:w] = Dict{Int,Any}()
+    var(pm, nw)[:wr] = Dict{Tuple{Int,Int},Any}()
+    var(pm, nw)[:wi] = Dict{Tuple{Int,Int},Any}()
+    wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs))
     for (gidx, voltage_product_group) in enumerate(voltage_product_groups)
         WR, WI = voltage_product_group[:WR], voltage_product_group[:WI]
         group = groups[gidx]
@@ -176,8 +190,8 @@ function variable_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, cnd::In
             wr_ii = WR[group_idx, group_idx]
 
             if bounded
-                JuMP.set_upper_bound(wr_ii, (bus["vmax"][cnd])^2)
-                JuMP.set_lower_bound(wr_ii, (bus["vmin"][cnd])^2)
+                JuMP.set_upper_bound(wr_ii, (bus["vmax"])^2)
+                JuMP.set_lower_bound(wr_ii, (bus["vmin"])^2)
             else
                 JuMP.set_lower_bound(wr_ii, 0)
             end
@@ -185,7 +199,7 @@ function variable_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, cnd::In
             # for non-semidefinite constraints
             if !(bus_id in visited_buses)
                 push!(visited_buses, bus_id)
-                var(pm, nw, cnd, :w)[bus_id] = wr_ii
+                var(pm, nw, :w)[bus_id] = wr_ii
             end
         end
 
@@ -205,8 +219,8 @@ function variable_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, cnd::In
                 # for non-semidefinite constraints
                 if !((i_bus, j_bus) in visited_buspairs)
                     push!(visited_buspairs, (i_bus, j_bus))
-                    var(pm, nw, cnd, :wr)[(i_bus, j_bus)] = WR[i, j]
-                    var(pm, nw, cnd, :wi)[(i_bus, j_bus)] = WI[i, j]
+                    var(pm, nw, :wr)[(i_bus, j_bus)] = WR[i, j]
+                    var(pm, nw, :wi)[(i_bus, j_bus)] = WI[i, j]
                 end
             end
         end
@@ -214,14 +228,14 @@ function variable_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, cnd::In
 end
 
 
-function constraint_model_voltage(pm::AbstractSparseSDPWRMModel, n::Int, c::Int)
-    _check_missing_keys(var(pm, n, c), [:voltage_product_groups], typeof(pm))
+function constraint_model_voltage(pm::AbstractSparseSDPWRMModel, n::Int)
+    _check_missing_keys(var(pm, n), [:voltage_product_groups], typeof(pm))
 
     pair_matrix(group) = [(i, j) for i in group, j in group]
 
     decomp = pm.ext[:SDconstraintDecomposition]
     groups = decomp.decomp
-    voltage_product_groups = var(pm, n, c)[:voltage_product_groups]
+    voltage_product_groups = var(pm, n)[:voltage_product_groups]
 
     # semidefinite constraint for each group in clique grouping
     for (gidx, voltage_product_group) in enumerate(voltage_product_groups)

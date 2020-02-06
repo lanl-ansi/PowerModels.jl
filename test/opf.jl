@@ -130,8 +130,8 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 11625.3; atol = 1e0)
-        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["bus"]["1"]["vi"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["bus"]["4"]["vi"], 0.0; atol = 1e-4)
     end
     @testset "24-bus rts case" begin
         result = run_opf("../test/data/matpower/case24.m", ACRPowerModel, ipopt_solver)
@@ -235,8 +235,8 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 11625.3; atol = 1e0)
-        @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["bus"]["1"]["vi"], 0.0; atol = 1e-4)
+        @test isapprox(result["solution"]["bus"]["4"]["vi"], 0.0; atol = 1e-4)
     end
     @testset "24-bus rts case" begin
         result = run_opf_iv("../test/data/matpower/case24.m", IVRPowerModel, ipopt_solver)

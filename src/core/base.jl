@@ -14,8 +14,11 @@ InfrastructureModels.@def pm_fields begin
     ref::Dict{Symbol,<:Any}
     var::Dict{Symbol,<:Any}
     con::Dict{Symbol,<:Any}
+
+    sol::Dict{Symbol,<:Any}
+    sol_proc::Dict{Symbol,<:Any}
+
     cnw::Int
-    ccnd::Int
 
     # Extension dictionary
     # Extensions should define a type to hold information particular to
@@ -38,27 +41,23 @@ function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = 
 
     var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
     con = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
+    sol = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
+    sol_proc = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
+
     for (nw_id, nw) in ref[:nw]
         nw_var = var[:nw][nw_id] = Dict{Symbol,Any}()
         nw_con = con[:nw][nw_id] = Dict{Symbol,Any}()
-
-        nw_var[:cnd] = Dict{Int,Any}()
-        nw_con[:cnd] = Dict{Int,Any}()
+        nw_sol = sol[:nw][nw_id] = Dict{Symbol,Any}()
+        nw_sol_proc = sol_proc[:nw][nw_id] = Dict{Symbol,Any}()
 
         if !haskey(nw, :conductors)
             nw[:conductor_ids] = 1:1
         else
             nw[:conductor_ids] = 1:nw[:conductors]
         end
-
-        for cnd_id in nw[:conductor_ids]
-            nw_var[:cnd][cnd_id] = Dict{Symbol,Any}()
-            nw_con[:cnd][cnd_id] = Dict{Symbol,Any}()
-        end
     end
 
     cnw = minimum([k for k in keys(var[:nw])])
-    ccnd = minimum([k for k in keys(var[:nw][cnw][:cnd])])
 
     pm = PowerModel(
         jump_model,
@@ -68,15 +67,19 @@ function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = 
         ref,
         var,
         con,
+        sol,
+        sol_proc,
         cnw,
-        ccnd,
         ext
     )
 
     return pm
 end
 
-### Helper functions for working with multinetworks and multiconductors
+
+report_duals(pm::AbstractPowerModel) = haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
+
+### Helper functions for working with multinetworks
 ""
 ismultinetwork(pm::AbstractPowerModel) = (length(pm.ref[:nw]) > 1)
 
@@ -103,36 +106,45 @@ ref(pm::AbstractPowerModel, nw::Int) = pm.ref[:nw][nw]
 ref(pm::AbstractPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
 ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
 ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
-ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx, param::String, cnd::Int) = pm.ref[:nw][nw][key][idx][param][cnd]
 
 ref(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
 ref(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
 ref(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
-ref(pm::AbstractPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.ref[:nw][nw][key][idx][param][cnd]
+ref(pm::AbstractPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx][param]
 
 
 var(pm::AbstractPowerModel, nw::Int) = pm.var[:nw][nw]
 var(pm::AbstractPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
 var(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
-var(pm::AbstractPowerModel, nw::Int, cnd::Int) = pm.var[:nw][nw][:cnd][cnd]
-var(pm::AbstractPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.var[:nw][nw][:cnd][cnd][key]
-var(pm::AbstractPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.var[:nw][nw][:cnd][cnd][key][idx]
 
-var(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd]
-var(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key]
-var(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.var[:nw][nw][:cnd][cnd][key][idx]
+var(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.var[:nw][nw]
+var(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.var[:nw][nw][key]
+var(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.var[:nw][nw][key][idx]
 
 ""
 con(pm::AbstractPowerModel, nw::Int) = pm.con[:nw][nw]
 con(pm::AbstractPowerModel, nw::Int, key::Symbol) = pm.con[:nw][nw][key]
 con(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.con[:nw][nw][key][idx]
-con(pm::AbstractPowerModel, nw::Int, cnd::Int) = pm.con[:nw][nw][:cnd][cnd]
-con(pm::AbstractPowerModel, nw::Int, cnd::Int, key::Symbol) = pm.con[:nw][nw][:cnd][cnd][key]
-con(pm::AbstractPowerModel, nw::Int, cnd::Int, key::Symbol, idx) = pm.con[:nw][nw][:cnd][cnd][key][idx]
 
-con(pm::AbstractPowerModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd]
-con(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key]
-con(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw, cnd::Int=pm.ccnd) = pm.con[:nw][nw][:cnd][cnd][key][idx]
+con(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.con[:nw][nw]
+con(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.con[:nw][nw][key]
+con(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.con[:nw][nw][key][idx]
+
+
+""
+sol(pm::AbstractPowerModel, nw::Int, args...) = _sol(pm.sol[:nw][nw], args...)
+sol(pm::AbstractPowerModel, args...; nw::Int=pm.cnw) = _sol(pm.sol[:nw][nw], args...)
+
+function _sol(sol::Dict, args...)
+    for arg in args
+        if haskey(sol, arg)
+            sol = sol[arg]
+        else
+            sol = sol[arg] = Dict()
+        end
+    end
+    return sol
+end
 
 
 ""
@@ -142,13 +154,13 @@ function run_model(file::String, model_type::Type, optimizer, build_method; kwar
 end
 
 ""
-function run_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method; ref_extensions=[], solution_builder=solution_opf!, kwargs...)
+function run_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method; ref_extensions=[], solution_processors=[], kwargs...)
     #start_time = time()
     pm = instantiate_model(data, model_type, build_method; ref_extensions=ref_extensions, kwargs...)
     #Memento.debug(_LOGGER, "pm model build time: $(time() - start_time)")
 
     #start_time = time()
-    result = optimize_model!(pm, optimizer=optimizer, solution_builder=solution_builder)
+    result = optimize_model!(pm, optimizer=optimizer, solution_processors=solution_processors)
     #Memento.debug(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
 
     return result
@@ -193,7 +205,7 @@ end
 
 
 ""
-function optimize_model!(pm::AbstractPowerModel; optimizer::Union{JuMP.OptimizerFactory,Nothing}=nothing, solution_builder = solution_opf!)
+function optimize_model!(pm::AbstractPowerModel; optimizer::Union{JuMP.OptimizerFactory,Nothing}=nothing, solution_processors=[])
     start_time = time()
 
     if optimizer == nothing
@@ -219,7 +231,7 @@ function optimize_model!(pm::AbstractPowerModel; optimizer::Union{JuMP.Optimizer
     Memento.debug(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
 
     start_time = time()
-    result = build_result(pm, solve_time; solution_builder = solution_builder)
+    result = build_result(pm, solve_time; solution_processors=solution_processors)
     Memento.debug(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
 
     pm.solution = result["solution"]
@@ -365,7 +377,6 @@ function _ref_add_core!(nw_refs::Dict)
         if length(ref_buses) > 1
             Memento.warn(_LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
         end
-
 
         ### aggregate info for pairs of connected buses ###
         if !haskey(ref, :buspairs)

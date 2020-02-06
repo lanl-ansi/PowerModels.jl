@@ -14,7 +14,7 @@ function run_opf_flow_cuts(file::String, model_type::Type, optimizer; kwargs...)
     return run_opf_flow_cuts!(data, model_type, optimizer; kwargs...)
 end
 
-function run_opf_flow_cuts!(data::Dict{String,<:Any}, model_type::Type, optimizer; max_iter::Int = 100, time_limit::Float64 = 3600.0)
+function run_opf_flow_cuts!(data::Dict{String,<:Any}, model_type::Type, optimizer; solution_processors=[], max_iter::Int=100, time_limit::Float64=3600.0)
     Memento.info(_LOGGER, "maximum cut iterations set to value of $max_iter")
 
     for (i,branch) in data["branch"]
@@ -26,9 +26,9 @@ function run_opf_flow_cuts!(data::Dict{String,<:Any}, model_type::Type, optimize
 
     start_time = time()
 
-    #result = run_opf(data, model_type, optimizer; setting = Dict("output" => Dict("branch_flows" => true)))
-    pm = instantiate_model(data, model_type, build_opf; setting = Dict("output" => Dict("branch_flows" => true)))
-    result = optimize_model!(pm, optimizer=optimizer)
+    #result = run_opf(data, model_type, optimizer)
+    pm = instantiate_model(data, model_type, build_opf)
+    result = optimize_model!(pm, optimizer=optimizer, solution_processors=solution_processors)
 
     #print_summary(result["solution"])
 
@@ -68,8 +68,8 @@ function run_opf_flow_cuts!(data::Dict{String,<:Any}, model_type::Type, optimize
 
         if violated
             iteration += 1
-            #result = run_opf(data, model_type, optimizer; setting = Dict("output" => Dict("branch_flows" => true)))
-            result = optimize_model!(pm)
+            #result = run_opf(data, model_type, optimizer)
+            result = optimize_model!(pm, solution_processors=solution_processors)
 
             #print_summary(result["solution"])
         else
@@ -102,7 +102,7 @@ function run_opf_ptdf_flow_cuts(file::String, optimizer; kwargs...)
     return run_opf_ptdf_flow_cuts!(data, optimizer; kwargs...)
 end
 
-function run_opf_ptdf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::Int = 100, time_limit::Float64 = 3600.0, full_inverse = false)
+function run_opf_ptdf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::Int=100, time_limit::Float64=3600.0, full_inverse=false)
     Memento.info(_LOGGER, "maximum cut iterations set to value of $max_iter")
 
     for (i,branch) in data["branch"]
@@ -125,7 +125,7 @@ function run_opf_ptdf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
 
     #result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
     pm = instantiate_model(data, DCPPowerModel, build_opf_ptdf; ref_extensions=ref_extensions)
-    result = optimize_model!(pm, optimizer=optimizer, solution_builder=solution_opf_ptdf!)
+    result = optimize_model!(pm, optimizer=optimizer)
     update_data!(data, result["solution"])
 
     solution = compute_dc_pf(data)
@@ -172,7 +172,7 @@ function run_opf_ptdf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
             iteration += 1
 
             #result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
-            result = optimize_model!(pm; solution_builder=solution_opf_ptdf!)
+            result = optimize_model!(pm)
 
             update_data!(data, result["solution"])
 

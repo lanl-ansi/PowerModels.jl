@@ -1,32 +1,31 @@
 # this file contains (balanced) convexified DistFlow formulation, in W space
 
 ""
-function variable_current_magnitude_sqr(pm::AbstractBFModel; nw::Int=pm.cnw, cnd::Int=pm.ccnd, bounded = true)
+function variable_current_magnitude_sqr(pm::AbstractBFModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     branch = ref(pm, nw, :branch)
 
-    ccm = var(pm, nw, cnd)[:ccm] = JuMP.@variable(pm.model,
-        [i in ids(pm, nw, :branch)], base_name="$(nw)_$(cnd)_ccm",
-        start = comp_start_value(branch[i], "ccm_start", cnd)
+    ccm = var(pm, nw)[:ccm] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :branch)], base_name="$(nw)_ccm",
+        start = comp_start_value(branch[i], "ccm_start")
     )
 
     if bounded
         bus = ref(pm, nw, :bus)
-        ub = Dict()
         for (i, b) in branch
             rate_a = Inf
             if haskey(b, "rate_a")
                 rate_a = b["rate_a"]
             end
-            ub[i] = ((rate_a[cnd]*b["tap"][cnd])/(bus[b["f_bus"]]["vmin"][cnd]))^2
-        end
+            ub = ((rate_a*b["tap"])/(bus[b["f_bus"]]["vmin"]))^2
 
-        for i in ids(pm, nw, :branch)
             JuMP.set_lower_bound(ccm[i], 0.0)
-            if !isinf(ub[i])
-                JuMP.set_upper_bound(ccm[i], ub[i])
+            if !isinf(ub)
+                JuMP.set_upper_bound(ccm[i], ub)
             end
         end
     end
+
+    report && sol_component_value(pm, nw, :branch, :ccm, ids(pm, nw, :branch), ccm)
 end
 
 ""
@@ -42,14 +41,14 @@ end
 """
 Defines branch flow model power flow equations
 """
-function constraint_flow_losses(pm::AbstractBFModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
-    p_fr = var(pm, n, c, :p, f_idx)
-    q_fr = var(pm, n, c, :q, f_idx)
-    p_to = var(pm, n, c, :p, t_idx)
-    q_to = var(pm, n, c, :q, t_idx)
-    w_fr = var(pm, n, c, :w, f_bus)
-    w_to = var(pm, n, c, :w, t_bus)
-    ccm =  var(pm, n, c, :ccm, i)
+function constraint_flow_losses(pm::AbstractBFModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
+    p_fr = var(pm, n, :p, f_idx)
+    q_fr = var(pm, n, :q, f_idx)
+    p_to = var(pm, n, :p, t_idx)
+    q_to = var(pm, n, :q, t_idx)
+    w_fr = var(pm, n, :w, f_bus)
+    w_to = var(pm, n, :w, t_bus)
+    ccm =  var(pm, n, :ccm, i)
 
     ym_sh_sqr = g_sh_fr^2 + b_sh_fr^2
 
@@ -61,12 +60,12 @@ end
 """
 Defines voltage drop over a branch, linking from and to side voltage magnitude
 """
-function constraint_voltage_magnitude_difference(pm::AbstractBFModel, n::Int, c::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm)
-    p_fr = var(pm, n, c, :p, f_idx)
-    q_fr = var(pm, n, c, :q, f_idx)
-    w_fr = var(pm, n, c, :w, f_bus)
-    w_to = var(pm, n, c, :w, t_bus)
-    ccm =  var(pm, n, c, :ccm, i)
+function constraint_voltage_magnitude_difference(pm::AbstractBFModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, b_sh_fr, tm)
+    p_fr = var(pm, n, :p, f_idx)
+    q_fr = var(pm, n, :q, f_idx)
+    w_fr = var(pm, n, :w, f_bus)
+    w_to = var(pm, n, :w, t_bus)
+    ccm =  var(pm, n, :ccm, i)
 
     ym_sh_sqr = g_sh_fr^2 + b_sh_fr^2
 
@@ -77,19 +76,19 @@ end
 """
 Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
-function constraint_model_current(pm::AbstractBFQPModel, n::Int, c::Int)
-    _check_missing_keys(var(pm, n, c), [:p,:q,:w,:ccm], typeof(pm))
+function constraint_model_current(pm::AbstractBFQPModel, n::Int)
+    _check_missing_keys(var(pm, n), [:p,:q,:w,:ccm], typeof(pm))
 
-    p  = var(pm, n, c, :p)
-    q  = var(pm, n, c, :q)
-    w  = var(pm, n, c, :w)
-    ccm = var(pm, n, c, :ccm)
+    p  = var(pm, n, :p)
+    q  = var(pm, n, :q)
+    w  = var(pm, n, :w)
+    ccm = var(pm, n, :ccm)
 
     for (i,branch) in ref(pm, n, :branch)
         f_bus = branch["f_bus"]
         t_bus = branch["t_bus"]
         f_idx = (i, f_bus, t_bus)
-        tm = branch["tap"][c]
+        tm = branch["tap"]
 
         JuMP.@constraint(pm.model, p[f_idx]^2 + q[f_idx]^2 <= (w[f_bus]/tm^2)*ccm[i])
     end
@@ -99,46 +98,45 @@ end
 """
 Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
 """
-function constraint_model_current(pm::AbstractBFConicModel, n::Int, c::Int)
-    _check_missing_keys(var(pm, n, c), [:p,:q,:w,:ccm], typeof(pm))
+function constraint_model_current(pm::AbstractBFConicModel, n::Int)
+    _check_missing_keys(var(pm, n), [:p,:q,:w,:ccm], typeof(pm))
 
-    p  = var(pm, n, c, :p)
-    q  = var(pm, n, c, :q)
-    w  = var(pm, n, c, :w)
-    ccm = var(pm, n, c, :ccm)
+    p  = var(pm, n, :p)
+    q  = var(pm, n, :q)
+    w  = var(pm, n, :w)
+    ccm = var(pm, n, :ccm)
 
     for (i,branch) in ref(pm, n, :branch)
         f_bus = branch["f_bus"]
         t_bus = branch["t_bus"]
         f_idx = (i, f_bus, t_bus)
-        tm = branch["tap"][c]
+        tm = branch["tap"]
 
         JuMP.@constraint(pm.model, [w[f_bus]/tm^2, ccm[i]/2, p[f_idx], q[f_idx]] in JuMP.RotatedSecondOrderCone())
     end
 end
 
 
-function constraint_voltage_angle_difference(pm::AbstractBFModel, n::Int, c::Int, f_idx, angmin, angmax)
+function constraint_voltage_angle_difference(pm::AbstractBFModel, n::Int, f_idx, angmin, angmax)
     i, f_bus, t_bus = f_idx
     t_idx = (i, t_bus, f_bus)
 
     branch = ref(pm, n, :branch, i)
-    tm = branch["tap"][c]
-    g_fr = branch["g_fr"][c]
-    g_to = branch["g_to"][c]
-    b_fr = branch["b_fr"][c]
-    b_to = branch["b_to"][c]
+    tm = branch["tap"]
+    g_fr = branch["g_fr"]
+    g_to = branch["g_to"]
+    b_fr = branch["b_fr"]
+    b_to = branch["b_to"]
 
     tr, ti = calc_branch_t(branch)
-    tr, ti = tr[c], ti[c]
 
-    r = branch["br_r"][c,c]
-    x = branch["br_x"][c,c]
+    r = branch["br_r"]
+    x = branch["br_x"]
 
     # getting the variables
-    w_fr = var(pm, n, c, :w, f_bus)
-    p_fr = var(pm, n, c, :p, f_idx)
-    q_fr = var(pm, n, c, :q, f_idx)
+    w_fr = var(pm, n, :w, f_bus)
+    p_fr = var(pm, n, :p, f_idx)
+    q_fr = var(pm, n, :q, f_idx)
 
     tzr = r*tr + x*ti
     tzi = r*ti - x*tr

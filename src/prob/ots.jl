@@ -6,7 +6,7 @@
 
 ""
 function run_ots(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, build_ots; ref_extensions=[ref_add_on_off_va_bounds!], solution_builder = solution_ots!, kwargs...)
+    return run_model(file, model_type, optimizer, build_ots; ref_extensions=[ref_add_on_off_va_bounds!], kwargs...)
 end
 
 ""
@@ -63,10 +63,3 @@ function ref_add_on_off_va_bounds!(pm::AbstractPowerModel)
     end
 end
 
-""
-function solution_ots!(pm::AbstractPowerModel, sol::Dict{String,<:Any})
-    add_setpoint_bus_voltage!(sol, pm)
-    add_setpoint_generator_power!(sol, pm)
-    add_setpoint_branch_flow!(sol, pm)
-    add_setpoint_branch_status!(sol, pm)
-end

@@ -13,7 +13,7 @@
         @test haskey(result, "machine") == true
         @test haskey(result, "data") == true
         @test haskey(result, "solution") == true
-        @test haskey(result["solution"], "branch") == false
+        @test haskey(result["solution"], "branch") == true
 
         @test !isnan(result["solve_time"])
 
@@ -40,13 +40,13 @@
         @test haskey(result, "solve_time")
         @test haskey(result, "solution")
         @test !isnan(result["solve_time"])
-        @test length(result["solution"]) == 1
+        @test length(result["solution"]) == 0
     end
 end
 
 @testset "test branch flow output" begin
     @testset "24-bus rts case ac opf" begin
-        result = run_opf("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_opf("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver)
 
         @test haskey(result, "optimizer") == true
         @test haskey(result, "termination_status") == true
@@ -74,7 +74,7 @@ end
 
     # A DCPPowerModel test is important because it does have variables for the reverse side of the branchs
     @testset "3-bus case dc opf" begin
-        result = run_opf("../test/data/matpower/case3.m", DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_opf("../test/data/matpower/case3.m", DCPPowerModel, ipopt_solver)
 
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "branch") == true
@@ -88,12 +88,12 @@ end
 
         @test isapprox(branches["3"]["pf"], -0.103497; atol = 1e-3)
         @test isapprox(branches["3"]["pt"],  0.103497; atol = 1e-3)
-        @test isnan(branches["3"]["qf"])
-        @test isnan(branches["3"]["qt"])
+        #@test isnan(branches["3"]["qf"])
+        #@test isnan(branches["3"]["qt"])
     end
 
     @testset "24-bus rts case ac pf" begin
-        result = run_pf("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_pf("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver)
 
         @test haskey(result, "optimizer") == true
         @test haskey(result, "termination_status") == true
@@ -121,7 +121,7 @@ end
 
     # A DCPPowerModel test is important because it does have variables for the reverse side of the branchs
     @testset "3-bus case dc pf" begin
-        result = run_pf("../test/data/matpower/case3.m", DCPPowerModel, ipopt_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_pf("../test/data/matpower/case3.m", DCPPowerModel, ipopt_solver)
 
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "branch") == true
@@ -135,8 +135,8 @@ end
 
         @test isapprox(branches["3"]["pf"], -0.101419; atol = 1e-3)
         @test isapprox(branches["3"]["pt"],  0.101419; atol = 1e-3)
-        @test isnan(branches["3"]["qf"])
-        @test isnan(branches["3"]["qt"])
+        #@test isnan(branches["3"]["qf"])
+        #@test isnan(branches["3"]["qt"])
     end
 end
 
@@ -151,9 +151,7 @@ end
     @testset "14 bus - kcl duals" begin
         for (i, bus) in result["solution"]["bus"]
             @test haskey(bus, "lam_kcl_r")
-            @test haskey(bus, "lam_kcl_i")
             @test isapprox(bus["lam_kcl_r"], -39.02; atol = 1e-2) # Expected result for case14
-            @test isnan(bus["lam_kcl_i"])
         end
     end
 
@@ -211,6 +209,7 @@ end
 
 end
 
+
 @testset "test solution builder inconsistent status" begin
     # test case where generator status is 1 but the gen_bus status is 0
     data = parse_file("../test/data/matpower/case5.m")
@@ -220,6 +219,40 @@ end
     @test result["termination_status"] == LOCALLY_SOLVED
     @test isapprox(result["objective"], 10128.6; atol = 1e0)
 end
+
+
+@testset "test solution processors" begin
+    @testset "sol_vr_to_vp" begin
+        result = run_opf("../test/data/matpower/case5.m", ACRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
+
+        for (i,bus) in result["solution"]["bus"]
+            if haskey(bus, "vr") && haskey(bus, "vi")
+                @test haskey(bus, "vm") && haskey(bus, "va")
+            end
+        end
+    end
+
+    @testset "sol_w_to_vm" begin
+        result = run_opf("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
+
+        for (i,bus) in result["solution"]["bus"]
+            if haskey(bus, "w")
+                @test haskey(bus, "vm")
+            end
+        end
+    end
+
+    @testset "sol_phi_to_vm" begin
+        result = run_opf("../test/data/matpower/case5.m", LPACCPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
+
+        for (i,bus) in result["solution"]["bus"]
+            if haskey(bus, "phi")
+                @test haskey(bus, "vm")
+            end
+        end
+    end
+end
+
 
 # recommended by @lroald
 @testset "test solution feedback" begin

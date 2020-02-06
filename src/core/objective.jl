@@ -3,6 +3,9 @@
 # This will hopefully make everything more compositional
 ################################################################################
 
+# enables support for v[1]
+Base.getindex(v::JuMP.VariableRef, i::Int64) = v
+
 
 """
 Checks that all cost models are of the same type
@@ -80,13 +83,13 @@ end
 
 
 ""
-function objective_min_fuel_and_flow_cost(pm::AbstractPowerModel)
+function objective_min_fuel_and_flow_cost(pm::AbstractPowerModel; kwargs...)
     model = check_cost_models(pm)
 
     if model == 1
-        return objective_min_fuel_and_flow_cost_pwl(pm)
+        return objective_min_fuel_and_flow_cost_pwl(pm; kwargs...)
     elseif model == 2
-        return objective_min_fuel_and_flow_cost_polynomial(pm)
+        return objective_min_fuel_and_flow_cost_polynomial(pm; kwargs...)
     else
         Memento.error(_LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
@@ -95,13 +98,13 @@ end
 
 
 ""
-function objective_min_fuel_cost(pm::AbstractPowerModel)
+function objective_min_fuel_cost(pm::AbstractPowerModel; kwargs...)
     model = check_gen_cost_models(pm)
 
     if model == 1
-        return objective_min_fuel_cost_pwl(pm)
+        return objective_min_fuel_cost_pwl(pm; kwargs...)
     elseif model == 2
-        return objective_min_fuel_cost_polynomial(pm)
+        return objective_min_fuel_cost_polynomial(pm; kwargs...)
     else
         Memento.error(_LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
@@ -110,24 +113,24 @@ end
 
 
 ""
-function objective_min_fuel_and_flow_cost_polynomial(pm::AbstractPowerModel)
+function objective_min_fuel_and_flow_cost_polynomial(pm::AbstractPowerModel; kwargs...)
     order = calc_max_cost_index(pm.data)-1
 
     if order <= 2
-        return _objective_min_fuel_and_flow_cost_polynomial_linquad(pm)
+        return _objective_min_fuel_and_flow_cost_polynomial_linquad(pm; kwargs...)
     else
-        return _objective_min_fuel_and_flow_cost_polynomial_nl(pm)
+        return _objective_min_fuel_and_flow_cost_polynomial_nl(pm; kwargs...)
     end
 end
 
 ""
-function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractPowerModel)
+function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractPowerModel; report::Bool=true)
     gen_cost = Dict()
     dcline_cost = Dict()
 
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
-            pg = sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n) )
+            pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n) )
 
             if length(gen["cost"]) == 1
                 gen_cost[(n,i)] = gen["cost"][1]
@@ -142,7 +145,7 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractPowerM
 
         from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
         for (i,dcline) in nw_ref[:dcline]
-            p_dc = sum( var(pm, n, c, :p_dc, from_idx[i]) for c in conductor_ids(pm, n) )
+            p_dc = sum( var(pm, n, :p_dc, from_idx[i])[c] for c in conductor_ids(pm, n) )
 
             if length(dcline["cost"]) == 1
                 dcline_cost[(n,i)] = dcline["cost"][1]
@@ -166,7 +169,7 @@ end
 
 
 "Adds lifted variables to turn a quadatic objective into a linear one; needed for conic solvers that only support linear objectives"
-function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractConicModels)
+function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractConicModels, report::Bool=true)
     gen_cost = Dict()
     dcline_cost = Dict()
 
@@ -174,7 +177,7 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractConicM
 
         var(pm, n)[:pg_sqr] = Dict()
         for (i,gen) in nw_ref[:gen]
-            pg = sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n) )
+            pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n) )
 
             if length(gen["cost"]) == 1
                 gen_cost[(n,i)] = gen["cost"][1]
@@ -199,6 +202,10 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractConicM
                     upper_bound = pg_sqr_ub,
                     start = 0.0
                 )
+                if report
+                    sol(pm, n, :gen, i)[:pg_sqr] = pg_sqr
+                end
+
                 JuMP.@constraint(pm.model, [0.5, pg_sqr, pg] in JuMP.RotatedSecondOrderCone())
 
                 gen_cost[(n,i)] = gen["cost"][1]*pg_sqr + gen["cost"][2]*pg + gen["cost"][3]
@@ -211,7 +218,7 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractConicM
 
         var(pm, n)[:p_dc_sqr] = Dict()
         for (i,dcline) in nw_ref[:dcline]
-            p_dc = sum( var(pm, n, c, :p_dc, from_idx[i]) for c in conductor_ids(pm, n) )
+            p_dc = sum( var(pm, n, :p_dc, from_idx[i])[c] for c in conductor_ids(pm, n) )
 
             if length(dcline["cost"]) == 1
                 dcline_cost[(n,i)] = dcline["cost"][1]
@@ -236,6 +243,10 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractConicM
                     upper_bound = p_dc_sqr_ub,
                     start = 0.0
                 )
+                if report
+                    sol(pm, n, :gen, i)[:p_dc_sqr] = p_dc_sqr
+                end
+
                 JuMP.@constraint(pm.model, [0.5, p_dc_sqr, p_dc] in JuMP.RotatedSecondOrderCone())
 
                 dcline_cost[(n,i)] = dcline["cost"][1]*p_dc_sqr + dcline["cost"][2]*p_dc + dcline["cost"][3]
@@ -255,13 +266,13 @@ end
 
 
 ""
-function _objective_min_fuel_and_flow_cost_polynomial_nl(pm::AbstractPowerModel)
+function _objective_min_fuel_and_flow_cost_polynomial_nl(pm::AbstractPowerModel; report::Bool=true)
     gen_cost = Dict()
     dcline_cost = Dict()
 
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
-            pg = sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))
+            pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n))
 
             cost_rev = reverse(gen["cost"])
             if length(cost_rev) == 1
@@ -281,7 +292,7 @@ function _objective_min_fuel_and_flow_cost_polynomial_nl(pm::AbstractPowerModel)
         from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
 
         for (i,dcline) in nw_ref[:dcline]
-            p_dc = sum( var(pm, n, c, :p_dc, from_idx[i]) for c in conductor_ids(pm, n))
+            p_dc = sum( var(pm, n, :p_dc, from_idx[i])[c] for c in conductor_ids(pm, n))
 
             cost_rev = reverse(dcline["cost"])
             if length(cost_rev) == 1
@@ -309,22 +320,22 @@ end
 
 
 ""
-function objective_min_fuel_cost_polynomial(pm::AbstractPowerModel)
+function objective_min_fuel_cost_polynomial(pm::AbstractPowerModel; kwargs...)
     order = calc_max_cost_index(pm.data)-1
 
     if order <= 2
-        return _objective_min_fuel_cost_polynomial_linquad(pm)
+        return _objective_min_fuel_cost_polynomial_linquad(pm; kwargs...)
     else
-        return _objective_min_fuel_cost_polynomial_nl(pm)
+        return _objective_min_fuel_cost_polynomial_nl(pm; kwargs...)
     end
 end
 
 ""
-function _objective_min_fuel_cost_polynomial_linquad(pm::AbstractPowerModel)
+function _objective_min_fuel_cost_polynomial_linquad(pm::AbstractPowerModel; report::Bool=true)
     gen_cost = Dict()
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
-            pg = sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n) )
+            pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n) )
 
             if length(gen["cost"]) == 1
                 gen_cost[(n,i)] = gen["cost"][1]
@@ -347,11 +358,11 @@ end
 
 
 ""
-function _objective_min_fuel_cost_polynomial_nl(pm::AbstractPowerModel)
+function _objective_min_fuel_cost_polynomial_nl(pm::AbstractPowerModel; report::Bool=true)
     gen_cost = Dict()
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
-            pg = sum( var(pm, n, c, :pg, i) for c in conductor_ids(pm, n))
+            pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n))
 
             cost_rev = reverse(gen["cost"])
             if length(cost_rev) == 1
@@ -378,12 +389,12 @@ end
 
 
 "adds pg_cost variables and constraints"
-function objective_variable_pg_cost(pm::AbstractPowerModel)
+function objective_variable_pg_cost(pm::AbstractPowerModel, report::Bool=true)
     for (n, nw_ref) in nws(pm)
         gen_lines = calc_cost_pwl_lines(nw_ref[:gen])
         pg_cost_start = Dict{Int64,Float64}()
         for (i, gen) in nw_ref[:gen]
-            pg_value = sum(JuMP.start_value(var(pm, n, c, :pg, i)) for c in conductor_ids(pm, n))
+            pg_value = sum(JuMP.start_value(var(pm, n, :pg, i)[c]) for c in conductor_ids(pm, n))
             pg_cost_value = -Inf
             for line in gen_lines[i]
                 pg_cost_value = max(pg_cost_value, line.slope*pg_value + line.intercept)
@@ -397,11 +408,12 @@ function objective_variable_pg_cost(pm::AbstractPowerModel)
             [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost",
             start=pg_cost_start[i]
         )
+        report && sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
 
         # gen pwl cost
         for (i, gen) in nw_ref[:gen]
             for line in gen_lines[i]
-                JuMP.@constraint(pm.model, pg_cost[i] >= line.slope*sum(var(pm, n, c, :pg, i) for c in conductor_ids(pm, n)) + line.intercept)
+                JuMP.@constraint(pm.model, pg_cost[i] >= line.slope*sum(var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n)) + line.intercept)
             end
         end
     end
@@ -409,13 +421,13 @@ end
 
 
 "adds p_dc_cost variables and constraints"
-function objective_variable_dc_cost(pm::AbstractPowerModel)
+function objective_variable_dc_cost(pm::AbstractPowerModel, report::Bool=true)
     for (n, nw_ref) in nws(pm)
         dcline_lines = calc_cost_pwl_lines(nw_ref[:dcline])
         dc_p_cost_start = Dict{Int64,Float64}()
         for (i, dcline) in nw_ref[:dcline]
             arc = (i, dcline["f_bus"], dcline["t_bus"])
-            dc_p_value = sum(JuMP.start_value(var(pm, n, c, :p_dc)[arc]) for c in conductor_ids(pm, n))
+            dc_p_value = sum(JuMP.start_value(var(pm, n, :p_dc)[arc][c]) for c in conductor_ids(pm, n))
             dc_p_cost_value = -Inf
             for line in dcline_lines[i]
                 dc_p_cost_value = max(dc_p_cost_value, line.slope*dc_p_value + line.intercept)
@@ -427,12 +439,14 @@ function objective_variable_dc_cost(pm::AbstractPowerModel)
             [i in ids(pm, n, :dcline)], base_name="$(n)_dc_p_cost",
             start=dc_p_cost_start[i]
         )
+        report && sol_component_value(pm, n, :dcline, :dc_p_cost, ids(pm, n, :dcline), dc_p_cost)
+
 
         # dcline pwl cost
         for (i, dcline) in nw_ref[:dcline]
             arc = (i, dcline["f_bus"], dcline["t_bus"])
             for line in dcline_lines[i]
-                JuMP.@constraint(pm.model, dc_p_cost[i] >= line.slope*sum(var(pm, n, c, :p_dc)[arc] for c in conductor_ids(pm, n)) + line.intercept)
+                JuMP.@constraint(pm.model, dc_p_cost[i] >= line.slope*sum(var(pm, n, :p_dc)[arc][c] for c in conductor_ids(pm, n)) + line.intercept)
             end
         end
     end
@@ -440,9 +454,9 @@ end
 
 
 ""
-function objective_min_fuel_and_flow_cost_pwl(pm::AbstractPowerModel)
-    objective_variable_pg_cost(pm)
-    objective_variable_dc_cost(pm)
+function objective_min_fuel_and_flow_cost_pwl(pm::AbstractPowerModel; kwargs...)
+    objective_variable_pg_cost(pm; kwargs...)
+    objective_variable_dc_cost(pm; kwargs...)
 
     return JuMP.@objective(pm.model, Min,
         sum(
@@ -454,8 +468,8 @@ end
 
 
 ""
-function objective_min_fuel_cost_pwl(pm::AbstractPowerModel)
-    objective_variable_pg_cost(pm)
+function objective_min_fuel_cost_pwl(pm::AbstractPowerModel; kwargs...)
+    objective_variable_pg_cost(pm; kwargs...)
 
     return JuMP.@objective(pm.model, Min,
         sum(

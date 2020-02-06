@@ -1,6 +1,6 @@
 @testset "test ac polar pf" begin
     @testset "3-bus case" begin
-        result = run_ac_pf("../test/data/matpower/case3.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_ac_pf("../test/data/matpower/case3.m", ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -31,7 +31,7 @@
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "5-bus case with hvdc line" begin
-        result = run_ac_pf("../test/data/matpower/case5_dc.m", ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_ac_pf("../test/data/matpower/case5_dc.m", ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -109,7 +109,7 @@ end
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "5-bus case with hvdc line" begin
-        result = run_pf("../test/data/matpower/case5_dc.m", ACTPowerModel, ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_pf("../test/data/matpower/case5_dc.m", ACTPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -133,7 +133,7 @@ end
 
 @testset "test iv pf" begin
     @testset "3-bus case" begin
-        result = run_pf_iv("../test/data/matpower/case3.m", IVRPowerModel, ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_pf_iv("../test/data/matpower/case3.m", IVRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -152,7 +152,7 @@ end
         # @test isapprox(result["solution"]["dcline"]["1"]["qt"],  0.0647562; atol = 1e-5) #no reason to expect this is unique
     end
     @testset "5-bus case with hvdc line" begin
-        result = run_pf_iv("../test/data/matpower/case5_dc.m", IVRPowerModel, ipopt_solver, setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_pf_iv("../test/data/matpower/case5_dc.m", IVRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -222,7 +222,7 @@ end
 
 @testset "test soc pf" begin
     @testset "3-bus case" begin
-        result = run_pf("../test/data/matpower/case3.m", SOCWRPowerModel, ipopt_solver)
+        result = run_pf("../test/data/matpower/case3.m", SOCWRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -246,7 +246,7 @@ end
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "6-bus case" begin
-        result = run_pf("../test/data/matpower/case6.m", SOCWRPowerModel, ipopt_solver)
+        result = run_pf("../test/data/matpower/case6.m", SOCWRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -265,7 +265,7 @@ end
 
 @testset "test soc distflow pf_bf" begin
     @testset "3-bus case" begin
-        result = run_pf_bf("../test/data/matpower/case3.m", SOCBFPowerModel, ipopt_solver)
+        result = run_pf_bf("../test/data/matpower/case3.m", SOCBFPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -295,7 +295,7 @@ end
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "6-bus case" begin
-        result = run_pf_bf("../test/data/matpower/case6.m", SOCBFPowerModel, ipopt_solver)
+        result = run_pf_bf("../test/data/matpower/case6.m", SOCBFPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -314,7 +314,7 @@ end
 @testset "test sdp pf" begin
     # note: may have issues on linux (04/02/18)
     @testset "3-bus case" begin
-        result = run_pf("../test/data/matpower/case3.m", SDPWRMPowerModel, scs_solver)
+        result = run_pf("../test/data/matpower/case3.m", SDPWRMPowerModel, scs_solver, solution_processors=[sol_data_model!])
 
         @test result["termination_status"] == OPTIMAL
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -339,7 +339,7 @@ end
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "6-bus case" begin
-        result = run_pf("../test/data/matpower/case6.m", SDPWRMPowerModel, scs_solver)
+        result = run_pf("../test/data/matpower/case6.m", SDPWRMPowerModel, scs_solver, solution_processors=[sol_data_model!])
 
         @test result["termination_status"] == OPTIMAL
         @test isapprox(result["objective"], 0; atol = 1e-2)

@@ -369,12 +369,12 @@ end
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 16641.2; atol = 1e0)
-            @test isapprox(result["solution"]["switch"]["1"]["psw"], 3.051, atol=1e-2)
-            @test isapprox(result["solution"]["switch"]["1"]["qsw"], 0.885, atol=1e-2)
-            @test isapprox(result["solution"]["switch"]["2"]["psw"], 0.000, atol=1e-3)
-            @test isapprox(result["solution"]["switch"]["2"]["qsw"], 0.000, atol=1e-3)
-            @test isnan(result["solution"]["switch"]["3"]["psw"])
-            @test isnan(result["solution"]["switch"]["3"]["qsw"])
+            @test isapprox(result["solution"]["switch"]["1"]["psw_fr"], 3.051, atol=1e-2)
+            @test isapprox(result["solution"]["switch"]["1"]["qsw_fr"], 0.885, atol=1e-2)
+            @test isapprox(result["solution"]["switch"]["2"]["psw_fr"], 0.000, atol=1e-3)
+            @test isapprox(result["solution"]["switch"]["2"]["qsw_fr"], 0.000, atol=1e-3)
+            #@test isnan(result["solution"]["switch"]["3"]["psw_fr"])
+            #@test isnan(result["solution"]["switch"]["3"]["qsw_fr"])
         end
 
         @testset "5-bus sw nb case" begin
@@ -391,10 +391,10 @@ end
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 16554.7; atol = 1e0)
-            @test isapprox(result["solution"]["switch"]["1"]["psw"], 3.050, atol=1e-2)
-            @test isnan(result["solution"]["switch"]["1"]["qsw"])
-            @test isapprox(result["solution"]["switch"]["2"]["psw"], 0.000, atol=1e-3)
-            @test isnan(result["solution"]["switch"]["2"]["qsw"])
+            @test isapprox(result["solution"]["switch"]["1"]["psw_fr"], 3.050, atol=1e-2)
+            #@test isnan(result["solution"]["switch"]["1"]["qsw_fr"])
+            @test isapprox(result["solution"]["switch"]["2"]["psw_fr"], 0.000, atol=1e-3)
+            #@test isnan(result["solution"]["switch"]["2"]["qsw_fr"])
         end
 
         @testset "5-bus sw nb case" begin
@@ -411,10 +411,10 @@ end
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15110.0; atol = 1e0)
-            @test isapprox(result["solution"]["switch"]["1"]["psw"], 3.048, atol=1e-2)
-            @test isapprox(result["solution"]["switch"]["1"]["qsw"], 0.889, atol=1e-2)
-            @test isapprox(result["solution"]["switch"]["2"]["psw"], 0.000, atol=1e-3)
-            @test isapprox(result["solution"]["switch"]["2"]["qsw"], 0.000, atol=1e-3)
+            @test isapprox(result["solution"]["switch"]["1"]["psw_fr"], 3.048, atol=1e-2)
+            @test isapprox(result["solution"]["switch"]["1"]["qsw_fr"], 0.889, atol=1e-2)
+            @test isapprox(result["solution"]["switch"]["2"]["psw_fr"], 0.000, atol=1e-3)
+            @test isapprox(result["solution"]["switch"]["2"]["qsw_fr"], 0.000, atol=1e-3)
         end
 
         @testset "5-bus sw nb case" begin
@@ -436,10 +436,10 @@ end
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15053.6; atol = 1e0)
-            @test isapprox(result["solution"]["switch"]["1"]["psw"],  5.468, atol=1e-2)
-            @test isapprox(result["solution"]["switch"]["1"]["qsw"], -0.836, atol=1e-2)
-            @test isapprox(result["solution"]["switch"]["2"]["psw"], -2.426, atol=1e-3)
-            @test isapprox(result["solution"]["switch"]["2"]["qsw"],  1.736, atol=1e-3)
+            @test isapprox(result["solution"]["switch"]["1"]["psw_fr"],  5.468, atol=1e-2)
+            @test isapprox(result["solution"]["switch"]["1"]["qsw_fr"], -0.836, atol=1e-2)
+            @test isapprox(result["solution"]["switch"]["2"]["psw_fr"], -2.426, atol=1e-3)
+            @test isapprox(result["solution"]["switch"]["2"]["qsw_fr"],  1.736, atol=1e-3)
 
             @test isapprox(result["solution"]["switch"]["1"]["status"], 1.00, atol=1e-3)
             @test isapprox(result["solution"]["switch"]["2"]["status"], 1.00, atol=1e-3)
@@ -463,10 +463,10 @@ end
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 15054.1; atol = 1e0)
 
-            @test isapprox(result["solution"]["switch"]["1"]["psw"], 5.603, atol=1e-2)
-            @test isnan(result["solution"]["switch"]["1"]["qsw"])
-            @test isapprox(result["solution"]["switch"]["2"]["psw"], -2.553, atol=1e-3)
-            @test isnan(result["solution"]["switch"]["2"]["qsw"])
+            @test isapprox(result["solution"]["switch"]["1"]["psw_fr"], 5.603, atol=1e-2)
+            #@test isnan(result["solution"]["switch"]["1"]["qsw_fr"])
+            @test isapprox(result["solution"]["switch"]["2"]["psw_fr"], -2.553, atol=1e-3)
+            #@test isnan(result["solution"]["switch"]["2"]["qsw_fr"])
 
             @test isapprox(result["solution"]["switch"]["1"]["status"], 1.00, atol=1e-3)
             @test isapprox(result["solution"]["switch"]["2"]["status"], 1.00, atol=1e-3)
@@ -489,10 +489,10 @@ end
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15053.6; atol = 1e0)
-            @test isapprox(result["solution"]["switch"]["1"]["psw"],  5.469, atol=1e-2)
-            @test isapprox(result["solution"]["switch"]["1"]["qsw"], -0.809, atol=1e-2)
-            @test isapprox(result["solution"]["switch"]["2"]["psw"], -2.426, atol=1e-3)
-            @test isapprox(result["solution"]["switch"]["2"]["qsw"],  1.710, atol=1e-3)
+            @test isapprox(result["solution"]["switch"]["1"]["psw_fr"],  5.469, atol=1e-2)
+            @test isapprox(result["solution"]["switch"]["1"]["qsw_fr"], -0.809, atol=1e-2)
+            @test isapprox(result["solution"]["switch"]["2"]["psw_fr"], -2.426, atol=1e-3)
+            @test isapprox(result["solution"]["switch"]["2"]["qsw_fr"],  1.710, atol=1e-3)
 
             @test isapprox(result["solution"]["switch"]["1"]["status"], 1.00, atol=1e-3)
             @test isapprox(result["solution"]["switch"]["2"]["status"], 1.00, atol=1e-3)
@@ -724,7 +724,7 @@ end
     end
 end
 
-@testset "test opf with optimization of on-load tap changing transformers / phase shifting transformers" begin
+@testset "test opf with optimization of oltc and pst" begin
 
     @testset "test ac polar opf" begin
         @testset "3-bus case with fixed phase shift / tap" begin

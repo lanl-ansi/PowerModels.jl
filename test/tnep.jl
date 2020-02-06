@@ -34,7 +34,7 @@ end
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
         calc_thermal_limits!(data)
-        result = run_tnep(data, SOCWRPowerModel, juniper_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_tnep(data, SOCWRPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -137,7 +137,7 @@ end
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
         calc_thermal_limits!(data)
-        result = run_tnep(data, SOCWRPowerModel, juniper_solver; setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_tnep(data, SOCWRPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 

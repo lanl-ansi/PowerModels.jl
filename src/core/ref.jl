@@ -12,8 +12,8 @@ function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcuto
     bp_branch = Dict((bp, typemax(Int64)) for bp in buspair_indexes)
 
     if ismulticondcutor
-        bp_angmin = Dict((bp, MultiConductorVector([-Inf for c in conductor_ids])) for bp in buspair_indexes)
-        bp_angmax = Dict((bp, MultiConductorVector([ Inf for c in conductor_ids])) for bp in buspair_indexes)
+        bp_angmin = Dict((bp, [-Inf for c in conductor_ids]) for bp in buspair_indexes)
+        bp_angmax = Dict((bp, [ Inf for c in conductor_ids]) for bp in buspair_indexes)
     else
         @assert(length(conductor_ids) == 1)
         bp_angmin = Dict((bp, -Inf) for bp in buspair_indexes)
@@ -129,7 +129,7 @@ function ref_calc_voltage_product_bounds(buspairs, conductor::Int=1)
 
     buspairs_conductor = Dict()
     for (bp, buspair) in buspairs
-        buspairs_conductor[bp] = Dict((k, conductor_value(v, conductor)) for (k,v) in buspair)
+        buspairs_conductor[bp] = Dict( k => v[conductor] for (k,v) in buspair)
     end
 
     for (bp, buspair) in buspairs_conductor
