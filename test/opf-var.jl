@@ -449,10 +449,10 @@ end
             result = PowerModels._run_oswpf("../test/data/matpower/case5_sw_nb.m", ACPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result["objective"], 16674.8; atol = 1e0)
+            @test isapprox(result["objective"], 17915.2; atol = 1e0)
 
             switch_status_total = sum(switch["status"] for (i,switch) in result["solution"]["switch"])
-            @test isapprox(switch_status_total, 12.00, atol=1e-4) # two swtiches off
+            @test isapprox(switch_status_total, 14.00, atol=1e-4) # two swtiches off
         end
     end
 
