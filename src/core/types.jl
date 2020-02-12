@@ -28,6 +28,10 @@ abstract type AbstractConicModel <: AbstractPowerModel end
 "for branch flow models"
 abstract type AbstractBFModel <: AbstractPowerModel end
 
+
+"for variants of branch flow models that target QP or NLP solvers"
+abstract type AbstractBFLPModel <: AbstractBFModel end
+
 "for variants of branch flow models that target QP or NLP solvers"
 abstract type AbstractBFQPModel <: AbstractBFModel end
 
@@ -389,6 +393,8 @@ Extended as discussed in:
 """
 mutable struct SOCBFPowerModel <: AbstractSOCBFModel @pm_fields end
 
+
+mutable struct LPBFPowerModel <: AbstractBFLPModel @pm_fields end
 
 ""
 abstract type AbstractSOCBFConicModel <: AbstractBFConicModel end
