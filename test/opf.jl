@@ -738,6 +738,66 @@ end
     end
 end
 
+@testset "test linear distflow opf_bf" begin
+    @testset "3-bus case" begin
+        result = run_opf_bf("../test/data/matpower/case3.m", LPBFPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 5658.22; atol = 1e0)
+    end
+    @testset "5-bus transformer swap case" begin
+        result = run_opf_bf("../test/data/matpower/case5.m", LPBFPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 14810; atol = 1e0)
+    end
+    @testset "5-bus asymmetric case" begin
+        result = run_opf_bf("../test/data/matpower/case5_asym.m", LPBFPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 14810; atol = 1e0)
+    end
+    @testset "5-bus gap case" begin
+        result = run_opf_bf("../test/data/matpower/case5_gap.m", LPBFPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], -27410.0; atol = 1e0)
+    end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_opf_bf("../test/data/pti/case5_alc.raw", LPBFPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 1002.46; atol = 1e0)
+    end
+    @testset "5-bus with pwl costs" begin
+        result = run_opf_bf("../test/data/matpower/case5_pwlc.m", LPBFPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 42565.8; atol = 1e0)
+    end
+    @testset "6-bus case" begin
+        result = run_opf_bf("../test/data/matpower/case6.m", LPBFPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 11277.9; atol = 1e0)
+    end
+    # @testset "24-bus rts case" begin
+    #     result = run_opf_bf("../test/data/matpower/case24.m", LPBFPowerModel, ipopt_solver)
+    #
+    #     @test result["termination_status"] == LOCALLY_SOLVED
+    #     @test isapprox(result["objective"], 70690.7; atol = 1e0)
+    # end
+    @testset "3-bus case w/ r,x=0 on branch" begin
+        mp_data = PowerModels.parse_file("../test/data/matpower/case3.m")
+        mp_data["branch"]["1"]["br_r"] = mp_data["branch"]["1"]["br_x"] = 0.0
+        result = run_opf_bf(mp_data, LPBFPowerModel, ipopt_solver)
+        @test result["termination_status"] == LOCALLY_SOLVED
+    end
+    @testset "14-bus variable bounds" begin
+        pm = instantiate_model("../test/data/matpower/case14.m", LPBFPowerModel, PowerModels.build_opf_bf)
+        @test check_variable_bounds(pm.model)
+    end
+end
 
 @testset "test qc opf" begin
     @testset "3-bus case" begin
