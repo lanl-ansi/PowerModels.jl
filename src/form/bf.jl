@@ -152,7 +152,7 @@ function constraint_voltage_angle_difference(pm::AbstractBFModel, n::Int, f_idx,
 end
 
 """
-Defines branch flow model power flow equations
+Defines linear branch flow model power flow equations
 """
 function constraint_flow_losses(pm::AbstractBFLPModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
     p_fr = var(pm, n, :p, f_idx)
@@ -180,15 +180,34 @@ function constraint_voltage_magnitude_difference(pm::AbstractBFLPModel, n::Int, 
 end
 
 
-"""
-Defines relationship between branch (series) power flow, branch (series) current and node voltage magnitude
-"""
+""
 function constraint_model_current(pm::AbstractBFLPModel, n::Int)
-
 
 end
 
 ""
 function variable_current_magnitude_sqr(pm::AbstractBFLPModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
 
+end
+
+
+""
+function constraint_storage_loss(pm::AbstractBFLPModel, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+    ps = var(pm, n, :ps, i)
+    qs = var(pm, n, :qs, i)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+
+
+    JuMP.@constraint(pm.model,
+        sum(ps[c] for c in conductors) + (sd - sc)
+        ==
+        p_loss
+    )
+
+    JuMP.@constraint(pm.model,
+        sum(qs[c] for c in conductors)
+        ==
+        q_loss
+    )
 end
