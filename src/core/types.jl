@@ -29,7 +29,7 @@ abstract type AbstractConicModel <: AbstractPowerModel end
 abstract type AbstractBFModel <: AbstractPowerModel end
 
 
-"for variants of branch flow models that target QP or NLP solvers"
+"for variants of branch flow models that target LP solvers"
 abstract type AbstractBFLPModel <: AbstractBFModel end
 
 "for variants of branch flow models that target QP or NLP solvers"
