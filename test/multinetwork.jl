@@ -197,6 +197,23 @@ TESTLOG = Memento.getlogger(PowerModels)
                 atol = 1e-3
             )
         end
+
+        @testset "test linear bf opf" begin
+            result = PowerModels.run_mn_opf(mn_data, LPBFPowerModel, ipopt_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 29620.0; atol = 1e0)
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["2"]["pg"];
+                atol = 1e-3
+            )
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["4"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["4"]["pg"];
+                atol = 1e-3
+            )
+        end
     end
 
     @testset "2 period 5-bus dual variable case" begin
@@ -286,6 +303,33 @@ TESTLOG = Memento.getlogger(PowerModels)
 
         @testset "test soc opf" begin
             result = PowerModels.run_mn_opf_strg(mn_data, PowerModels.SOCWRPowerModel, juniper_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 58853.5; atol = 1e0)
+
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"], -0.0597052; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["ps"], -0.0596959; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"], -0.0597053; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["ps"], -0.0596960; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"], -0.0597056; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["ps"], -0.0596961; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"], -0.0596964; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+        end
+
+        @testset "test linear bf opf" begin
+            result = PowerModels.run_mn_opf_strg(mn_data, PowerModels.LPBFPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 58853.5; atol = 1e0)
