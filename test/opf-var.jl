@@ -452,7 +452,7 @@ end
             @test isapprox(result["objective"], 17915.2; atol = 1e0)
 
             switch_status_total = sum(switch["status"] for (i,switch) in result["solution"]["switch"])
-            @test isapprox(switch_status_total, 14.00, atol=1e-4) # two swtiches off
+            @test isapprox(switch_status_total, 14.00, atol=1e-4) # zero swtiches off
         end
     end
 
