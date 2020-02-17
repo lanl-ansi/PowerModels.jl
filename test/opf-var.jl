@@ -448,14 +448,11 @@ end
         @testset "5-bus sw nb case" begin
             result = PowerModels._run_oswpf("../test/data/matpower/case5_sw_nb.m", ACPPowerModel, juniper_solver)
 
-            # juniper v0.5 vs v0.6 in JuMP v0.20 vs v0.21
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 17915.2; atol = 1e0)
 
             switch_status_total = sum(switch["status"] for (i,switch) in result["solution"]["switch"])
-            @test isapprox(switch_status_total, 14.00, atol=1e-4) # zero
-      
-      swtiches off
+            @test isapprox(switch_status_total, 14.00, atol=1e-4) # zero swtiches off
         end
     end
 
