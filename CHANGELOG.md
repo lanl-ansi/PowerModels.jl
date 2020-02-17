@@ -4,6 +4,9 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.15.1
+- Add support for JuMP v0.21
+
 ### v0.15.0
 - Standardized use of bounded parameter in variable creation (#651)
 - Simplified branch series current variable indexing (breaking)
