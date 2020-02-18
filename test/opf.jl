@@ -746,10 +746,14 @@ end
         @test isapprox(result["objective"], 5658.22; atol = 1e0)
     end
     @testset "5-bus transformer swap case" begin
-        result = run_opf_bf("../test/data/matpower/case5.m", LPBFPowerModel, ipopt_solver)
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        result = run_opf_bf(data, LPBFPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 14810; atol = 1e0)
+        @test isapprox(sum(l["pd"] for l in values(data["load"])),
+            sum(g["pg"] for g in values(result["solution"]["gen"]));
+            atol = 1e-3)
     end
     @testset "5-bus asymmetric case" begin
         result = run_opf_bf("../test/data/matpower/case5_asym.m", LPBFPowerModel, ipopt_solver)

@@ -351,10 +351,14 @@ end
         @test isapprox(result["solution"]["bus"]["4"]["vm"], 1.09999; atol = 1e-3)
     end
     @testset "24-bus rts case" begin
-        result = run_pf_bf("../test/data/matpower/case24.m", LPBFPowerModel, ipopt_solver)
+        data = parse_file("../test/data/matpower/case24.m")
+        result = run_pf_bf(data, LPBFPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
+        @test isapprox(sum(l["pd"] for l in values(data["load"])),
+            sum(g["pg"] for g in values(result["solution"]["gen"]));
+            atol = 1e-3)
     end
 end
 

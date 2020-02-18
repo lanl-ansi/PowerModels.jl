@@ -336,6 +336,13 @@ TESTLOG = Memento.getlogger(PowerModels)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            for (n, net) in mn_data["nw"]
+                @test isapprox(sum(l["pd"] for l in values(net["load"])),
+                    sum(g["pg"] for g in values(result["solution"]["nw"][n]["gen"])) -
+                    sum(s["ps"] for s in values(result["solution"]["nw"][n]["storage"]));
+                    atol = 1e-3)
+            end
         end
 
         @testset "test dc polar opf" begin
