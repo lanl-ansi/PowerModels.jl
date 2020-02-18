@@ -50,6 +50,7 @@ function build_mn_opf_bf_strg(pm::AbstractPowerModel)
         variable_generation(pm, nw=n)
         variable_storage_mi(pm, nw=n)
         variable_branch_flow(pm, nw=n)
+        variable_branch_current(pm, nw=n)
         variable_dcline_flow(pm, nw=n)
 
         constraint_model_current(pm, nw=n)

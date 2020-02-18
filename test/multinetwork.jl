@@ -311,6 +311,33 @@ TESTLOG = Memento.getlogger(PowerModels)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
         end
 
+        @testset "test soc bf opf" begin
+            result = PowerModels.run_mn_opf_bf_strg(mn_data, PowerModels.SOCBFPowerModel, juniper_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 72407.45; atol = 1e0)
+
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"],  0.3460208; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["ps"],  0.7364543; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"],  0.3460209; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["ps"],  0.7364541; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"],  0.3460209; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["ps"],  0.7364537; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"],  0.1660210; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"],  0.7364528; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+        end
+
         @testset "test linear bf opf" begin
             result = PowerModels.run_mn_opf_bf_strg(mn_data, PowerModels.LPBFPowerModel, juniper_solver)
 
