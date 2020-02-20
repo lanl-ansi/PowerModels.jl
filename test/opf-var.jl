@@ -162,6 +162,7 @@ end
             @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
             @test all_loads_on(result)
             @test all_shunts_on(result)
+
         end
         @testset "14-bus current" begin
             result = PowerModels._run_mld("../test/data/matpower/case14.m", ACPPowerModel, ipopt_solver)
@@ -171,6 +172,12 @@ end
             @test isapprox(active_power_served(result), 2.59; atol = 1e-2)
             @test all_loads_on(result)
             @test all_shunts_on(result)
+
+            @test isapprox(sum(load["pd"] for (i,load) in result["solution"]["load"]), 2.5900; atol = 1e-4)
+            @test isapprox(sum(load["qd"] for (i,load) in result["solution"]["load"]), 0.7349; atol = 1e-4)
+
+            @test isapprox(sum(shunt["bs"] for (i,shunt) in result["solution"]["shunt"]), 0.19; atol = 1e-4)
+            @test isapprox(sum(shunt["gs"] for (i,shunt) in result["solution"]["shunt"]), 0.00; atol = 1e-4)
         end
     end
 
