@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - nothing
 
 ### v0.15.2
+- Add support for on/off storage in SOCWRPowerModel
 - Fixed multinetwork solution building bug
 - Fixed solution building bug in variable_demand_factor
 

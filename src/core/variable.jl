@@ -1073,6 +1073,7 @@ end
 function variable_storage_mi_on_off(pm::AbstractPowerModel; kwargs...)
     variable_active_storage_on_off(pm; kwargs...)
     variable_reactive_storage_on_off(pm; kwargs...)
+    variable_current_storage(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
     variable_storage_discharge(pm; kwargs...)
