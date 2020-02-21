@@ -43,7 +43,7 @@ function build_opf_bf(pm::AbstractPowerModel)
     end
 end
 
-""
+"Build multinetwork branch flow storage OPF"
 function build_mn_opf_bf_strg(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n)

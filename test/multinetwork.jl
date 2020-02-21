@@ -364,6 +364,7 @@ TESTLOG = Memento.getlogger(PowerModels)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
 
+            # This formulation is lossless. Sum of loads and storage should equal sum of generation.
             for (n, net) in mn_data["nw"]
                 @test isapprox(sum(l["pd"] for l in values(net["load"])),
                     sum(g["pg"] for g in values(result["solution"]["nw"][n]["gen"])) -

@@ -362,32 +362,6 @@ function variable_current_storage(pm::AbstractWRModel; nw::Int=pm.cnw, bounded::
     report && sol_component_value(pm, nw, :storage, :ccms, ids(pm, nw, :storage), ccms)
 end
 
-""
-function constraint_storage_loss(pm::AbstractWRModel, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
-    w = var(pm, n, :w, bus)
-    ccms = var(pm, n, :ccms, i)
-    ps = var(pm, n, :ps, i)
-    qs = var(pm, n, :qs, i)
-    sc = var(pm, n, :sc, i)
-    sd = var(pm, n, :sd, i)
-
-    for c in conductors
-        JuMP.@constraint(pm.model, ps[c]^2 + qs[c]^2 <= w[c]*ccms[c])
-    end
-
-    JuMP.@constraint(pm.model, 
-        sum(ps[c] for c in conductors) + (sd - sc)
-        ==
-        p_loss + sum(r[c]*ccms[c] for c in conductors)
-    )
-
-    JuMP.@constraint(pm.model, 
-        sum(qs[c] for c in conductors)
-        ==
-        q_loss + sum(x[c]*ccms[c] for c in conductors)
-    )
-end
-
 
 
 ###### QC Relaxations ######

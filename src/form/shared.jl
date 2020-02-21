@@ -15,14 +15,14 @@
 function variable_shunt_factor(pm::AbstractWConvexModels; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
     if !relax
         z_shunt = var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt", 
+            [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt",
             binary = true,
             start = comp_start_value(ref(pm, nw, :shunt, i), "z_shunt_start", 1.0)
         )
     else
         z_shunt = var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
-            [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt", 
-            upper_bound = 1, 
+            [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt",
+            upper_bound = 1,
             lower_bound = 0,
             start = comp_start_value(ref(pm, nw, :shunt, i), "z_shunt_start", 1.0)
         )
@@ -343,3 +343,28 @@ function constraint_current_limit(pm::AbstractWModels, n::Int, f_idx, c_rating_a
     JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= w_to*c_rating_a^2)
 end
 
+""
+function constraint_storage_loss(pm::AbstractWModels, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+    w = var(pm, n, :w, bus)
+    ccms = var(pm, n, :ccms, i)
+    ps = var(pm, n, :ps, i)
+    qs = var(pm, n, :qs, i)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+
+    for c in conductors
+        JuMP.@constraint(pm.model, ps[c]^2 + qs[c]^2 <= w[c]*ccms[c])
+    end
+
+    JuMP.@constraint(pm.model,
+        sum(ps[c] for c in conductors) + (sd - sc)
+        ==
+        p_loss + sum(r[c]*ccms[c] for c in conductors)
+    )
+
+    JuMP.@constraint(pm.model,
+        sum(qs[c] for c in conductors)
+        ==
+        q_loss + sum(x[c]*ccms[c] for c in conductors)
+    )
+end
