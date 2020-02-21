@@ -1073,6 +1073,7 @@ end
 function variable_storage_mi_on_off(pm::AbstractPowerModel; kwargs...)
     variable_active_storage_on_off(pm; kwargs...)
     variable_reactive_storage_on_off(pm; kwargs...)
+    variable_current_storage(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
     variable_storage_discharge(pm; kwargs...)
@@ -1251,7 +1252,7 @@ function variable_demand_factor(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::B
         sol_component_value(pm, nw, :load, :status, ids(pm, nw, :load), z_demand)
         sol_pd = Dict(i => z_demand[i]*ref(pm, nw, :load, i)["pd"] for i in ids(pm, nw, :load))
         sol_component_value(pm, nw, :load, :pd, ids(pm, nw, :load), sol_pd)
-        sol_qd = Dict(i => z_demand[i]*ref(pm, nw, :load, i)["pd"] for i in ids(pm, nw, :load))
+        sol_qd = Dict(i => z_demand[i]*ref(pm, nw, :load, i)["qd"] for i in ids(pm, nw, :load))
         sol_component_value(pm, nw, :load, :qd, ids(pm, nw, :load), sol_qd)
     end
 end

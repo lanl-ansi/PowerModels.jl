@@ -162,6 +162,7 @@ end
             @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
             @test all_loads_on(result)
             @test all_shunts_on(result)
+
         end
         @testset "14-bus current" begin
             result = PowerModels._run_mld("../test/data/matpower/case14.m", ACPPowerModel, ipopt_solver)
@@ -171,6 +172,12 @@ end
             @test isapprox(active_power_served(result), 2.59; atol = 1e-2)
             @test all_loads_on(result)
             @test all_shunts_on(result)
+
+            @test isapprox(sum(load["pd"] for (i,load) in result["solution"]["load"]), 2.5900; atol = 1e-4)
+            @test isapprox(sum(load["qd"] for (i,load) in result["solution"]["load"]), 0.7349; atol = 1e-4)
+
+            @test isapprox(sum(shunt["bs"] for (i,shunt) in result["solution"]["shunt"]), 0.19; atol = 1e-4)
+            @test isapprox(sum(shunt["gs"] for (i,shunt) in result["solution"]["shunt"]), 0.00; atol = 1e-4)
         end
     end
 
@@ -336,6 +343,16 @@ end
         end
     end
 
+    @testset "test soc opf" begin
+        @testset "5-bus uc case" begin
+            result = PowerModels._run_ucopf("../test/data/matpower/case5_uc.m", SOCWRPowerModel, juniper_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 15057.09; atol = 1e0)
+            @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0, atol=1e-6)
+        end
+    end
+
     @testset "test dc opf" begin
         @testset "5-bus uc case" begin
             result = PowerModels._run_ucopf("../test/data/matpower/case5_uc.m", DCPPowerModel, cbc_solver)
@@ -346,14 +363,43 @@ end
         end
     end
 
+
     @testset "test ac opf" begin
         @testset "5-bus uc storage case" begin
             result = PowerModels._run_ucopf("../test/data/matpower/case5_uc_strg.m", ACPPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 17740.9; atol = 1e0)
+
+            @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0, atol=1e-6)
             @test isapprox(result["solution"]["storage"]["1"]["status"], 1.0, atol=1e-6)
             @test isapprox(result["solution"]["storage"]["2"]["status"], 0.0, atol=1e-6)
+        end
+    end
+
+    @testset "test soc opf" begin
+        @testset "5-bus uc storage case" begin
+            result = PowerModels._run_ucopf("../test/data/matpower/case5_uc_strg.m", SOCWRPowerModel, juniper_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 14525.0; atol = 1e0)
+
+            @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0, atol=1e-6)
+            @test isapprox(result["solution"]["storage"]["1"]["status"], 1.0, atol=1e-6)
+            @test isapprox(result["solution"]["storage"]["2"]["status"], 0.0, atol=1e-6)
+        end
+    end
+
+    @testset "test dc opf" begin
+        @testset "5-bus uc storage case" begin
+            result = PowerModels._run_ucopf("../test/data/matpower/case5_uc_strg.m", DCPPowerModel, cbc_solver)
+
+            @test result["termination_status"] == OPTIMAL
+            @test isapprox(result["objective"], 16833.2; atol = 1e0)
+
+            @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0, atol=1e-6)
+            @test isapprox(result["solution"]["storage"]["1"]["status"], 1.0, atol=1e-6)
+            @test isapprox(result["solution"]["storage"]["2"]["status"], 1.0, atol=1e-6)
         end
     end
 
