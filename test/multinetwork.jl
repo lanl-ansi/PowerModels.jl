@@ -352,7 +352,7 @@ TESTLOG = Memento.getlogger(PowerModels)
         end
 
         @testset "test linear bf opf" begin
-            result = PowerModels.run_mn_opf_bf_strg(mn_data, PowerModels.LPBFPowerModel, juniper_solver)
+            result = PowerModels.run_mn_opf_bf_strg(mn_data, PowerModels.BFAPowerModel, juniper_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 57980.0; atol = 1e0)

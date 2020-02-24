@@ -30,7 +30,7 @@ abstract type AbstractBFModel <: AbstractPowerModel end
 
 
 "for variants of branch flow models that target LP solvers"
-abstract type AbstractBFLPModel <: AbstractBFModel end
+abstract type AbstractBFAModel <: AbstractBFModel end
 
 "for variants of branch flow models that target QP or NLP solvers"
 abstract type AbstractBFQPModel <: AbstractBFModel end
@@ -414,7 +414,7 @@ Note that flow bounds are still second order cones.
 }
 ```
 """
-mutable struct LPBFPowerModel <: AbstractBFLPModel @pm_fields end
+mutable struct BFAPowerModel <: AbstractBFAModel @pm_fields end
 
 ""
 abstract type AbstractSOCBFConicModel <: AbstractBFConicModel end

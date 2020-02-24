@@ -313,7 +313,7 @@ end
 
 @testset "test linear distflow pf_bf" begin
     @testset "3-bus case" begin
-        result = run_pf_bf("../test/data/matpower/case3.m", LPBFPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
+        result = run_pf_bf("../test/data/matpower/case3.m", BFAPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -331,19 +331,19 @@ end
         @test isapprox(result["solution"]["dcline"]["1"]["pt"], -0.10; atol = 1e-4)
     end
     @testset "5-bus asymmetric case" begin
-        result = run_pf_bf("../test/data/matpower/case5_asym.m", LPBFPowerModel, ipopt_solver)
+        result = run_pf_bf("../test/data/matpower/case5_asym.m", BFAPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "5-bus case with hvdc line" begin
-        result = run_pf_bf("../test/data/matpower/case5_dc.m", LPBFPowerModel, ipopt_solver)
+        result = run_pf_bf("../test/data/matpower/case5_dc.m", BFAPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
     @testset "6-bus case" begin
-        result = run_pf_bf("../test/data/matpower/case6.m", LPBFPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
+        result = run_pf_bf("../test/data/matpower/case6.m", BFAPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
@@ -352,7 +352,7 @@ end
     end
     @testset "24-bus rts case" begin
         data = parse_file("../test/data/matpower/case24.m")
-        result = run_pf_bf(data, LPBFPowerModel, ipopt_solver)
+        result = run_pf_bf(data, BFAPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
