@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Add support for building storage models with branch flow formulations (#676)
+- A linear branch flow formulation was added (#676)
 
 ### v0.15.2
 - Add support for on/off storage in SOCWRPowerModel
