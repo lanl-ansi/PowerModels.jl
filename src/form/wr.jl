@@ -337,7 +337,7 @@ end
 
 
 "do nothing by default but some formulations require this"
-function variable_current_storage(pm::AbstractWRModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_current_storage(pm::AbstractWModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     ccms = var(pm, nw)[:ccms] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_ccms",
         start = comp_start_value(ref(pm, nw, :storage, i), "ccms_start")
