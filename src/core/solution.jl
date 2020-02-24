@@ -93,7 +93,9 @@ function build_solution(pm::AbstractPowerModel; post_processors=[])
         end
     end
 
-    if !ismultinetwork(pm)
+    if ismultinetwork(pm)
+        sol["multinetwork"] = true
+    else
         for (k,v) in sol["nw"]["$(pm.cnw)"]
             sol[k] = v
         end

@@ -108,6 +108,19 @@ TESTLOG = Memento.getlogger(PowerModels)
         end
     end
 
+
+    @testset "test multi-network solution" begin
+        # test case where generator status is 1 but the gen_bus status is 0
+        mn_data = build_mn_data("../test/data/matpower/case5.m")
+        result = PowerModels.run_mn_opf(mn_data, ACPPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 36538.2; atol = 1e0)
+
+        @test InfrastructureModels.ismultinetwork(mn_data) == InfrastructureModels.ismultinetwork(result["solution"])
+    end
+
+
     @testset "2 period 5-bus asymmetric case" begin
         mn_data = build_mn_data("../test/data/matpower/case5_asym.m")
 

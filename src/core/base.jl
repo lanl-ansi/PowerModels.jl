@@ -205,23 +205,22 @@ end
 
 
 ""
-function optimize_model!(pm::AbstractPowerModel; optimizer::Union{JuMP.OptimizerFactory,Nothing}=nothing, solution_processors=[])
+function optimize_model!(pm::AbstractPowerModel; optimizer=nothing, solution_processors=[])
     start_time = time()
 
-    if optimizer == nothing
+    if optimizer != nothing
         if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
-            Memento.error(_LOGGER, "no optimizer specified in `optimize_model!` or the given JuMP model.")
+            JuMP.set_optimizer(pm.model, optimizer)
         else
-            _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
-        end
-    else
-        if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
-            _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model, optimizer)
-        else
-            Memento.warn(_LOGGER, "Model already contains optimizer factory, cannot use optimizer specified in `solve_generic_model`")
-            _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
+            Memento.warn(_LOGGER, "Model already contains optimizer, cannot use optimizer specified in `optimize_model!`")
         end
     end
+
+    if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
+        Memento.error(_LOGGER, "no optimizer specified in `optimize_model!` or the given JuMP model.")
+    end
+
+    _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
 
     try
         solve_time = _MOI.get(pm.model, _MOI.SolveTime())
