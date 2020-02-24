@@ -151,28 +151,6 @@ function constraint_voltage_angle_difference(pm::AbstractBFModel, n::Int, f_idx,
         )
 end
 
-# ""
-# function constraint_storage_loss(pm::AbstractBFModel, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
-#     ccm = var(pm, n, :ccm, i)
-#     ps = var(pm, n, :ps, i)
-#     qs = var(pm, n, :qs, i)
-#     sc = var(pm, n, :sc, i)
-#     sd = var(pm, n, :sd, i)
-#
-#
-#     JuMP.@constraint(pm.model,
-#         sum(ps[c] for c in conductors) + (sd - sc)
-#         ==
-#         p_loss + sum(r[c]*ccm[c] for c in conductors)
-#     )
-#
-#     JuMP.@constraint(pm.model,
-#         sum(qs[c] for c in conductors)
-#         ==
-#         q_loss + sum(x[c]*ccm[c] for c in conductors)
-#     )
-# end
-
 """
 Defines linear branch flow model power flow equations
 """
