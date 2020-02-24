@@ -39,6 +39,33 @@ function variable_shunt_factor(pm::AbstractWConvexModels; nw::Int=pm.cnw, relax:
 end
 
 
+"do nothing by default but some formulations require this"
+function variable_current_storage(pm::AbstractWConvexModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+    ccms = var(pm, nw)[:ccms] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_ccms",
+        start = comp_start_value(ref(pm, nw, :storage, i), "ccms_start")
+    )
+
+    if bounded
+        bus = ref(pm, nw, :bus)
+        for (i, storage) in ref(pm, nw, :storage)
+            ub = Inf
+            if haskey(storage, "thermal_rating")
+                sb = bus[storage["storage_bus"]]
+                ub = (storage["thermal_rating"]/sb["vmin"])^2
+            end
+
+            JuMP.set_lower_bound(ccms[i], 0.0)
+            if !isinf(ub)
+                JuMP.set_upper_bound(ccms[i], ub)
+            end
+        end
+    end
+
+    report && sol_component_value(pm, nw, :storage, :ccms, ids(pm, nw, :storage), ccms)
+end
+
+
 "`t[ref_bus] == 0`"
 function constraint_theta_ref(pm::AbstractPolarModels, n::Int, i::Int)
     JuMP.@constraint(pm.model, var(pm, n, :va)[i] == 0)
@@ -344,7 +371,7 @@ function constraint_current_limit(pm::AbstractWModels, n::Int, f_idx, c_rating_a
 end
 
 ""
-function constraint_storage_loss(pm::AbstractWModels, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+function constraint_storage_loss(pm::AbstractWConvexModels, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
     w = var(pm, n, :w, bus)
     ccms = var(pm, n, :ccms, i)
     ps = var(pm, n, :ps, i)

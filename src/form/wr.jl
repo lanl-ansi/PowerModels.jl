@@ -336,34 +336,6 @@ function variable_voltage_product_ne(pm::AbstractWRModel; nw::Int=pm.cnw, report
 end
 
 
-"do nothing by default but some formulations require this"
-function variable_current_storage(pm::AbstractWModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
-    ccms = var(pm, nw)[:ccms] = JuMP.@variable(pm.model,
-        [i in ids(pm, nw, :storage)], base_name="$(nw)_ccms",
-        start = comp_start_value(ref(pm, nw, :storage, i), "ccms_start")
-    )
-
-    if bounded
-        bus = ref(pm, nw, :bus)
-        for (i, storage) in ref(pm, nw, :storage)
-            ub = Inf
-            if haskey(storage, "thermal_rating")
-                sb = bus[storage["storage_bus"]]
-                ub = (storage["thermal_rating"]/sb["vmin"])^2
-            end
-
-            JuMP.set_lower_bound(ccms[i], 0.0)
-            if !isinf(ub)
-                JuMP.set_upper_bound(ccms[i], ub)
-            end
-        end
-    end
-
-    report && sol_component_value(pm, nw, :storage, :ccms, ids(pm, nw, :storage), ccms)
-end
-
-
-
 ###### QC Relaxations ######
 
 
