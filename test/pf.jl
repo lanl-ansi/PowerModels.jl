@@ -311,6 +311,58 @@ end
 end
 
 
+@testset "test linear distflow pf_bf" begin
+    @testset "3-bus case" begin
+        result = run_pf_bf("../test/data/matpower/case3.m", BFAPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+
+        @test result["solution"]["gen"]["1"]["pg"] >= 1.480
+
+        @test isapprox(result["solution"]["gen"]["2"]["pg"], 1.600063; atol = 1e-3)
+        @test isapprox(result["solution"]["gen"]["3"]["pg"], 0.0; atol = 1e-3)
+
+        @test isapprox(result["solution"]["bus"]["1"]["vm"], 1.09999; atol = 1e-3)
+        @test isapprox(result["solution"]["bus"]["2"]["vm"], 0.92616; atol = 1e-3)
+        @test isapprox(result["solution"]["bus"]["3"]["vm"], 0.89999; atol = 1e-3)
+
+        @test isapprox(result["solution"]["dcline"]["1"]["pf"],  0.10; atol = 1e-4)
+        @test isapprox(result["solution"]["dcline"]["1"]["pt"], -0.10; atol = 1e-4)
+    end
+    @testset "5-bus asymmetric case" begin
+        result = run_pf_bf("../test/data/matpower/case5_asym.m", BFAPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+    end
+    @testset "5-bus case with hvdc line" begin
+        result = run_pf_bf("../test/data/matpower/case5_dc.m", BFAPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+    end
+    @testset "6-bus case" begin
+        result = run_pf_bf("../test/data/matpower/case6.m", BFAPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+        @test isapprox(result["solution"]["bus"]["1"]["vm"], 1.09999; atol = 1e-3)
+        @test isapprox(result["solution"]["bus"]["4"]["vm"], 1.09999; atol = 1e-3)
+    end
+    @testset "24-bus rts case" begin
+        data = parse_file("../test/data/matpower/case24.m")
+        result = run_pf_bf(data, BFAPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+        @test isapprox(sum(l["pd"] for l in values(data["load"])),
+            sum(g["pg"] for g in values(result["solution"]["gen"]));
+            atol = 1e-3)
+    end
+end
+
+
 @testset "test sdp pf" begin
     # note: may have issues on linux (04/02/18)
     @testset "3-bus case" begin

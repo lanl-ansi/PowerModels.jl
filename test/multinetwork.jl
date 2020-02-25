@@ -324,6 +324,68 @@ TESTLOG = Memento.getlogger(PowerModels)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
         end
 
+        @testset "test soc bf opf" begin
+            result = PowerModels.run_mn_opf_bf_strg(mn_data, PowerModels.SOCBFPowerModel, juniper_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 58826.36; atol = 1e0)
+
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"], -0.0597052; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["ps"], -0.0596960; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"], -0.0597053; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["ps"], -0.0597053; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"], -0.0597056; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["ps"], -0.0596962; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"], -0.0596964; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+        end
+
+        @testset "test linear bf opf" begin
+            result = PowerModels.run_mn_opf_bf_strg(mn_data, PowerModels.BFAPowerModel, juniper_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 57980.0; atol = 1e0)
+
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["ps"], -0.0834412; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["ps"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["ps"], -0.1565587; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"], -0.1800000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+
+            # This formulation is lossless. Sum of loads and storage should equal sum of generation.
+            for (n, net) in mn_data["nw"]
+                @test isapprox(sum(l["pd"] for l in values(net["load"])),
+                    sum(g["pg"] for g in values(result["solution"]["nw"][n]["gen"])) -
+                    sum(s["ps"] for s in values(result["solution"]["nw"][n]["storage"]));
+                    atol = 1e-3)
+            end
+        end
+
         @testset "test dc polar opf" begin
             for (n, net) in mn_data["nw"]
                 for (i, gen) in net["gen"]

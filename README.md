@@ -65,6 +65,7 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 - Kaarthik Sundar (@kaarthiksundar) LANL, OBBT utility
+- Per Aaslid (@peraaslid) SINTEF ER, Branch flow storage model and linear branch flow formulation
 
 
 ## Citing PowerModels
