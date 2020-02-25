@@ -48,16 +48,19 @@ Nevertheless, in the literature, a simplified bus model is often used:
 ACPPowerModel
 ACRPowerModel
 ACTPowerModel
+IVRPowerModel
 ```
 
 ## Linear Approximations
 
 ```@docs
 DCPPowerModel
+DCMPPowerModel
+BFAPowerModel
 NFAPowerModel
 ```
 
-## Quadratic Approximation
+## Quadratic Approximations
 
 ```@docs
 DCPLLPowerModel

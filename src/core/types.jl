@@ -3,7 +3,7 @@
     ACPPowerModel, ACRPowerModel, ACTPowerModel, IVRPowerModel
 
     # linear approximations
-    DCPPowerModel, DCMPPowerModel, NFAPowerModel
+    DCPPowerModel, DCMPPowerModel, BFAPowerModel, NFAPowerModel
 
     # quadratic approximations
     DCPLLPowerModel, LPACCPowerModel
@@ -139,6 +139,8 @@ and apparent power limits.
     year = {2012}
 }
 ```
+
+Applicable to problem formulations with `_iv` in the name.
 """
 mutable struct IVRPowerModel <: AbstractIVRModel @pm_fields end
 
@@ -390,6 +392,8 @@ Extended as discussed in:
   url = {https://arxiv.org/abs/1506.04773}
 }
 ```
+
+Applicable to problem formulations with `_bf` in the name.
 """
 mutable struct SOCBFPowerModel <: AbstractSOCBFModel @pm_fields end
 
@@ -413,6 +417,8 @@ Note that flow bounds are still second order cones.
     issn = {19374208}
 }
 ```
+
+Applicable to problem formulations with `_bf` in the name.
 """
 mutable struct BFAPowerModel <: AbstractBFAModel @pm_fields end
 
