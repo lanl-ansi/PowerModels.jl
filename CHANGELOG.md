@@ -4,6 +4,7 @@ PowerModels.jl Change Log
 ### Staged
 - Add support for building storage models with branch flow formulations (#676)
 - A linear branch flow formulation was added (#676)
+- Fixed power balance duals in ACT formulation (#678)
 
 ### v0.15.2
 - Add support for on/off storage in SOCWRPowerModel
