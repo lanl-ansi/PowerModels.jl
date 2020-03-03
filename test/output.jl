@@ -207,6 +207,36 @@ end
         end
     end
 
+    result = run_opf("../test/data/matpower/case5.m", ACPPowerModel, ipopt_solver, setting = settings)
+    @testset "5 bus - kcl duals acp" begin
+        for (i, bus) in result["solution"]["bus"]
+            @test bus["lam_kcl_r"] <= -1000.00
+            @test bus["lam_kcl_r"] >= -3600.00
+            @test bus["lam_kcl_i"] <=   0.01
+            @test bus["lam_kcl_i"] >= -42.00
+        end
+    end
+
+    result = run_opf("../test/data/matpower/case5.m", ACRPowerModel, ipopt_solver, setting = settings)
+    @testset "5 bus - kcl duals acr" begin
+        for (i, bus) in result["solution"]["bus"]
+            @test bus["lam_kcl_r"] <= -1000.00
+            @test bus["lam_kcl_r"] >= -3600.00
+            @test bus["lam_kcl_i"] <=   0.01
+            @test bus["lam_kcl_i"] >= -42.00
+        end
+    end
+
+    result = run_opf("../test/data/matpower/case5.m", ACTPowerModel, ipopt_solver, setting = settings)
+    @testset "5 bus - kcl duals act" begin
+        for (i, bus) in result["solution"]["bus"]
+            @test bus["lam_kcl_r"] <= -1000.00
+            @test bus["lam_kcl_r"] >= -3600.00
+            @test bus["lam_kcl_i"] <=   0.01
+            @test bus["lam_kcl_i"] >= -42.00
+        end
+    end
+
 end
 
 

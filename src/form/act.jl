@@ -54,7 +54,7 @@ function constraint_power_balance_ls(pm::AbstractACTModel, n::Int, i::Int, bus_a
         - sum(pd*z_demand[i] for (i,pd) in bus_pd)
         - sum(gs*z_shunt[i] for (i,gs) in bus_gs)*w
     )
-    cstr_p = JuMP.@constraint(pm.model,
+    cstr_q = JuMP.@constraint(pm.model,
         sum(q[a] for a in bus_arcs)
         + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
