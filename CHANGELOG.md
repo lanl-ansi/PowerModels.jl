@@ -2,13 +2,14 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Add export of `optimizer_with_attributes`
-- Add support for building storage models with branch flow formulations (#676)
-- A linear branch flow formulation was added (#676)
+- Added support for Memento v0.13, v1.0
+- Added export of `optimizer_with_attributes` from JuMP v0.21
+- Added support for building storage models with branch flow formulations (#676)
+- Added a linear branch flow formulation (#676)
 - Fixed power balance duals in ACT formulation (#678)
 
 ### v0.15.2
-- Add support for on/off storage in SOCWRPowerModel
+- Added support for on/off storage in SOCWRPowerModel
 - Fixed multinetwork solution building bug
 - Fixed solution building bug in variable_demand_factor
 
