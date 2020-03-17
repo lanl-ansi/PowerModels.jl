@@ -29,6 +29,11 @@ end
 import JuMP: with_optimizer
 export with_optimizer
 
+# so that users do not need to import JuMP to use a solver with PowerModels
+# note does appear to be work with JuMP v0.20, but throws "could not import" warning
+import JuMP: optimizer_with_attributes
+export optimizer_with_attributes
+
 import MathOptInterface: TerminationStatusCode
 export TerminationStatusCode
 

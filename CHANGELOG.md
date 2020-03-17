@@ -3,8 +3,9 @@ PowerModels.jl Change Log
 
 ### Staged
 - Added support for Memento v0.13, v1.0
-- Add support for building storage models with branch flow formulations (#676)
-- A linear branch flow formulation was added (#676)
+- Added export of `optimizer_with_attributes` from JuMP v0.21
+- Added support for building storage models with branch flow formulations (#676)
+- Added a linear branch flow formulation (#676)
 - Fixed power balance duals in ACT formulation (#678)
 
 ### v0.15.2
