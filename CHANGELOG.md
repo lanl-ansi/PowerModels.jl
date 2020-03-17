@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.15.3
 - Added support for Memento v0.13, v1.0
 - Added export of `optimizer_with_attributes` from JuMP v0.21
 - Added support for building storage models with branch flow formulations (#676)
