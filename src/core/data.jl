@@ -1880,7 +1880,7 @@ function _remove_pwl_cost_duplicates!(id, comp, type_name, tolerance = 1e-2)
     if length(unique_costs) < length(comp["cost"])
         Memento.warn(_LOGGER, "removing duplicate points from pwl cost on $(type_name) $(id), $(comp["cost"]) -> $(unique_costs)")
         comp["cost"] = unique_costs
-        comp["ncost"] = length(unique_costs)/2
+        comp["ncost"] = div(length(unique_costs), 2)
         return true
     end
     return false
@@ -1920,7 +1920,7 @@ function _simplify_pwl_cost!(id, comp, type_name, tolerance = 1e-2)
     if length(smpl_cost) < length(comp["cost"])
         Memento.warn(_LOGGER, "simplifying pwl cost on $(type_name) $(id), $(comp["cost"]) -> $(smpl_cost)")
         comp["cost"] = smpl_cost
-        comp["ncost"] = length(smpl_cost)/2
+        comp["ncost"] = div(length(smpl_cost), 2)
         return true
     end
     return false

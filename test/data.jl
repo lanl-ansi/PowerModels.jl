@@ -543,6 +543,11 @@ end
 
      @testset "5-bus pwlc gen cost" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
+
+        for (i,gen) in data["gen"]
+            @test isa(gen["ncost"], Int)
+        end
+
         result = run_opf(data, ACPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 

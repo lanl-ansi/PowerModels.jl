@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fixed the type of derived "ncost" values in `correct_cost_functions!`
 
 ### v0.15.3
 - Added support for Memento v0.13, v1.0
