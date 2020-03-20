@@ -18,8 +18,8 @@ function cut_complex_product_and_angle_difference(m, wf, wt, wr, wi, angmin, ang
     @assert angmax >= -pi/2 && angmax <= pi/2
     @assert angmin < angmax
 
-    wf_lb, wf_ub = InfrastructureModels.variable_domain(wf)
-    wt_lb, wt_ub = InfrastructureModels.variable_domain(wt)
+    wf_lb, wf_ub = _IM.variable_domain(wf)
+    wt_lb, wt_ub = _IM.variable_domain(wt)
 
     vf_lb, vf_ub = sqrt(wf_lb), sqrt(wf_ub)
     vt_lb, vt_ub = sqrt(wt_lb), sqrt(wt_ub)
@@ -74,7 +74,7 @@ end
 
 "general relaxation of a sine term, in -pi/2 to pi/2"
 function relaxation_sin(m, x, y)
-    lb, ub = InfrastructureModels.variable_domain(x)
+    lb, ub = _IM.variable_domain(x)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))
@@ -96,7 +96,7 @@ end
 
 "general relaxation of a cosine term, in -pi/2 to pi/2"
 function relaxation_cos(m, x, y)
-    lb, ub = InfrastructureModels.variable_domain(x)
+    lb, ub = _IM.variable_domain(x)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))
@@ -108,7 +108,7 @@ end
 
 "general relaxation of a sine term, in -pi/2 to pi/2"
 function relaxation_sin_on_off(m, x, y, z, M_x)
-    lb, ub = InfrastructureModels.variable_domain(x)
+    lb, ub = _IM.variable_domain(x)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))
@@ -129,7 +129,7 @@ end
 
 "general relaxation of a cosine term, in -pi/2 to pi/2"
 function relaxation_cos_on_off(m, x, y, z, M_x)
-    lb, ub = InfrastructureModels.variable_domain(x)
+    lb, ub = _IM.variable_domain(x)
     @assert lb >= -pi/2 && ub <= pi/2
 
     max_ad = max(abs(lb),abs(ub))

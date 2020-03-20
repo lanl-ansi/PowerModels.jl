@@ -47,7 +47,7 @@ end
 
 ""
 function ref_add_on_off_va_bounds!(pm::AbstractPowerModel)
-    if InfrastructureModels.ismultinetwork(pm.data)
+    if _IM.ismultinetwork(pm.data)
         nws_data = pm.data["nw"]
     else
         nws_data = Dict("0" => pm.data)

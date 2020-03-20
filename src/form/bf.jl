@@ -25,7 +25,7 @@ function variable_current_magnitude_sqr(pm::AbstractBFModel; nw::Int=pm.cnw, bou
         end
     end
 
-    report && sol_component_value(pm, nw, :branch, :ccm, ids(pm, nw, :branch), ccm)
+    report && _IM.sol_component_value(pm, nw, :branch, :ccm, ids(pm, nw, :branch), ccm)
 end
 
 ""

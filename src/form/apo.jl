@@ -3,40 +3,40 @@
 
 "apo models ignore reactive power flows"
 function variable_reactive_generation(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
-    report && sol_component_fixed(pm, nw, :gen, :qg, ids(pm, nw, :gen), NaN)
+    report && _IM.sol_component_fixed(pm, nw, :gen, :qg, ids(pm, nw, :gen), NaN)
 end
 
 "apo models ignore reactive power flows"
 function variable_reactive_generation_on_off(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
-    report && sol_component_fixed(pm, nw, :gen, :qg, ids(pm, nw, :gen), NaN)
+    report && _IM.sol_component_fixed(pm, nw, :gen, :qg, ids(pm, nw, :gen), NaN)
 end
 
 "apo models ignore reactive power flows"
 function variable_reactive_storage(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
-    report && sol_component_fixed(pm, nw, :storage, :qs, ids(pm, nw, :storage), NaN)
+    report && _IM.sol_component_fixed(pm, nw, :storage, :qs, ids(pm, nw, :storage), NaN)
 end
 
 "apo models ignore reactive power flows"
 function variable_reactive_storage_on_off(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
-    report && sol_component_fixed(pm, nw, :storage, :qs, ids(pm, nw, :storage), NaN)
+    report && _IM.sol_component_fixed(pm, nw, :storage, :qs, ids(pm, nw, :storage), NaN)
 end
 
 "apo models ignore reactive power flows"
 function variable_reactive_branch_flow(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
-    report && sol_component_fixed(pm, nw, :branch, :qf, ids(pm, nw, :branch), NaN)
-    report && sol_component_fixed(pm, nw, :branch, :qt, ids(pm, nw, :branch), NaN)
+    report && _IM.sol_component_fixed(pm, nw, :branch, :qf, ids(pm, nw, :branch), NaN)
+    report && _IM.sol_component_fixed(pm, nw, :branch, :qt, ids(pm, nw, :branch), NaN)
 end
 
 "apo models ignore reactive power flows"
 function variable_reactive_branch_flow_ne(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
-    report && sol_component_fixed(pm, nw, :ne_branch, :q_ne_fr, ids(pm, nw, :ne_branch), NaN)
-    report && sol_component_fixed(pm, nw, :ne_branch, :q_ne_to, ids(pm, nw, :ne_branch), NaN)
+    report && _IM.sol_component_fixed(pm, nw, :ne_branch, :q_ne_fr, ids(pm, nw, :ne_branch), NaN)
+    report && _IM.sol_component_fixed(pm, nw, :ne_branch, :q_ne_to, ids(pm, nw, :ne_branch), NaN)
 end
 
 "apo models ignore reactive power flows"
 function variable_reactive_dcline_flow(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
-    report && sol_component_fixed(pm, nw, :dcline, :qf, ids(pm, nw, :dcline), NaN)
-    report && sol_component_fixed(pm, nw, :dcline, :qt, ids(pm, nw, :dcline), NaN)
+    report && _IM.sol_component_fixed(pm, nw, :dcline, :qf, ids(pm, nw, :dcline), NaN)
+    report && _IM.sol_component_fixed(pm, nw, :dcline, :qt, ids(pm, nw, :dcline), NaN)
 end
 
 "do nothing, apo models do not have reactive variables"
@@ -75,7 +75,7 @@ function constraint_power_balance(pm::AbstractActivePowerModel, n::Int, i::Int, 
         - sum(gs for gs in values(bus_gs))*1.0^2
     )
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr
         sol(pm, n, :bus, i)[:lam_kcl_i] = NaN
     end
@@ -103,7 +103,7 @@ function constraint_power_balance_ls(pm::AbstractActivePowerModel, n::Int, i::In
         - sum(gs*z_shunt[i] for (i,gs) in bus_gs)*1.0^2
     )
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
         sol(pm, n, :bus, i)[:lam_kcl_i] = NaN
     end
@@ -130,7 +130,7 @@ function constraint_power_balance_ne(pm::AbstractDCPModel, n::Int, i, bus_arcs, 
         - sum(gs for gs in values(bus_gs))*1.0^2
     )
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr
     end
 end
@@ -178,7 +178,7 @@ function constraint_thermal_limit_from(pm::AbstractActivePowerModel, n::Int, f_i
         cstr = JuMP.@constraint(pm.model, p_fr <= rate_a)
     end
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :branch, f_idx[1])[:mu_sm_fr] = cstr
     end
 end
@@ -196,7 +196,7 @@ function constraint_thermal_limit_to(pm::AbstractActivePowerModel, n::Int, t_idx
         cstr = JuMP.@constraint(pm.model, p_to <= rate_a)
     end
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :branch, t_idx[1])[:mu_sm_to] = cstr
     end
 end

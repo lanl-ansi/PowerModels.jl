@@ -47,3 +47,7 @@ for status_code_enum in [TerminationStatusCode, ResultStatusCode]
     end
 end
 
+# from InfrastructureModels
+import InfrastructureModels: optimize_model!
+export ids, ref, var, con, sol, nw_ids, nws, @im_fields, optimize_model!
+

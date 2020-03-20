@@ -11,7 +11,7 @@ end
 
 ""
 function variable_voltage_magnitude(pm::AbstractDCPModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
-    report && sol_component_fixed(pm, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
+    report && _IM.sol_component_fixed(pm, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
 end
 
 ""
@@ -190,7 +190,7 @@ end
 
 ""
 function ref_add_sm!(pm::AbstractDCPModel)
-    if InfrastructureModels.ismultinetwork(pm.data)
+    if _IM.ismultinetwork(pm.data)
         nws_data = pm.data["nw"]
     else
         nws_data = Dict("0" => pm.data)
@@ -206,7 +206,7 @@ end
 
 ""
 function ref_add_sm_inv!(pm::AbstractDCPModel)
-    if InfrastructureModels.ismultinetwork(pm.data)
+    if _IM.ismultinetwork(pm.data)
         nws_data = pm.data["nw"]
     else
         nws_data = Dict("0" => pm.data)
@@ -260,7 +260,7 @@ function variable_active_branch_flow(pm::AbstractAPLossLessModels; nw::Int=pm.cn
     p_expr = merge(p_expr, Dict( ((l,j,i), -1.0*p[(l,i,j)]) for (l,i,j) in ref(pm, nw, :arcs_from)))
     var(pm, nw)[:p] = p_expr
 
-    report && sol_component_value_edge(pm, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p_expr)
+    report && _IM.sol_component_value_edge(pm, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p_expr)
 end
 
 ""
@@ -283,7 +283,7 @@ function variable_active_branch_flow_ne(pm::AbstractAPLossLessModels; nw::Int=pm
     p_ne_expr = merge(p_ne_expr, Dict(((l,j,i), -1.0*var(pm, nw, :p_ne, (l,i,j))) for (l,i,j) in ref(pm, nw, :ne_arcs_from)))
     var(pm, nw)[:p_ne] = p_ne_expr
 
-    report && sol_component_value_edge(pm, nw, :ne_branch, :p_ne_fr, :p_ne_to, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne_expr)
+    report && _IM.sol_component_value_edge(pm, nw, :ne_branch, :p_ne_fr, :p_ne_to, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne_expr)
 end
 
 ""
@@ -306,7 +306,7 @@ function constraint_thermal_limit_to(pm::AbstractAPLossLessModels, n::Int, t_idx
         cstr = JuMP.@constraint(pm.model, p_to <= rate_a)
     end
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :branch, t_idx[1])[:mu_sm_to] = cstr
     end
 end

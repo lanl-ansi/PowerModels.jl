@@ -65,7 +65,7 @@ function constraint_power_balance_ls(pm::AbstractACTModel, n::Int, i::Int, bus_a
         + sum(bs*z_shunt[i] for (i,bs) in bus_bs)*w
     )
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
         sol(pm, n, :bus, i)[:lam_kcl_i] = cstr_q
     end

@@ -85,7 +85,7 @@ function constraint_power_balance(pm::AbstractACRModel, n::Int, i::Int, bus_arcs
         + sum(bs for bs in values(bus_bs))*(vr^2 + vi^2)
     )
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
         sol(pm, n, :bus, i)[:lam_kcl_i] = cstr_q
     end
@@ -154,7 +154,7 @@ function constraint_power_balance_ls(pm::AbstractACRModel, n::Int, i::Int, bus_a
         )
     end
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
         sol(pm, n, :bus, i)[:lam_kcl_i] = cstr_q
     end
