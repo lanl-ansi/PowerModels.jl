@@ -48,6 +48,9 @@ for status_code_enum in [TerminationStatusCode, ResultStatusCode]
 end
 
 # from InfrastructureModels
-import InfrastructureModels: optimize_model!
-export ids, ref, var, con, sol, nw_ids, nws, @im_fields, optimize_model!
+export ids, ref, var, con, sol, nw_ids, nws, optimize_model!
+
+# for backward compat with previous versions, drop on PowerModels v0.16
+import InfrastructureModels: sol_component_fixed, sol_component_value, sol_component_value_edge, build_solution, build_result, report_duals, ismultinetwork
+export sol_component_fixed, sol_component_value, sol_component_value_edge, build_solution, build_result, report_duals, ismultinetwork
 

@@ -10,7 +10,7 @@ import MathOptInterface
 const _MOI = MathOptInterface
 
 import InfrastructureModels
-import InfrastructureModels: ids, ref, var, con, sol, nw_ids, nws, @im_fields
+import InfrastructureModels: ids, ref, var, con, sol, nw_ids, nws, optimize_model!, @im_fields
 const _IM = InfrastructureModels
 
 # Create our module level logger (this will get precompiled)

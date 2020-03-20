@@ -5,14 +5,18 @@ abstract type AbstractPowerModel <: _IM.AbstractInfrastructureModel end
 
 "a macro for adding the base PowerModels fields to a type definition"
 _IM.@def pm_fields begin
-    macroexpand(PowerModels, @im_fields)
+    # this must be explicitly qualified, so that it works in downstream
+    # packages that use import PowerModels and this command appears in the
+    # downstream package's scope
+    PowerModels.@im_fields
 end
 
 
-# default generic constructor
+# deprecated can be removed in PowerModels v0.16
 function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), jump_model::JuMP.AbstractModel=JuMP.Model())
     @assert PowerModel <: AbstractPowerModel
 
+    @warn "InitializePowerModel is deprecated. use InfrastructureModels.InitializeInfrastructureModel instead"
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
 
@@ -72,13 +76,13 @@ end
 
 ""
 function run_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method; ref_extensions=[], solution_processors=[], kwargs...)
-    #start_time = time()
+    start_time = time()
     pm = instantiate_model(data, model_type, build_method; ref_extensions=ref_extensions, kwargs...)
-    #Memento.debug(_LOGGER, "pm model build time: $(time() - start_time)")
+    Memento.debug(_LOGGER, "pm model build time: $(time() - start_time)")
 
-    #start_time = time()
-    result = _IM.optimize_model!(pm, optimizer=optimizer, solution_processors=solution_processors)
-    #Memento.debug(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
+    start_time = time()
+    result = optimize_model!(pm, optimizer=optimizer, solution_processors=solution_processors)
+    Memento.debug(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
 
     return result
 end
@@ -95,7 +99,7 @@ function instantiate_model(data::Dict{String,<:Any}, model_type::Type, build_met
     # NOTE, this model constructor will build the ref dict using the latest info from the data
 
     #start_time = time()
-    pm = InitializePowerModel(model_type, data; kwargs...)
+    pm = _IM.InitializeInfrastructureModel(model_type, data, _pm_global_keys; kwargs...)
     #Memento.info(LOGGER, "pm model_type time: $(time() - start_time)")
 
     if !multinetwork && _IM.ismultinetwork(pm)
@@ -125,8 +129,8 @@ end
 function build_ref(data::Dict{String,<:Any}; ref_extensions=[])
     ref = _IM.ref_initialize(data, _pm_global_keys)
     _ref_add_core!(ref[:nw])
-    for ref_ext in ref_extensions
-        ref_ext(pm)
+    if length(ref_extensions) > 0
+        Memento.warn(_LOGGER, "ref_extensions are not yet supported by build_ref, given $(ref_extensions) extensions")
     end
     return ref
 end
