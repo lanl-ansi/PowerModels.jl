@@ -188,43 +188,6 @@ function expression_voltage(pm::AbstractPowerModel, n::Int, i, am::Union{Admitta
 end
 
 
-""
-function ref_add_sm!(pm::AbstractDCPModel)
-    if _IM.ismultinetwork(pm.data)
-        nws_data = pm.data["nw"]
-    else
-        nws_data = Dict("0" => pm.data)
-    end
-
-    for (n, nw_data) in nws_data
-        nw_id = parse(Int, n)
-        nw_ref = ref(pm, nw_id)
-
-        nw_ref[:sm] = calc_susceptance_matrix(nw_data)
-    end
-end
-
-""
-function ref_add_sm_inv!(pm::AbstractDCPModel)
-    if _IM.ismultinetwork(pm.data)
-        nws_data = pm.data["nw"]
-    else
-        nws_data = Dict("0" => pm.data)
-    end
-
-    for (n, nw_data) in nws_data
-        nw_id = parse(Int, n)
-        nw_ref = ref(pm, nw_id)
-
-        nw_ref[:sm] = calc_susceptance_matrix_inv(nw_data)
-    end
-end
-
-
-
-
-
-
 ######## Lossless Models ########
 
 ""

@@ -999,6 +999,26 @@ end
 
 
 
+""
+function ismulticonductor(data::Dict{String,<:Any})
+    if _IM.ismultinetwork(data)
+        return all(_ismulticonductor(nw_data) for (i,nw_data) in data["nw"])
+    else
+        return _ismulticonductor(data)
+    end
+end
+
+function _ismulticonductor(data::Dict{String,<:Any})
+    return haskey(data, "conductors")
+end
+
+
+""
+function _check_conductors(data::Dict{String,<:Any})
+    if haskey(data, "conductors") && data["conductors"] < 1
+        Memento.error(_LOGGER, "conductor values must be positive integers, given $(data["conductors"])")
+    end
+end
 
 
 ""
