@@ -2,13 +2,16 @@ module PowerModels
 
 import LinearAlgebra, SparseArrays
 
-import InfrastructureModels
 import JSON
 import JuMP
 import Memento
 
 import MathOptInterface
 const _MOI = MathOptInterface
+
+import InfrastructureModels
+import InfrastructureModels: ids, ref, var, con, sol, nw_ids, nws, optimize_model!, @im_fields
+const _IM = InfrastructureModels
 
 # Create our module level logger (this will get precompiled)
 const _LOGGER = Memento.getlogger(@__MODULE__)

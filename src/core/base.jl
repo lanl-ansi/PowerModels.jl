@@ -1,43 +1,26 @@
 # stuff that is universal to all power models
 
 "root of the power formulation type hierarchy"
-abstract type AbstractPowerModel end
+abstract type AbstractPowerModel <: _IM.AbstractInfrastructureModel end
 
 "a macro for adding the base PowerModels fields to a type definition"
-InfrastructureModels.@def pm_fields begin
-    model::JuMP.AbstractModel
-
-    data::Dict{String,<:Any}
-    setting::Dict{String,<:Any}
-    solution::Dict{String,<:Any}
-
-    ref::Dict{Symbol,<:Any}
-    var::Dict{Symbol,<:Any}
-    con::Dict{Symbol,<:Any}
-
-    sol::Dict{Symbol,<:Any}
-    sol_proc::Dict{Symbol,<:Any}
-
-    cnw::Int
-
-    # Extension dictionary
-    # Extensions should define a type to hold information particular to
-    # their functionality, and store an instance of the type in this
-    # dictionary keyed on an extension-specific symbol
-    ext::Dict{Symbol,<:Any}
+_IM.@def pm_fields begin
+    # this must be explicitly qualified, so that it works in downstream
+    # packages that use import PowerModels and this command appears in the
+    # downstream package's scope
+    PowerModels.@im_fields
 end
 
 
-
-
-# default generic constructor
+# deprecated can be removed in PowerModels v0.16
 function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = Dict{Symbol,Any}(), setting = Dict{String,Any}(), jump_model::JuMP.AbstractModel=JuMP.Model())
     @assert PowerModel <: AbstractPowerModel
 
+    @warn "InitializePowerModel is deprecated. use InfrastructureModels.InitializeInfrastructureModel instead"
     # TODO is may be a good place to check component connectivity validity
     # i.e. https://github.com/lanl-ansi/PowerModels.jl/issues/131
 
-    ref = InfrastructureModels.ref_initialize(data, _pm_global_keys) # refrence data
+    ref = _IM.ref_initialize(data, _pm_global_keys) # refrence data
 
     var = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
     con = Dict{Symbol,Any}(:nw => Dict{Int,Any}())
@@ -76,19 +59,6 @@ function InitializePowerModel(PowerModel::Type, data::Dict{String,<:Any}; ext = 
     return pm
 end
 
-
-report_duals(pm::AbstractPowerModel) = haskey(pm.setting, "output") && haskey(pm.setting["output"], "duals") && pm.setting["output"]["duals"] == true
-
-### Helper functions for working with multinetworks
-""
-ismultinetwork(pm::AbstractPowerModel) = (length(pm.ref[:nw]) > 1)
-
-""
-nw_ids(pm::AbstractPowerModel) = keys(pm.ref[:nw])
-
-""
-nws(pm::AbstractPowerModel) = pm.ref[:nw]
-
 ""
 ismulticonductor(pm::AbstractPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :conductors)
 ismulticonductor(pm::AbstractPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :conductors)
@@ -96,55 +66,6 @@ ismulticonductor(pm::AbstractPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw
 ""
 conductor_ids(pm::AbstractPowerModel, nw::Int) = pm.ref[:nw][nw][:conductor_ids]
 conductor_ids(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:conductor_ids]
-
-""
-ids(pm::AbstractPowerModel, nw::Int, key::Symbol) = keys(pm.ref[:nw][nw][key])
-ids(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = keys(pm.ref[:nw][nw][key])
-
-""
-ref(pm::AbstractPowerModel, nw::Int) = pm.ref[:nw][nw]
-ref(pm::AbstractPowerModel, nw::Int, key::Symbol) = pm.ref[:nw][nw][key]
-ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.ref[:nw][nw][key][idx]
-ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx, param::String) = pm.ref[:nw][nw][key][idx][param]
-
-ref(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw]
-ref(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.ref[:nw][nw][key]
-ref(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx]
-ref(pm::AbstractPowerModel, key::Symbol, idx, param::String; nw::Int=pm.cnw) = pm.ref[:nw][nw][key][idx][param]
-
-
-var(pm::AbstractPowerModel, nw::Int) = pm.var[:nw][nw]
-var(pm::AbstractPowerModel, nw::Int, key::Symbol) = pm.var[:nw][nw][key]
-var(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.var[:nw][nw][key][idx]
-
-var(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.var[:nw][nw]
-var(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.var[:nw][nw][key]
-var(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.var[:nw][nw][key][idx]
-
-""
-con(pm::AbstractPowerModel, nw::Int) = pm.con[:nw][nw]
-con(pm::AbstractPowerModel, nw::Int, key::Symbol) = pm.con[:nw][nw][key]
-con(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = pm.con[:nw][nw][key][idx]
-
-con(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.con[:nw][nw]
-con(pm::AbstractPowerModel, key::Symbol; nw::Int=pm.cnw) = pm.con[:nw][nw][key]
-con(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=pm.cnw) = pm.con[:nw][nw][key][idx]
-
-
-""
-sol(pm::AbstractPowerModel, nw::Int, args...) = _sol(pm.sol[:nw][nw], args...)
-sol(pm::AbstractPowerModel, args...; nw::Int=pm.cnw) = _sol(pm.sol[:nw][nw], args...)
-
-function _sol(sol::Dict, args...)
-    for arg in args
-        if haskey(sol, arg)
-            sol = sol[arg]
-        else
-            sol = sol[arg] = Dict()
-        end
-    end
-    return sol
-end
 
 
 ""
@@ -155,13 +76,13 @@ end
 
 ""
 function run_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method; ref_extensions=[], solution_processors=[], kwargs...)
-    #start_time = time()
+    start_time = time()
     pm = instantiate_model(data, model_type, build_method; ref_extensions=ref_extensions, kwargs...)
-    #Memento.debug(_LOGGER, "pm model build time: $(time() - start_time)")
+    Memento.debug(_LOGGER, "pm model build time: $(time() - start_time)")
 
-    #start_time = time()
+    start_time = time()
     result = optimize_model!(pm, optimizer=optimizer, solution_processors=solution_processors)
-    #Memento.debug(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
+    Memento.debug(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
 
     return result
 end
@@ -178,10 +99,10 @@ function instantiate_model(data::Dict{String,<:Any}, model_type::Type, build_met
     # NOTE, this model constructor will build the ref dict using the latest info from the data
 
     #start_time = time()
-    pm = InitializePowerModel(model_type, data; kwargs...)
+    pm = _IM.InitializeInfrastructureModel(model_type, data, _pm_global_keys; kwargs...)
     #Memento.info(LOGGER, "pm model_type time: $(time() - start_time)")
 
-    if !multinetwork && ismultinetwork(pm)
+    if !multinetwork && _IM.ismultinetwork(pm)
         Memento.error(_LOGGER, "attempted to build a single-network model with multi-network data")
     end
 
@@ -204,47 +125,12 @@ function instantiate_model(data::Dict{String,<:Any}, model_type::Type, build_met
 end
 
 
-""
-function optimize_model!(pm::AbstractPowerModel; optimizer=nothing, solution_processors=[])
-    start_time = time()
-
-    if optimizer != nothing
-        if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
-            JuMP.set_optimizer(pm.model, optimizer)
-        else
-            Memento.warn(_LOGGER, "Model already contains optimizer, cannot use optimizer specified in `optimize_model!`")
-        end
-    end
-
-    if pm.model.moi_backend.state == _MOI.Utilities.NO_OPTIMIZER
-        Memento.error(_LOGGER, "no optimizer specified in `optimize_model!` or the given JuMP model.")
-    end
-
-    _, solve_time, solve_bytes_alloc, sec_in_gc = @timed JuMP.optimize!(pm.model)
-
-    try
-        solve_time = _MOI.get(pm.model, _MOI.SolveTime())
-    catch
-        Memento.warn(_LOGGER, "the given optimizer does not provide the SolveTime() attribute, falling back on @timed.  This is not a rigorous timing value.");
-    end
-    Memento.debug(_LOGGER, "JuMP model optimize time: $(time() - start_time)")
-
-    start_time = time()
-    result = build_result(pm, solve_time; solution_processors=solution_processors)
-    Memento.debug(_LOGGER, "PowerModels solution build time: $(time() - start_time)")
-
-    pm.solution = result["solution"]
-
-    return result
-end
-
-
 "used for building ref without the need to build a initialize an AbstractPowerModel"
 function build_ref(data::Dict{String,<:Any}; ref_extensions=[])
-    ref = InfrastructureModels.ref_initialize(data, _pm_global_keys)
+    ref = _IM.ref_initialize(data, _pm_global_keys)
     _ref_add_core!(ref[:nw])
-    for ref_ext in ref_extensions
-        ref_ext(pm)
+    if length(ref_extensions) > 0
+        Memento.warn(_LOGGER, "ref_extensions are not yet supported by build_ref, given $(ref_extensions) extensions")
     end
     return ref
 end

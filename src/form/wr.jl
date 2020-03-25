@@ -22,7 +22,7 @@ function constraint_model_voltage(pm::AbstractWRModel, n::Int)
     wi = var(pm, n, :wi)
 
     for (i,j) in ids(pm, n, :buspairs)
-        InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
+        _IM.relaxation_complex_product(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     end
 end
 
@@ -35,7 +35,7 @@ function constraint_model_voltage(pm::AbstractWRConicModel, n::Int)
     wi = var(pm, n, :wi)
 
     for (i,j) in ids(pm, n, :buspairs)
-        InfrastructureModels.relaxation_complex_product_conic(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
+        _IM.relaxation_complex_product_conic(pm.model, w[i], w[j], wr[(i,j)], wi[(i,j)])
     end
 end
 
@@ -101,9 +101,9 @@ function constraint_model_voltage_on_off(pm::AbstractWRModel, n::Int)
     constraint_voltage_product_on_off(pm, n)
 
     for (l,i,j) in ref(pm, n, :arcs_from)
-        InfrastructureModels.relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
-        InfrastructureModels.relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
-        InfrastructureModels.relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
+        _IM.relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
+        _IM.relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
+        _IM.relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
     end
 end
 
@@ -135,9 +135,9 @@ function constraint_model_voltage_ne(pm::AbstractWRModel, n::Int)
         JuMP.@constraint(pm.model, w_to[l] <= z[l]*buses[branches[l]["t_bus"]]["vmax"]^2)
         JuMP.@constraint(pm.model, w_to[l] >= z[l]*buses[branches[l]["t_bus"]]["vmin"]^2)
 
-        InfrastructureModels.relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
-        InfrastructureModels.relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
-        InfrastructureModels.relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
+        _IM.relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
+        _IM.relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
+        _IM.relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
     end
 end
 
@@ -294,7 +294,7 @@ function variable_voltage_magnitude_sqr_from_ne(pm::AbstractWRModel; nw::Int=pm.
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["f_bus"]), "w_fr_start", 1.001)
     )
 
-    report && sol_component_value(pm, nw, :ne_branch, :w_fr, ids(pm, nw, :ne_branch), w_fr_ne)
+    report && _IM.sol_component_value(pm, nw, :ne_branch, :w_fr, ids(pm, nw, :ne_branch), w_fr_ne)
 end
 
 ""
@@ -309,7 +309,7 @@ function variable_voltage_magnitude_sqr_to_ne(pm::AbstractWRModel; nw::Int=pm.cn
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["t_bus"]), "w_to_start", 1.001)
     )
 
-    report && sol_component_value(pm, nw, :ne_branch, :w_to, ids(pm, nw, :ne_branch), w_to_ne)
+    report && _IM.sol_component_value(pm, nw, :ne_branch, :w_to, ids(pm, nw, :ne_branch), w_to_ne)
 end
 
 ""
@@ -331,8 +331,8 @@ function variable_voltage_product_ne(pm::AbstractWRModel; nw::Int=pm.cnw, report
         start = comp_start_value(ref(pm, nw, :ne_buspairs, bi_bp[b]), "wi_start")
     )
 
-    report && sol_component_value(pm, nw, :ne_branch, :wr, ids(pm, nw, :ne_branch), wr_ne)
-    report && sol_component_value(pm, nw, :ne_branch, :wi, ids(pm, nw, :ne_branch), wi_ne)
+    report && _IM.sol_component_value(pm, nw, :ne_branch, :wr, ids(pm, nw, :ne_branch), wr_ne)
+    report && _IM.sol_component_value(pm, nw, :ne_branch, :wi, ids(pm, nw, :ne_branch), wi_ne)
 end
 
 
@@ -431,7 +431,7 @@ function constraint_model_voltage(pm::AbstractQCWRModel, n::Int)
     wi = var(pm, n, :wi)
 
     for (i,b) in ref(pm, n, :bus)
-        InfrastructureModels.relaxation_sqr(pm.model, v[i], w[i])
+        _IM.relaxation_sqr(pm.model, v[i], w[i])
     end
 
     for bp in ids(pm, n, :buspairs)
@@ -440,12 +440,12 @@ function constraint_model_voltage(pm::AbstractQCWRModel, n::Int)
 
         relaxation_sin(pm.model, td[bp], si[bp])
         relaxation_cos(pm.model, td[bp], cs[bp])
-        InfrastructureModels.relaxation_product(pm.model, v[i], v[j], vv[bp])
-        InfrastructureModels.relaxation_product(pm.model, vv[bp], cs[bp], wr[bp])
-        InfrastructureModels.relaxation_product(pm.model, vv[bp], si[bp], wi[bp])
+        _IM.relaxation_product(pm.model, v[i], v[j], vv[bp])
+        _IM.relaxation_product(pm.model, vv[bp], cs[bp], wr[bp])
+        _IM.relaxation_product(pm.model, vv[bp], si[bp], wi[bp])
 
         # this constraint is redudant and useful for debugging
-        #InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])
+        #_IM.relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])
    end
 
    for (i,branch) in ref(pm, n, :branch)
@@ -546,7 +546,7 @@ function variable_voltage_angle_difference_on_off(pm::AbstractPowerModel; nw::In
         start = comp_start_value(ref(pm, nw, :branch, l), "td_start")
     )
 
-    report && sol_component_value(pm, nw, :branch, :td, ids(pm, nw, :branch), td)
+    report && _IM.sol_component_value(pm, nw, :branch, :td, ids(pm, nw, :branch), td)
 end
 
 ""
@@ -564,7 +564,7 @@ function variable_voltage_magnitude_product_on_off(pm::AbstractPowerModel; nw::I
         start = comp_start_value(ref(pm, nw, :branch, l), "vv_start", 1.0)
     )
 
-    report && sol_component_value(pm, nw, :branch, :vv, ids(pm, nw, :branch), vv)
+    report && _IM.sol_component_value(pm, nw, :branch, :vv, ids(pm, nw, :branch), vv)
 end
 
 
@@ -597,7 +597,7 @@ function variable_cosine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::
         start = comp_start_value(ref(pm, nw, :branch, l), "cs_start", 1.0)
     )
 
-    report && sol_component_value(pm, nw, :branch, :cs, ids(pm, nw, :branch), cs)
+    report && _IM.sol_component_value(pm, nw, :branch, :cs, ids(pm, nw, :branch), cs)
 end
 
 ""
@@ -609,7 +609,7 @@ function variable_sine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bo
         start = comp_start_value(ref(pm, nw, :branch, l), "si_start")
     )
 
-    report && sol_component_value(pm, nw, :branch, :si, ids(pm, nw, :branch), si)
+    report && _IM.sol_component_value(pm, nw, :branch, :si, ids(pm, nw, :branch), si)
 end
 
 
@@ -631,7 +631,7 @@ function variable_current_magnitude_sqr_on_off(pm::AbstractPowerModel; nw::Int=p
         start = comp_start_value(ref(pm, nw, :branch, l), "ccm_start")
     )
 
-    report && sol_component_value(pm, nw, :branch, :ccm, ids(pm, nw, :branch), ccm)
+    report && _IM.sol_component_value(pm, nw, :branch, :ccm, ids(pm, nw, :branch), ccm)
 end
 
 
@@ -661,7 +661,7 @@ function constraint_model_voltage_on_off(pm::AbstractQCWRModel, n::Int)
     td_max = max(abs(td_lb), abs(td_ub))
 
     for i in ids(pm, n, :bus)
-        InfrastructureModels.relaxation_sqr(pm.model, v[i], w[i])
+        _IM.relaxation_sqr(pm.model, v[i], w[i])
     end
 
     constraint_voltage_magnitude_from_on_off(pm, n) # bounds on vm_fr
@@ -679,18 +679,18 @@ function constraint_model_voltage_on_off(pm::AbstractQCWRModel, n::Int)
 
         relaxation_sin_on_off(pm.model, td[l], si[l], z[l], td_max)
         relaxation_cos_on_off(pm.model, td[l], cs[l], z[l], td_max)
-        InfrastructureModels.relaxation_product_on_off(pm.model, vm_fr[l], vm_to[l], vv[l], z[l])
-        InfrastructureModels.relaxation_product_on_off(pm.model, vv[l], cs[l], wr[l], z[l])
-        InfrastructureModels.relaxation_product_on_off(pm.model, vv[l], si[l], wi[l], z[l])
+        _IM.relaxation_product_on_off(pm.model, vm_fr[l], vm_to[l], vv[l], z[l])
+        _IM.relaxation_product_on_off(pm.model, vv[l], cs[l], wr[l], z[l])
+        _IM.relaxation_product_on_off(pm.model, vv[l], si[l], wi[l], z[l])
 
         # this constraint is redudant and useful for debugging
-        #InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[l], wi[l])
+        #_IM.relaxation_complex_product(pm.model, w[i], w[j], wr[l], wi[l])
 
-        #cs4 = InfrastructureModels.relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
-        InfrastructureModels.relaxation_equality_on_off(pm.model, v[i], vm_fr[l], z[l])
-        InfrastructureModels.relaxation_equality_on_off(pm.model, v[j], vm_to[l], z[l])
-        InfrastructureModels.relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
-        InfrastructureModels.relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
+        #cs4 = _IM.relaxation_complex_product_on_off(pm.model, w[i], w[j], wr[l], wi[l], z[l])
+        _IM.relaxation_equality_on_off(pm.model, v[i], vm_fr[l], z[l])
+        _IM.relaxation_equality_on_off(pm.model, v[j], vm_to[l], z[l])
+        _IM.relaxation_equality_on_off(pm.model, w[i], w_fr[l], z[l])
+        _IM.relaxation_equality_on_off(pm.model, w[j], w_to[l], z[l])
 
         # to prevent this constraint from being posted on multiple parallel branchs
         # TODO needs on/off variant
@@ -709,9 +709,9 @@ function constraint_power_magnitude_sqr_on_off(pm::AbstractQCWRModel, n::Int, i,
     z    = var(pm, n, :z_branch, i)
 
     # TODO see if there is a way to leverage relaxation_complex_product_on_off here
-    w_lb, w_ub = InfrastructureModels.variable_domain(w)
-    ccm_lb, ccm_ub = InfrastructureModels.variable_domain(ccm)
-    z_lb, z_ub = InfrastructureModels.variable_domain(z)
+    w_lb, w_ub = _IM.variable_domain(w)
+    ccm_lb, ccm_ub = _IM.variable_domain(ccm)
+    z_lb, z_ub = _IM.variable_domain(z)
 
     JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w*ccm*z_ub/tm^2)
     JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w_ub*ccm*z/tm^2)
@@ -796,7 +796,7 @@ function constraint_model_voltage(pm::AbstractQCLSModel, n::Int)
     lambda_wi = var(pm, n, :lambda_wi)
 
     for (i,b) in ref(pm, n, :bus)
-        InfrastructureModels.relaxation_sqr(pm.model, v[i], w[i])
+        _IM.relaxation_sqr(pm.model, v[i], w[i])
     end
 
     for bp in ids(pm, n, :buspairs)
@@ -805,12 +805,12 @@ function constraint_model_voltage(pm::AbstractQCLSModel, n::Int)
 
         relaxation_sin(pm.model, td[bp], si[bp])
         relaxation_cos(pm.model, td[bp], cs[bp])
-        InfrastructureModels.relaxation_trilinear(pm.model, v[i], v[j], cs[bp], wr[bp], lambda_wr[bp,:])
-        InfrastructureModels.relaxation_trilinear(pm.model, v[i], v[j], si[bp], wi[bp], lambda_wi[bp,:])
+        _IM.relaxation_trilinear(pm.model, v[i], v[j], cs[bp], wr[bp], lambda_wr[bp,:])
+        _IM.relaxation_trilinear(pm.model, v[i], v[j], si[bp], wi[bp], lambda_wi[bp,:])
         cut_product_replicates(pm.model, v[i], v[j], lambda_wr[bp,:], lambda_wi[bp,:])
 
         # this constraint is redudant and useful for debugging
-        #InfrastructureModels.relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])
+        #_IM.relaxation_complex_product(pm.model, w[i], w[j], wr[bp], wi[bp])
    end
 
    for (i,branch) in ref(pm, n, :branch)

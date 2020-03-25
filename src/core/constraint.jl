@@ -182,8 +182,8 @@ function constraint_switch_flow_on_off(pm::AbstractPowerModel, n::Int, i, f_idx)
     qsw = var(pm, n, :qsw, f_idx)
     z = var(pm, n, :z_switch, i)
 
-    psw_lb, psw_ub = InfrastructureModels.variable_domain(psw)
-    qsw_lb, qsw_ub = InfrastructureModels.variable_domain(qsw)
+    psw_lb, psw_ub = _IM.variable_domain(psw)
+    qsw_lb, qsw_ub = _IM.variable_domain(qsw)
 
     JuMP.@constraint(pm.model, psw <= psw_ub*z)
     JuMP.@constraint(pm.model, psw >= psw_lb*z)

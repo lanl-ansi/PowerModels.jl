@@ -34,8 +34,8 @@ function variable_shunt_factor(pm::AbstractWConvexModels; nw::Int=pm.cnw, relax:
         start = comp_start_value(ref(pm, nw, :shunt, i), "wz_shunt_start", 1.001)
     )
 
-    report && sol_component_value(pm, nw, :shunt, :status, ids(pm, nw, :shunt), z_shunt)
-    report && sol_component_value(pm, nw, :shunt, :wz_shunt, ids(pm, nw, :shunt), wz_shunt)
+    report && _IM.sol_component_value(pm, nw, :shunt, :status, ids(pm, nw, :shunt), z_shunt)
+    report && _IM.sol_component_value(pm, nw, :shunt, :wz_shunt, ids(pm, nw, :shunt), wz_shunt)
 end
 
 
@@ -62,7 +62,7 @@ function variable_current_storage(pm::AbstractWConvexModels; nw::Int=pm.cnw, bou
         end
     end
 
-    report && sol_component_value(pm, nw, :storage, :ccms, ids(pm, nw, :storage), ccms)
+    report && _IM.sol_component_value(pm, nw, :storage, :ccms, ids(pm, nw, :storage), ccms)
 end
 
 
@@ -161,7 +161,7 @@ function constraint_power_balance(pm::AbstractWModels, n::Int, i, bus_arcs, bus_
         + sum(bs for bs in values(bus_bs))*w
     )
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
         sol(pm, n, :bus, i)[:lam_kcl_i] = cstr_q
     end
@@ -208,10 +208,10 @@ function constraint_power_balance_ls(pm::AbstractWConvexModels, n::Int, i::Int, 
     )
 
     for s in keys(bus_gs)
-        InfrastructureModels.relaxation_product(pm.model, w, z_shunt[s], wz_shunt[s])
+        _IM.relaxation_product(pm.model, w, z_shunt[s], wz_shunt[s])
     end
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
         sol(pm, n, :bus, i)[:lam_kcl_i] = cstr_q
     end
@@ -258,7 +258,7 @@ function constraint_power_balance_ne(pm::AbstractWModels, n::Int, i::Int, bus_ar
         + sum(bs for bs in values(bus_bs))*w
     )
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
         sol(pm, n, :bus, i)[:lam_kcl_i] = cstr_q
     end
@@ -339,8 +339,8 @@ function constraint_switch_voltage_on_off(pm::AbstractWModels, n::Int, i, f_bus,
     w_to = var(pm, n, :w, t_bus)
     z = var(pm, n, :z_switch, i)
 
-    w_fr_lb, w_fr_ub = InfrastructureModels.variable_domain(w_fr)
-    w_to_lb, w_to_ub = InfrastructureModels.variable_domain(w_to)
+    w_fr_lb, w_fr_ub = _IM.variable_domain(w_fr)
+    w_to_lb, w_to_ub = _IM.variable_domain(w_to)
 
     @assert w_fr_lb >= 0.0 && w_to_lb >= 0.0
 

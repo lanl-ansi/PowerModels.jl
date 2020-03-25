@@ -29,8 +29,8 @@ function variable_branch_current(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::
 
     var(pm, nw)[:p] = p
     var(pm, nw)[:q] = q
-    report && sol_component_value_edge(pm, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p)
-    report && sol_component_value_edge(pm, nw, :branch, :qf, :qt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), q)
+    report && _IM.sol_component_value_edge(pm, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p)
+    report && _IM.sol_component_value_edge(pm, nw, :branch, :qf, :qt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), q)
 
     variable_branch_series_current_real(pm, nw=nw, bounded=bounded, report=report; kwargs...)
     variable_branch_series_current_imaginary(pm, nw=nw, bounded=bounded, report=report; kwargs...)
@@ -55,8 +55,8 @@ function variable_gen(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::Bool=true, 
     end
     var(pm, nw)[:pg] = pg
     var(pm, nw)[:qg] = qg
-    report && sol_component_value(pm, nw, :gen, :pg, ids(pm, nw, :gen), pg)
-    report && sol_component_value(pm, nw, :gen, :qg, ids(pm, nw, :gen), qg)
+    report && _IM.sol_component_value(pm, nw, :gen, :pg, ids(pm, nw, :gen), pg)
+    report && _IM.sol_component_value(pm, nw, :gen, :qg, ids(pm, nw, :gen), qg)
 
     if bounded
         for (i,gen) in ref(pm, nw, :gen)
@@ -93,8 +93,8 @@ function variable_dcline(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::Bool=tru
 
     var(pm, nw)[:p_dc] = p
     var(pm, nw)[:q_dc] = q
-    report && sol_component_value_edge(pm, nw, :dcline, :pf, :pt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), p)
-    report && sol_component_value_edge(pm, nw, :dcline, :qf, :qt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), q)
+    report && _IM.sol_component_value_edge(pm, nw, :dcline, :pf, :pt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), p)
+    report && _IM.sol_component_value_edge(pm, nw, :dcline, :qf, :qt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), q)
 
     if bounded
         for (i,dcline) in ref(pm, nw, :dcline)
@@ -437,7 +437,7 @@ function objective_variable_pg_cost(pm::AbstractIVRModel; report::Bool=true)
         pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
             [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost",
         )
-        report && sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
+        report && _IM.sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
 
         nc = length(conductor_ids(pm, n))
 
@@ -460,7 +460,7 @@ function objective_variable_dc_cost(pm::AbstractIVRModel; report::Bool=true)
         dc_p_cost = var(pm, n)[:p_dc_cost] = JuMP.@variable(pm.model,
             [i in ids(pm, n, :dcline)], base_name="$(n)_dc_p_cost",
         )
-        report && sol_component_value(pm, n, :dcline, :p_dc_cost, ids(pm, n, :dcline), dc_p_cost)
+        report && _IM.sol_component_value(pm, n, :dcline, :p_dc_cost, ids(pm, n, :dcline), dc_p_cost)
 
         #to avoid function calls inside of @NLconstraint:
         nc = length(conductor_ids(pm, n))

@@ -21,7 +21,7 @@ function variable_voltage_magnitude(pm::AbstractLPACModel; nw::Int=pm.cnw, bound
         end
     end
 
-    report && sol_component_value(pm, nw, :bus, :phi, ids(pm, nw, :bus), phi)
+    report && _IM.sol_component_value(pm, nw, :bus, :phi, ids(pm, nw, :bus), phi)
 end
 
 ""
@@ -95,7 +95,7 @@ function constraint_power_balance(pm::AbstractLPACModel, n::Int, i::Int, bus_arc
         + sum(bs for bs in values(bus_bs))*(1.0 + 2*phi)
     )
 
-    if report_duals(pm)
+    if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
         sol(pm, n, :bus, i)[:lam_kcl_i] = cstr_q
     end
