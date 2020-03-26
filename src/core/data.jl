@@ -1013,13 +1013,6 @@ function _ismulticonductor(data::Dict{String,<:Any})
 end
 
 
-""
-function _check_conductors(data::Dict{String,<:Any})
-    if haskey(data, "conductors") && data["conductors"] < 1
-        Memento.error(_LOGGER, "conductor values must be positive integers, given $(data["conductors"])")
-    end
-end
-
 
 ""
 function check_conductors(data::Dict{String,<:Any})
@@ -1032,8 +1025,6 @@ function check_conductors(data::Dict{String,<:Any})
     end
 end
 
-
-""
 function _check_conductors(data::Dict{String,<:Any})
     if haskey(data, "conductors") && data["conductors"] < 1
         Memento.error(_LOGGER, "conductor values must be positive integers, given $(data["conductors"])")

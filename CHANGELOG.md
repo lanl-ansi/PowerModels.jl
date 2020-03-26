@@ -8,6 +8,7 @@ PowerModels.jl Change Log
 - Removed export of some functions defined in InfratructureModels (breaking)
 
 ### Staged
+- Updated to utilize generic base functions from InfrastructureModels
 - Fixed the type of derived "ncost" values in `correct_cost_functions!`
 
 ### v0.15.3
