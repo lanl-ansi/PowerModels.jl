@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.15.4
 - Updated to utilize generic base functions from InfrastructureModels
 - Fixed the type of derived "ncost" values in `correct_cost_functions!`
 
