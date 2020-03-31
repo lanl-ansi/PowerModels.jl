@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Made matpower cost data parser more robust to floating point numbers
+- Fixed the type of derived "ncost" values in `export_matpower`
 
 ### v0.15.4
 - Updated to utilize generic base functions from InfrastructureModels
