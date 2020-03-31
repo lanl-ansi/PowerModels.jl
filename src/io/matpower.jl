@@ -1160,7 +1160,7 @@ function _export_cost_data(io::IO, components::Dict{Int,Dict}, prefix::String)
 
         for (idx,gen) in (sort(components))
             if gen["model"] == 1
-                print(io, "\t1\t", gen["startup"], "\t", gen["shutdown"], "\t", (length(gen["cost"])/2) ),
+                print(io, "\t1\t", gen["startup"], "\t", gen["shutdown"], "\t", (div(length(gen["cost"]),2))),
                 for l=1:length(gen["cost"])
                     print(io, "\t", gen["cost"][l])
                 end
