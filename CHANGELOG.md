@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Made matpower cost data parser more robust to floating point numbers
 
 ### v0.15.4
 - Updated to utilize generic base functions from InfrastructureModels
