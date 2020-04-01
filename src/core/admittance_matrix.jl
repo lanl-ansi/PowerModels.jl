@@ -14,10 +14,72 @@ struct AdmittanceMatrix{T}
     idx_to_bus::Vector{Int}
     bus_to_idx::Dict{Int,Int}
     ref_idx::Int
+    bus_type::Vector{Int}
     matrix::SparseArrays.SparseMatrixCSC{T,Int}
 end
 
 Base.show(io::IO, x::AdmittanceMatrix{<:Number}) = print(io, "AdmittanceMatrix($(length(x.idx_to_bus)) buses, $(length(nonzeros(x.matrix))) entries)")
+
+
+"data should be a PowerModels network data model; only supports networks with exactly one refrence bus"
+function calc_admittance_matrix(data::Dict{String,<:Any})
+    if length(data["dcline"]) > 0
+        Memento.error(_LOGGER, "calc_susceptance_matrix does not support data with dclines")
+    end
+    if length(data["switch"]) > 0
+        Memento.error(_LOGGER, "calc_susceptance_matrix does not support data with switches")
+    end
+
+    #TODO check single connected component
+
+    # NOTE currently exactly one refrence bus is required
+    ref_bus = reference_bus(data)
+
+    buses = [x.second for x in data["bus"] if (x.second[pm_component_status["bus"]] != pm_component_status_inactive["bus"])]
+    sort!(buses, by=x->x["index"])
+
+    idx_to_bus = [x["index"] for x in buses]
+    bus_type = [x["bus_type"] for x in buses]
+    bus_to_idx = Dict(x["index"] => i for (i,x) in enumerate(buses))
+    #println(idx_to_bus)
+    #println(bus_to_idx)
+
+    I = Int64[]
+    J = Int64[]
+    V = Complex{Float64}[]
+
+    for (i,branch) in data["branch"]
+        if branch[pm_component_status["branch"]] != pm_component_status_inactive["branch"]
+            f_bus = bus_to_idx[branch["f_bus"]]
+            t_bus = bus_to_idx[branch["t_bus"]]
+            y = inv(branch["br_r"] + branch["br_x"]im)
+            tr, ti = calc_branch_t(branch)
+            t = tr + ti*im
+            lc_fr = branch["g_fr"] + branch["b_fr"]im
+            lc_to = branch["g_to"] + branch["b_to"]im
+            push!(I, f_bus); push!(J, t_bus); push!(V, - conj(y)/t)
+            push!(I, t_bus); push!(J, f_bus); push!(V, - conj(y/t))
+            push!(I, f_bus); push!(J, f_bus); push!(V, conj(y + lc_fr)/abs2(t))
+            push!(I, t_bus); push!(J, t_bus); push!(V, conj(y + lc_to))
+        end
+    end
+
+    for (i,shunt) in data["shunt"]
+        if shunt[pm_component_status["shunt"]] != pm_component_status_inactive["shunt"]
+            bus = bus_to_idx[shunt["shunt_bus"]]
+
+            ys = conj(shunt["gs"] + shunt["bs"]im)
+
+            push!(I, bus); push!(J, bus); push!(V, ys)
+        end
+    end
+
+
+    m = sparse(I,J,V)
+    #println(m)
+
+    return AdmittanceMatrix(idx_to_bus, bus_to_idx, bus_to_idx[ref_bus["index"]], bus_type, m)
+end
 
 
 "data should be a PowerModels network data model; only supports networks with exactly one refrence bus"
@@ -38,6 +100,7 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
     sort!(buses, by=x->x["index"])
 
     idx_to_bus = [x["index"] for x in buses]
+    bus_type = [x["bus_type"] for x in buses]
     bus_to_idx = Dict(x["index"] => i for (i,x) in enumerate(buses))
     #println(idx_to_bus)
     #println(bus_to_idx)
@@ -50,7 +113,7 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
         if branch[pm_component_status["branch"]] != pm_component_status_inactive["branch"]
             f_bus = bus_to_idx[branch["f_bus"]]
             t_bus = bus_to_idx[branch["t_bus"]]
-            b_val = -branch["br_x"]/(branch["br_x"]^2+branch["br_r"]^2)
+            b_val = imag(inv(branch["br_r"] + branch["br_x"]im))
             push!(I, f_bus); push!(J, t_bus); push!(V,  b_val)
             push!(I, t_bus); push!(J, f_bus); push!(V,  b_val)
             push!(I, f_bus); push!(J, f_bus); push!(V, -b_val)
@@ -61,7 +124,7 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
     m = sparse(I,J,V)
     #println(m)
 
-    return AdmittanceMatrix(idx_to_bus, bus_to_idx, bus_to_idx[ref_bus["index"]], m)
+    return AdmittanceMatrix(idx_to_bus, bus_to_idx, bus_to_idx[ref_bus["index"]], bus_type, m)
 end
 
 
@@ -212,13 +275,13 @@ function calc_bus_injection(data::Dict{String,<:Any})
         end
     end
 
-    for (i,shunt) in data["shunt"]
-        if shunt["status"] != 0
-            bvals = bus_values[shunt["shunt_bus"]]
-            bvals["gs"] += shunt["gs"]
-            bvals["bs"] += shunt["bs"]
-        end
-    end
+    # for (i,shunt) in data["shunt"]
+    #     if shunt["status"] != 0
+    #         bvals = bus_values[shunt["shunt_bus"]]
+    #         bvals["gs"] += shunt["gs"]
+    #         bvals["bs"] += shunt["bs"]
+    #     end
+    # end
 
     for (i,storage) in data["storage"]
         if storage["status"] != 0
