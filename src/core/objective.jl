@@ -420,10 +420,10 @@ function objective_variable_pg_cost(pm::AbstractPowerModel, report::Bool=true)
         end
         =#
 
-        pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
-            [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost",
-        )
-        report && _IM.sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
+        var(pm, n)[:pg_cost] = Dict{Int,Any}()
+        # pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
+        #     [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost",
+        # )
 
         for (i,gen) in ref(pm, n, :gen)
             pg_cost_lambda = JuMP.@variable(pm.model,
@@ -450,8 +450,11 @@ function objective_variable_pg_cost(pm::AbstractPowerModel, report::Bool=true)
             end
             #println()
             JuMP.@constraint(pm.model, pg_expr == sum(var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n)))
-            JuMP.@constraint(pm.model, pg_cost_expr == pg_cost[i])
+            #JuMP.@constraint(pm.model, pg_cost_expr == pg_cost[i])
+             var(pm, n)[:pg_cost][i] = pg_cost_expr
         end
+
+        report && _IM.sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), var(pm, n)[:pg_cost])
 
     end
 end
