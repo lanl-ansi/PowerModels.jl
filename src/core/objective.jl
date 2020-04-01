@@ -391,6 +391,8 @@ end
 "adds pg_cost variables and constraints"
 function objective_variable_pg_cost(pm::AbstractPowerModel, report::Bool=true)
     for (n, nw_ref) in nws(pm)
+
+        #=
         gen_lines = calc_cost_pwl_lines(nw_ref[:gen])
         pg_cost_start = Dict{Int64,Float64}()
         for (i, gen) in nw_ref[:gen]
@@ -416,6 +418,41 @@ function objective_variable_pg_cost(pm::AbstractPowerModel, report::Bool=true)
                 JuMP.@constraint(pm.model, pg_cost[i] >= line.slope*sum(var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n)) + line.intercept)
             end
         end
+        =#
+
+        pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
+            [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost",
+        )
+        report && _IM.sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
+
+        for (i,gen) in ref(pm, n, :gen)
+            pg_cost_lambda = JuMP.@variable(pm.model,
+                [i in 1:gen["ncost"]], base_name="$(n)_pg_cost_lambda",
+                lower_bound = 0.0,
+                upper_bound = 1.0
+            )
+            JuMP.@constraint(pm.model, sum(pg_cost_lambda) == 1.0)
+
+            points = gen["cost"]
+
+            pg_expr = 0.0
+            pg_cost_expr = 0.0
+            for i in 1:gen["ncost"]
+                mw = points[2*i-1]
+                cost = points[2*i]
+                #println(mw, " - ", cost)
+
+                pg_expr += mw*pg_cost_lambda[i]
+                pg_cost_expr += cost*pg_cost_lambda[i]
+                #name = Symbol("pg_cost_lam_$(i)")
+                #report && sol(pm, n, :gen, i)[name] = pg_cost_lambda[i]
+                #println(typeof(pg_cost_lambda[i]))
+            end
+            #println()
+            JuMP.@constraint(pm.model, pg_expr == sum(var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n)))
+            JuMP.@constraint(pm.model, pg_cost_expr == pg_cost[i])
+        end
+
     end
 end
 
