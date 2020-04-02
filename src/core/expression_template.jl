@@ -73,13 +73,6 @@ function expression_branch_flow_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.
         var(pm, nw)[:q] = Dict{Tuple{Int,Int,Int},Any}()
     end
 
-    if !haskey(var(pm, nw), :va)
-        var(pm, nw)[:va] = Dict{Int,Any}()
-    end
-    if !haskey(var(pm, nw), :vm)
-        var(pm, nw)[:vm] = Dict{Int,Any}()
-    end
-
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -92,18 +85,7 @@ function expression_branch_flow_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.
     b_fr = branch["b_fr"]
     tm = branch["tap"]
 
-    if haskey(branch, "rate_a")
-        #sm_inv = ref(pm, nw, :sm_inv)
-        sm = ref(pm, nw, :sm)
-        if !haskey(var(pm, nw, :va), f_bus)
-            expression_voltage(pm, nw, f_bus, sm)
-        end
-        if !haskey(var(pm, nw, :va), t_bus)
-            expression_voltage(pm, nw, t_bus, sm)
-        end
-
-        expression_branch_flow_from(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
-    end
+    expression_branch_flow_from(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
 end
 
 
@@ -114,13 +96,6 @@ function expression_branch_flow_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cn
     end
     if !haskey(var(pm, nw), :q)
         var(pm, nw)[:q] = Dict{Tuple{Int,Int,Int},Any}()
-    end
-
-    if !haskey(var(pm, nw), :va)
-        var(pm, nw)[:va] = Dict{Int,Any}()
-    end
-    if !haskey(var(pm, nw), :vm)
-        var(pm, nw)[:vm] = Dict{Int,Any}()
     end
 
     branch = ref(pm, nw, :branch, i)
@@ -135,16 +110,5 @@ function expression_branch_flow_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cn
     b_to = branch["b_to"]
     tm = branch["tap"]
 
-    if haskey(branch, "rate_a")
-        #sm_inv = ref(pm, nw, :sm_inv)
-        sm = ref(pm, nw, :sm)
-        if !haskey(var(pm, nw, :va), f_bus)
-            expression_voltage(pm, nw, f_bus, sm)
-        end
-        if !haskey(var(pm, nw, :va), t_bus)
-            expression_voltage(pm, nw, t_bus, sm)
-        end
-
-        expression_branch_flow_to(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
-    end
+    expression_branch_flow_to(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
 end

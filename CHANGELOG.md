@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Made branch power flow expressions formulation agnostic (#684) (breaking)
+
+### Staged
 - Made matpower cost data parser more robust to floating point numbers
 - Fixed the type of derived "ncost" values in `export_matpower`
 

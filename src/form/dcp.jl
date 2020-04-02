@@ -56,6 +56,21 @@ end
 
 ""
 function expression_branch_flow_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    if !haskey(var(pm, n), :va)
+        var(pm, n)[:va] = Dict{Int,Any}()
+    end
+    if !haskey(var(pm, n), :vm)
+        var(pm, n)[:vm] = Dict{Int,Any}()
+    end
+
+    sm = ref(pm, n, :sm)
+    if !haskey(var(pm, n, :va), f_bus)
+        expression_voltage(pm, n, f_bus, sm)
+    end
+    if !haskey(var(pm, n, :va), t_bus)
+        expression_voltage(pm, n, t_bus, sm)
+    end
+
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
@@ -65,6 +80,21 @@ end
 
 ""
 function expression_branch_flow_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    if !haskey(var(pm, n), :va)
+        var(pm, n)[:va] = Dict{Int,Any}()
+    end
+    if !haskey(var(pm, n), :vm)
+        var(pm, n)[:vm] = Dict{Int,Any}()
+    end
+
+    sm = ref(pm, n, :sm)
+    if !haskey(var(pm, n, :va), f_bus)
+        expression_voltage(pm, n, f_bus, sm)
+    end
+    if !haskey(var(pm, n, :va), t_bus)
+        expression_voltage(pm, n, t_bus, sm)
+    end
+
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
