@@ -295,7 +295,7 @@ function calc_bus_injection(data::Dict{String,<:Any})
         if gen["gen_status"] != 0
             bvals = bus_values[gen["gen_bus"]]
             bvals["pg"] += gen["pg"]
-            bvals["qg"] += gen["qg"]
+            #bvals["qg"] += gen["qg"]
         end
     end
 
