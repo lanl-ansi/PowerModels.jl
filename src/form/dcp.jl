@@ -55,22 +55,7 @@ function constraint_ohms_yt_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_i
 end
 
 ""
-function expression_branch_flow_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
-    if !haskey(var(pm, n), :va)
-        var(pm, n)[:va] = Dict{Int,Any}()
-    end
-    if !haskey(var(pm, n), :vm)
-        var(pm, n)[:vm] = Dict{Int,Any}()
-    end
-
-    sm = ref(pm, n, :sm)
-    if !haskey(var(pm, n, :va), f_bus)
-        expression_voltage(pm, n, f_bus, sm)
-    end
-    if !haskey(var(pm, n, :va), t_bus)
-        expression_voltage(pm, n, t_bus, sm)
-    end
-
+function expression_branch_flow_yt_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
@@ -79,22 +64,7 @@ function expression_branch_flow_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus,
 end
 
 ""
-function expression_branch_flow_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
-    if !haskey(var(pm, n), :va)
-        var(pm, n)[:va] = Dict{Int,Any}()
-    end
-    if !haskey(var(pm, n), :vm)
-        var(pm, n)[:vm] = Dict{Int,Any}()
-    end
-
-    sm = ref(pm, n, :sm)
-    if !haskey(var(pm, n, :va), f_bus)
-        expression_voltage(pm, n, f_bus, sm)
-    end
-    if !haskey(var(pm, n, :va), t_bus)
-        expression_voltage(pm, n, t_bus, sm)
-    end
-
+function expression_branch_flow_yt_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
@@ -127,6 +97,32 @@ function constraint_ohms_yt_from_ne(pm::AbstractDCMPPModel, n::Int, i, f_bus, t_
     JuMP.@constraint(pm.model, p_fr >= (va_fr - va_to - ta + vad_min*(1-z)) / (x*tm))
 end
 
+
+""
+function expression_branch_flow_yt_from(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+
+    # get b only based on br_x (b = -1 / br_x) and take tap + shift into account
+    x = -b / (g^2 + b^2)
+    ta = atan(ti, tr)
+    var(pm, n, :p)[f_idx] = (va_fr - va_to - ta)/(x*tm)
+    # omit reactive constraint
+end
+
+""
+function expression_branch_flow_yt_to(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+
+    # get b only based on br_x (b = -1 / br_x) and take tap + shift into account
+    x = -b / (g^2 + b^2)
+    ta = atan(ti, tr)
+    var(pm, n, :p)[t_idx] = -(va_fr - va_to - ta)/(x*tm)
+    # omit reactive constraint
+end
+
+""
 function constraint_ohms_yt_from(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     p_fr  = var(pm, n,  :p, f_idx)
     va_fr = var(pm, n, :va, f_bus)

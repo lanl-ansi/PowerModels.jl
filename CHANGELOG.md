@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Removed branch flow variables from generic Power Flow problem specificaiton
 - Made branch power flow expressions formulation agnostic (#684) (breaking)
 
 ### Staged
