@@ -197,8 +197,8 @@ function build_opf_ptdf(pm::AbstractPowerModel)
 
         # only create these exressions if a line flow is specificed
         if haskey(branch, "rate_a")
-            expression_branch_flow_from(pm, i)
-            expression_branch_flow_to(pm, i)
+            expression_branch_flow_yt_from_ptdf(pm, i)
+            expression_branch_flow_yt_to_ptdf(pm, i)
         end
 
         constraint_thermal_limit_from(pm, i)

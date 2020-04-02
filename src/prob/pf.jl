@@ -17,8 +17,12 @@ end
 function build_pf(pm::AbstractPowerModel)
     variable_voltage(pm, bounded = false)
     variable_generation(pm, bounded = false)
-    variable_branch_flow(pm, bounded = false)
     variable_dcline_flow(pm, bounded = false)
+
+    for i in ids(pm, :branch)
+        expression_branch_flow_yt_from(pm, i)
+        expression_branch_flow_yt_to(pm, i)
+    end
 
     constraint_model_voltage(pm)
 
@@ -43,10 +47,6 @@ function build_pf(pm::AbstractPowerModel)
         end
     end
 
-    for i in ids(pm, :branch)
-        constraint_ohms_yt_from(pm, i)
-        constraint_ohms_yt_to(pm, i)
-    end
 
     for (i,dcline) in ref(pm, :dcline)
         #constraint_dcline(pm, i) not needed, active power flow fully defined by dc line setpoints
