@@ -174,13 +174,7 @@ end
 
 
 "computes a mapping from bus injections to voltage angles implicitly by solving a system of linear equations."
-function injection_factors_va(am::AdmittanceMatrix{T}, bus_id::Int; ref_bus::Int=typemin(Int))::Dict{Int,T} where T
-    # this row is all zeros, an empty Dict is also a reasonable option
-
-    if ref_bus == typemin(Int)
-        ref_bus = am.idx_to_bus[am.ref_idx]
-    end
-
+function injection_factors_va(am::AdmittanceMatrix{T}, bus_id::Int; ref_bus::Int=am.ref_idx)::Dict{Int,T} where T
     if ref_bus == bus_id
         return Dict{Int,T}()
     end
@@ -303,40 +297,8 @@ function calc_bus_injection(data::Dict{String,<:Any})
     return (p_deltas, q_deltas)
 end
 
+"an active power only variant of `calc_bus_injection`"
 calc_bus_injection_active(data::Dict{String,<:Any}) = calc_bus_injection(data)[1]
-
-
-"""
-computes a dc power flow based on the susceptance matrix of the network data
-"""
-function compute_dc_pf(data::Dict{String,<:Any})
-    #TODO check single connected component
-
-    bi = calc_bus_injection_active(data)
-
-    # accounts for vm = 1.0 assumption
-    for (i,shunt) in data["shunt"]
-        if shunt["status"] != 0 && !isapprox(shunt["gs"], 0.0)
-            bi[shunt["shunt_bus"]] += shunt["gs"]
-        end
-    end
-
-    sm = calc_susceptance_matrix(data)
-
-    bi_idx = [bi[bus_id] for bus_id in sm.idx_to_bus]
-    theta_idx = solve_theta(sm, bi_idx)
-
-    bus_assignment= Dict{String,Any}()
-    for (i,bus) in data["bus"]
-        va = NaN
-        if haskey(sm.bus_to_idx, bus["index"])
-            va = theta_idx[sm.bus_to_idx[bus["index"]]]
-        end
-        bus_assignment[i] = Dict("va" => va)
-    end
-
-    return Dict("per_unit" => data["per_unit"], "bus" => bus_assignment)
-end
 
 
 """

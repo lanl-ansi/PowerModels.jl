@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added a native AC Power Flow solver in polar cordinates that uses NLSolve (#590)
 - Removed branch flow variables from generic Power Flow problem specificaiton
 - Made branch power flow expressions formulation agnostic (#684) (breaking)
 

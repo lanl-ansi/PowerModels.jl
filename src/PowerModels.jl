@@ -3,9 +3,11 @@ module PowerModels
 import LinearAlgebra, SparseArrays
 
 import JSON
-import JuMP
 import Memento
 
+import NLsolve
+
+import JuMP
 import MathOptInterface
 const _MOI = MathOptInterface
 
