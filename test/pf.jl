@@ -653,7 +653,7 @@ end
 
         solution_ws = compute_ac_pf(data)
         #solution_ws = compute_ac_pf(data, show_trace=true)
-        @test length(result) >= 3
+        @test length(solution_ws) >= 3
 
         bus_pg_ini = bus_gen_values(data, solution, "pg")
         bus_qg_ini = bus_gen_values(data, solution, "qg")
