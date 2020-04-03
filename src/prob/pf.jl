@@ -108,7 +108,6 @@ end
 
 
 
-
 function compute_ac_pf(file::String; kwargs...)
     data = parse_file(file)
     compute_ac_pf(data, kwargs...)
@@ -121,10 +120,9 @@ matrix of the network data using the NLSolve package.
 returns a solution data structure in PowerModels Dict format
 """
 function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat_start=false, kwargs...)
-    #checks
+    # TODO check invariants
     # single connected component
     # all buses of type 2/3 have generators on them
-    # make sure that a test has non-1.0 voltage value (solve OPF followed by PF?)
 
     p_delta, q_delta = calc_bus_injection(data)
 
@@ -164,13 +162,13 @@ function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat
     end
 
 
-
     neighbors = [Set{Int}([i]) for i in eachindex(am.idx_to_bus)]
     I, J, V = findnz(am.matrix)
     for nz in eachindex(V)
         push!(neighbors[I[nz]], J[nz])
         push!(neighbors[J[nz]], I[nz])
     end
+
 
     function f!(F::Vector{Float64}, x::Vector{Float64}) 
         for i in eachindex(am.idx_to_bus)
@@ -214,90 +212,6 @@ function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat
         #     F[2*i] = imag(balance)
         # end
     end
-
-    #=
-    # lazy non-sparce jacobian
-    function j!(J, x::Vector{Float64})
-        for i in eachindex(am.idx_to_bus)
-            f_i_r = 2*i - 1
-            f_i_i = 2*i
-
-            for j in eachindex(am.idx_to_bus)
-                x_j_fst = 2*j - 1
-                x_j_snd = 2*j
-
-                bus_type = bus_type_idx[j]
-                if bus_type == 1
-                    if j in neighbors[i]
-                        if i == j
-                            y_ii = am.matrix[i,i]
-                            J[f_i_r, x_j_fst] = 2*real(y_ii)*vm_idx[i] + sum( real(am.matrix[i,k])             * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) - imag(am.matrix[i,k])             * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
-                            J[f_i_r, x_j_snd] =                          sum( real(am.matrix[i,k]) * vm_idx[i] * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) - imag(am.matrix[i,k]) * vm_idx[i] * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
-
-                            J[f_i_i, x_j_fst] = 2*imag(y_ii)*vm_idx[i] + sum( imag(am.matrix[i,k])             * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) + real(am.matrix[i,k])             * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
-                            J[f_i_i, x_j_snd] =                          sum( imag(am.matrix[i,k]) * vm_idx[i] * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[i] * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
-                        else
-                            y_ij = am.matrix[i,j]
-                            J[f_i_r, x_j_fst] = real(y_ij)             * vm_idx[i] *  cos(va_idx[i] - va_idx[j]) - imag(y_ij)             * vm_idx[i] *  sin(va_idx[i] - va_idx[j])
-                            J[f_i_r, x_j_snd] = real(y_ij) * vm_idx[i] * vm_idx[j] *  sin(va_idx[i] - va_idx[j]) - imag(y_ij) * vm_idx[i] * vm_idx[j] * -cos(va_idx[i] - va_idx[j])
-
-                            J[f_i_i, x_j_fst] = imag(y_ij)             * vm_idx[i] *  cos(va_idx[i] - va_idx[j]) + real(y_ij)             * vm_idx[i] *  sin(va_idx[i] - va_idx[j])
-                            J[f_i_i, x_j_snd] = imag(y_ij) * vm_idx[i] * vm_idx[j] *  sin(va_idx[i] - va_idx[j]) + real(y_ij) * vm_idx[i] * vm_idx[j] * -cos(va_idx[i] - va_idx[j])
-                        end
-                    else
-                        J[f_i_r, x_j_fst] = 0.0
-                        J[f_i_r, x_j_snd] = 0.0
-                        J[f_i_i, x_j_fst] = 0.0
-                        J[f_i_i, x_j_snd] = 0.0
-                    end
-                elseif bus_type == 2
-                    # q_inject_idx[i] = q_delta_base_idx[i] + x[2*i - 1]
-                    # va_idx[i] = x[2*i]
-                    if j in neighbors[i]
-                        if i == j
-                            J[f_i_r, x_j_fst] = 0.0
-                            J[f_i_i, x_j_fst] = 1.0
-
-                            y_ii = am.matrix[i,i]
-                            J[f_i_r, x_j_snd] =                sum( real(am.matrix[i,k]) * vm_idx[i] * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) - imag(am.matrix[i,k]) * vm_idx[i] * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
-
-                            J[f_i_i, x_j_snd] =                sum( imag(am.matrix[i,k]) * vm_idx[i] * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[i] * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
-                        else
-                            J[f_i_r, x_j_fst] = 0.0
-                            J[f_i_i, x_j_fst] = 0.0
-
-                            y_ij = am.matrix[i,j]
-                            J[f_i_r, x_j_snd] = real(y_ij) * vm_idx[i] * vm_idx[j] * sin(va_idx[i] - va_idx[j]) - imag(y_ij) * vm_idx[i] * vm_idx[j] * -cos(va_idx[i] - va_idx[j])
-
-                            J[f_i_i, x_j_snd] = imag(y_ij) * vm_idx[i] * vm_idx[j] * sin(va_idx[i] - va_idx[j]) + real(y_ij) * vm_idx[i] * vm_idx[j] * -cos(va_idx[i] - va_idx[j])
-                        end
-                    else
-                        J[f_i_r, x_j_fst] = 0.0
-                        J[f_i_r, x_j_snd] = 0.0
-                        J[f_i_i, x_j_fst] = 0.0
-                        J[f_i_i, x_j_snd] = 0.0
-                    end
-                elseif bus_type == 3
-                    # p_inject_idx[i] = p_delta_base_idx[i] + x[2*i - 1]
-                    # q_inject_idx[i] = q_delta_base_idx[i] + x[2*i]
-                    if i == j
-                        J[f_i_r, x_j_fst] = 1.0
-                        J[f_i_r, x_j_snd] = 0.0
-                        J[f_i_i, x_j_fst] = 0.0
-                        J[f_i_i, x_j_snd] = 1.0
-                    else
-                        J[f_i_r, x_j_fst] = 0.0
-                        J[f_i_r, x_j_snd] = 0.0
-                        J[f_i_i, x_j_fst] = 0.0
-                        J[f_i_i, x_j_snd] = 0.0
-                    end
-                else
-                    @assert false
-                end
-            end
-        end
-    end
-    =#
 
 
     function jsp!(J::SparseMatrixCSC{Float64,Int64}, x::Vector{Float64})
@@ -374,7 +288,6 @@ function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat
     end
 
     if !flat_start
-
         p_inject = Dict{Int,Float64}(bus["index"] => 0.0 for (i,bus) in data["bus"])
         q_inject = Dict{Int,Float64}(bus["index"] => 0.0 for (i,bus) in data["bus"])
         for (i,gen) in data["gen"]
@@ -445,10 +358,7 @@ function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat
         end
     end
     J0 = sparse(J0_I, J0_J, J0_V)
-    #println(J0)
 
-    #@code_warntype f!(F0, x0)
-    #@code_warntype jsp!(J0, x0)
 
     if finite_differencing
         result = NLsolve.nlsolve(f!, x0; kwargs...)
@@ -507,7 +417,6 @@ function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat
         bus = bus_assignment["$(bid)"]
 
         if bus_type_idx[i] == 1
-            #println("$(i) $(bus_type) $(result.zero[2*i - 1]) $(result.zero[2*i])")
             bus["vm"] = result.zero[2*i - 1]
             bus["va"] = result.zero[2*i]
         elseif bus_type_idx[i] == 2
@@ -515,7 +424,6 @@ function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat
             gen["qg"] = -result.zero[2*i - 1]
             bus["va"] = result.zero[2*i]
         elseif bus_type_idx[i] == 3
-            #println("$(i) $(bus_type) $(result.zero[2*i - 1]) $(result.zero[2*i])")
             gen = bus_gen[bid]
             gen["pg"] = -result.zero[2*i - 1]
             gen["qg"] = -result.zero[2*i]
@@ -523,8 +431,6 @@ function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat
             @assert false
         end
     end
-
-    #print_summary(data)
 
     return Dict("per_unit" => data["per_unit"],
         "bus" => bus_assignment,
