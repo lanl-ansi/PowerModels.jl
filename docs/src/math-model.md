@@ -53,7 +53,7 @@ A complete mathematical model is as follows,
 & \angle V_{r} = 0  \;\; \forall r \in R \label{eq_ref_bus}\\
 & S^{gl}_k \leq S^g_k \leq S^{gu}_k \;\; \forall k \in G  \label{eq_gen_bounds}\\
 & v^l_i \leq |V_i| \leq v^u_i \;\; \forall i \in N \label{eq_voltage_bounds}\\
-& \sum_{\substack{k \in G_i}} S^g_k - \sum_{\substack{k \in L_i}} S^d_k - \sum_{\substack{k \in S_i}} Y^s_k |V_i|^2 = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} S_{ij} \;\; \forall i\in N \label{eq_kcl_shunt} \\
+& \sum_{\substack{k \in G_i}} S^g_k - \sum_{\substack{k \in L_i}} S^d_k - \sum_{\substack{k \in S_i}} (Y^s_k)^* |V_i|^2 = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} S_{ij} \;\; \forall i\in N \label{eq_kcl_shunt} \\
 & S_{ij} = \left( Y_{ij} + Y^c_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2} - Y^*_{ij} \frac{V_i V^*_j}{{T}_{ij}} \;\; \forall (i,j)\in E \label{eq_power_from}\\
 & S_{ji} = \left( Y_{ij} + Y^c_{ji} \right)^* |V_j|^2 - Y^*_{ij} \frac{V^*_i V_j}{{T}^*_{ij}} \;\; \forall (i,j)\in E \label{eq_power_to}\\
 & |S_{ij}| \leq s^u_{ij} \;\; \forall (i,j) \in E \cup E^R \label{eq_thermal_limit}\\
@@ -104,7 +104,7 @@ A complete mathematical formulation for a Branch Flow Model is conceived as:
 & \angle V_{r} = 0  \;\; \forall r \in R \nonumber \\
 & S^{gl}_k \leq S^g_k \leq S^{gu}_k \;\; \forall k \in G \nonumber \\
 & v^l_i \leq |V_i| \leq v^u_i \;\; \forall i \in N \nonumber\\
-& \sum_{\substack{k \in G_i}} S^g_k - \sum_{\substack{k \in L_i}} S^d_k - \sum_{\substack{k \in S_i}} Y^s_k |V_i|^2 = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} S_{ij} \;\; \forall i\in N \nonumber\\
+& \sum_{\substack{k \in G_i}} S^g_k - \sum_{\substack{k \in L_i}} S^d_k - \sum_{\substack{k \in S_i}} (Y^s_k)^* |V_i|^2 = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} S_{ij} \;\; \forall i\in N \nonumber\\
 & S_{ij} +  S_{ji} = \left(Y^c_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2} + Z_{ij} |I^{s}_{ij}|^2 +  \left(Y^c_{ji}\right)^* {|V_j|^2}  \;\; \forall (i,j)\in E \label{eq_line_losses} \\
 & S_{ij} = S^{s}_{ij} + \left(Y^c_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2}  \;\; \forall (i,j)\in E \label{eq_series_power_flow} \\
 & S^{s}_{ij} = \frac{V_i}{{T}_{ij}} (I^{s}_{ij})^*  \;\; \forall (i,j)\in E \label{eq_complex_power_definition} \\
