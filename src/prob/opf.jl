@@ -172,14 +172,15 @@ end
 
 ""
 function build_opf_ptdf(pm::AbstractPowerModel)
+    Memento.error(_LOGGER, "build_opf_ptdf is only valid for DCPPowerModels")
+end
+
+""
+function build_opf_ptdf(pm::DCPPowerModel)
     variable_generation(pm)
 
     for i in ids(pm, :bus)
         expression_power_injection(pm, i)
-    end
-    for i in ids(pm, :branch)
-        expression_branch_flow_from(pm, i)
-        expression_branch_flow_to(pm, i)
     end
 
     objective_min_fuel_cost(pm)
@@ -195,9 +196,15 @@ function build_opf_ptdf(pm::AbstractPowerModel)
         constraint_network_power_balance(pm, i)
     end
 
-    for i in ids(pm, :branch)
+    for (i, branch) in ref(pm, :branch)
         # requires optional vad parameters
         #constraint_voltage_angle_difference(pm, i)
+
+        # only create these exressions if a line flow is specificed
+        if haskey(branch, "rate_a")
+            expression_branch_flow_yt_from_ptdf(pm, i)
+            expression_branch_flow_yt_to_ptdf(pm, i)
+        end
 
         constraint_thermal_limit_from(pm, i)
         constraint_thermal_limit_to(pm, i)
@@ -206,12 +213,34 @@ end
 
 
 ""
-function ref_add_sm!(pm::AbstractPowerModel)
-    Memento.error(_LOGGER, "ref_add_sm! is only valid for DCPPowerModels")
+function ref_add_sm!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
+    if _IM.ismultinetwork(data)
+        nws_data = data["nw"]
+    else
+        nws_data = Dict("0" => data)
+    end
+
+    for (n, nw_data) in nws_data
+        nw_id = parse(Int, n)
+        nw_ref = ref[:nw][nw_id]
+
+        nw_ref[:sm] = calc_susceptance_matrix(nw_data)
+    end
 end
 
 ""
-function ref_add_sm_inv!(pm::AbstractPowerModel)
-    Memento.error(_LOGGER, "ref_add_sm_inv! is only valid for DCPPowerModels")
+function ref_add_sm_inv!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
+    if _IM.ismultinetwork(data)
+        nws_data = data["nw"]
+    else
+        nws_data = Dict("0" => data)
+    end
+
+    for (n, nw_data) in nws_data
+        nw_id = parse(Int, n)
+        nw_ref = ref[:nw][nw_id]
+
+        nw_ref[:sm] = calc_susceptance_matrix_inv(nw_data)
+    end
 end
 

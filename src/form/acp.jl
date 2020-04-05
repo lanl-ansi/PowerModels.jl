@@ -59,27 +59,59 @@ function constraint_power_balance(pm::AbstractACPModel, n::Int, i::Int, bus_arcs
     p_dc = get(var(pm, n), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
     q_dc = get(var(pm, n), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
 
+    # the check "typeof(p[arc]) <: JuMP.NonlinearExpression" is required for the
+    # case when p/q are nonlinear expressions instead of decision variables
+    # once NLExpressions are first order in JuMP it should be possible to
+    # remove this.
+    nl_form = length(bus_arcs) > 0 && (typeof(p[iterate(bus_arcs)[1]]) <: JuMP.NonlinearExpression)
 
-    cstr_p = JuMP.@constraint(pm.model,
-        sum(p[a] for a in bus_arcs)
-        + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
-        + sum(psw[a_sw] for a_sw in bus_arcs_sw)
-        ==
-        sum(pg[g] for g in bus_gens)
-        - sum(ps[s] for s in bus_storage)
-        - sum(pd for (i,pd) in bus_pd)
-        - sum(gs for (i,gs) in bus_gs)*vm^2
-    )
-    cstr_q = JuMP.@constraint(pm.model,
-        sum(q[a] for a in bus_arcs)
-        + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
-        + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
-        ==
-        sum(qg[g] for g in bus_gens)
-        - sum(qs[s] for s in bus_storage)
-        - sum(qd for (i,qd) in bus_qd)
-        + sum(bs for (i,bs) in bus_bs)*vm^2
-    )
+    if !nl_form
+        cstr_p = JuMP.@constraint(pm.model,
+            sum(p[a] for a in bus_arcs)
+            + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
+            + sum(psw[a_sw] for a_sw in bus_arcs_sw)
+            ==
+            sum(pg[g] for g in bus_gens)
+            - sum(ps[s] for s in bus_storage)
+            - sum(pd for (i,pd) in bus_pd)
+            - sum(gs for (i,gs) in bus_gs)*vm^2
+        )
+    else
+        cstr_p = JuMP.@NLconstraint(pm.model,
+            sum(p[a] for a in bus_arcs)
+            + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
+            + sum(psw[a_sw] for a_sw in bus_arcs_sw)
+            ==
+            sum(pg[g] for g in bus_gens)
+            - sum(ps[s] for s in bus_storage)
+            - sum(pd for (i,pd) in bus_pd)
+            - sum(gs for (i,gs) in bus_gs)*vm^2
+        )
+    end
+
+    if !nl_form
+        cstr_q = JuMP.@constraint(pm.model,
+            sum(q[a] for a in bus_arcs)
+            + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
+            + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
+            ==
+            sum(qg[g] for g in bus_gens)
+            - sum(qs[s] for s in bus_storage)
+            - sum(qd for (i,qd) in bus_qd)
+            + sum(bs for (i,bs) in bus_bs)*vm^2
+        )
+    else
+        cstr_q = JuMP.@NLconstraint(pm.model,
+            sum(q[a] for a in bus_arcs)
+            + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
+            + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
+            ==
+            sum(qg[g] for g in bus_gens)
+            - sum(qs[s] for s in bus_storage)
+            - sum(qd for (i,qd) in bus_qd)
+            + sum(bs for (i,bs) in bus_bs)*vm^2
+        )
+    end
 
     if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
@@ -194,6 +226,30 @@ function constraint_power_balance_ne(pm::AbstractACPModel, n::Int, i::Int, bus_a
         - sum(qd for qd in values(bus_qd))
         + sum(bs for bs in values(bus_bs))*vm^2
     )
+end
+
+
+
+""
+function expression_branch_flow_yt_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    vm_fr = var(pm, n, :vm, f_bus)
+    vm_to = var(pm, n, :vm, t_bus)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+
+    var(pm, n, :p)[f_idx] = JuMP.@NLexpression(pm.model,  (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
+    var(pm, n, :q)[f_idx] = JuMP.@NLexpression(pm.model, -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
+end
+
+""
+function expression_branch_flow_yt_to(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
+    vm_fr = var(pm, n, :vm, f_bus)
+    vm_to = var(pm, n, :vm, t_bus)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+
+    var(pm, n, :p)[t_idx] = JuMP.@NLexpression(pm.model,  (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
+    var(pm, n, :q)[t_idx] = JuMP.@NLexpression(pm.model, -(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
 end
 
 

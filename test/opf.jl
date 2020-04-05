@@ -309,17 +309,6 @@ end
         @test isapprox(result["solution"]["bus"]["1"]["va"], 0.0; atol = 1e-4)
         @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
-    @testset "5-bus case with matpower DCMP model" begin
-        result = run_opf("../test/data/matpower/case5.m", DCMPPowerModel, ipopt_solver)
-
-        @test result["termination_status"] == LOCALLY_SOLVED
-
-        @test isapprox(result["solution"]["bus"]["1"]["va"],  0.0591772; atol = 1e-7)
-        @test isapprox(result["solution"]["bus"]["2"]["va"],  0.0017285; atol = 1e-7)
-        @test isapprox(result["solution"]["bus"]["3"]["va"], 0.0120486; atol = 1e-7)
-        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-7)
-
-    end
     # TODO verify this is really infeasible
     #@testset "24-bus rts case" begin
     #    result = run_opf("../test/data/matpower/case24.m", DCPPowerModel, ipopt_solver)
@@ -332,6 +321,22 @@ end
         @test check_variable_bounds(pm.model)
     end
 end
+
+
+@testset "test matpower dc opf" begin
+    @testset "5-bus case with matpower DCMP model" begin
+        result = run_opf("../test/data/matpower/case5.m", DCMPPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+
+        @test isapprox(result["solution"]["bus"]["1"]["va"],  0.0591772; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["2"]["va"],  0.0017285; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["3"]["va"], 0.0120486; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-7)
+
+    end
+end
+
 
 @testset "test nfa opf" begin
     @testset "3-bus case" begin
@@ -999,8 +1004,8 @@ end
         # too slow for unit tests
         #data = PowerModels.parse_file("../test/data/matpower/case14.m")
         data = PowerModels.parse_file("../test/data/pti/case5_alc.raw")
-        pm = InitializePowerModel(SparseSDPWRMPowerModel, data)
-        PowerModels.ref_add_core!(pm)
+        pm = InfrastructureModels.InitializeInfrastructureModel(SparseSDPWRMPowerModel, data, PowerModels._pm_global_keys)
+        PowerModels.ref_add_core!(pm.ref)
 
         cadj, lookup_index, sigma = PowerModels._chordal_extension(pm)
         cliques = PowerModels._maximal_cliques(cadj)

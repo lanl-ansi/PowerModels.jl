@@ -46,16 +46,16 @@ end
 
 
 ""
-function ref_add_on_off_va_bounds!(pm::AbstractPowerModel)
-    if _IM.ismultinetwork(pm.data)
-        nws_data = pm.data["nw"]
+function ref_add_on_off_va_bounds!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
+    if _IM.ismultinetwork(data)
+        nws_data = data["nw"]
     else
-        nws_data = Dict("0" => pm.data)
+        nws_data = Dict("0" => data)
     end
 
     for (n, nw_data) in nws_data
         nw_id = parse(Int, n)
-        nw_ref = ref(pm, nw_id)
+        nw_ref = ref[:nw][nw_id]
 
         off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
         nw_ref[:off_angmin] = off_angmin

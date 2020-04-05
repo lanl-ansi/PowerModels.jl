@@ -15,6 +15,7 @@ import JuMP
 import JSON
 
 import LinearAlgebra
+import SparseArrays
 using Test
 
 # default setup for solvers

@@ -2,6 +2,15 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added a native AC Power Flow solver in polar cordinates that uses NLSolve (#590)
+- Made branch power flow expressions formulation agnostic (#684) (breaking)
+- Added `ismulticonductor` check on data models
+- Updated ref extensions API to use ref and data dictionaries, not abstract types (#668) (breaking)
+- Removed InitializePowerModel and instantiate_model to use InfratructureModels versions (breaking)
+- Removed export of some functions defined in InfratructureModels (breaking)
+- Removed branch flow variables from generic Power Flow problem specificaiton
+
+### Staged
 - Made matpower cost data parser more robust to floating point numbers
 - Fixed the type of derived "ncost" values in `export_matpower`
 

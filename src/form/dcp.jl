@@ -55,7 +55,7 @@ function constraint_ohms_yt_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_i
 end
 
 ""
-function expression_branch_flow_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+function expression_branch_flow_yt_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
@@ -64,7 +64,7 @@ function expression_branch_flow_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus,
 end
 
 ""
-function expression_branch_flow_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+function expression_branch_flow_yt_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
@@ -97,6 +97,32 @@ function constraint_ohms_yt_from_ne(pm::AbstractDCMPPModel, n::Int, i, f_bus, t_
     JuMP.@constraint(pm.model, p_fr >= (va_fr - va_to - ta + vad_min*(1-z)) / (x*tm))
 end
 
+
+""
+function expression_branch_flow_yt_from(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+
+    # get b only based on br_x (b = -1 / br_x) and take tap + shift into account
+    x = -b / (g^2 + b^2)
+    ta = atan(ti, tr)
+    var(pm, n, :p)[f_idx] = (va_fr - va_to - ta)/(x*tm)
+    # omit reactive constraint
+end
+
+""
+function expression_branch_flow_yt_to(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+
+    # get b only based on br_x (b = -1 / br_x) and take tap + shift into account
+    x = -b / (g^2 + b^2)
+    ta = atan(ti, tr)
+    var(pm, n, :p)[t_idx] = -(va_fr - va_to - ta)/(x*tm)
+    # omit reactive constraint
+end
+
+""
 function constraint_ohms_yt_from(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     p_fr  = var(pm, n,  :p, f_idx)
     va_fr = var(pm, n, :va, f_bus)
@@ -186,42 +212,6 @@ function expression_voltage(pm::AbstractPowerModel, n::Int, i, am::Union{Admitta
         var(pm, n, :va)[i] = JuMP.@expression(pm.model, sum(f*inj_p[j] for (j,f) in inj_factors))
     end
 end
-
-
-""
-function ref_add_sm!(pm::AbstractDCPModel)
-    if _IM.ismultinetwork(pm.data)
-        nws_data = pm.data["nw"]
-    else
-        nws_data = Dict("0" => pm.data)
-    end
-
-    for (n, nw_data) in nws_data
-        nw_id = parse(Int, n)
-        nw_ref = ref(pm, nw_id)
-
-        nw_ref[:sm] = calc_susceptance_matrix(nw_data)
-    end
-end
-
-""
-function ref_add_sm_inv!(pm::AbstractDCPModel)
-    if _IM.ismultinetwork(pm.data)
-        nws_data = pm.data["nw"]
-    else
-        nws_data = Dict("0" => pm.data)
-    end
-
-    for (n, nw_data) in nws_data
-        nw_id = parse(Int, n)
-        nw_ref = ref(pm, nw_id)
-
-        nw_ref[:sm] = calc_susceptance_matrix_inv(nw_data)
-    end
-end
-
-
-
 
 
 

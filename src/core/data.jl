@@ -716,6 +716,19 @@ function _calc_cost_polynomial(component::Dict{String,<:Any}, setpoint_id)
 end
 
 
+"takes the current ac solution and configures it a starting value for an ac power flow solver"
+function set_ac_pf_start_values!(network::Dict{String,<:Any})
+    for (i,bus) in network["bus"]
+        bus["va_start"] = bus["va"]
+        bus["vm_start"] = bus["vm"]
+    end
+
+    for (i,gen) in network["gen"]
+        gen["pg_start"] = gen["pg"]
+        gen["qg_start"] = gen["qg"]
+    end
+end
+
 
 "assumes a valid ac solution is included in the data and computes the branch flow values"
 function calc_branch_flow_ac(data::Dict{String,<:Any})
@@ -999,6 +1012,19 @@ end
 
 
 
+""
+function ismulticonductor(data::Dict{String,<:Any})
+    if _IM.ismultinetwork(data)
+        return all(_ismulticonductor(nw_data) for (i,nw_data) in data["nw"])
+    else
+        return _ismulticonductor(data)
+    end
+end
+
+function _ismulticonductor(data::Dict{String,<:Any})
+    return haskey(data, "conductors")
+end
+
 
 
 ""
@@ -1012,8 +1038,6 @@ function check_conductors(data::Dict{String,<:Any})
     end
 end
 
-
-""
 function _check_conductors(data::Dict{String,<:Any})
     if haskey(data, "conductors") && data["conductors"] < 1
         Memento.error(_LOGGER, "conductor values must be positive integers, given $(data["conductors"])")
