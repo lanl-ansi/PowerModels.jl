@@ -21,16 +21,16 @@ function build_opb(pm::AbstractPowerModel)
 end
 
 
-function ref_add_connected_components!(pm::AbstractPowerModel)
-    if _IM.ismultinetwork(pm.data)
-        nws_data = pm.data["nw"]
+function ref_add_connected_components!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
+    if _IM.ismultinetwork(data)
+        nws_data = data["nw"]
     else
-        nws_data = Dict("0" => pm.data)
+        nws_data = Dict("0" => data)
     end
 
     for (n, nw_data) in nws_data
         nw_id = parse(Int, n)
-        nw_ref = ref(pm, nw_id)
+        nw_ref = ref[:nw][nw_id]
         component_sets = PowerModels.calc_connected_components(nw_data)
         nw_ref[:components] = Dict(i => c for (i,c) in enumerate(sort(collect(component_sets); by=length)))
     end

@@ -67,8 +67,8 @@ end
 
 
 ""
-function ref_add_ne_branch!(pm::AbstractPowerModel)
-    for (nw, nw_ref) in pm.ref[:nw]
+function ref_add_ne_branch!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
+    for (nw, nw_ref) in ref[:nw]
         if !haskey(nw_ref, :ne_branch)
             error(_LOGGER, "required ne_branch data not found")
         end
@@ -86,7 +86,9 @@ function ref_add_ne_branch!(pm::AbstractPowerModel)
         nw_ref[:ne_bus_arcs] = ne_bus_arcs
 
         if !haskey(nw_ref, :ne_buspairs)
-            nw_ref[:ne_buspairs] = calc_buspair_parameters(nw_ref[:bus], nw_ref[:ne_branch], conductor_ids(pm, nw), ismulticonductor(pm, nw))
+            ismc = haskey(nw_ref, :conductors)
+            cid = nw_ref[:conductor_ids]
+            nw_ref[:ne_buspairs] = calc_buspair_parameters(nw_ref[:bus], nw_ref[:ne_branch], cid, ismc)
         end
     end
 end
