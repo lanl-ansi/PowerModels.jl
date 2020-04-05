@@ -265,6 +265,28 @@ function constraint_power_balance_ne(pm::AbstractWModels, n::Int, i::Int, bus_ar
 end
 
 
+""
+function expression_branch_flow_yt_from(pm::AbstractWRModels, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    w_fr = var(pm, n, :w, f_bus)
+    wr   = var(pm, n, :wr, (f_bus, t_bus))
+    wi   = var(pm, n, :wi, (f_bus, t_bus))
+
+    var(pm, n, :p)[f_idx] =  (g+g_fr)/tm^2*w_fr + (-g*tr+b*ti)/tm^2*wr + (-b*tr-g*ti)/tm^2*wi
+    var(pm, n, :q)[f_idx] = -(b+b_fr)/tm^2*w_fr - (-b*tr-g*ti)/tm^2*wr + (-g*tr+b*ti)/tm^2*wi
+end
+
+
+""
+function expression_branch_flow_yt_to(pm::AbstractWRModels, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
+    w_to = var(pm, n, :w, t_bus)
+    wr   = var(pm, n, :wr, (f_bus, t_bus))
+    wi   = var(pm, n, :wi, (f_bus, t_bus))
+
+    var(pm, n, :p)[t_idx] =  (g+g_to)*w_to + (-g*tr-b*ti)/tm^2*wr + (-b*tr+g*ti)/tm^2*-wi
+    var(pm, n, :q)[t_idx] = -(b+b_to)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi
+end
+
+
 """
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """

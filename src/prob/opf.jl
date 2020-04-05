@@ -182,10 +182,6 @@ function build_opf_ptdf(pm::DCPPowerModel)
     for i in ids(pm, :bus)
         expression_power_injection(pm, i)
     end
-    for i in ids(pm, :branch)
-        expression_branch_flow_from(pm, i)
-        expression_branch_flow_to(pm, i)
-    end
 
     objective_min_fuel_cost(pm)
 
@@ -200,9 +196,15 @@ function build_opf_ptdf(pm::DCPPowerModel)
         constraint_network_power_balance(pm, i)
     end
 
-    for i in ids(pm, :branch)
+    for (i, branch) in ref(pm, :branch)
         # requires optional vad parameters
         #constraint_voltage_angle_difference(pm, i)
+
+        # only create these exressions if a line flow is specificed
+        if haskey(branch, "rate_a")
+            expression_branch_flow_yt_from_ptdf(pm, i)
+            expression_branch_flow_yt_to_ptdf(pm, i)
+        end
 
         constraint_thermal_limit_from(pm, i)
         constraint_thermal_limit_to(pm, i)

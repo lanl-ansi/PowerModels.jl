@@ -301,18 +301,20 @@ end
 
 ""
 function _mp_cost_data(cost_row)
-    ncost = cost_row[4]
-    model = cost_row[1]
+    ncost = _IM.check_type(Int, cost_row[4])
+    model = _IM.check_type(Int, cost_row[1])
+
     if model == 1
         nr_parameters = ncost*2
     elseif model == 2
        nr_parameters = ncost
     end
+
     cost_data = Dict(
-        "model" => _IM.check_type(Int, cost_row[1]),
+        "model" => model,
         "startup" => _IM.check_type(Float64, cost_row[2]),
         "shutdown" => _IM.check_type(Float64, cost_row[3]),
-        "ncost" => _IM.check_type(Int, cost_row[4]),
+        "ncost" => ncost,
         "cost" => [_IM.check_type(Float64, x) for x in cost_row[5:5+nr_parameters-1]]
     )
 
@@ -1158,7 +1160,7 @@ function _export_cost_data(io::IO, components::Dict{Int,Dict}, prefix::String)
 
         for (idx,gen) in (sort(components))
             if gen["model"] == 1
-                print(io, "\t1\t", gen["startup"], "\t", gen["shutdown"], "\t", (length(gen["cost"])/2) ),
+                print(io, "\t1\t", gen["startup"], "\t", gen["shutdown"], "\t", (div(length(gen["cost"]),2))),
                 for l=1:length(gen["cost"])
                     print(io, "\t", gen["cost"][l])
                 end

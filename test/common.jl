@@ -52,6 +52,15 @@ function check_variable_bounds(model)
 end
 
 
+function bus_gen_values(data, solution, value_key)
+    bus_pg = Dict(i => 0.0 for (i,bus) in data["bus"])
+    for (i,gen) in data["gen"]
+        bus_pg["$(gen["gen_bus"])"] += solution["gen"][i][value_key]
+    end
+    return bus_pg
+end
+
+
 function all_loads_on(result; atol=1e-5)
     # tolerance of 1e-5 is needed for SCS tests to pass
     return !haskey(result["solution"], "load") || all(isapprox(load["status"], 1.0, atol=atol) for (i,load) in result["solution"]["load"])

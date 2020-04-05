@@ -158,8 +158,8 @@ function run_opf_ptdf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
                     delete!(branch, "rate_a_inactive")
 
                     idx = branch["index"]
-                    expression_branch_flow_from(pm, idx)
-                    expression_branch_flow_to(pm, idx)
+                    expression_branch_flow_yt_from_ptdf(pm, idx)
+                    expression_branch_flow_yt_to_ptdf(pm, idx)
                     constraint_thermal_limit_from(pm, idx)
                     constraint_thermal_limit_to(pm, idx)
 
