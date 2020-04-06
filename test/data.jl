@@ -350,10 +350,6 @@ end
     data["gen"]["1"]["cost"] = [0, 0]
     @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
 
-    data["gen"]["1"]["ncost"] = 2
-    data["gen"]["1"]["cost"] = [0, 1, 0, 2]
-    @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
-
     data["gen"]["1"]["model"] = 2
     @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
 
@@ -393,10 +389,14 @@ end
     @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units!(data))
     @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_per_unit!(data))
     @test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.correct_cost_functions!(data))
-    data["gen"]["1"]["model"] = 1
 
-    data["gen"]["1"]["cost"][3] = 3000
-    @test_warn(TESTLOG, "pwl x value 3000 is outside the bounds 0.0-20.0 on generator 1", PowerModels.correct_cost_functions!(data))
+    data["gen"]["1"]["model"] = 1
+    data["gen"]["1"]["ncost"] = 2
+    data["gen"]["1"]["cost"] = [0.0, 1.0, 18.0, 2.0]
+    @test_warn(TESTLOG, "exending the pwl costs model on generator 1 by 2.0100000000000016 to include the maximum active power value 20.0", PowerModels.correct_cost_functions!(data))
+
+    data["gen"]["1"]["cost"][1] = 2.0
+    @test_warn(TESTLOG, "exending the pwl costs model on generator 1 by -2.01 to include the minimum active power value 0.0", PowerModels.correct_cost_functions!(data))
 
     data["dcline"]["1"]["loss0"] = -1.0
     @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0", PowerModels.correct_dcline_limits!(data))

@@ -1825,14 +1825,14 @@ function correct_cost_functions!(data::Dict{String,<:Any})
 
     modified_gen = Set{Int}()
     for (i,gen) in data["gen"]
-        if _correct_cost_function!(i, gen, "generator")
+        if _correct_cost_function!(i, gen, "generator", "pmin", "pmax")
             push!(modified_gen, gen["index"])
         end
     end
 
     modified_dcline = Set{Int}()
     for (i, dcline) in data["dcline"]
-        if _correct_cost_function!(i, dcline, "dcline")
+        if _correct_cost_function!(i, dcline, "dcline", "pminf", "pminf")
             push!(modified_dcline, dcline["index"])
         end
     end
@@ -1842,7 +1842,7 @@ end
 
 
 ""
-function _correct_cost_function!(id, comp, type_name)
+function _correct_cost_function!(id, comp, type_name, pmin_key, pmax_key)
     #println(comp)
     modified = false
 
@@ -1855,6 +1855,8 @@ function _correct_cost_function!(id, comp, type_name)
                 Memento.error(_LOGGER, "cost includes $(comp["ncost"]) points, but at least two points are required on $(type_name) $(id)")
             end
 
+            modified = _extend_pwl_cost!(id, comp, type_name, pmin_key, pmax_key)
+
             modified = _remove_pwl_cost_duplicates!(id, comp, type_name)
 
             for i in 3:2:length(comp["cost"])
@@ -1862,15 +1864,7 @@ function _correct_cost_function!(id, comp, type_name)
                     Memento.error(_LOGGER, "non-increasing x values in pwl cost model on $(type_name) $(id)")
                 end
             end
-            if "pmin" in keys(comp) && "pmax" in keys(comp)
-                pmin = sum(comp["pmin"]) # sum supports multi-conductor case
-                pmax = sum(comp["pmax"])
-                for i in 3:2:length(comp["cost"])
-                    if comp["cost"][i] < pmin || comp["cost"][i] > pmax
-                        Memento.warn(_LOGGER, "pwl x value $(comp["cost"][i]) is outside the bounds $(pmin)-$(pmax) on $(type_name) $(id)")
-                    end
-                end
-            end
+
             modified |= _simplify_pwl_cost!(id, comp, type_name)
         elseif comp["model"] == 2
             if length(comp["cost"]) != comp["ncost"]
@@ -1885,8 +1879,76 @@ function _correct_cost_function!(id, comp, type_name)
 end
 
 
+"checks that the span of points in the a pwl function is greater than the generator operating range"
+function _extend_pwl_cost!(id, comp, type_name, pmin_key, pmax_key; tolerance=1e-2)
+    @assert comp["model"] == 1
+
+    modified = false
+
+    if isinf(comp[pmin_key]) || isinf(comp[pmax_key])
+        Memento.warn(_LOGGER, "a bounded operating range is required for modeling pwl costs.  $(type_name) $(id) active power range is $(comp[pmin_key]) - $(comp[pmax_key])")
+        return modified
+    end
+
+    pmin = comp[pmin_key]
+    x1 = comp["cost"][1]
+    y1 = comp["cost"][2]
+    x2 = comp["cost"][3]
+    y2 = comp["cost"][4]
+
+    if x1 > pmin
+        x0 = pmin - tolerance
+
+        Memento.warn(_LOGGER, "exending the pwl costs model on $(type_name) $(id) by $(x0-x1) to include the minimum active power value $(pmin)")
+
+        m = (y2 - y1)/(x2 - x1)
+
+        if !isnan(m)
+            y0 = y2 - m*(x2 - x0)
+
+            comp["cost"][1] = x0
+            comp["cost"][2] = y0
+        else
+            #println("$x1, $y1 - $x2, $y2")
+            comp["cost"][1] = x0
+        end
+
+        modified = true
+    end
+
+
+    pmax = comp[pmax_key]
+    x1 = comp["cost"][end-3]
+    y1 = comp["cost"][end-2]
+    x2 = comp["cost"][end-1]
+    y2 = comp["cost"][end]
+
+    if x2 < pmax
+        x3 = pmax + tolerance
+
+        Memento.warn(_LOGGER, "exending the pwl costs model on $(type_name) $(id) by $(x3-x2) to include the maximum active power value $(pmax)")
+
+        m = (y2 - y1)/(x2 - x1)
+
+        if !isnan(m)
+            y3 = m*(x3 - x1) + y1
+
+            comp["cost"][end-1] = x3
+            comp["cost"][end] = y3
+        else
+            #println("$x1, $y1 - $x2, $y2")
+            comp["cost"][end-1] = x3
+        end
+
+        modified = true
+    end
+
+    return modified
+end
+
+
 "checks that each point in the a pwl function is unqiue, simplifies the function if duplicates appear"
-function _remove_pwl_cost_duplicates!(id, comp, type_name, tolerance = 1e-2)
+function _remove_pwl_cost_duplicates!(id, comp, type_name; tolerance=1e-2)
     @assert comp["model"] == 1
 
     unique_costs = Float64[comp["cost"][1], comp["cost"][2]]
@@ -1912,7 +1974,7 @@ end
 
 
 "checks the slope of each segment in a pwl function, simplifies the function if the slope changes is below a tolerance"
-function _simplify_pwl_cost!(id, comp, type_name, tolerance = 1e-2)
+function _simplify_pwl_cost!(id, comp, type_name; tolerance=1e-2)
     @assert comp["model"] == 1
 
     slopes = Float64[]
