@@ -710,7 +710,11 @@ function _pti_to_powermodels!(pti_data::Dict; import_all=false, validate=true)::
 end
 
 
-"Parses directly from file"
+"""
+    parse_psse(filename::String; kwargs...)::Dict
+
+Parses directly from file
+"""
 function parse_psse(filename::String; kwargs...)::Dict
     pm_data = open(filename) do f
         parse_psse(f; kwargs...)
@@ -720,7 +724,11 @@ function parse_psse(filename::String; kwargs...)::Dict
 end
 
 
-"Parses directly from iostream"
+"""
+    function parse_psse(io::IO; kwargs...)::Dict
+
+Parses directly from iostream
+"""
 function parse_psse(io::IO; kwargs...)::Dict
     pti_data = parse_pti(io)
     pm = _pti_to_powermodels!(pti_data; kwargs...)
