@@ -7,10 +7,12 @@ PowerModels.jl Change Log
 - Added `ismulticonductor` check on data models
 - Changed the PWL cost implementation from a max formulation to an extreme-point formulation
 - Updated PWL cost data processing to require points that span a generators complete operating range
+- Updated `correct_bus_types!` to correct slack buses and focus on preparation for power flow studies (breaking)
 - Updated ref extensions API to use ref and data dictionaries, not abstract types (#668) (breaking)
 - Removed InitializePowerModel and instantiate_model to use InfratructureModels versions (breaking)
 - Removed export of some functions defined in InfratructureModels (breaking)
 - Removed branch flow variables from generic Power Flow problem specification
+- Removed bus type modification from `check_reference_bus` (breaking)
 
 ### Staged
 - Made matpower cost data parser more robust to floating point numbers

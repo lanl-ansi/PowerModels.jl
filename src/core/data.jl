@@ -1496,41 +1496,15 @@ function check_reference_bus(data::Dict{String,<:Any})
     end
 
     ref_buses = Dict{String,Any}()
-    for (k,v) in data["bus"]
-        if v["bus_type"] == 3
-            ref_buses[k] = v
+    for (i,bus) in data["bus"]
+        if bus["bus_type"] == 3
+            ref_buses[i] = bus
         end
     end
 
     if length(ref_buses) == 0
-            if length(data["gen"]) > 0
-            big_gen = _biggest_generator(data["gen"])
-            gen_bus = big_gen["gen_bus"]
-            ref_bus = data["bus"]["$(gen_bus)"]
-            ref_bus["bus_type"] = 3
-            Memento.warn(_LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
-        else
-            (bus_item, state) = Base.iterate(data["bus"])
-            bus_item.second["bus_type"] = 3
-            Memento.warn(_LOGGER, "no reference bus found, setting bus $(bus_item.second["index"]) as reference")
-        end
+        Memento.warn(_LOGGER, "no reference bus found")
     end
-end
-
-
-"find the largest active generator in the network"
-function _biggest_generator(gens)
-    biggest_gen = nothing
-    biggest_value = -Inf
-    for (k,gen) in gens
-        pmax = maximum(gen["pmax"])
-        if pmax > biggest_value
-            biggest_gen = gen
-            biggest_value = pmax
-        end
-    end
-    @assert(biggest_gen != nothing)
-    return biggest_gen
 end
 
 
@@ -1671,7 +1645,15 @@ function check_switch_parameters(data::Dict{String,<:Any})
 end
 
 
-"checks bus types are consistent with generator connections, if not, fixes them"
+"""
+checks bus types are suitable for a power flow study, if not, fixes them.
+
+the primary checks are that all type 2 buses (i.e., PV) have a connected and
+active generator and there is a single type 3 bus (i.e., slack bus) with an
+active connected generator.
+
+assumes that the network is a single connected component
+"""
 function correct_bus_types!(data::Dict{String,<:Any})
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_bus_types! does not yet support multinetwork data")
@@ -1679,35 +1661,66 @@ function correct_bus_types!(data::Dict{String,<:Any})
 
     modified = Set{Int}()
 
-    bus_gens = Dict((i, []) for (i,bus) in data["bus"])
+    bus_gens = Dict(bus["index"] => [] for (i,bus) in data["bus"])
 
     for (i,gen) in data["gen"]
-        #println(gen)
-        if gen["gen_status"] == 1
-            push!(bus_gens[string(gen["gen_bus"])], i)
+        if gen["gen_status"] != 0
+            push!(bus_gens[gen["gen_bus"]], i)
         end
     end
 
+    slack_found = false
     for (i, bus) in data["bus"]
-        if bus["bus_type"] != 4 && bus["bus_type"] != 3
-            bus_gens_count = length(bus_gens[i])
+        idx = bus["index"]
+        if bus["bus_type"] == 1 && length(bus_gens[idx]) != 0 # PQ
+            Memento.warn(_LOGGER, "active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 2")
+            bus["bus_type"] = 2
+            push!(modified, bus["index"])
+        elseif (bus["bus_type"] == 2 || bus["bus_type"] == 3) && length(bus_gens[idx]) == 0 # PV
+            Memento.warn(_LOGGER, "no active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 1")
+            bus["bus_type"] = 1
+            push!(modified, bus["index"])
+        elseif bus["bus_type"] == 3 && length(bus_gens[idx]) != 0 # Slack
+             slack_found = true
+        end
+    end
 
-            if bus_gens_count == 0 && bus["bus_type"] != 1
-                Memento.warn(_LOGGER, "no active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 1")
-                bus["bus_type"] = 1
-                push!(modified, bus["index"])
-            end
-
-            if bus_gens_count != 0 && bus["bus_type"] != 2
-                Memento.warn(_LOGGER, "active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 2")
-                bus["bus_type"] = 2
-                push!(modified, bus["index"])
-            end
-
+    if !slack_found
+        if length(data["gen"]) > 0
+            big_gen = _biggest_generator(data["gen"])
+            gen_bus = big_gen["gen_bus"]
+            ref_bus = data["bus"]["$(gen_bus)"]
+            ref_bus["bus_type"] = 3
+            Memento.warn(_LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
+        else
+            Memento.error(_LOGGER, "no generators found in the given network data, correct_bus_types! requires at least one generator at the reference bus")
         end
     end
 
     return modified
+end
+
+
+"find the largest active generator in a collection of generators"
+function _biggest_generator(gens::Dict)::Dict
+    if length(gens) == 0
+        Memento.error(_LOGGER, "generator list passed to _biggest_generator was empty.  please report this bug.")
+    end
+
+    biggest_gen = Dict{String,Any}()
+    biggest_value = -Inf
+
+    for (k,gen) in gens
+        if gen["gen_status"] != 0
+            pmax = maximum(gen["pmax"])
+            if pmax > biggest_value
+                biggest_gen = gen
+                biggest_value = pmax
+            end
+        end
+    end
+
+    return biggest_gen
 end
 
 
@@ -2454,7 +2467,7 @@ function _correct_reference_buses!(data::Dict{String,<:Any})
         end
     end
 
-    cc_gens = Dict( i => Dict() for (i, cc) in enumerate(ccs_order) )
+    cc_gens = Dict(i => Dict() for (i, cc) in enumerate(ccs_order) )
     for (i, gen) in data["gen"]
         bus_id = gen["gen_bus"]
         if haskey(bus_to_cc, bus_id)
