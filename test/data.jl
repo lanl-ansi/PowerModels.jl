@@ -160,12 +160,129 @@ end
 end
 
 
-@testset "test topology propagation" begin
-    @testset "component status updates" begin
+@testset "test component status updates " begin
+
+    @testset "topology propagation updates" begin
         data_initial = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
 
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
         PowerModels.propagate_topology_status!(data)
+
+        @test length(data_initial["bus"]) == length(data["bus"])
+        @test length(data_initial["gen"]) == length(data["gen"])
+        @test length(data_initial["branch"]) == length(data["branch"])
+
+        active_buses = Set(["1", "2", "3", "4", "5", "7"])
+        active_branches = Set(["5", "8"])
+        active_dclines = Set(["3"])
+        active_storage = Set([])
+        active_switches = Set([])
+
+        for (i,bus) in data["bus"]
+            if i in active_buses
+                @test bus["bus_type"] != 4
+            else
+                @test bus["bus_type"] == 4
+            end
+        end
+
+        for (i,strg) in data["storage"]
+            if i in active_storage
+                @test strg["status"] != 0
+            else
+                @test strg["status"] == 0
+            end
+        end
+
+        for (i,branch) in data["branch"]
+            if i in active_branches
+                @test branch["br_status"] == 1
+            else
+                @test branch["br_status"] == 0
+            end
+        end
+
+        for (i,dcline) in data["dcline"]
+            if i in active_dclines
+                @test dcline["br_status"] == 1
+            else
+                @test dcline["br_status"] == 0
+            end
+        end
+
+        for (i,switch) in data["switch"]
+            if i in active_switches
+                @test switch["status"] == 1
+            else
+                @test switch["status"] == 0
+            end
+        end
+    end
+
+
+    @testset "isolated components updates" begin
+        data_initial = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
+
+        data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
+        PowerModels.deactivate_isolated_components!(data)
+
+        @test length(data_initial["bus"]) == length(data["bus"])
+        @test length(data_initial["gen"]) == length(data["gen"])
+        @test length(data_initial["branch"]) == length(data["branch"])
+
+        active_buses = Set(["2", "3", "4", "5", "7"])
+        active_branches = Set(["5", "6", "7", "8"])
+        active_dclines = Set(["2", "3"])
+        active_storage = Set(["1"])
+        active_switches = Set([])
+
+        for (i,bus) in data["bus"]
+            if i in active_buses
+                @test bus["bus_type"] != 4
+            else
+                @test bus["bus_type"] == 4
+            end
+        end
+
+        for (i,strg) in data["storage"]
+            if i in active_storage
+                @test strg["status"] != 0
+            else
+                @test strg["status"] == 0
+            end
+        end
+
+        for (i,branch) in data["branch"]
+            if i in active_branches
+                @test branch["br_status"] == 1
+            else
+                @test branch["br_status"] == 0
+            end
+        end
+
+        for (i,dcline) in data["dcline"]
+            if i in active_dclines
+                @test dcline["br_status"] == 1
+            else
+                @test dcline["br_status"] == 0
+            end
+        end
+
+        for (i,switch) in data["switch"]
+            if i in active_switches
+                @test switch["status"] == 1
+            else
+                @test switch["status"] == 0
+            end
+        end
+    end
+
+
+    @testset "simplify network updates" begin
+        data_initial = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
+
+        data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
+        PowerModels.simplify_network!(data)
 
         @test length(data_initial["bus"]) == length(data["bus"])
         @test length(data_initial["gen"]) == length(data["gen"])
@@ -218,6 +335,7 @@ end
         end
     end
 
+
     @testset "connecected components" begin
         data = PowerModels.parse_file("../test/data/matpower/case6.m")
         cc = PowerModels.calc_connected_components(data)
@@ -247,9 +365,9 @@ end
         @test length(cc_ordered[1]) == 19
     end
 
-    @testset "connecected components with propagate topology status" begin
+    @testset "connecected components with simplify network" begin
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
-        PowerModels.propagate_topology_status!(data)
+        PowerModels.simplify_network!(data)
         cc = PowerModels.calc_connected_components(data)
 
         cc_ordered = sort(collect(cc); by=length)
@@ -271,7 +389,7 @@ end
         data_initial = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
 
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
-        PowerModels.propagate_topology_status!(data)
+        PowerModels.simplify_network!(data)
         PowerModels.select_largest_component!(data)
 
         @test length(data_initial["bus"]) == length(data["bus"])
@@ -309,7 +427,7 @@ end
 
     @testset "output values" begin
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
-        PowerModels.propagate_topology_status!(data)
+        PowerModels.simplify_network!(data)
         result = run_opf(data, ACPPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED

@@ -2179,19 +2179,23 @@ end
 
 
 """
-finds active network buses and branches that are not necessary for the
-computation and sets their status to off.
+propages inactive active network buses status to attached components so that
+the system status values are consistent.
 
-Warning: this implementation has quadratic complexity, in the worst case
+returns true if any component was modified.
 """
 function propagate_topology_status!(data::Dict{String,<:Any})
+    revised = false
+
     if _IM.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
-            _propagate_topology_status!(nw_data)
+            revised |= _propagate_topology_status!(nw_data)
         end
     else
-         _propagate_topology_status!(data)
+        revised = _propagate_topology_status!(data)
     end
+
+    return revised
 end
 
 
@@ -2199,47 +2203,29 @@ end
 function _propagate_topology_status!(data::Dict{String,<:Any})
     buses = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
 
-    for (i,load) in data["load"]
-        if load["status"] != 0 && all(load["pd"] .== 0.0) && all(load["qd"] .== 0.0)
-            Memento.info(_LOGGER, "deactivating load $(load["index"]) due to zero pd and qd")
-            load["status"] = 0
-        end
-    end
-
-    for (i,shunt) in data["shunt"]
-        if shunt["status"] != 0 && all(shunt["gs"] .== 0.0) && all(shunt["bs"] .== 0.0)
-            Memento.info(_LOGGER, "deactivating shunt $(shunt["index"]) due to zero gs and bs")
-            shunt["status"] = 0
-        end
-    end
-
     # compute what active components are incident to each bus
     incident_load = bus_load_lookup(data["load"], data["bus"])
     incident_active_load = Dict()
     for (i, load_list) in incident_load
         incident_active_load[i] = [load for load in load_list if load["status"] != 0]
-        #incident_active_load[i] = filter(load -> load["status"] != 0, load_list)
     end
 
     incident_shunt = bus_shunt_lookup(data["shunt"], data["bus"])
     incident_active_shunt = Dict()
     for (i, shunt_list) in incident_shunt
         incident_active_shunt[i] = [shunt for shunt in shunt_list if shunt["status"] != 0]
-        #incident_active_shunt[i] = filter(shunt -> shunt["status"] != 0, shunt_list)
     end
 
     incident_gen = bus_gen_lookup(data["gen"], data["bus"])
     incident_active_gen = Dict()
     for (i, gen_list) in incident_gen
         incident_active_gen[i] = [gen for gen in gen_list if gen["gen_status"] != 0]
-        #incident_active_gen[i] = filter(gen -> gen["gen_status"] != 0, gen_list)
     end
 
     incident_strg = bus_storage_lookup(data["storage"], data["bus"])
     incident_active_strg = Dict()
     for (i, strg_list) in incident_strg
         incident_active_strg[i] = [strg for strg in strg_list if strg["status"] != 0]
-        #incident_active_strg[i] = filter(strg -> strg["status"] != 0, strg_list)
     end
 
     incident_branch = Dict(bus["bus_i"] => [] for (i,bus) in data["bus"])
@@ -2260,14 +2246,203 @@ function _propagate_topology_status!(data::Dict{String,<:Any})
         push!(incident_switch[switch["t_bus"]], switch)
     end
 
-    updated = true
-    iteration = 0
 
-    while updated
-        while updated
-            iteration += 1
-            updated = false
+    revised = false
 
+    for (i,branch) in data["branch"]
+        if branch["br_status"] != 0
+            f_bus = buses[branch["f_bus"]]
+            t_bus = buses[branch["t_bus"]]
+
+            if f_bus["bus_type"] == 4 || t_bus["bus_type"] == 4
+                Memento.info(_LOGGER, "deactivating branch $(i):($(branch["f_bus"]),$(branch["t_bus"])) due to connecting bus status")
+                branch["br_status"] = 0
+                revised = true
+            end
+        end
+    end
+
+    for (i,dcline) in data["dcline"]
+        if dcline["br_status"] != 0
+            f_bus = buses[dcline["f_bus"]]
+            t_bus = buses[dcline["t_bus"]]
+
+            if f_bus["bus_type"] == 4 || t_bus["bus_type"] == 4
+                Memento.info(_LOGGER, "deactivating dcline $(i):($(dcline["f_bus"]),$(dcline["t_bus"])) due to connecting bus status")
+                dcline["br_status"] = 0
+                revised = true
+            end
+        end
+    end
+
+    for (i,switch) in data["switch"]
+        if switch["status"] != 0
+            f_bus = buses[switch["f_bus"]]
+            t_bus = buses[switch["t_bus"]]
+
+            if f_bus["bus_type"] == 4 || t_bus["bus_type"] == 4
+                Memento.info(_LOGGER, "deactivating switch $(i):($(switch["f_bus"]),$(switch["t_bus"])) due to connecting bus status")
+                switch["status"] = 0
+                revised = true
+            end
+        end
+    end
+
+    for (i,bus) in buses
+        if bus["bus_type"] == 4
+            for load in incident_active_load[i]
+                if load["status"] != 0
+                    Memento.info(_LOGGER, "deactivating load $(load["index"]) due to inactive bus $(i)")
+                    load["status"] = 0
+                    revised = true
+                end
+            end
+
+            for shunt in incident_active_shunt[i]
+                if shunt["status"] != 0
+                    Memento.info(_LOGGER, "deactivating shunt $(shunt["index"]) due to inactive bus $(i)")
+                    shunt["status"] = 0
+                    revised = true
+                end
+            end
+
+            for gen in incident_active_gen[i]
+                if gen["gen_status"] != 0
+                    Memento.info(_LOGGER, "deactivating generator $(gen["index"]) due to inactive bus $(i)")
+                    gen["gen_status"] = 0
+                    revised = true
+                end
+            end
+
+            for strg in incident_active_strg[i]
+                if strg["status"] != 0
+                    Memento.info(_LOGGER, "deactivating storage $(strg["index"]) due to inactive bus $(i)")
+                    strg["status"] = 0
+                    revised = true
+                end
+            end
+        end
+    end
+
+    return revised
+end
+
+
+
+"""
+removes buses with single branch connections and without any other attached
+components.  Also removes connected components without suffuceint generation
+or loads.
+
+also deactivates 0 valued loads and shunts.
+"""
+function deactivate_isolated_components!(data::Dict{String,<:Any})
+    revised = false
+
+    if _IM.ismultinetwork(data)
+        for (i,nw_data) in data["nw"]
+            revised |= _deactivate_isolated_components!(nw_data)
+        end
+    else
+        revised = _deactivate_isolated_components!(data)
+    end
+
+    return revised
+end
+
+
+""
+function _deactivate_isolated_components!(data::Dict{String,<:Any})
+    buses = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
+
+    revised = false
+
+    for (i,load) in data["load"]
+        if load["status"] != 0 && all(load["pd"] .== 0.0) && all(load["qd"] .== 0.0)
+            Memento.info(_LOGGER, "deactivating load $(load["index"]) due to zero pd and qd")
+            load["status"] = 0
+            revised = true
+        end
+    end
+
+    for (i,shunt) in data["shunt"]
+        if shunt["status"] != 0 && all(shunt["gs"] .== 0.0) && all(shunt["bs"] .== 0.0)
+            Memento.info(_LOGGER, "deactivating shunt $(shunt["index"]) due to zero gs and bs")
+            shunt["status"] = 0
+            revised = true
+        end
+    end
+
+
+    # compute what active components are incident to each bus
+    incident_load = bus_load_lookup(data["load"], data["bus"])
+    incident_active_load = Dict()
+    for (i, load_list) in incident_load
+        incident_active_load[i] = [load for load in load_list if load["status"] != 0]
+    end
+
+    incident_shunt = bus_shunt_lookup(data["shunt"], data["bus"])
+    incident_active_shunt = Dict()
+    for (i, shunt_list) in incident_shunt
+        incident_active_shunt[i] = [shunt for shunt in shunt_list if shunt["status"] != 0]
+    end
+
+    incident_gen = bus_gen_lookup(data["gen"], data["bus"])
+    incident_active_gen = Dict()
+    for (i, gen_list) in incident_gen
+        incident_active_gen[i] = [gen for gen in gen_list if gen["gen_status"] != 0]
+    end
+
+    incident_strg = bus_storage_lookup(data["storage"], data["bus"])
+    incident_active_strg = Dict()
+    for (i, strg_list) in incident_strg
+        incident_active_strg[i] = [strg for strg in strg_list if strg["status"] != 0]
+    end
+
+
+    incident_branch = Dict(bus["bus_i"] => [] for (i,bus) in data["bus"])
+    for (i,branch) in data["branch"]
+        push!(incident_branch[branch["f_bus"]], branch)
+        push!(incident_branch[branch["t_bus"]], branch)
+    end
+
+    incident_dcline = Dict(bus["bus_i"] => [] for (i,bus) in data["bus"])
+    for (i,dcline) in data["dcline"]
+        push!(incident_dcline[dcline["f_bus"]], dcline)
+        push!(incident_dcline[dcline["t_bus"]], dcline)
+    end
+
+    incident_switch = Dict(bus["bus_i"] => [] for (i,bus) in data["bus"])
+    for (i,switch) in data["switch"]
+        push!(incident_switch[switch["f_bus"]], switch)
+        push!(incident_switch[switch["t_bus"]], switch)
+    end
+
+
+    changed = true
+    while changed
+        changed = false
+
+        for (i,bus) in buses
+            if bus["bus_type"] != 4
+                incident_active_edge = 0
+                if length(incident_branch[i]) + length(incident_dcline[i]) + length(incident_switch[i]) > 0
+                    incident_branch_count = sum([0; [branch["br_status"] for branch in incident_branch[i]]])
+                    incident_dcline_count = sum([0; [dcline["br_status"] for dcline in incident_dcline[i]]])
+                    incident_switch_count = sum([0; [switch["status"] for switch in incident_switch[i]]])
+                    incident_active_edge = incident_branch_count + incident_dcline_count + incident_switch_count
+                end
+
+                if incident_active_edge == 1 && length(incident_active_gen[i]) == 0 && length(incident_active_load[i]) == 0 && length(incident_active_shunt[i]) == 0 && length(incident_active_strg[i]) == 0
+                    Memento.info(_LOGGER, "deactivating bus $(i) due to dangling bus without generation, load or storage")
+                    bus["bus_type"] = 4
+                    revised = true
+                    changed = true
+                end
+            end
+        end
+
+        if changed
             for (i,branch) in data["branch"]
                 if branch["br_status"] != 0
                     f_bus = buses[branch["f_bus"]]
@@ -2276,7 +2451,6 @@ function _propagate_topology_status!(data::Dict{String,<:Any})
                     if f_bus["bus_type"] == 4 || t_bus["bus_type"] == 4
                         Memento.info(_LOGGER, "deactivating branch $(i):($(branch["f_bus"]),$(branch["t_bus"])) due to connecting bus status")
                         branch["br_status"] = 0
-                        updated = true
                     end
                 end
             end
@@ -2289,7 +2463,6 @@ function _propagate_topology_status!(data::Dict{String,<:Any})
                     if f_bus["bus_type"] == 4 || t_bus["bus_type"] == 4
                         Memento.info(_LOGGER, "deactivating dcline $(i):($(dcline["f_bus"]),$(dcline["t_bus"])) due to connecting bus status")
                         dcline["br_status"] = 0
-                        updated = true
                     end
                 end
             end
@@ -2302,104 +2475,66 @@ function _propagate_topology_status!(data::Dict{String,<:Any})
                     if f_bus["bus_type"] == 4 || t_bus["bus_type"] == 4
                         Memento.info(_LOGGER, "deactivating switch $(i):($(switch["f_bus"]),$(switch["t_bus"])) due to connecting bus status")
                         switch["status"] = 0
-                        updated = true
                     end
                 end
-            end
-
-            for (i,bus) in buses
-                if bus["bus_type"] != 4
-                    incident_active_edge = 0
-                    if length(incident_branch[i]) + length(incident_dcline[i]) + length(incident_switch[i]) > 0
-                        incident_branch_count = sum([0; [branch["br_status"] for branch in incident_branch[i]]])
-                        incident_dcline_count = sum([0; [dcline["br_status"] for dcline in incident_dcline[i]]])
-                        incident_switch_count = sum([0; [switch["status"] for switch in incident_switch[i]]])
-                        incident_active_edge = incident_branch_count + incident_dcline_count + incident_switch_count
-                    end
-
-                    #println("bus $(i) active branch $(incident_active_edge)")
-                    #println("bus $(i) active gen $(incident_active_gen)")
-                    #println("bus $(i) active load $(incident_active_load)")
-                    #println("bus $(i) active shunt $(incident_active_shunt)")
-
-                    if incident_active_edge == 1 && length(incident_active_gen[i]) == 0 && length(incident_active_load[i]) == 0 && length(incident_active_shunt[i]) == 0 && length(incident_active_strg[i]) == 0
-                        Memento.info(_LOGGER, "deactivating bus $(i) due to dangling bus without generation, load or storage")
-                        bus["bus_type"] = 4
-                        updated = true
-                    end
-                else # bus type == 4
-                    for load in incident_active_load[i]
-                        if load["status"] != 0
-                            Memento.info(_LOGGER, "deactivating load $(load["index"]) due to inactive bus $(i)")
-                            load["status"] = 0
-                            updated = true
-                        end
-                    end
-
-                    for shunt in incident_active_shunt[i]
-                        if shunt["status"] != 0
-                            Memento.info(_LOGGER, "deactivating shunt $(shunt["index"]) due to inactive bus $(i)")
-                            shunt["status"] = 0
-                            updated = true
-                        end
-                    end
-
-                    for gen in incident_active_gen[i]
-                        if gen["gen_status"] != 0
-                            Memento.info(_LOGGER, "deactivating generator $(gen["index"]) due to inactive bus $(i)")
-                            gen["gen_status"] = 0
-                            updated = true
-                        end
-                    end
-
-                    for strg in incident_active_strg[i]
-                        if strg["status"] != 0
-                            Memento.info(_LOGGER, "deactivating storage $(strg["index"]) due to inactive bus $(i)")
-                            strg["status"] = 0
-                            updated = true
-                        end
-                    end
-                end
-            end
-        end
-
-        ccs = calc_connected_components(data)
-
-        #println(ccs)
-        #TODO set reference node for each cc
-
-        for cc in ccs
-            cc_active_loads = [0]
-            cc_active_shunts = [0]
-            cc_active_gens = [0]
-            cc_active_strg = [0]
-
-            for i in cc
-                cc_active_loads = push!(cc_active_loads, length(incident_active_load[i]))
-                cc_active_shunts = push!(cc_active_shunts, length(incident_active_shunt[i]))
-                cc_active_gens = push!(cc_active_gens, length(incident_active_gen[i]))
-                cc_active_strg = push!(cc_active_strg, length(incident_active_strg[i]))
-            end
-
-            active_load_count = sum(cc_active_loads)
-            active_shunt_count = sum(cc_active_shunts)
-            active_gen_count = sum(cc_active_gens)
-            active_strg_count = sum(cc_active_strg)
-
-            if (active_load_count == 0 && active_shunt_count == 0 && active_strg_count == 0) || active_gen_count == 0
-                Memento.info(_LOGGER, "deactivating connected component $(cc) due to isolation without generation, load or storage")
-                for i in cc
-                    buses[i]["bus_type"] = 4
-                end
-                updated = true
             end
         end
 
     end
 
-    Memento.info(_LOGGER, "topology status propagation fixpoint reached in $(iteration) rounds")
 
-    correct_reference_buses!(data)
+    ccs = calc_connected_components(data)
+
+    for cc in ccs
+        cc_active_loads = [0]
+        cc_active_shunts = [0]
+        cc_active_gens = [0]
+        cc_active_strg = [0]
+
+        for i in cc
+            cc_active_loads = push!(cc_active_loads, length(incident_active_load[i]))
+            cc_active_shunts = push!(cc_active_shunts, length(incident_active_shunt[i]))
+            cc_active_gens = push!(cc_active_gens, length(incident_active_gen[i]))
+            cc_active_strg = push!(cc_active_strg, length(incident_active_strg[i]))
+        end
+
+        active_load_count = sum(cc_active_loads)
+        active_shunt_count = sum(cc_active_shunts)
+        active_gen_count = sum(cc_active_gens)
+        active_strg_count = sum(cc_active_strg)
+
+        if (active_load_count == 0 && active_shunt_count == 0 && active_strg_count == 0) || active_gen_count == 0
+            Memento.info(_LOGGER, "deactivating connected component $(cc) due to isolation without generation, load or storage")
+            for i in cc
+                buses[i]["bus_type"] = 4
+            end
+            revised = true
+        end
+    end
+
+    return revised
+end
+
+
+"""
+attempts to deactive components that are not needed in the network by repeated
+calls to `propagate_topology_status!` and `deactivate_isolated_components!`
+
+warning: this implementation has quadratic complexity, in the worst case
+"""
+function simplify_network!(data::Dict{String,<:Any})
+    revised = true
+    iteration = 0
+
+    while revised
+        iteration += 1
+        revised = false
+        revised |= propagate_topology_status!(data)
+        revised |= deactivate_isolated_components!(data)
+    end
+
+    Memento.info(_LOGGER, "network simplification fixpoint reached in $(iteration) rounds")
+    return revised
 end
 
 
