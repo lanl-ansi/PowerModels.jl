@@ -1,4 +1,4 @@
-# Network Models
+# Network Formulations
 
 ## Type Hierarchy
 We begin with the top of the hierarchy, where we can distinguish between AC and DC power flow models.
