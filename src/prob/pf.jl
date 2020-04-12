@@ -108,6 +108,7 @@ end
 
 
 
+
 """
 internal data required used solving an ac power flow
 
@@ -207,7 +208,7 @@ end
 
 function compute_ac_pf(file::String; kwargs...)
     data = parse_file(file)
-    compute_ac_pf(data, kwargs...)
+    return compute_ac_pf(data, kwargs...)
 end
 
 function compute_ac_pf(data::Dict{String,<:Any}; kwargs...)
@@ -216,7 +217,7 @@ function compute_ac_pf(data::Dict{String,<:Any}; kwargs...)
     # all buses of type 2/3 have generators on them
 
     pf_data = instantiate_pf_data(data)
-    compute_ac_pf(pf_data, kwargs...)
+    return compute_ac_pf(pf_data, kwargs...)
 end
 
 
@@ -227,7 +228,7 @@ matrix of the network data using the NLSolve package.
 returns a solution data structure in PowerModels Dict format
 """
 function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
-    result = _compute_ac_pf(pf_data,  kwargs...)
+    result = _compute_ac_pf(pf_data, kwargs...)
 
     if !(result.x_converged || result.f_converged)
         Memento.warn(_LOGGER, "ac power flow solver convergence failed!  use `show_trace = true` for more details")
@@ -319,7 +320,7 @@ similar to compute_ac_pf but places the solution in the power model's data
 dict instead of a seperate result object
 """
 function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
-    result = _compute_ac_pf(pf_data,  kwargs...)
+    result = _compute_ac_pf(pf_data, kwargs...)
 
     if !(result.x_converged || result.f_converged)
         Memento.warn(_LOGGER, "ac power flow solver convergence failed!  use `show_trace = true` for more details")
@@ -372,10 +373,6 @@ end
 
 
 function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_start=false, kwargs...)
-    # TODO check invariants
-    # single connected component
-    # all buses of type 2/3 have generators on them
-
     data = pf_data.data
     am = pf_data.am
     bus_type_idx = pf_data.bus_type_idx
@@ -390,7 +387,7 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
     F0 = pf_data.F0
     J0 = pf_data.J0
 
-
+    # ac power flow, nodal power balance function eval
     function f!(F::Vector{Float64}, x::Vector{Float64})
         for i in eachindex(am.idx_to_bus)
             if bus_type_idx[i] == 1
@@ -435,6 +432,7 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
     end
 
 
+    # ac power flow, sparse jacobian computation
     function jsp!(J::SparseMatrixCSC{Float64,Int64}, x::Vector{Float64})
         for i in eachindex(am.idx_to_bus)
             f_i_r = 2*i - 1
@@ -507,6 +505,7 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
         end
     end
 
+    # warm-start point
     if !flat_start
         p_inject = Dict{Int,Float64}(bus["index"] => 0.0 for (i,bus) in data["bus"])
         q_inject = Dict{Int,Float64}(bus["index"] => 0.0 for (i,bus) in data["bus"])
@@ -558,6 +557,7 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
     end
 
 
+    # this is where the magic happens
     if finite_differencing
         result = NLsolve.nlsolve(f!, x0; kwargs...)
     else
