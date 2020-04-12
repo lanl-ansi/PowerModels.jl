@@ -17,5 +17,5 @@ The following functions are meta-algorithms for solving OPF problems where line 
 
 ```@docs
 run_opf_flow_cuts
-run_ptdf_opf_flow_cuts
+run_opf_ptdf_flow_cuts
 ```

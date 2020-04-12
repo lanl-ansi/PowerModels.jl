@@ -9,11 +9,7 @@ case3file = Pkg.dir(dirname(@__DIR__), "test", "data", "matpower", "case3.m")
 
 There are occasions when it is desirable to co-optimize multiple networks, these networks might encode time for dynamic network optimization, or scenarios for stochastic optimization.
 
-To distinguish between network data (see [The Network Data Dictionary](@ref)) that correspond to a single network or to multiple networks, PowerModels.jl provides
-```@docs
-PowerModels.ismultinetwork
-```
-For example, we can do the following:
+To distinguish between network data (see [The Network Data Dictionary](@ref)) that correspond to a single network or to multiple networks, PowerModels.jl provides the function `ismultinetwork()`.  For example, we can do the following:
 ```@example powermodels
 network_data = PowerModels.parse_file(case3file)
 pm = instantiate_model(network_data, ACPPowerModel, PowerModels.build_opf)

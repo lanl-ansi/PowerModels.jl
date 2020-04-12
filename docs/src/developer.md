@@ -93,57 +93,102 @@ $y = g + j\cdot b$:
 ## DistFlow derivation
 
 ### For an asymmetric pi section
-Following notation of [^1], but recognizing it derives the SOC BFM without shunts. In a pi-section, part of the total current $I_{lij}$ at the from side flows through the series impedance, $I^{s}_{lij}$, part of it flows through the from side shunt admittance $I^{sh}_{lij}$. Vice versa for the to-side. Indicated by superscripts 's' (series) and 'sh' (shunt).
-- Ohm's law: $U^{mag}_{j} \angle \theta_{j} = U^{mag}_{i}\angle \theta_{i}  - z^{s}_{lij} \cdot I^{s}_{lij}$ $\forall lij$
-- KCL at shunts: $ I_{lij} = I^{s}_{lij} + I^{sh}_{lij}$, $ I_{lji} = I^{s}_{lji} + I^{sh}_{lji} $
-- Observing: $I^{s}_{lij} = - I^{s}_{lji}$, $ \vert I^{s}_{lij} \vert = \vert I^{s}_{lji} \vert $
-- Ohm's law times its own complex conjugate: $(U^{mag}_{j})^2 = (U^{mag}_{i}\angle \theta_{i}  - z^{s}_{lij} \cdot I^{s}_{lij})\cdot (U^{mag}_{i}\angle \theta_{i}  - z^{s}_{lij} \cdot I^{s}_{lij})^*$
-- Defining $S^{s}_{lij} = P^{s}_{lij} + j\cdot Q^{s}_{lij} = (U^{mag}_{i}\angle \theta_{i}) \cdot (I^{s}_{lij})^*$
-- Working it out $(U^{mag}_{j})^2 = (U^{mag}_{i})^2 - 2 \cdot(r^{s}_{lij} \cdot P^{s}_{lij} + x^{s}_{lij} \cdot Q^{s}_{lij}) $ + $((r^{s}_{lij})^2 + (x^{s}_{lij})^2)\vert I^{s}_{lij} \vert^2$
+Following notation of [^1], but recognizing it derives the SOC BFM without shunts.
+In a pi-section, part of the total current $I_{lij}$ at the from side flows 
+through the series impedance, $I^{s}_{lij}$, part of it flows through the from
+side shunt admittance $I^{sh}_{lij}$. Vice versa for the to-side. Indicated by
+superscripts 's' (series) and 'sh' (shunt).
+```math
+\begin{align}
+& \mbox{Ohm's law: }  U^{mag}_{j} \angle \theta_{j} = U^{mag}_{i}\angle \theta_{i}  - z^{s}_{lij} \cdot I^{s}_{lij} \nonumber \\
+& \mbox{KCL at shunts: }  I_{lij} = I^{s}_{lij} + I^{sh}_{lij}, I_{lji} = I^{s}_{lji} + I^{sh}_{lji} \nonumber \\
+& \mbox{Observing: }  Observing: I^{s}_{lij} = - I^{s}_{lji}, \vert I^{s}_{lij} \vert = \vert I^{s}_{lji} \vert \nonumber \\
+& \mbox{Ohm's law times its own complex conjugate: } (U^{mag}_{j})^2 = (U^{mag}_{i}\angle \theta_{i}  - z^{s}_{lij} \cdot I^{s}_{lij})\cdot (U^{mag}_{i}\angle \theta_{i}  - z^{s}_{lij} \cdot I^{s}_{lij})^* \nonumber \\
+& \mbox{Defining: } S^{s}_{lij} = P^{s}_{lij} + j\cdot Q^{s}_{lij} = (U^{mag}_{i}\angle \theta_{i}) \cdot (I^{s}_{lij})^* \nonumber \\
+& \mbox{Working it out: } (U^{mag}_{j})^2 = (U^{mag}_{i})^2 - 2 \cdot(r^{s}_{lij} \cdot P^{s}_{lij} + x^{s}_{lij} \cdot Q^{s}_{lij})  + ((r^{s}_{lij})^2 + (x^{s}_{lij})^2)\vert I^{s}_{lij} \vert^2 \nonumber \\
+\end{align}
+```
 
 Power flow balance w.r.t. branch *total* losses
-- Active power flow:   $P_{lij}$ + $ P_{lji} $ = $  g^{sh}_{lij} \cdot (U^{mag}_{i})^2 + r^{s}_{l} \cdot \vert I^{s}_{lij} \vert^2 +  g^{sh}_{lji} \cdot  (U^{mag}_{j})^2 $
-- Reactive power flow: $Q_{lij}$ + $ Q_{lji} $ = $ -b^{sh}_{lij} \cdot (U^{mag}_{i})^2 + x^{s}_{l} \cdot \vert I^{s}_{lij} \vert^2  - b^{sh}_{lji} \cdot  (U^{mag}_{j})^2 $
-- Current definition: $ \vert S^{s}_{lij} \vert^2  $ $=(U^{mag}_{i})^2 \cdot \vert I^{s}_{lij} \vert^2 $
+```math
+\begin{align}
+& \mbox{Active power flow: } P_{lij} + P_{lji} = g^{sh}_{lij} \cdot (U^{mag}_{i})^2 + r^{s}_{l} \cdot \vert I^{s}_{lij} \vert^2 +  g^{sh}_{lji} \cdot (U^{mag}_{j})^2 \nonumber \\
+& \mbox{Reactive power flow: } Q_{lij} + Q_{lji} = -b^{sh}_{lij} \cdot (U^{mag}_{i})^2 + x^{s}_{l} \cdot \vert I^{s}_{lij} \vert^2  - b^{sh}_{lji} \cdot (U^{mag}_{j})^2 \nonumber \\
+& \mbox{Current definition: } \vert S^{s}_{lij} \vert^2 = (U^{mag}_{i})^2 \cdot \vert I^{s}_{lij} \vert^2 \nonumber \\
+\end{align}
+```
 
 Substitution:
-- Voltage from: $(U^{mag}_{i})^2 \rightarrow w_{i}$
-- Voltage to: $(U^{mag}_{j})^2 \rightarrow w_{j}$
-- Series current : $\vert I^{s}_{lij} \vert^2 \rightarrow l^{s}_{l}$
-Note that $l^{s}_{l}$ represents squared magnitude of the *series* current, i.e. the current flow through the series impedance in the pi-model.
+```math
+\begin{align}
+& \mbox{Voltage from: } (U^{mag}_{i})^2 \rightarrow w_{i} \nonumber \\
+& \mbox{Voltage to: } (U^{mag}_{j})^2 \rightarrow w_{j} \nonumber \\
+& \mbox{Series current: } \vert I^{s}_{lij} \vert^2  \rightarrow l^{s}_{l} \nonumber \\
+\end{align}
+```
 
+Note that $l^{s}_{l}$ represents squared magnitude of the *series* current,
+i.e. the current flow through the series impedance in the pi-model.
 Power flow balance w.r.t. branch *total* losses
-- Active power flow:   $P_{lij}$ + $ P_{lji} $ = $  g^{sh}_{lij} \cdot w_{i} + r^{s}_{l} \cdot l^{s}_{l} +  g^{sh}_{lji} \cdot  w_{j} $
-- Reactive power flow: $Q_{lij}$ + $ Q_{lji} $ = $ -b^{sh}_{lij} \cdot w_{i} + x^{s}_{l} \cdot l^{s}_{l}  - b^{sh}_{lji} \cdot  w_{j} $
+```math
+\begin{align}
+& \mbox{Active power flow: } P_{lij} + P_{lji} = g^{sh}_{lij} \cdot w_{i} + r^{s}_{l} \cdot l^{s}_{l} +  g^{sh}_{lji} \cdot  w_{j}  \nonumber \\
+& \mbox{Reactive power flow: } Q_{lij} + Q_{lji} = -b^{sh}_{lij} \cdot w_{i} + x^{s}_{l} \cdot l^{s}_{l}  - b^{sh}_{lji} \cdot  w_{j} \nonumber \\
+\end{align}
+```
+
 
 Power flow balance w.r.t. branch *series* losses:
-- Series active power flow : $P^{s}_{lij} + P^{s}_{lji}$ $ = r^{s}_{l} \cdot l^{s}_{l} $
-- Series reactive power flow: $Q^{s}_{lij} + Q^{s}_{lji}$ $ = x^{s}_{l} \cdot l^{s}_{l} $
+```math
+\begin{align}
+& \mbox{Active power flow: } P^{s}_{lij} + P^{s}_{lji}  = r^{s}_{l} \cdot l^{s}_{l}  \nonumber \\
+& \mbox{Reactive power flow: } Q^{s}_{lij} + Q^{s}_{lji}  = x^{s}_{l} \cdot l^{s}_{l}  \nonumber \\
+\end{align}
+```
 
 Valid equality to link $w_{i}, l_{lij}, P^{s}_{lij}, Q^{s}_{lij}$:
-- Nonconvex current definition: $(P^{s}_{lij})^2$ + $(Q^{s}_{lij})^2$  $=w_{i} \cdot l_{lij} $
-- SOC current definition: $(P^{s}_{lij})^2$ + $(Q^{s}_{lij})^2$  $\leq$ $ w_{i} \cdot l_{lij} $
+```math
+\begin{align}
+& \mbox{Nonconvex current definition: } (P^{s}_{lij})^2 + (Q^{s}_{lij})^2   =w_{i} \cdot l_{lij}  \nonumber \\
+& \mbox{SOC current definition: } (P^{s}_{lij})^2 + (Q^{s}_{lij})^2   \leq w_{i} \cdot l_{lij}  \nonumber \\
+\end{align}
+```
 
 
 ### Adding an ideal transformer
-Adding an ideal transformer at the from side implicitly creates an internal branch voltage, between the transformer and the pi-section.
-- new voltage: $w^{'}_{l}$
-- ideal voltage magnitude transformer: $w^{'}_{l} = \frac{w_{i}}{(t^{mag})^2}$
+Adding an ideal transformer at the from side implicitly creates an internal
+branch voltage, between the transformer and the pi-section.
+```math
+\begin{align}
+& \mbox{New voltage: } w^{'}_{l} \nonumber \\
+& \mbox{Ideal voltage magnitude transformer: } w^{'}_{l} = \frac{w_{i}}{(t^{mag})^2} \nonumber \\
+\end{align}
+```
 
 W.r.t to the pi-section only formulation, we effectively perform the following substitution in all the equations above:
-- $ w_{i} \rightarrow \frac{w_{i}}{(t^{mag})^2}$
+```math
+\begin{align}
+& w_{i} \rightarrow \frac{w_{i}}{(t^{mag})^2} \nonumber \\
+\end{align}
+```
 
 The branch's power balance isn't otherwise impacted by adding the ideal transformer, as such transformer is lossless.
 
 ### Adding total current limits
-- Total current from: $ \vert I_{lij} \vert \leq I^{rated}_{l}$
-- Total current to: $ \vert I_{lji} \vert \leq I^{rated}_{l}$
+```math
+\begin{align}
+& \mbox{Total current from: }  \vert I_{lij} \vert \leq I^{rated}_{l} \nonumber \\
+& \mbox{Total current to: }  \vert I_{lji} \vert \leq I^{rated}_{l} \nonumber \\
+\end{align}
+```
 
 In squared voltage magnitude variables:
-- Total current from: $ (P_{lij})^2$ + $(Q_{lij})^2  \leq (I^{rated}_{l})^2 \cdot  w_{i}$
-- Total current to: $ (P_{lji})^2$ + $(Q_{lji})^2  \leq (I^{rated}_{l})^2 \cdot w_{j}$
-
-
+```math
+\begin{align*}
+& \mbox{Total current from: }  (P_{lij})^2 + (Q_{lij})^2  \leq (I^{rated}_{l})^2 \cdot  w_{i} \nonumber \\
+& \mbox{Total current to: }  (P_{lji})^2 + (Q_{lji})^2  \leq (I^{rated}_{l})^2 \cdot w_{j} \nonumber \\
+\end{align*}
+```
 
 
 [^1] Gan, L., Li, N., Topcu, U., & Low, S. (2012). Branch flow model for radial networks: convex relaxation. 51st IEEE Conference on Decision and Control, 1–8. Retrieved from http://smart.caltech.edu/papers/ExactRelaxation.pdf

@@ -37,14 +37,8 @@ constraint_voltage_magnitude_setpoint
 
 ```@docs
 constraint_power_balance
-```
-
-### KCL Constraints
-
-```@docs
-constraint_power_balance_shunt
-constraint_power_balance_shunt_storage
-constraint_power_balance_shunt_ne
+constraint_power_balance_ls
+constraint_power_balance_ne
 ```
 
 ## Branch Constraints
@@ -114,7 +108,8 @@ constraint_voltage_magnitude_difference
 ```@docs
 constraint_storage_thermal_limit
 constraint_storage_current_limit
-constraint_storage_complementarity
+constraint_storage_complementarity_nl
+constraint_storage_complementarity_mi
 constraint_storage_loss
 constraint_storage_state_initial
 constraint_storage_state

@@ -21,6 +21,7 @@ PTI `.raw` files in the PSS(R)E v33 specification can be run similarly, e.g. in 
 run_ac_opf("case3.raw", with_optimizer(Ipopt.Optimizer))
 ```
 
+
 ## Getting Results
 
 The run commands in PowerModels return detailed results data in the form of a dictionary. Results dictionaries from either Matpower `.m` or PTI `.raw` files will be identical in format. This dictionary can be saved for further processing as follows,
@@ -48,7 +49,7 @@ The `print_summary(result["solution"])` function can be used show an table-like 
 
 ## Accessing Different Formulations
 
-The function `run_ac_opf` and `run_dc_opf` are shorthands for a more general formulation-independent OPF execution, "run_opf".
+The function `run_ac_opf` and `run_dc_opf` are shorthands for a more general formulation-independent OPF execution, `run_opf`.
 For example, `run_ac_opf` is equivalent to,
 
 ```julia
@@ -61,7 +62,11 @@ where "ACPPowerModel" indicates an AC formulation in polar coordinates.  This mo
 run_opf("matpower/case3.m", SOCWRPowerModel, with_optimizer(Ipopt.Optimizer))
 ```
 
+[Formulation Details](@ref) provides a list of available formulations.
+
+
 ## Modifying Network Data
+
 The following example demonstrates one way to perform multiple PowerModels solves while modifing the network data in Julia,
 
 ```julia
@@ -83,7 +88,9 @@ network_data = PowerModels.parse_file("pti/case3.raw"; import_all=true)
 
 This network data can be modified in the same way as the previous Matpower `.m` file example. For additional details about the network data, see the [PowerModels Network Data Format](@ref) section.
 
+
 ## Inspecting AC and DC branch flow results
+
 The flow AC and DC branch results are written to the result by default. The following can be used to inspect the flow results:
 ```julia
 result = run_opf("matpower/case3_dc.m", ACPPowerModel, with_optimizer(Ipopt.Optimizer))
@@ -109,7 +116,7 @@ print(pm.model)
 result = optimize_model!(pm, optimizer=with_optimizer(Ipopt.Optimizer))
 ```
 
-Alternatively, you can further break it up by parsing a file into a network data dictionary, before passing it on to `instantiate_model()` like so
+Alternatively, you can further break it up by parsing a file into a network data dictionary, before passing it on to `instantiate_model()` like so,
 
 ```julia
 network_data = PowerModels.parse_file("matpower/case3.m")
