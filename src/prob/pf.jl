@@ -117,6 +117,7 @@ between successive power flow solves
 """
 struct PowerFlowData
     data::Dict{String,<:Any}
+    bus_gens::Dict{Int,Array}
     am::AdmittanceMatrix{Complex{Float64}}
     bus_type_idx::Vector{Int}
     p_delta_base_idx::Vector{Float64}
@@ -149,6 +150,26 @@ function instantiate_pf_data(data::Dict{String,<:Any})
             end
         end
     end
+
+
+    bus_gens = Dict{Int,Array{Any}}()
+    for (i,gen) in data["gen"]
+        # skip inactive generators
+        if gen["gen_status"] == 0
+            continue
+        end
+
+        gen_bus_id = gen["gen_bus"]
+        if !haskey(bus_gens, gen_bus_id)
+            bus_gens[gen_bus_id] = []
+        end
+        push!(bus_gens[gen_bus_id], gen)
+    end
+
+    for (bus_id, gens) in bus_gens
+        sort!(gens, by=x -> (x["qmax"] - x["qmin"], x["index"]))
+    end
+
 
     am = calc_admittance_matrix(data)
 
@@ -201,7 +222,7 @@ function instantiate_pf_data(data::Dict{String,<:Any})
     end
     J0 = sparse(J0_I, J0_J, J0_V)
 
-    return PowerFlowData(data, am, bus_type_idx, p_delta_base_idx, q_delta_base_idx, p_inject_idx, q_inject_idx, vm_idx, va_idx, neighbors, x0, F0, J0)
+    return PowerFlowData(data, bus_gens, am, bus_type_idx, p_delta_base_idx, q_delta_base_idx, p_inject_idx, q_inject_idx, vm_idx, va_idx, neighbors, x0, F0, J0)
 end
 
 
@@ -236,8 +257,10 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
     end
 
     data = pf_data.data
+    bus_gens = pf_data.bus_gens
     am = pf_data.am
     bus_type_idx = pf_data.bus_type_idx
+
 
     bus_assignment= Dict{String,Any}()
     for (i,bus) in data["bus"]
@@ -259,30 +282,12 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
         end
     end
 
-    bus_gens = Dict{Int,Array{Any}}()
-    for (i,gen) in gen_assignment
-        # skip inactive generators
-        if data["gen"][i]["gen_status"] == 0
-            continue
-        end
-
-        gen_bus_id = data["gen"][i]["gen_bus"]
-        if !haskey(bus_gens, gen_bus_id)
-            bus_gens[gen_bus_id] = []
-        end
-        push!(bus_gens[gen_bus_id], data["gen"][i])
-    end
-
-    for (bus_id, gens) in bus_gens
-        sort!(gens, by=x -> (x["qmax"] - x["qmin"], x["index"]))
-    end
-
 
     for (i,bid) in enumerate(am.idx_to_bus)
         bus = bus_assignment["$(bid)"]
 
         if bus_type_idx[i] == 1
-            @assert !haskey(bid, bus_gens)
+            @assert !haskey(bus_gens, bid)
             bus["vm"] = result.zero[2*i - 1]
             bus["va"] = result.zero[2*i]
         elseif bus_type_idx[i] == 2
@@ -420,34 +425,16 @@ function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
     end
 
     data = pf_data.data
+    bus_gens = pf_data.bus_gens
     am = pf_data.am
     bus_type_idx = pf_data.bus_type_idx
-
-
-    bus_gens = Dict{Int,Array{Any}}()
-    for (i,gen) in data["gen"]
-        # skip inactive generators
-        if gen["gen_status"] == 0
-            continue
-        end
-
-        gen_bus_id = gen["gen_bus"]
-        if !haskey(bus_gens, gen_bus_id)
-            bus_gens[gen_bus_id] = []
-        end
-        push!(bus_gens[gen_bus_id], gen)
-    end
-
-    for (bus_id, gens) in bus_gens
-        sort!(gens, by=x -> (x["qmax"] - x["qmin"], x["index"]))
-    end
 
 
     for (i,bid) in enumerate(am.idx_to_bus)
         bus = data["bus"]["$(bid)"]
 
         if bus_type_idx[i] == 1
-            @assert !haskey(bid, bus_gens)
+            @assert !haskey(bus_gens, bid)
             bus["vm"] = result.zero[2*i - 1]
             bus["va"] = result.zero[2*i]
         elseif bus_type_idx[i] == 2
