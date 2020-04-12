@@ -259,40 +259,133 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
         end
     end
 
-    bus_gen = Dict{Int,Any}()
+    bus_gens = Dict{Int,Array{Any}}()
     for (i,gen) in gen_assignment
-        gen_bus_id = data["gen"][i]["gen_bus"]
-        if !haskey(bus_gen, gen_bus_id)
-            bus_gen[gen_bus_id] = gen
+        # skip inactive generators
+        if data["gen"][i]["gen_status"] == 0
+            continue
         end
 
-        gen_bus = data["bus"]["$(gen_bus_id)"]
-        if gen_bus["bus_type"] == 1
-            @assert false
-        elseif gen_bus["bus_type"] == 2
-            gen["qg"] = 0.0
-        elseif gen_bus["bus_type"] == 3
-            gen["pg"] = 0.0
-            gen["qg"] = 0.0
-        else
-            @assert false
+        gen_bus_id = data["gen"][i]["gen_bus"]
+        if !haskey(bus_gens, gen_bus_id)
+            bus_gens[gen_bus_id] = []
         end
+        push!(bus_gens[gen_bus_id], data["gen"][i])
     end
+
+    for (bus_id, gens) in bus_gens
+        sort!(gens, by=x -> (x["qmax"] - x["qmin"], x["index"]))
+    end
+
 
     for (i,bid) in enumerate(am.idx_to_bus)
         bus = bus_assignment["$(bid)"]
 
         if bus_type_idx[i] == 1
+            @assert !haskey(bid, bus_gens)
             bus["vm"] = result.zero[2*i - 1]
             bus["va"] = result.zero[2*i]
         elseif bus_type_idx[i] == 2
-            gen = bus_gen[bid]
-            gen["qg"] = -result.zero[2*i - 1]
+
+            for gen in bus_gens[bid]
+                gen_sol = gen_assignment["$(gen["index"])"]
+                gen_sol["qg"] = 0.0
+            end
+
+            qg_remaining = -result.zero[2*i - 1]
+            for gen in bus_gens[bid][1:end-1]
+                qmin = gen["qmin"]
+                qmax = gen["qmax"]
+
+                if (qg_remaining <= 0.0 && qmin >= 0.0) || (qg_remaining >= 0.0 && qmax <= 0.0)
+                    # keep qg assignment as zero
+                    continue
+                end
+
+                gen_sol = gen_assignment["$(gen["index"])"]
+                if qg_remaining < qmin
+                    gen_sol["qg"] = qmin
+                elseif qg_remaining > qmax
+                    gen_sol["qg"] = qmax
+                else
+                    gen_sol["qg"] = qg_remaining
+                    qg_remaining = 0.0
+                    break
+                end
+                qg_remaining -= gen_sol["qg"]
+            end
+            if !isapprox(qg_remaining, 0.0)
+                gen = bus_gens[bid][end]
+                gen_sol = gen_assignment["$(gen["index"])"]
+                gen_sol["qg"] = qg_remaining
+            end
+
             bus["va"] = result.zero[2*i]
+
         elseif bus_type_idx[i] == 3
-            gen = bus_gen[bid]
-            gen["pg"] = -result.zero[2*i - 1]
-            gen["qg"] = -result.zero[2*i]
+            for gen in bus_gens[bid]
+                gen_sol = gen_assignment["$(gen["index"])"]
+                gen_sol["pg"] = 0.0
+                gen_sol["qg"] = 0.0
+            end
+
+            pg_remaining = -result.zero[2*i - 1]
+            for gen in bus_gens[bid][1:end-1]
+                pmin = gen["pmin"]
+                pmax = gen["pmax"]
+
+                if (pg_remaining <= 0.0 && pmin >= 0.0) || (pg_remaining >= 0.0 && pmax <= 0.0)
+                    # keep pg assignment as zero
+                    continue
+                end
+
+                gen_sol = gen_assignment["$(gen["index"])"]
+                if pg_remaining < pmin
+                    gen_sol["pg"] = pmin
+                elseif pg_remaining > pmax
+                    gen_sol["pg"] = pmax
+                else
+                    gen_sol["pg"] = pg_remaining
+                    pg_remaining = 0.0
+                    break
+                end
+                pg_remaining -= gen_sol["pg"]
+            end
+            if !isapprox(pg_remaining, 0.0)
+                gen = bus_gens[bid][end]
+                gen_sol = gen_assignment["$(gen["index"])"]
+                gen_sol["pg"] = pg_remaining
+            end
+
+
+            qg_remaining = -result.zero[2*i]
+            for gen in bus_gens[bid][1:end-1]
+                qmin = gen["qmin"]
+                qmax = gen["qmax"]
+
+                if (qg_remaining <= 0.0 && qmin >= 0.0) || (qg_remaining >= 0.0 && qmax <= 0.0)
+                    # keep qg assignment as zero
+                    continue
+                end
+
+                gen_sol = gen_assignment["$(gen["index"])"]
+                if qg_remaining < qmin
+                    gen_sol["qg"] = qmin
+                elseif qg_remaining > qmax
+                    gen_sol["qg"] = qmax
+                else
+                    gen_sol["qg"] = qg_remaining
+                    qg_remaining = 0.0
+                    break
+                end
+                qg_remaining -= gen_sol["qg"]
+            end
+            if !isapprox(qg_remaining, 0.0)
+                gen = bus_gens[bid][end]
+                gen_sol = gen_assignment["$(gen["index"])"]
+                gen_sol["qg"] = qg_remaining
+            end
+
         else
             @assert false
         end
@@ -331,40 +424,123 @@ function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
     bus_type_idx = pf_data.bus_type_idx
 
 
-    bus_gen = Dict{Int,Any}()
+    bus_gens = Dict{Int,Array{Any}}()
     for (i,gen) in data["gen"]
-        gen_bus_id = data["gen"][i]["gen_bus"]
-        if !haskey(bus_gen, gen_bus_id)
-            bus_gen[gen_bus_id] = gen
+        # skip inactive generators
+        if gen["gen_status"] == 0
+            continue
         end
 
-        gen_bus = data["bus"]["$(gen_bus_id)"]
-        if gen_bus["bus_type"] == 1
-            @assert false
-        elseif gen_bus["bus_type"] == 2
-            gen["qg"] = 0.0
-        elseif gen_bus["bus_type"] == 3
-            gen["pg"] = 0.0
-            gen["qg"] = 0.0
-        else
-            @assert false
+        gen_bus_id = gen["gen_bus"]
+        if !haskey(bus_gens, gen_bus_id)
+            bus_gens[gen_bus_id] = []
         end
+        push!(bus_gens[gen_bus_id], gen)
     end
+
+    for (bus_id, gens) in bus_gens
+        sort!(gens, by=x -> (x["qmax"] - x["qmin"], x["index"]))
+    end
+
 
     for (i,bid) in enumerate(am.idx_to_bus)
         bus = data["bus"]["$(bid)"]
 
         if bus_type_idx[i] == 1
+            @assert !haskey(bid, bus_gens)
             bus["vm"] = result.zero[2*i - 1]
             bus["va"] = result.zero[2*i]
         elseif bus_type_idx[i] == 2
-            gen = bus_gen[bid]
-            gen["qg"] = -result.zero[2*i - 1]
+            for gen in bus_gens[bid]
+                gen["qg"] = 0.0
+            end
+
+            qg_remaining = -result.zero[2*i - 1]
+            for gen in bus_gens[bid][1:end-1]
+                qmin = gen["qmin"]
+                qmax = gen["qmax"]
+
+                if (qg_remaining <= 0.0 && qmin >= 0.0) || (qg_remaining >= 0.0 && qmax <= 0.0)
+                    # keep qg assignment as zero
+                    continue
+                end
+
+                if qg_remaining < qmin
+                    gen["qg"] = qmin
+                elseif qg_remaining > qmax
+                    gen["qg"] = qmax
+                else
+                    gen["qg"] = qg_remaining
+                    qg_remaining = 0.0
+                    break
+                end
+                qg_remaining -= gen["qg"]
+            end
+            if !isapprox(qg_remaining, 0.0)
+                gen = bus_gens[bid][end]
+                gen["qg"] = qg_remaining
+            end
+
             bus["va"] = result.zero[2*i]
+
         elseif bus_type_idx[i] == 3
-            gen = bus_gen[bid]
-            gen["pg"] = -result.zero[2*i - 1]
-            gen["qg"] = -result.zero[2*i]
+            for gen in bus_gens[bid]
+                gen["pg"] = 0.0
+                gen["qg"] = 0.0
+            end
+
+            pg_remaining = -result.zero[2*i - 1]
+            for gen in bus_gens[bid][1:end-1]
+                pmin = gen["pmin"]
+                pmax = gen["pmax"]
+
+                if (pg_remaining <= 0.0 && pmin >= 0.0) || (pg_remaining >= 0.0 && pmax <= 0.0)
+                    # keep pg assignment as zero
+                    continue
+                end
+
+                if pg_remaining < pmin
+                    gen["pg"] = pmin
+                elseif pg_remaining > pmax
+                    gen["pg"] = pmax
+                else
+                    gen["pg"] = pg_remaining
+                    pg_remaining = 0.0
+                    break
+                end
+                pg_remaining -= gen["pg"]
+            end
+            if !isapprox(pg_remaining, 0.0)
+                gen = bus_gens[bid][end]
+                gen["pg"] = pg_remaining
+            end
+
+
+            qg_remaining = -result.zero[2*i]
+            for gen in bus_gens[bid][1:end-1]
+                qmin = gen["qmin"]
+                qmax = gen["qmax"]
+
+                if (qg_remaining <= 0.0 && qmin >= 0.0) || (qg_remaining >= 0.0 && qmax <= 0.0)
+                    # keep qg assignment as zero
+                    continue
+                end
+
+                if qg_remaining < qmin
+                    gen["qg"] = qmin
+                elseif qg_remaining > qmax
+                    gen["qg"] = qmax
+                else
+                    gen["qg"] = qg_remaining
+                    qg_remaining = 0.0
+                    break
+                end
+                qg_remaining -= gen["qg"]
+            end
+            if !isapprox(qg_remaining, 0.0)
+                gen = bus_gens[bid][end]
+                gen["qg"] = qg_remaining
+            end
         else
             @assert false
         end
