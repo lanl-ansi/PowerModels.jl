@@ -112,12 +112,29 @@ end
 """
 internal data required used solving an ac power flow
 
-the primay use of this data structure is to prevent reallocaiton of memory
+the primary use of this data structure is to prevent re-allocation of memory
 between successive power flow solves
+
+* `data` -- a power models data dictionary
+* `bus_gens` -- for each bus id, a list of active generators
+* `am` -- an admittance matrix computed from the data dictionary
+* `bus_type_idx` -- bus types (i.e., 1, 2, 3)
+* `p_delta_base_idx` -- fixed active power delta at a bus
+* `q_delta_base_idx` -- fixed reactive power delta at a bus
+* `p_inject_idx` -- variable active power generator injection at a bus
+* `q_inject_idx` -- variable reactive power generator injection at a bus
+* `vm_idx` -- variable voltage magnitude at a bus
+* `va_idx` -- variable voltage angle at a bus
+* `neighbors` -- neighboring buses to a given bus
+* `x0` -- 2*|N| variables, one for each bus, varies based on bus type
+* `F0` -- 2*|N| bus power balance evaluation values, active power followed by reactive power
+* `J0` -- a sparse matrix holding the Jacobian of the F0 power balance evaluation function
+
+The postfix `_idx` indicates the admittance matrix indexing convention.
 """
 struct PowerFlowData
     data::Dict{String,<:Any}
-    bus_gens::Dict{Int,Array}
+    bus_gens::Dict{Int,Vector}
     am::AdmittanceMatrix{Complex{Float64}}
     bus_type_idx::Vector{Int}
     p_delta_base_idx::Vector{Float64}
@@ -291,106 +308,28 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
             bus["vm"] = result.zero[2*i - 1]
             bus["va"] = result.zero[2*i]
         elseif bus_type_idx[i] == 2
-
             for gen in bus_gens[bid]
-                gen_sol = gen_assignment["$(gen["index"])"]
-                gen_sol["qg"] = 0.0
+                sol_gen = gen_assignment["$(gen["index"])"]
+                sol_gen["qg"] = 0.0
             end
 
             qg_remaining = -result.zero[2*i - 1]
-            for gen in bus_gens[bid][1:end-1]
-                qmin = gen["qmin"]
-                qmax = gen["qmax"]
-
-                if (qg_remaining <= 0.0 && qmin >= 0.0) || (qg_remaining >= 0.0 && qmax <= 0.0)
-                    # keep qg assignment as zero
-                    continue
-                end
-
-                gen_sol = gen_assignment["$(gen["index"])"]
-                if qg_remaining < qmin
-                    gen_sol["qg"] = qmin
-                elseif qg_remaining > qmax
-                    gen_sol["qg"] = qmax
-                else
-                    gen_sol["qg"] = qg_remaining
-                    qg_remaining = 0.0
-                    break
-                end
-                qg_remaining -= gen_sol["qg"]
-            end
-            if !isapprox(qg_remaining, 0.0)
-                gen = bus_gens[bid][end]
-                gen_sol = gen_assignment["$(gen["index"])"]
-                gen_sol["qg"] = qg_remaining
-            end
+            _assign_qg!(gen_assignment, bus_gens[bid], qg_remaining)
 
             bus["va"] = result.zero[2*i]
 
         elseif bus_type_idx[i] == 3
             for gen in bus_gens[bid]
-                gen_sol = gen_assignment["$(gen["index"])"]
-                gen_sol["pg"] = 0.0
-                gen_sol["qg"] = 0.0
+                sol_gen = gen_assignment["$(gen["index"])"]
+                sol_gen["pg"] = 0.0
+                sol_gen["qg"] = 0.0
             end
 
             pg_remaining = -result.zero[2*i - 1]
-            for gen in bus_gens[bid][1:end-1]
-                pmin = gen["pmin"]
-                pmax = gen["pmax"]
-
-                if (pg_remaining <= 0.0 && pmin >= 0.0) || (pg_remaining >= 0.0 && pmax <= 0.0)
-                    # keep pg assignment as zero
-                    continue
-                end
-
-                gen_sol = gen_assignment["$(gen["index"])"]
-                if pg_remaining < pmin
-                    gen_sol["pg"] = pmin
-                elseif pg_remaining > pmax
-                    gen_sol["pg"] = pmax
-                else
-                    gen_sol["pg"] = pg_remaining
-                    pg_remaining = 0.0
-                    break
-                end
-                pg_remaining -= gen_sol["pg"]
-            end
-            if !isapprox(pg_remaining, 0.0)
-                gen = bus_gens[bid][end]
-                gen_sol = gen_assignment["$(gen["index"])"]
-                gen_sol["pg"] = pg_remaining
-            end
-
+            _assign_pg!(gen_assignment, bus_gens[bid], pg_remaining)
 
             qg_remaining = -result.zero[2*i]
-            for gen in bus_gens[bid][1:end-1]
-                qmin = gen["qmin"]
-                qmax = gen["qmax"]
-
-                if (qg_remaining <= 0.0 && qmin >= 0.0) || (qg_remaining >= 0.0 && qmax <= 0.0)
-                    # keep qg assignment as zero
-                    continue
-                end
-
-                gen_sol = gen_assignment["$(gen["index"])"]
-                if qg_remaining < qmin
-                    gen_sol["qg"] = qmin
-                elseif qg_remaining > qmax
-                    gen_sol["qg"] = qmax
-                else
-                    gen_sol["qg"] = qg_remaining
-                    qg_remaining = 0.0
-                    break
-                end
-                qg_remaining -= gen_sol["qg"]
-            end
-            if !isapprox(qg_remaining, 0.0)
-                gen = bus_gens[bid][end]
-                gen_sol = gen_assignment["$(gen["index"])"]
-                gen_sol["qg"] = qg_remaining
-            end
-
+            _assign_qg!(gen_assignment, bus_gens[bid], qg_remaining)
         else
             @assert false
         end
@@ -443,30 +382,7 @@ function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
             end
 
             qg_remaining = -result.zero[2*i - 1]
-            for gen in bus_gens[bid][1:end-1]
-                qmin = gen["qmin"]
-                qmax = gen["qmax"]
-
-                if (qg_remaining <= 0.0 && qmin >= 0.0) || (qg_remaining >= 0.0 && qmax <= 0.0)
-                    # keep qg assignment as zero
-                    continue
-                end
-
-                if qg_remaining < qmin
-                    gen["qg"] = qmin
-                elseif qg_remaining > qmax
-                    gen["qg"] = qmax
-                else
-                    gen["qg"] = qg_remaining
-                    qg_remaining = 0.0
-                    break
-                end
-                qg_remaining -= gen["qg"]
-            end
-            if !isapprox(qg_remaining, 0.0)
-                gen = bus_gens[bid][end]
-                gen["qg"] = qg_remaining
-            end
+            _assign_qg!(data["gen"], bus_gens[bid], qg_remaining)
 
             bus["va"] = result.zero[2*i]
 
@@ -477,60 +393,73 @@ function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
             end
 
             pg_remaining = -result.zero[2*i - 1]
-            for gen in bus_gens[bid][1:end-1]
-                pmin = gen["pmin"]
-                pmax = gen["pmax"]
-
-                if (pg_remaining <= 0.0 && pmin >= 0.0) || (pg_remaining >= 0.0 && pmax <= 0.0)
-                    # keep pg assignment as zero
-                    continue
-                end
-
-                if pg_remaining < pmin
-                    gen["pg"] = pmin
-                elseif pg_remaining > pmax
-                    gen["pg"] = pmax
-                else
-                    gen["pg"] = pg_remaining
-                    pg_remaining = 0.0
-                    break
-                end
-                pg_remaining -= gen["pg"]
-            end
-            if !isapprox(pg_remaining, 0.0)
-                gen = bus_gens[bid][end]
-                gen["pg"] = pg_remaining
-            end
-
+            _assign_pg!(data["gen"], bus_gens[bid], pg_remaining)
 
             qg_remaining = -result.zero[2*i]
-            for gen in bus_gens[bid][1:end-1]
-                qmin = gen["qmin"]
-                qmax = gen["qmax"]
-
-                if (qg_remaining <= 0.0 && qmin >= 0.0) || (qg_remaining >= 0.0 && qmax <= 0.0)
-                    # keep qg assignment as zero
-                    continue
-                end
-
-                if qg_remaining < qmin
-                    gen["qg"] = qmin
-                elseif qg_remaining > qmax
-                    gen["qg"] = qmax
-                else
-                    gen["qg"] = qg_remaining
-                    qg_remaining = 0.0
-                    break
-                end
-                qg_remaining -= gen["qg"]
-            end
-            if !isapprox(qg_remaining, 0.0)
-                gen = bus_gens[bid][end]
-                gen["qg"] = qg_remaining
-            end
+            _assign_qg!(data["gen"], bus_gens[bid], qg_remaining)
         else
             @assert false
         end
+    end
+end
+
+
+function _assign_pg!(sol_gens::Dict{String,<:Any}, bus_gens::Vector, pg_remaining::Float64)
+    for gen in bus_gens[1:end-1]
+        pmin = gen["pmin"]
+        pmax = gen["pmax"]
+
+        if (pg_remaining <= 0.0 && pmin >= 0.0) || (pg_remaining >= 0.0 && pmax <= 0.0)
+            # keep pg assignment as zero
+            continue
+        end
+
+        sol_gen = sol_gens["$(gen["index"])"]
+        if pg_remaining < pmin
+            sol_gen["pg"] = pmin
+        elseif pg_remaining > pmax
+            sol_gen["pg"] = pmax
+        else
+            sol_gen["pg"] = pg_remaining
+            pg_remaining = 0.0
+            break
+        end
+        pg_remaining -= sol_gen["pg"]
+    end
+    if !isapprox(pg_remaining, 0.0)
+        gen = bus_gens[end]
+        sol_gen = sol_gens["$(gen["index"])"]
+        sol_gen["pg"] = pg_remaining
+    end
+end
+
+
+function _assign_qg!(sol_gens::Dict{String,<:Any}, bus_gens::Vector, qg_remaining::Float64)
+    for gen in bus_gens[1:end-1]
+        qmin = gen["qmin"]
+        qmax = gen["qmax"]
+
+        if (qg_remaining <= 0.0 && qmin >= 0.0) || (qg_remaining >= 0.0 && qmax <= 0.0)
+            # keep qg assignment as zero
+            continue
+        end
+
+        sol_gen = sol_gens["$(gen["index"])"]
+        if qg_remaining < qmin
+            sol_gen["qg"] = qmin
+        elseif qg_remaining > qmax
+            sol_gen["qg"] = qmax
+        else
+            sol_gen["qg"] = qg_remaining
+            qg_remaining = 0.0
+            break
+        end
+        qg_remaining -= sol_gen["qg"]
+    end
+    if !isapprox(qg_remaining, 0.0)
+        gen = bus_gens[end]
+        sol_gen = sol_gens["$(gen["index"])"]
+        sol_gen["qg"] = qg_remaining
     end
 end
 
@@ -730,6 +659,5 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
 
     return result
 end
-
 
 
