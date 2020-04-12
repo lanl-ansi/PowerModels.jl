@@ -196,6 +196,108 @@ end
 end
 
 
+@testset "test native ac pf solver, in-place" begin
+    # requires dc line support in ac solver
+    # @testset "3-bus case" begin
+    #     data = PowerModels.parse_file("../test/data/matpower/case3.m")
+    #     native = compute_ac_pf(data)
+    #     compute_ac_pf!(data)
+
+    #     @test length(native) >= 3
+
+    #     for (i,bus) in native["bus"]
+    #         @test isapprox(data["bus"][i]["va"], bus["va"]; atol = 1e-7)
+    #         @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
+    #     end
+    #     for (i,gen) in native["gen"]
+    #         @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
+    #         @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+    #     end
+    # end
+    @testset "5-bus case" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        native = compute_ac_pf(data)
+        compute_ac_pf!(data)
+
+        @test length(native) >= 3
+
+        for (i,bus) in native["bus"]
+            @test isapprox(data["bus"][i]["va"], bus["va"]; atol = 1e-7)
+            @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
+        end
+        for (i,gen) in native["gen"]
+            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
+            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+        end
+    end
+    @testset "5-bus asymmetric case" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_asym.m")
+        native = compute_ac_pf(data)
+        compute_ac_pf!(data)
+
+        @test length(native) >= 3
+
+        for (i,bus) in native["bus"]
+            @test isapprox(data["bus"][i]["va"], bus["va"]; atol = 1e-7)
+            @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
+        end
+        for (i,gen) in native["gen"]
+            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
+            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+        end
+    end
+    # compute_ac_pf does not yet support multiple slack buses
+    # @testset "6-bus case" begin
+    #     data = PowerModels.parse_file("../test/data/matpower/case6.m")
+    #     native = compute_ac_pf(data)
+    #     compute_ac_pf!(data)
+
+    #     @test length(native) >= 3
+
+    #     for (i,bus) in native["bus"]
+    #         @test isapprox(data["bus"][i]["va"], bus["va"]; atol = 1e-7)
+    #         @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
+    #     end
+    #     for (i,gen) in native["gen"]
+    #         @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
+    #         @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+    #     end
+    # end
+    @testset "14-bus case, vm fixed non-1.0 value" begin
+        data = PowerModels.parse_file("../test/data/matpower/case14.m")
+        native = compute_ac_pf(data)
+        compute_ac_pf!(data)
+
+        @test length(native) >= 3
+
+        for (i,bus) in native["bus"]
+            @test isapprox(data["bus"][i]["va"], bus["va"]; atol = 1e-7)
+            @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
+        end
+        for (i,gen) in native["gen"]
+            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
+            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+        end
+    end
+    @testset "24-bus rts case" begin
+        data = PowerModels.parse_file("../test/data/matpower/case24.m")
+        native = compute_ac_pf(data)
+        compute_ac_pf!(data)
+
+        @test length(native) >= 3
+
+        for (i,bus) in native["bus"]
+            @test isapprox(data["bus"][i]["va"], bus["va"]; atol = 1e-7)
+            @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
+        end
+        for (i,gen) in native["gen"]
+            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
+            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+        end
+    end
+end
+
+
 @testset "test warm-start ac pf solvers" begin
     @testset "24-bus rts case, jump warm-start" begin
         # TODO extract number of iterations and test there is a reduction

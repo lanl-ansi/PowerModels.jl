@@ -108,22 +108,30 @@ end
 
 
 
-function compute_ac_pf(file::String; kwargs...)
-    data = parse_file(file)
-    compute_ac_pf(data, kwargs...)
+"""
+internal data required used solving an ac power flow
+
+the primay use of this data structure is to prevent reallocaiton of memory
+between successive power flow solves
+"""
+struct PowerFlowData
+    data::Dict{String,<:Any}
+    am::AdmittanceMatrix{Complex{Float64}}
+    bus_type_idx::Vector{Int}
+    p_delta_base_idx::Vector{Float64}
+    q_delta_base_idx::Vector{Float64}
+    p_inject_idx::Vector{Float64}
+    q_inject_idx::Vector{Float64}
+    vm_idx::Vector{Float64}
+    va_idx::Vector{Float64}
+    neighbors::Vector{Set{Int}}
+    x0::Vector{Float64}
+    F0::Vector{Float64}
+    J0::SparseArrays.SparseMatrixCSC{Float64,Int}
 end
 
-"""
-computes a nonlinear AC power flow in polar coordinates based on the admittance
-matrix of the network data using the NLSolve package.
 
-returns a solution data structure in PowerModels Dict format
-"""
-function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat_start=false, kwargs...)
-    # TODO check invariants
-    # single connected component
-    # all buses of type 2/3 have generators on them
-
+function instantiate_pf_data(data::Dict{String,<:Any})
     p_delta, q_delta = calc_bus_injection(data)
 
     # remove gen injections from slack and pv buses
@@ -169,8 +177,221 @@ function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat
         push!(neighbors[J[nz]], I[nz])
     end
 
+    x0 = [0.0 for i in 1:2*length(am.idx_to_bus)]
+    F0 = similar(x0)
 
-    function f!(F::Vector{Float64}, x::Vector{Float64}) 
+    J0_I = Int64[]
+    J0_J = Int64[]
+    J0_V = Float64[]
+
+    for i in eachindex(am.idx_to_bus)
+        f_i_r = 2*i - 1
+        f_i_i = 2*i
+
+        for j in neighbors[i]
+            x_j_fst = 2*j - 1
+            x_j_snd = 2*j
+
+            push!(J0_I, f_i_r); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
+            push!(J0_I, f_i_r); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
+            push!(J0_I, f_i_i); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
+            push!(J0_I, f_i_i); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
+        end
+    end
+    J0 = sparse(J0_I, J0_J, J0_V)
+
+    return PowerFlowData(data, am, bus_type_idx, p_delta_base_idx, q_delta_base_idx, p_inject_idx, q_inject_idx, vm_idx, va_idx, neighbors, x0, F0, J0)
+end
+
+
+
+function compute_ac_pf(file::String; kwargs...)
+    data = parse_file(file)
+    compute_ac_pf(data, kwargs...)
+end
+
+function compute_ac_pf(data::Dict{String,<:Any}; kwargs...)
+    # TODO check invariants
+    # single connected component
+    # all buses of type 2/3 have generators on them
+
+    pf_data = instantiate_pf_data(data)
+    compute_ac_pf(pf_data, kwargs...)
+end
+
+
+"""
+computes a nonlinear AC power flow in polar coordinates based on the admittance
+matrix of the network data using the NLSolve package.
+
+returns a solution data structure in PowerModels Dict format
+"""
+function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
+    result = _compute_ac_pf(pf_data,  kwargs...)
+
+    if !(result.x_converged || result.f_converged)
+        Memento.warn(_LOGGER, "ac power flow solver convergence failed!  use `show_trace = true` for more details")
+        return Dict("per_unit" => pf_data.data["per_unit"])
+    end
+
+    data = pf_data.data
+    am = pf_data.am
+    bus_type_idx = pf_data.bus_type_idx
+
+    bus_assignment= Dict{String,Any}()
+    for (i,bus) in data["bus"]
+        if bus["bus_type"] != 4
+            bus_assignment[i] = Dict(
+                "vm" => bus["vm"],
+                "va" => bus["va"]
+            )
+        end
+    end
+
+    gen_assignment= Dict{String,Any}()
+    for (i,gen) in data["gen"]
+        if gen["gen_status"] != 0
+            gen_assignment[i] = Dict(
+                "pg" => gen["pg"],
+                "qg" => gen["qg"]
+            )
+        end
+    end
+
+    bus_gen = Dict{Int,Any}()
+    for (i,gen) in gen_assignment
+        gen_bus_id = data["gen"][i]["gen_bus"]
+        if !haskey(bus_gen, gen_bus_id)
+            bus_gen[gen_bus_id] = gen
+        end
+
+        gen_bus = data["bus"]["$(gen_bus_id)"]
+        if gen_bus["bus_type"] == 1
+            @assert false
+        elseif gen_bus["bus_type"] == 2
+            gen["qg"] = 0.0
+        elseif gen_bus["bus_type"] == 3
+            gen["pg"] = 0.0
+            gen["qg"] = 0.0
+        else
+            @assert false
+        end
+    end
+
+    for (i,bid) in enumerate(am.idx_to_bus)
+        bus = bus_assignment["$(bid)"]
+
+        if bus_type_idx[i] == 1
+            bus["vm"] = result.zero[2*i - 1]
+            bus["va"] = result.zero[2*i]
+        elseif bus_type_idx[i] == 2
+            gen = bus_gen[bid]
+            gen["qg"] = -result.zero[2*i - 1]
+            bus["va"] = result.zero[2*i]
+        elseif bus_type_idx[i] == 3
+            gen = bus_gen[bid]
+            gen["pg"] = -result.zero[2*i - 1]
+            gen["qg"] = -result.zero[2*i]
+        else
+            @assert false
+        end
+    end
+
+    return Dict("per_unit" => data["per_unit"],
+        "bus" => bus_assignment,
+        "gen" => gen_assignment,
+    )
+end
+
+
+function compute_ac_pf!(data::Dict{String,<:Any}; kwargs...)
+    # TODO check invariants
+    # single connected component
+    # all buses of type 2/3 have generators on them
+
+    pf_data = instantiate_pf_data(data)
+    compute_ac_pf!(pf_data, kwargs...)
+end
+
+
+"""
+similar to compute_ac_pf but places the solution in the power model's data
+dict instead of a seperate result object
+"""
+function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
+    result = _compute_ac_pf(pf_data,  kwargs...)
+
+    if !(result.x_converged || result.f_converged)
+        Memento.warn(_LOGGER, "ac power flow solver convergence failed!  use `show_trace = true` for more details")
+    end
+
+    data = pf_data.data
+    am = pf_data.am
+    bus_type_idx = pf_data.bus_type_idx
+
+
+    bus_gen = Dict{Int,Any}()
+    for (i,gen) in data["gen"]
+        gen_bus_id = data["gen"][i]["gen_bus"]
+        if !haskey(bus_gen, gen_bus_id)
+            bus_gen[gen_bus_id] = gen
+        end
+
+        gen_bus = data["bus"]["$(gen_bus_id)"]
+        if gen_bus["bus_type"] == 1
+            @assert false
+        elseif gen_bus["bus_type"] == 2
+            gen["qg"] = 0.0
+        elseif gen_bus["bus_type"] == 3
+            gen["pg"] = 0.0
+            gen["qg"] = 0.0
+        else
+            @assert false
+        end
+    end
+
+    for (i,bid) in enumerate(am.idx_to_bus)
+        bus = data["bus"]["$(bid)"]
+
+        if bus_type_idx[i] == 1
+            bus["vm"] = result.zero[2*i - 1]
+            bus["va"] = result.zero[2*i]
+        elseif bus_type_idx[i] == 2
+            gen = bus_gen[bid]
+            gen["qg"] = -result.zero[2*i - 1]
+            bus["va"] = result.zero[2*i]
+        elseif bus_type_idx[i] == 3
+            gen = bus_gen[bid]
+            gen["pg"] = -result.zero[2*i - 1]
+            gen["qg"] = -result.zero[2*i]
+        else
+            @assert false
+        end
+    end
+end
+
+
+function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_start=false, kwargs...)
+    # TODO check invariants
+    # single connected component
+    # all buses of type 2/3 have generators on them
+
+    data = pf_data.data
+    am = pf_data.am
+    bus_type_idx = pf_data.bus_type_idx
+    p_delta_base_idx = pf_data.p_delta_base_idx
+    q_delta_base_idx = pf_data.q_delta_base_idx
+    p_inject_idx = pf_data.p_inject_idx
+    q_inject_idx = pf_data.q_inject_idx
+    vm_idx = pf_data.vm_idx
+    va_idx = pf_data.va_idx
+    neighbors = pf_data.neighbors
+    x0 = pf_data.x0
+    F0 = pf_data.F0
+    J0 = pf_data.J0
+
+
+    function f!(F::Vector{Float64}, x::Vector{Float64})
         for i in eachindex(am.idx_to_bus)
             if bus_type_idx[i] == 1
                 vm_idx[i] = x[2*i - 1]
@@ -275,9 +496,8 @@ function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat
     end
 
 
-    x0 = [0.0 for i in 1:2*length(am.idx_to_bus)]
-
-    for i in eachindex(am.idx_to_bus) 
+    # basic init point
+    for i in eachindex(am.idx_to_bus)
         if bus_type_idx[i] == 1
             x0[2*i - 1] = 1.0 #vm
         elseif bus_type_idx[i] == 2
@@ -337,28 +557,6 @@ function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat
         end
     end
 
-    F0 = similar(x0)
-
-    J0_I = Int64[]
-    J0_J = Int64[]
-    J0_V = Float64[]
-
-    for i in eachindex(am.idx_to_bus)
-        f_i_r = 2*i - 1
-        f_i_i = 2*i
-
-        for j in neighbors[i]
-            x_j_fst = 2*j - 1
-            x_j_snd = 2*j
-
-            push!(J0_I, f_i_r); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
-            push!(J0_I, f_i_r); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
-            push!(J0_I, f_i_i); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
-            push!(J0_I, f_i_i); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
-        end
-    end
-    J0 = sparse(J0_I, J0_J, J0_V)
-
 
     if finite_differencing
         result = NLsolve.nlsolve(f!, x0; kwargs...)
@@ -367,74 +565,8 @@ function compute_ac_pf(data::Dict{String,<:Any}; finite_differencing=false, flat
         result = NLsolve.nlsolve(df, x0; kwargs...)
     end
 
-    if !(result.x_converged || result.f_converged)
-        Memento.warn(_LOGGER, "ac power flow solver convergence failed!  use `show_trace = true` for more details")
-        return Dict("per_unit" => data["per_unit"])
-    end
-
-
-    bus_assignment= Dict{String,Any}()
-    for (i,bus) in data["bus"]
-        if bus["bus_type"] != 4
-            bus_assignment[i] = Dict(
-                "vm" => bus["vm"],
-                "va" => bus["va"]
-            )
-        end
-    end
-
-    gen_assignment= Dict{String,Any}()
-    for (i,gen) in data["gen"]
-        if gen["gen_status"] != 0
-            gen_assignment[i] = Dict(
-                "pg" => gen["pg"],
-                "qg" => gen["qg"]
-            )
-        end
-    end
-
-    bus_gen = Dict{Int,Any}()
-    for (i,gen) in gen_assignment
-        gen_bus_id = data["gen"][i]["gen_bus"]
-        if !haskey(bus_gen, gen_bus_id)
-            bus_gen[gen_bus_id] = gen
-        end
-
-        gen_bus = data["bus"]["$(gen_bus_id)"]
-        if gen_bus["bus_type"] == 1
-            @assert false
-        elseif gen_bus["bus_type"] == 2
-            gen["qg"] = 0.0
-        elseif gen_bus["bus_type"] == 3
-            gen["pg"] = 0.0
-            gen["qg"] = 0.0
-        else
-            @assert false
-        end
-    end
-
-    for (i,bid) in enumerate(am.idx_to_bus)
-        bus = bus_assignment["$(bid)"]
-
-        if bus_type_idx[i] == 1
-            bus["vm"] = result.zero[2*i - 1]
-            bus["va"] = result.zero[2*i]
-        elseif bus_type_idx[i] == 2
-            gen = bus_gen[bid]
-            gen["qg"] = -result.zero[2*i - 1]
-            bus["va"] = result.zero[2*i]
-        elseif bus_type_idx[i] == 3
-            gen = bus_gen[bid]
-            gen["pg"] = -result.zero[2*i - 1]
-            gen["qg"] = -result.zero[2*i]
-        else
-            @assert false
-        end
-    end
-
-    return Dict("per_unit" => data["per_unit"],
-        "bus" => bus_assignment,
-        "gen" => gen_assignment,
-    )
+    return result
 end
+
+
 
