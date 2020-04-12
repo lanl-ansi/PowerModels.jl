@@ -8,7 +8,7 @@ CurrentModule = PowerModels
 
 PowerModels.jl is a Julia/JuMP package for Steady-State Power Network Optimization. It provides utilities for parsing and modifying network data (see [PowerModels Network Data Format](@ref) for details), and is designed to enable computational evaluation of emerging power network formulations and algorithms in a common platform.
 
-The code is engineered to decouple [Problem Specifications](@ref) (e.g. Power Flow, Optimal Power Flow, ...) from [Network Formulations](@ref) (e.g. AC, DC-approximation, SOC-relaxation, ...). This enables the definition of a wide variety of power network formulations and their comparison on common problem specifications.
+The code is engineered to decouple [Problem Specifications](@ref) (e.g. Power Flow, Optimal Power Flow, ...) from the [Formulation Details](@ref) (e.g. AC, DC approximation, SOC relaxation, ...). This enables the definition of a wide variety of power network formulations and their comparison on common problem specifications.
 
 ## Installation
 
