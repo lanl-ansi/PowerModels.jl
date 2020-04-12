@@ -174,7 +174,7 @@ data = PowerModels.parse_file("matpower/case3.m")
 PowerModels.propagate_topology_status!(data)
 opf_result = run_ac_opf(data, with_optimizer(Ipopt.Optimizer))
 ```
-The `test/data/matpower/case7_tplgy.m` case provides an example of the kind of component status deductions that can be made.  The `propagate_topology_status!` function can be helpful in diagnosing network models that converge to an infeasible solution.
+The `test/data/matpower/case7_tplgy.m` case provides an example of the kind of component status deductions that can be made.  The `simplify_network!`, `propagate_topology_status!` and `deactivate_isolated_components!` functions can be helpful in diagnosing network models that do not converge or have an infeasible solution.
 
 For details on all of the network data helper functions see, `src/core/data.jl`.
 
