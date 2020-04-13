@@ -60,8 +60,8 @@ function variable_gen(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::Bool=true, 
 
     if bounded
         for (i,gen) in ref(pm, nw, :gen)
-            constraint_gen_active_power_limits(pm, i, nw=nw)
-            constraint_gen_reactive_power_limits(pm, i, nw=nw)
+            constraint_gen_active_bounds(pm, i, nw=nw)
+            constraint_gen_reactive_bounds(pm, i, nw=nw)
         end
     end
 end
@@ -251,7 +251,7 @@ end
 """
 `pmin <= Re(v*cg') <= pmax`
 """
-function constraint_gen_active_power_limits(pm::AbstractIVRModel, n::Int, i, bus, pmax, pmin)
+function constraint_gen_active_bounds(pm::AbstractIVRModel, n::Int, i, bus, pmax, pmin)
     @assert pmin <= pmax
 
     vr = var(pm, n, :vr, bus)
@@ -266,7 +266,7 @@ end
 """
 `qmin <= Im(v*cg') <= qmax`
 """
-function constraint_gen_reactive_power_limits(pm::AbstractIVRModel, n::Int, i, bus, qmax, qmin)
+function constraint_gen_reactive_bounds(pm::AbstractIVRModel, n::Int, i, bus, qmax, qmin)
     @assert qmin <= qmax
 
     vr = var(pm, n, :vr, bus)
@@ -279,7 +279,7 @@ function constraint_gen_reactive_power_limits(pm::AbstractIVRModel, n::Int, i, b
 end
 
 "`pg[i] == pg`"
-function constraint_active_gen_setpoint(pm::AbstractIVRModel, n::Int, i, pgref)
+function constraint_gen_setpoint_active(pm::AbstractIVRModel, n::Int, i, pgref)
     gen = ref(pm, n, :gen, i)
     bus = gen["gen_bus"]
     vr = var(pm, n, :vr, bus)
@@ -291,7 +291,7 @@ function constraint_active_gen_setpoint(pm::AbstractIVRModel, n::Int, i, pgref)
 end
 
 "`qq[i] == qq`"
-function constraint_reactive_gen_setpoint(pm::AbstractIVRModel, n::Int, i, qgref)
+function constraint_gen_setpoint_reactive(pm::AbstractIVRModel, n::Int, i, qgref)
     gen = ref(pm, n, :gen, i)
     bus = gen["gen_bus"]
     vr = var(pm, n, :vr, bus)
@@ -359,7 +359,7 @@ function constraint_dcline_power_limits_to(pm::AbstractIVRModel, n::Int, i, t_bu
 end
 
 "`p_fr[i] == pref_fr, p_to[i] == pref_to`"
-function constraint_active_dcline_setpoint(pm::AbstractIVRModel, n::Int, f_idx, t_idx, pref_fr, pref_to)
+function constraint_dcline_setpoint_active(pm::AbstractIVRModel, n::Int, f_idx, t_idx, pref_fr, pref_to)
     (l, f_bus, t_bus) = f_idx
     vr_fr = var(pm, n, :vr, f_bus)
     vi_fr = var(pm, n, :vi, f_bus)

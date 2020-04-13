@@ -81,36 +81,36 @@ end
 ### Generator Constraints ###
 
 ""
-function constraint_active_gen_setpoint(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_gen_setpoint_active(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     gen = ref(pm, nw, :gen, i)
-    constraint_active_gen_setpoint(pm, nw, gen["index"], gen["pg"])
+    constraint_gen_setpoint_active(pm, nw, gen["index"], gen["pg"])
 end
 
 ""
-function constraint_reactive_gen_setpoint(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_gen_setpoint_reactive(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     gen = ref(pm, nw, :gen, i)
-    constraint_reactive_gen_setpoint(pm, nw, gen["index"], gen["qg"])
+    constraint_gen_setpoint_reactive(pm, nw, gen["index"], gen["qg"])
 end
 
 ""
-function constraint_generation_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_gen_power_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     gen = ref(pm, nw, :gen, i)
 
-    constraint_generation_on_off(pm, nw, i, gen["pmin"], gen["pmax"], gen["qmin"], gen["qmax"])
+    constraint_gen_power_on_off(pm, nw, i, gen["pmin"], gen["pmax"], gen["qmin"], gen["qmax"])
 end
 
 "defines limits on active power output of a generator where bounds can't be used"
-function constraint_gen_active_power_limits(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_gen_active_bounds(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     gen = ref(pm, nw, :gen, i)
     bus = gen["gen_bus"]
-    constraint_gen_active_power_limits(pm, nw, i, bus, gen["pmax"], gen["pmin"])
+    constraint_gen_active_bounds(pm, nw, i, bus, gen["pmax"], gen["pmin"])
 end
 
 "defines limits on reactive power output of a generator where bounds can't be used"
-function constraint_gen_reactive_power_limits(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_gen_reactive_bounds(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     gen = ref(pm, nw, :gen, i)
     bus = gen["gen_bus"]
-    constraint_gen_reactive_power_limits(pm, nw, i, bus, gen["qmax"], gen["qmin"])
+    constraint_gen_reactive_bounds(pm, nw, i, bus, gen["qmax"], gen["qmin"])
 end
 
 ### Bus - Setpoint Constraints ###
@@ -720,7 +720,7 @@ end
 ### Branch - Loss Constraints ###
 
 ""
-function constraint_loss_lb(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_power_losses_lb(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     branch = ref(pm, nw, :branch, i)
     @assert branch["br_r"] >= 0
     @assert branch["br_x"] >= 0
@@ -735,11 +735,11 @@ function constraint_loss_lb(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     b_to = branch["b_to"]
     tr = branch["tr"]
 
-    constraint_loss_lb(pm, nw, f_bus, t_bus, f_idx, t_idx, g_fr, b_fr, g_to, b_to, tr)
+    constraint_power_losses_lb(pm, nw, f_bus, t_bus, f_idx, t_idx, g_fr, b_fr, g_to, b_to, tr)
 end
 
 ""
-function constraint_flow_losses(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_power_losses(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -754,7 +754,7 @@ function constraint_flow_losses(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     b_sh_fr = branch["b_fr"]
     b_sh_to = branch["b_to"]
 
-    constraint_flow_losses(pm::AbstractPowerModel, nw, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
+    constraint_power_losses(pm::AbstractPowerModel, nw, i, f_bus, t_bus, f_idx, t_idx, r, x, g_sh_fr, g_sh_to, b_sh_fr, b_sh_to, tm)
 end
 
 ""
@@ -797,7 +797,7 @@ function constraint_switch_on_off(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw
     vad_min = ref(pm, nw, :off_angmin)
     vad_max = ref(pm, nw, :off_angmax)
 
-    constraint_switch_flow_on_off(pm, nw, i, f_idx)
+    constraint_switch_power_on_off(pm, nw, i, f_idx)
     constraint_switch_voltage_on_off(pm, nw, i, switch["f_bus"], switch["t_bus"], vad_min, vad_max)
 end
 
@@ -846,10 +846,10 @@ end
 
 
 ""
-function constraint_storage_loss(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_storage_losses(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     storage = ref(pm, nw, :storage, i)
 
-    constraint_storage_loss(pm, nw, i, storage["storage_bus"], storage["r"], storage["x"], storage["p_loss"], storage["q_loss"])
+    constraint_storage_losses(pm, nw, i, storage["storage_bus"], storage["r"], storage["x"], storage["p_loss"], storage["q_loss"])
 end
 
 ""
@@ -917,7 +917,7 @@ function constraint_dcline(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
 end
 
 ""
-function constraint_active_dcline_setpoint(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_dcline_setpoint_active(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     dcline = ref(pm, nw, :dcline, i)
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
@@ -926,7 +926,7 @@ function constraint_active_dcline_setpoint(pm::AbstractPowerModel, i::Int; nw::I
     pf = dcline["pf"]
     pt = dcline["pt"]
 
-    constraint_active_dcline_setpoint(pm, nw, f_idx, t_idx, pf, pt)
+    constraint_dcline_setpoint_active(pm, nw, f_idx, t_idx, pf, pt)
 end
 
 

@@ -42,7 +42,7 @@ function build_pf(pm::AbstractPowerModel)
 
             constraint_voltage_magnitude_setpoint(pm, i)
             for j in ref(pm, :bus_gens, i)
-                constraint_active_gen_setpoint(pm, j)
+                constraint_gen_setpoint_active(pm, j)
             end
         end
     end
@@ -50,7 +50,7 @@ function build_pf(pm::AbstractPowerModel)
 
     for (i,dcline) in ref(pm, :dcline)
         #constraint_dcline(pm, i) not needed, active power flow fully defined by dc line setpoints
-        constraint_active_dcline_setpoint(pm, i)
+        constraint_dcline_setpoint_active(pm, i)
 
         f_bus = ref(pm, :bus)[dcline["f_bus"]]
         if f_bus["bus_type"] == 1

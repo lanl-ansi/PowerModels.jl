@@ -289,7 +289,7 @@ function _build_ucopf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :gen)
-        constraint_generation_on_off(pm, i)
+        constraint_gen_power_on_off(pm, i)
     end
 
     for i in ids(pm, :storage)
@@ -303,7 +303,7 @@ function _build_ucopf(pm::AbstractPowerModel)
     for i in ids(pm, :storage)
         constraint_storage_state(pm, i)
         constraint_storage_complementarity_mi(pm, i)
-        constraint_storage_loss(pm, i)
+        constraint_storage_losses(pm, i)
         constraint_storage_thermal_limit(pm, i)
     end
 
@@ -371,7 +371,7 @@ function _build_mn_pf(pm::AbstractPowerModel)
 
                 constraint_voltage_magnitude_setpoint(pm, i, nw=n)
                 for j in ref(pm, :bus_gens, i, nw=n)
-                    constraint_active_gen_setpoint(pm, j, nw=n)
+                    constraint_gen_setpoint_active(pm, j, nw=n)
                 end
             end
         end
@@ -382,7 +382,7 @@ function _build_mn_pf(pm::AbstractPowerModel)
         end
 
         for (i,dcline) in ref(pm, :dcline, nw=n)
-            constraint_active_dcline_setpoint(pm, i, nw=n)
+            constraint_dcline_setpoint_active(pm, i, nw=n)
 
             f_bus = ref(pm, :bus, nw=n)[dcline["f_bus"]]
             if f_bus["bus_type"] == 1
@@ -426,7 +426,7 @@ function _build_opf_strg(pm::AbstractPowerModel)
     for i in ids(pm, :storage)
         constraint_storage_state(pm, i)
         constraint_storage_complementarity_nl(pm, i)
-        constraint_storage_loss(pm, i)
+        constraint_storage_losses(pm, i)
         constraint_storage_thermal_limit(pm, i)
     end
 
@@ -474,7 +474,7 @@ function _build_opf_strg_mi(pm::AbstractPowerModel)
     for i in ids(pm, :storage)
         constraint_storage_state(pm, i)
         constraint_storage_complementarity_mi(pm, i)
-        constraint_storage_loss(pm, i)
+        constraint_storage_losses(pm, i)
         constraint_storage_thermal_limit(pm, i)
     end
 

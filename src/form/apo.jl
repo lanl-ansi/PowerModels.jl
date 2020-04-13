@@ -40,12 +40,12 @@ function variable_reactive_dcline_flow(pm::AbstractActivePowerModel; nw::Int=pm.
 end
 
 "do nothing, apo models do not have reactive variables"
-function constraint_reactive_gen_setpoint(pm::AbstractActivePowerModel, n::Int, i, qg)
+function constraint_gen_setpoint_reactive(pm::AbstractActivePowerModel, n::Int, i, qg)
 end
 
 
 "on/off constraint for generators"
-function constraint_generation_on_off(pm::AbstractActivePowerModel, n::Int, i::Int, pmin, pmax, qmin, qmax)
+function constraint_gen_power_on_off(pm::AbstractActivePowerModel, n::Int, i::Int, pmin, pmax, qmin, qmax)
     pg = var(pm, n, :pg, i)
     z = var(pm, n, :z_gen, i)
 
@@ -275,7 +275,7 @@ function constraint_storage_current_limit(pm::AbstractActivePowerModel, n::Int, 
 end
 
 ""
-function constraint_storage_loss(pm::AbstractActivePowerModel, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+function constraint_storage_losses(pm::AbstractActivePowerModel, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
     ps = var(pm, n, :ps, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)

@@ -393,7 +393,7 @@ function constraint_current_limit(pm::AbstractWModels, n::Int, f_idx, c_rating_a
 end
 
 ""
-function constraint_storage_loss(pm::AbstractWConvexModels, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+function constraint_storage_losses(pm::AbstractWConvexModels, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
     w = var(pm, n, :w, bus)
     ccms = var(pm, n, :ccms, i)
     ps = var(pm, n, :ps, i)

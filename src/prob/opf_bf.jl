@@ -29,7 +29,7 @@ function build_opf_bf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :branch)
-        constraint_flow_losses(pm, i)
+        constraint_power_losses(pm, i)
         constraint_voltage_magnitude_difference(pm, i)
 
         constraint_voltage_angle_difference(pm, i)
@@ -65,12 +65,12 @@ function build_mn_opf_bf_strg(pm::AbstractPowerModel)
 
         for i in ids(pm, :storage, nw=n)
             constraint_storage_complementarity_mi(pm, i, nw=n)
-            constraint_storage_loss(pm, i, nw=n)
+            constraint_storage_losses(pm, i, nw=n)
             constraint_storage_thermal_limit(pm, i, nw=n)
         end
 
         for i in ids(pm, :branch, nw=n)
-            constraint_flow_losses(pm, i, nw=n)
+            constraint_power_losses(pm, i, nw=n)
             constraint_voltage_magnitude_difference(pm, i, nw=n)
 
             constraint_voltage_angle_difference(pm, i, nw=n)

@@ -117,7 +117,7 @@ function build_mn_opf_strg(pm::AbstractPowerModel)
 
         for i in ids(pm, :storage, nw=n)
             constraint_storage_complementarity_mi(pm, i, nw=n)
-            constraint_storage_loss(pm, i, nw=n)
+            constraint_storage_losses(pm, i, nw=n)
             constraint_storage_thermal_limit(pm, i, nw=n)
         end
 

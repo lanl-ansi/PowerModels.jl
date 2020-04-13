@@ -513,7 +513,7 @@ p[f_idx] + p[t_idx] >= 0
 q[f_idx] + q[t_idx] >= -c/2*(v[f_bus]^2/tr^2 + v[t_bus]^2)
 ```
 """
-function constraint_loss_lb(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g_fr, b_fr, g_to, b_to, tr)
+function constraint_power_losses_lb(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g_fr, b_fr, g_to, b_to, tr)
     vm_fr = var(pm, n, :vm, f_bus)
     vm_to = var(pm, n, :vm, t_bus)
     p_fr = var(pm, n, :p, f_idx)
@@ -541,7 +541,7 @@ end
 
 
 ""
-function constraint_storage_loss(pm::AbstractACPModel, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+function constraint_storage_losses(pm::AbstractACPModel, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
     vm = var(pm, n, :vm, bus)
     ps = var(pm, n, :ps, i)
     qs = var(pm, n, :qs, i)

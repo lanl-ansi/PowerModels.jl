@@ -66,7 +66,7 @@ for i in ids(pm, :bus)
     constraint_power_balance_shunt(pm, i)
 end
 for i in ids(pm, :branch)
-    constraint_flow_losses(pm, i)
+    constraint_power_losses(pm, i)
     constraint_voltage_magnitude_difference(pm, i)
 
     constraint_voltage_angle_difference(pm, i)
@@ -154,7 +154,7 @@ for (i,bus) in ref(pm, :bus)
         @assert bus["bus_type"] == 2
         constraint_voltage_magnitude_setpoint(pm, i)
         for j in ref(pm, :bus_gens, i)
-            constraint_active_gen_setpoint(pm, j)
+            constraint_gen_setpoint_active(pm, j)
         end
     end
 end
@@ -163,7 +163,7 @@ for i in ids(pm, :branch)
     constraint_ohms_yt_to(pm, i)
 end
 for (i,dcline) in ref(pm, :dcline)
-    constraint_active_dcline_setpoint(pm, i)
+    constraint_dcline_setpoint_active(pm, i)
 
     f_bus = ref(pm, :bus)[dcline["f_bus"]]
     if f_bus["bus_type"] == 1
@@ -206,16 +206,16 @@ for (i,bus) in ref(pm, :bus)
         @assert bus["bus_type"] == 2
         constraint_voltage_magnitude_setpoint(pm, i)
         for j in ref(pm, :bus_gens, i)
-            constraint_active_gen_setpoint(pm, j)
+            constraint_gen_setpoint_active(pm, j)
         end
     end
 end
 for i in ids(pm, :branch)
-    constraint_flow_losses(pm, i)
+    constraint_power_losses(pm, i)
     constraint_voltage_magnitude_difference(pm, i)
 end
 for (i,dcline) in ref(pm, :dcline)
-    constraint_active_dcline_setpoint(pm, i)
+    constraint_dcline_setpoint_active(pm, i)
 
     f_bus = ref(pm, :bus)[dcline["f_bus"]]
     if f_bus["bus_type"] == 1
