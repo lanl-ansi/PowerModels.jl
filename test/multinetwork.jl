@@ -25,7 +25,7 @@ TESTLOG = Memento.getlogger(PowerModels)
     @testset "topology processing" begin
         @testset "7-bus replicate status case" begin
             mn_data = build_mn_data("../test/data/matpower/case7_tplgy.m")
-            PowerModels.propagate_topology_status!(mn_data)
+            PowerModels.simplify_network!(mn_data)
 
             active_buses = Set(["2", "4", "5", "7"])
             active_branches = Set(["8"])
@@ -59,7 +59,7 @@ TESTLOG = Memento.getlogger(PowerModels)
         end
         @testset "7-bus replicate filer case" begin
             mn_data = build_mn_data("../test/data/matpower/case7_tplgy.m")
-            PowerModels.propagate_topology_status!(mn_data)
+            PowerModels.simplify_network!(mn_data)
             PowerModels.select_largest_component!(mn_data)
 
             active_buses = Set(["4", "5", "7"])
@@ -94,7 +94,7 @@ TESTLOG = Memento.getlogger(PowerModels)
         end
         @testset "7+14 hybrid filer case" begin
             mn_data = build_mn_data("../test/data/matpower/case7_tplgy.m", "../test/data/matpower/case14.m")
-            PowerModels.propagate_topology_status!(mn_data)
+            PowerModels.simplify_network!(mn_data)
             PowerModels.select_largest_component!(mn_data)
 
             case7_data = mn_data["nw"]["1"]

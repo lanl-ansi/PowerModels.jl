@@ -2,7 +2,7 @@ name = "PowerModels"
 uuid = "c36e90e8-916a-50a6-bd94-075b64ef4655"
 authors = ["Carleton Coffrin"]
 repo = "https://github.com/lanl-ansi/PowerModels.jl"
-version = "0.15.5"
+version = "0.16.0"
 
 [deps]
 InfrastructureModels = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
@@ -11,6 +11,7 @@ JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 Memento = "f28f55f0-a522-5efc-85c2-fe41dfb9b2d9"
+NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
@@ -22,6 +23,7 @@ JuMP = "~0.19.1, ~0.20, ~0.21"
 Juniper = ">= 0.4"
 MathOptInterface = "~0.8, ~0.9"
 Memento = "~0.10, ~0.11, ~0.12, ~0.13, ~1.0"
+NLsolve = "4.0"
 SCS = ">= 0.6.3"
 julia = "^1"
 

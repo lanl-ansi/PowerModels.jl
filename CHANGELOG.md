@@ -4,6 +4,21 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.16.0
+- Added a native AC Power Flow solver in polar coordinates that uses NLSolve (#590)
+- Added `ismulticonductor` check on data models
+- Made branch power flow expressions formulation agnostic (#684) (breaking)
+- Changed the PWL cost implementation from a max formulation to a relaxaed sos formulation
+- Updated PWL cost data processing to require points that span a generators complete operating range (breaking)
+- Updated `correct_bus_types!` to correct slack buses and focus on preparation for power flow studies (breaking)
+- Updated ref extensions API to use ref and data dictionaries, not power model types (#668) (breaking)
+- Replaced `propagate_topology_status!` with `simplify_network!` (breaking)
+- Moved isolated component removal from `propagate_topology_status!` into `deactivate_isolated_components!` (#677) (breaking)
+- Removed InitializePowerModel and instantiate_model to use InfratructureModels versions (breaking)
+- Removed export of some functions defined in InfratructureModels (breaking)
+- Removed branch flow variables from generic Power Flow problem specification (breaking)
+- Removed bus type modification from `check_reference_bus` (breaking)
+
 ### v0.15.5
 - Made matpower cost data parser more robust to floating point numbers
 - Fixed the type of derived "ncost" values in `export_matpower`

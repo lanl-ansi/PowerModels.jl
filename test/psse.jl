@@ -138,8 +138,8 @@ end
             data_pti = PowerModels.parse_file("../test/data/pti/case7_tplgy.raw")
             data_mp  = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
 
-            PowerModels.propagate_topology_status!(data_pti)
-            PowerModels.propagate_topology_status!(data_mp)
+            PowerModels.simplify_network!(data_pti)
+            PowerModels.simplify_network!(data_mp)
 
             set_costs!(data_mp)
 

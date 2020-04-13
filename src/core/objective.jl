@@ -391,31 +391,32 @@ end
 "adds pg_cost variables and constraints"
 function objective_variable_pg_cost(pm::AbstractPowerModel, report::Bool=true)
     for (n, nw_ref) in nws(pm)
-        gen_lines = calc_cost_pwl_lines(nw_ref[:gen])
-        pg_cost_start = Dict{Int64,Float64}()
-        for (i, gen) in nw_ref[:gen]
-            pg_value = sum(JuMP.start_value(var(pm, n, :pg, i)[c]) for c in conductor_ids(pm, n))
-            pg_cost_value = -Inf
-            for line in gen_lines[i]
-                pg_cost_value = max(pg_cost_value, line.slope*pg_value + line.intercept)
+        pg_cost = var(pm, n)[:pg_cost] = Dict{Int,Any}()
+
+        for (i,gen) in ref(pm, n, :gen)
+            pg_cost_lambda = JuMP.@variable(pm.model,
+                [i in 1:gen["ncost"]], base_name="$(n)_pg_cost_lambda",
+                lower_bound = 0.0,
+                upper_bound = 1.0
+            )
+            JuMP.@constraint(pm.model, sum(pg_cost_lambda) == 1.0)
+
+            points = gen["cost"]
+
+            pg_expr = 0.0
+            pg_cost_expr = 0.0
+            for i in 1:gen["ncost"]
+                mw = points[2*i-1]
+                cost = points[2*i]
+
+                pg_expr += mw*pg_cost_lambda[i]
+                pg_cost_expr += cost*pg_cost_lambda[i]
             end
-            pg_cost_start[i] = pg_cost_value
+            JuMP.@constraint(pm.model, pg_expr == sum(var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n)))
+            pg_cost[i] = pg_cost_expr
         end
 
-        #println(pg_cost_start)
-
-        pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
-            [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost",
-            start=pg_cost_start[i]
-        )
         report && _IM.sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
-
-        # gen pwl cost
-        for (i, gen) in nw_ref[:gen]
-            for line in gen_lines[i]
-                JuMP.@constraint(pm.model, pg_cost[i] >= line.slope*sum(var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n)) + line.intercept)
-            end
-        end
     end
 end
 
@@ -423,32 +424,33 @@ end
 "adds p_dc_cost variables and constraints"
 function objective_variable_dc_cost(pm::AbstractPowerModel, report::Bool=true)
     for (n, nw_ref) in nws(pm)
-        dcline_lines = calc_cost_pwl_lines(nw_ref[:dcline])
-        dc_p_cost_start = Dict{Int64,Float64}()
-        for (i, dcline) in nw_ref[:dcline]
-            arc = (i, dcline["f_bus"], dcline["t_bus"])
-            dc_p_value = sum(JuMP.start_value(var(pm, n, :p_dc)[arc][c]) for c in conductor_ids(pm, n))
-            dc_p_cost_value = -Inf
-            for line in dcline_lines[i]
-                dc_p_cost_value = max(dc_p_cost_value, line.slope*dc_p_value + line.intercept)
+        p_dc_cost = var(pm, n)[:p_dc_cost] = Dict{Int,Any}()
+
+        for (i,dcline) in ref(pm, n, :dcline)
+            dc_p_cost_lambda = JuMP.@variable(pm.model,
+                [i in 1:dcline["ncost"]], base_name="$(n)_dc_p_cost_lambda",
+                lower_bound = 0.0,
+                upper_bound = 1.0
+            )
+            JuMP.@constraint(pm.model, sum(dc_p_cost_lambda) == 1.0)
+
+            points = dcline["cost"]
+
+            dc_p_expr = 0.0
+            dc_p_cost_expr = 0.0
+            for i in 1:dcline["ncost"]
+                mw = points[2*i-1]
+                cost = points[2*i]
+
+                dc_p_expr += mw*dc_p_cost_lambda[i]
+                dc_p_cost_expr += cost*dc_p_cost_lambda[i]
             end
-            dc_p_cost_start[i] = dc_p_cost_value
+            arc = (i, dcline["f_bus"], dcline["t_bus"])
+            JuMP.@constraint(pm.model, dc_p_expr == sum(var(pm, n, :p_dc)[arc][c] for c in conductor_ids(pm, n)))
+            p_dc_cost[i] = dc_p_cost_expr
         end
 
-        dc_p_cost = var(pm, n)[:p_dc_cost] = JuMP.@variable(pm.model,
-            [i in ids(pm, n, :dcline)], base_name="$(n)_dc_p_cost",
-            start=dc_p_cost_start[i]
-        )
-        report && _IM.sol_component_value(pm, n, :dcline, :dc_p_cost, ids(pm, n, :dcline), dc_p_cost)
-
-
-        # dcline pwl cost
-        for (i, dcline) in nw_ref[:dcline]
-            arc = (i, dcline["f_bus"], dcline["t_bus"])
-            for line in dcline_lines[i]
-                JuMP.@constraint(pm.model, dc_p_cost[i] >= line.slope*sum(var(pm, n, :p_dc)[arc][c] for c in conductor_ids(pm, n)) + line.intercept)
-            end
-        end
+        report && _IM.sol_component_value(pm, n, :dcline, :p_dc_cost, ids(pm, n, :dcline), p_dc_cost)
     end
 end
 

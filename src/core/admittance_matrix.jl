@@ -3,12 +3,14 @@
 ###############################################################################
 
 """
-Stores metadata related to an Admittance Matirx
+Stores data related to an Admittance Matrix.  Work with both complex
+(i.e. Y) and real-valued (e.g. B) valued admittance matrices.  Only supports
+sparse matrices.
 
-Designed to work with both complex (i.e. Y) and real-valued (e.g. b) valued
-admittance matrices.
-
-Typically the matrix will be sparse, but supports dense matricies as well.
+* `idx_to_bus` - a mapping from 1-to-n bus idx values to data model bus ids
+* `bus_to_idx` - a mapping from data model bus ids to 1-to-n bus idx values
+* `ref_idx` - idx representing the reference bus
+* `matrix` - the sparse admittance matrix values
 """
 struct AdmittanceMatrix{T}
     idx_to_bus::Vector{Int}
@@ -18,6 +20,62 @@ struct AdmittanceMatrix{T}
 end
 
 Base.show(io::IO, x::AdmittanceMatrix{<:Number}) = print(io, "AdmittanceMatrix($(length(x.idx_to_bus)) buses, $(length(nonzeros(x.matrix))) entries)")
+
+
+"data should be a PowerModels network data model; only supports networks with exactly one reference bus"
+function calc_admittance_matrix(data::Dict{String,<:Any})
+    if length(data["dcline"]) > 0
+        Memento.error(_LOGGER, "calc_susceptance_matrix does not support data with dclines")
+    end
+    if length(data["switch"]) > 0
+        Memento.error(_LOGGER, "calc_susceptance_matrix does not support data with switches")
+    end
+
+    #TODO check single connected component
+
+    # NOTE currently exactly one reference bus is required
+    ref_bus = reference_bus(data)
+
+    buses = [x.second for x in data["bus"] if (x.second[pm_component_status["bus"]] != pm_component_status_inactive["bus"])]
+    sort!(buses, by=x->x["index"])
+
+    idx_to_bus = [x["index"] for x in buses]
+    bus_to_idx = Dict(x["index"] => i for (i,x) in enumerate(buses))
+
+    I = Int64[]
+    J = Int64[]
+    V = Complex{Float64}[]
+
+    for (i,branch) in data["branch"]
+        if branch[pm_component_status["branch"]] != pm_component_status_inactive["branch"]
+            f_bus = bus_to_idx[branch["f_bus"]]
+            t_bus = bus_to_idx[branch["t_bus"]]
+            y = inv(branch["br_r"] + branch["br_x"]im)
+            tr, ti = calc_branch_t(branch)
+            t = tr + ti*im
+            lc_fr = branch["g_fr"] + branch["b_fr"]im
+            lc_to = branch["g_to"] + branch["b_to"]im
+            push!(I, f_bus); push!(J, t_bus); push!(V, -conj(y)/t)
+            push!(I, t_bus); push!(J, f_bus); push!(V, -conj(y/t))
+            push!(I, f_bus); push!(J, f_bus); push!(V, conj(y + lc_fr)/abs2(t))
+            push!(I, t_bus); push!(J, t_bus); push!(V, conj(y + lc_to))
+        end
+    end
+
+    for (i,shunt) in data["shunt"]
+        if shunt[pm_component_status["shunt"]] != pm_component_status_inactive["shunt"]
+            bus = bus_to_idx[shunt["shunt_bus"]]
+
+            ys = conj(shunt["gs"] + shunt["bs"]im)
+
+            push!(I, bus); push!(J, bus); push!(V, ys)
+        end
+    end
+
+    m = sparse(I,J,V)
+
+    return AdmittanceMatrix(idx_to_bus, bus_to_idx, bus_to_idx[ref_bus["index"]], m)
+end
 
 
 "data should be a PowerModels network data model; only supports networks with exactly one refrence bus"
@@ -31,16 +89,15 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
 
     #TODO check single connected component
 
-    # NOTE currently exactly one refrence bus is required
+    # NOTE currently exactly one reference bus is required
     ref_bus = reference_bus(data)
 
     buses = [x.second for x in data["bus"] if (x.second[pm_component_status["bus"]] != pm_component_status_inactive["bus"])]
     sort!(buses, by=x->x["index"])
 
     idx_to_bus = [x["index"] for x in buses]
+    bus_type = [x["bus_type"] for x in buses]
     bus_to_idx = Dict(x["index"] => i for (i,x) in enumerate(buses))
-    #println(idx_to_bus)
-    #println(bus_to_idx)
 
     I = Int64[]
     J = Int64[]
@@ -50,7 +107,7 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
         if branch[pm_component_status["branch"]] != pm_component_status_inactive["branch"]
             f_bus = bus_to_idx[branch["f_bus"]]
             t_bus = bus_to_idx[branch["t_bus"]]
-            b_val = -branch["br_x"]/(branch["br_x"]^2+branch["br_r"]^2)
+            b_val = imag(inv(branch["br_r"] + branch["br_x"]im))
             push!(I, f_bus); push!(J, t_bus); push!(V,  b_val)
             push!(I, t_bus); push!(J, f_bus); push!(V,  b_val)
             push!(I, f_bus); push!(J, f_bus); push!(V, -b_val)
@@ -59,7 +116,6 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
     end
 
     m = sparse(I,J,V)
-    #println(m)
 
     return AdmittanceMatrix(idx_to_bus, bus_to_idx, bus_to_idx[ref_bus["index"]], m)
 end
@@ -120,13 +176,7 @@ end
 
 
 "computes a mapping from bus injections to voltage angles implicitly by solving a system of linear equations."
-function injection_factors_va(am::AdmittanceMatrix{T}, bus_id::Int; ref_bus::Int=typemin(Int))::Dict{Int,T} where T
-    # this row is all zeros, an empty Dict is also a reasonable option
-
-    if ref_bus == typemin(Int)
-        ref_bus = am.idx_to_bus[am.ref_idx]
-    end
-
+function injection_factors_va(am::AdmittanceMatrix{T}, bus_id::Int; ref_bus::Int=am.ref_idx)::Dict{Int,T} where T
     if ref_bus == bus_id
         return Dict{Int,T}()
     end
@@ -173,7 +223,12 @@ end
 
 
 """
-computes the power injection of each bus in the network
+computes the power injection of each bus in the network, with a focus on the
+needs of Power Flow solvers.
+
+excludes voltage-dependent components (e.g. shunts), these should be addressed
+as needed by the calling functions.  note that voltage dependent components are
+resolved during an AC Power Flow solve and are not static.
 
 data should be a PowerModels network data model
 """
@@ -194,9 +249,6 @@ function calc_bus_injection(data::Dict{String,<:Any})
         bvals["pd"] = 0.0
         bvals["qd"] = 0.0
 
-        bvals["gs"] = 0.0
-        bvals["bs"] = 0.0
-
         bvals["ps"] = 0.0
         bvals["qs"] = 0.0
 
@@ -209,14 +261,6 @@ function calc_bus_injection(data::Dict{String,<:Any})
             bvals = bus_values[load["load_bus"]]
             bvals["pd"] += load["pd"]
             bvals["qd"] += load["qd"]
-        end
-    end
-
-    for (i,shunt) in data["shunt"]
-        if shunt["status"] != 0
-            bvals = bus_values[shunt["shunt_bus"]]
-            bvals["gs"] += shunt["gs"]
-            bvals["bs"] += shunt["bs"]
         end
     end
 
@@ -241,8 +285,8 @@ function calc_bus_injection(data::Dict{String,<:Any})
     for (i,bus) in data["bus"]
         if bus["bus_type"] != 4
             bvals = bus_values[bus["index"]]
-            p_delta = - bvals["pg"] + bvals["ps"] + bvals["pd"] + bvals["gs"]*(bvals["vm"]^2)
-            q_delta = - bvals["qg"] + bvals["qs"] + bvals["qd"] - bvals["bs"]*(bvals["vm"]^2)
+            p_delta = - bvals["pg"] + bvals["ps"] + bvals["pd"]
+            q_delta = - bvals["qg"] + bvals["qs"] + bvals["qd"]
         else
             p_delta = NaN
             q_delta = NaN
@@ -255,41 +299,15 @@ function calc_bus_injection(data::Dict{String,<:Any})
     return (p_deltas, q_deltas)
 end
 
+"an active power only variant of `calc_bus_injection`"
 calc_bus_injection_active(data::Dict{String,<:Any}) = calc_bus_injection(data)[1]
-
-
-"""
-computes a dc power flow based on the susceptance matrix of the network data
-"""
-function compute_dc_pf(data::Dict{String,<:Any})
-    #TODO check single connected component
-
-    sm = calc_susceptance_matrix(data)
-    bi = calc_bus_injection_active(data)
-
-    bi_idx = [bi[bus_id] for bus_id in sm.idx_to_bus]
-    theta_idx = solve_theta(sm, bi_idx)
-
-    bus_assignment= Dict{String,Any}()
-    for (i,bus) in data["bus"]
-        va = NaN
-        if haskey(sm.bus_to_idx, bus["index"])
-            va = theta_idx[sm.bus_to_idx[bus["index"]]]
-        end
-        bus_assignment[i] = Dict("va" => va)
-    end
-
-    return Dict("per_unit" => data["per_unit"], "bus" => bus_assignment)
-end
 
 
 """
 solves a DC power flow, assumes a single slack power variable at the refrence bus
 """
 function solve_theta(am::AdmittanceMatrix, bus_injection::Vector{Float64})
-    #println(am.matrix)
-    #println(bus_injection)
-
+    # TODO can copy be avoided?  @view?
     m = deepcopy(am.matrix)
     bi = deepcopy(bus_injection)
 

@@ -56,7 +56,9 @@ function correct_network_data!(data::Dict{String,<:Any})
 
     mod_dcline[:losses] = correct_dcline_limits!(data)
 
-    mod_bus[:type] = correct_bus_types!(data)
+    if length(data["gen"]) > 0 && any(gen["gen_status"] != 0 for (i,gen) in data["gen"])
+        mod_bus[:type] = correct_bus_types!(data)
+    end
     check_voltage_setpoints(data)
 
     check_storage_parameters(data)
