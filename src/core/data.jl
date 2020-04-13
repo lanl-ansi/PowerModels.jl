@@ -1686,12 +1686,12 @@ function correct_bus_types!(data::Dict{String,<:Any})
     end
 
     if !slack_found
-        if length(data["gen"]) > 0
-            big_gen = _biggest_generator(data["gen"])
-            gen_bus = big_gen["gen_bus"]
+        gen = _biggest_generator(data["gen"])
+        if length(gen) > 0
+            gen_bus = gen["gen_bus"]
             ref_bus = data["bus"]["$(gen_bus)"]
             ref_bus["bus_type"] = 3
-            Memento.warn(_LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(big_gen["index"])")
+            Memento.warn(_LOGGER, "no reference bus found, setting bus $(gen_bus) as reference based on generator $(gen["index"])")
         else
             Memento.error(_LOGGER, "no generators found in the given network data, correct_bus_types! requires at least one generator at the reference bus")
         end
