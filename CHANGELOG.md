@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.16.0
 - Added a native AC Power Flow solver in polar coordinates that uses NLSolve (#590)
 - Added `ismulticonductor` check on data models
 - Made branch power flow expressions formulation agnostic (#684) (breaking)
