@@ -3,12 +3,14 @@
 ###############################################################################
 
 """
-Stores metadata related to an Admittance Matirx
+Stores data related to an Admittance Matrix.  Work with both complex
+(i.e. Y) and real-valued (e.g. B) valued admittance matrices.  Only supports
+sparse matrices.
 
-Designed to work with both complex (i.e. Y) and real-valued (e.g. b) valued
-admittance matrices.
-
-Typically the matrix will be sparse, but supports dense matricies as well.
+* `idx_to_bus` - a mapping from 1-to-n bus idx values to data model bus ids
+* `bus_to_idx` - a mapping from data model bus ids to 1-to-n bus idx values
+* `ref_idx` - idx representing the reference bus
+* `matrix` - the sparse admittance matrix values
 """
 struct AdmittanceMatrix{T}
     idx_to_bus::Vector{Int}

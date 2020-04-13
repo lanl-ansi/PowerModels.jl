@@ -12,6 +12,7 @@ makedocs(
             "Network Data Format" => "network-data.md",
             "Result Data Format" => "result-data.md",
             "Mathematical Model" => "math-model.md",
+            "Power Flow" => "power-flow.md",
             "Storage Model" => "storage.md",
             "Switch Model" => "switch.md",
             "Multi Networks" => "multi-networks.md",

@@ -8,7 +8,7 @@ function run_dc_pf(file, optimizer; kwargs...)
     return run_pf(file, DCPPowerModel, optimizer; kwargs...)
 end
 
-"solves a formulation agnostic Power Flow using a JuMP model"
+"solves a formulation-agnostic Power Flow using a JuMP model"
 function run_pf(file, model_type::Type, optimizer; kwargs...)
     return run_model(file, model_type, optimizer, build_pf; kwargs...)
 end
@@ -260,10 +260,11 @@ end
 
 
 """
-computes a nonlinear AC power flow in polar coordinates based on the admittance
-matrix of the network data using the NLSolve package.
+Computes a nonlinear AC power flow in polar coordinates based on the admittance
+matrix of the network data using the NLsolve package.  See the NLsolve
+documentation for solver configuration parameters.
 
-returns a solution data structure in PowerModels Dict format
+Returns a solution data structure in PowerModels Dict format
 """
 function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
     result = _compute_ac_pf(pf_data, kwargs...)
