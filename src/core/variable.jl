@@ -474,12 +474,12 @@ function variable_branch_power_imag(pm::AbstractPowerModel; nw::Int=pm.cnw, boun
 end
 
 function variable_branch_transform(pm::AbstractPolarModels; kwargs...)
-    variable_branch_transform_mang(pm; kwargs...)
+    variable_branch_transform_magn(pm; kwargs...)
     variable_branch_transform_angl(pm; kwargs...)
 end
 
 "variable: `0 <= tm[l]` for `l` in `branch`es"
-function variable_branch_transform_mang(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_transform_magn(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     tm = var(pm, nw)[:tm] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :branch)], base_name="$(nw)_tm",
         start = comp_start_value(ref(pm, nw, :branch, i), "tm_start")
