@@ -17,7 +17,7 @@ end
 function build_pf(pm::AbstractPowerModel)
     variable_voltage(pm, bounded = false)
     variable_generation(pm, bounded = false)
-    variable_dcline_flow(pm, bounded = false)
+    variable_dcline_power(pm, bounded = false)
 
     for i in ids(pm, :branch)
         expression_branch_flow_yt_from(pm, i)

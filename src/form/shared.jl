@@ -40,7 +40,7 @@ end
 
 
 "do nothing by default but some formulations require this"
-function variable_current_storage(pm::AbstractWConvexModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_current(pm::AbstractWConvexModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     ccms = var(pm, nw)[:ccms] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_ccms",
         start = comp_start_value(ref(pm, nw, :storage, i), "ccms_start")
@@ -89,8 +89,8 @@ end
 
 
 ""
-function variable_bus_voltage(pm::AbstractWModels; kwargs...)
-    variable_voltage_magnitude_sqr(pm; kwargs...)
+function variable_voltage_magnitude(pm::AbstractWModels; kwargs...)
+    variable_voltage_magn_sqr(pm; kwargs...)
 end
 
 ""

@@ -14,8 +14,8 @@ function build_ots(pm::AbstractPowerModel)
     variable_branch_indicator(pm)
     variable_voltage_on_off(pm)
     variable_generation(pm)
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 

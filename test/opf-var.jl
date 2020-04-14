@@ -699,8 +699,8 @@ end
     function build_opf_var(pm::AbstractPowerModel)
         PMs.variable_voltage(pm)
         PMs.variable_generation(pm)
-        PMs.variable_branch_flow(pm)
-        PMs.variable_dcline_flow(pm)
+        PMs.variable_branch_power(pm)
+        PMs.variable_dcline_power(pm)
 
         PMs.objective_min_fuel_and_flow_cost(pm)
 

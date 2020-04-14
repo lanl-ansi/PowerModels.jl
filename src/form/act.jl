@@ -8,7 +8,7 @@ end
 ""
 function variable_voltage(pm::AbstractACTModel; kwargs...)
     variable_voltage_angle(pm; kwargs...)
-    variable_voltage_magnitude_sqr(pm; kwargs...)
+    variable_voltage_magn_sqr(pm; kwargs...)
     variable_voltage_product(pm; kwargs...)
 end
 

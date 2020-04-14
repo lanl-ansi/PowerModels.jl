@@ -15,8 +15,8 @@ end
 function _build_opf_cl(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 
@@ -55,8 +55,8 @@ function _build_opf_sw(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_switch_flow(pm)
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 
@@ -104,8 +104,8 @@ function _build_oswpf(pm::AbstractPowerModel)
     variable_switch_indicator(pm)
     variable_switch_flow(pm)
 
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 
@@ -154,8 +154,8 @@ function _build_oswpf_nb(pm::AbstractPowerModel)
     variable_switch_flow(pm)
 
     variable_branch_indicator(pm)
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 
@@ -228,10 +228,10 @@ end
 function _build_mld(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
 
-    variable_demand_factor(pm, relax=true)
+    variable_load_power_factor(pm, relax=true)
     variable_shunt_factor(pm, relax=true)
 
     objective_max_loadability(pm)
@@ -277,8 +277,8 @@ function _build_ucopf(pm::AbstractPowerModel)
     variable_storage_indicator(pm)
     variable_storage_mi_on_off(pm)
 
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 
@@ -352,8 +352,8 @@ function _build_mn_pf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n, bounded = false)
         variable_generation(pm, nw=n, bounded = false)
-        variable_branch_flow(pm, nw=n, bounded = false)
-        variable_dcline_flow(pm, nw=n, bounded = false)
+        variable_branch_power(pm, nw=n, bounded = false)
+        variable_dcline_power(pm, nw=n, bounded = false)
 
         constraint_model_voltage(pm, nw=n)
 
@@ -408,8 +408,8 @@ function _build_opf_strg(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_storage(pm)
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 
@@ -456,8 +456,8 @@ function _build_opf_strg_mi(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_generation(pm)
     variable_storage_mi(pm)
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 
@@ -505,8 +505,8 @@ function _build_opf_oltc_pst(pm::AbstractPowerModel)
     variable_generation(pm)
 
     variable_transformer(pm)
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 

@@ -9,7 +9,7 @@ function build_pf_iv(pm::AbstractPowerModel)
     variable_branch_current(pm, bounded = false)
 
     variable_gen(pm, bounded = false)
-    variable_dcline(pm, bounded = false)
+    variable_dcline_current(pm, bounded = false)
 
     for (i,bus) in ref(pm, :ref_buses)
         @assert bus["bus_type"] == 3

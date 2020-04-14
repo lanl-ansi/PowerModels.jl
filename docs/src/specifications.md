@@ -10,10 +10,10 @@ objective_min_fuel_cost(pm)
 ### Variables
 ```julia
 variable_voltage(pm)
-variable_active_generation(pm)
+variable_gen_power_real(pm)
 variable_reactive_generation(pm)
-variable_branch_flow(pm)
-variable_dcline_flow(pm)
+variable_branch_power(pm)
+variable_dcline_power(pm)
 ```
 
 ### Constraints
@@ -49,11 +49,11 @@ objective_min_fuel_cost(pm)
 ### Variables
 ```julia
 variable_voltage(pm)
-variable_active_generation(pm)
+variable_gen_power_real(pm)
 variable_reactive_generation(pm)
-variable_branch_flow(pm)
+variable_branch_power(pm)
 variable_branch_current(pm)
-variable_dcline_flow(pm)
+variable_dcline_power(pm)
 ```
 
 ### Constraints
@@ -91,8 +91,8 @@ end
 variable_branch_indicator(pm)
 variable_voltage_on_off(pm)
 variable_generation(pm)
-variable_branch_flow(pm)
-variable_dcline_flow(pm)
+variable_branch_power(pm)
+variable_dcline_power(pm)
 ```
 
 ### Objective
@@ -132,10 +132,10 @@ end
 ### Variables
 ```julia
 variable_voltage(pm, bounded = false)
-variable_active_generation(pm, bounded = false)
+variable_gen_power_real(pm, bounded = false)
 variable_reactive_generation(pm, bounded = false)
-variable_branch_flow(pm, bounded = false)
-variable_dcline_flow(pm, bounded = false)
+variable_branch_power(pm, bounded = false)
+variable_dcline_power(pm, bounded = false)
 ```
 
 ### Constraints
@@ -184,11 +184,11 @@ end
 ### Variables
 ```julia
 variable_voltage(pm, bounded = false)
-variable_active_generation(pm, bounded = false)
+variable_gen_power_real(pm, bounded = false)
 variable_reactive_generation(pm, bounded = false)
-variable_branch_flow(pm, bounded = false)
+variable_branch_power(pm, bounded = false)
 variable_branch_current(pm, bounded = false)
-variable_dcline_flow(pm, bounded = false)
+variable_dcline_power(pm, bounded = false)
 ```
 
 ### Constraints
@@ -241,11 +241,11 @@ objective_tnep_cost(pm)
 variable_branch_ne(pm)
 variable_voltage(pm)
 variable_voltage_ne(pm)
-variable_active_generation(pm)
+variable_gen_power_real(pm)
 variable_reactive_generation(pm)
-variable_branch_flow(pm)
-variable_dcline_flow(pm)
-variable_branch_flow_ne(pm)
+variable_branch_power(pm)
+variable_dcline_power(pm)
+variable_branch_power_ne(pm)
 ```
 
 ### Constraints

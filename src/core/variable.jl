@@ -29,7 +29,7 @@ function variable_voltage_angle(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded:
 end
 
 "variable: `v[i]` for `i` in `bus`es"
-function variable_voltage_magnitude(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_voltage_magn(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     vm = var(pm, nw)[:vm] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_vm",
         start = comp_start_value(ref(pm, nw, :bus, i), "vm_start", 1.0)
@@ -83,7 +83,7 @@ end
 
 
 "variable: `0 <= vm_fr[l] <= buses[branches[l][\"f_bus\"]][\"vmax\"]` for `l` in `branch`es"
-function variable_voltage_magnitude_from_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_magn_fr_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
@@ -98,7 +98,7 @@ function variable_voltage_magnitude_from_on_off(pm::AbstractPowerModel; nw::Int=
 end
 
 "variable: `0 <= vm_to[l] <= buses[branches[l][\"t_bus\"]][\"vmax\"]` for `l` in `branch`es"
-function variable_voltage_magnitude_to_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_magn_to_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
@@ -114,7 +114,7 @@ end
 
 
 "variable: `w[i] >= 0` for `i` in `bus`es"
-function variable_voltage_magnitude_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_voltage_magn_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     w = var(pm, nw)[:w] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_w",
         lower_bound = 0.0,
@@ -132,7 +132,7 @@ function variable_voltage_magnitude_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, 
 end
 
 "variable: `0 <= w_fr[l] <= buses[branches[l][\"f_bus\"]][\"vmax\"]^2` for `l` in `branch`es"
-function variable_voltage_magnitude_sqr_from_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_magn_fr_sqr_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
@@ -147,7 +147,7 @@ function variable_voltage_magnitude_sqr_from_on_off(pm::AbstractPowerModel; nw::
 end
 
 "variable: `0 <= w_to[l] <= buses[branches[l][\"t_bus\"]][\"vmax\"]^2` for `l` in `branch`es"
-function variable_voltage_magnitude_sqr_to_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_magn_to_sqr_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
@@ -162,7 +162,7 @@ function variable_voltage_magnitude_sqr_to_on_off(pm::AbstractPowerModel; nw::In
 end
 
 ""
-function variable_cosine(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_cosine(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     cs = var(pm, nw)[:cs] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_cs",
         start = comp_start_value(ref(pm, nw, :buspairs, bp), "cs_start", 1.0)
@@ -262,13 +262,13 @@ end
 
 "generates variables for both `active` and `reactive` generation"
 function variable_generation(pm::AbstractPowerModel; kwargs...)
-    variable_active_generation(pm; kwargs...)
+    variable_gen_power_real(pm; kwargs...)
     variable_reactive_generation(pm; kwargs...)
 end
 
 
 "variable: `pg[j]` for `j` in `gen`"
-function variable_active_generation(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_gen_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     pg = var(pm, nw)[:pg] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :gen)], base_name="$(nw)_pg",
         start = comp_start_value(ref(pm, nw, :gen, i), "pg_start")
@@ -368,11 +368,11 @@ end
 
 
 function variable_generation_on_off(pm::AbstractPowerModel; kwargs...)
-    variable_active_generation_on_off(pm; kwargs...)
+    variable_gen_power_real_on_off(pm; kwargs...)
     variable_reactive_generation_on_off(pm; kwargs...)
 end
 
-function variable_active_generation_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_gen_power_real_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     pg = var(pm, nw)[:pg] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :gen)], base_name="$(nw)_pg",
         lower_bound = min(0, ref(pm, nw, :gen, i, "pmin")),
@@ -397,14 +397,14 @@ end
 
 
 ""
-function variable_branch_flow(pm::AbstractPowerModel; kwargs...)
-    variable_active_branch_flow(pm; kwargs...)
+function variable_branch_power(pm::AbstractPowerModel; kwargs...)
+    variable_branch_power_real(pm; kwargs...)
     variable_reactive_branch_flow(pm; kwargs...)
 end
 
 
 "variable: `p[l,i,j]` for `(l,i,j)` in `arcs`"
-function variable_active_branch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     p = var(pm, nw)[:p] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_p",
         start = comp_start_value(ref(pm, nw, :branch, l), "p_start")
@@ -551,7 +551,7 @@ end
 
 
 "variable: `ci[l,i,j] ` for `(l,i,j)` in `arcs`"
-function variable_branch_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_current_imag(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     ci = var(pm, nw)[:ci] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_ci",
         start = comp_start_value(ref(pm, nw, :branch, l), "ci_start")
@@ -628,7 +628,7 @@ function variable_branch_series_current_real(pm::AbstractPowerModel; nw::Int=pm.
 end
 
 "variable: `csi[l,i,j] ` for `(l,i,j)` in `arcs_from`"
-function variable_branch_series_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_series_current_imag(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     csi = var(pm, nw)[:csi] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_csi",
         start = comp_start_value(ref(pm, nw, :branch, l), "csi_start", 0.0)
@@ -668,13 +668,13 @@ function variable_branch_series_current_imaginary(pm::AbstractPowerModel; nw::In
 end
 
 
-function variable_dcline_flow(pm::AbstractPowerModel; kwargs...)
-    variable_active_dcline_flow(pm; kwargs...)
+function variable_dcline_power(pm::AbstractPowerModel; kwargs...)
+    variable_dcline_power_real(pm; kwargs...)
     variable_reactive_dcline_flow(pm; kwargs...)
 end
 
 "variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
-function variable_active_dcline_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_dcline_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     p_dc = var(pm, nw)[:p_dc] = JuMP.@variable(pm.model,
         [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_p_dc",
     )
@@ -772,7 +772,7 @@ function variable_dcline_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bo
 end
 
 "variable:  `cidc[j]` for `j` in `dcline`"
-function variable_dcline_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_dcline_current_imag(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     cidc = var(pm, nw)[:cidc] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_cidc",
         start = comp_start_value(ref(pm, nw, :dcline, l), "cidc_start")
@@ -823,13 +823,13 @@ end
 
 ""
 function variable_switch_flow(pm::AbstractPowerModel; kwargs...)
-    variable_active_switch_flow(pm; kwargs...)
+    variable_switch_power_real(pm; kwargs...)
     variable_reactive_switch_flow(pm; kwargs...)
 end
 
 
 "variable: `pws[l,i,j]` for `(l,i,j)` in `arcs_sw`"
-function variable_active_switch_flow(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_switch_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     psw = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_psw",
         start = comp_start_value(ref(pm, nw, :switch, l), "psw_start")
@@ -891,9 +891,9 @@ end
 
 "variables for modeling storage units, includes grid injection and internal variables"
 function variable_storage(pm::AbstractPowerModel; kwargs...)
-    variable_active_storage(pm; kwargs...)
+    variable_storage_power_real(pm; kwargs...)
     variable_reactive_storage(pm; kwargs...)
-    variable_current_storage(pm; kwargs...)
+    variable_storage_current(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
     variable_storage_discharge(pm; kwargs...)
@@ -901,9 +901,9 @@ end
 
 "variables for modeling storage units, includes grid injection and internal variables, with mixed int variables for charge/discharge"
 function variable_storage_mi(pm::AbstractPowerModel; kwargs...)
-    variable_active_storage(pm; kwargs...)
+    variable_storage_power_real(pm; kwargs...)
     variable_reactive_storage(pm; kwargs...)
-    variable_current_storage(pm; kwargs...)
+    variable_storage_current(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
     variable_storage_discharge(pm; kwargs...)
@@ -912,7 +912,7 @@ end
 
 
 ""
-function variable_active_storage(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     ps = var(pm, nw)[:ps] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_ps",
         start = comp_start_value(ref(pm, nw, :storage, i), "ps_start")
@@ -954,7 +954,7 @@ function variable_reactive_storage(pm::AbstractPowerModel; nw::Int=pm.cnw, bound
 end
 
 "do nothing by default but some formulations require this"
-function variable_current_storage(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_current(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
 end
 
 
@@ -1042,16 +1042,16 @@ function variable_storage_complementary_indicator(pm::AbstractPowerModel; nw::In
 end
 
 function variable_storage_mi_on_off(pm::AbstractPowerModel; kwargs...)
-    variable_active_storage_on_off(pm; kwargs...)
+    variable_storage_power_real_on_off(pm; kwargs...)
     variable_reactive_storage_on_off(pm; kwargs...)
-    variable_current_storage(pm; kwargs...)
+    variable_storage_current(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
     variable_storage_discharge(pm; kwargs...)
     variable_storage_complementary_indicator(pm; kwargs...)
 end
 
-function variable_active_storage_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_storage_power_real_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     ps = var(pm, nw)[:ps] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_ps",
         start = comp_start_value(ref(pm, nw, :storage, i), "ps_start")
@@ -1108,13 +1108,13 @@ end
 ### Network Expantion Variables
 
 "generates variables for both `active` and `reactive` `branch_flow_ne`"
-function variable_branch_flow_ne(pm::AbstractPowerModel; kwargs...)
-    variable_active_branch_flow_ne(pm; kwargs...)
+function variable_branch_power_ne(pm::AbstractPowerModel; kwargs...)
+    variable_branch_power_real_ne(pm; kwargs...)
     variable_reactive_branch_flow_ne(pm; kwargs...)
 end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= p_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
-function variable_active_branch_flow_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_power_real_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     p_ne = var(pm, nw)[:p_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs)], base_name="$(nw)_p_ne",
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "p_start")
@@ -1203,7 +1203,7 @@ end
 
 
 ""
-function variable_demand_factor(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+function variable_load_power_factor(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
     if !relax
         z_demand = var(pm, nw)[:z_demand] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :load)], base_name="$(nw)_z_demand",

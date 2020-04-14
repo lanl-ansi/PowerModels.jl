@@ -13,9 +13,9 @@ function build_tnep(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_voltage_ne(pm)
     variable_generation(pm)
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
-    variable_branch_flow_ne(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
+    variable_branch_power_ne(pm)
 
     objective_tnep_cost(pm)
 
