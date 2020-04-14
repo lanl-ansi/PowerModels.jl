@@ -276,22 +276,22 @@ TESTLOG = Memento.getlogger(PowerModels)
 
 
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"], -0.0447822; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"], -0.0197299; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["ps"], -0.079233; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
 
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"], -0.0447822; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"], -0.0197299; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["ps"], -0.079233; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
 
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"], -0.0447824; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"], -0.0197300; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["ps"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
 
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"], -0.0447822; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"], -0.0197299; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"], -0.079233; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
 
@@ -303,22 +303,22 @@ TESTLOG = Memento.getlogger(PowerModels)
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 58853.5; atol = 1e0)
 
-            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"], -0.0597052; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"], -0.0448335; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["ps"], -0.0596959; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
 
-            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"], -0.0597053; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"], -0.0448337; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["ps"], -0.0596960; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
 
-            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"], -0.0597056; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"], -0.0448338; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["ps"], -0.0596961; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
 
-            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"], -0.0448343; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"], -0.0596964; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
@@ -330,22 +330,22 @@ TESTLOG = Memento.getlogger(PowerModels)
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 58826.36; atol = 1e0)
 
-            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"], -0.0597052; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"], -0.0448335; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["ps"], -0.0596960; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
 
-            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"], -0.0597053; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"], -0.0448337; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["ps"], -0.0597053; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
 
-            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"], -0.0597056; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"], -0.0448338; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["ps"], -0.0596962; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
 
-            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"], -0.0448338; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"], -0.0596964; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
@@ -358,24 +358,24 @@ TESTLOG = Memento.getlogger(PowerModels)
             @test isapprox(result["objective"], 57980.0; atol = 1e0)
 
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0180554; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["ps"], -0.0834412; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["qs"],  0.0526152; atol = 1e-3)
 
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0191375; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["ps"],  0.0000000; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["qs"],  0.0528281; atol = 1e-3)
 
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0169098; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["ps"], -0.1565587; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["qs"],  0.0533083; atol = 1e-3)
 
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"], -0.1800000; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0190448; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"],  0.0000000; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0000000; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0526638; atol = 1e-3)
 
             # This formulation is lossless. Sum of loads and storage should equal sum of generation.
             for (n, net) in mn_data["nw"]

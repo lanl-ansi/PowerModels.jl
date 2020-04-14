@@ -893,6 +893,7 @@ end
 function variable_storage(pm::AbstractPowerModel; kwargs...)
     variable_active_storage(pm; kwargs...)
     variable_reactive_storage(pm; kwargs...)
+    variable_reactive_storage_control(pm; kwargs...)
     variable_current_storage(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
@@ -903,6 +904,7 @@ end
 function variable_storage_mi(pm::AbstractPowerModel; kwargs...)
     variable_active_storage(pm; kwargs...)
     variable_reactive_storage(pm; kwargs...)
+    variable_reactive_storage_control(pm; kwargs...)
     variable_current_storage(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
@@ -951,6 +953,29 @@ function variable_reactive_storage(pm::AbstractPowerModel; nw::Int=pm.cnw, bound
     end
 
     report && _IM.sol_component_value(pm, nw, :storage, :qs, ids(pm, nw, :storage), qs)
+end
+
+
+""
+function variable_reactive_storage_control(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+    sq = var(pm, nw)[:sq] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_sq",
+        start = comp_start_value(ref(pm, nw, :storage, i), "sq_start", 1)
+    )
+
+    if bounded
+        inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus))
+
+        for i in ids(pm, nw, :storage)
+            if !isinf(inj_lb[i])
+                JuMP.set_lower_bound(sq[i], inj_lb[i])
+            end
+            if !isinf(inj_ub[i])
+                JuMP.set_upper_bound(sq[i], inj_ub[i])
+            end
+        end
+    end
+    report && _IM.sol_component_value(pm, nw, :storage, :sq, ids(pm, nw, :storage), sq)
 end
 
 "do nothing by default but some formulations require this"

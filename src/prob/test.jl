@@ -276,6 +276,8 @@ function _build_ucopf(pm::AbstractPowerModel)
 
     variable_storage_indicator(pm)
     variable_storage_mi_on_off(pm)
+    variable_reactive_storage_control(pm)
+
 
     variable_branch_flow(pm)
     variable_dcline_flow(pm)
@@ -534,4 +536,3 @@ function _build_opf_oltc_pst(pm::AbstractPowerModel)
         constraint_dcline(pm, i)
     end
 end
-
