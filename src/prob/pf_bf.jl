@@ -6,7 +6,7 @@ end
 ""
 function build_pf_bf(pm::AbstractPowerModel)
     variable_voltage(pm, bounded = false)
-    variable_generation(pm, bounded = false)
+    variable_gen_power(pm, bounded = false)
     variable_branch_power(pm, bounded = false)
     variable_branch_current(pm, bounded = false)
     variable_dcline_power(pm, bounded = false)

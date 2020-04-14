@@ -2,7 +2,7 @@
 
 ""
 function variable_voltage(pm::AbstractLPACModel; kwargs...)
-    variable_voltage_angle(pm; kwargs...)
+    variable_voltage_angl(pm; kwargs...)
     variable_voltage_magn(pm; kwargs...)
     variable_buspair_cosine(pm; kwargs...)
 end

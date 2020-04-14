@@ -8,7 +8,7 @@ function build_opf_iv(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_branch_current(pm)
 
-    variable_gen(pm)
+    variable_gen_current(pm)
     variable_dcline_current(pm)
 
     objective_min_fuel_and_flow_cost(pm)

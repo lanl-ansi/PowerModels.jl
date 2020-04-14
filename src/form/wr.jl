@@ -4,13 +4,13 @@
 ""
 function variable_voltage(pm::AbstractWRModel; kwargs...)
     variable_voltage_magn_sqr(pm; kwargs...)
-    variable_voltage_product(pm; kwargs...)
+    variable_buspair_voltage_product(pm; kwargs...)
 end
 
 ""
 function variable_voltage(pm::AbstractWRConicModel; kwargs...)
     variable_voltage_magn_sqr(pm; kwargs...)
-    variable_voltage_product(pm; kwargs...)
+    variable_buspair_voltage_product(pm; kwargs...)
 end
 
 ""
@@ -83,7 +83,7 @@ function variable_voltage_on_off(pm::AbstractWRModel; kwargs...)
     variable_branch_voltage_magn_fr_sqr_on_off(pm; kwargs...)
     variable_branch_voltage_magn_to_sqr_on_off(pm; kwargs...)
 
-    variable_voltage_product_on_off(pm; kwargs...)
+    variable_branch_voltage_product_on_off(pm; kwargs...)
 end
 
 ""
@@ -279,7 +279,7 @@ end
 function variable_voltage_ne(pm::AbstractWRModel; kwargs...)
     variable_branch_voltage_magn_fr_sqr_ne(pm; kwargs...)
     variable_branch_voltage_magn_to_sqr_ne(pm; kwargs...)
-    variable_voltage_product_ne(pm; kwargs...)
+    variable_branch_voltage_product_ne(pm; kwargs...)
 end
 
 ""
@@ -313,7 +313,7 @@ function variable_branch_voltage_magn_to_sqr_ne(pm::AbstractWRModel; nw::Int=pm.
 end
 
 ""
-function variable_voltage_product_ne(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_product_ne(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
     wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :ne_buspairs))
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
 
@@ -340,7 +340,7 @@ end
 
 
 "Creates variables associated with differences in voltage angles"
-function variable_voltage_angle_difference(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_voltage_product_angl(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     td = var(pm, nw)[:td] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_td",
         start = comp_start_value(ref(pm, nw, :buspairs, bp), "td_start")
@@ -401,16 +401,16 @@ end
 
 ""
 function variable_voltage(pm::AbstractQCWRModel; kwargs...)
-    variable_voltage_angle(pm; kwargs...)
+    variable_voltage_angl(pm; kwargs...)
     variable_voltage_magn(pm; kwargs...)
 
     variable_voltage_magn_sqr(pm; kwargs...)
-    variable_voltage_product(pm; kwargs...)
+    variable_buspair_voltage_product(pm; kwargs...)
 
-    variable_voltage_angle_difference(pm; kwargs...)
+    variable_buspair_voltage_product_angl(pm; kwargs...)
     variable_buspair_voltage_product_magn(pm; kwargs...)
     variable_buspair_cosine(pm; kwargs...)
-    variable_sine(pm; kwargs...)
+    variable_buspair_sine(pm; kwargs...)
     variable_buspair_current_magn_sqr(pm; kwargs...)
 end
 
@@ -519,7 +519,7 @@ end
 
 ""
 function variable_voltage_on_off(pm::AbstractQCWRModel; kwargs...)
-    variable_voltage_angle(pm; kwargs...)
+    variable_voltage_angl(pm; kwargs...)
     variable_voltage_magn(pm; kwargs...)
     variable_branch_voltage_magn_fr_on_off(pm; kwargs...)
     variable_branch_voltage_magn_to_on_off(pm; kwargs...)
@@ -528,17 +528,17 @@ function variable_voltage_on_off(pm::AbstractQCWRModel; kwargs...)
     variable_branch_voltage_magn_fr_sqr_on_off(pm; kwargs...)
     variable_branch_voltage_magn_to_sqr_on_off(pm; kwargs...)
 
-    variable_voltage_product_on_off(pm; kwargs...)
+    variable_branch_voltage_product_on_off(pm; kwargs...)
 
-    variable_voltage_angle_difference_on_off(pm; kwargs...)
+    variable_branch_voltage_product_angl_on_off(pm; kwargs...)
     variable_buspair_voltage_product_magn_on_off(pm; kwargs...)
     variable_branch_cosine_on_off(pm; kwargs...)
-    variable_sine_on_off(pm; kwargs...)
+    variable_branch_sine_on_off(pm; kwargs...)
     variable_branch_current_magn_sqr_on_off(pm; kwargs...) # includes 0, but needs new indexs
 end
 
 ""
-function variable_voltage_angle_difference_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_product_angl_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     td = var(pm, nw)[:td] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_td",
         lower_bound = min(0, ref(pm, nw, :branch, l, "angmin")),
@@ -601,7 +601,7 @@ function variable_branch_cosine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, r
 end
 
 ""
-function variable_sine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_sine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     si = var(pm, nw)[:si] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_si",
         lower_bound = min(0, sin(ref(pm, nw, :branch, l, "angmin"))),
@@ -763,17 +763,17 @@ end
 
 ""
 function variable_voltage(pm::AbstractQCLSModel; kwargs...)
-    variable_voltage_angle(pm; kwargs...)
+    variable_voltage_angl(pm; kwargs...)
     variable_voltage_magn(pm; kwargs...)
 
     variable_voltage_magn_sqr(pm; kwargs...)
-    variable_voltage_product(pm; kwargs...)
+    variable_buspair_voltage_product(pm; kwargs...)
 
-    variable_voltage_angle_difference(pm; kwargs...)
+    variable_buspair_voltage_product_angl(pm; kwargs...)
     variable_buspair_voltage_product_magn(pm; kwargs...)
     variable_buspair_voltage_product_magn_multipliers(pm; kwargs...)
     variable_buspair_cosine(pm; kwargs...)
-    variable_sine(pm; kwargs...)
+    variable_buspair_sine(pm; kwargs...)
     variable_buspair_current_magn_sqr(pm; kwargs...)
 end
 

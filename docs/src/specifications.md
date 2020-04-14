@@ -11,7 +11,7 @@ objective_min_fuel_cost(pm)
 ```julia
 variable_voltage(pm)
 variable_gen_power_real(pm)
-variable_reactive_generation(pm)
+variable_gen_power_imag(pm)
 variable_branch_power(pm)
 variable_dcline_power(pm)
 ```
@@ -50,7 +50,7 @@ objective_min_fuel_cost(pm)
 ```julia
 variable_voltage(pm)
 variable_gen_power_real(pm)
-variable_reactive_generation(pm)
+variable_gen_power_imag(pm)
 variable_branch_power(pm)
 variable_branch_current(pm)
 variable_dcline_power(pm)
@@ -90,7 +90,7 @@ end
 ```julia
 variable_branch_indicator(pm)
 variable_voltage_on_off(pm)
-variable_generation(pm)
+variable_gen_power(pm)
 variable_branch_power(pm)
 variable_dcline_power(pm)
 ```
@@ -133,7 +133,7 @@ end
 ```julia
 variable_voltage(pm, bounded = false)
 variable_gen_power_real(pm, bounded = false)
-variable_reactive_generation(pm, bounded = false)
+variable_gen_power_imag(pm, bounded = false)
 variable_branch_power(pm, bounded = false)
 variable_dcline_power(pm, bounded = false)
 ```
@@ -185,7 +185,7 @@ end
 ```julia
 variable_voltage(pm, bounded = false)
 variable_gen_power_real(pm, bounded = false)
-variable_reactive_generation(pm, bounded = false)
+variable_gen_power_imag(pm, bounded = false)
 variable_branch_power(pm, bounded = false)
 variable_branch_current(pm, bounded = false)
 variable_dcline_power(pm, bounded = false)
@@ -242,7 +242,7 @@ variable_branch_ne(pm)
 variable_voltage(pm)
 variable_voltage_ne(pm)
 variable_gen_power_real(pm)
-variable_reactive_generation(pm)
+variable_gen_power_imag(pm)
 variable_branch_power(pm)
 variable_dcline_power(pm)
 variable_branch_power_ne(pm)

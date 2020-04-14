@@ -5,7 +5,7 @@
 
 ""
 function variable_voltage(pm::AbstractDCPModel; kwargs...)
-    variable_voltage_angle(pm; kwargs...)
+    variable_voltage_angl(pm; kwargs...)
     variable_voltage_magn(pm; kwargs...)
 end
 
@@ -155,7 +155,7 @@ end
 
 ""
 function variable_voltage_on_off(pm::AbstractDCPModel; kwargs...)
-    variable_voltage_angle(pm; kwargs...)
+    variable_voltage_angl(pm; kwargs...)
 end
 
 "do nothing, this model does not have complex voltage variables"

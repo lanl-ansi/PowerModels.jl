@@ -37,9 +37,9 @@ function variable_branch_current(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::
 end
 
 ""
-function variable_gen(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true, kwargs...)
+function variable_gen_current(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true, kwargs...)
     variable_gen_current_real(pm, nw=nw, bounded=bounded, report=report; kwargs...)
-    variable_gen_current_imaginary(pm, nw=nw, bounded=bounded, report=report; kwargs...)
+    variable_gen_current_imag(pm, nw=nw, bounded=bounded, report=report; kwargs...)
 
     # store active and reactive power expressions for use in objective + post processing
     pg = Dict()

@@ -16,7 +16,7 @@ end
 ""
 function build_opf(pm::AbstractPowerModel)
     variable_voltage(pm)
-    variable_generation(pm)
+    variable_gen_power(pm)
     variable_branch_power(pm)
     variable_dcline_power(pm)
 
@@ -58,7 +58,7 @@ end
 function build_mn_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n)
-        variable_generation(pm, nw=n)
+        variable_gen_power(pm, nw=n)
         variable_branch_power(pm, nw=n)
         variable_dcline_power(pm, nw=n)
 
@@ -100,7 +100,7 @@ end
 function build_mn_opf_strg(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n)
-        variable_generation(pm, nw=n)
+        variable_gen_power(pm, nw=n)
         variable_storage_mi(pm, nw=n)
         variable_branch_power(pm, nw=n)
         variable_dcline_power(pm, nw=n)
@@ -177,7 +177,7 @@ end
 
 ""
 function build_opf_ptdf(pm::DCPPowerModel)
-    variable_generation(pm)
+    variable_gen_power(pm)
 
     for i in ids(pm, :bus)
         expression_power_injection(pm, i)
