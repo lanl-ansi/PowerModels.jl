@@ -34,6 +34,6 @@ function build_opf_iv(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :dcline)
-        constraint_dcline(pm, i)
+        constraint_dcline_power_losses(pm, i)
     end
 end

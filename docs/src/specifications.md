@@ -35,7 +35,7 @@ for i in ids(pm, :branch)
     constraint_thermal_limit_to(pm, i)
 end
 for i in ids(pm, :dcline)
-    constraint_dcline(pm, i)
+    constraint_dcline_power_losses(pm, i)
 end
 ```
 
@@ -75,7 +75,7 @@ for i in ids(pm, :branch)
     constraint_thermal_limit_to(pm, i)
 end
 for i in ids(pm, :dcline)
-    constraint_dcline(pm, i)
+    constraint_dcline_power_losses(pm, i)
 end
 ```
 
@@ -121,7 +121,7 @@ for i in ids(pm, :branch)
     constraint_thermal_limit_to_on_off(pm, i)
 end
 for i in ids(pm, :dcline)
-    constraint_dcline(pm, i)
+    constraint_dcline_power_losses(pm, i)
 end
 ```
 
@@ -277,6 +277,6 @@ for i in ids(pm, :ne_branch)
     constraint_ne_thermal_limit_to(pm, i)
 end
 for i in ids(pm, :dcline)
-    constraint_dcline(pm, i)
+    constraint_dcline_power_losses(pm, i)
 end
 ```

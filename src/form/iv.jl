@@ -98,8 +98,8 @@ function variable_dcline_current(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::
 
     if bounded
         for (i,dcline) in ref(pm, nw, :dcline)
-            constraint_dcline_power_limits_from(pm, i, nw=nw)
-            constraint_dcline_power_limits_to(pm, i, nw=nw)
+            constraint_dcline_power_fr_bounds(pm, i, nw=nw)
+            constraint_dcline_power_to_bounds(pm, i, nw=nw)
         end
     end
 end
@@ -302,7 +302,7 @@ function constraint_gen_setpoint_reactive(pm::AbstractIVRModel, n::Int, i, qgref
     JuMP.@constraint(pm.model, qgref == vi*cr  - vr*ci)
 end
 
-function constraint_dcline(pm::AbstractIVRModel, n::Int, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
+function constraint_dcline_power_losses(pm::AbstractIVRModel, n::Int, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
     vr_fr = var(pm, n, :vr, f_bus)
     vi_fr = var(pm, n, :vi, f_bus)
 
@@ -322,7 +322,7 @@ function constraint_dcline(pm::AbstractIVRModel, n::Int, f_bus, t_bus, f_idx, t_
 end
 
 "`pmin <= p_fr <= pmax, qmin <= q_fr <= qmax, `"
-function constraint_dcline_power_limits_from(pm::AbstractIVRModel, n::Int, i, f_bus, f_idx, pmax, pmin, qmax, qmin)
+function constraint_dcline_power_fr_bounds(pm::AbstractIVRModel, n::Int, i, f_bus, f_idx, pmax, pmin, qmax, qmin)
     vr_fr = var(pm, n, :vr, f_bus)
     vi_fr = var(pm, n, :vi, f_bus)
 
@@ -341,7 +341,7 @@ end
 
 
 "`pmin <= p_to <= pmax, qmin <= q_to <= qmax, `"
-function constraint_dcline_power_limits_to(pm::AbstractIVRModel, n::Int, i, t_bus, t_idx, pmax, pmin, qmax, qmin)
+function constraint_dcline_power_to_bounds(pm::AbstractIVRModel, n::Int, i, t_bus, t_idx, pmax, pmin, qmax, qmin)
     vr_to = var(pm, n, :vr, t_bus)
     vi_to = var(pm, n, :vi, t_bus)
 

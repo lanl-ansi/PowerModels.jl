@@ -904,7 +904,7 @@ end
 ### DC LINES ###
 
 ""
-function constraint_dcline(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_dcline_power_losses(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     dcline = ref(pm, nw, :dcline, i)
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
@@ -913,7 +913,7 @@ function constraint_dcline(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     loss0 = dcline["loss0"]
     loss1 = dcline["loss1"]
 
-    constraint_dcline(pm, nw, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
+    constraint_dcline_power_losses(pm, nw, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
 end
 
 ""
@@ -931,7 +931,7 @@ end
 
 
 ""
-function constraint_dcline_power_limits_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_dcline_power_fr_bounds(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     dcline = ref(pm, nw, :dcline, i)
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
@@ -942,11 +942,11 @@ function constraint_dcline_power_limits_from(pm::AbstractPowerModel, i::Int; nw:
 
     qmax = dcline["qmaxf"]
     qmin = dcline["qminf"]
-    constraint_dcline_power_limits_from(pm, nw, i, f_bus, f_idx, pmax, pmin, qmax, qmin)
+    constraint_dcline_power_fr_bounds(pm, nw, i, f_bus, f_idx, pmax, pmin, qmax, qmin)
 end
 
 ""
-function constraint_dcline_power_limits_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_dcline_power_to_bounds(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     dcline = ref(pm, nw, :dcline, i)
     f_bus = dcline["f_bus"]
     t_bus = dcline["t_bus"]
@@ -956,5 +956,5 @@ function constraint_dcline_power_limits_to(pm::AbstractPowerModel, i::Int; nw::I
     pmin = dcline["pmint"]
     qmax = dcline["qmaxt"]
     qmin = dcline["qmint"]
-    constraint_dcline_power_limits_to(pm, nw, i, t_bus, t_idx, pmax, pmin, qmax, qmin)
+    constraint_dcline_power_to_bounds(pm, nw, i, t_bus, t_idx, pmax, pmin, qmax, qmin)
 end

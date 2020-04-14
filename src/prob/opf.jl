@@ -43,7 +43,7 @@ function build_opf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :dcline)
-        constraint_dcline(pm, i)
+        constraint_dcline_power_losses(pm, i)
     end
 end
 
@@ -83,7 +83,7 @@ function build_mn_opf(pm::AbstractPowerModel)
         end
 
         for i in ids(pm, :dcline, nw=n)
-            constraint_dcline(pm, i, nw=n)
+            constraint_dcline_power_losses(pm, i, nw=n)
         end
     end
 
@@ -132,7 +132,7 @@ function build_mn_opf_strg(pm::AbstractPowerModel)
         end
 
         for i in ids(pm, :dcline, nw=n)
-            constraint_dcline(pm, i, nw=n)
+            constraint_dcline_power_losses(pm, i, nw=n)
         end
     end
 

@@ -40,7 +40,7 @@ function build_pf_iv(pm::AbstractPowerModel)
     end
 
     for (i,dcline) in ref(pm, :dcline)
-        #constraint_dcline(pm, i) not needed, active power flow fully defined by dc line setpoints
+        #constraint_dcline_power_losses(pm, i) not needed, active power flow fully defined by dc line setpoints
         constraint_dcline_setpoint_active(pm, i)
 
         f_bus = ref(pm, :bus)[dcline["f_bus"]]

@@ -726,7 +726,7 @@ end
         end
 
         for i in ids(pm,:dcline)
-            PMs.constraint_dcline(pm, i)
+            PMs.constraint_dcline_power_losses(pm, i)
         end
     end
 
