@@ -101,7 +101,7 @@ function build_mn_opf_strg(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_voltage(pm, nw=n)
         variable_gen_power(pm, nw=n)
-        variable_storage_mi(pm, nw=n)
+        variable_storage_power_mi(pm, nw=n)
         variable_branch_power(pm, nw=n)
         variable_dcline_power(pm, nw=n)
 

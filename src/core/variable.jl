@@ -890,7 +890,7 @@ end
 
 
 "variables for modeling storage units, includes grid injection and internal variables"
-function variable_storage(pm::AbstractPowerModel; kwargs...)
+function variable_storage_power(pm::AbstractPowerModel; kwargs...)
     variable_storage_power_real(pm; kwargs...)
     variable_storage_power_imag(pm; kwargs...)
     variable_storage_current(pm; kwargs...)
@@ -900,7 +900,7 @@ function variable_storage(pm::AbstractPowerModel; kwargs...)
 end
 
 "variables for modeling storage units, includes grid injection and internal variables, with mixed int variables for charge/discharge"
-function variable_storage_mi(pm::AbstractPowerModel; kwargs...)
+function variable_storage_power_mi(pm::AbstractPowerModel; kwargs...)
     variable_storage_power_real(pm; kwargs...)
     variable_storage_power_imag(pm; kwargs...)
     variable_storage_current(pm; kwargs...)
@@ -1041,7 +1041,7 @@ function variable_storage_complementary_indicator(pm::AbstractPowerModel; nw::In
     report && _IM.sol_component_value(pm, nw, :storage, :sd_on, ids(pm, nw, :storage), sd_on)
 end
 
-function variable_storage_mi_on_off(pm::AbstractPowerModel; kwargs...)
+function variable_storage_power_mi_on_off(pm::AbstractPowerModel; kwargs...)
     variable_storage_power_real_on_off(pm; kwargs...)
     variable_storage_power_imag_on_off(pm; kwargs...)
     variable_storage_current(pm; kwargs...)

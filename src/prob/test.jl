@@ -275,7 +275,7 @@ function _build_ucopf(pm::AbstractPowerModel)
     variable_gen_power_on_off(pm)
 
     variable_storage_indicator(pm)
-    variable_storage_mi_on_off(pm)
+    variable_storage_power_mi_on_off(pm)
 
     variable_branch_power(pm)
     variable_dcline_power(pm)
@@ -407,7 +407,7 @@ end
 function _build_opf_strg(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_gen_power(pm)
-    variable_storage(pm)
+    variable_storage_power(pm)
     variable_branch_power(pm)
     variable_dcline_power(pm)
 
@@ -455,7 +455,7 @@ end
 function _build_opf_strg_mi(pm::AbstractPowerModel)
     variable_voltage(pm)
     variable_gen_power(pm)
-    variable_storage_mi(pm)
+    variable_storage_power_mi(pm)
     variable_branch_power(pm)
     variable_dcline_power(pm)
 
