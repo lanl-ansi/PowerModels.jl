@@ -48,8 +48,8 @@ voltages in this constraint can be set to zero via an indicator variable
 Notable examples include the constraints linking the voltages in the
 ACTPowerModel, constraints linking convex relaxations of voltage variables.
 """
-function constraint_model_voltage_ne(pm::AbstractPowerModel; nw::Int=pm.cnw)
-    constraint_model_voltage_ne(pm, nw)
+function constraint_ne_model_voltage(pm::AbstractPowerModel; nw::Int=pm.cnw)
+    constraint_ne_model_voltage(pm, nw)
 end
 
 """
@@ -211,7 +211,7 @@ function constraint_power_balance_ls(pm::AbstractPowerModel, i::Int; nw::Int=pm.
 end
 
 ""
-function constraint_power_balance_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_ne_power_balance(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     bus = ref(pm, nw, :bus, i)
     bus_arcs = ref(pm, nw, :bus_arcs, i)
     bus_arcs_dc = ref(pm, nw, :bus_arcs_dc, i)
@@ -228,7 +228,7 @@ function constraint_power_balance_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.
     bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs") for k in bus_shunts)
     bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs") for k in bus_shunts)
 
-    constraint_power_balance_ne(pm, nw, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+    constraint_ne_power_balance(pm, nw, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
 ""
@@ -409,7 +409,7 @@ end
 
 
 ""
-function constraint_ohms_yt_from_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_ne_ohms_yt_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     branch = ref(pm, nw, :ne_branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -425,12 +425,12 @@ function constraint_ohms_yt_from_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.c
     vad_min = ref(pm, nw, :off_angmin)
     vad_max = ref(pm, nw, :off_angmax)
 
-    constraint_ohms_yt_from_ne(pm, nw, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
+    constraint_ne_ohms_yt_from(pm, nw, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
 end
 
 
 ""
-function constraint_ohms_yt_to_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_ne_ohms_yt_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     branch = ref(pm, nw, :ne_branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -446,7 +446,7 @@ function constraint_ohms_yt_to_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw
     vad_min = ref(pm, nw, :off_angmin)
     vad_max = ref(pm, nw, :off_angmax)
 
-    constraint_ohms_yt_to_ne(pm, nw, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
+    constraint_ne_ohms_yt_to(pm, nw, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
 end
 
 ""
@@ -630,7 +630,7 @@ end
 
 
 ""
-function constraint_thermal_limit_from_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_ne_thermal_limit_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     branch = ref(pm, nw, :ne_branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -640,12 +640,12 @@ function constraint_thermal_limit_from_ne(pm::AbstractPowerModel, i::Int; nw::In
         Memento.error(_LOGGER, "constraint_thermal_limit_from_ne requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
     end
 
-    constraint_thermal_limit_from_ne(pm, nw, i, f_idx, branch["rate_a"])
+    constraint_ne_thermal_limit_from(pm, nw, i, f_idx, branch["rate_a"])
 end
 
 
 ""
-function constraint_thermal_limit_to_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_ne_thermal_limit_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     branch = ref(pm, nw, :ne_branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
@@ -655,7 +655,7 @@ function constraint_thermal_limit_to_ne(pm::AbstractPowerModel, i::Int; nw::Int=
         Memento.error(_LOGGER, "constraint_thermal_limit_to_ne requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
     end
 
-    constraint_thermal_limit_to_ne(pm, nw, i, t_idx, branch["rate_a"])
+    constraint_ne_thermal_limit_to(pm, nw, i, t_idx, branch["rate_a"])
 end
 
 
@@ -706,14 +706,14 @@ end
 
 
 ""
-function constraint_voltage_angle_difference_ne(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function constraint_ne_voltage_angle_difference(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     branch = ref(pm, nw, :ne_branch, i)
     f_idx = (i, branch["f_bus"], branch["t_bus"])
 
     vad_min = ref(pm, nw, :off_angmin)
     vad_max = ref(pm, nw, :off_angmax)
 
-    constraint_voltage_angle_difference_ne(pm, nw, f_idx, branch["angmin"], branch["angmax"], vad_min, vad_max)
+    constraint_ne_voltage_angle_difference(pm, nw, f_idx, branch["angmin"], branch["angmax"], vad_min, vad_max)
 end
 
 

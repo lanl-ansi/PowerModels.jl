@@ -28,7 +28,7 @@ function variable_branch_power_imag(pm::AbstractActivePowerModel; nw::Int=pm.cnw
 end
 
 "apo models ignore reactive power flows"
-function variable_branch_power_imag_ne(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
+function variable_ne_branch_power_imag(pm::AbstractActivePowerModel; nw::Int=pm.cnw, report::Bool=true, kwargs...)
     report && _IM.sol_component_fixed(pm, nw, :ne_branch, :q_ne_fr, ids(pm, nw, :ne_branch), NaN)
     report && _IM.sol_component_fixed(pm, nw, :ne_branch, :q_ne_to, ids(pm, nw, :ne_branch), NaN)
 end
@@ -110,7 +110,7 @@ function constraint_power_balance_ls(pm::AbstractActivePowerModel, n::Int, i::In
 end
 
 ""
-function constraint_power_balance_ne(pm::AbstractDCPModel, n::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+function constraint_ne_power_balance(pm::AbstractDCPModel, n::Int, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
     p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
     pg   = get(var(pm, n),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
     ps   = get(var(pm, n),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
@@ -229,7 +229,7 @@ function constraint_thermal_limit_to_on_off(pm::AbstractActivePowerModel, n::Int
 end
 
 ""
-function constraint_thermal_limit_from_ne(pm::AbstractActivePowerModel, n::Int, i, f_idx, rate_a)
+function constraint_ne_thermal_limit_from(pm::AbstractActivePowerModel, n::Int, i, f_idx, rate_a)
     p_fr = var(pm, n, :p_ne, f_idx)
     z = var(pm, n, :branch_ne, i)
 
@@ -238,7 +238,7 @@ function constraint_thermal_limit_from_ne(pm::AbstractActivePowerModel, n::Int, 
 end
 
 ""
-function constraint_thermal_limit_to_ne(pm::AbstractActivePowerModel, n::Int, i, t_idx, rate_a)
+function constraint_ne_thermal_limit_to(pm::AbstractActivePowerModel, n::Int, i, t_idx, rate_a)
     p_to = var(pm, n, :p_ne, t_idx)
     z = var(pm, n, :branch_ne, i)
 

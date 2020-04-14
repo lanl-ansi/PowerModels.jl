@@ -1108,13 +1108,13 @@ end
 ### Network Expantion Variables
 
 "generates variables for both `active` and `reactive` `branch_flow_ne`"
-function variable_branch_power_ne(pm::AbstractPowerModel; kwargs...)
-    variable_branch_power_real_ne(pm; kwargs...)
-    variable_branch_power_imag_ne(pm; kwargs...)
+function variable_ne_branch_power(pm::AbstractPowerModel; kwargs...)
+    variable_ne_branch_power_real(pm; kwargs...)
+    variable_ne_branch_power_imag(pm; kwargs...)
 end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= p_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
-function variable_branch_power_real_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     p_ne = var(pm, nw)[:p_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs)], base_name="$(nw)_p_ne",
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "p_start")
@@ -1138,7 +1138,7 @@ function variable_branch_power_real_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, b
 end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= q_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
-function variable_branch_power_imag_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_power_imag(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     q_ne = var(pm, nw)[:q_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs)], base_name="$(nw)_q_ne",
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "q_start")
@@ -1182,7 +1182,7 @@ function variable_branch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax
 end
 
 "variable: `0 <= branch_ne[l] <= 1` for `l` in `branch`es"
-function variable_branch_ne(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+function variable_ne_branch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
     if !relax
         z_branch_ne = var(pm, nw)[:branch_ne] = JuMP.@variable(pm.model,
             [l in ids(pm, nw, :ne_branch)], base_name="$(nw)_branch_ne",

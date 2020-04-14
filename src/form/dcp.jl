@@ -21,11 +21,11 @@ end
 
 
 "nothing to add, there are no voltage variables on branches"
-function variable_voltage_ne(pm::AbstractDCPModel; kwargs...)
+function variable_ne_branch_voltage(pm::AbstractDCPModel; kwargs...)
 end
 
 "do nothing, this model does not have complex voltage variables"
-function constraint_model_voltage_ne(pm::AbstractDCPModel; kwargs...)
+function constraint_ne_model_voltage(pm::AbstractDCPModel; kwargs...)
 end
 
 "do nothing, this model does not have voltage variables"
@@ -72,7 +72,7 @@ function expression_branch_flow_yt_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus
     # omit reactive constraint
 end
 
-function constraint_ohms_yt_from_ne(pm::AbstractDCPModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
+function constraint_ne_ohms_yt_from(pm::AbstractDCPModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
     p_fr  = var(pm, n, :p_ne, f_idx)
     va_fr = var(pm, n,   :va, f_bus)
     va_to = var(pm, n,   :va, t_bus)
@@ -83,7 +83,7 @@ function constraint_ohms_yt_from_ne(pm::AbstractDCPModel, n::Int, i, f_bus, t_bu
 end
 
 
-function constraint_ohms_yt_from_ne(pm::AbstractDCMPPModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
+function constraint_ne_ohms_yt_from(pm::AbstractDCMPPModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
     p_fr  = var(pm, n, :p_ne, f_idx)
     va_fr = var(pm, n,   :va, f_bus)
     va_to = var(pm, n,   :va, t_bus)
@@ -187,7 +187,7 @@ function constraint_voltage_angle_difference_on_off(pm::AbstractDCPModel, n::Int
 end
 
 "`angmin*branch_ne[i] + vad_min*(1-branch_ne[i]) <= t[f_bus] - t[t_bus] <= angmax*branch_ne[i] + vad_max*(1-branch_ne[i])`"
-function constraint_voltage_angle_difference_ne(pm::AbstractDCPModel, n::Int, f_idx, angmin, angmax, vad_min, vad_max)
+function constraint_ne_voltage_angle_difference(pm::AbstractDCPModel, n::Int, f_idx, angmin, angmax, vad_min, vad_max)
     i, f_bus, t_bus = f_idx
 
     va_fr = var(pm, n, :va, f_bus)
@@ -254,7 +254,7 @@ function variable_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=pm.cnw
 end
 
 ""
-function variable_branch_power_real_ne(pm::AbstractAPLossLessModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     p_ne = var(pm, nw)[:p_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs_from)], base_name="$(nw)_p_ne",
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "p_start")
@@ -310,7 +310,7 @@ function constraint_thermal_limit_to_on_off(pm::AbstractAPLossLessModels, n::Int
 end
 
 "nothing to do, this model is symetric"
-function constraint_thermal_limit_to_ne(pm::AbstractAPLossLessModels, n::Int, i, t_idx, rate_a)
+function constraint_ne_thermal_limit_to(pm::AbstractAPLossLessModels, n::Int, i, t_idx, rate_a)
 end
 
 "nothing to do, this model is symetric"
@@ -318,7 +318,7 @@ function constraint_ohms_yt_to(pm::AbstractAPLossLessModels, n::Int, f_bus, t_bu
 end
 
 "nothing to do, this model is symetric"
-function constraint_ohms_yt_to_ne(pm::AbstractAPLossLessModels, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
+function constraint_ne_ohms_yt_to(pm::AbstractAPLossLessModels, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
 end
 
 ""
@@ -398,7 +398,7 @@ function constraint_ohms_yt_to_on_off(pm::AbstractDCPLLModel, n::Int, i, f_bus, 
 end
 
 ""
-function constraint_ohms_yt_to_ne(pm::AbstractDCPLLModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
+function constraint_ne_ohms_yt_to(pm::AbstractDCPLLModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
     p_fr = var(pm, n, :p_ne, f_idx)
     p_to = var(pm, n, :p_ne, t_idx)
     va_fr = var(pm, n, :va, f_bus)

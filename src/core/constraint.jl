@@ -66,7 +66,7 @@ function constraint_thermal_limit_to_on_off(pm::AbstractPowerModel, n::Int, i, t
 end
 
 "`p_ne[f_idx]^2 + q_ne[f_idx]^2 <= (rate_a * branch_ne[i])^2`"
-function constraint_thermal_limit_from_ne(pm::AbstractPowerModel, n::Int, i, f_idx, rate_a)
+function constraint_ne_thermal_limit_from(pm::AbstractPowerModel, n::Int, i, f_idx, rate_a)
     p_fr = var(pm, n, :p_ne, f_idx)
     q_fr = var(pm, n, :q_ne, f_idx)
     z = var(pm, n, :branch_ne, i)
@@ -75,7 +75,7 @@ function constraint_thermal_limit_from_ne(pm::AbstractPowerModel, n::Int, i, f_i
 end
 
 "`p_ne[t_idx]^2 + q_ne[t_idx]^2 <= (rate_a * branch_ne[i])^2`"
-function constraint_thermal_limit_to_ne(pm::AbstractPowerModel, n::Int, i, t_idx, rate_a)
+function constraint_ne_thermal_limit_to(pm::AbstractPowerModel, n::Int, i, t_idx, rate_a)
     p_to = var(pm, n, :p_ne, t_idx)
     q_to = var(pm, n, :q_ne, t_idx)
     z = var(pm, n, :branch_ne, i)
@@ -149,7 +149,7 @@ end
 """
 do nothing, most models to not require any model-specific network expansion voltage constraints
 """
-function constraint_model_voltage_ne(pm::AbstractPowerModel, n::Int)
+function constraint_ne_model_voltage(pm::AbstractPowerModel, n::Int)
 end
 
 """

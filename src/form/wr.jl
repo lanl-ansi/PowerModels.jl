@@ -47,7 +47,7 @@ p[f_idx] == g/tm*w_fr_ne[i] + (-g*tr+b*ti)/tm*(wr_ne[i]) + (-b*tr-g*ti)/tm*(wi_n
 q[f_idx] == -(b+c/2)/tm*w_fr_ne[i] - (-b*tr-g*ti)/tm*(wr_ne[i]) + (-g*tr+b*ti)/tm*(wi_ne[i])
 ```
 """
-function constraint_ohms_yt_from_ne(pm::AbstractWRModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
+function constraint_ne_ohms_yt_from(pm::AbstractWRModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
     p_fr = var(pm, n,    :p_ne, f_idx)
     q_fr = var(pm, n,    :q_ne, f_idx)
     w_fr = var(pm, n, :w_fr_ne, i)
@@ -66,7 +66,7 @@ p[t_idx] == g*w_to_ne[i] + (-g*tr-b*ti)/tm*(wr_ne[i]) + (-b*tr+g*ti)/tm*(-wi_ne[
 q[t_idx] == -(b+c/2)*w_to_ne[i] - (-b*tr+g*ti)/tm*(wr_ne[i]) + (-g*tr-b*ti)/tm*(-wi_ne[i])
 ```
 """
-function constraint_ohms_yt_to_ne(pm::AbstractWRModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
+function constraint_ne_ohms_yt_to(pm::AbstractWRModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
     p_to = var(pm, n,    :p_ne, t_idx)
     q_to = var(pm, n,    :q_ne, t_idx)
     w_to = var(pm, n, :w_to_ne, i)
@@ -108,7 +108,7 @@ function constraint_model_voltage_on_off(pm::AbstractWRModel, n::Int)
 end
 
 ""
-function constraint_model_voltage_ne(pm::AbstractWRModel, n::Int)
+function constraint_ne_model_voltage(pm::AbstractWRModel, n::Int)
     buses = ref(pm, n, :bus)
     branches = ref(pm, n, :ne_branch)
 
@@ -266,7 +266,7 @@ function constraint_voltage_angle_difference_on_off(pm::AbstractWRModel, n::Int,
 end
 
 "`angmin*wr_ne[i] <= wi_ne[i] <= angmax*wr_ne[i]`"
-function constraint_voltage_angle_difference_ne(pm::AbstractWRModel, n::Int, f_idx, angmin, angmax, vad_min, vad_max)
+function constraint_ne_voltage_angle_difference(pm::AbstractWRModel, n::Int, f_idx, angmin, angmax, vad_min, vad_max)
     i, f_bus, t_bus = f_idx
     wr = var(pm, n, :wr_ne, i)
     wi = var(pm, n, :wi_ne, i)
@@ -276,14 +276,14 @@ function constraint_voltage_angle_difference_ne(pm::AbstractWRModel, n::Int, f_i
 end
 
 ""
-function variable_voltage_ne(pm::AbstractWRModel; kwargs...)
-    variable_branch_voltage_magn_fr_sqr_ne(pm; kwargs...)
-    variable_branch_voltage_magn_to_sqr_ne(pm; kwargs...)
-    variable_branch_voltage_product_ne(pm; kwargs...)
+function variable_ne_branch_voltage(pm::AbstractWRModel; kwargs...)
+    variable_ne_branch_voltage_magn_fr_sqr(pm; kwargs...)
+    variable_ne_branch_voltage_magn_to_sqr(pm; kwargs...)
+    variable_ne_branch_voltage_product(pm; kwargs...)
 end
 
 ""
-function variable_branch_voltage_magn_fr_sqr_ne(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_ne_branch_voltage_magn_fr_sqr(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
 
@@ -298,7 +298,7 @@ function variable_branch_voltage_magn_fr_sqr_ne(pm::AbstractWRModel; nw::Int=pm.
 end
 
 ""
-function variable_branch_voltage_magn_to_sqr_ne(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_ne_branch_voltage_magn_to_sqr(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
 
@@ -313,7 +313,7 @@ function variable_branch_voltage_magn_to_sqr_ne(pm::AbstractWRModel; nw::Int=pm.
 end
 
 ""
-function variable_branch_voltage_product_ne(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_ne_branch_voltage_product(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
     wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :ne_buspairs))
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
 
