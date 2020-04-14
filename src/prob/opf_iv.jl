@@ -5,7 +5,7 @@ end
 
 ""
 function build_opf_iv(pm::AbstractPowerModel)
-    variable_voltage(pm)
+    variable_bus_voltage(pm)
     variable_branch_current(pm)
 
     variable_gen_current(pm)
@@ -26,7 +26,6 @@ function build_opf_iv(pm::AbstractPowerModel)
         constraint_current_to(pm, i)
 
         constraint_voltage_drop(pm, i)
-
         constraint_voltage_angle_difference(pm, i)
 
         constraint_thermal_limit_from(pm, i)

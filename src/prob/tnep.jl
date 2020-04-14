@@ -9,7 +9,7 @@ end
 
 "the general form of the tnep optimization model"
 function build_tnep(pm::AbstractPowerModel)
-    variable_voltage(pm)
+    variable_bus_voltage(pm)
     variable_gen_power(pm)
     variable_branch_power(pm)
     variable_dcline_power(pm)

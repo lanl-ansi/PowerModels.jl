@@ -19,7 +19,7 @@ end
 
 
 "variable: `t[i]` for `i` in `bus`es"
-function variable_voltage_angl(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_angl(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     va = var(pm, nw)[:va] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_va",
         start = comp_start_value(ref(pm, nw, :bus, i), "va_start")
@@ -29,7 +29,7 @@ function variable_voltage_angl(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::
 end
 
 "variable: `v[i]` for `i` in `bus`es"
-function variable_voltage_magn(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_magn(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     vm = var(pm, nw)[:vm] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_vm",
         start = comp_start_value(ref(pm, nw, :bus, i), "vm_start", 1.0)
@@ -47,7 +47,7 @@ end
 
 
 "real part of the voltage variable `i` in `bus`es"
-function variable_voltage_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     vr = var(pm, nw)[:vr] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_vr",
         start = comp_start_value(ref(pm, nw, :bus, i), "vr_start", 1.0)
@@ -64,7 +64,7 @@ function variable_voltage_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::
 end
 
 "real part of the voltage variable `i` in `bus`es"
-function variable_voltage_imag(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_imag(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     vi = var(pm, nw)[:vi] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_vi",
         start = comp_start_value(ref(pm, nw, :bus, i), "vi_start")
@@ -114,7 +114,7 @@ end
 
 
 "variable: `w[i] >= 0` for `i` in `bus`es"
-function variable_voltage_magn_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_magn_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     w = var(pm, nw)[:w] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_w",
         lower_bound = 0.0,

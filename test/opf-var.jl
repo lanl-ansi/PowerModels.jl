@@ -697,7 +697,7 @@ end
     PMs = PowerModels
 
     function build_opf_var(pm::AbstractPowerModel)
-        PMs.variable_voltage(pm)
+        PMs.variable_bus_voltage(pm)
         PMs.variable_gen_power(pm)
         PMs.variable_branch_power(pm)
         PMs.variable_dcline_power(pm)

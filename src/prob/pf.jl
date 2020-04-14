@@ -15,7 +15,7 @@ end
 
 "specification of the formulation agnostic Power Flow model"
 function build_pf(pm::AbstractPowerModel)
-    variable_voltage(pm, bounded = false)
+    variable_bus_voltage(pm, bounded = false)
     variable_gen_power(pm, bounded = false)
     variable_dcline_power(pm, bounded = false)
 

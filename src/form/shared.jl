@@ -88,9 +88,17 @@ function constraint_voltage_angle_difference(pm::AbstractPolarModels, n::Int, f_
 end
 
 
-""
-function variable_voltage_magnitude(pm::AbstractWModels; kwargs...)
-    variable_voltage_magn_sqr(pm; kwargs...)
+"""
+Adds the voltage variables required to represent the voltage magnitude.
+
+This function is an analog to `variable_bus_voltage`, which adds the variables
+to represent both the voltage magnitude and voltage angle.
+
+In contrast to `variable_bus_voltage_magn`, this function is formulation
+agnostic.
+"""
+function variable_bus_voltage_magnitude(pm::AbstractWModels; kwargs...)
+    variable_bus_voltage_magn_sqr(pm; kwargs...)
 end
 
 ""

@@ -13,7 +13,7 @@ end
 
 ""
 function _build_opf_cl(pm::AbstractPowerModel)
-    variable_voltage(pm)
+    variable_bus_voltage(pm)
     variable_gen_power(pm)
     variable_branch_power(pm)
     variable_dcline_power(pm)
@@ -52,7 +52,7 @@ end
 
 ""
 function _build_opf_sw(pm::AbstractPowerModel)
-    variable_voltage(pm)
+    variable_bus_voltage(pm)
     variable_gen_power(pm)
     variable_switch_power(pm)
     variable_branch_power(pm)
@@ -98,7 +98,7 @@ end
 
 ""
 function _build_oswpf(pm::AbstractPowerModel)
-    variable_voltage(pm)
+    variable_bus_voltage(pm)
     variable_gen_power(pm)
 
     variable_switch_indicator(pm)
@@ -147,7 +147,7 @@ end
 
 ""
 function _build_oswpf_nb(pm::AbstractPowerModel)
-    variable_voltage_on_off(pm)
+    variable_bus_voltage_on_off(pm)
     variable_gen_power(pm)
 
     variable_switch_indicator(pm)
@@ -226,7 +226,7 @@ function _run_mld(file, model_constructor, solver; kwargs...)
 end
 
 function _build_mld(pm::AbstractPowerModel)
-    variable_voltage(pm)
+    variable_bus_voltage(pm)
     variable_gen_power(pm)
     variable_branch_power(pm)
     variable_dcline_power(pm)
@@ -269,7 +269,7 @@ end
 
 ""
 function _build_ucopf(pm::AbstractPowerModel)
-    variable_voltage(pm)
+    variable_bus_voltage(pm)
 
     variable_gen_indicator(pm)
     variable_gen_power_on_off(pm)
@@ -350,7 +350,7 @@ end
 ""
 function _build_mn_pf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
-        variable_voltage(pm, nw=n, bounded = false)
+        variable_bus_voltage(pm, nw=n, bounded = false)
         variable_gen_power(pm, nw=n, bounded = false)
         variable_branch_power(pm, nw=n, bounded = false)
         variable_dcline_power(pm, nw=n, bounded = false)
@@ -405,7 +405,7 @@ end
 
 ""
 function _build_opf_strg(pm::AbstractPowerModel)
-    variable_voltage(pm)
+    variable_bus_voltage(pm)
     variable_gen_power(pm)
     variable_storage_power(pm)
     variable_branch_power(pm)
@@ -453,7 +453,7 @@ end
 
 ""
 function _build_opf_strg_mi(pm::AbstractPowerModel)
-    variable_voltage(pm)
+    variable_bus_voltage(pm)
     variable_gen_power(pm)
     variable_storage_power_mi(pm)
     variable_branch_power(pm)
@@ -501,7 +501,7 @@ end
 
 ""
 function _build_opf_oltc_pst(pm::AbstractPowerModel)
-    variable_voltage(pm)
+    variable_bus_voltage(pm)
     variable_gen_power(pm)
 
     variable_branch_transform(pm)

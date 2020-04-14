@@ -2,14 +2,14 @@
 
 
 ""
-function variable_voltage(pm::AbstractWRModel; kwargs...)
-    variable_voltage_magn_sqr(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractWRModel; kwargs...)
+    variable_bus_voltage_magn_sqr(pm; kwargs...)
     variable_buspair_voltage_product(pm; kwargs...)
 end
 
 ""
-function variable_voltage(pm::AbstractWRConicModel; kwargs...)
-    variable_voltage_magn_sqr(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractWRConicModel; kwargs...)
+    variable_bus_voltage_magn_sqr(pm; kwargs...)
     variable_buspair_voltage_product(pm; kwargs...)
 end
 
@@ -78,11 +78,11 @@ function constraint_ne_ohms_yt_to(pm::AbstractWRModel, n::Int, i, f_bus, t_bus, 
 end
 
 ""
-function variable_voltage_on_off(pm::AbstractWRModel; kwargs...)
-    variable_voltage_magn_sqr(pm; kwargs...)
+function variable_bus_voltage_on_off(pm::AbstractWRModel; kwargs...)
+    variable_bus_voltage_magn_sqr(pm; kwargs...)
+
     variable_branch_voltage_magn_fr_sqr_on_off(pm; kwargs...)
     variable_branch_voltage_magn_to_sqr_on_off(pm; kwargs...)
-
     variable_branch_voltage_product_on_off(pm; kwargs...)
 end
 
@@ -400,11 +400,11 @@ function variable_buspair_current_magn_sqr(pm::AbstractPowerModel; nw::Int=pm.cn
 end
 
 ""
-function variable_voltage(pm::AbstractQCWRModel; kwargs...)
-    variable_voltage_angl(pm; kwargs...)
-    variable_voltage_magn(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractQCWRModel; kwargs...)
+    variable_bus_voltage_angl(pm; kwargs...)
+    variable_bus_voltage_magn(pm; kwargs...)
 
-    variable_voltage_magn_sqr(pm; kwargs...)
+    variable_bus_voltage_magn_sqr(pm; kwargs...)
     variable_buspair_voltage_product(pm; kwargs...)
 
     variable_buspair_voltage_product_angl(pm; kwargs...)
@@ -518,13 +518,13 @@ end
 
 
 ""
-function variable_voltage_on_off(pm::AbstractQCWRModel; kwargs...)
-    variable_voltage_angl(pm; kwargs...)
-    variable_voltage_magn(pm; kwargs...)
+function variable_bus_voltage_on_off(pm::AbstractQCWRModel; kwargs...)
+    variable_bus_voltage_angl(pm; kwargs...)
+    variable_bus_voltage_magn(pm; kwargs...)
     variable_branch_voltage_magn_fr_on_off(pm; kwargs...)
     variable_branch_voltage_magn_to_on_off(pm; kwargs...)
 
-    variable_voltage_magn_sqr(pm; kwargs...)
+    variable_bus_voltage_magn_sqr(pm; kwargs...)
     variable_branch_voltage_magn_fr_sqr_on_off(pm; kwargs...)
     variable_branch_voltage_magn_to_sqr_on_off(pm; kwargs...)
 
@@ -762,11 +762,11 @@ function variable_buspair_voltage_product_magn_multipliers(pm::AbstractQCLSModel
 end
 
 ""
-function variable_voltage(pm::AbstractQCLSModel; kwargs...)
-    variable_voltage_angl(pm; kwargs...)
-    variable_voltage_magn(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractQCLSModel; kwargs...)
+    variable_bus_voltage_angl(pm; kwargs...)
+    variable_bus_voltage_magn(pm; kwargs...)
 
-    variable_voltage_magn_sqr(pm; kwargs...)
+    variable_bus_voltage_magn_sqr(pm; kwargs...)
     variable_buspair_voltage_product(pm; kwargs...)
 
     variable_buspair_voltage_product_angl(pm; kwargs...)

@@ -5,7 +5,7 @@ end
 
 ""
 function build_pf_iv(pm::AbstractPowerModel)
-    variable_voltage(pm, bounded = false)
+    variable_bus_voltage(pm, bounded = false)
     variable_branch_current(pm, bounded = false)
 
     variable_gen_current(pm, bounded = false)

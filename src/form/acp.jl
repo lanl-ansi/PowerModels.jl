@@ -1,9 +1,9 @@
 ### polar form of the non-convex AC equations
 
 ""
-function variable_voltage(pm::AbstractACPModel; kwargs...)
-    variable_voltage_angl(pm; kwargs...)
-    variable_voltage_magn(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractACPModel; kwargs...)
+    variable_bus_voltage_angl(pm; kwargs...)
+    variable_bus_voltage_magn(pm; kwargs...)
 end
 
 ""
@@ -358,9 +358,9 @@ function constraint_switch_voltage_on_off(pm::AbstractACPModel, n::Int, i, f_bus
 end
 
 ""
-function variable_voltage_on_off(pm::AbstractACPModel; kwargs...)
-    variable_voltage_angl(pm; kwargs...)
-    variable_voltage_magn(pm; kwargs...)
+function variable_bus_voltage_on_off(pm::AbstractACPModel; kwargs...)
+    variable_bus_voltage_angl(pm; kwargs...)
+    variable_bus_voltage_magn(pm; kwargs...)
 end
 
 "do nothing, this model does not have complex voltage constraints"

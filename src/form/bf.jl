@@ -34,8 +34,8 @@ function variable_branch_current(pm::AbstractBFModel; kwargs...)
 end
 
 ""
-function variable_voltage(pm::AbstractBFModel; kwargs...)
-    variable_voltage_magn_sqr(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractBFModel; kwargs...)
+    variable_bus_voltage_magn_sqr(pm; kwargs...)
 end
 
 """

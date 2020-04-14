@@ -6,9 +6,9 @@ function constraint_theta_ref(pm::AbstractACTModel, n::Int, i::Int)
 end
 
 ""
-function variable_voltage(pm::AbstractACTModel; kwargs...)
-    variable_voltage_angl(pm; kwargs...)
-    variable_voltage_magn_sqr(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractACTModel; kwargs...)
+    variable_bus_voltage_angl(pm; kwargs...)
+    variable_bus_voltage_magn_sqr(pm; kwargs...)
     variable_buspair_voltage_product(pm; kwargs...)
 end
 

@@ -4,13 +4,13 @@
 ######## AbstractDCPForm Models (has va but assumes vm is 1.0) ########
 
 ""
-function variable_voltage(pm::AbstractDCPModel; kwargs...)
-    variable_voltage_angl(pm; kwargs...)
-    variable_voltage_magn(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractDCPModel; kwargs...)
+    variable_bus_voltage_angl(pm; kwargs...)
+    variable_bus_voltage_magn(pm; kwargs...)
 end
 
 ""
-function variable_voltage_magn(pm::AbstractDCPModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_magn(pm::AbstractDCPModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     report && _IM.sol_component_fixed(pm, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
 end
 
@@ -34,7 +34,7 @@ end
 
 
 "do nothing, this model does not have voltage variables"
-function variable_voltage_magnitude(pm::AbstractDCPModel; kwargs...)
+function variable_bus_voltage_magnitude(pm::AbstractDCPModel; kwargs...)
 end
 
 
@@ -154,8 +154,8 @@ end
 
 
 ""
-function variable_voltage_on_off(pm::AbstractDCPModel; kwargs...)
-    variable_voltage_angl(pm; kwargs...)
+function variable_bus_voltage_on_off(pm::AbstractDCPModel; kwargs...)
+    variable_bus_voltage_angl(pm; kwargs...)
 end
 
 "do nothing, this model does not have complex voltage variables"
@@ -349,7 +349,7 @@ end
 
 
 "nothing to do, no voltage angle variables"
-function variable_voltage(pm::AbstractNFAModel; kwargs...)
+function variable_bus_voltage(pm::AbstractNFAModel; kwargs...)
 end
 
 "nothing to do, no voltage angle variables"
