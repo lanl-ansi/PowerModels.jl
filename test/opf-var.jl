@@ -694,39 +694,38 @@ end
 
 
 @testset "test ac v+t polar opf" begin
-    PMs = PowerModels
 
     function build_opf_var(pm::AbstractPowerModel)
-        PMs.variable_voltage(pm)
-        PMs.variable_generation(pm)
-        PMs.variable_branch_flow(pm)
-        PMs.variable_dcline_flow(pm)
+        PowerModels.variable_voltage(pm)
+        PowerModels.variable_generation(pm)
+        PowerModels.variable_branch_flow(pm)
+        PowerModels.variable_dcline_flow(pm)
 
-        PMs.objective_min_fuel_and_flow_cost(pm)
+        PowerModels.objective_min_fuel_and_flow_cost(pm)
 
-        PMs.constraint_model_voltage(pm)
+        PowerModels.constraint_model_voltage(pm)
 
         for i in ids(pm,:ref_buses)
-            PMs.constraint_theta_ref(pm, i)
+            PowerModels.constraint_theta_ref(pm, i)
         end
 
         for i in ids(pm,:bus)
-            PMs.constraint_power_balance(pm, i)
+            PowerModels.constraint_power_balance(pm, i)
         end
 
         for i in ids(pm,:branch)
             # these are the functions to be tested
-            PMs.constraint_ohms_y_from(pm, i)
-            PMs.constraint_ohms_y_to(pm, i)
+            PowerModels.constraint_ohms_y_from(pm, i)
+            PowerModels.constraint_ohms_y_to(pm, i)
 
-            PMs.constraint_voltage_angle_difference(pm, i)
+            PowerModels.constraint_voltage_angle_difference(pm, i)
 
-            PMs.constraint_thermal_limit_from(pm, i)
-            PMs.constraint_thermal_limit_to(pm, i)
+            PowerModels.constraint_thermal_limit_from(pm, i)
+            PowerModels.constraint_thermal_limit_to(pm, i)
         end
 
         for i in ids(pm,:dcline)
-            PMs.constraint_dcline(pm, i)
+            PowerModels.constraint_dcline(pm, i)
         end
     end
 
