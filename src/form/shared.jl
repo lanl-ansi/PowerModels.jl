@@ -97,8 +97,8 @@ to represent both the voltage magnitude and voltage angle.
 In contrast to `variable_bus_voltage_magn`, this function is formulation
 agnostic.
 """
-function variable_bus_voltage_magnitude(pm::AbstractWModels; kwargs...)
-    variable_bus_voltage_magn_sqr(pm; kwargs...)
+function variable_bus_voltage_magnitude_only(pm::AbstractWModels; kwargs...)
+    variable_bus_voltage_magnitude_sqr(pm; kwargs...)
 end
 
 ""

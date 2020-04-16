@@ -3,7 +3,7 @@
 ""
 function variable_bus_voltage(pm::AbstractACRModel; nw::Int=pm.cnw, bounded::Bool=true, kwargs...)
     variable_bus_voltage_real(pm; nw=nw, bounded=bounded, kwargs...)
-    variable_bus_voltage_imag(pm; nw=nw, bounded=bounded, kwargs...)
+    variable_bus_voltage_imaginary(pm; nw=nw, bounded=bounded, kwargs...)
 
     if bounded
         for (i,bus) in ref(pm, nw, :bus)

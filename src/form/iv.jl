@@ -5,7 +5,7 @@
 ""
 function variable_branch_current(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true, kwargs...)
     variable_branch_current_real(pm, nw=nw, bounded=bounded, report=report; kwargs...)
-    variable_branch_current_imag(pm, nw=nw, bounded=bounded, report=report; kwargs...)
+    variable_branch_current_imaginary(pm, nw=nw, bounded=bounded, report=report; kwargs...)
 
     # store expressions in rectangular power variable space
     p = Dict()
@@ -33,13 +33,13 @@ function variable_branch_current(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::
     report && _IM.sol_component_value_edge(pm, nw, :branch, :qf, :qt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), q)
 
     variable_branch_series_current_real(pm, nw=nw, bounded=bounded, report=report; kwargs...)
-    variable_branch_series_current_imag(pm, nw=nw, bounded=bounded, report=report; kwargs...)
+    variable_branch_series_current_imaginary(pm, nw=nw, bounded=bounded, report=report; kwargs...)
 end
 
 ""
 function variable_gen_current(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true, kwargs...)
     variable_gen_current_real(pm, nw=nw, bounded=bounded, report=report; kwargs...)
-    variable_gen_current_imag(pm, nw=nw, bounded=bounded, report=report; kwargs...)
+    variable_gen_current_imaginary(pm, nw=nw, bounded=bounded, report=report; kwargs...)
 
     # store active and reactive power expressions for use in objective + post processing
     pg = Dict()
@@ -69,7 +69,7 @@ end
 ""
 function variable_dcline_current(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true, kwargs...)
     variable_dcline_current_real(pm, nw=nw, bounded=bounded, report=report; kwargs...)
-    variable_dcline_current_imag(pm, nw=nw, bounded=bounded, report=report; kwargs...)
+    variable_dcline_current_imaginary(pm, nw=nw, bounded=bounded, report=report; kwargs...)
     # store expressions in rectangular power variable space
     p = Dict()
     q = Dict()

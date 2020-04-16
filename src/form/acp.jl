@@ -2,8 +2,8 @@
 
 ""
 function variable_bus_voltage(pm::AbstractACPModel; kwargs...)
-    variable_bus_voltage_angl(pm; kwargs...)
-    variable_bus_voltage_magn(pm; kwargs...)
+    variable_bus_voltage_angle(pm; kwargs...)
+    variable_bus_voltage_magnitude(pm; kwargs...)
 end
 
 ""
@@ -359,8 +359,8 @@ end
 
 ""
 function variable_bus_voltage_on_off(pm::AbstractACPModel; kwargs...)
-    variable_bus_voltage_angl(pm; kwargs...)
-    variable_bus_voltage_magn(pm; kwargs...)
+    variable_bus_voltage_angle(pm; kwargs...)
+    variable_bus_voltage_magnitude(pm; kwargs...)
 end
 
 "do nothing, this model does not have complex voltage constraints"

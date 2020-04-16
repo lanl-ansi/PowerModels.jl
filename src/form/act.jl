@@ -7,8 +7,8 @@ end
 
 ""
 function variable_bus_voltage(pm::AbstractACTModel; kwargs...)
-    variable_bus_voltage_angl(pm; kwargs...)
-    variable_bus_voltage_magn_sqr(pm; kwargs...)
+    variable_bus_voltage_angle(pm; kwargs...)
+    variable_bus_voltage_magnitude_sqr(pm; kwargs...)
     variable_buspair_voltage_product(pm; kwargs...)
 end
 
