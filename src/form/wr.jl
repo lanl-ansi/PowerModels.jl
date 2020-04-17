@@ -2,15 +2,15 @@
 
 
 ""
-function variable_voltage(pm::AbstractWRModel; kwargs...)
-    variable_voltage_magnitude_sqr(pm; kwargs...)
-    variable_voltage_product(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractWRModel; kwargs...)
+    variable_bus_voltage_magnitude_sqr(pm; kwargs...)
+    variable_buspair_voltage_product(pm; kwargs...)
 end
 
 ""
-function variable_voltage(pm::AbstractWRConicModel; kwargs...)
-    variable_voltage_magnitude_sqr(pm; kwargs...)
-    variable_voltage_product(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractWRConicModel; kwargs...)
+    variable_bus_voltage_magnitude_sqr(pm; kwargs...)
+    variable_buspair_voltage_product(pm; kwargs...)
 end
 
 ""
@@ -47,7 +47,7 @@ p[f_idx] == g/tm*w_fr_ne[i] + (-g*tr+b*ti)/tm*(wr_ne[i]) + (-b*tr-g*ti)/tm*(wi_n
 q[f_idx] == -(b+c/2)/tm*w_fr_ne[i] - (-b*tr-g*ti)/tm*(wr_ne[i]) + (-g*tr+b*ti)/tm*(wi_ne[i])
 ```
 """
-function constraint_ohms_yt_from_ne(pm::AbstractWRModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
+function constraint_ne_ohms_yt_from(pm::AbstractWRModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
     p_fr = var(pm, n,    :p_ne, f_idx)
     q_fr = var(pm, n,    :q_ne, f_idx)
     w_fr = var(pm, n, :w_fr_ne, i)
@@ -66,7 +66,7 @@ p[t_idx] == g*w_to_ne[i] + (-g*tr-b*ti)/tm*(wr_ne[i]) + (-b*tr+g*ti)/tm*(-wi_ne[
 q[t_idx] == -(b+c/2)*w_to_ne[i] - (-b*tr+g*ti)/tm*(wr_ne[i]) + (-g*tr-b*ti)/tm*(-wi_ne[i])
 ```
 """
-function constraint_ohms_yt_to_ne(pm::AbstractWRModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
+function constraint_ne_ohms_yt_to(pm::AbstractWRModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
     p_to = var(pm, n,    :p_ne, t_idx)
     q_to = var(pm, n,    :q_ne, t_idx)
     w_to = var(pm, n, :w_to_ne, i)
@@ -78,12 +78,12 @@ function constraint_ohms_yt_to_ne(pm::AbstractWRModel, n::Int, i, f_bus, t_bus, 
 end
 
 ""
-function variable_voltage_on_off(pm::AbstractWRModel; kwargs...)
-    variable_voltage_magnitude_sqr(pm; kwargs...)
-    variable_voltage_magnitude_sqr_from_on_off(pm; kwargs...)
-    variable_voltage_magnitude_sqr_to_on_off(pm; kwargs...)
+function variable_bus_voltage_on_off(pm::AbstractWRModel; kwargs...)
+    variable_bus_voltage_magnitude_sqr(pm; kwargs...)
 
-    variable_voltage_product_on_off(pm; kwargs...)
+    variable_branch_voltage_magnitude_fr_sqr_on_off(pm; kwargs...)
+    variable_branch_voltage_magnitude_to_sqr_on_off(pm; kwargs...)
+    variable_branch_voltage_product_on_off(pm; kwargs...)
 end
 
 ""
@@ -108,7 +108,7 @@ function constraint_model_voltage_on_off(pm::AbstractWRModel, n::Int)
 end
 
 ""
-function constraint_model_voltage_ne(pm::AbstractWRModel, n::Int)
+function constraint_ne_model_voltage(pm::AbstractWRModel, n::Int)
     buses = ref(pm, n, :bus)
     branches = ref(pm, n, :ne_branch)
 
@@ -266,7 +266,7 @@ function constraint_voltage_angle_difference_on_off(pm::AbstractWRModel, n::Int,
 end
 
 "`angmin*wr_ne[i] <= wi_ne[i] <= angmax*wr_ne[i]`"
-function constraint_voltage_angle_difference_ne(pm::AbstractWRModel, n::Int, f_idx, angmin, angmax, vad_min, vad_max)
+function constraint_ne_voltage_angle_difference(pm::AbstractWRModel, n::Int, f_idx, angmin, angmax, vad_min, vad_max)
     i, f_bus, t_bus = f_idx
     wr = var(pm, n, :wr_ne, i)
     wi = var(pm, n, :wi_ne, i)
@@ -276,14 +276,14 @@ function constraint_voltage_angle_difference_ne(pm::AbstractWRModel, n::Int, f_i
 end
 
 ""
-function variable_voltage_ne(pm::AbstractWRModel; kwargs...)
-    variable_voltage_magnitude_sqr_from_ne(pm; kwargs...)
-    variable_voltage_magnitude_sqr_to_ne(pm; kwargs...)
-    variable_voltage_product_ne(pm; kwargs...)
+function variable_ne_branch_voltage(pm::AbstractWRModel; kwargs...)
+    variable_ne_branch_voltage_magnitude_fr_sqr(pm; kwargs...)
+    variable_ne_branch_voltage_magnitude_to_sqr(pm; kwargs...)
+    variable_ne_branch_voltage_product(pm; kwargs...)
 end
 
 ""
-function variable_voltage_magnitude_sqr_from_ne(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_ne_branch_voltage_magnitude_fr_sqr(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
 
@@ -298,7 +298,7 @@ function variable_voltage_magnitude_sqr_from_ne(pm::AbstractWRModel; nw::Int=pm.
 end
 
 ""
-function variable_voltage_magnitude_sqr_to_ne(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_ne_branch_voltage_magnitude_to_sqr(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
 
@@ -313,7 +313,7 @@ function variable_voltage_magnitude_sqr_to_ne(pm::AbstractWRModel; nw::Int=pm.cn
 end
 
 ""
-function variable_voltage_product_ne(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_ne_branch_voltage_product(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
     wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :ne_buspairs))
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
 
@@ -340,7 +340,7 @@ end
 
 
 "Creates variables associated with differences in voltage angles"
-function variable_voltage_angle_difference(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_voltage_product_angle(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     td = var(pm, nw)[:td] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_td",
         start = comp_start_value(ref(pm, nw, :buspairs, bp), "td_start")
@@ -357,7 +357,7 @@ function variable_voltage_angle_difference(pm::AbstractPowerModel; nw::Int=pm.cn
 end
 
 "Creates the voltage magnitude product variables"
-function variable_voltage_magnitude_product(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_voltage_product_magnitude(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     buspairs = ref(pm, nw, :buspairs)
     vv = var(pm, nw)[:vv] = JuMP.@variable(pm.model,
         [bp in keys(buspairs)], base_name="$(nw)_vv",
@@ -376,7 +376,7 @@ end
 
 
 ""
-function variable_current_magnitude_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_current_magnitude_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     ccm = var(pm, nw)[:ccm] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_ccm",
         start = comp_start_value(ref(pm, nw, :buspairs, bp), "ccm_start")
@@ -400,18 +400,18 @@ function variable_current_magnitude_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, 
 end
 
 ""
-function variable_voltage(pm::AbstractQCWRModel; kwargs...)
-    variable_voltage_angle(pm; kwargs...)
-    variable_voltage_magnitude(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractQCWRModel; kwargs...)
+    variable_bus_voltage_angle(pm; kwargs...)
+    variable_bus_voltage_magnitude(pm; kwargs...)
 
-    variable_voltage_magnitude_sqr(pm; kwargs...)
-    variable_voltage_product(pm; kwargs...)
+    variable_bus_voltage_magnitude_sqr(pm; kwargs...)
+    variable_buspair_voltage_product(pm; kwargs...)
 
-    variable_voltage_angle_difference(pm; kwargs...)
-    variable_voltage_magnitude_product(pm; kwargs...)
-    variable_cosine(pm; kwargs...)
-    variable_sine(pm; kwargs...)
-    variable_current_magnitude_sqr(pm; kwargs...)
+    variable_buspair_voltage_product_angle(pm; kwargs...)
+    variable_buspair_voltage_product_magnitude(pm; kwargs...)
+    variable_buspair_cosine(pm; kwargs...)
+    variable_buspair_sine(pm; kwargs...)
+    variable_buspair_current_magnitude_sqr(pm; kwargs...)
 end
 
 ""
@@ -518,27 +518,27 @@ end
 
 
 ""
-function variable_voltage_on_off(pm::AbstractQCWRModel; kwargs...)
-    variable_voltage_angle(pm; kwargs...)
-    variable_voltage_magnitude(pm; kwargs...)
-    variable_voltage_magnitude_from_on_off(pm; kwargs...)
-    variable_voltage_magnitude_to_on_off(pm; kwargs...)
+function variable_bus_voltage_on_off(pm::AbstractQCWRModel; kwargs...)
+    variable_bus_voltage_angle(pm; kwargs...)
+    variable_bus_voltage_magnitude(pm; kwargs...)
+    variable_branch_voltage_magnitude_fr_on_off(pm; kwargs...)
+    variable_branch_voltage_magnitude_to_on_off(pm; kwargs...)
 
-    variable_voltage_magnitude_sqr(pm; kwargs...)
-    variable_voltage_magnitude_sqr_from_on_off(pm; kwargs...)
-    variable_voltage_magnitude_sqr_to_on_off(pm; kwargs...)
+    variable_bus_voltage_magnitude_sqr(pm; kwargs...)
+    variable_branch_voltage_magnitude_fr_sqr_on_off(pm; kwargs...)
+    variable_branch_voltage_magnitude_to_sqr_on_off(pm; kwargs...)
 
-    variable_voltage_product_on_off(pm; kwargs...)
+    variable_branch_voltage_product_on_off(pm; kwargs...)
 
-    variable_voltage_angle_difference_on_off(pm; kwargs...)
-    variable_voltage_magnitude_product_on_off(pm; kwargs...)
-    variable_cosine_on_off(pm; kwargs...)
-    variable_sine_on_off(pm; kwargs...)
-    variable_current_magnitude_sqr_on_off(pm; kwargs...) # includes 0, but needs new indexs
+    variable_branch_voltage_product_angle_on_off(pm; kwargs...)
+    variable_buspair_voltage_product_magnitude_on_off(pm; kwargs...)
+    variable_branch_cosine_on_off(pm; kwargs...)
+    variable_branch_sine_on_off(pm; kwargs...)
+    variable_branch_current_magnitude_sqr_on_off(pm; kwargs...) # includes 0, but needs new indexs
 end
 
 ""
-function variable_voltage_angle_difference_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_product_angle_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     td = var(pm, nw)[:td] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_td",
         lower_bound = min(0, ref(pm, nw, :branch, l, "angmin")),
@@ -550,7 +550,7 @@ function variable_voltage_angle_difference_on_off(pm::AbstractPowerModel; nw::In
 end
 
 ""
-function variable_voltage_magnitude_product_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_buspair_voltage_product_magnitude_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     branches = ref(pm, nw, :branch)
     buses = ref(pm, nw, :bus)
 
@@ -569,7 +569,7 @@ end
 
 
 ""
-function variable_cosine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_cosine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     cos_min = Dict((l, -Inf) for l in ids(pm, nw, :branch))
     cos_max = Dict((l,  Inf) for l in ids(pm, nw, :branch))
 
@@ -601,7 +601,7 @@ function variable_cosine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::
 end
 
 ""
-function variable_sine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_sine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     si = var(pm, nw)[:si] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_si",
         lower_bound = min(0, sin(ref(pm, nw, :branch, l, "angmin"))),
@@ -614,7 +614,7 @@ end
 
 
 ""
-function variable_current_magnitude_sqr_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_current_magnitude_sqr_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
     ccm_min = Dict((l, 0) for l in ids(pm, nw, :branch))
 
     branches = ref(pm, nw, :branch)
@@ -737,12 +737,12 @@ end
 
 
 ""
-function variable_voltage_magnitude_product(pm::AbstractQCLSModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_buspair_voltage_product_magnitude(pm::AbstractQCLSModel; nw::Int=pm.cnw, report::Bool=true)
     # do nothing - no lifted variables required for voltage variable product
 end
 
 "creates lambda variables for convex combination model"
-function variable_voltage_magnitude_product_multipliers(pm::AbstractQCLSModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_buspair_voltage_product_magnitude_multipliers(pm::AbstractQCLSModel; nw::Int=pm.cnw, report::Bool=true)
     lambda_wr = var(pm, nw)[:lambda_wr] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs), i=1:8], base_name="$(nw)_lambda",
         lower_bound = 0, upper_bound = 1, start = 0.0)
@@ -762,19 +762,19 @@ function variable_voltage_magnitude_product_multipliers(pm::AbstractQCLSModel; n
 end
 
 ""
-function variable_voltage(pm::AbstractQCLSModel; kwargs...)
-    variable_voltage_angle(pm; kwargs...)
-    variable_voltage_magnitude(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractQCLSModel; kwargs...)
+    variable_bus_voltage_angle(pm; kwargs...)
+    variable_bus_voltage_magnitude(pm; kwargs...)
 
-    variable_voltage_magnitude_sqr(pm; kwargs...)
-    variable_voltage_product(pm; kwargs...)
+    variable_bus_voltage_magnitude_sqr(pm; kwargs...)
+    variable_buspair_voltage_product(pm; kwargs...)
 
-    variable_voltage_angle_difference(pm; kwargs...)
-    variable_voltage_magnitude_product(pm; kwargs...)
-    variable_voltage_magnitude_product_multipliers(pm; kwargs...)
-    variable_cosine(pm; kwargs...)
-    variable_sine(pm; kwargs...)
-    variable_current_magnitude_sqr(pm; kwargs...)
+    variable_buspair_voltage_product_angle(pm; kwargs...)
+    variable_buspair_voltage_product_magnitude(pm; kwargs...)
+    variable_buspair_voltage_product_magnitude_multipliers(pm; kwargs...)
+    variable_buspair_cosine(pm; kwargs...)
+    variable_buspair_sine(pm; kwargs...)
+    variable_buspair_current_magnitude_sqr(pm; kwargs...)
 end
 
 

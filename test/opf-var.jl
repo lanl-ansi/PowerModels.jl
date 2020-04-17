@@ -697,10 +697,10 @@ end
     PMs = PowerModels
 
     function build_opf_var(pm::AbstractPowerModel)
-        PMs.variable_voltage(pm)
-        PMs.variable_generation(pm)
-        PMs.variable_branch_flow(pm)
-        PMs.variable_dcline_flow(pm)
+        PMs.variable_bus_voltage(pm)
+        PMs.variable_gen_power(pm)
+        PMs.variable_branch_power(pm)
+        PMs.variable_dcline_power(pm)
 
         PMs.objective_min_fuel_and_flow_cost(pm)
 
@@ -726,7 +726,7 @@ end
         end
 
         for i in ids(pm,:dcline)
-            PMs.constraint_dcline(pm, i)
+            PMs.constraint_dcline_power_losses(pm, i)
         end
     end
 

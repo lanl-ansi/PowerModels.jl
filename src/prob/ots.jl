@@ -12,10 +12,10 @@ end
 ""
 function build_ots(pm::AbstractPowerModel)
     variable_branch_indicator(pm)
-    variable_voltage_on_off(pm)
-    variable_generation(pm)
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
+    variable_bus_voltage_on_off(pm)
+    variable_gen_power(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 
@@ -40,7 +40,7 @@ function build_ots(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :dcline)
-        constraint_dcline(pm, i)
+        constraint_dcline_power_losses(pm, i)
     end
 end
 
