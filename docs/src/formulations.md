@@ -25,11 +25,11 @@ QCRMPowerModel <: AbstractWRForm
 SOCBFPowerModel <: AbstractSOCBFModel
 ```
 
-For details on `AbstractPowerModel`, see the section on [Power Model](@ref).
+For details on `AbstractPowerModel`, see the section on [Power Model](@ref).  A more comprehensive list of supported formulation is documented in [Formulation Details](@ref).
 
 ## User-Defined Abstractions
 
-Consider the class of conic Models for power flow models. One way of modelling them in this package is through the following type hierarchy:
+Consider the class of conic Models for power flow models. One way of modeling them in this package is through the following type hierarchy:
 ```julia
 AbstractConicPowerModel <: AbstractPowerModel
 AbstractWRMModel <: AbstractConicPowerModel
