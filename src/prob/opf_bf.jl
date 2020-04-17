@@ -10,11 +10,11 @@ end
 
 ""
 function build_opf_bf(pm::AbstractPowerModel)
-    variable_voltage(pm)
-    variable_generation(pm)
-    variable_branch_flow(pm)
+    variable_bus_voltage(pm)
+    variable_gen_power(pm)
+    variable_branch_power(pm)
     variable_branch_current(pm)
-    variable_dcline_flow(pm)
+    variable_dcline_power(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 
@@ -29,7 +29,7 @@ function build_opf_bf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :branch)
-        constraint_flow_losses(pm, i)
+        constraint_power_losses(pm, i)
         constraint_voltage_magnitude_difference(pm, i)
 
         constraint_voltage_angle_difference(pm, i)
@@ -39,19 +39,19 @@ function build_opf_bf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :dcline)
-        constraint_dcline(pm, i)
+        constraint_dcline_power_losses(pm, i)
     end
 end
 
 "Build multinetwork branch flow storage OPF"
 function build_mn_opf_bf_strg(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
-        variable_voltage(pm, nw=n)
-        variable_generation(pm, nw=n)
-        variable_storage_mi(pm, nw=n)
-        variable_branch_flow(pm, nw=n)
+        variable_bus_voltage(pm, nw=n)
+        variable_gen_power(pm, nw=n)
+        variable_storage_power_mi(pm, nw=n)
+        variable_branch_power(pm, nw=n)
         variable_branch_current(pm, nw=n)
-        variable_dcline_flow(pm, nw=n)
+        variable_dcline_power(pm, nw=n)
 
         constraint_model_current(pm, nw=n)
 
@@ -65,12 +65,12 @@ function build_mn_opf_bf_strg(pm::AbstractPowerModel)
 
         for i in ids(pm, :storage, nw=n)
             constraint_storage_complementarity_mi(pm, i, nw=n)
-            constraint_storage_loss(pm, i, nw=n)
+            constraint_storage_losses(pm, i, nw=n)
             constraint_storage_thermal_limit(pm, i, nw=n)
         end
 
         for i in ids(pm, :branch, nw=n)
-            constraint_flow_losses(pm, i, nw=n)
+            constraint_power_losses(pm, i, nw=n)
             constraint_voltage_magnitude_difference(pm, i, nw=n)
 
             constraint_voltage_angle_difference(pm, i, nw=n)
@@ -80,7 +80,7 @@ function build_mn_opf_bf_strg(pm::AbstractPowerModel)
         end
 
         for i in ids(pm, :dcline, nw=n)
-            constraint_dcline(pm, i, nw=n)
+            constraint_dcline_power_losses(pm, i, nw=n)
         end
     end
 

@@ -9,25 +9,26 @@ end
 
 "the general form of the tnep optimization model"
 function build_tnep(pm::AbstractPowerModel)
-    variable_branch_ne(pm)
-    variable_voltage(pm)
-    variable_voltage_ne(pm)
-    variable_generation(pm)
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
-    variable_branch_flow_ne(pm)
+    variable_bus_voltage(pm)
+    variable_gen_power(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
+
+    variable_ne_branch_indicator(pm)
+    variable_ne_branch_power(pm)
+    variable_ne_branch_voltage(pm)
 
     objective_tnep_cost(pm)
 
     constraint_model_voltage(pm)
-    constraint_model_voltage_ne(pm)
+    constraint_ne_model_voltage(pm)
 
     for i in ids(pm, :ref_buses)
         constraint_theta_ref(pm, i)
     end
 
     for i in ids(pm, :bus)
-        constraint_power_balance_ne(pm, i)
+        constraint_ne_power_balance(pm, i)
     end
 
     for i in ids(pm, :branch)
@@ -41,17 +42,17 @@ function build_tnep(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :ne_branch)
-        constraint_ohms_yt_from_ne(pm, i)
-        constraint_ohms_yt_to_ne(pm, i)
+        constraint_ne_ohms_yt_from(pm, i)
+        constraint_ne_ohms_yt_to(pm, i)
 
-        constraint_voltage_angle_difference_ne(pm, i)
+        constraint_ne_voltage_angle_difference(pm, i)
 
-        constraint_thermal_limit_from_ne(pm, i)
-        constraint_thermal_limit_to_ne(pm, i)
+        constraint_ne_thermal_limit_from(pm, i)
+        constraint_ne_thermal_limit_to(pm, i)
     end
 
     for i in ids(pm, :dcline)
-        constraint_dcline(pm, i)
+        constraint_dcline_power_losses(pm, i)
     end
 end
 

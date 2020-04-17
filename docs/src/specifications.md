@@ -9,11 +9,11 @@ objective_min_fuel_cost(pm)
 
 ### Variables
 ```julia
-variable_voltage(pm)
-variable_active_generation(pm)
-variable_reactive_generation(pm)
-variable_branch_flow(pm)
-variable_dcline_flow(pm)
+variable_bus_voltage(pm)
+variable_gen_power_real(pm)
+variable_gen_power_imaginary(pm)
+variable_branch_power(pm)
+variable_dcline_power(pm)
 ```
 
 ### Constraints
@@ -35,7 +35,7 @@ for i in ids(pm, :branch)
     constraint_thermal_limit_to(pm, i)
 end
 for i in ids(pm, :dcline)
-    constraint_dcline(pm, i)
+    constraint_dcline_power_losses(pm, i)
 end
 ```
 
@@ -48,12 +48,12 @@ objective_min_fuel_cost(pm)
 
 ### Variables
 ```julia
-variable_voltage(pm)
-variable_active_generation(pm)
-variable_reactive_generation(pm)
-variable_branch_flow(pm)
+variable_bus_voltage(pm)
+variable_gen_power_real(pm)
+variable_gen_power_imaginary(pm)
+variable_branch_power(pm)
 variable_branch_current(pm)
-variable_dcline_flow(pm)
+variable_dcline_power(pm)
 ```
 
 ### Constraints
@@ -66,7 +66,7 @@ for i in ids(pm, :bus)
     constraint_power_balance_shunt(pm, i)
 end
 for i in ids(pm, :branch)
-    constraint_flow_losses(pm, i)
+    constraint_power_losses(pm, i)
     constraint_voltage_magnitude_difference(pm, i)
 
     constraint_voltage_angle_difference(pm, i)
@@ -75,7 +75,7 @@ for i in ids(pm, :branch)
     constraint_thermal_limit_to(pm, i)
 end
 for i in ids(pm, :dcline)
-    constraint_dcline(pm, i)
+    constraint_dcline_power_losses(pm, i)
 end
 ```
 
@@ -89,10 +89,10 @@ end
 
 ```julia
 variable_branch_indicator(pm)
-variable_voltage_on_off(pm)
-variable_generation(pm)
-variable_branch_flow(pm)
-variable_dcline_flow(pm)
+variable_bus_voltage_on_off(pm)
+variable_gen_power(pm)
+variable_branch_power(pm)
+variable_dcline_power(pm)
 ```
 
 ### Objective
@@ -121,7 +121,7 @@ for i in ids(pm, :branch)
     constraint_thermal_limit_to_on_off(pm, i)
 end
 for i in ids(pm, :dcline)
-    constraint_dcline(pm, i)
+    constraint_dcline_power_losses(pm, i)
 end
 ```
 
@@ -131,11 +131,11 @@ end
 
 ### Variables
 ```julia
-variable_voltage(pm, bounded = false)
-variable_active_generation(pm, bounded = false)
-variable_reactive_generation(pm, bounded = false)
-variable_branch_flow(pm, bounded = false)
-variable_dcline_flow(pm, bounded = false)
+variable_bus_voltage(pm, bounded = false)
+variable_gen_power_real(pm, bounded = false)
+variable_gen_power_imaginary(pm, bounded = false)
+variable_branch_power(pm, bounded = false)
+variable_dcline_power(pm, bounded = false)
 ```
 
 ### Constraints
@@ -154,7 +154,7 @@ for (i,bus) in ref(pm, :bus)
         @assert bus["bus_type"] == 2
         constraint_voltage_magnitude_setpoint(pm, i)
         for j in ref(pm, :bus_gens, i)
-            constraint_active_gen_setpoint(pm, j)
+            constraint_gen_setpoint_active(pm, j)
         end
     end
 end
@@ -163,7 +163,7 @@ for i in ids(pm, :branch)
     constraint_ohms_yt_to(pm, i)
 end
 for (i,dcline) in ref(pm, :dcline)
-    constraint_active_dcline_setpoint(pm, i)
+    constraint_dcline_setpoint_active(pm, i)
 
     f_bus = ref(pm, :bus)[dcline["f_bus"]]
     if f_bus["bus_type"] == 1
@@ -183,12 +183,12 @@ end
 
 ### Variables
 ```julia
-variable_voltage(pm, bounded = false)
-variable_active_generation(pm, bounded = false)
-variable_reactive_generation(pm, bounded = false)
-variable_branch_flow(pm, bounded = false)
+variable_bus_voltage(pm, bounded = false)
+variable_gen_power_real(pm, bounded = false)
+variable_gen_power_imaginary(pm, bounded = false)
+variable_branch_power(pm, bounded = false)
 variable_branch_current(pm, bounded = false)
-variable_dcline_flow(pm, bounded = false)
+variable_dcline_power(pm, bounded = false)
 ```
 
 ### Constraints
@@ -206,16 +206,16 @@ for (i,bus) in ref(pm, :bus)
         @assert bus["bus_type"] == 2
         constraint_voltage_magnitude_setpoint(pm, i)
         for j in ref(pm, :bus_gens, i)
-            constraint_active_gen_setpoint(pm, j)
+            constraint_gen_setpoint_active(pm, j)
         end
     end
 end
 for i in ids(pm, :branch)
-    constraint_flow_losses(pm, i)
+    constraint_power_losses(pm, i)
     constraint_voltage_magnitude_difference(pm, i)
 end
 for (i,dcline) in ref(pm, :dcline)
-    constraint_active_dcline_setpoint(pm, i)
+    constraint_dcline_setpoint_active(pm, i)
 
     f_bus = ref(pm, :bus)[dcline["f_bus"]]
     if f_bus["bus_type"] == 1
@@ -238,20 +238,20 @@ objective_tnep_cost(pm)
 
 ### Variables
 ```julia
-variable_branch_ne(pm)
-variable_voltage(pm)
-variable_voltage_ne(pm)
-variable_active_generation(pm)
-variable_reactive_generation(pm)
-variable_branch_flow(pm)
-variable_dcline_flow(pm)
-variable_branch_flow_ne(pm)
+variable_ne_branch_indicator(pm)
+variable_bus_voltage(pm)
+variable_ne_branch_voltage(pm)
+variable_gen_power_real(pm)
+variable_gen_power_imaginary(pm)
+variable_branch_power(pm)
+variable_dcline_power(pm)
+variable_ne_branch_power(pm)
 ```
 
 ### Constraints
 ```julia
 constraint_model_voltage(pm)
-constraint_model_voltage_ne(pm)
+constraint_ne_model_voltage(pm)
 for i in ids(pm, :ref_buses)
     constraint_theta_ref(pm, i)
 end
@@ -268,15 +268,15 @@ for i in ids(pm, :branch)
     constraint_thermal_limit_to(pm, i)
 end
 for i in ids(pm, :ne_branch)
-    constraint_ohms_yt_from_ne(pm, i)
-    constraint_ohms_yt_to_ne(pm, i)
+    constraint_ne_ohms_yt_from(pm, i)
+    constraint_ne_ohms_yt_to(pm, i)
 
-    constraint_voltage_angle_difference_ne(pm, i)
+    constraint_ne_voltage_angle_difference(pm, i)
 
-    constraint_thermal_limit_from_ne(pm, i)
-    constraint_thermal_limit_to_ne(pm, i)
+    constraint_ne_thermal_limit_from(pm, i)
+    constraint_ne_thermal_limit_to(pm, i)
 end
 for i in ids(pm, :dcline)
-    constraint_dcline(pm, i)
+    constraint_dcline_power_losses(pm, i)
 end
 ```

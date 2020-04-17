@@ -1,14 +1,14 @@
 ### the LPAC approximation
 
 ""
-function variable_voltage(pm::AbstractLPACModel; kwargs...)
-    variable_voltage_angle(pm; kwargs...)
-    variable_voltage_magnitude(pm; kwargs...)
-    variable_cosine(pm; kwargs...)
+function variable_bus_voltage(pm::AbstractLPACModel; kwargs...)
+    variable_bus_voltage_angle(pm; kwargs...)
+    variable_bus_voltage_magnitude(pm; kwargs...)
+    variable_buspair_cosine(pm; kwargs...)
 end
 
 ""
-function variable_voltage_magnitude(pm::AbstractLPACModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_magnitude(pm::AbstractLPACModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     phi = var(pm, nw)[:phi] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_phi",
         start = comp_start_value(ref(pm, nw, :bus, i), "phi_start")

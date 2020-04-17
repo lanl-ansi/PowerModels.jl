@@ -10,8 +10,8 @@ end
 
 ""
 function build_opb(pm::AbstractPowerModel)
-    variable_bus_voltage(pm)
-    variable_generation(pm)
+    variable_bus_voltage_magnitude_only(pm)
+    variable_gen_power(pm)
 
     objective_min_fuel_cost(pm)
 
