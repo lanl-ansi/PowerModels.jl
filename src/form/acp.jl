@@ -556,8 +556,8 @@ function constraint_storage_losses(pm::AbstractACPModel, n::Int, i, bus, r, x, p
     )
 
     JuMP.@NLconstraint(pm.model,
-        sum(qs[c] for c in conductors) + qsc
+        sum(qs[c] for c in conductors)
         ==
-        q_loss + sum(x[c]*(ps[c]^2 + qs[c]^2)/vm[c]^2 for c in conductors)
+        qsc + q_loss + sum(x[c]*(ps[c]^2 + qs[c]^2)/vm[c]^2 for c in conductors)
     )
 end
