@@ -9,13 +9,45 @@ scope functions).  Underscores are used to separate multi-word function names
 and the words should typically be ordered from general to more specific,
 so that alphabetical sorting clusters similar functions together.
 
+Due to model-agnostic design of PowerModels, top level functions are implicitly defined on complex numbers.  Specializations of these functions yield different complex coordinates systems and real-valued model parameters.  
+
+Top level functions have the following structure,
+```
+<variable|constraint>_<component short name>_<quantity name>(_fr|_to)(_on_off)
+```
+The suffixes have the following meanings,
+- `_fr`: the from-side of a two-terminal component (e.g., branch or switch)
+- `_to`: the to-side of a two-terminal component (e.g., branch or switch)
+- `_on_off`: indicates that the constraint can be added or removed with a discrete 0-1 indicator variable.
+Note that the from-to orientation of two-terminal components is often arbitrary and does not imply a direction of flow.
+
+The most common values of `<quantity name>` are `power`, `current` and `voltage`.  Compound names like `voltage_product` are also possible.
+
+
+Lower level functions have the following structure,
+```
+<variable|constraint>_<component short name>_<quantity name>
+(_real|_imaginary|_magnitude|_angle|_factor)(_fr|_to)(_sqr)(_on_off)
+```
+The additional suffixes have the following meanings,
+- `_real`: the real component of a complex value in rectangular coordinates
+- `_imaginary`: the imaginary component of a complex value in rectangular coordinates
+- `_magnitude`: the magnitude of a complex value in polar coordinates
+- `_angle`: the angle of a complex value in polar coordinates
+- `_factor`: a continuous real value (usually in the range 0.0 to 1.0), that scales a complex value in equal proportions
+- `_sqr`: the square of a value, usually paired with `_magnitude`
+
+
+### Special Cases
+
+In the interest of intuitive names for users, the following special cases are also acceptable,
+
+- The value of `<component short name>` can be omitted from constraint definitions for one of the canonical components that it applies to.
+- `_power_real` -(can be replaced with)-> `_active`
+- `_power_imaginary` -(can be replaced with)-> `_reactive`
+
 
 ## Variable and Parameter Naming Guidelines
-
-### Suffixes
-
-- `_fr`: from-side ('i'-node)
-- `_to`: to-side ('j'-node)
 
 ### Power
 
@@ -90,7 +122,7 @@ $y = g + j\cdot b$:
 - phase ids: `phase`, `ph`, `h`
 
 
-## DistFlow derivation
+## DistFlow Derivation
 
 ### For an asymmetric pi section
 Following notation of [^1], but recognizing it derives the SOC BFM without shunts.

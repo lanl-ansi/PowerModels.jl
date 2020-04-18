@@ -180,7 +180,7 @@ function build_opf_ptdf(pm::DCPPowerModel)
     variable_gen_power(pm)
 
     for i in ids(pm, :bus)
-        expression_power_injection(pm, i)
+        expression_bus_power_injection(pm, i)
     end
 
     objective_min_fuel_cost(pm)
@@ -202,8 +202,8 @@ function build_opf_ptdf(pm::DCPPowerModel)
 
         # only create these exressions if a line flow is specificed
         if haskey(branch, "rate_a")
-            expression_branch_flow_yt_from_ptdf(pm, i)
-            expression_branch_flow_yt_to_ptdf(pm, i)
+            expression_branch_power_ohms_yt_from_ptdf(pm, i)
+            expression_branch_power_ohms_yt_to_ptdf(pm, i)
         end
 
         constraint_thermal_limit_from(pm, i)

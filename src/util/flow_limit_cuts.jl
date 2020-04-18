@@ -94,8 +94,7 @@ supporting the PTDF problem specification at this time.
 # Keyword Arguments
 * `max_iter`: maximum number of flow iterations to perform.
 * `time_limit`: maximum amount of time (sec) for the algorithm.
-* `full_inverse`: compute the complete admittance matrix inverse, instead of a
-branch by branch computation.
+* `full_inverse`: compute the complete admittance matrix inverse, instead of a branch by branch computation.
 """
 function run_opf_ptdf_flow_cuts(file::String, optimizer; kwargs...)
     data = PowerModels.parse_file(file)
@@ -158,8 +157,8 @@ function run_opf_ptdf_flow_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::
                     delete!(branch, "rate_a_inactive")
 
                     idx = branch["index"]
-                    expression_branch_flow_yt_from_ptdf(pm, idx)
-                    expression_branch_flow_yt_to_ptdf(pm, idx)
+                    expression_branch_power_ohms_yt_from_ptdf(pm, idx)
+                    expression_branch_power_ohms_yt_to_ptdf(pm, idx)
                     constraint_thermal_limit_from(pm, idx)
                     constraint_thermal_limit_to(pm, idx)
 

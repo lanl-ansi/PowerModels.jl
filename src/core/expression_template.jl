@@ -18,7 +18,7 @@
 """
 defines va in terms of power injections
 """
-function expression_voltage(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function expression_bus_voltage(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     @assert haskey(var(pm, nw), :inj_p)
     @assert haskey(var(pm, nw), :inj_q)
 
@@ -30,7 +30,7 @@ function expression_voltage(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     end
 
     am_inv = ref(pm, nw, :am_inv)
-    expression_voltage(pm, nw, i, am_inv)
+    expression_bus_voltage(pm, nw, i, am_inv)
 end
 
 
@@ -39,7 +39,7 @@ end
 """
 defines power injection at each bus
 """
-function expression_power_injection(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function expression_bus_power_injection(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     if !haskey(var(pm, nw), :inj_p)
         var(pm, nw)[:inj_p] = Dict{Int,Any}()
     end
@@ -59,13 +59,13 @@ function expression_power_injection(pm::AbstractPowerModel, i::Int; nw::Int=pm.c
     bus_gs = Dict(k => ref(pm, nw, :shunt, k, "gs") for k in bus_shunts)
     bus_bs = Dict(k => ref(pm, nw, :shunt, k, "bs") for k in bus_shunts)
 
-    expression_power_injection(pm, nw, i, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+    expression_bus_power_injection(pm, nw, i, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
 
 
 ""
-function expression_branch_flow_yt_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function expression_branch_power_ohms_yt_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     if !haskey(var(pm, nw), :p)
         var(pm, nw)[:p] = Dict{Tuple{Int,Int,Int},Any}()
     end
@@ -85,12 +85,12 @@ function expression_branch_flow_yt_from(pm::AbstractPowerModel, i::Int; nw::Int=
     b_fr = branch["b_fr"]
     tm = branch["tap"]
 
-    expression_branch_flow_yt_from(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    expression_branch_power_ohms_yt_from(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
 end
 
 
 ""
-function expression_branch_flow_yt_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function expression_branch_power_ohms_yt_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     if !haskey(var(pm, nw), :p)
         var(pm, nw)[:p] = Dict{Tuple{Int,Int,Int},Any}()
     end
@@ -110,13 +110,13 @@ function expression_branch_flow_yt_to(pm::AbstractPowerModel, i::Int; nw::Int=pm
     b_to = branch["b_to"]
     tm = branch["tap"]
 
-    expression_branch_flow_yt_to(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
+    expression_branch_power_ohms_yt_to(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
 end
 
 
 
 ""
-function expression_branch_flow_yt_from_ptdf(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function expression_branch_power_ohms_yt_from_ptdf(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     if !haskey(var(pm, nw), :p)
         var(pm, nw)[:p] = Dict{Tuple{Int,Int,Int},Any}()
     end
@@ -145,18 +145,18 @@ function expression_branch_flow_yt_from_ptdf(pm::AbstractPowerModel, i::Int; nw:
 
     sm = ref(pm, nw, :sm)
     if !haskey(var(pm, nw, :va), f_bus)
-        expression_voltage(pm, nw, f_bus, sm)
+        expression_bus_voltage(pm, nw, f_bus, sm)
     end
     if !haskey(var(pm, nw, :va), t_bus)
-        expression_voltage(pm, nw, t_bus, sm)
+        expression_bus_voltage(pm, nw, t_bus, sm)
     end
 
-    expression_branch_flow_yt_from(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    expression_branch_power_ohms_yt_from(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
 end
 
 
 ""
-function expression_branch_flow_yt_to_ptdf(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function expression_branch_power_ohms_yt_to_ptdf(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
     if !haskey(var(pm, nw), :p)
         var(pm, nw)[:p] = Dict{Tuple{Int,Int,Int},Any}()
     end
@@ -185,11 +185,11 @@ function expression_branch_flow_yt_to_ptdf(pm::AbstractPowerModel, i::Int; nw::I
 
     sm = ref(pm, nw, :sm)
     if !haskey(var(pm, nw, :va), f_bus)
-        expression_voltage(pm, nw, f_bus, sm)
+        expression_bus_voltage(pm, nw, f_bus, sm)
     end
     if !haskey(var(pm, nw, :va), t_bus)
-        expression_voltage(pm, nw, t_bus, sm)
+        expression_bus_voltage(pm, nw, t_bus, sm)
     end
 
-    expression_branch_flow_yt_to(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
+    expression_branch_power_ohms_yt_to(pm, nw, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
 end

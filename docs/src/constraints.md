@@ -14,14 +14,14 @@ These templates should be defined over `AbstractPowerModel` and should not refer
 ```@docs
 constraint_model_voltage
 constraint_model_voltage_on_off
-constraint_model_voltage_ne
+constraint_ne_model_voltage
 ```
 
 ## Generator Constraints
 
 ```@docs
-constraint_active_gen_setpoint
-constraint_reactive_gen_setpoint
+constraint_gen_setpoint_active
+constraint_gen_setpoint_reactive
 ```
 
 ## Bus Constraints
@@ -38,7 +38,7 @@ constraint_voltage_magnitude_setpoint
 ```@docs
 constraint_power_balance
 constraint_power_balance_ls
-constraint_power_balance_ne
+constraint_ne_power_balance
 ```
 
 ## Branch Constraints
@@ -57,8 +57,8 @@ constraint_ohms_y_to
 ```@docs
 constraint_ohms_yt_from_on_off
 constraint_ohms_yt_to_on_off
-constraint_ohms_yt_from_ne
-constraint_ohms_yt_to_ne
+constraint_ne_ohms_yt_from
+constraint_ne_ohms_yt_to
 ```
 
 ### Current
@@ -77,8 +77,8 @@ constraint_thermal_limit_from
 constraint_thermal_limit_to
 constraint_thermal_limit_from_on_off
 constraint_thermal_limit_to_on_off
-constraint_thermal_limit_from_ne
-constraint_thermal_limit_to_ne
+constraint_ne_thermal_limit_from
+constraint_ne_thermal_limit_to
 ```
 
 ### Current Limit Constraints
@@ -92,14 +92,14 @@ constraint_current_limit
 ```@docs
 constraint_voltage_angle_difference
 constraint_voltage_angle_difference_on_off
-constraint_voltage_angle_difference_ne
+constraint_ne_voltage_angle_difference
 ```
 
 ### Loss Constraints
 
 ```@docs
-constraint_loss_lb
-constraint_flow_losses
+constraint_power_losses
+constraint_power_losses_lb
 constraint_voltage_magnitude_difference
 ```
 
@@ -110,7 +110,7 @@ constraint_storage_thermal_limit
 constraint_storage_current_limit
 constraint_storage_complementarity_nl
 constraint_storage_complementarity_mi
-constraint_storage_loss
+constraint_storage_losses
 constraint_storage_state_initial
 constraint_storage_state
 ```
@@ -118,6 +118,6 @@ constraint_storage_state
 ## DC Line Constraints
 
 ```@docs
-constraint_dcline
-constraint_active_dcline_setpoint
+constraint_dcline_power_losses
+constraint_dcline_setpoint_active
 ```

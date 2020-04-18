@@ -137,7 +137,7 @@ end
 
 
 ""
-function expression_power_injection(pm::AbstractActivePowerModel, n::Int, i::Int, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+function expression_bus_power_injection(pm::AbstractActivePowerModel, n::Int, i::Int, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
     pg   = get(var(pm, n),   :pg, Dict()); _check_var_keys(pg, bus_gens, "active power", "generator")
     ps   = get(var(pm, n),   :ps, Dict()); _check_var_keys(ps, bus_storage, "active power", "storage")
 
