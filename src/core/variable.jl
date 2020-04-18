@@ -956,27 +956,36 @@ function variable_storage_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw
 end
 
 
-""
+"""
+a reactive power slack variable that enables the storage device to inject or
+consume reactive power at its connecting bus, subject to the injection limits
+of the device.
+"""
 function variable_storage_power_control_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
-    sq = var(pm, nw)[:sq] = JuMP.@variable(pm.model,
-        [i in ids(pm, nw, :storage)], base_name="$(nw)_sq",
-        start = comp_start_value(ref(pm, nw, :storage, i), "sq_start", 1)
+    qsc = var(pm, nw)[:qsc] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_qsc",
+        start = comp_start_value(ref(pm, nw, :storage, i), "qsc_start")
     )
 
     if bounded
         inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus))
 
-        for i in ids(pm, nw, :storage)
-            if !isinf(inj_lb[i])
-                JuMP.set_lower_bound(sq[i], inj_lb[i])
+        for (i,storage) in ref(pm, nw, :storage)
+
+            if !isinf(inj_lb[i]) #|| haskey(storage, "qmin")
+                #JuMP.set_lower_bound(qsc[i], max(inj_lb[i], get(storage, "qmin", -Inf)))
+                JuMP.set_lower_bound(qsc[i], inj_lb[i])
             end
-            if !isinf(inj_ub[i])
-                JuMP.set_upper_bound(sq[i], inj_ub[i])
+            if !isinf(inj_ub[i]) #|| haskey(storage, "qmax")
+                #JuMP.set_upper_bound(qsc[i], min(inj_ub[i], get(storage, "qmax",  Inf)))
+                JuMP.set_upper_bound(qsc[i], inj_ub[i])
             end
         end
     end
-    report && _IM.sol_component_value(pm, nw, :storage, :sq, ids(pm, nw, :storage), sq)
+
+    report && _IM.sol_component_value(pm, nw, :storage, :qsc, ids(pm, nw, :storage), qsc)
 end
+
 
 "do nothing by default but some formulations require this"
 function variable_storage_current(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
@@ -1069,6 +1078,7 @@ end
 function variable_storage_power_mi_on_off(pm::AbstractPowerModel; kwargs...)
     variable_storage_power_real_on_off(pm; kwargs...)
     variable_storage_power_imaginary_on_off(pm; kwargs...)
+    variable_storage_power_control_imaginary(pm; kwargs...)
     variable_storage_current(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)

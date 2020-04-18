@@ -276,7 +276,6 @@ function _build_ucopf(pm::AbstractPowerModel)
 
     variable_storage_indicator(pm)
     variable_storage_power_mi_on_off(pm)
-    variable_storage_power_control_imaginary(pm)
 
     variable_branch_power(pm)
     variable_dcline_power(pm)
