@@ -20,8 +20,8 @@ function build_pf(pm::AbstractPowerModel)
     variable_dcline_power(pm, bounded = false)
 
     for i in ids(pm, :branch)
-        expression_branch_flow_yt_from(pm, i)
-        expression_branch_flow_yt_to(pm, i)
+        expression_branch_power_ohms_yt_from(pm, i)
+        expression_branch_power_ohms_yt_to(pm, i)
     end
 
     constraint_model_voltage(pm)

@@ -231,7 +231,7 @@ end
 
 
 ""
-function expression_branch_flow_yt_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+function expression_branch_power_ohms_yt_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     vm_fr = var(pm, n, :vm, f_bus)
     vm_to = var(pm, n, :vm, t_bus)
     va_fr = var(pm, n, :va, f_bus)
@@ -242,7 +242,7 @@ function expression_branch_flow_yt_from(pm::AbstractACPModel, n::Int, f_bus, t_b
 end
 
 ""
-function expression_branch_flow_yt_to(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
+function expression_branch_power_ohms_yt_to(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
     vm_fr = var(pm, n, :vm, f_bus)
     vm_to = var(pm, n, :vm, t_bus)
     va_fr = var(pm, n, :va, f_bus)

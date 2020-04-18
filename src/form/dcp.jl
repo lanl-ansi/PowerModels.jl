@@ -55,7 +55,7 @@ function constraint_ohms_yt_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_i
 end
 
 ""
-function expression_branch_flow_yt_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+function expression_branch_power_ohms_yt_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
@@ -64,7 +64,7 @@ function expression_branch_flow_yt_from(pm::AbstractDCPModel, n::Int, f_bus, t_b
 end
 
 ""
-function expression_branch_flow_yt_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+function expression_branch_power_ohms_yt_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
@@ -99,7 +99,7 @@ end
 
 
 ""
-function expression_branch_flow_yt_from(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+function expression_branch_power_ohms_yt_from(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
@@ -111,7 +111,7 @@ function expression_branch_flow_yt_from(pm::AbstractDCMPPModel, n::Int, f_bus, t
 end
 
 ""
-function expression_branch_flow_yt_to(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+function expression_branch_power_ohms_yt_to(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
@@ -200,7 +200,7 @@ end
 
 
 ""
-function expression_voltage(pm::AbstractPowerModel, n::Int, i, am::Union{AdmittanceMatrix,AdmittanceMatrixInverse})
+function expression_bus_voltage(pm::AbstractPowerModel, n::Int, i, am::Union{AdmittanceMatrix,AdmittanceMatrixInverse})
     inj_factors = injection_factors_va(am, i)
 
     inj_p = var(pm, n, :inj_p)

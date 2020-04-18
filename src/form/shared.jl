@@ -274,7 +274,7 @@ end
 
 
 ""
-function expression_branch_flow_yt_from(pm::AbstractWRModels, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+function expression_branch_power_ohms_yt_from(pm::AbstractWRModels, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     w_fr = var(pm, n, :w, f_bus)
     wr   = var(pm, n, :wr, (f_bus, t_bus))
     wi   = var(pm, n, :wi, (f_bus, t_bus))
@@ -285,7 +285,7 @@ end
 
 
 ""
-function expression_branch_flow_yt_to(pm::AbstractWRModels, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
+function expression_branch_power_ohms_yt_to(pm::AbstractWRModels, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
     w_to = var(pm, n, :w, t_bus)
     wr   = var(pm, n, :wr, (f_bus, t_bus))
     wi   = var(pm, n, :wi, (f_bus, t_bus))
