@@ -6,6 +6,8 @@ PowerModels.jl Change Log
 
 ### v0.17.0
 - Updated to new function name convention, details in issue #701 (#555,#656) (breaking)
+- Update to InfrastructureModels v0.5 (breaking)
+- Added support for Memento v1.1
 
 ### v0.16.0
 - Added a native AC Power Flow solver in polar coordinates that uses NLSolve (#590)

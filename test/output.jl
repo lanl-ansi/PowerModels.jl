@@ -10,8 +10,6 @@
         @test haskey(result, "objective") == true
         @test haskey(result, "objective_lb") == true
         @test haskey(result, "solve_time") == true
-        @test haskey(result, "machine") == true
-        @test haskey(result, "data") == true
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "branch") == true
 
@@ -55,8 +53,6 @@ end
         @test haskey(result, "objective") == true
         @test haskey(result, "objective_lb") == true
         @test haskey(result, "solve_time") == true
-        @test haskey(result, "machine") == true
-        @test haskey(result, "data") == true
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "branch") == true
 
@@ -102,8 +98,6 @@ end
         @test haskey(result, "objective") == true
         @test haskey(result, "objective_lb") == true
         @test haskey(result, "solve_time") == true
-        @test haskey(result, "machine") == true
-        @test haskey(result, "data") == true
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "bus") == true
         @test haskey(result["solution"], "branch") == false
