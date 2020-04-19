@@ -64,6 +64,7 @@ constraint_ne_ohms_yt_to
 ### Current
 
 ```@docs
+constraint_current_balance
 constraint_power_magnitude_sqr
 constraint_power_magnitude_sqr_on_off
 constraint_power_magnitude_link
@@ -85,6 +86,8 @@ constraint_ne_thermal_limit_to
 
 ```@docs
 constraint_current_limit
+constraint_current_to
+constraint_current_from
 ```
 
 ### Phase Angle Difference Constraints
@@ -101,6 +104,7 @@ constraint_ne_voltage_angle_difference
 constraint_power_losses
 constraint_power_losses_lb
 constraint_voltage_magnitude_difference
+constraint_voltage_drop
 ```
 
 ### Storage Constraints

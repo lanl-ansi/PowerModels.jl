@@ -8,3 +8,9 @@ Pages   = ["core/variable.jl"]
 Order   = [:type, :function]
 Private  = true
 ```
+
+```@docs
+variable_branch_current
+variable_bus_voltage
+variable_gen_current
+```

@@ -42,7 +42,7 @@ A complete mathematical model is as follows,
 ```math
 \begin{align}
 %
-\mbox{variables: } &  \\
+\mbox{variables: } & \nonumber \\
 & S^g_k \;\; \forall k\in G \mbox{ - generator complex power dispatch} \label{var_generation}\\
 & V_i \;\; \forall i\in N \label{var_voltage} \mbox{ - bus complex voltage}\\
 & S_{ij} \;\; \forall (i,j) \in E \cup E^R  \label{var_complex_power} \mbox{ - branch complex power flow}\\
@@ -67,19 +67,19 @@ Note that for clarity of this presentation some model variants that PowerModels 
 
 
 ### Mapping to function names
-- Eq. $\eqref{var_generation}$ - `variable_generation` in `variable.jl`
-- Eq. $\eqref{var_voltage}$ - `variable_voltage` in `variable.jl`
-- Eq. $\eqref{var_complex_power}$ - `variable_branch_flow` in `variable.jl`
-- Eq. $\eqref{eq_objective}$ - `objective_min_fuel_cost` in `objective.jl`
-- Eq. $\eqref{eq_ref_bus}$ - `constraint_theta_ref` in `constraint_template.jl`
-- Eq. $\eqref{eq_gen_bounds}$ - bounds of `variable_generation` in `variable.jl`
-- Eq. $\eqref{eq_voltage_bounds}$ - bounds of `variable_voltage` in `variable.jl`
-- Eq. $\eqref{eq_kcl_shunt}$ - `constraint_power_balance_shunt` in `constraint_template.jl`
-- Eq. $\eqref{eq_power_from}$ - `constraint_ohms_yt_from` in `constraint_template.jl`
-- Eq. $\eqref{eq_power_to}$ - `constraint_ohms_yt_to` in `constraint_template.jl`
-- Eq. $\eqref{eq_thermal_limit}$ - `constraint_thermal_limit_from` and `constraint_thermal_limit_to` in `constraint_template.jl`
-- Eq. $\eqref{eq_current_limit}$ - `constraint_current_limit` in `constraint_template.jl`
-- Eq. $\eqref{eq_angle_difference}$ - `constraint_voltage_angle_difference` in `constraint_template.jl`
+- Eq. $\eqref{var_generation}$ - [`variable_gen_power`](@ref)
+- Eq. $\eqref{var_voltage}$ - [`variable_bus_voltage`](@ref)
+- Eq. $\eqref{var_complex_power}$ - [`variable_branch_power`](@ref)
+- Eq. $\eqref{eq_objective}$ - [`objective_min_fuel_cost`](@ref)
+- Eq. $\eqref{eq_ref_bus}$ - [`constraint_theta_ref`](@ref)
+- Eq. $\eqref{eq_gen_bounds}$ - bounds of [`variable_gen_power`](@ref)
+- Eq. $\eqref{eq_voltage_bounds}$ - bounds of [`variable_bus_voltage`](@ref)
+- Eq. $\eqref{eq_kcl_shunt}$ - [`constraint_power_balance`](@ref)
+- Eq. $\eqref{eq_power_from}$ - [`constraint_ohms_yt_from`](@ref)
+- Eq. $\eqref{eq_power_to}$ - [`constraint_ohms_yt_to`](@ref)
+- Eq. $\eqref{eq_thermal_limit}$ - [`constraint_thermal_limit_from`](@ref) and [`constraint_thermal_limit_to`](@ref)
+- Eq. $\eqref{eq_current_limit}$ - [`constraint_current_limit`](@ref)
+- Eq. $\eqref{eq_angle_difference}$ - [`constraint_voltage_angle_difference`](@ref)
 
 
 
@@ -119,11 +119,11 @@ A complete mathematical formulation for a Branch Flow Model is conceived as:
 Note that constraints $\eqref{eq_line_losses} - \eqref{eq_ohms_bfm}$ replace $\eqref{eq_power_from} - \eqref{eq_power_to}$ but the remainder of the problem formulation is identical. Furthermore, the problems have the same feasible set.  
 
 ### Mapping to function names
-- Eq. $\eqref{var_branch_current}$ - `variable_branch_current` in `variable.jl`
-- Eq. $\eqref{eq_line_losses}$ - `constraint_flow_losses` in `constraint_template.jl`
+- Eq. $\eqref{var_branch_current}$ - [`variable_branch_current`](@ref)
+- Eq. $\eqref{eq_line_losses}$ - [`constraint_power_losses`](@ref)
 - Eq. $\eqref{eq_series_power_flow}$ - implicit, substituted out before implementation
-- Eq. $\eqref{eq_complex_power_definition}$ - `constraint_model_voltage` in `constraint_template.jl`
-- Eq. $\eqref{eq_ohms_bfm}$ - `constraint_voltage_magnitude_difference` in `constraint_template.jl`
+- Eq. $\eqref{eq_complex_power_definition}$ - [`constraint_model_voltage`](@ref)
+- Eq. $\eqref{eq_ohms_bfm}$ - [`constraint_voltage_magnitude_difference`](@ref)
 
 
 ## AC Optimal Power Flow in Current-Voltage Variables
@@ -157,9 +157,9 @@ The mathematical structure for a current-voltage formulation is conceived as:
 ```
 
 ### Mapping to function names
-- Eq. $\eqref{var_total_current}$ - total current flow into a branch on either end `variable_branch_current`
-- Eq. $\eqref{eq_complex_power_definition_gen}$  - models active and reactive power range of a generator `constraint_gen`
-- Eq. $\eqref{eq_kcl_current}$  - Kirchhoff's current law in current variables  `constraint_current_balance`
-- Eq. $\eqref{eq_current_from}$  - branch from-side current constraint in `constraint_current_from`
-- Eq. $\eqref{eq_current_to}$  - branch to-side current constraint in `constraint_current_to`
-- Eq. $\eqref{eq_ohms_iv}$  - Ohm's law `constraint_voltage_difference`
+- Eq. $\eqref{var_total_current}$ - total current flow into a branch on either end [`variable_branch_current`](@ref)
+- Eq. $\eqref{eq_complex_power_definition_gen}$  - models active and reactive power range of a generator [`variable_gen_current`](@ref)
+- Eq. $\eqref{eq_kcl_current}$  - Kirchhoff's current law in current variables  [`constraint_current_balance`](@ref)
+- Eq. $\eqref{eq_current_from}$  - branch from-side current constraint in [`constraint_current_from`](@ref)
+- Eq. $\eqref{eq_current_to}$  - branch to-side current constraint in [`constraint_current_to`](@ref)
+- Eq. $\eqref{eq_ohms_iv}$  - Ohm's law [`constraint_voltage_drop`](@ref)
