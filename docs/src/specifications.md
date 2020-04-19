@@ -4,13 +4,11 @@ This section provides links to the formulation agnostic problem specifications.
 
 ## Power Flow (PF)
 
-For additional discussion please see, [Power Flow Computations](@ref).
+For additional discussion on the power flow problem please see, [Power Flow Computations](@ref).
 
 **Bus Injection Models (BIM)**
 ```@docs
 build_pf
-compute_dc_pf
-compute_ac_pf
 ```
 
 **Branch Flow Models (BFM)**
@@ -22,7 +20,6 @@ build_pf_bf
 ```@docs
 build_pf_iv
 ```
-
 
 ## Optimal Power Flow (OPF)
 
