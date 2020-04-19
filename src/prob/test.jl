@@ -534,4 +534,3 @@ function _build_opf_oltc_pst(pm::AbstractPowerModel)
         constraint_dcline_power_losses(pm, i)
     end
 end
-

@@ -246,9 +246,12 @@ function constraint_storage_on_off(pm::AbstractPowerModel, n::Int, i, pmin, pmax
     z_storage = var(pm, n, :z_storage, i)
     ps = var(pm, n, :ps, i)
     qs = var(pm, n, :qs, i)
+    qsc = var(pm, n, :qsc, i)
 
     JuMP.@constraint(pm.model, ps <= z_storage*pmax)
     JuMP.@constraint(pm.model, ps >= z_storage*pmin)
     JuMP.@constraint(pm.model, qs <= z_storage*qmax)
     JuMP.@constraint(pm.model, qs >= z_storage*qmin)
+    JuMP.@constraint(pm.model, qsc <= z_storage*qmax)
+    JuMP.@constraint(pm.model, qsc >= z_storage*qmin)
 end

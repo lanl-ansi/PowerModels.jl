@@ -893,6 +893,7 @@ end
 function variable_storage_power(pm::AbstractPowerModel; kwargs...)
     variable_storage_power_real(pm; kwargs...)
     variable_storage_power_imaginary(pm; kwargs...)
+    variable_storage_power_control_imaginary(pm; kwargs...)
     variable_storage_current(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
@@ -903,6 +904,7 @@ end
 function variable_storage_power_mi(pm::AbstractPowerModel; kwargs...)
     variable_storage_power_real(pm; kwargs...)
     variable_storage_power_imaginary(pm; kwargs...)
+    variable_storage_power_control_imaginary(pm; kwargs...)
     variable_storage_current(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
@@ -952,6 +954,36 @@ function variable_storage_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw
 
     report && _IM.sol_component_value(pm, nw, :storage, :qs, ids(pm, nw, :storage), qs)
 end
+
+
+"""
+a reactive power slack variable that enables the storage device to inject or
+consume reactive power at its connecting bus, subject to the injection limits
+of the device.
+"""
+function variable_storage_power_control_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+    qsc = var(pm, nw)[:qsc] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_qsc",
+        start = comp_start_value(ref(pm, nw, :storage, i), "qsc_start")
+    )
+
+    if bounded
+        inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus))
+
+        for (i,storage) in ref(pm, nw, :storage)
+
+            if !isinf(inj_lb[i]) || haskey(storage, "qmin")
+                JuMP.set_lower_bound(qsc[i], max(inj_lb[i], get(storage, "qmin", -Inf)))
+            end
+            if !isinf(inj_ub[i]) || haskey(storage, "qmax")
+                JuMP.set_upper_bound(qsc[i], min(inj_ub[i], get(storage, "qmax",  Inf)))
+            end
+        end
+    end
+
+    report && _IM.sol_component_value(pm, nw, :storage, :qsc, ids(pm, nw, :storage), qsc)
+end
+
 
 "do nothing by default but some formulations require this"
 function variable_storage_current(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
@@ -1044,6 +1076,7 @@ end
 function variable_storage_power_mi_on_off(pm::AbstractPowerModel; kwargs...)
     variable_storage_power_real_on_off(pm; kwargs...)
     variable_storage_power_imaginary_on_off(pm; kwargs...)
+    variable_storage_power_control_imaginary_on_off(pm; kwargs...)
     variable_storage_current(pm; kwargs...)
     variable_storage_energy(pm; kwargs...)
     variable_storage_charge(pm; kwargs...)
@@ -1083,6 +1116,38 @@ function variable_storage_power_imaginary_on_off(pm::AbstractPowerModel; nw::Int
 
     report && _IM.sol_component_value(pm, nw, :storage, :qs, ids(pm, nw, :storage), qs)
 end
+
+
+"""
+a reactive power slack variable that enables the storage device to inject or
+consume reactive power at its connecting bus, subject to the injection limits
+of the device.
+"""
+function variable_storage_power_control_imaginary_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+    qsc = var(pm, nw)[:qsc] = JuMP.@variable(pm.model,
+        [i in ids(pm, nw, :storage)], base_name="$(nw)_qsc",
+        start = comp_start_value(ref(pm, nw, :storage, i), "qsc_start")
+    )
+
+    if bounded
+        inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus))
+
+        for (i,storage) in ref(pm, nw, :storage)
+
+            if !isinf(inj_lb[i]) || haskey(storage, "qmin")
+                lb = max(inj_lb[i], get(storage, "qmin", -Inf))
+                JuMP.set_lower_bound(qsc[i], min(lb, 0.0))
+            end
+            if !isinf(inj_ub[i]) || haskey(storage, "qmax")
+                ub = min(inj_ub[i], get(storage, "qmax",  Inf))
+                JuMP.set_upper_bound(qsc[i], max(ub, 0.0))
+            end
+        end
+    end
+
+    report && _IM.sol_component_value(pm, nw, :storage, :qsc, ids(pm, nw, :storage), qsc)
+end
+
 
 function variable_storage_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
     if !relax

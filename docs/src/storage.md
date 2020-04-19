@@ -80,13 +80,14 @@ Given the storage data model and two sequential time points $s$ and $t$, the sto
 & e_i \in (0, e^u) \mbox{ - storage energy at time $i$} \\
 & sc_i \in (0, sc^u) \mbox{ - charge amount at time $i$} \\
 & sd_i \in (0, sd^u) \mbox{ - discharge amount at time $i$} \\
+& sqc_i \mbox{ - reactive power slack at time $i$} \\
 & S_i \mbox{ - complex bus power injection at time $i$} \\
 & I_i \mbox{ - complex bus current injection at time $i$} \\
 %
 \mbox{subject to: } & \nonumber \\
 & e_t - e_s = te \left(\eta^c sc_t - \frac{sd_t}{\eta^d} \right) \label{eq_strg_energy} \\
 & sc_t \cdot sd_t = 0 \label{eq_strg_compl} \\
-& S_t + (sd_t - sc_t) = S^l + Z |I_t| \label{eq_strg_loss} \\
+& S_t + (sd_t - sc_t) = j \cdot sqc_t + S^l + Z |I_t| \label{eq_strg_loss} \\
 & q^l \leq \Im(S_t) \leq q^u \label{eq_strg_q_limit} \\
 & |S_t| \leq s^u \label{eq_strg_thermal_limit} \\
 & |I_t| \leq i^u \label{eq_strg_current_limit}

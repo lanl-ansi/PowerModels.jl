@@ -197,6 +197,7 @@ function constraint_storage_losses(pm::AbstractBFAModel, n::Int, i, bus, r, x, p
     qs = var(pm, n, :qs, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
+    qsc = var(pm, n, :qsc, i)
 
 
     JuMP.@constraint(pm.model,
@@ -208,6 +209,6 @@ function constraint_storage_losses(pm::AbstractBFAModel, n::Int, i, bus, r, x, p
     JuMP.@constraint(pm.model,
         sum(qs[c] for c in conductors)
         ==
-        q_loss
+        qsc + q_loss
     )
 end
