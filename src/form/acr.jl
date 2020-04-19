@@ -1,9 +1,9 @@
 ### rectangular form of the non-convex AC equations
 
 ""
-function variable_voltage(pm::AbstractACRModel; nw::Int=pm.cnw, bounded::Bool=true, kwargs...)
-    variable_voltage_real(pm; nw=nw, bounded=bounded, kwargs...)
-    variable_voltage_imaginary(pm; nw=nw, bounded=bounded, kwargs...)
+function variable_bus_voltage(pm::AbstractACRModel; nw::Int=pm.cnw, bounded::Bool=true, kwargs...)
+    variable_bus_voltage_real(pm; nw=nw, bounded=bounded, kwargs...)
+    variable_bus_voltage_imaginary(pm; nw=nw, bounded=bounded, kwargs...)
 
     if bounded
         for (i,bus) in ref(pm, nw, :bus)
@@ -163,7 +163,7 @@ end
 
 
 ""
-function expression_branch_flow_yt_from(pm::AbstractACRModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+function expression_branch_power_ohms_yt_from(pm::AbstractACRModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     vr_fr = var(pm, n, :vr, f_bus)
     vr_to = var(pm, n, :vr, t_bus)
     vi_fr = var(pm, n, :vi, f_bus)
@@ -175,7 +175,7 @@ end
 
 
 ""
-function expression_branch_flow_yt_to(pm::AbstractACRModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
+function expression_branch_power_ohms_yt_to(pm::AbstractACRModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
     vr_fr = var(pm, n, :vr, f_bus)
     vr_to = var(pm, n, :vr, t_bus)
     vi_fr = var(pm, n, :vi, f_bus)

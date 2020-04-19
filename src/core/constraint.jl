@@ -66,7 +66,7 @@ function constraint_thermal_limit_to_on_off(pm::AbstractPowerModel, n::Int, i, t
 end
 
 "`p_ne[f_idx]^2 + q_ne[f_idx]^2 <= (rate_a * branch_ne[i])^2`"
-function constraint_thermal_limit_from_ne(pm::AbstractPowerModel, n::Int, i, f_idx, rate_a)
+function constraint_ne_thermal_limit_from(pm::AbstractPowerModel, n::Int, i, f_idx, rate_a)
     p_fr = var(pm, n, :p_ne, f_idx)
     q_fr = var(pm, n, :q_ne, f_idx)
     z = var(pm, n, :branch_ne, i)
@@ -75,7 +75,7 @@ function constraint_thermal_limit_from_ne(pm::AbstractPowerModel, n::Int, i, f_i
 end
 
 "`p_ne[t_idx]^2 + q_ne[t_idx]^2 <= (rate_a * branch_ne[i])^2`"
-function constraint_thermal_limit_to_ne(pm::AbstractPowerModel, n::Int, i, t_idx, rate_a)
+function constraint_ne_thermal_limit_to(pm::AbstractPowerModel, n::Int, i, t_idx, rate_a)
     p_to = var(pm, n, :p_ne, t_idx)
     q_to = var(pm, n, :q_ne, t_idx)
     z = var(pm, n, :branch_ne, i)
@@ -84,21 +84,21 @@ function constraint_thermal_limit_to_ne(pm::AbstractPowerModel, n::Int, i, t_idx
 end
 
 "`pg[i] == pg`"
-function constraint_active_gen_setpoint(pm::AbstractPowerModel, n::Int, i, pg)
+function constraint_gen_setpoint_active(pm::AbstractPowerModel, n::Int, i, pg)
     pg_var = var(pm, n, :pg, i)
 
     JuMP.@constraint(pm.model, pg_var == pg)
 end
 
 "`qq[i] == qq`"
-function constraint_reactive_gen_setpoint(pm::AbstractPowerModel, n::Int, i, qg)
+function constraint_gen_setpoint_reactive(pm::AbstractPowerModel, n::Int, i, qg)
     qg_var = var(pm, n, :qg, i)
 
     JuMP.@constraint(pm.model, qg_var == qg)
 end
 
 "on/off constraint for generators"
-function constraint_generation_on_off(pm::AbstractPowerModel, n::Int, i::Int, pmin, pmax, qmin, qmax)
+function constraint_gen_power_on_off(pm::AbstractPowerModel, n::Int, i::Int, pmin, pmax, qmin, qmax)
     pg = var(pm, n, :pg, i)
     qg = var(pm, n, :qg, i)
     z = var(pm, n, :z_gen, i)
@@ -117,7 +117,7 @@ Creates Line Flow constraint for DC Lines (Matpower Formulation)
 p_fr + p_to == loss0 + p_fr * loss1
 ```
 """
-function constraint_dcline(pm::AbstractPowerModel, n::Int, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
+function constraint_dcline_power_losses(pm::AbstractPowerModel, n::Int, f_bus, t_bus, f_idx, t_idx, loss0, loss1)
     p_fr = var(pm, n, :p_dc, f_idx)
     p_to = var(pm, n, :p_dc, t_idx)
 
@@ -125,7 +125,7 @@ function constraint_dcline(pm::AbstractPowerModel, n::Int, f_bus, t_bus, f_idx, 
 end
 
 "`pf[i] == pf, pt[i] == pt`"
-function constraint_active_dcline_setpoint(pm::AbstractPowerModel, n::Int, f_idx, t_idx, pf, pt)
+function constraint_dcline_setpoint_active(pm::AbstractPowerModel, n::Int, f_idx, t_idx, pf, pt)
     p_fr = var(pm, n, :p_dc, f_idx)
     p_to = var(pm, n, :p_dc, t_idx)
 
@@ -149,7 +149,7 @@ end
 """
 do nothing, most models to not require any model-specific network expansion voltage constraints
 """
-function constraint_model_voltage_ne(pm::AbstractPowerModel, n::Int)
+function constraint_ne_model_voltage(pm::AbstractPowerModel, n::Int)
 end
 
 """
@@ -177,7 +177,7 @@ function constraint_switch_thermal_limit(pm::AbstractPowerModel, n::Int, f_idx, 
 end
 
 ""
-function constraint_switch_flow_on_off(pm::AbstractPowerModel, n::Int, i, f_idx)
+function constraint_switch_power_on_off(pm::AbstractPowerModel, n::Int, i, f_idx)
     psw = var(pm, n, :psw, f_idx)
     qsw = var(pm, n, :qsw, f_idx)
     z = var(pm, n, :z_switch, i)
@@ -246,9 +246,12 @@ function constraint_storage_on_off(pm::AbstractPowerModel, n::Int, i, pmin, pmax
     z_storage = var(pm, n, :z_storage, i)
     ps = var(pm, n, :ps, i)
     qs = var(pm, n, :qs, i)
+    qsc = var(pm, n, :qsc, i)
 
     JuMP.@constraint(pm.model, ps <= z_storage*pmax)
     JuMP.@constraint(pm.model, ps >= z_storage*pmin)
     JuMP.@constraint(pm.model, qs <= z_storage*qmax)
     JuMP.@constraint(pm.model, qs >= z_storage*qmin)
+    JuMP.@constraint(pm.model, qsc <= z_storage*qmax)
+    JuMP.@constraint(pm.model, qsc >= z_storage*qmin)
 end

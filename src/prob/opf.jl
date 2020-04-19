@@ -15,10 +15,10 @@ end
 
 ""
 function build_opf(pm::AbstractPowerModel)
-    variable_voltage(pm)
-    variable_generation(pm)
-    variable_branch_flow(pm)
-    variable_dcline_flow(pm)
+    variable_bus_voltage(pm)
+    variable_gen_power(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
 
     objective_min_fuel_and_flow_cost(pm)
 
@@ -43,7 +43,7 @@ function build_opf(pm::AbstractPowerModel)
     end
 
     for i in ids(pm, :dcline)
-        constraint_dcline(pm, i)
+        constraint_dcline_power_losses(pm, i)
     end
 end
 
@@ -57,10 +57,10 @@ end
 ""
 function build_mn_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
-        variable_voltage(pm, nw=n)
-        variable_generation(pm, nw=n)
-        variable_branch_flow(pm, nw=n)
-        variable_dcline_flow(pm, nw=n)
+        variable_bus_voltage(pm, nw=n)
+        variable_gen_power(pm, nw=n)
+        variable_branch_power(pm, nw=n)
+        variable_dcline_power(pm, nw=n)
 
         constraint_model_voltage(pm, nw=n)
 
@@ -83,7 +83,7 @@ function build_mn_opf(pm::AbstractPowerModel)
         end
 
         for i in ids(pm, :dcline, nw=n)
-            constraint_dcline(pm, i, nw=n)
+            constraint_dcline_power_losses(pm, i, nw=n)
         end
     end
 
@@ -99,11 +99,11 @@ end
 ""
 function build_mn_opf_strg(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
-        variable_voltage(pm, nw=n)
-        variable_generation(pm, nw=n)
-        variable_storage_mi(pm, nw=n)
-        variable_branch_flow(pm, nw=n)
-        variable_dcline_flow(pm, nw=n)
+        variable_bus_voltage(pm, nw=n)
+        variable_gen_power(pm, nw=n)
+        variable_storage_power_mi(pm, nw=n)
+        variable_branch_power(pm, nw=n)
+        variable_dcline_power(pm, nw=n)
 
         constraint_model_voltage(pm, nw=n)
 
@@ -117,7 +117,7 @@ function build_mn_opf_strg(pm::AbstractPowerModel)
 
         for i in ids(pm, :storage, nw=n)
             constraint_storage_complementarity_mi(pm, i, nw=n)
-            constraint_storage_loss(pm, i, nw=n)
+            constraint_storage_losses(pm, i, nw=n)
             constraint_storage_thermal_limit(pm, i, nw=n)
         end
 
@@ -132,7 +132,7 @@ function build_mn_opf_strg(pm::AbstractPowerModel)
         end
 
         for i in ids(pm, :dcline, nw=n)
-            constraint_dcline(pm, i, nw=n)
+            constraint_dcline_power_losses(pm, i, nw=n)
         end
     end
 
@@ -177,10 +177,10 @@ end
 
 ""
 function build_opf_ptdf(pm::DCPPowerModel)
-    variable_generation(pm)
+    variable_gen_power(pm)
 
     for i in ids(pm, :bus)
-        expression_power_injection(pm, i)
+        expression_bus_power_injection(pm, i)
     end
 
     objective_min_fuel_cost(pm)
@@ -202,8 +202,8 @@ function build_opf_ptdf(pm::DCPPowerModel)
 
         # only create these exressions if a line flow is specificed
         if haskey(branch, "rate_a")
-            expression_branch_flow_yt_from_ptdf(pm, i)
-            expression_branch_flow_yt_to_ptdf(pm, i)
+            expression_branch_power_ohms_yt_from_ptdf(pm, i)
+            expression_branch_power_ohms_yt_to_ptdf(pm, i)
         end
 
         constraint_thermal_limit_from(pm, i)

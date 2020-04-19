@@ -12,7 +12,7 @@
 
 
 ""
-function variable_shunt_factor(pm::AbstractWConvexModels; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+function variable_shunt_admittance_factor(pm::AbstractWConvexModels; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
     if !relax
         z_shunt = var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt",
@@ -40,7 +40,7 @@ end
 
 
 "do nothing by default but some formulations require this"
-function variable_current_storage(pm::AbstractWConvexModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_current(pm::AbstractWConvexModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     ccms = var(pm, nw)[:ccms] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_ccms",
         start = comp_start_value(ref(pm, nw, :storage, i), "ccms_start")
@@ -88,9 +88,17 @@ function constraint_voltage_angle_difference(pm::AbstractPolarModels, n::Int, f_
 end
 
 
-""
-function variable_bus_voltage(pm::AbstractWModels; kwargs...)
-    variable_voltage_magnitude_sqr(pm; kwargs...)
+"""
+Adds the voltage variables required to represent the voltage magnitude.
+
+This function is an analog to `variable_bus_voltage`, which adds the variables
+to represent both the voltage magnitude and voltage angle.
+
+In contrast to `variable_bus_voltage_magnitude`, this function is formulation
+agnostic.
+"""
+function variable_bus_voltage_magnitude_only(pm::AbstractWModels; kwargs...)
+    variable_bus_voltage_magnitude_sqr(pm; kwargs...)
 end
 
 ""
@@ -219,7 +227,7 @@ end
 
 
 ""
-function constraint_power_balance_ne(pm::AbstractWModels, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
+function constraint_ne_power_balance(pm::AbstractWModels, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
     w    = var(pm, n, :w, i)
     p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
     q    = get(var(pm, n),    :q, Dict()); _check_var_keys(q, bus_arcs, "reactive power", "branch")
@@ -266,7 +274,7 @@ end
 
 
 ""
-function expression_branch_flow_yt_from(pm::AbstractWRModels, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+function expression_branch_power_ohms_yt_from(pm::AbstractWRModels, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     w_fr = var(pm, n, :w, f_bus)
     wr   = var(pm, n, :wr, (f_bus, t_bus))
     wi   = var(pm, n, :wi, (f_bus, t_bus))
@@ -277,7 +285,7 @@ end
 
 
 ""
-function expression_branch_flow_yt_to(pm::AbstractWRModels, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
+function expression_branch_power_ohms_yt_to(pm::AbstractWRModels, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
     w_to = var(pm, n, :w, t_bus)
     wr   = var(pm, n, :wr, (f_bus, t_bus))
     wi   = var(pm, n, :wi, (f_bus, t_bus))
@@ -393,13 +401,14 @@ function constraint_current_limit(pm::AbstractWModels, n::Int, f_idx, c_rating_a
 end
 
 ""
-function constraint_storage_loss(pm::AbstractWConvexModels, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+function constraint_storage_losses(pm::AbstractWConvexModels, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
     w = var(pm, n, :w, bus)
     ccms = var(pm, n, :ccms, i)
     ps = var(pm, n, :ps, i)
     qs = var(pm, n, :qs, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
+    qsc = var(pm, n, :qsc, i)
 
     for c in conductors
         JuMP.@constraint(pm.model, ps[c]^2 + qs[c]^2 <= w[c]*ccms[c])
@@ -414,6 +423,6 @@ function constraint_storage_loss(pm::AbstractWConvexModels, n::Int, i, bus, r, x
     JuMP.@constraint(pm.model,
         sum(qs[c] for c in conductors)
         ==
-        q_loss + sum(x[c]*ccms[c] for c in conductors)
+        qsc + q_loss + sum(x[c]*ccms[c] for c in conductors)
     )
 end

@@ -696,10 +696,10 @@ end
 @testset "test ac v+t polar opf" begin
 
     function build_opf_var(pm::AbstractPowerModel)
-        PowerModels.variable_voltage(pm)
-        PowerModels.variable_generation(pm)
-        PowerModels.variable_branch_flow(pm)
-        PowerModels.variable_dcline_flow(pm)
+        PowerModels.variable_bus_voltage(pm)
+        PowerModels.variable_gen_power(pm)
+        PowerModels.variable_branch_power(pm)
+        PowerModels.variable_dcline_power(pm)
 
         PowerModels.objective_min_fuel_and_flow_cost(pm)
 
@@ -725,7 +725,7 @@ end
         end
 
         for i in ids(pm,:dcline)
-            PowerModels.constraint_dcline(pm, i)
+            PowerModels.constraint_dcline_power_losses(pm, i)
         end
     end
 

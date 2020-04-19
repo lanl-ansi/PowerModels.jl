@@ -4,6 +4,12 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.17.0
+- Updated to new function name convention, details in issue #701 (#555,#656) (breaking)
+- Update to InfrastructureModels v0.5 (breaking)
+- Added support for Memento v1.1
+- Fixed storage reactive power dispatch model, added reactive power control variable (breaking)
+
 ### v0.16.0
 - Added a native AC Power Flow solver in polar coordinates that uses NLSolve (#590)
 - Added `ismulticonductor` check on data models
@@ -13,7 +19,7 @@ PowerModels.jl Change Log
 - Updated `correct_bus_types!` to correct slack buses and focus on preparation for power flow studies (breaking)
 - Updated ref extensions API to use ref and data dictionaries, not power model types (#668) (breaking)
 - Replaced `propagate_topology_status!` with `simplify_network!` (breaking)
-- Moved isolated component removal from `propagate_topology_status!` into `deactivate_isolated_components!` (#677) (breaking)
+- Moved isolated component removal into `deactivate_isolated_components!` (#677) (breaking)
 - Removed InitializePowerModel and instantiate_model to use InfratructureModels versions (breaking)
 - Removed export of some functions defined in InfratructureModels (breaking)
 - Removed branch flow variables from generic Power Flow problem specification (breaking)

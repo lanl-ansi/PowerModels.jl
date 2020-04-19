@@ -33,7 +33,7 @@ end
 
 
 ""
-function variable_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs))
     bus_ids = ids(pm, nw, :bus)
 
@@ -129,7 +129,7 @@ function ==(d1::_SDconstraintDecomposition, d2::_SDconstraintDecomposition)
     return eq
 end
 
-function variable_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
 
     if haskey(pm.ext, :SDconstraintDecomposition)
         decomp = pm.ext[:SDconstraintDecomposition]
