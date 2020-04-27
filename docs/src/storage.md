@@ -64,25 +64,25 @@ Given the storage data model and two sequential time points $s$ and $t$, the sto
 \begin{align}
 %
 \mbox{data: } & \nonumber \\
-& e^u \mbox{ - energy rating} \\
-& sc^u \mbox{ - charge rating} \\
-& sd^u \mbox{ - discharge rating} \\
-& \eta^c \mbox{ - charge efficiency} \\
-& \eta^d \mbox{ - discharge efficiency} \\
-& te \mbox{ - time elapsed} \\
-& S^l \mbox{ - power losses} \\
-& Z \mbox{ - injection impedance} \\
-& q^l, q^u  \mbox{ - reactive power injection limits} \\
-& s^u \mbox{ - thermal injection limit} \\
-& i^u \mbox{ - current injection limit} \\
+& e^u \mbox{ - energy rating} \nonumber \\
+& sc^u \mbox{ - charge rating} \nonumber \\
+& sd^u \mbox{ - discharge rating} \nonumber \\
+& \eta^c \mbox{ - charge efficiency} \nonumber \\
+& \eta^d \mbox{ - discharge efficiency} \nonumber \\
+& te \mbox{ - time elapsed} \nonumber \\
+& S^l \mbox{ - power losses} \nonumber \\
+& Z \mbox{ - injection impedance} \nonumber \\
+& q^l, q^u  \mbox{ - reactive power injection limits} \nonumber \\
+& s^u \mbox{ - thermal injection limit} \nonumber \\
+& i^u \mbox{ - current injection limit} \nonumber \\
 %
 \mbox{variables: } & \nonumber \\
-& e_i \in (0, e^u) \mbox{ - storage energy at time $i$} \\
-& sc_i \in (0, sc^u) \mbox{ - charge amount at time $i$} \\
-& sd_i \in (0, sd^u) \mbox{ - discharge amount at time $i$} \\
-& sqc_i \mbox{ - reactive power slack at time $i$} \\
-& S_i \mbox{ - complex bus power injection at time $i$} \\
-& I_i \mbox{ - complex bus current injection at time $i$} \\
+& e_i \in (0, e^u) \mbox{ - storage energy at time $i$} \label{var_strg_energy} \\
+& sc_i \in (0, sc^u) \mbox{ - charge amount at time $i$} \label{var_strg_charge} \\
+& sd_i \in (0, sd^u) \mbox{ - discharge amount at time $i$} \label{var_strg_discharge} \\
+& sqc_i \mbox{ - reactive power slack at time $i$} \label{var_strg_qslack} \\
+& S_i \mbox{ - complex bus power injection at time $i$} \label{var_strg_power} \\
+& I_i \mbox{ - complex bus current injection at time $i$} \label{var_strg_current} \\
 %
 \mbox{subject to: } & \nonumber \\
 & e_t - e_s = te \left(\eta^c sc_t - \frac{sd_t}{\eta^d} \right) \label{eq_strg_energy} \\
@@ -93,3 +93,20 @@ Given the storage data model and two sequential time points $s$ and $t$, the sto
 & |I_t| \leq i^u \label{eq_strg_current_limit}
 \end{align}
 ```
+
+
+### Mapping to PowerModels Functions
+- Eq. $\eqref{var_strg_energy}$ - [`variable_storage_energy`](@ref)
+- Eq. $\eqref{var_strg_charge}$ - [`variable_storage_charge`](@ref)
+- Eq. $\eqref{var_strg_discharge}$ - [`variable_storage_discharge`](@ref)
+- Eq. $\eqref{var_strg_qslack}$ - [`variable_storage_power_control_imaginary`](@ref)
+- Eq. $\eqref{var_strg_power}$ - [`variable_storage_power`](@ref)
+- Eq. $\eqref{var_strg_current}$ - implemented as a function of other variables
+- Eq. $\eqref{eq_strg_energy}$ - [`constraint_storage_state`](@ref)
+- Eq. $\eqref{eq_strg_compl}$ - [`constraint_storage_complementarity_nl`](@ref) or [`constraint_storage_complementarity_mi`](@ref)
+- Eq. $\eqref{eq_strg_loss}$ - [`constraint_storage_losses`](@ref)
+- Eq. $\eqref{eq_strg_q_limit}$ - bounds of [`variable_storage_power`](@ref)
+- Eq. $\eqref{eq_strg_thermal_limit}$ - [`constraint_storage_thermal_limit`](@ref)
+- Eq. $\eqref{eq_strg_current_limit}$ - [`constraint_storage_current_limit`](@ref)
+
+

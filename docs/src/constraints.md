@@ -125,3 +125,12 @@ constraint_storage_state
 constraint_dcline_power_losses
 constraint_dcline_setpoint_active
 ```
+
+
+## Switch Constraints
+
+```@docs
+constraint_switch_state
+constraint_switch_on_off
+constraint_switch_thermal_limit
+```

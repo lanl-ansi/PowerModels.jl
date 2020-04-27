@@ -801,6 +801,8 @@ function variable_dcline_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cn
     report && _IM.sol_component_value_edge(pm, nw, :dcline, :cidc_fr, :cidc_to, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), cidc)
 end
 
+
+""
 function variable_switch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
     if !relax
         z_switch = var(pm, nw)[:z_switch] = JuMP.@variable(pm.model,

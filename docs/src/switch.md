@@ -48,14 +48,14 @@ Switch component have two discrete states open (i.e. 0) and closed (i.e. 1).  Wh
 \begin{align}
 %
 \mbox{data: } & \nonumber \\
-& s^u \mbox{ - thermal injection limit} \\
-& i^u \mbox{ - current injection limit} \\
+& s^u \mbox{ - thermal injection limit} \nonumber \\
+& i^u \mbox{ - current injection limit} \nonumber \\
 %
 \mbox{variables: } & \nonumber \\
-& z \in {0, 1} \mbox{ - the state of the switch (open/closed)} \\
-& V_i \mbox{ - complex voltage on bus $i$} \\
-& V_j \mbox{ - complex voltage on bus $j$} \\
-& S \mbox{ - complex power flowing along the switch} \\
+& z \in {0, 1} \mbox{ - the state of the switch (open/closed)} \label{var_sw_state} \\
+& V_i \mbox{ - complex voltage on bus $i$} \label{var_sw_voltage_fr} \\
+& V_j \mbox{ - complex voltage on bus $j$} \label{var_sw_voltage_to} \\
+& S \mbox{ - complex power flowing along the switch} \label{var_sw_power} \\
 %
 \mbox{subject to: } & \nonumber \\
 & z \cdot V_i = z \cdot V_j \label{eq_sw_voltage} \\
@@ -63,3 +63,15 @@ Switch component have two discrete states open (i.e. 0) and closed (i.e. 1).  Wh
 & |I| \leq z \cdot i^u \label{eq_sw_current_limit}
 \end{align}
 ```
+
+
+### Mapping to PowerModels Functions
+- Eq. $\eqref{var_sw_state}$ - [`variable_switch_indicator`](@ref)
+- Eq. $\eqref{var_sw_voltage_fr}$ - [`variable_bus_voltage`](@ref)
+- Eq. $\eqref{var_sw_voltage_to}$ - [`variable_bus_voltage`](@ref)
+- Eq. $\eqref{var_sw_power}$ - [`variable_switch_power`](@ref)
+
+- Eq. $\eqref{eq_sw_voltage}$ - [`constraint_switch_on_off`](@ref) or [`constraint_switch_state`](@ref)
+- Eq. $\eqref{eq_sw_thermal_limit}$ - [`constraint_switch_thermal_limit`](@ref)
+- Eq. $\eqref{eq_sw_current_limit}$ - not yet implemented
+

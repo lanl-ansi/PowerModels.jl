@@ -66,7 +66,7 @@ A complete mathematical model is as follows,
 Note that for clarity of this presentation some model variants that PowerModels supports have been omitted (e.g. piecewise linear cost functions and HVDC lines).  Details about these variants is available in the [Matpower](http://www.pserc.cornell.edu/matpower/) documentation.
 
 
-### Mapping to function names
+### Mapping to PowerModels Functions
 - Eq. $\eqref{var_generation}$ - [`variable_gen_power`](@ref)
 - Eq. $\eqref{var_voltage}$ - [`variable_bus_voltage`](@ref)
 - Eq. $\eqref{var_complex_power}$ - [`variable_branch_power`](@ref)
@@ -118,7 +118,7 @@ A complete mathematical formulation for a Branch Flow Model is conceived as:
 
 Note that constraints $\eqref{eq_line_losses} - \eqref{eq_ohms_bfm}$ replace $\eqref{eq_power_from} - \eqref{eq_power_to}$ but the remainder of the problem formulation is identical. Furthermore, the problems have the same feasible set.  
 
-### Mapping to function names
+### Mapping to PowerModels Functions
 - Eq. $\eqref{var_branch_current}$ - [`variable_branch_current`](@ref)
 - Eq. $\eqref{eq_line_losses}$ - [`constraint_power_losses`](@ref)
 - Eq. $\eqref{eq_series_power_flow}$ - implicit, substituted out before implementation
@@ -156,7 +156,7 @@ The mathematical structure for a current-voltage formulation is conceived as:
 \end{align}
 ```
 
-### Mapping to function names
+### Mapping to PowerModels Functions
 - Eq. $\eqref{var_total_current}$ - total current flow into a branch on either end [`variable_branch_current`](@ref)
 - Eq. $\eqref{eq_complex_power_definition_gen}$  - models active and reactive power range of a generator [`variable_gen_current`](@ref)
 - Eq. $\eqref{eq_kcl_current}$  - Kirchhoff's current law in current variables  [`constraint_current_balance`](@ref)
