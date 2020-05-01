@@ -1,6 +1,6 @@
 # PowerModels' Storage Component
 
-In addition to the standard transmission network components (e.g. bus, load, generator, branch, ...) PowerModels also includes a generic storage component, which can be configured to model a variety of storage devices.  This section provides a brief overview of the storage component's data and mathematical model.
+In addition to the standard transmission network components (e.g. bus, load, generator, branch, ...) PowerModels also includes a generic storage component, which can be configured to model a variety of storage devices.  This section provides a brief overview of the storage component's data and mathematical model.  The motivations and derivation of this model are discussed in this [technical report](https://arxiv.org/abs/2004.14768).
 
 
 ## Storage Data Model
