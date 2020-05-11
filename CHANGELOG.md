@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fixed bugs admittance matrix tools to support inactive buses
 
 ### v0.17.0
 - Updated to new function name convention, details in issue #701 (#555,#656) (breaking)
@@ -14,7 +14,7 @@ PowerModels.jl Change Log
 - Added a native AC Power Flow solver in polar coordinates that uses NLSolve (#590)
 - Added `ismulticonductor` check on data models
 - Made branch power flow expressions formulation agnostic (#684) (breaking)
-- Changed the PWL cost implementation from a max formulation to a relaxaed sos formulation
+- Changed the PWL cost implementation from a max formulation to a relaxed sos formulation
 - Updated PWL cost data processing to require points that span a generators complete operating range (breaking)
 - Updated `correct_bus_types!` to correct slack buses and focus on preparation for power flow studies (breaking)
 - Updated ref extensions API to use ref and data dictionaries, not power model types (#668) (breaking)
