@@ -25,10 +25,10 @@ Base.show(io::IO, x::AdmittanceMatrix{<:Number}) = print(io, "AdmittanceMatrix($
 "data should be a PowerModels network data model; only supports networks with exactly one reference bus"
 function calc_admittance_matrix(data::Dict{String,<:Any})
     if length(data["dcline"]) > 0
-        Memento.error(_LOGGER, "calc_susceptance_matrix does not support data with dclines")
+        Memento.error(_LOGGER, "calc_admittance_matrix does not support data with dclines")
     end
     if length(data["switch"]) > 0
-        Memento.error(_LOGGER, "calc_susceptance_matrix does not support data with switches")
+        Memento.error(_LOGGER, "calc_admittance_matrix does not support data with switches")
     end
 
     #TODO check single connected component
@@ -47,9 +47,11 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
     V = Complex{Float64}[]
 
     for (i,branch) in data["branch"]
-        if branch[pm_component_status["branch"]] != pm_component_status_inactive["branch"]
-            f_bus = bus_to_idx[branch["f_bus"]]
-            t_bus = bus_to_idx[branch["t_bus"]]
+        f_bus = branch["f_bus"]
+        t_bus = branch["t_bus"]
+        if branch[pm_component_status["branch"]] != pm_component_status_inactive["branch"] && haskey(bus_to_idx, f_bus) && haskey(bus_to_idx, t_bus)
+            f_bus = bus_to_idx[f_bus]
+            t_bus = bus_to_idx[t_bus]
             y = inv(branch["br_r"] + branch["br_x"]im)
             tr, ti = calc_branch_t(branch)
             t = tr + ti*im
@@ -63,8 +65,9 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
     end
 
     for (i,shunt) in data["shunt"]
-        if shunt[pm_component_status["shunt"]] != pm_component_status_inactive["shunt"]
-            bus = bus_to_idx[shunt["shunt_bus"]]
+        shunt_bus = shunt["shunt_bus"]
+        if shunt[pm_component_status["shunt"]] != pm_component_status_inactive["shunt"] && haskey(bus_to_idx, shunt_bus)
+            bus = bus_to_idx[shunt_bus]
 
             ys = conj(shunt["gs"] + shunt["bs"]im)
 
@@ -104,9 +107,11 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
     V = Float64[]
 
     for (i,branch) in data["branch"]
-        if branch[pm_component_status["branch"]] != pm_component_status_inactive["branch"]
-            f_bus = bus_to_idx[branch["f_bus"]]
-            t_bus = bus_to_idx[branch["t_bus"]]
+        f_bus = branch["f_bus"]
+        t_bus = branch["t_bus"]
+        if branch[pm_component_status["branch"]] != pm_component_status_inactive["branch"] && haskey(bus_to_idx, f_bus) && haskey(bus_to_idx, t_bus)
+            f_bus = bus_to_idx[f_bus]
+            t_bus = bus_to_idx[t_bus]
             b_val = imag(inv(branch["br_r"] + branch["br_x"]im))
             push!(I, f_bus); push!(J, t_bus); push!(V,  b_val)
             push!(I, t_bus); push!(J, f_bus); push!(V,  b_val)
@@ -164,6 +169,10 @@ end
 
 "extracts a mapping from bus injections to voltage angles from the inverse of an admittance matrix."
 function injection_factors_va(am_inv::AdmittanceMatrixInverse{T}, bus_id::Int)::Dict{Int,T} where T
+    if !haskey(am_inv.bus_to_idx, bus_id)
+        return Dict{Int,T}()
+    end
+
     bus_idx = am_inv.bus_to_idx[bus_id]
 
     injection_factors = Dict(
@@ -176,8 +185,9 @@ end
 
 
 "computes a mapping from bus injections to voltage angles implicitly by solving a system of linear equations."
-function injection_factors_va(am::AdmittanceMatrix{T}, bus_id::Int; ref_bus::Int=am.ref_idx)::Dict{Int,T} where T
-    if ref_bus == bus_id
+function injection_factors_va(am::AdmittanceMatrix{T}, bus_id::Int; ref_bus::Int=am.idx_to_bus[am.ref_idx])::Dict{Int,T} where T
+    # !haskey(am.bus_to_idx, bus_id) occurs when the bus is inactive
+    if ref_bus == bus_id || !haskey(am.bus_to_idx, bus_id)
         return Dict{Int,T}()
     end
 

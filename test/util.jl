@@ -147,6 +147,17 @@ end
             @test isapprox(result_base["solution"]["gen"][i]["pg"], result_cuts["solution"]["gen"][i]["pg"]; atol = 1e-8)
         end
     end
+    @testset "dc 5-bus ext case" begin
+        result_base = run_opf("../test/data/matpower/case5_ext.m", DCPPowerModel, cbc_solver)
+        result_cuts = run_opf_ptdf_flow_cuts("../test/data/matpower/case5_ext.m", cbc_solver)
+
+        @test result_base["termination_status"] == OPTIMAL
+        @test result_cuts["termination_status"] == OPTIMAL
+        @test isapprox(result_base["objective"], result_cuts["objective"])
+        for (i,gen) in result_base["solution"]["gen"]
+            @test isapprox(result_base["solution"]["gen"][i]["pg"], result_cuts["solution"]["gen"][i]["pg"]; atol = 1e-8)
+        end
+    end
     @testset "dc 14-bus case" begin
         result_base = run_opf("../test/data/matpower/case14.m", DCPPowerModel, ipopt_solver)
         result_cuts = run_opf_ptdf_flow_cuts("../test/data/matpower/case14.m", ipopt_solver)
