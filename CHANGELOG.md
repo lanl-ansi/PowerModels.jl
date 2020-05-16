@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Improved robustness of `export_matpower` (#707)
 - Fixed bugs admittance matrix tools to support inactive buses
 
 ### v0.17.0

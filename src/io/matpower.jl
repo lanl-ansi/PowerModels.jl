@@ -679,6 +679,10 @@ end
 
 "Export power network data in the matpower format"
 function export_matpower(io::IO, data::Dict{String,Any})
+    if _IM.ismultinetwork(data)
+        Memento.error(_LOGGER, "export_matpower does not yet support multinetwork data")
+    end
+
     data = deepcopy(data)
 
     #convert data to mixed unit
@@ -1062,19 +1066,23 @@ end
 
 "Export fields of a component type"
 function _export_extra_data(io::IO, data::Dict{String,<:Any}, component, excluded_fields=Set(["index", "source_id"]); postfix="")
-    if isa(data[component], Int) || isa(data[component], Int64) || isa(data[component], Float64)
+    # check if numeric
+    if typeof(data[component]) <: Real
         println(io, "mpc.", component, " = ", data[component], ";")
         println(io)
         return
     end
 
-    if isa(data[component], String) || isa(data[component], SubString{String})
+    # check if string
+    if typeof(data[component]) <: AbstractString
         println(io, "mpc.", component, " = '", data[component], "';")
         println(io)
         return
     end
 
-    if !isa(data[component], Dict)
+    # proceed only if given a Dict
+    if !(typeof(data[component]) <: Dict{<:AbstractString,<:Any}
+            || typeof(data[component]) <: Dict{<:Real,<:Any})
         return
     end
 
@@ -1082,9 +1090,20 @@ function _export_extra_data(io::IO, data::Dict{String,<:Any}, component, exclude
         return
     end
 
+    # check if dict of dicts
+    for (key, value) in data[component]
+        if !isa(value, Dict)
+            Memento.warn(_LOGGER, "skipping export $(component), does not appear to be a component Dict")
+            return
+        end
+    end
+
+    #println("process $(component) as a dict of dicts")
+    comp_dict = data[component]
+
     # Gather the fields
     included_fields = []
-    c = collect(values(data[component]))[1]
+    c = collect(values(comp_dict))[1]
     for (key, value) in c
         if !in(key, excluded_fields)
             push!(included_fields, key)
@@ -1093,6 +1112,13 @@ function _export_extra_data(io::IO, data::Dict{String,<:Any}, component, exclude
 
     if length(included_fields) == 0
         return
+    end
+
+
+    if all(haskey(comp, "index") for (key,comp) in comp_dict)
+        key_order = sort(collect(keys(comp_dict)), by=x->comp_dict[x]["index"])
+    else
+        key_order = sort(collect(keys(comp_dict)))
     end
 
     # Print the header
@@ -1104,27 +1130,35 @@ function _export_extra_data(io::IO, data::Dict{String,<:Any}, component, exclude
     println(io)
     println(io, "mpc.", component, postfix, " = {")
 
-    # sort the data
-    components = Dict{Int, Dict}()
-    for (idx,c) in data[component]
-        components[c["index"]] = c
-    end
-
     # print the data
     i = 1
-    for (idx,c) in sort(components)
-        if idx != c["index"]
-            Memento.warn(_LOGGER, "The index of a component does not match the matpower assigned index. Any data that uses component indexes for reference is corrupted.");
+    for idx in key_order
+        c = comp_dict[idx]
+        if haskey(c, "index") && i != c["index"]
+            Memento.warn(_LOGGER, "The index of a component does not match the implicit matpower index. Any data that uses component indexes for reference is corrupted.")
         end
 
         for field in included_fields
             print(io,"\t")
-            if isa(c[field], Union{String,SubString})
-                print(io, "'")
-            end
-            print(io,c[field])
-            if isa(c[field], Union{String,SubString})
-                print(io, "'")
+            if haskey(c, field)
+                value = c[field]
+                if typeof(value) <: AbstractString
+                    print(io, "'$(value)'")
+                elseif typeof(value) <: Bool
+                    # exporting as float instead of Int is required to supprts NaN for missing values
+                    if value
+                        print(io, "1.0")
+                    else
+                        print(io, "0.0")
+                    end
+                elseif typeof(value) <: Real
+                    print(io, "$(value)")
+                else
+                    Memento.warn(_LOGGER, "unable to export $(typeof(value)) value for '$(field)' in component list $(component), not a string or numeric value")
+                    print(io, "NaN")
+                end
+            else
+                print(io, "NaN")
             end
         end
         println(io)
