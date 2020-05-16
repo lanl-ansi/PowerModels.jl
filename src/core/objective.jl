@@ -388,29 +388,114 @@ function _objective_min_fuel_cost_polynomial_nl(pm::AbstractPowerModel; report::
 end
 
 
+"""
+cleans up raw pwl cost points in preparation for building a mathamatical model.
+
+The key mathematical properties,
+- the first and last points are strickly outside of the pmin-to-pmax range
+- pmin and pmax occur in the first and last line segments.
+"""
+function calc_pwl_points(ncost::Int, cost::Vector{<:Real}, pmin::Real, pmax::Real; tolerance=1e-2)
+    @assert ncost >= 1 && length(cost) >= 2
+    @assert 2*ncost == length(cost)
+    @assert pmin <= pmax
+
+    if isinf(pmin) || isinf(pmax)
+        Memento.error(_LOGGER, "a bounded operating range is required for modeling pwl costs.  Given active power range in $(pmin) - $(pmax)")
+    end
+
+    points = []
+    for i in 1:ncost
+        push!(points, (mw=cost[2*i-1], cost=cost[2*i]))
+    end
+
+    first_active = 0
+    for i in 1:(ncost-1)
+        #mw_0 = points[i].mw
+        mw_1 = points[i+1].mw
+        first_active = i
+        if pmin <= mw_1
+            break
+        end
+    end
+
+    last_active = 0
+    for i in 1:(ncost-1)
+        mw_0 = points[end - i].mw
+        #mw_1 = points[end - i + 1].mw
+        last_active = ncost - i + 1
+        if pmax >= mw_0
+            break
+        end
+    end
+
+    points = points[first_active : last_active]
+
+
+    x1 = points[1].mw
+    y1 = points[1].cost
+    x2 = points[2].mw
+    y2 = points[2].cost
+
+    if x1 > pmin
+        x0 = pmin - tolerance
+
+        m = (y2 - y1)/(x2 - x1)
+
+        if !isnan(m)
+            y0 = y2 - m*(x2 - x0)
+            points[1] = (mw=x0, cost=y0)
+        else
+            points[1] = (mw=x0, cost=y1)
+        end
+
+        modified = true
+    end
+
+
+    x1 = points[end-1].mw
+    y1 = points[end-1].cost
+    x2 = points[end].mw
+    y2 = points[end].cost
+
+    if x2 < pmax
+        x3 = pmax + tolerance
+
+        m = (y2 - y1)/(x2 - x1)
+
+        if !isnan(m)
+            y3 = m*(x3 - x1) + y1
+
+            points[end] = (mw=x3, cost=y3)
+        else
+            points[end] = (mw=x3, cost=y2)
+        end
+    end
+
+    return points
+end
+
+
 "adds pg_cost variables and constraints"
 function objective_variable_pg_cost(pm::AbstractPowerModel, report::Bool=true)
     for (n, nw_ref) in nws(pm)
         pg_cost = var(pm, n)[:pg_cost] = Dict{Int,Any}()
 
         for (i,gen) in ref(pm, n, :gen)
+            points = calc_pwl_points(gen["ncost"], gen["cost"], gen["pmin"], gen["pmax"])
+
             pg_cost_lambda = JuMP.@variable(pm.model,
-                [i in 1:gen["ncost"]], base_name="$(n)_pg_cost_lambda",
+                [i in 1:length(points)], base_name="$(n)_pg_cost_lambda",
                 lower_bound = 0.0,
                 upper_bound = 1.0
             )
             JuMP.@constraint(pm.model, sum(pg_cost_lambda) == 1.0)
 
-            points = gen["cost"]
-
             pg_expr = 0.0
             pg_cost_expr = 0.0
-            for i in 1:gen["ncost"]
-                mw = points[2*i-1]
-                cost = points[2*i]
-
-                pg_expr += mw*pg_cost_lambda[i]
-                pg_cost_expr += cost*pg_cost_lambda[i]
+            for (i,point) in enumerate(points)
+                pg_expr += point.mw*pg_cost_lambda[i]
+                pg_cost_expr += point.cost*pg_cost_lambda[i]
             end
             JuMP.@constraint(pm.model, pg_expr == sum(var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n)))
             pg_cost[i] = pg_cost_expr
@@ -427,24 +512,22 @@ function objective_variable_dc_cost(pm::AbstractPowerModel, report::Bool=true)
         p_dc_cost = var(pm, n)[:p_dc_cost] = Dict{Int,Any}()
 
         for (i,dcline) in ref(pm, n, :dcline)
+            points = calc_pwl_points(dcline["ncost"], dcline["cost"], dcline["pminf"], dcline["pmaxf"])
+
             dc_p_cost_lambda = JuMP.@variable(pm.model,
-                [i in 1:dcline["ncost"]], base_name="$(n)_dc_p_cost_lambda",
+                [i in 1:length(points)], base_name="$(n)_dc_p_cost_lambda",
                 lower_bound = 0.0,
                 upper_bound = 1.0
             )
             JuMP.@constraint(pm.model, sum(dc_p_cost_lambda) == 1.0)
 
-            points = dcline["cost"]
-
             dc_p_expr = 0.0
             dc_p_cost_expr = 0.0
-            for i in 1:dcline["ncost"]
-                mw = points[2*i-1]
-                cost = points[2*i]
-
-                dc_p_expr += mw*dc_p_cost_lambda[i]
-                dc_p_cost_expr += cost*dc_p_cost_lambda[i]
+            for (i,point) in enumerate(points)
+                dc_p_expr += point.mw*dc_p_cost_lambda[i]
+                dc_p_cost_expr += point.cost*dc_p_cost_lambda[i]
             end
+
             arc = (i, dcline["f_bus"], dcline["t_bus"])
             JuMP.@constraint(pm.model, dc_p_expr == sum(var(pm, n, :p_dc)[arc][c] for c in conductor_ids(pm, n)))
             p_dc_cost[i] = dc_p_cost_expr

@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Improved the PWL cost data processing during model building (#709)
 - Fixed bugs admittance matrix tools to support inactive buses
 
 ### v0.17.0
