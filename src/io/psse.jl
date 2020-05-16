@@ -395,7 +395,11 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     end
                 end
 
-                sub_data["br_status"] = transformer["STAT"]
+                if transformer["STAT"] == 0 || transformer["STAT"] == 2
+                    sub_data["br_status"] = 0
+                else
+                    sub_data["br_status"] = 1
+                end
 
                 sub_data["angmin"] = 0.0
                 sub_data["angmax"] = 0.0
@@ -499,12 +503,14 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     sub_data["transformer"] = true
                     sub_data["index"] = length(pm_data["branch"]) + 1
 
-                    _import_remaining!(sub_data, transformer, import_all; exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
-                                                                                  "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3", "CKT",
-                                                                                  "SBASE3-1", "MAG1", "MAG2", "STAT","NOMV1", "NOMV2",
-                                                                                  "NOMV3", "WINDV1", "WINDV2", "WINDV3", "RATA1",
-                                                                                  "RATA2", "RATA3", "RATB1", "RATB2", "RATB3", "RATC1",
-                                                                                  "RATC2", "RATC3", "ANG1", "ANG2", "ANG3"])
+                    _import_remaining!(sub_data, transformer, import_all; 
+                        exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
+                              "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3", "CKT",
+                              "SBASE3-1", "MAG1", "MAG2", "STAT","NOMV1", "NOMV2",
+                              "NOMV3", "WINDV1", "WINDV2", "WINDV3", "RATA1",
+                              "RATA2", "RATA3", "RATB1", "RATB2", "RATB3", "RATC1",
+                              "RATC2", "RATC3", "ANG1", "ANG2", "ANG3"]
+                        )
 
                     push!(pm_data["branch"], sub_data)
                 end

@@ -226,14 +226,18 @@ end
         @testset "without unit conversion" begin
             data_pti = PowerModels.parse_file("../test/data/pti/three_winding_test.raw")
 
-            for (branch, br_r, br_x, tap, shift, rate_a, rate_b, rate_c) in zip(["1", "2", "3"],
-                                                                                [0.00225, 0.00225, -0.00155],
-                                                                                [0.05, 0.15, 0.15],
-                                                                                [1.1, 1.0, 1.0],
-                                                                                [0.0, 0.0, 0.0],
-                                                                                [2.0, 1.0, 1.0],
-                                                                                [2.0, 1.0, 1.0],
-                                                                                [4.0, 1.0, 1.0])
+            branch_data = zip(
+                ["1", "2", "3"],
+                [0.00225, 0.00225, -0.00155],
+                [0.05, 0.15, 0.15],
+                [1.1, 1.0, 1.0],
+                [0.0, 0.0, 0.0],
+                [2.0, 1.0, 1.0],
+                [2.0, 1.0, 1.0],
+                [4.0, 1.0, 1.0]
+            )
+
+            for (branch, br_r, br_x, tap, shift, rate_a, rate_b, rate_c) in branch_data
                 @test isapprox(data_pti["branch"][branch]["br_r"], br_r; atol=1e-4)
                 @test isapprox(data_pti["branch"][branch]["br_x"], br_x; atol=1e-4)
                 @test isapprox(data_pti["branch"][branch]["tap"], tap; atol=1e-4)
@@ -262,14 +266,18 @@ end
         @testset "with unit conversion" begin
             data_pti = PowerModels.parse_file("../test/data/pti/three_winding_test_2.raw")
 
-            for (branch, br_r, br_x, tap, shift, rate_a, rate_b, rate_c) in zip(["1", "2", "3"],
-                                                                                [0.0, 0.0, 0.0],
-                                                                                [0.05, 0.15, 0.15],
-                                                                                [1.1, 1.0, 1.0],
-                                                                                [0.0, 0.0, 0.0],
-                                                                                [2.0, 1.0, 1.0],
-                                                                                [2.0, 1.0, 1.0],
-                                                                                [4.0, 1.0, 1.0])
+            branch_data = zip(
+                ["1", "2", "3"],
+                [0.0, 0.0, 0.0],
+                [0.05, 0.15, 0.15],
+                [1.1, 1.0, 1.0],
+                [0.0, 0.0, 0.0],
+                [2.0, 1.0, 1.0],
+                [2.0, 1.0, 1.0],
+                [4.0, 1.0, 1.0]
+            )
+
+            for (branch, br_r, br_x, tap, shift, rate_a, rate_b, rate_c) in branch_data
                 @test isapprox(data_pti["branch"][branch]["br_r"], br_r; atol=1e-4)
                 @test isapprox(data_pti["branch"][branch]["br_x"], br_x; atol=1e-4)
                 @test isapprox(data_pti["branch"][branch]["tap"], tap; atol=1e-4)
