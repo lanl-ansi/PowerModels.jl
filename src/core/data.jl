@@ -1845,7 +1845,7 @@ function correct_cost_functions!(data::Dict{String,<:Any})
 
     modified_dcline = Set{Int}()
     for (i, dcline) in data["dcline"]
-        if _correct_cost_function!(i, dcline, "dcline", "pminf", "pminf")
+        if _correct_cost_function!(i, dcline, "dcline", "pminf", "pmaxf")
             push!(modified_dcline, dcline["index"])
         end
     end

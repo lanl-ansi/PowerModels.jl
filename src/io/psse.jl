@@ -73,16 +73,12 @@ by `["bus_i", "name", "I", "J", "K", "CKT"]` where "bus_i" and "name" are the
 modified names for the starbus, and "I", "J", "K" and "CKT" come from the
 originating transformer, in the PSS(R)E transformer specification.
 """
-function _create_starbus_from_transformer(pm_data::Dict, transformer::Dict)::Dict
+function _create_starbus_from_transformer(pm_data::Dict, transformer::Dict, starbus_id::Int)::Dict
     starbus = Dict{String,Any}()
-
-    # transformer starbus ids will be one order of magnitude larger than highest real bus id
-    base = convert(Int, 10 ^ ceil(log10(abs(_find_max_bus_id(pm_data)))))
-    starbus_id = transformer["I"] + base
 
     _init_bus!(starbus, starbus_id)
 
-    starbus["name"] = "$(transformer["I"]) starbus"
+    starbus["name"] = "starbus_$(transformer["I"])_$(transformer["J"])_$(transformer["K"])_$(strip(transformer["CKT"]))"
 
     starbus["vm"] = transformer["VMSTAR"]
     starbus["va"] = transformer["ANSTAR"]
@@ -341,6 +337,8 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     end
 
     if haskey(pti_data, "TRANSFORMER")
+        starbus_id = 10 ^ ceil(Int, log10(abs(_find_max_bus_id(pm_data)))) + 1
+
         for transformer in pti_data["TRANSFORMER"]
             if transformer["K"] == 0  # Two-winding Transformers
                 sub_data = Dict{String,Any}()
@@ -395,7 +393,11 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     end
                 end
 
-                sub_data["br_status"] = transformer["STAT"]
+                if transformer["STAT"] == 0 || transformer["STAT"] == 2
+                    sub_data["br_status"] = 0
+                else
+                    sub_data["br_status"] = 1
+                end
 
                 sub_data["angmin"] = 0.0
                 sub_data["angmax"] = 0.0
@@ -413,8 +415,9 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 bus_id1, bus_id2, bus_id3 = transformer["I"], transformer["J"], transformer["K"]
 
                 # Creates a starbus (or "dummy" bus) to which each winding of the transformer will connect
-                starbus = _create_starbus_from_transformer(pm_data, transformer)
+                starbus = _create_starbus_from_transformer(pm_data, transformer, starbus_id)
                 push!(pm_data["bus"], starbus)
+                starbus_id += 1
 
                 # Create 3 branches from a three winding transformer (one for each winding, which will each connect to the starbus)
                 br_r12, br_r23, br_r31 = transformer["R1-2"], transformer["R2-3"], transformer["R3-1"]
@@ -490,7 +493,17 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                         end
                     end
 
-                    sub_data["br_status"] = transformer["STAT"]
+                    
+                    sub_data["br_status"] = 1
+                    if transformer["STAT"] == 0
+                        sub_data["br_status"] = 0
+                    elseif transformer["STAT"] == 2 && m == 2
+                        sub_data["br_status"] = 0
+                    elseif transformer["STAT"] == 3 && m == 3
+                        sub_data["br_status"] = 0
+                    elseif transformer["STAT"] == 4 && m == 1
+                        sub_data["br_status"] = 0
+                    end
 
                     sub_data["angmin"] = 0.0
                     sub_data["angmax"] = 0.0
@@ -499,12 +512,14 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     sub_data["transformer"] = true
                     sub_data["index"] = length(pm_data["branch"]) + 1
 
-                    _import_remaining!(sub_data, transformer, import_all; exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
-                                                                                  "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3", "CKT",
-                                                                                  "SBASE3-1", "MAG1", "MAG2", "STAT","NOMV1", "NOMV2",
-                                                                                  "NOMV3", "WINDV1", "WINDV2", "WINDV3", "RATA1",
-                                                                                  "RATA2", "RATA3", "RATB1", "RATB2", "RATB3", "RATC1",
-                                                                                  "RATC2", "RATC3", "ANG1", "ANG2", "ANG3"])
+                    _import_remaining!(sub_data, transformer, import_all; 
+                        exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
+                              "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3", "CKT",
+                              "SBASE3-1", "MAG1", "MAG2", "STAT","NOMV1", "NOMV2",
+                              "NOMV3", "WINDV1", "WINDV2", "WINDV3", "RATA1",
+                              "RATA2", "RATA3", "RATB1", "RATB2", "RATB3", "RATC1",
+                              "RATC2", "RATC3", "ANG1", "ANG2", "ANG3"]
+                        )
 
                     push!(pm_data["branch"], sub_data)
                 end

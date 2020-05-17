@@ -226,14 +226,18 @@ end
         @testset "without unit conversion" begin
             data_pti = PowerModels.parse_file("../test/data/pti/three_winding_test.raw")
 
-            for (branch, br_r, br_x, tap, shift, rate_a, rate_b, rate_c) in zip(["1", "2", "3"],
-                                                                                [0.00225, 0.00225, -0.00155],
-                                                                                [0.05, 0.15, 0.15],
-                                                                                [1.1, 1.0, 1.0],
-                                                                                [0.0, 0.0, 0.0],
-                                                                                [2.0, 1.0, 1.0],
-                                                                                [2.0, 1.0, 1.0],
-                                                                                [4.0, 1.0, 1.0])
+            branch_data = zip(
+                ["4", "5", "6"],
+                [0.00225, 0.00225, -0.00155],
+                [0.05, 0.15, 0.15],
+                [1.1, 1.0, 1.0],
+                [0.0, 0.0, 0.0],
+                [2.0, 1.0, 1.0],
+                [2.0, 1.0, 1.0],
+                [4.0, 1.0, 1.0]
+            )
+
+            for (branch, br_r, br_x, tap, shift, rate_a, rate_b, rate_c) in branch_data
                 @test isapprox(data_pti["branch"][branch]["br_r"], br_r; atol=1e-4)
                 @test isapprox(data_pti["branch"][branch]["br_x"], br_x; atol=1e-4)
                 @test isapprox(data_pti["branch"][branch]["tap"], tap; atol=1e-4)
@@ -243,33 +247,43 @@ end
                 @test isapprox(data_pti["branch"][branch]["rate_c"], rate_c; atol=1e-4)
             end
 
-            @test length(data_pti["bus"]) == 4
-            @test length(data_pti["branch"]) == 3
+            @test length(data_pti["bus"]) == 8
+            @test length(data_pti["branch"]) == 15
 
             result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
 
             @test result_opf["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result_opf["objective"], 9.99647; atol=1e-5)
+            @test isapprox(result_opf["objective"], 10.00015; atol=1e-5)
 
             result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
 
-            for (bus, vm, va) in zip(["1001", "1002", "1003", "11001"], [1.09, 1.0, 1.0, 0.997], [2.304, 0., 6.042244, 2.5901])
+            bus_data = zip(
+                ["1001", "1002", "1003", "10001", "10002", "10003", "10004"],
+                [1.098, 1.000, 1.000, 1.000, 0.999, 0.999, 0.999],
+                [0.025, 0.000, 0.060, 0.000, 0.027, 0.033, 0.018]
+            )
+
+            for (bus, vm, va) in bus_data
                 @test isapprox(result_pf["solution"]["bus"][bus]["vm"], vm; atol=1e-1)
-                @test isapprox(result_pf["solution"]["bus"][bus]["va"], deg2rad(va); atol=1e-2)
+                @test isapprox(result_pf["solution"]["bus"][bus]["va"], va; atol=1e-2)
             end
         end
 
         @testset "with unit conversion" begin
             data_pti = PowerModels.parse_file("../test/data/pti/three_winding_test_2.raw")
 
-            for (branch, br_r, br_x, tap, shift, rate_a, rate_b, rate_c) in zip(["1", "2", "3"],
-                                                                                [0.0, 0.0, 0.0],
-                                                                                [0.05, 0.15, 0.15],
-                                                                                [1.1, 1.0, 1.0],
-                                                                                [0.0, 0.0, 0.0],
-                                                                                [2.0, 1.0, 1.0],
-                                                                                [2.0, 1.0, 1.0],
-                                                                                [4.0, 1.0, 1.0])
+            branch_data = zip(
+                ["1", "2", "3"],
+                [0.0, 0.0, 0.0],
+                [0.05, 0.15, 0.15],
+                [1.1, 1.0, 1.0],
+                [0.0, 0.0, 0.0],
+                [2.0, 1.0, 1.0],
+                [2.0, 1.0, 1.0],
+                [4.0, 1.0, 1.0]
+            )
+
+            for (branch, br_r, br_x, tap, shift, rate_a, rate_b, rate_c) in branch_data
                 @test isapprox(data_pti["branch"][branch]["br_r"], br_r; atol=1e-4)
                 @test isapprox(data_pti["branch"][branch]["br_x"], br_x; atol=1e-4)
                 @test isapprox(data_pti["branch"][branch]["tap"], tap; atol=1e-4)
@@ -287,7 +301,7 @@ end
 
             result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
 
-            for (bus, vm, va) in zip(["1001", "1002", "1003", "11001"], [1.09, 1.0, 1.0, 0.997], [2.304, 0., 6.042244, 2.5901])
+            for (bus, vm, va) in zip(["1001", "1002", "1003", "10001"], [1.09, 1.0, 1.0, 0.997], [2.304, 0., 6.042244, 2.5901])
                 @test isapprox(result_pf["solution"]["bus"][bus]["vm"], vm; atol=1e-1)
                 @test isapprox(result_pf["solution"]["bus"][bus]["va"], deg2rad(va); atol=1e-2)
             end
@@ -338,12 +352,42 @@ end
             @test result_pf["termination_status"] == LOCALLY_SOLVED
             @test result_pf["objective"] == 0.0
 
-            for (bus, vm, va) in zip(["1001", "1002", "1003", "11001"], [1.0965262, 1.0, 0.9999540, 0.9978417], [2.234718, 0., 5.985760, 2.538179])
+            for (bus, vm, va) in zip(["1001", "1002", "1003", "10001"], [1.0965262, 1.0, 0.9999540, 0.9978417], [2.234718, 0., 5.985760, 2.538179])
                 @test isapprox(result_pf["solution"]["bus"][bus]["vm"], vm; atol=1e-1)
                 @test isapprox(result_pf["solution"]["bus"][bus]["va"], deg2rad(va); atol=1e-2)
             end
         end
     end
+
+
+    @testset "transformer status" begin
+        @testset "two-winding transformers" begin
+            data_pti = PowerModels.parse_file("../test/data/pti/case5.raw")
+
+            br_off = Set(["8", "9"])
+            for (i,branch) in data_pti["branch"]
+                if i in br_off
+                    @test branch["br_status"] == 0
+                else
+                    @test branch["br_status"] == 1
+                end
+            end
+        end
+
+        @testset "three-winding transformers" begin
+            data_pti = PowerModels.parse_file("../test/data/pti/three_winding_test.raw")
+
+            br_off = Set(["1", "2", "3", "8", "12", "13"])
+            for (i,branch) in data_pti["branch"]
+                if i in br_off
+                    @test branch["br_status"] == 0
+                else
+                    @test branch["br_status"] == 1
+                end
+            end
+        end
+    end
+
 
     @testset "import all" begin
         @testset "30-bus case" begin
