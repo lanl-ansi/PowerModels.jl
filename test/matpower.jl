@@ -308,18 +308,20 @@ end
 
 
 
+function test_mp_export(filename::AbstractString)
+    source_data = PowerModels.parse_file(filename)
+    test_mp_export(source_data)
+end
+
+function test_mp_export(data::Dict{String,<:Any})
+    io = PipeBuffer()
+    PowerModels.export_matpower(io, data)
+    destination_data = PowerModels.parse_matpower(io)
+    @test true
+end
 
 
 @testset "test pti to matpower" begin
-
-    function test_mp_export(filename::AbstractString, parse_file::Function)
-        source_data = parse_file(filename)
-
-        io = PipeBuffer()
-        PowerModels.export_matpower(io, source_data)
-        destination_data = PowerModels.parse_matpower(io)
-    end
-
     # special string name edge case
     #@testset "test case3" begin
     #    file = "../test/data/pti/case3.raw"
@@ -328,17 +330,46 @@ end
 
     @testset "test case5" begin
         file = "../test/data/pti/case5.raw"
-        test_mp_export(file, PowerModels.parse_psse)
+        test_mp_export(file)
     end
 
     @testset "test case14" begin
         file = "../test/data/pti/case14.raw"
-        test_mp_export(file, PowerModels.parse_psse)
+        test_mp_export(file)
     end
 
     @testset "test case24" begin
         file = "../test/data/pti/case24.raw"
-        test_mp_export(file, PowerModels.parse_psse)
+        test_mp_export(file)
+    end
+
+end
+
+
+@testset "test matpower export robustness" begin
+
+    @testset "test adhoc data" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
+
+        data["foo"] = [1.2, 3.4, 5.6]
+        data["bar"] = Dict(1 => "a", 2 => "b", 3 => "c")
+
+        data["adhoc_comp"] = Dict(
+            "a" => Dict("val" => 1.2, "active" => false),
+            "b" => Dict("val" => 3.4),
+            "c" => Dict("val" => 5.6, "active" => true),
+            "d" => Dict("val" => 1.1 + 2.3im),
+        )
+
+        data["adhoc_comp_2"] = Dict(
+            3 => Dict("val" => 1.2),
+            2 => Dict("val" => 3.4),
+            1 => Dict("val" => 5.6)
+        )
+
+        data["bus"]["1"]["complex"] = 1 + 2im
+
+        test_mp_export(data)
     end
 
 end

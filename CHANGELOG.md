@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Improved robustness of `export_matpower` to extra model data (#707)
 - Improved the PWL cost data processing during model building (#709)
 - Fixed bugs admittance matrix tools to support inactive buses
 - Fixed PSSE support for multiple three-winding transformers at the same buses (#712)
