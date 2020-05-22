@@ -731,18 +731,18 @@ function export_matpower(io::IO, data::Dict{String,Any})
     bs = Dict{Int, Float64}()
 
     # collect all the loads
-    for (idx,bus) in sort(data["bus"])
+    for (idx,bus) in data["bus"]
         pd[bus["index"]] = 0
         qd[bus["index"]] = 0
     end
-    for (idx,load) in sort(data["load"])
+    for (idx,load) in data["load"]
         bus = buses[load["load_bus"]]
-        pd[bus["index"]] = pd[bus["index"]] + load["pd"]
-        qd[bus["index"]] = qd[bus["index"]] + load["qd"]
+        pd[bus["index"]] += load["pd"]
+        qd[bus["index"]] += load["qd"]
     end
 
     # collect all the shunts
-    for (idx,bus) in sort(data["bus"])
+    for (idx,bus) in data["bus"]
         gs[bus["index"]] = 0
         bs[bus["index"]] = 0
     end
@@ -767,7 +767,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     println(io, "%% bus data")
     println(io, "%    bus_i    type    Pd    Qd    Gs    Bs    area    Vm    Va    baseKV    zone    Vmax    Vmin")
     println(io, "mpc.bus = [")
-    for (idx,bus) in sort(buses)
+    for (idx,bus) in sort(collect(buses), by=(x) -> x.first)
         println(io,
             "\t", bus["index"],
             "\t", bus["bus_type"],
@@ -807,7 +807,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     println(io, "%    bus    Pg    Qg    Qmax    Qmin    Vg    mBase    status    Pmax    Pmin    Pc1    Pc2    Qc1min    Qc1max    Qc2min    Qc2max    ramp_agc    ramp_10    ramp_30    ramp_q    apf")
     println(io, "mpc.gen = [")
     i = 1
-    for (idx,gen) in sort(generators)
+    for (idx,gen) in sort(collect(generators), by=(x) -> x.first)
         if idx != gen["index"]
             Memento.warn(_LOGGER, "The index of the generator does not match the matpower assigned index. Any data that uses generator indexes for reference is corrupted.");
         end
@@ -850,7 +850,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
         println(io, "%    storage_bus    ps    qs    energy    energy_rating    charge_rating    discharge_rating    charge_efficiency    discharge_efficiency    thermal_rating    qmin    qmax    r    x    p_loss    q_loss    status")
         println(io, "mpc.storage = [")
         i = 1
-        for (idx,strg) in sort(storage)
+        for (idx,strg) in sort(collect(storage), by=(x) -> x.first)
             if idx != strg["index"]
                 Memento.warn(_LOGGER, "The index of the storage does not match the matpower assigned index. Any data that uses storage indexes for reference is corrupted.");
             end
@@ -884,7 +884,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     println(io, "%    f_bus    t_bus    r    x    b    rateA    rateB    rateC    ratio    angle    status    angmin    angmax")
     println(io, "mpc.branch = [")
     i = 1
-    for (idx,branch) in sort(branches)
+    for (idx,branch) in sort(collect(branches), by=(x) -> x.first)
         if idx != branch["index"]
             Memento.warn(_LOGGER, "The index of the branch does not match the matpower assigned index. Any data that uses branch indexes for reference is corrupted.");
         end
@@ -922,7 +922,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
         println(io, "%% dcline data")
         println(io, "%    f_bus    t_bus    status    Pf    Pt    Qf    Qt    Vf    Vt    Pmin    Pmax    QminF    QmaxF    QminT    QmaxT    loss0    loss1")
         println(io, "mpc.dcline = [")
-        for (idx, dcline) in sort(dclines)
+        for (idx, dcline) in sort(collect(dclines), by=(x) -> x.first)
             println(io,
                 "\t", _get_default(dcline, "f_bus"),
                 "\t", _get_default(dcline, "t_bus"),
@@ -959,7 +959,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
         println(io, "%% switch data")
         println(io, "%  f_bus    t_bus    psw    qsw    state    thermal_rating    status")
         println(io, "mpc.switch = [")
-        for (idx, switch) in sort(switches)
+        for (idx, switch) in sort(collect(switches), by=(x) -> x.first)
             println(io,
                 "\t", _get_default(switch, "f_bus"),
                 "\t", _get_default(switch, "t_bus"),
@@ -987,7 +987,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
         println(io, "%column_names%    f_bus    t_bus    br_r    br_x    br_b    rate_a    rate_b    rate_c    tap    shift    br_status    angmin    angmax    construction_cost")
         println(io, "mpc.ne_branch = [")
         i = 1
-        for (idx,branch) in sort(ne_branches)
+        for (idx,branch) in sort(collect(ne_branches), by=(x) -> x.first)
             if idx != branch["index"]
                 Memento.warn(_LOGGER, "The index of the ne_branch does not match the matpower assigned index. Any data that uses branch indexes for reference is corrupted.");
             end
@@ -1017,7 +1017,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
         # Print the bus name data
         println(io, "%% bus names")
         println(io, "mpc.bus_name = {")
-        for (idx,bus) in sort(buses)
+        for (idx,bus) in sort(collect(buses), by=(x) -> x.first)
             println(io,
                 "\t", "'", bus["name"], "'"
             )
@@ -1192,16 +1192,16 @@ function _export_cost_data(io::IO, components::Dict{Int,Dict}, prefix::String)
         println(io, "%    2    startup    shutdown    n    c(n-1)    ...    c0")
         println(io, prefix, " = [")
 
-        for (idx,gen) in (sort(components))
-            if gen["model"] == 1
-                print(io, "\t1\t", gen["startup"], "\t", gen["shutdown"], "\t", (div(length(gen["cost"]),2))),
-                for l=1:length(gen["cost"])
-                    print(io, "\t", gen["cost"][l])
+        for (idx,comp) in sort(collect(components), by=(x) -> x.first)
+            if comp["model"] == 1
+                print(io, "\t1\t", comp["startup"], "\t", comp["shutdown"], "\t", (div(length(comp["cost"]),2))),
+                for l=1:length(comp["cost"])
+                    print(io, "\t", comp["cost"][l])
                 end
             else
-                print(io, "\t2\t", gen["startup"], "\t", gen["shutdown"], "\t", length(gen["cost"])),
-                for l=1:length(gen["cost"])
-                    print(io, "\t", gen["cost"][l])
+                print(io, "\t2\t", comp["startup"], "\t", comp["shutdown"], "\t", length(comp["cost"])),
+                for l=1:length(comp["cost"])
+                    print(io, "\t", comp["cost"][l])
                 end
             end
             println(io)

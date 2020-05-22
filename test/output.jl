@@ -249,9 +249,7 @@ end
         result = run_opf("../test/data/matpower/case5.m", ACRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         for (i,bus) in result["solution"]["bus"]
-            if haskey(bus, "vr") && haskey(bus, "vi")
-                @test haskey(bus, "vm") && haskey(bus, "va")
-            end
+            @test haskey(bus, "vm") && haskey(bus, "va")
         end
     end
 
@@ -259,9 +257,8 @@ end
         result = run_opf("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         for (i,bus) in result["solution"]["bus"]
-            if haskey(bus, "w")
-                @test haskey(bus, "vm")
-            end
+            @test haskey(bus, "vm")
+            @test !haskey(bus, "va")
         end
     end
 
@@ -269,9 +266,8 @@ end
         result = run_opf("../test/data/matpower/case5.m", LPACCPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
         for (i,bus) in result["solution"]["bus"]
-            if haskey(bus, "phi")
-                @test haskey(bus, "vm")
-            end
+            @test haskey(bus, "vm")
+            @test haskey(bus, "va")
         end
     end
 end
