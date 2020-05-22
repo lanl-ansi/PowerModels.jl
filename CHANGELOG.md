@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.17.1
 - Improved robustness of `export_matpower` to extra model data (#707)
 - Improved the PWL cost data processing during model building (#709)
 - Fixed bugs admittance matrix tools to support inactive buses
