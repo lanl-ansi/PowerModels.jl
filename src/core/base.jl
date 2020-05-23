@@ -29,12 +29,16 @@ end
 
 ""
 function run_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method; ref_extensions=[], solution_processors=[], multinetwork=false, multiconductor=false, kwargs...)
-    if !multinetwork && _IM.ismultinetwork(data)
-        Memento.error(_LOGGER, "attempted to build a single-network model with multi-network data")
+    if multinetwork != _IM.ismultinetwork(data)
+        model_requirement = multinetwork ? "multi-network" : "single-network"
+        data_type = _IM.ismultinetwork(data) ? "multi-network" : "single-network"
+        Memento.error(_LOGGER, "attempted to build a $(model_requirement) model with $(data_type) data")
     end
 
-    if !multiconductor && ismulticonductor(data)
-        Memento.error(_LOGGER, "attempted to build a single-conductor model with multi-conductor data")
+    if multiconductor != ismulticonductor(data)
+        model_requirement = multiconductor ? "multi-conductor" : "single-conductor"
+        data_type = ismulticonductor(data) ? "multi-conductor" : "single-conductor"
+        Memento.error(_LOGGER, "attempted to build a $(model_requirement) model with $(data_type) data")
     end
 
     start_time = time()

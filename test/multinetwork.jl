@@ -109,6 +109,15 @@ TESTLOG = Memento.getlogger(PowerModels)
     end
 
 
+    @testset "test run_opf with multinetwork data" begin
+        mn_data = build_mn_data("../test/data/matpower/case5.m")
+        @test_throws(TESTLOG, ErrorException, PowerModels.run_opf(mn_data, ACPPowerModel, ipopt_solver))
+    end
+
+    @testset "test run_mn_opf with single-network data" begin
+        @test_throws(TESTLOG, ErrorException, PowerModels.run_mn_opf("../test/data/matpower/case5.m", ACPPowerModel, ipopt_solver))
+    end
+
     @testset "test multi-network solution" begin
         # test case where generator status is 1 but the gen_bus status is 0
         mn_data = build_mn_data("../test/data/matpower/case5.m")

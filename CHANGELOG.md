@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Strengthened checks for multi-network and multi-conductor in `run_model`
 
 ### v0.17.1
 - Improved robustness of `export_matpower` to extra model data (#707)
