@@ -121,6 +121,26 @@ how `compute_dc_pf` is typically used.
 This solver does not support warm starting.
 
 
+## Branch Flow Values
+
+By default none of the Power Flow solvers produce branch flow values.
+If needed, these can be computed with the network data functions,
+```@docs
+calc_branch_flow_ac
+calc_branch_flow_dc
+```
+Both of these methods require a complete network data with a valid voltage solution
+for computing the branch flows.  For example, one common work flow to recover
+branch flow values is,
+```julia
+result = run_ac_pf(network, ...)
+# check that the solver converged
+update_data!(network, result["solution"])
+flows = calc_branch_flow_ac(network)
+update_data!(network, flows)
+```
+
+
 ## Network Admittance Matrix
 
 Internally `compute_ac_pf` and `compute_dc_pf` utilize an admittance matrix
