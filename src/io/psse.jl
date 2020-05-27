@@ -360,8 +360,9 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     br_x *= (transformer["NOMV1"]^2 / _get_bus_value(transformer["I"], "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE1-2"])
                 end
 
-                sub_data["br_r"] = br_r
-                sub_data["br_x"] = br_x
+				# Tap Zeq scaling
+                sub_data["br_r"] = br_r * (transformer["WINDV2"]/transformer["NOMV2"])^2
+                sub_data["br_x"] = br_x * (transformer["WINDV2"]/transformer["NOMV2"])^2
 
                 sub_data["g_fr"] = pop!(transformer, "MAG1")
                 sub_data["b_fr"] = pop!(transformer, "MAG2")
@@ -382,7 +383,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     delete!(sub_data, "rate_c")
                 end
 
-                sub_data["tap"] = pop!(transformer, "WINDV1") / pop!(transformer, "WINDV2")
+                sub_data["tap"] = transformer["WINDV1"] / transformer["WINDV2"]
                 sub_data["shift"] = pop!(transformer, "ANG1")
 
                 # Unit Transformations
@@ -408,7 +409,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
                 _import_remaining!(sub_data, transformer, import_all; exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
                                                                               "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3",
-                                                                              "SBASE3-1", "MAG1", "MAG2", "STAT", "NOMV1", "NOMV2"])
+                                                                              "SBASE3-1", "MAG1", "MAG2", "STAT"])
 
                 push!(pm_data["branch"], sub_data)
             else  # Three-winding Transformers
@@ -445,6 +446,14 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     br_x31 *= (transformer["NOMV3"]^2 / _get_bus_value(bus_id3, "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE3-1"])
                 end
 
+				# Tap Zeq scaling
+				br_r12 *= (transformer["WINDV2"]/transformer["NOMV2"])^2
+				br_r23 *= (transformer["WINDV3"]/transformer["NOMV3"])^2
+				br_r31 *= (transformer["WINDV1"]/transformer["NOMV1"])^2
+				br_b12 *= (transformer["WINDV2"]/transformer["NOMV2"])^2
+				br_b23 *= (transformer["WINDV3"]/transformer["NOMV3"])^2
+				br_b31 *= (transformer["WINDV1"]/transformer["NOMV1"])^2				
+				
                 # See "Power System Stability and Control", ISBN: 0-07-035958-X, Eq. 6.72
                 Zr_p = 1/2 * (br_r12 - br_r23 + br_r31)
                 Zr_s = 1/2 * (br_r23 - br_r31 + br_r12)
@@ -482,7 +491,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                         delete!(sub_data, "rate_c")
                     end
 
-                    sub_data["tap"] = pop!(transformer, "WINDV$m")
+                    sub_data["tap"] = transformer["WINDV$m"]
                     sub_data["shift"] = pop!(transformer, "ANG$m")
 
                     # Unit Transformations
@@ -515,8 +524,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     _import_remaining!(sub_data, transformer, import_all; 
                         exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
                               "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3", "CKT",
-                              "SBASE3-1", "MAG1", "MAG2", "STAT","NOMV1", "NOMV2",
-                              "NOMV3", "WINDV1", "WINDV2", "WINDV3", "RATA1",
+                              "SBASE3-1", "MAG1", "MAG2", "STAT","RATA1",
                               "RATA2", "RATA3", "RATB1", "RATB2", "RATB3", "RATC1",
                               "RATC2", "RATC3", "ANG1", "ANG2", "ANG3"]
                         )
