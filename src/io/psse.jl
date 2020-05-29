@@ -460,33 +460,6 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     br_x31 *= (transformer["NOMV3"]^2 / _get_bus_value(bus_id3, "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE3-1"])
                 end
 				
-				# Zeq scaling for tap2 (see eq (4.21b) in PROGRAM APPLICATION GUIDE 1 in PSSE installation folder)
-                # Unit Transformations
-                if transformer["CW"] == 1  # "for off-nominal turns ratio in pu of winding bus base voltage"
-					br_r12 *= (transformer["WINDV2"])^2
-					br_x12 *= (transformer["WINDV2"])^2
-					br_r23 *= (transformer["WINDV3"])^2
-					br_x23 *= (transformer["WINDV3"])^2
-					br_r31 *= (transformer["WINDV1"])^2
-					br_x31 *= (transformer["WINDV1"])^2
-				else  # NOT "for off-nominal turns ratio in pu of winding bus base voltage"
-					if transformer["CW"] == 2  # "for winding voltage in kV"
-						br_r12 *= (transformer["WINDV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data))^2
-						br_x12 *= (transformer["WINDV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data))^2
-						br_r23 *= (transformer["WINDV3"]/_get_bus_value(transformer["K"], "base_kv", pm_data))^2
-						br_x23 *= (transformer["WINDV3"]/_get_bus_value(transformer["K"], "base_kv", pm_data))^2
-						br_r31 *= (transformer["WINDV1"]/_get_bus_value(transformer["I"], "base_kv", pm_data))^2
-						br_x31 *= (transformer["WINDV1"]/_get_bus_value(transformer["I"], "base_kv", pm_data))^2
-					else  # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
-						br_r12 *= (transformer["WINDV2"]*(transformer["NOMV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data)))^2
-						br_x12 *= (transformer["WINDV2"]*(transformer["NOMV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data)))^2
-						br_r23 *= (transformer["WINDV3"]*(transformer["NOMV3"]/_get_bus_value(transformer["K"], "base_kv", pm_data)))^2
-						br_x23 *= (transformer["WINDV3"]*(transformer["NOMV3"]/_get_bus_value(transformer["K"], "base_kv", pm_data)))^2
-						br_r31 *= (transformer["WINDV1"]*(transformer["NOMV1"]/_get_bus_value(transformer["I"], "base_kv", pm_data)))^2
-						br_x31 *= (transformer["WINDV1"]*(transformer["NOMV1"]/_get_bus_value(transformer["I"], "base_kv", pm_data)))^2
-					end
-				end
-
                 # See "Power System Stability and Control", ISBN: 0-07-035958-X, Eq. 6.72
                 Zr_p = 1/2 * (br_r12 - br_r23 + br_r31)
                 Zr_s = 1/2 * (br_r23 - br_r31 + br_r12)
