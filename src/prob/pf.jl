@@ -246,7 +246,7 @@ end
 
 function compute_ac_pf(file::String; kwargs...)
     data = parse_file(file)
-    return compute_ac_pf(data, kwargs...)
+    return compute_ac_pf(data; kwargs...)
 end
 
 function compute_ac_pf(data::Dict{String,<:Any}; kwargs...)
@@ -255,7 +255,7 @@ function compute_ac_pf(data::Dict{String,<:Any}; kwargs...)
     # all buses of type 2/3 have generators on them
 
     pf_data = instantiate_pf_data(data)
-    return compute_ac_pf(pf_data, kwargs...)
+    return compute_ac_pf(pf_data; kwargs...)
 end
 
 
@@ -267,7 +267,7 @@ documentation for solver configuration parameters.
 Returns a solution data structure in PowerModels Dict format
 """
 function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
-    result = _compute_ac_pf(pf_data, kwargs...)
+    result = _compute_ac_pf(pf_data; kwargs...)
 
     if !(result.x_converged || result.f_converged)
         Memento.warn(_LOGGER, "ac power flow solver convergence failed!  use `show_trace = true` for more details")
@@ -349,7 +349,7 @@ function compute_ac_pf!(data::Dict{String,<:Any}; kwargs...)
     # all buses of type 2/3 have generators on them
 
     pf_data = instantiate_pf_data(data)
-    compute_ac_pf!(pf_data, kwargs...)
+    compute_ac_pf!(pf_data; kwargs...)
 end
 
 
@@ -358,7 +358,7 @@ similar to compute_ac_pf but places the solution in the power model's data
 dict instead of a seperate result object
 """
 function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
-    result = _compute_ac_pf(pf_data, kwargs...)
+    result = _compute_ac_pf(pf_data; kwargs...)
 
     if !(result.x_converged || result.f_converged)
         Memento.warn(_LOGGER, "ac power flow solver convergence failed!  use `show_trace = true` for more details")

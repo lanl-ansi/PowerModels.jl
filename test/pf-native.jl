@@ -360,3 +360,67 @@ end
     end
 end
 
+
+@testset "test native ac pf solver options" begin
+    @testset "5-bus case, finite_differencing" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        result = run_ac_pf(data, ipopt_solver)
+        native = compute_ac_pf("../test/data/matpower/case5.m", finite_differencing=true)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test length(native) >= 3
+
+        bus_pg_nlp = bus_gen_values(data, result["solution"], "pg")
+        bus_qg_nlp = bus_gen_values(data, result["solution"], "qg")
+
+        bus_pg_nls = bus_gen_values(data, native, "pg")
+        bus_qg_nls = bus_gen_values(data, native, "qg")
+
+        for (i,bus) in data["bus"]
+            @test isapprox(result["solution"]["bus"][i]["va"], native["bus"][i]["va"]; atol = 1e-7)
+            @test isapprox(result["solution"]["bus"][i]["vm"], native["bus"][i]["vm"]; atol = 1e-7)
+
+            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-7)
+            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-7)
+        end
+    end
+    @testset "5-bus case, flat_start" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        result = run_ac_pf(data, ipopt_solver)
+        native = compute_ac_pf("../test/data/matpower/case5.m", flat_start=true)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test length(native) >= 3
+
+        bus_pg_nlp = bus_gen_values(data, result["solution"], "pg")
+        bus_qg_nlp = bus_gen_values(data, result["solution"], "qg")
+
+        bus_pg_nls = bus_gen_values(data, native, "pg")
+        bus_qg_nls = bus_gen_values(data, native, "qg")
+
+        for (i,bus) in data["bus"]
+            @test isapprox(result["solution"]["bus"][i]["va"], native["bus"][i]["va"]; atol = 1e-7)
+            @test isapprox(result["solution"]["bus"][i]["vm"], native["bus"][i]["vm"]; atol = 1e-7)
+
+            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-7)
+            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-7)
+        end
+    end
+    @testset "5-bus case, in-place and nsolve method parameter" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        native = compute_ac_pf("../test/data/matpower/case5.m", method=:newton)
+        compute_ac_pf!(data, method=:newton)
+
+        @test length(native) >= 3
+
+        for (i,bus) in native["bus"]
+            @test isapprox(data["bus"][i]["va"], bus["va"]; atol = 1e-7)
+            @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
+        end
+        for (i,gen) in native["gen"]
+            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
+            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+        end
+    end
+end
+
