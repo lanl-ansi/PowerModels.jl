@@ -80,9 +80,14 @@ function _create_starbus_from_transformer(pm_data::Dict, transformer::Dict, star
 
     starbus["name"] = "starbus_$(transformer["I"])_$(transformer["J"])_$(transformer["K"])_$(strip(transformer["CKT"]))"
 
+    bus_type = 1
+    if transformer["STAT"] == 0
+        bus_type = 4
+    end
+
     starbus["vm"] = transformer["VMSTAR"]
     starbus["va"] = transformer["ANSTAR"]
-    starbus["bus_type"] = transformer["STAT"]
+    starbus["bus_type"] = bus_type
     starbus["area"] = _get_bus_value(transformer["I"], "area", pm_data)
     starbus["zone"] = _get_bus_value(transformer["I"], "zone", pm_data)
     starbus["source_id"] = push!(["transformer", starbus["bus_i"], starbus["name"]], transformer["I"], transformer["J"], transformer["K"], transformer["CKT"])
@@ -493,7 +498,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                         end
                     end
 
-                    
+
                     sub_data["br_status"] = 1
                     if transformer["STAT"] == 0
                         sub_data["br_status"] = 0

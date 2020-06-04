@@ -4,6 +4,7 @@ PowerModels.jl Change Log
 ### Staged
 - Strengthened checks for multi-network and multi-conductor in `run_model`
 - Fixed keyword arguments in native AC Power Flow solver
+- Fixed star bus `bus_type` values in three winding transformers
 
 ### v0.17.1
 - Improved robustness of `export_matpower` to extra model data (#707)

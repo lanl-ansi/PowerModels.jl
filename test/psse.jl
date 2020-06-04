@@ -247,20 +247,29 @@ end
                 @test isapprox(data_pti["branch"][branch]["rate_c"], rate_c; atol=1e-4)
             end
 
+            bus_data = zip(
+                ["10001", "10002", "10003", "10004", "10005"],
+                [4, 1, 1, 1, 1]
+            )
+
+            for (bus, bus_type) in bus_data
+                @test isapprox(data_pti["bus"][bus]["bus_type"], bus_type; atol=1e-8)
+            end
+
             @test length(data_pti["bus"]) == 8
             @test length(data_pti["branch"]) == 15
 
             result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
 
             @test result_opf["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result_opf["objective"], 10.00015; atol=1e-5)
+            @test isapprox(result_opf["objective"], 10.00027; atol=1e-5)
 
             result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
 
             bus_data = zip(
-                ["1001", "1002", "1003", "10001", "10002", "10003", "10004"],
-                [1.098, 1.000, 1.000, 1.000, 0.999, 0.999, 0.999],
-                [0.025, 0.000, 0.060, 0.000, 0.027, 0.033, 0.018]
+                ["1001", "1002", "1003", "10002", "10003", "10004"],
+                [1.0980, 1.000, 1.0000, 0.9990, 0.9990, 0.999],
+                [0.0135, 0.000, 0.0382, 0.0157, 0.0197, 0.018]
             )
 
             for (bus, vm, va) in bus_data
