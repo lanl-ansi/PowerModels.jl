@@ -459,7 +459,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     br_x23 *= (transformer["NOMV2"]^2 / _get_bus_value(bus_id2, "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE2-3"])
                     br_x31 *= (transformer["NOMV3"]^2 / _get_bus_value(bus_id3, "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE3-1"])
                 end
-				
+
                 # See "Power System Stability and Control", ISBN: 0-07-035958-X, Eq. 6.72
                 Zr_p = 1/2 * (br_r12 - br_r23 + br_r31)
                 Zr_s = 1/2 * (br_r23 - br_r31 + br_r12)
