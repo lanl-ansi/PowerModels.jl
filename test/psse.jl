@@ -405,7 +405,7 @@ end
             for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [15, 15, 28, 34, 29])
                 for item in values(data[key])
                     if key == "branch" && item["transformer"]
-                        @test length(item) == 42
+                        @test length(item) == 45
                     else
                         @test length(item) == n
                     end
@@ -436,6 +436,25 @@ end
                     @test k == lowercase(k)
                 end
             end
+        end
+
+        @testset "three-winding case" begin
+            data = PowerModels.parse_file("../test/data/pti/three_winding_test.raw"; import_all=true)
+
+            for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [15, 15, 28, 34, 29])
+                for item in values(data[key])
+                    if key == "branch" && item["transformer"]
+                        # 45 = 2 winding, 69 = 3 winding - first winding, 22 = 3 winding - other windings
+                        @test length(item) == 45 || length(item) == 68 || length(item) == 21
+                    elseif key == "bus" && item["source_id"][1] == "transformer"
+                        # star bus info
+                        @test length(item) == 12
+                    else
+                        @test length(item) == n
+                    end
+                end
+            end
+
         end
     end
 

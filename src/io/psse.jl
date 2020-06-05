@@ -387,6 +387,11 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     delete!(sub_data, "rate_c")
                 end
 
+                if import_all
+                    sub_data["windv1"] = transformer["WINDV1"]
+                    sub_data["windv2"] = transformer["WINDV2"]
+                end
+
                 sub_data["tap"] = pop!(transformer, "WINDV1") / pop!(transformer, "WINDV2")
                 sub_data["shift"] = pop!(transformer, "ANG1")
 
@@ -397,6 +402,11 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                         sub_data["tap"] *= transformer["NOMV1"] / transformer["NOMV2"]
                     end
                 end
+
+                if import_all
+                    sub_data["cw"] = transformer["CW"]
+                end
+
 
                 if transformer["STAT"] == 0 || transformer["STAT"] == 2
                     sub_data["br_status"] = 0
@@ -411,9 +421,10 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 sub_data["transformer"] = true
                 sub_data["index"] = length(pm_data["branch"]) + 1
 
-                _import_remaining!(sub_data, transformer, import_all; exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
-                                                                              "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3",
-                                                                              "SBASE3-1", "MAG1", "MAG2", "STAT", "NOMV1", "NOMV2"])
+                _import_remaining!(sub_data, transformer, import_all;
+                    exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
+                        "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3",
+                        "SBASE3-1", "MAG1", "MAG2", "STAT", "NOMV1", "NOMV2"])
 
                 push!(pm_data["branch"], sub_data)
             else  # Three-winding Transformers
@@ -487,6 +498,11 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                         delete!(sub_data, "rate_c")
                     end
 
+                    if import_all
+                        sub_data["windv$m"] = transformer["WINDV$m"]
+                        #sub_data["windvs"] = 1.0
+                    end
+
                     sub_data["tap"] = pop!(transformer, "WINDV$m")
                     sub_data["shift"] = pop!(transformer, "ANG$m")
 
@@ -497,6 +513,11 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                             sub_data["tap"] *= transformer["NOMV$m"]
                         end
                     end
+
+                    if import_all
+                        sub_data["cw"] = transformer["CW"]
+                    end
+
 
 
                     sub_data["br_status"] = 1
