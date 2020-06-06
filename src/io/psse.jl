@@ -390,6 +390,8 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 if import_all
                     sub_data["windv1"] = transformer["WINDV1"]
                     sub_data["windv2"] = transformer["WINDV2"]
+                    sub_data["nomv1"] = transformer["NOMV1"]
+                    sub_data["nomv2"] = transformer["NOMV2"]
                 end
 
                 sub_data["tap"] = pop!(transformer, "WINDV1") / pop!(transformer, "WINDV2")
@@ -501,6 +503,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     if import_all
                         sub_data["windv$m"] = transformer["WINDV$m"]
                         #sub_data["windvs"] = 1.0
+                        sub_data["nomv$m"] = transformer["NOMV$m"]
                     end
 
                     sub_data["tap"] = pop!(transformer, "WINDV$m")
