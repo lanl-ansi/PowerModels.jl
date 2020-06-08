@@ -365,6 +365,21 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     br_x *= (transformer["NOMV1"]^2 / _get_bus_value(transformer["I"], "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE1-2"])
                 end
 
+				# Zeq scaling for tap2 (see eq (4.21b) in PROGRAM APPLICATION GUIDE 1 in PSSE installation folder)
+                # Unit Transformations
+                if transformer["CW"] == 1  # "for off-nominal turns ratio in pu of winding bus base voltage"
+					br_r *= (transformer["WINDV2"])^2
+					br_x *= (transformer["WINDV2"])^2
+				else  # NOT "for off-nominal turns ratio in pu of winding bus base voltage"
+					if transformer["CW"] == 2  # "for winding voltage in kV"
+						br_r *= (transformer["WINDV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data))^2
+						br_x *= (transformer["WINDV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data))^2
+					else  # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
+						br_r *= (transformer["WINDV2"]*(transformer["NOMV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data)))^2
+						br_x *= (transformer["WINDV2"]*(transformer["NOMV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data)))^2
+					end
+				end
+
                 sub_data["br_r"] = br_r
                 sub_data["br_x"] = br_x
 
