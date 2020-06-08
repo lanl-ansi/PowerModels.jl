@@ -365,20 +365,20 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     br_x *= (transformer["NOMV1"]^2 / _get_bus_value(transformer["I"], "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE1-2"])
                 end
 
-				# Zeq scaling for tap2 (see eq (4.21b) in PROGRAM APPLICATION GUIDE 1 in PSSE installation folder)
+                # Zeq scaling for tap2 (see eq (4.21b) in PROGRAM APPLICATION GUIDE 1 in PSSE installation folder)
                 # Unit Transformations
                 if transformer["CW"] == 1  # "for off-nominal turns ratio in pu of winding bus base voltage"
-					br_r *= (transformer["WINDV2"])^2
-					br_x *= (transformer["WINDV2"])^2
-				else  # NOT "for off-nominal turns ratio in pu of winding bus base voltage"
-					if transformer["CW"] == 2  # "for winding voltage in kV"
-						br_r *= (transformer["WINDV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data))^2
-						br_x *= (transformer["WINDV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data))^2
-					else  # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
-						br_r *= (transformer["WINDV2"]*(transformer["NOMV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data)))^2
-						br_x *= (transformer["WINDV2"]*(transformer["NOMV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data)))^2
-					end
-				end
+                    br_r *= transformer["WINDV2"]^2
+                    br_x *= transformer["WINDV2"]^2
+                else  # NOT "for off-nominal turns ratio in pu of winding bus base voltage"
+                    if transformer["CW"] == 2  # "for winding voltage in kV"
+                        br_r *= (transformer["WINDV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data))^2
+                        br_x *= (transformer["WINDV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data))^2
+                    else  # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
+                        br_r *= (transformer["WINDV2"]*(transformer["NOMV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data)))^2
+                        br_x *= (transformer["WINDV2"]*(transformer["NOMV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data)))^2
+                    end
+                end
 
                 sub_data["br_r"] = br_r
                 sub_data["br_x"] = br_x
@@ -469,13 +469,13 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
                 # Unit Transformations
                 if transformer["CZ"] != 1  # NOT "for resistance and reactance in pu on system MVA base and winding voltage base"
-                    br_r12 *= (transformer["NOMV1"]^2 / _get_bus_value(bus_id1, "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE1-2"])
-                    br_r23 *= (transformer["NOMV2"]^2 / _get_bus_value(bus_id2, "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE2-3"])
-                    br_r31 *= (transformer["NOMV3"]^2 / _get_bus_value(bus_id3, "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE3-1"])
+                    br_r12 *= (transformer["NOMV1"] / _get_bus_value(bus_id1, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE1-2"])
+                    br_r23 *= (transformer["NOMV2"] / _get_bus_value(bus_id2, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE2-3"])
+                    br_r31 *= (transformer["NOMV3"] / _get_bus_value(bus_id3, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE3-1"])
 
-                    br_x12 *= (transformer["NOMV1"]^2 / _get_bus_value(bus_id1, "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE1-2"])
-                    br_x23 *= (transformer["NOMV2"]^2 / _get_bus_value(bus_id2, "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE2-3"])
-                    br_x31 *= (transformer["NOMV3"]^2 / _get_bus_value(bus_id3, "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE3-1"])
+                    br_x12 *= (transformer["NOMV1"] / _get_bus_value(bus_id1, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE1-2"])
+                    br_x23 *= (transformer["NOMV2"] / _get_bus_value(bus_id2, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE2-3"])
+                    br_x31 *= (transformer["NOMV3"] / _get_bus_value(bus_id3, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE3-1"])
                 end
 
                 # See "Power System Stability and Control", ISBN: 0-07-035958-X, Eq. 6.72

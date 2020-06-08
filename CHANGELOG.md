@@ -2,8 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Added `windv*`, `nomv*` and `cw` values to `import_all` on PSS/E data files
+- Added `windv*`, `nomv*` and `cw` values to `import_all` on PSS/E data files (#629)
 - Strengthened checks for multi-network and multi-conductor in `run_model`
+- Fixed conversions for transformer tap values in PSSE parser (#629)
 - Fixed keyword arguments in native AC Power Flow solver
 - Fixed star bus `bus_type` values in three winding transformers
 
