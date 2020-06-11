@@ -405,7 +405,7 @@ end
             for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [15, 15, 28, 34, 29])
                 for item in values(data[key])
                     if key == "branch" && item["transformer"]
-                        @test length(item) == 45
+                        @test length(item) == 47
                     else
                         @test length(item) == n
                     end
@@ -444,8 +444,8 @@ end
             for (key, n) in zip(["bus", "load", "shunt", "gen", "branch"], [15, 15, 28, 34, 29])
                 for item in values(data[key])
                     if key == "branch" && item["transformer"]
-                        # 45 = 2 winding, 69 = 3 winding - first winding, 22 = 3 winding - other windings
-                        @test length(item) == 45 || length(item) == 68 || length(item) == 21
+                        # 47 = 2 winding, 69 = 3 winding - first winding, 22 = 3 winding - other windings
+                        @test length(item) == 47 || length(item) == 69 || length(item) == 22
                     elseif key == "bus" && item["source_id"][1] == "transformer"
                         # star bus info
                         @test length(item) == 12
