@@ -22,6 +22,8 @@ end
 function variable_bus_voltage_angle(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     va = var(pm, nw)[:va] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_va",
+        lower_bound = -2*pi,
+        upper_bound = 2*pi,
         start = comp_start_value(ref(pm, nw, :bus, i), "va_start")
     )
 

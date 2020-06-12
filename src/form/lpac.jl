@@ -137,7 +137,6 @@ function constraint_ne_voltage_angle_difference(pm::AbstractLPACCModel, n::Int, 
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
     z = var(pm, n, :branch_ne, i)
-
     JuMP.@constraint(pm.model, va_fr - va_to <= angmax*z + vad_max*(1-z))
     JuMP.@constraint(pm.model, va_fr - va_to >= angmin*z + vad_min*(1-z))
 end
@@ -198,6 +197,8 @@ function variable_ne_branch_voltage_angle_fr(pm::AbstractLPACModel; nw::Int=pm.c
 
     va_fr_ne = var(pm, nw)[:va_fr_ne] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :ne_branch)], base_name="$(nw)_va_fr_ne",
+        lower_bound = -2*pi,
+        upper_bound = 2*pi,
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["f_bus"]), "va_fr_start")
     )
 
@@ -243,12 +244,17 @@ function constraint_ne_model_voltage(pm::AbstractLPACCModel, n::Int)
     cos_min, cos_max  = ref_calc_angle_difference_bounds(ref(pm, n, :ne_buspairs))
 
     phi  = var(pm, n, :phi)
+    va  = var(pm, n, :va)
     z  = var(pm, n, :branch_ne)
 
     cs = var(pm, n, :cs)
     cs_ne = var(pm, n, :cs_ne)
     phi_fr = var(pm, n, :phi_fr_ne)
     phi_to = var(pm, n, :phi_to_ne)
+    va_fr = var(pm, n, :va_fr_ne)
+    va_to = var(pm, n, :va_to_ne)
+
+
     for (l,i,j) in ref(pm, n, :ne_arcs_from)
         JuMP.@constraint(pm.model, phi_fr[l] <= z[l]*(buses[branches[l]["f_bus"]]["vmax"]-1))
         JuMP.@constraint(pm.model, phi_fr[l] >= z[l]*(buses[branches[l]["f_bus"]]["vmin"]-1))
@@ -261,15 +267,16 @@ function constraint_ne_model_voltage(pm::AbstractLPACCModel, n::Int)
 
         _IM.relaxation_equality_on_off(pm.model, phi[i], phi_fr[l], z[l])
         _IM.relaxation_equality_on_off(pm.model, phi[j], phi_to[l], z[l])
+
+        _IM.relaxation_equality_on_off(pm.model, va[i], va_fr[l], z[l])
+        _IM.relaxation_equality_on_off(pm.model, va[j], va_to[l], z[l])
     end
 
     # Cosine constraint can be moved to a different function for neatness
-    _check_missing_keys(var(pm, n), [:va,:cs_ne], typeof(pm))
-    t = var(pm, n, :va)
     cs = var(pm, n, :cs_ne)
     for (l,i,j) in ref(pm, n, :ne_arcs_from)
         vad_max = max(abs(buspair[bi_bp[l]]["angmin"]), abs(buspair[bi_bp[l]]["angmax"]))
-        JuMP.@constraint(pm.model, cs[l] <= 1 - (1-cos(vad_max))/vad_max^2*(t[i] - t[j])^2)
+        JuMP.@constraint(pm.model, cs[l] <= 1 - (1-cos(vad_max))/vad_max^2*(va_fr[l] - va_to[l])^2)
    end
 end
 
@@ -311,7 +318,6 @@ function constraint_ne_power_balance(pm::AbstractLPACCModel, n::Int, i::Int, bus
         - sum(qd for qd in values(bus_qd))
         + sum(bs for bs in values(bus_bs))*(1 + 2*phi)
     )
-
     if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
         sol(pm, n, :bus, i)[:lam_kcl_i] = cstr_q
@@ -328,7 +334,6 @@ function constraint_ne_ohms_yt_from(pm::AbstractLPACCModel, n::Int, i, f_bus, t_
     va_to  = var(pm, n, :va_to_ne, i)
     cs     = var(pm, n, :cs_ne, i)
     z = var(pm, n, :branch_ne, i)
-
     JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*(z + 2*phi_fr) + (-g*tr+b*ti)/tm^2*(cs + phi_fr + phi_to) + (-b*tr-g*ti)/tm^2*(va_fr-va_to) )
     JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*(z + 2*phi_fr) - (-b*tr-g*ti)/tm^2*(cs + phi_fr + phi_to) + (-g*tr+b*ti)/tm^2*(va_fr-va_to) )
 end
@@ -343,7 +348,6 @@ function constraint_ne_ohms_yt_to(pm::AbstractLPACCModel, n::Int, i, f_bus, t_bu
     va_to  = var(pm, n, :va_to_ne, i)
     cs     = var(pm, n, :cs_ne, i)
     z = var(pm, n, :branch_ne, i)
-
     JuMP.@constraint(pm.model, p_to ==  (g+g_to)*(z + 2*phi_to) + (-g*tr-b*ti)/tm^2*(cs + phi_fr + phi_to) + (-b*tr+g*ti)/tm^2*-(va_fr-va_to) )
     JuMP.@constraint(pm.model, q_to == -(b+b_to)*(z + 2*phi_to) - (-b*tr+g*ti)/tm^2*(cs + phi_fr + phi_to) + (-g*tr-b*ti)/tm^2*-(va_fr-va_to) )
 end
