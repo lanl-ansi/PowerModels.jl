@@ -202,7 +202,6 @@ function variable_ne_branch_voltage_angle_fr(pm::AbstractLPACModel; nw::Int=pm.c
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["f_bus"]), "va_fr_start")
     )
 
-    # may be bounds can be added in future
     report && _IM.sol_component_value(pm, nw, :ne_branch, :va_fr, ids(pm, nw, :ne_branch), va_fr_ne)
 end
 
@@ -213,6 +212,8 @@ function variable_ne_branch_voltage_angle_to(pm::AbstractLPACModel; nw::Int=pm.c
 
     va_to_ne = var(pm, nw)[:va_to_ne] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :ne_branch)], base_name="$(nw)_va_to_ne",
+        lower_bound = -2*pi,
+        upper_bound = 2*pi,
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["t_bus"]), "va_to_start")
     )
 
