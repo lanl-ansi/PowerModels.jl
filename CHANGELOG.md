@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added support for ACR formulation with storage
 - Added `windv*`, `nomv*` and `cw` values to `import_all` on PSS/E data files (#629)
 - Strengthened checks for multi-network and multi-conductor in `run_model`
 - Fixed conversions for transformer tap values in PSSE parser (#629)

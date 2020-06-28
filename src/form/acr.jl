@@ -217,6 +217,30 @@ function constraint_ohms_yt_to(pm::AbstractACRModel, n::Int, f_bus, t_bus, f_idx
 end
 
 
+""
+function constraint_storage_losses(pm::AbstractACRModel, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+    vr = var(pm, n, :vr, bus)
+    vi = var(pm, n, :vi, bus)
+    ps = var(pm, n, :ps, i)
+    qs = var(pm, n, :qs, i)
+    sc = var(pm, n, :sc, i)
+    sd = var(pm, n, :sd, i)
+    qsc = var(pm, n, :qsc, i)
+
+    JuMP.@NLconstraint(pm.model,
+        sum(ps[c] for c in conductors) + (sd - sc)
+        ==
+        p_loss + sum(r[c]*(ps[c]^2 + qs[c]^2)/(vr[c]^2 + vi[c]^2) for c in conductors)
+    )
+
+    JuMP.@NLconstraint(pm.model,
+        sum(qs[c] for c in conductors)
+        ==
+        qsc + q_loss + sum(x[c]*(ps[c]^2 + qs[c]^2)/(vr[c]^2 + vi[c]^2) for c in conductors)
+    )
+end
+
+
 function constraint_current_limit(pm::AbstractACRModel, n::Int, f_idx, c_rating_a)
     l,i,j = f_idx
     t_idx = (l,j,i)
