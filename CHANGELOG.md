@@ -8,6 +8,7 @@ PowerModels.jl Change Log
 - Fixed conversions for transformer tap values in PSSE parser (#629)
 - Fixed keyword arguments in native AC Power Flow solver
 - Fixed star bus `bus_type` values in three winding transformers
+- Fixed Matpower parser bug when reactive power cost data was present (#729)
 
 ### v0.17.1
 - Improved robustness of `export_matpower` to extra model data (#707)
