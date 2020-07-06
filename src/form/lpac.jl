@@ -160,9 +160,8 @@ end
 function variable_ne_branch_voltage(pm::AbstractLPACCModel; kwargs...)
     variable_ne_branch_voltage_magnitude_fr(pm; kwargs...)
     variable_ne_branch_voltage_magnitude_to(pm; kwargs...)
-    variable_ne_branch_voltage_angle(pm; kwargs...)
-    variable_branch_cosine_ne(pm; kwargs...)
-    variable_buspair_voltage_product_angle(pm; kwargs...)
+    variable_ne_branch_voltage_product_angle(pm; kwargs...)
+    variable_ne_branch_cosine(pm; kwargs...)
 end
 
 ""
@@ -197,7 +196,7 @@ function variable_ne_branch_voltage_magnitude_to(pm::AbstractLPACModel; nw::Int=
 end
 
 ""
-function variable_branch_cosine_ne(pm::AbstractLPACCModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_ne_branch_cosine(pm::AbstractLPACCModel; nw::Int=pm.cnw, report::Bool=true)
     cos_min = Dict((l, -Inf) for l in ids(pm, nw, :ne_branch))
     cos_max = Dict((l,  Inf) for l in ids(pm, nw, :ne_branch))
 
@@ -229,7 +228,7 @@ function variable_branch_cosine_ne(pm::AbstractLPACCModel; nw::Int=pm.cnw, repor
 end
 
 ""
-function variable_ne_branch_voltage_angle(pm::AbstractLPACCModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_voltage_product_angle(pm::AbstractLPACCModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
      buspair = ref(pm, nw, :ne_buspairs)
      td_ne = var(pm, nw)[:td_ne] = JuMP.@variable(pm.model,
@@ -240,22 +239,6 @@ function variable_ne_branch_voltage_angle(pm::AbstractLPACCModel; nw::Int=pm.cnw
     )
 
     report && _IM.sol_component_value(pm, nw, :ne_branch, :td_ne, ids(pm, nw, :ne_branch), td_ne)
-end
-
-"Creates variables associated with differences in voltage angles"
-function variable_buspair_voltage_product_angle(pm::AbstractLPACCModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
-    td = var(pm, nw)[:td] = JuMP.@variable(pm.model,
-        [bp in ids(pm, nw, :ne_buspairs)], base_name="$(nw)_td",
-        start = comp_start_value(ref(pm, nw, :ne_buspairs, bp), "td_start")
-    )
-
-    if bounded
-        for (bp, buspair) in ref(pm, nw, :ne_buspairs)
-            JuMP.set_lower_bound(td[bp], buspair["angmin"])
-            JuMP.set_upper_bound(td[bp], buspair["angmax"])
-        end
-    end
-    report && sol_component_value_buspair(pm, nw, :ne_buspairs, :td, ids(pm, nw, :ne_buspairs), td)
 end
 
 ""
@@ -281,7 +264,7 @@ function constraint_model_voltage_on_off(pm::AbstractLPACCModel, n::Int)
 
         JuMP.@constraint(pm.model, t[i] - t[j] >= td[l] + td_lb*(1-z[l]))
         JuMP.@constraint(pm.model, t[i] - t[j] <= td[l] + td_ub*(1-z[l]))
-        relaxation_cos_on_off(pm.model, td[l], cs[l], z[l], td_max))
+        relaxation_cos_on_off(pm.model, td[l], cs[l], z[l], td_max)
 
         relaxation_variable_on_off(pm.model, td[l], z[l])
         relaxation_variable_on_off(pm.model, phi_fr[l], z[l])
@@ -295,11 +278,10 @@ end
 function constraint_ne_model_voltage(pm::AbstractLPACCModel, n::Int)
     phi  = var(pm, n, :phi)
     t = var(pm, n, :va)
-    phi_fr = var(pm, n, :phi_fr_ne)
-    phi_to = var(pm, n, :phi_to_ne)
+    phi_fr_ne = var(pm, n, :phi_fr_ne)
+    phi_to_ne = var(pm, n, :phi_to_ne)
 
-    td = var(pm, n, :td)
-    cs = var(pm, n, :cs_ne)
+    cs_ne = var(pm, n, :cs_ne)
     td_ne = var(pm, n , :td_ne)
 
     z = var(pm, n, :branch_ne)
@@ -308,28 +290,20 @@ function constraint_ne_model_voltage(pm::AbstractLPACCModel, n::Int)
     td_ub = ref(pm, n, :off_angmax)
     td_max = max(abs(td_lb), abs(td_ub))
 
-    buses = ref(pm, n, :bus)
-    branches = ref(pm, n, :ne_branch)
-    bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in branches)
-    buspair = ref(pm, n, :ne_buspairs)
-    # cos_min, cos_max  = ref_calc_angle_difference_bounds(ref(pm, n, :ne_buspairs))
-
     for (l,branch) in ref(pm, n, :ne_branch)
         i = branch["f_bus"]
         j = branch["t_bus"]
+        JuMP.@constraint(pm.model, t[i] - t[j] >= td_ne[l] + td_lb*(1-z[l]))
+        JuMP.@constraint(pm.model, t[i] - t[j] <= td_ne[l] + td_ub*(1-z[l]))
 
-        JuMP.@constraint(pm.model, t[i] - t[j] >= td[(i,j)] + td_lb*(1-z[l]))
-        JuMP.@constraint(pm.model, t[i] - t[j] <= td[(i,j)] + td_ub*(1-z[l]))
+        relaxation_cos_on_off(pm.model, td_ne[l], cs_ne[l], z[l], td_max)
 
-        relaxation_cos_on_off(pm.model, td[(i,j)], cs[l], z[l], td_max)
-
-        relaxation_variable_on_off(pm.model, phi_fr[l], z[l])
-        relaxation_variable_on_off(pm.model, phi_to[l], z[l])
+        relaxation_variable_on_off(pm.model, phi_fr_ne[l], z[l])
+        relaxation_variable_on_off(pm.model, phi_to_ne[l], z[l])
         relaxation_variable_on_off(pm.model, td_ne[l], z[l])
 
-        _IM.relaxation_equality_on_off(pm.model, phi[i], phi_fr[l], z[l])
-        _IM.relaxation_equality_on_off(pm.model, phi[j], phi_to[l], z[l])
-        _IM.relaxation_equality_on_off(pm.model, td[(i,j)], td_ne[l], z[l])
+        _IM.relaxation_equality_on_off(pm.model, phi[i], phi_fr_ne[l], z[l])
+        _IM.relaxation_equality_on_off(pm.model, phi[j], phi_to_ne[l], z[l])
     end
 end
 
@@ -404,35 +378,7 @@ function constraint_ne_ohms_yt_to(pm::AbstractLPACCModel, n::Int, i, f_bus, t_bu
 end
 
 ""
-function ref_calc_angle_difference_bounds(buspairs, conductor::Int=1)
-    cos_min = Dict((bp, -Inf) for bp in keys(buspairs))
-    cos_max = Dict((bp, Inf) for bp in keys(buspairs))
 
-    buspairs_conductor = Dict()
-    for (bp, buspair) in buspairs
-        buspairs_conductor[bp] = Dict( k => v[conductor] for (k,v) in buspair)
-    end
-
-    for (bp, buspair) in buspairs_conductor
-        if buspair["angmin"] >= 0
-            cos_max[bp] = cos(buspair["angmin"])
-            cos_min[bp] = cos(buspair["angmax"])
-        end
-        if buspair["angmax"] <= 0
-            cos_max[bp] = cos(buspair["angmax"])
-            cos_min[bp] = cos(buspair["angmin"])
-        end
-        if buspair["angmin"] < 0 && buspair["angmax"] > 0
-            cos_max[bp] = 1.0
-            cos_min[bp] = min(cos(buspair["angmin"]), cos(buspair["angmax"]))
-        end
-    end
-
-    return cos_min, cos_max
-
-end
-
-""
 function variable_bus_voltage_on_off(pm::AbstractLPACCModel; kwargs...)
     variable_bus_voltage_angle(pm; kwargs...)
     variable_bus_voltage_magnitude(pm; kwargs...)

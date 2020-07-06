@@ -66,6 +66,7 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 - Kaarthik Sundar (@kaarthiksundar) LANL, OBBT utility
+- Jay Dave (@jay-dave) KU Leuven, LPAC for TNEP and OTS problems
 
 
 ## Citing PowerModels

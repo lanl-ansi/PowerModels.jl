@@ -197,3 +197,47 @@ end
         @test isapprox(result["objective"], 11472.3; atol = 1e0)
     end
 end
+
+
+@testset "test lpac ots" begin
+    @testset "3-bus case" begin
+        result = run_ots("../test/data/matpower/case3.m", LPACCPowerModel, juniper_solver)
+
+        check_br_status(result["solution"], 3, 3)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 5908.98; atol = 1e0)
+    end
+    @testset "5-bus case" begin
+        result = run_ots("../test/data/matpower/case5.m", LPACCPowerModel, juniper_solver)
+
+        check_br_status(result["solution"], 5, 5)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 15241.4; atol = 5e1)
+    end
+    @testset "5-bus asymmetric case" begin
+        result = run_ots("../test/data/matpower/case5_asym.m", LPACCPowerModel, juniper_solver)
+
+        check_br_status(result["solution"], 5, 5)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 15246.9; atol = 1e0)
+    end
+    @testset "5-bus with asymmetric line charge" begin
+        result = run_ots("../test/data/pti/case5_alc.raw", LPACCPowerModel, juniper_solver)
+
+        check_br_status(result["solution"], 4, 4)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 998.4; atol = 5e0)
+    end
+    @testset "6-bus case" begin
+        result = run_ots("../test/data/matpower/case6.m", LPACCPowerModel, juniper_solver)
+
+        check_br_status(result["solution"], 6, 6)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 11615.1; atol = 1e0)
+    end
+end
