@@ -375,7 +375,7 @@ function _matpower_to_powermodels!(mp_data::Dict{String,<:Any})
 
     # merge data tables
     _merge_bus_name_data!(pm_data)
-    _merge_generator_cost_data!(pm_data)
+    _merge_cost_data!(pm_data)
     _merge_generic_data!(pm_data)
 
     # split loads and shunts from buses
@@ -561,29 +561,50 @@ end
 
 
 "merges generator cost functions into generator data, if costs exist"
-function _merge_generator_cost_data!(data::Dict{String,Any})
+function _merge_cost_data!(data::Dict{String,Any})
     if haskey(data, "gencost")
-        for (i, gencost) in enumerate(data["gencost"])
-            gen = data["gen"][i]
-            @assert(gen["index"] == gencost["index"])
-            delete!(gencost, "index")
-            delete!(gencost, "source_id")
+        gen = data["gen"]
+        gencost = data["gencost"]
 
-            _check_keys(gen, keys(gencost))
-            merge!(gen, gencost)
+        if length(gen) != length(gencost)
+            if length(gencost) > length(gen)
+                Memento.warn(_LOGGER, "The last $(length(gencost) - length(gen)) generator cost records will be ignored due to too few generator records.")
+                gencost = gencost[1:length(gen)]
+            else
+                Memento.warn(_LOGGER, "The number of generators ($(length(gen))) does not match the number of generator cost records ($(length(gencost))).")
+            end
         end
+
+        for (i, gc) in enumerate(gencost)
+            g = gen[i]
+            @assert(g["index"] == gc["index"])
+            delete!(gc, "index")
+            delete!(gc, "source_id")
+
+            _check_keys(g, keys(gc))
+            merge!(g, gc)
+        end
+
         delete!(data, "gencost")
     end
 
-    if haskey(data, "dclinecost")
-        for (i, dclinecost) in enumerate(data["dclinecost"])
-            dcline = data["dcline"][i]
-            @assert(dcline["index"] == dclinecost["index"])
-            delete!(dclinecost, "index")
-            delete!(dclinecost, "source_id")
 
-            _check_keys(dcline, keys(dclinecost))
-            merge!(dcline, dclinecost)
+    if haskey(data, "dclinecost")
+        dcline = data["dcline"]
+        dclinecost = data["dclinecost"]
+
+        if length(dcline) != length(dclinecost)
+            Memento.warn(_LOGGER, "The number of dclines ($(length(dcline))) does not match the number of dcline cost records ($(length(dclinecost))).")
+        end
+
+        for (i, dclc) in enumerate(dclinecost)
+            dcl = dcline[i]
+            @assert(dcl["index"] == dclc["index"])
+            delete!(dclc, "index")
+            delete!(dclc, "source_id")
+
+            _check_keys(dcl, keys(dclc))
+            merge!(dcl, dclc)
         end
         delete!(data, "dclinecost")
     end
