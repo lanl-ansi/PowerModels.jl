@@ -135,6 +135,27 @@ end
     end
 end
 
+@testset "test lpac tnep" begin
+    @testset "3-bus case" begin
+        data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
+        calc_thermal_limits!(data)
+        result = run_tnep(data, LPACCPowerModel, juniper_solver)
+
+        check_tnep_status(result["solution"])
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 2; atol = 1e-2)
+    end
+
+    @testset "5-bus case" begin
+        result = run_tnep("../test/data/matpower/case5_tnep.m", LPACCPowerModel, juniper_solver)
+
+        check_tnep_status(result["solution"])
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 1; atol = 1e-2)
+    end
+end
 
 @testset "test tnep branch flow output" begin
     @testset "3-bus case" begin
