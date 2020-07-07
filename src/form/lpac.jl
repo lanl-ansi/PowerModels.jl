@@ -266,9 +266,9 @@ function constraint_model_voltage_on_off(pm::AbstractLPACCModel, n::Int)
         JuMP.@constraint(pm.model, t[i] - t[j] <= td[l] + td_ub*(1-z[l]))
         relaxation_cos_on_off(pm.model, td[l], cs[l], z[l], td_max)
 
-        relaxation_variable_on_off(pm.model, td[l], z[l])
-        relaxation_variable_on_off(pm.model, phi_fr[l], z[l])
-        relaxation_variable_on_off(pm.model, phi_to[l], z[l])
+        _IM.constraint_bounds_on_off(pm.model, td[l], z[l])
+        _IM.constraint_bounds_on_off(pm.model, phi_fr[l], z[l])
+        _IM.constraint_bounds_on_off(pm.model, phi_to[l], z[l])
         _IM.relaxation_equality_on_off(pm.model, phi[i], phi_fr[l], z[l])
         _IM.relaxation_equality_on_off(pm.model, phi[j], phi_to[l], z[l])
     end
@@ -298,9 +298,9 @@ function constraint_ne_model_voltage(pm::AbstractLPACCModel, n::Int)
 
         relaxation_cos_on_off(pm.model, td_ne[l], cs_ne[l], z[l], td_max)
 
-        relaxation_variable_on_off(pm.model, phi_fr_ne[l], z[l])
-        relaxation_variable_on_off(pm.model, phi_to_ne[l], z[l])
-        relaxation_variable_on_off(pm.model, td_ne[l], z[l])
+        _IM.constraint_bounds_on_off(pm.model, phi_fr_ne[l], z[l])
+        _IM.constraint_bounds_on_off(pm.model, phi_to_ne[l], z[l])
+        _IM.constraint_bounds_on_off(pm.model, td_ne[l], z[l])
 
         _IM.relaxation_equality_on_off(pm.model, phi[i], phi_fr_ne[l], z[l])
         _IM.relaxation_equality_on_off(pm.model, phi[j], phi_to_ne[l], z[l])
