@@ -142,9 +142,3 @@ function relaxation_cos_on_off(m, x, y, z, M_x)
     JuMP.@constraint(m, y <= z - (1-cos(max_ad))/(max_ad^2)*(x^2) + (1-z)*((1-cos(max_ad))/(max_ad^2)*(M_x^2)))
 end
 
-function relaxation_variable_on_off(m, a, z)
-    a_lb, a_ub = _IM.variable_domain(a)
-    @assert (a_lb <= 0 && a_ub >= 0)
-    JuMP.@constraint(m, a <= z*a_ub)
-    JuMP.@constraint(m, a >= z*a_lb)
-end
