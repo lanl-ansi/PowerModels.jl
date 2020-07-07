@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.17.2
 - Added support for ACR formulation with storage
 - Added support for LPAC formulations of OTS and TNEP problems (#708) (thanks to @jay-dave)
 - Added `windv*`, `nomv*` and `cw` values to `import_all` on PSS/E data files (#629)
