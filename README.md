@@ -58,6 +58,7 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 - Per Aaslid (@peraaslid) SINTEF ER, Branch flow storage model and linear branch flow formulation
 - Russell Bent (@rb004f) LANL, Matpower export, TNEP problem specification
 - Jose Daniel Lara (@jd-lara) Berkeley, Julia v1.0 compatibility
+- Jay Dave (@jay-dave) KU Leuven, LPAC for TNEP and OTS problems
 - Hakan Ergun (@hakanergun) KU Leuven, HVDC lines
 - David Fobes (@pseudocubic) LANL, PSS(R)E v33 data support
 - Rory Finnegan (@rofinn) Invenia, Memento Logging
@@ -66,7 +67,6 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 - Kaarthik Sundar (@kaarthiksundar) LANL, OBBT utility
-- Jay Dave (@jay-dave) KU Leuven, LPAC for TNEP and OTS problems
 
 
 ## Citing PowerModels
