@@ -25,10 +25,8 @@ function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcuto
         j = branch["t_bus"]
 
         if ismulticondcutor
-            for c in conductor_ids
-                bp_angmin[(i,j)][c] = max(bp_angmin[(i,j)][c], branch["angmin"][c])
-                bp_angmax[(i,j)][c] = min(bp_angmax[(i,j)][c], branch["angmax"][c])
-            end
+            bp_angmin[(i,j)] = max.(-Inf, branch["angmin"])
+            bp_angmax[(i,j)] = min.( Inf, branch["angmax"])
         else
             bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
             bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
@@ -41,7 +39,6 @@ function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcuto
         "branch"=>bp_branch[(i,j)],
         "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],
-        "tap"=>branch_lookup[bp_branch[(i,j)]]["tap"],
         "vm_fr_min"=>bus_lookup[i]["vmin"],
         "vm_fr_max"=>bus_lookup[i]["vmax"],
         "vm_to_min"=>bus_lookup[j]["vmin"],
@@ -66,7 +63,7 @@ end
 
 "computes flow bounds on branches from ref data"
 function ref_calc_branch_flow_bounds(branches, buses, conductor::Int=1)
-    flow_lb = Dict() 
+    flow_lb = Dict()
     flow_ub = Dict()
 
     for (i, branch) in branches
@@ -94,7 +91,7 @@ end
 
 "computes flow bounds on switches from ref data"
 function ref_calc_switch_flow_bounds(switches, buses, conductor::Int=1)
-    flow_lb = Dict() 
+    flow_lb = Dict()
     flow_ub = Dict()
 
     for (i, switch) in switches
