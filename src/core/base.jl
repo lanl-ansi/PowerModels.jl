@@ -16,10 +16,6 @@ end
 ismulticonductor(pm::AbstractPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :conductors)
 ismulticonductor(pm::AbstractPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :conductors)
 
-""
-conductor_ids(pm::AbstractPowerModel, nw::Int) = pm.ref[:nw][nw][:conductor_ids]
-conductor_ids(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:conductor_ids]
-
 
 ""
 function run_model(file::String, model_type::Type, optimizer, build_method; kwargs...)
@@ -102,14 +98,6 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 """
 function ref_add_core!(ref::Dict{Symbol,Any})
     for (nw, nw_ref) in ref[:nw]
-        if !haskey(nw_ref, :conductor_ids)
-            if !haskey(nw_ref, :conductors)
-                nw_ref[:conductor_ids] = 1:1
-            else
-                nw_ref[:conductor_ids] = 1:nw_ref[:conductors]
-            end
-        end
-
         ### filter out inactive components ###
         nw_ref[:bus] = Dict(x for x in nw_ref[:bus] if (x.second["bus_type"] != pm_component_status_inactive["bus"]))
         nw_ref[:load] = Dict(x for x in nw_ref[:load] if (x.second["status"] != pm_component_status_inactive["load"] && x.second["load_bus"] in keys(nw_ref[:bus])))
@@ -196,7 +184,7 @@ function ref_add_core!(ref::Dict{Symbol,Any})
 
         ### aggregate info for pairs of connected buses ###
         if !haskey(nw_ref, :buspairs)
-            nw_ref[:buspairs] = calc_buspair_parameters(nw_ref[:bus], nw_ref[:branch], nw_ref[:conductor_ids], haskey(nw_ref, :conductors))
+            nw_ref[:buspairs] = calc_buspair_parameters(nw_ref[:bus], nw_ref[:branch], 1:1, haskey(nw_ref, :conductors))
         end
     end
 end

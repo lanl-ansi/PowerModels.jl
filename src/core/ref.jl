@@ -2,7 +2,7 @@
 
 
 "compute bus pair level data, can be run on data or ref data structures"
-function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcutor)
+function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcutor::Bool)
     bus_lookup = Dict(bus["index"] => bus for (i,bus) in buses if bus["bus_type"] != 4)
 
     branch_lookup = Dict(branch["index"] => branch for (i,branch) in branches if branch["br_status"] == 1 && haskey(bus_lookup, branch["f_bus"]) && haskey(bus_lookup, branch["t_bus"]))
@@ -11,22 +11,16 @@ function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcuto
 
     bp_branch = Dict((bp, typemax(Int64)) for bp in buspair_indexes)
 
-    if ismulticondcutor
-        bp_angmin = Dict((bp, [-Inf for c in conductor_ids]) for bp in buspair_indexes)
-        bp_angmax = Dict((bp, [ Inf for c in conductor_ids]) for bp in buspair_indexes)
-    else
-        @assert(length(conductor_ids) == 1)
-        bp_angmin = Dict((bp, -Inf) for bp in buspair_indexes)
-        bp_angmax = Dict((bp,  Inf) for bp in buspair_indexes)
-    end
+    bp_angmin = Dict((bp, -Inf) for bp in buspair_indexes)
+    bp_angmax = Dict((bp,  Inf) for bp in buspair_indexes)
 
     for (l,branch) in branch_lookup
         i = branch["f_bus"]
         j = branch["t_bus"]
 
         if ismulticondcutor
-            bp_angmin[(i,j)] = max.(-Inf, branch["angmin"])
-            bp_angmax[(i,j)] = min.( Inf, branch["angmax"])
+            bp_angmin[(i,j)] = max.(fill(-Inf, length(branch["angmin"])), branch["angmin"])
+            bp_angmax[(i,j)] = min.(fill( Inf, length(branch["angmax"])), branch["angmax"])
         else
             bp_angmin[(i,j)] = max(bp_angmin[(i,j)], branch["angmin"])
             bp_angmax[(i,j)] = min(bp_angmax[(i,j)], branch["angmax"])
@@ -39,6 +33,7 @@ function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcuto
         "branch"=>bp_branch[(i,j)],
         "angmin"=>bp_angmin[(i,j)],
         "angmax"=>bp_angmax[(i,j)],
+        "tap"=>get(branch_lookup[bp_branch[(i,j)]], "tap", 1.0),
         "vm_fr_min"=>bus_lookup[i]["vmin"],
         "vm_fr_max"=>bus_lookup[i]["vmax"],
         "vm_to_min"=>bus_lookup[j]["vmin"],
@@ -104,8 +99,8 @@ function ref_calc_switch_flow_bounds(switches, buses, conductor::Int=1)
         end
 
         if haskey(switch, "current_rating")
-            fr_vmax = buses[branch["f_bus"]]["vmax"][conductor]
-            to_vmax = buses[branch["t_bus"]]["vmax"][conductor]
+            fr_vmax = buses[switch["f_bus"]]["vmax"][conductor]
+            to_vmax = buses[switch["t_bus"]]["vmax"][conductor]
             m_vmax = max(fr_vmax, to_vmax)
 
             flow_lb[i] = max(flow_lb[i], -switch["current_rating"][conductor]*m_vmax)

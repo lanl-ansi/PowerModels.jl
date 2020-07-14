@@ -386,15 +386,15 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractIVRMod
         for (i,gen) in nw_ref[:gen]
             bus = gen["gen_bus"]
 
-            #to avoid function calls inside of @NLconstraint:
-            pg = [var(pm, n, :pg, i) for c in conductor_ids(pm, n)]
-            nc = length(conductor_ids(pm, n))
+            connections = get(gen, "connections", [1])
+            nc = length(connections)
+            pg = [var(pm, n, :pg, i) for c in connections]
             if length(gen["cost"]) == 1
                 gen_cost[(n,i)] = gen["cost"][1]
             elseif length(gen["cost"]) == 2
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, gen["cost"][1]*sum(pg[c] for c in 1:nc) + gen["cost"][2])
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, gen["cost"][1]*sum(pg[idx] for idx in 1:nc) + gen["cost"][2])
             elseif length(gen["cost"]) == 3
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, gen["cost"][1]*sum(pg[c] for c in 1:nc)^2 + gen["cost"][2]*sum(pg[c] for c in 1:nc) + gen["cost"][3])
+                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, gen["cost"][1]*sum(pg[idx] for idx in 1:nc)^2 + gen["cost"][2]*sum(pg[idx] for idx in 1:nc) + gen["cost"][3])
             else
                 gen_cost[(n,i)] = 0.0
             end
@@ -403,16 +403,14 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractIVRMod
         from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
         for (i,dcline) in nw_ref[:dcline]
             bus = dcline["f_bus"]
-            #to avoid function calls inside of @NLconstraint:
-            p_dc = [var(pm, n, :p_dc, from_idx[i]) for c in conductor_ids(pm, n)]
-            nc = length(conductor_ids(pm, n))
 
+            p_dc = var(pm, n, :p_dc, from_idx[i])
             if length(dcline["cost"]) == 1
                 dcline_cost[(n,i)] = dcline["cost"][1]
             elseif length(dcline["cost"]) == 2
-                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, dcline["cost"][1]*sum(p_dc[c] for c in 1:nc) + dcline["cost"][2])
+                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, dcline["cost"][1]*p_dc + dcline["cost"][2])
             elseif length(dcline["cost"]) == 3
-                dcline_cost[(n,i)]  = JuMP.@NLexpression(pm.model, dcline["cost"][1]*sum(p_dc[c] for c in 1:nc)^2 + dcline["cost"][2]*sum(p_dc[c] for c in 1:nc) + dcline["cost"][3])
+                dcline_cost[(n,i)]  = JuMP.@NLexpression(pm.model, dcline["cost"][1]*p_dc^2 + dcline["cost"][2]*p_dc + dcline["cost"][3])
             else
                 dcline_cost[(n,i)] = 0.0
             end
@@ -433,19 +431,18 @@ function objective_variable_pg_cost(pm::AbstractIVRModel; report::Bool=true)
     for (n, nw_ref) in nws(pm)
         gen_lines = calc_cost_pwl_lines(nw_ref[:gen])
 
-        #to avoid function calls inside of @NLconstraint
         pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
             [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost",
         )
         report && _IM.sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
 
-        nc = length(conductor_ids(pm, n))
-
         # gen pwl cost
         for (i, gen) in nw_ref[:gen]
-            pg = [var(pm, n, :pg, i) for c in conductor_ids(pm, n)]
+            connections = get(gen, "connections", [1])
+            nc = length(connections)
+            pg = [var(pm, n, :pg, i) for c in connections]
             for line in gen_lines[i]
-                JuMP.@NLconstraint(pm.model, pg_cost[i] >= line.slope*sum(pg[c] for c in 1:nc) + line.intercept)
+                JuMP.@NLconstraint(pm.model, pg_cost[i] >= line.slope*sum(pg[idx] for idx in 1:nc) + line.intercept)
             end
         end
     end
@@ -462,15 +459,12 @@ function objective_variable_dc_cost(pm::AbstractIVRModel; report::Bool=true)
         )
         report && _IM.sol_component_value(pm, n, :dcline, :p_dc_cost, ids(pm, n, :dcline), dc_p_cost)
 
-        #to avoid function calls inside of @NLconstraint:
-        nc = length(conductor_ids(pm, n))
         # dcline pwl cost
         for (i, dcline) in nw_ref[:dcline]
             arc = (i, dcline["f_bus"], dcline["t_bus"])
             for line in dcline_lines[i]
-                #to avoid function calls inside of @NLconstraint:
-                p_dc = [var(pm, n, :p_dc, arc) for c in conductor_ids(pm, n)]
-                JuMP.@NLconstraint(pm.model, dc_p_cost[i] >= line.slope*sum(p_dc[c] for c in 1:nc)  + line.intercept)
+                p_dc = var(pm, n, :p_dc, arc)
+                JuMP.@NLconstraint(pm.model, dc_p_cost[i] >= line.slope*p_dc  + line.intercept)
             end
         end
     end
