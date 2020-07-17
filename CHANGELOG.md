@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Improved PSSE parsers robustness to invalid CZ and CW parameters in transformers
+- Improved PSSE parser robustness to invalid `CZ`, `CW` and `CM` parameters in transformers
 
 ### v0.17.2
 - Added support for ACR formulation with storage
