@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Improved `correct_bus_types!` support for undefined bus type values
 - Improved PSSE parser robustness to invalid `CZ`, `CW` and `CM` parameters in transformers
 
 ### v0.17.2
