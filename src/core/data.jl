@@ -1672,16 +1672,36 @@ function correct_bus_types!(data::Dict{String,<:Any})
     slack_found = false
     for (i, bus) in data["bus"]
         idx = bus["index"]
-        if bus["bus_type"] == 1 && length(bus_gens[idx]) != 0 # PQ
-            Memento.warn(_LOGGER, "active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 2")
-            bus["bus_type"] = 2
-            push!(modified, bus["index"])
-        elseif (bus["bus_type"] == 2 || bus["bus_type"] == 3) && length(bus_gens[idx]) == 0 # PV
-            Memento.warn(_LOGGER, "no active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 1")
-            bus["bus_type"] = 1
-            push!(modified, bus["index"])
-        elseif bus["bus_type"] == 3 && length(bus_gens[idx]) != 0 # Slack
-             slack_found = true
+        if bus["bus_type"] == 1
+            if length(bus_gens[idx]) != 0 # PQ
+                Memento.warn(_LOGGER, "active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 2")
+                bus["bus_type"] = 2
+                push!(modified, idx)
+            end
+        elseif bus["bus_type"] == 2 # PV
+            if length(bus_gens[idx]) == 0
+                Memento.warn(_LOGGER, "no active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 1")
+                bus["bus_type"] = 1
+                push!(modified, idx)
+            end
+        elseif bus["bus_type"] == 3 # Slack
+            if length(bus_gens[idx]) != 0
+                slack_found = true
+            else
+                Memento.warn(_LOGGER, "no active generators found at bus $(bus["bus_i"]), updating to bus type from $(bus["bus_type"]) to 1")
+                bus["bus_type"] = 1
+                push!(modified, idx)
+            end
+        elseif bus["bus_type"] == 4 # inactive bus
+            # do nothing
+        else  # unknown bus type
+            new_bus_type = 1
+            if length(bus_gens[idx]) != 0
+                new_bus_type = 2
+            end
+            Memento.warn(_LOGGER, "bus $(bus["bus_i"]) has an unrecongized bus_type $(bus["bus_type"]), updating to bus_type $(new_bus_type)")
+            bus["bus_type"] = new_bus_type
+            push!(modified, idx)
         end
     end
 

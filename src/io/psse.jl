@@ -345,6 +345,22 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
         starbus_id = 10 ^ ceil(Int, log10(abs(_find_max_bus_id(pm_data)))) + 1
 
         for transformer in pti_data["TRANSFORMER"]
+
+            if !(transformer["CZ"] in [1,2,3])
+                Memento.warn(_LOGGER, "transformer CZ value outside of valid bounds assuming the default value of 1.  Given $(transformer["CZ"]), should be 1, 2 or 3")
+                transformer["CZ"] = 1
+            end
+
+            if !(transformer["CW"] in [1,2,3])
+                Memento.warn(_LOGGER, "transformer CW value outside of valid bounds assuming the default value of 1.  Given $(transformer["CW"]), should be 1, 2 or 3")
+                transformer["CW"] = 1
+            end
+
+            if !(transformer["CM"] in [1,2])
+                Memento.warn(_LOGGER, "transformer CM value outside of valid bounds assuming the default value of 1.  Given $(transformer["CM"]), should be 1 or 2")
+                transformer["CM"] = 1
+            end
+
             if transformer["K"] == 0  # Two-winding Transformers
                 sub_data = Dict{String,Any}()
 
