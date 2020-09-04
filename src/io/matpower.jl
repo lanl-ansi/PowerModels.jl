@@ -697,6 +697,13 @@ function _check_keys(data, keys)
 end
 
 
+"Export power network data to a file in the matpower format"
+function export_matpower(file::AbstractString, data::Dict{String,Any})
+    open(file, "w") do io
+        export_matpower(io, data)
+    end
+end
+
 
 "Export power network data in the matpower format"
 function export_matpower(io::IO, data::Dict{String,Any})

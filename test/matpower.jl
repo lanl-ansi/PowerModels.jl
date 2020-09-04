@@ -307,7 +307,6 @@ end
 end
 
 
-
 function test_mp_export(filename::AbstractString)
     source_data = PowerModels.parse_file(filename)
     test_mp_export(source_data)
@@ -318,6 +317,20 @@ function test_mp_export(data::Dict{String,<:Any})
     PowerModels.export_matpower(io, data)
     destination_data = PowerModels.parse_matpower(io)
     @test true
+end
+
+
+@testset "test matpower export to file" begin
+    file_case = "../test/data/matpower/case5_gap.m"
+    file_tmp = "../test/data/tmp.m"
+    case_base = PowerModels.parse_file(file_case)
+
+    export_matpower(file_tmp, case_base)
+
+    case_tmp = PowerModels.parse_file(file_tmp)
+    rm(file_tmp)
+
+    @test InfrastructureModels.compare_dict(case_base, case_tmp)
 end
 
 
