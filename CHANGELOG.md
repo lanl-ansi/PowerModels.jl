@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fixed bug in dual reporting in `constraint_power_balance_ls` (#741)
 
 ### v0.17.3
 - Added a to file variant of `export_matpower`
