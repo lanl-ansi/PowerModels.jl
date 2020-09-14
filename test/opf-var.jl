@@ -328,6 +328,49 @@ end
         end
     end
 
+
+    @testset "test mld duals" begin
+        settings = Dict("output" => Dict("duals" => true))
+
+        @testset "ac case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case5.m", ACPPowerModel, ipopt_solver, setting=settings)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 10.0; atol = 1e-2)
+            for (i, bus) in result["solution"]["bus"]
+                @test bus["lam_kcl_r"] <=  1.0
+                @test bus["lam_kcl_r"] >= -1.0
+                @test bus["lam_kcl_i"] <=  1.0
+                @test bus["lam_kcl_i"] >= -1.0
+            end
+        end
+
+        @testset "soc case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver, setting=settings)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 10.0; atol = 1e-2)
+            for (i, bus) in result["solution"]["bus"]
+                @test bus["lam_kcl_r"] <=  1.0
+                @test bus["lam_kcl_r"] >= -1.0
+                @test bus["lam_kcl_i"] <=  1.0
+                @test bus["lam_kcl_i"] >= -1.0
+            end
+        end
+
+        @testset "dc case" begin
+            result = PowerModels._run_mld("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver, setting=settings)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 10.0; atol = 1e-2)
+            for (i, bus) in result["solution"]["bus"]
+                @test bus["lam_kcl_r"] <=  1.0
+                @test bus["lam_kcl_r"] >= -1.0
+            end
+        end
+
+    end
+
 end
 
 

@@ -104,7 +104,7 @@ function constraint_power_balance_ls(pm::AbstractActivePowerModel, n::Int, i::In
     )
 
     if _IM.report_duals(pm)
-        sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
+        sol(pm, n, :bus, i)[:lam_kcl_r] = cstr
         sol(pm, n, :bus, i)[:lam_kcl_i] = NaN
     end
 end
@@ -132,6 +132,7 @@ function constraint_ne_power_balance(pm::AbstractDCPModel, n::Int, i, bus_arcs, 
 
     if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr
+        sol(pm, n, :bus, i)[:lam_kcl_i] = NaN
     end
 end
 
