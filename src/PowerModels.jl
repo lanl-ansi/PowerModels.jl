@@ -12,7 +12,7 @@ import MathOptInterface
 const _MOI = MathOptInterface
 
 import InfrastructureModels
-import InfrastructureModels: ids, ref, var, con, sol, nw_ids, nws, optimize_model!, @im_fields
+import InfrastructureModels: optimize_model!, @im_fields
 const _IM = InfrastructureModels
 
 # Create our module level logger (this will get precompiled)
@@ -46,6 +46,7 @@ include("core/data.jl")
 include("core/ref.jl")
 include("core/base.jl")
 include("core/types.jl")
+include("core/helpers.jl")
 include("core/variable.jl")
 include("core/constraint_template.jl")
 include("core/constraint.jl")

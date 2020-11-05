@@ -93,7 +93,7 @@ function variable_bus_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, bounded::Boo
         w_idx = lookup_w_index[i]
         var(pm, nw, :w)[i] = WR[w_idx,w_idx]
     end
-    report && _IM.sol_component_value(pm, nw, :bus, :w, ids(pm, nw, :bus), var(pm, nw)[:w])
+    report && _IM.sol_component_value(pm, :ep, nw, :bus, :w, ids(pm, nw, :bus), var(pm, nw)[:w])
 
     var(pm, nw)[:wr] = Dict{Tuple{Int,Int},Any}()
     var(pm, nw)[:wi] = Dict{Tuple{Int,Int},Any}()

@@ -214,32 +214,34 @@ end
 
 ""
 function ref_add_sm!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
-    if _IM.ismultinetwork(data)
-        nws_data = data["nw"]
+    data_it = _IM.ismultiinfrastructure(data) ? data["it"]["ep"] : data
+
+    if _IM.ismultinetwork(data_it)
+        nws_data = data_it["nw"]
     else
-        nws_data = Dict("0" => data)
+        nws_data = Dict("0" => data_it)
     end
 
     for (n, nw_data) in nws_data
         nw_id = parse(Int, n)
-        nw_ref = ref[:nw][nw_id]
-
+        nw_ref = ref[:it][:ep][:nw][nw_id]
         nw_ref[:sm] = calc_susceptance_matrix(nw_data)
     end
 end
 
 ""
 function ref_add_sm_inv!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
-    if _IM.ismultinetwork(data)
-        nws_data = data["nw"]
+    data_it = _IM.ismultiinfrastructure(data) ? data["it"]["ep"] : data
+
+    if _IM.ismultinetwork(data_it)
+        nws_data = data_it["nw"]
     else
-        nws_data = Dict("0" => data)
+        nws_data = Dict("0" => data_it)
     end
 
     for (n, nw_data) in nws_data
         nw_id = parse(Int, n)
-        nw_ref = ref[:nw][nw_id]
-
+        nw_ref = ref[:it][:ep][:nw][nw_id]
         nw_ref[:sm] = calc_susceptance_matrix_inv(nw_data)
     end
 end

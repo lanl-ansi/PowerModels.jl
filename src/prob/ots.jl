@@ -47,15 +47,17 @@ end
 
 ""
 function ref_add_on_off_va_bounds!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
-    if _IM.ismultinetwork(data)
+    data_it = _IM.ismultiinfrastructure(data) ? data["it"]["ep"] : data
+
+    if _IM.ismultinetwork(data_it)
         nws_data = data["nw"]
     else
-        nws_data = Dict("0" => data)
+        nws_data = Dict("0" => data_it)
     end
 
     for (n, nw_data) in nws_data
         nw_id = parse(Int, n)
-        nw_ref = ref[:nw][nw_id]
+        nw_ref = ref[:it][:ep][:nw][nw_id]
 
         off_angmin, off_angmax = calc_theta_delta_bounds(nw_data)
         nw_ref[:off_angmin] = off_angmin

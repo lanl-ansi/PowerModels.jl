@@ -278,10 +278,10 @@ end
 
 ""
 function sol_data_model!(pm::AbstractACRModel, solution::Dict)
-    if haskey(solution, "nw")
-        nws_data = solution["nw"]
+    if haskey(solution["it"]["ep"], "nw")
+        nws_data = solution["it"]["ep"]["nw"]
     else
-        nws_data = Dict("0" => solution)
+        nws_data = Dict("0" => solution["it"]["ep"])
     end
 
     for (n, nw_data) in nws_data

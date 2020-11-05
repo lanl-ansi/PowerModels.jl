@@ -69,7 +69,7 @@ end
 
 ""
 function ref_add_ne_branch!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
-    for (nw, nw_ref) in ref[:nw]
+    for (nw, nw_ref) in ref[:it][:ep][:nw]
         if !haskey(nw_ref, :ne_branch)
             error(_LOGGER, "required ne_branch data not found")
         end

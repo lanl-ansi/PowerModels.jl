@@ -1,8 +1,11 @@
 using PowerModels
 import InfrastructureModels
+import Logging
 import Memento
 
 # Suppress warnings during testing.
+Logging.disable_logging(Logging.Info)
+Logging.disable_logging(Logging.Warn)
 Memento.setlevel!(Memento.getlogger(InfrastructureModels), "error")
 PowerModels.logger_config!("error")
 
@@ -71,4 +74,5 @@ include("common.jl")
     include("warmstart.jl")
 
     include("docs.jl")
+
 end
