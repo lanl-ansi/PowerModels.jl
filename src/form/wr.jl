@@ -294,7 +294,7 @@ function variable_ne_branch_voltage_magnitude_fr_sqr(pm::AbstractWRModel; nw::In
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["f_bus"]), "w_fr_start", 1.001)
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :ne_branch, :w_fr, ids(pm, nw, :ne_branch), w_fr_ne)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :ne_branch, :w_fr, ids(pm, nw, :ne_branch), w_fr_ne)
 end
 
 ""
@@ -309,7 +309,7 @@ function variable_ne_branch_voltage_magnitude_to_sqr(pm::AbstractWRModel; nw::In
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["t_bus"]), "w_to_start", 1.001)
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :ne_branch, :w_to, ids(pm, nw, :ne_branch), w_to_ne)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :ne_branch, :w_to, ids(pm, nw, :ne_branch), w_to_ne)
 end
 
 ""
@@ -331,8 +331,8 @@ function variable_ne_branch_voltage_product(pm::AbstractWRModel; nw::Int=pm.cnw,
         start = comp_start_value(ref(pm, nw, :ne_buspairs, bi_bp[b]), "wi_start")
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :ne_branch, :wr, ids(pm, nw, :ne_branch), wr_ne)
-    report && _IM.sol_component_value(pm, :ep, nw, :ne_branch, :wi, ids(pm, nw, :ne_branch), wi_ne)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :ne_branch, :wr, ids(pm, nw, :ne_branch), wr_ne)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :ne_branch, :wi, ids(pm, nw, :ne_branch), wi_ne)
 end
 
 
@@ -546,7 +546,7 @@ function variable_branch_voltage_product_angle_on_off(pm::AbstractPowerModel; nw
         start = comp_start_value(ref(pm, nw, :branch, l), "td_start")
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :branch, :td, ids(pm, nw, :branch), td)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :branch, :td, ids(pm, nw, :branch), td)
 end
 
 ""
@@ -564,7 +564,7 @@ function variable_buspair_voltage_product_magnitude_on_off(pm::AbstractPowerMode
         start = comp_start_value(ref(pm, nw, :branch, l), "vv_start", 1.0)
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :branch, :vv, ids(pm, nw, :branch), vv)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :branch, :vv, ids(pm, nw, :branch), vv)
 end
 
 
@@ -597,7 +597,7 @@ function variable_branch_cosine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, r
         start = comp_start_value(ref(pm, nw, :branch, l), "cs_start", 1.0)
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :branch, :cs, ids(pm, nw, :branch), cs)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :branch, :cs, ids(pm, nw, :branch), cs)
 end
 
 ""
@@ -609,7 +609,7 @@ function variable_branch_sine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, rep
         start = comp_start_value(ref(pm, nw, :branch, l), "si_start")
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :branch, :si, ids(pm, nw, :branch), si)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :branch, :si, ids(pm, nw, :branch), si)
 end
 
 
@@ -631,7 +631,7 @@ function variable_branch_current_magnitude_sqr_on_off(pm::AbstractPowerModel; nw
         start = comp_start_value(ref(pm, nw, :branch, l), "ccm_start")
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :branch, :ccm, ids(pm, nw, :branch), ccm)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :branch, :ccm, ids(pm, nw, :branch), ccm)
 end
 
 

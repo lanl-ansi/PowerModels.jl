@@ -34,8 +34,8 @@ function variable_shunt_admittance_factor(pm::AbstractWConvexModels; nw::Int=pm.
         start = comp_start_value(ref(pm, nw, :shunt, i), "wz_shunt_start", 1.001)
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :shunt, :status, ids(pm, nw, :shunt), z_shunt)
-    report && _IM.sol_component_value(pm, :ep, nw, :shunt, :wz_shunt, ids(pm, nw, :shunt), wz_shunt)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :shunt, :status, ids(pm, nw, :shunt), z_shunt)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :shunt, :wz_shunt, ids(pm, nw, :shunt), wz_shunt)
 end
 
 
@@ -62,7 +62,7 @@ function variable_storage_current(pm::AbstractWConvexModels; nw::Int=pm.cnw, bou
         end
     end
 
-    report && _IM.sol_component_value(pm, :ep, nw, :storage, :ccms, ids(pm, nw, :storage), ccms)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :storage, :ccms, ids(pm, nw, :storage), ccms)
 end
 
 

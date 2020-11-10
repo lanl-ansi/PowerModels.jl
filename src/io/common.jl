@@ -40,35 +40,36 @@ function correct_network_data!(data::Dict{String,<:Any})
     mod_branch = Dict{Symbol,Set{Int}}()
     mod_dcline = Dict{Symbol,Set{Int}}()
 
-    _IM.modify_data_with_function!(data, "ep", check_conductors; apply_to_nws = false)
-    _IM.modify_data_with_function!(data, "ep", check_connectivity; apply_to_nws = false)
-    _IM.modify_data_with_function!(data, "ep", check_status; apply_to_nws = false)
-    _IM.modify_data_with_function!(data, "ep", check_reference_bus; apply_to_nws = false)
-    _IM.modify_data_with_function!(data, "ep", make_per_unit!; apply_to_nws = false)
+    check_conductors(data)
+    check_connectivity(data)
+    check_status(data)
+    check_reference_bus(data)
+    make_per_unit!(data)
 
-    mod_branch[:xfer_fix] = _IM.modify_data_with_function!(data, "ep", correct_transformer_parameters!; apply_to_nws = false)
-    mod_branch[:vad_bounds] = _IM.modify_data_with_function!(data, "ep", correct_voltage_angle_differences!; apply_to_nws = false)
-    mod_branch[:mva_zero] = _IM.modify_data_with_function!(data, "ep", correct_thermal_limits!; apply_to_nws = false)
-    mod_branch[:ma_zero] = _IM.modify_data_with_function!(data, "ep", correct_current_limits!; apply_to_nws = false)
-    mod_branch[:orientation] = _IM.modify_data_with_function!(data, "ep", correct_branch_directions!; apply_to_nws = false)
+    mod_branch[:xfer_fix] = correct_transformer_parameters!(data)
+    mod_branch[:vad_bounds] = correct_voltage_angle_differences!(data)
+    mod_branch[:mva_zero] = correct_thermal_limits!(data)
+    mod_branch[:ma_zero] = correct_current_limits!(data)
+    mod_branch[:orientation] = correct_branch_directions!(data)
 
-    _IM.modify_data_with_function!(data, "ep", check_branch_loops)
+    check_branch_loops(data)
+    correct_dcline_limits!(data)
 
-    mod_dcline[:losses] = _IM.modify_data_with_function!(data, "ep", correct_dcline_limits!; apply_to_nws = false)
+    data_ep = _IM.ismultiinfrastructure(data) ? data["it"][_pm_it_name] : data
 
-    if length(data["gen"]) > 0 && any(gen["gen_status"] != 0 for (i,gen) in data["gen"])
-        mod_bus[:type] = _IM.modify_data_with_function!(data, "ep", correct_bus_types!; apply_to_nws = false)
+    if length(data_ep["gen"]) > 0 && any(gen["gen_status"] != 0 for (i, gen) in data_ep["gen"])
+        mod_bus[:type] = correct_bus_types!(data)
     end
 
-    _IM.modify_data_with_function!(data, "ep", check_voltage_setpoints)
-    _IM.modify_data_with_function!(data, "ep", check_storage_parameters)
-    _IM.modify_data_with_function!(data, "ep", check_switch_parameters)
+    check_voltage_setpoints(data)
+    check_storage_parameters(data)
+    check_switch_parameters(data)
 
-    gen, dcline = _IM.modify_data_with_function!(data, "ep", correct_cost_functions!; apply_to_nws = false)
+    gen, dcline = correct_cost_functions!(data)
     mod_gen[:cost_pwl] = gen
     mod_dcline[:cost_pwl] = dcline
 
-    _IM.modify_data_with_function!(data, "ep", simplify_cost_terms!)
+    simplify_cost_terms!(data)
 
     return Dict(
         "bus" => mod_bus,

@@ -21,7 +21,7 @@ function variable_bus_voltage_magnitude(pm::AbstractLPACModel; nw::Int=pm.cnw, b
         end
     end
 
-    report && _IM.sol_component_value(pm, :ep, nw, :bus, :phi, ids(pm, nw, :bus), phi)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :bus, :phi, ids(pm, nw, :bus), phi)
 end
 
 
@@ -176,7 +176,7 @@ function variable_ne_branch_voltage_magnitude_fr(pm::AbstractLPACModel; nw::Int=
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["f_bus"]), "phi_fr_start")
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :ne_branch, :phi_fr, ids(pm, nw, :ne_branch), phi_fr_ne)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :ne_branch, :phi_fr, ids(pm, nw, :ne_branch), phi_fr_ne)
 end
 
 ""
@@ -192,7 +192,7 @@ function variable_ne_branch_voltage_magnitude_to(pm::AbstractLPACModel; nw::Int=
     )
 
 
-    report && _IM.sol_component_value(pm, :ep, nw, :ne_branch, :phi_to, ids(pm, nw, :ne_branch), phi_to_ne)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :ne_branch, :phi_to, ids(pm, nw, :ne_branch), phi_to_ne)
 end
 
 ""
@@ -224,7 +224,7 @@ function variable_ne_branch_cosine(pm::AbstractLPACCModel; nw::Int=pm.cnw, repor
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "cs_start", 1.0)
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :ne_branch, :cs_ne, ids(pm, nw, :ne_branch), cs_ne)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :ne_branch, :cs_ne, ids(pm, nw, :ne_branch), cs_ne)
 end
 
 ""
@@ -238,7 +238,7 @@ function variable_ne_branch_voltage_product_angle(pm::AbstractLPACCModel; nw::In
         start = comp_start_value(ref(pm, nw, :ne_buspairs, bi_bp[b]), "td_start")
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :ne_branch, :td_ne, ids(pm, nw, :ne_branch), td_ne)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :ne_branch, :td_ne, ids(pm, nw, :ne_branch), td_ne)
 end
 
 ""
@@ -402,7 +402,7 @@ function variable_branch_voltage_magnitude_fr_on_off(pm::AbstractLPACCModel; nw:
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["f_bus"]), "phi_fr_start")
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :branch, :phi_fr, ids(pm, nw, :branch), phi_fr)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :branch, :phi_fr, ids(pm, nw, :branch), phi_fr)
 end
 
 ""
@@ -417,7 +417,7 @@ function variable_branch_voltage_magnitude_to_on_off(pm::AbstractLPACCModel; nw:
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["t_bus"]), "phi_to_start")
     )
 
-    report && _IM.sol_component_value(pm, :ep, nw, :branch, :phi_to, ids(pm, nw, :branch), phi_to)
+    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :branch, :phi_to, ids(pm, nw, :branch), phi_to)
 end
 
 

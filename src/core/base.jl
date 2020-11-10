@@ -13,12 +13,12 @@ end
 
 
 ""
-ismulticonductor(pm::AbstractPowerModel, nw::Int) = haskey(pm.ref[:it][:ep][:nw][nw], :conductors)
-ismulticonductor(pm::AbstractPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:it][:ep][:nw][nw], :conductors)
+ismulticonductor(pm::AbstractPowerModel, nw::Int) = haskey(pm.ref[:it][_pm_it_sym][:nw][nw], :conductors)
+ismulticonductor(pm::AbstractPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:it][_pm_it_sym][:nw][nw], :conductors)
 
 ""
-conductor_ids(pm::AbstractPowerModel, nw::Int) = pm.ref[:it][:ep][:nw][nw][:conductor_ids]
-conductor_ids(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.ref[:it][:ep][:nw][nw][:conductor_ids]
+conductor_ids(pm::AbstractPowerModel, nw::Int) = pm.ref[:it][_pm_it_sym][:nw][nw][:conductor_ids]
+conductor_ids(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.ref[:it][_pm_it_sym][:nw][nw][:conductor_ids]
 
 
 ""
@@ -61,7 +61,7 @@ end
 
 ""
 function instantiate_model(data::Dict{String,<:Any}, model_type::Type, build_method; kwargs...)
-    return _IM.instantiate_model(data, model_type, build_method, ref_add_core!, _pm_global_keys; default_it = :ep, kwargs...)
+    return _IM.instantiate_model(data, model_type, build_method, ref_add_core!, _pm_global_keys; default_it = _pm_it_sym, kwargs...)
 end
 
 
@@ -101,7 +101,7 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 * `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`.
 """
 function ref_add_core!(ref::Dict{Symbol,Any})
-    for (nw, nw_ref) in ref[:it][:ep][:nw]
+    for (nw, nw_ref) in ref[:it][_pm_it_sym][:nw]
         if !haskey(nw_ref, :conductor_ids)
             if !haskey(nw_ref, :conductors)
                 nw_ref[:conductor_ids] = 1:1

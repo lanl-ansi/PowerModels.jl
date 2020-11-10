@@ -11,7 +11,7 @@ end
 
 ""
 function variable_bus_voltage_magnitude(pm::AbstractDCPModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
-    report && _IM.sol_component_fixed(pm, :ep, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
+    report && _IM.sol_component_fixed(pm, _pm_it_sym, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
 end
 
 ""
@@ -250,7 +250,7 @@ function variable_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=pm.cnw
     p_expr = merge(p_expr, Dict( ((l,j,i), -1.0*p[(l,i,j)]) for (l,i,j) in ref(pm, nw, :arcs_from)))
     var(pm, nw)[:p] = p_expr
 
-    report && _IM.sol_component_value_edge(pm, :ep, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p_expr)
+    report && _IM.sol_component_value_edge(pm, _pm_it_sym, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p_expr)
 end
 
 ""
@@ -273,7 +273,7 @@ function variable_ne_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=pm.
     p_ne_expr = merge(p_ne_expr, Dict(((l,j,i), -1.0*var(pm, nw, :p_ne, (l,i,j))) for (l,i,j) in ref(pm, nw, :ne_arcs_from)))
     var(pm, nw)[:p_ne] = p_ne_expr
 
-    report && _IM.sol_component_value_edge(pm, :ep, nw, :ne_branch, :p_ne_fr, :p_ne_to, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne_expr)
+    report && _IM.sol_component_value_edge(pm, _pm_it_sym, nw, :ne_branch, :p_ne_fr, :p_ne_to, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne_expr)
 end
 
 ""
