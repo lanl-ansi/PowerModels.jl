@@ -1,6 +1,6 @@
-
 function _IM.solution_preprocessor(pm::AbstractPowerModel, solution::Dict)
-    solution["it"]["ep"]["per_unit"] = pm.data["per_unit"]
+    per_unit = _IM.get_data_with_function(pm.data, "ep", x -> x["per_unit"])
+    solution["it"]["ep"]["per_unit"] = per_unit
 
     for (nw_id, nw_ref) in nws(pm)
         solution["it"]["ep"]["nw"]["$(nw_id)"]["baseMVA"] = nw_ref[:baseMVA]
