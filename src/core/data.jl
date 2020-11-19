@@ -2251,16 +2251,17 @@ end
 
 
 """
-propages inactive active network buses status to attached components so that
+propagates inactive active network buses status to attached components so that
 the system status values are consistent.
 
 returns true if any component was modified.
 """
-function propagate_topology_status!(data::Dict{String,<:Any})
+function propagate_topology_status!(data_all::Dict{String, <:Any})
     revised = false
+    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][_pm_it_name] : data_all
 
     if _IM.ismultinetwork(data)
-        for (i,nw_data) in data["nw"]
+        for (i, nw_data) in data["nw"]
             revised |= _propagate_topology_status!(nw_data)
         end
     else
@@ -2408,8 +2409,9 @@ or loads.
 
 also deactivates 0 valued loads and shunts.
 """
-function deactivate_isolated_components!(data::Dict{String,<:Any})
+function deactivate_isolated_components!(data_all::Dict{String, <:Any})
     revised = false
+    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][_pm_it_name] : data_all
 
     if _IM.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
@@ -2613,7 +2615,9 @@ end
 """
 determines the largest connected component of the network and turns everything else off
 """
-function select_largest_component!(data::Dict{String,<:Any})
+function select_largest_component!(data_all::Dict{String, <:Any})
+    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][_pm_it_name] : data_all
+
     if _IM.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
             _select_largest_component!(nw_data)
