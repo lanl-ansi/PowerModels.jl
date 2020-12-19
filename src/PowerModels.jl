@@ -88,4 +88,20 @@ include("util/flow_limit_cuts.jl")
 # this must come last to support automated export
 include("core/export.jl")
 
+# deprecate section
+@deprecate run_nfa_opb(file, optimizer; kwargs...) solve_nfa_opb(file, optimizer; kwargs...)
+@deprecate run_opb(file, model_type::Type, optimizer; kwargs...) solve_opb(file, model_type::Type, optimizer; kwargs...)
+@deprecate run_opf_bf(file, model_type::Type{T}, optimizer; kwargs...) where T <: AbstractBFModel solve_opf_bf(file, model_type::Type{T}, optimizer; kwargs...) where T <: AbstractBFModel
+@deprecate run_mn_opf_bf(file, model_type::Type, optimizer; kwargs...) solve_mn_opf_bf(file, model_type::Type, optimizer; kwargs...) 
+@deprecate run_opf_iv(file, model_constructor, optimizer; kwargs...) solve_opf_iv(file, model_constructor, optimizer; kwargs...)
+@deprecate run_ac_opf(file, optimizer; kwargs...) solve_ac_opf(file, optimizer; kwargs...)
+@deprecate run_dc_opf(file, optimizer; kwargs...) solve_dc_opf(file, optimizer; kwargs...)
+@deprecate run_opf(file, model_type::Type, optimizer; kwargs...) solve_opf(file, model_type::Type, optimizer; kwargs...)
+@deprecate run_mn_opf(file, model_type::Type, optimizer; kwargs...) solve_mn_opf(file, model_type::Type, optimizer; kwargs...)
+@deprecate run_mn_opf_strg(file, model_type::Type, optimizer; kwargs...) solve_mn_opf_strg(file, model_type::Type, optimizer; kwargs...)
+@deprecate run_opf_ptdf(file, model_type::Type, optimizer; full_inverse=false, kwargs...) solve_opf_ptdf(file, model_type::Type, optimizer; full_inverse=false, kwargs...)
+@deprecate run_pf_bf(file, model_type::Type, optimizer; kwargs...) solve_pf_bf(file, model_type::Type, optimizer; kwargs...)
+@deprecate run_pf_iv(file, model_constructor, optimizer; kwargs...) solve_pf_iv(file, model_constructor, optimizer; kwargs...)
+@deprecate run_tnep(file, model_type::Type, optimizer; kwargs...) solve_tnep(file, model_type::Type, optimizer; kwargs...)
+
 end

@@ -22,13 +22,13 @@ conductor_ids(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:conduct
 
 
 ""
-function run_model(file::String, model_type::Type, optimizer, build_method; kwargs...)
+function solve_model(file::String, model_type::Type, optimizer, build_method; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_model(data, model_type, optimizer, build_method; kwargs...)
+    return solve_model(data, model_type, optimizer, build_method; kwargs...)
 end
 
 ""
-function run_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method; ref_extensions=[], solution_processors=[], multinetwork=false, multiconductor=false, kwargs...)
+function solve_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method; ref_extensions=[], solution_processors=[], multinetwork=false, multiconductor=false, kwargs...)
     if multinetwork != _IM.ismultinetwork(data)
         model_requirement = multinetwork ? "multi-network" : "single-network"
         data_type = _IM.ismultinetwork(data) ? "multi-network" : "single-network"

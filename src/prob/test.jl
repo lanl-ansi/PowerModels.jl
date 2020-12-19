@@ -7,8 +7,8 @@
 
 
 "opf using current limits instead of thermal limits, tests constraint_current_limit"
-function _run_opf_cl(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, _build_opf_cl; kwargs...)
+function _solve_opf_cl(file, model_type::Type, optimizer; kwargs...)
+    return solve_model(file, model_type, optimizer, _build_opf_cl; kwargs...)
 end
 
 ""
@@ -46,8 +46,8 @@ end
 
 
 "opf with fixed switches"
-function _run_opf_sw(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _build_opf_sw; kwargs...)
+function _solve_opf_sw(file, model_constructor, optimizer; kwargs...)
+    return solve_model(file, model_constructor, optimizer, _build_opf_sw; kwargs...)
 end
 
 ""
@@ -92,8 +92,8 @@ end
 
 
 "opf with controlable switches"
-function _run_oswpf(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _build_oswpf; ref_extensions=[ref_add_on_off_va_bounds!], kwargs...)
+function _solve_oswpf(file, model_constructor, optimizer; kwargs...)
+    return solve_model(file, model_constructor, optimizer, _build_oswpf; ref_extensions=[ref_add_on_off_va_bounds!], kwargs...)
 end
 
 ""
@@ -141,8 +141,8 @@ end
 
 
 "opf with controlable switches, node breaker"
-function _run_oswpf_nb(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, _build_oswpf_nb; ref_extensions=[ref_add_on_off_va_bounds!], kwargs...)
+function _solve_oswpf_nb(file, model_constructor, optimizer; kwargs...)
+    return solve_model(file, model_constructor, optimizer, _build_oswpf_nb; ref_extensions=[ref_add_on_off_va_bounds!], kwargs...)
 end
 
 ""
@@ -221,8 +221,8 @@ end
 
 
 # a simple maximum loadability problem
-function _run_mld(file, model_constructor, solver; kwargs...)
-    return run_model(file, model_constructor, solver, _build_mld; kwargs...)
+function _solve_mld(file, model_constructor, solver; kwargs...)
+    return solve_model(file, model_constructor, solver, _build_mld; kwargs...)
 end
 
 function _build_mld(pm::AbstractPowerModel)
@@ -263,8 +263,8 @@ end
 
 
 "opf with unit commitment, tests constraint_current_limit"
-function _run_ucopf(file, model_type::Type, solver; kwargs...)
-    return run_model(file, model_type, solver, _build_ucopf; kwargs...)
+function _solve_ucopf(file, model_type::Type, solver; kwargs...)
+    return solve_model(file, model_type, solver, _build_ucopf; kwargs...)
 end
 
 ""
@@ -324,8 +324,8 @@ end
 
 
 ""
-function _run_mn_opb(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, _build_mn_opb; ref_extensions=[ref_add_connected_components!], multinetwork=true, kwargs...)
+function _solve_mn_opb(file, model_type::Type, optimizer; kwargs...)
+    return solve_model(file, model_type, optimizer, _build_mn_opb; ref_extensions=[ref_add_connected_components!], multinetwork=true, kwargs...)
 end
 
 ""
@@ -343,8 +343,8 @@ end
 
 
 ""
-function _run_mn_pf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, _build_mn_pf; multinetwork=true, kwargs...)
+function _solve_mn_pf(file, model_type::Type, optimizer; kwargs...)
+    return solve_model(file, model_type, optimizer, _build_mn_pf; multinetwork=true, kwargs...)
 end
 
 ""
@@ -399,8 +399,8 @@ end
 
 
 "opf with storage"
-function _run_opf_strg(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, _build_opf_strg; kwargs...)
+function _solve_opf_strg(file, model_type::Type, optimizer; kwargs...)
+    return solve_model(file, model_type, optimizer, _build_opf_strg; kwargs...)
 end
 
 ""
@@ -447,8 +447,8 @@ end
 
 
 "opf with mi storage variables"
-function _run_opf_strg_mi(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, _build_opf_strg_mi; kwargs...)
+function _solve_opf_strg_mi(file, model_type::Type, optimizer; kwargs...)
+    return solve_model(file, model_type, optimizer, _build_opf_strg_mi; kwargs...)
 end
 
 ""
@@ -495,8 +495,8 @@ end
 
 
 "opf with tap magnitude and angle as optimization variables"
-function _run_opf_oltc_pst(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, _build_opf_oltc_pst; kwargs...)
+function _solve_opf_oltc_pst(file, model_type::Type, optimizer; kwargs...)
+    return solve_model(file, model_type, optimizer, _build_opf_oltc_pst; kwargs...)
 end
 
 ""

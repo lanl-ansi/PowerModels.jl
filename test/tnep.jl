@@ -11,7 +11,7 @@ end
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
         calc_thermal_limits!(data)
-        result = run_tnep(data, ACPPowerModel, juniper_solver)
+        result = solve_tnep(data, ACPPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -20,7 +20,7 @@ end
     end
 
     @testset "5-bus case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", ACPPowerModel, juniper_solver)
+        result = solve_tnep("../test/data/matpower/case5_tnep.m", ACPPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -34,7 +34,7 @@ end
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
         calc_thermal_limits!(data)
-        result = run_tnep(data, SOCWRPowerModel, juniper_solver)
+        result = solve_tnep(data, SOCWRPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -43,7 +43,7 @@ end
     end
 
     @testset "5-bus rts case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", SOCWRPowerModel, juniper_solver)
+        result = solve_tnep("../test/data/matpower/case5_tnep.m", SOCWRPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -57,7 +57,7 @@ end
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
         calc_thermal_limits!(data)
-        result = run_tnep(data, QCRMPowerModel, juniper_solver)
+        result = solve_tnep(data, QCRMPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -66,7 +66,7 @@ end
     end
 
     @testset "5-bus rts case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", QCRMPowerModel, juniper_solver)
+        result = solve_tnep("../test/data/matpower/case5_tnep.m", QCRMPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -80,7 +80,7 @@ end
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
         calc_thermal_limits!(data)
-        result = run_tnep(data, DCPPowerModel, juniper_solver)
+        result = solve_tnep(data, DCPPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -89,7 +89,7 @@ end
     end
 
     @testset "5-bus case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", DCPPowerModel, juniper_solver)
+        result = solve_tnep("../test/data/matpower/case5_tnep.m", DCPPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -101,7 +101,7 @@ end
 
 @testset "test matpower dc tnep" begin
     @testset "5-bus case with matpower DCMP model and TNEP" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", DCMPPowerModel, juniper_solver)
+        result = solve_tnep("../test/data/matpower/case5_tnep.m", DCMPPowerModel, juniper_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["solution"]["ne_branch"]["1"]["built"], 1.0; atol = 1e-5)
@@ -116,7 +116,7 @@ end
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
         calc_thermal_limits!(data)
-        result = run_tnep(data, DCPLLPowerModel, juniper_solver)
+        result = solve_tnep(data, DCPLLPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -126,7 +126,7 @@ end
     =#
 
     @testset "5-bus case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", DCPLLPowerModel, juniper_solver)
+        result = solve_tnep("../test/data/matpower/case5_tnep.m", DCPLLPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -139,7 +139,7 @@ end
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
         calc_thermal_limits!(data)
-        result = run_tnep(data, LPACCPowerModel, juniper_solver)
+        result = solve_tnep(data, LPACCPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -148,7 +148,7 @@ end
     end
 
     @testset "5-bus case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", LPACCPowerModel, juniper_solver)
+        result = solve_tnep("../test/data/matpower/case5_tnep.m", LPACCPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 
@@ -161,7 +161,7 @@ end
     @testset "3-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
         calc_thermal_limits!(data)
-        result = run_tnep(data, SOCWRPowerModel, juniper_solver)
+        result = solve_tnep(data, SOCWRPowerModel, juniper_solver)
 
         check_tnep_status(result["solution"])
 

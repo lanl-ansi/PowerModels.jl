@@ -2,7 +2,7 @@
     # degenerate due to no slack bus
     # @testset "3-bus case" begin
     #     data = PowerModels.parse_file("../test/data/matpower/case3.m")
-    #     result = run_dc_pf(data, ipopt_solver)
+    #     result = solve_dc_pf(data, ipopt_solver)
     #     native = compute_dc_pf(data)
 
     #     for (i,bus) in data["bus"]
@@ -13,7 +13,7 @@
     # end
     @testset "5-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
-        result = run_dc_pf(data, ipopt_solver)
+        result = solve_dc_pf(data, ipopt_solver)
         native = compute_dc_pf(data)
 
         for (i,bus) in data["bus"]
@@ -24,7 +24,7 @@
     end
     @testset "5-bus asymmetric case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_asym.m")
-        result = run_dc_pf(data, ipopt_solver)
+        result = solve_dc_pf(data, ipopt_solver)
         native = compute_dc_pf(data)
 
         for (i,bus) in data["bus"]
@@ -36,7 +36,7 @@
     # compute_dc_pf does not yet support multiple slack buses
     # @testset "6-bus case" begin
     #     data = PowerModels.parse_file("../test/data/matpower/case6.m")
-    #     result = run_dc_pf(data, ipopt_solver)
+    #     result = solve_dc_pf(data, ipopt_solver)
     #     native = compute_dc_pf(data)
 
     #     for (i,bus) in data["bus"]
@@ -47,7 +47,7 @@
     # end
     @testset "24-bus rts case" begin
         data = PowerModels.parse_file("../test/data/matpower/case24.m")
-        result = run_dc_pf(data, ipopt_solver)
+        result = solve_dc_pf(data, ipopt_solver)
         native = compute_dc_pf(data)
 
         for (i,bus) in data["bus"]
@@ -63,7 +63,7 @@ end
     # requires dc line support in ac solver
     # @testset "3-bus case" begin
     #     data = PowerModels.parse_file("../test/data/matpower/case3.m")
-    #     result = run_dc_pf(data, ipopt_solver)
+    #     result = solve_dc_pf(data, ipopt_solver)
     #     native = compute_dc_pf(data)
 
     #     @test result["termination_status"] == LOCALLY_SOLVED
@@ -84,7 +84,7 @@ end
     # end
     @testset "5-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
-        result = run_ac_pf(data, ipopt_solver)
+        result = solve_ac_pf(data, ipopt_solver)
         native = compute_ac_pf(data)
 
         @test result["termination_status"] == LOCALLY_SOLVED
@@ -106,7 +106,7 @@ end
     end
     @testset "5-bus asymmetric case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_asym.m")
-        result = run_ac_pf(data, ipopt_solver)
+        result = solve_ac_pf(data, ipopt_solver)
         native = compute_ac_pf(data)
 
         @test result["termination_status"] == LOCALLY_SOLVED
@@ -129,7 +129,7 @@ end
     # compute_ac_pf does not yet support multiple slack buses
     # @testset "6-bus case" begin
     #     data = PowerModels.parse_file("../test/data/matpower/case6.m")
-    #     result = run_ac_pf(data, ipopt_solver)
+    #     result = solve_ac_pf(data, ipopt_solver)
     #     native = compute_ac_pf(data)
 
     #     @test result["termination_status"] == LOCALLY_SOLVED
@@ -150,7 +150,7 @@ end
     # end
     @testset "14-bus case, vm fixed non-1.0 value" begin
         data = PowerModels.parse_file("../test/data/matpower/case14.m")
-        result = run_ac_pf(data, ipopt_solver)
+        result = solve_ac_pf(data, ipopt_solver)
         native = compute_ac_pf(data)
 
         @test result["termination_status"] == LOCALLY_SOLVED
@@ -172,7 +172,7 @@ end
     end
     @testset "24-bus rts case" begin
         data = PowerModels.parse_file("../test/data/matpower/case24.m")
-        result = run_ac_pf(data, ipopt_solver)
+        result = solve_ac_pf(data, ipopt_solver)
         native = compute_ac_pf(data)
 
         @test result["termination_status"] == LOCALLY_SOLVED
@@ -303,15 +303,15 @@ end
         # TODO extract number of iterations and test there is a reduction
         # Ipopt log can be used for manual verification, for now
         data = PowerModels.parse_file("../test/data/matpower/case24.m")
-        result = run_ac_pf(data, ipopt_solver)
-        #result = run_ac_pf(data, JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6))
+        result = solve_ac_pf(data, ipopt_solver)
+        #result = solve_ac_pf(data, JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6))
         @test result["termination_status"] == LOCALLY_SOLVED
 
         update_data!(data, result["solution"])
         set_ac_pf_start_values!(data)
 
-        result_ws = run_ac_pf(data, ipopt_solver)
-        #result_ws = run_ac_pf(data, JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6))
+        result_ws = solve_ac_pf(data, ipopt_solver)
+        #result_ws = solve_ac_pf(data, JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6))
         @test result_ws["termination_status"] == LOCALLY_SOLVED
 
         bus_pg_ini = bus_gen_values(data, result["solution"], "pg")
@@ -364,7 +364,7 @@ end
 @testset "test native ac pf solver options" begin
     @testset "5-bus case, finite_differencing" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
-        result = run_ac_pf(data, ipopt_solver)
+        result = solve_ac_pf(data, ipopt_solver)
         native = compute_ac_pf("../test/data/matpower/case5.m", finite_differencing=true)
 
         @test result["termination_status"] == LOCALLY_SOLVED
@@ -386,7 +386,7 @@ end
     end
     @testset "5-bus case, flat_start" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
-        result = run_ac_pf(data, ipopt_solver)
+        result = solve_ac_pf(data, ipopt_solver)
         native = compute_ac_pf("../test/data/matpower/case5.m", flat_start=true)
 
         @test result["termination_status"] == LOCALLY_SOLVED

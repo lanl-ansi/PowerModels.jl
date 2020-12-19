@@ -3,7 +3,7 @@
     @testset "run with user provided JuMP model" begin
         m = JuMP.Model()
         x = JuMP.@variable(m, my_var >= 0, start=0.0)
-        result = run_ac_opf("../test/data/matpower/case5.m", ipopt_solver, jump_model=m)
+        result = solve_ac_opf("../test/data/matpower/case5.m", ipopt_solver, jump_model=m)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 18269; atol = 1e0)
@@ -27,7 +27,7 @@ end
 
 @testset "exports for usablity" begin
     @testset "with_optimizer and NLP status" begin
-        result = run_opf("../test/data/matpower/case5.m", ACPPowerModel, with_optimizer(Ipopt.Optimizer, print_level=0))
+        result = solve_opf("../test/data/matpower/case5.m", ACPPowerModel, with_optimizer(Ipopt.Optimizer, print_level=0))
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test result["primal_status"] == FEASIBLE_POINT
@@ -36,7 +36,7 @@ end
     end
 
     @testset "with_optimizer and LP status" begin
-        result = run_opf("../test/data/matpower/case5.m", DCPPowerModel, with_optimizer(Cbc.Optimizer, logLevel=0))
+        result = solve_opf("../test/data/matpower/case5.m", DCPPowerModel, with_optimizer(Cbc.Optimizer, logLevel=0))
 
         @test result["termination_status"] == OPTIMAL
         @test result["primal_status"] == FEASIBLE_POINT
