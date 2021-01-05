@@ -2,12 +2,10 @@
 
 <img src="https://lanl-ansi.github.io/PowerModels.jl/dev/assets/logo.svg" align="left" width="200" alt="PowerModels logo">
 
-Release: [![](https://img.shields.io/badge/docs-stable-blue.svg)](https://lanl-ansi.github.io/PowerModels.jl/stable/)
-
-Dev:
-[![Build Status](https://travis-ci.org/lanl-ansi/PowerModels.jl.svg?branch=master)](https://travis-ci.org/lanl-ansi/PowerModels.jl)
+Status:
+[![CI](https://github.com/lanl-ansi/PowerModels.jl/workflows/CI/badge.svg)](https://github.com/lanl-ansi/PowerModels.jl/actions?query=workflow%3ACI)
 [![codecov](https://codecov.io/gh/lanl-ansi/PowerModels.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/lanl-ansi/PowerModels.jl)
-[![](https://img.shields.io/badge/docs-dev-blue.svg)](https://lanl-ansi.github.io/PowerModels.jl/dev/)
+[![Documentation](https://github.com/lanl-ansi/PowerModels.jl/workflows/Documentation/badge.svg)](https://lanl-ansi.github.io/PowerModels.jl/stable/)
 </p>
 
 PowerModels.jl is a Julia/JuMP package for Steady-State Power Network Optimization.
