@@ -35,8 +35,8 @@ function logger_config!(level)
 end
 
 const _pm_global_keys = Set(["time_series", "per_unit"])
-const _pm_it_name = "ep"
-const _pm_it_sym = :ep
+const pm_it_name = "ep"
+const pm_it_sym = Symbol(pm_it_name)
 
 
 include("io/matpower.jl")

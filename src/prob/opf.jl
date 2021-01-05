@@ -214,7 +214,7 @@ end
 
 ""
 function ref_add_sm!(ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any})
-    _IM.ref_add_function!(_ref_add_sm!, _pm_it_sym, ref, data)
+    _IM.ref_apply!(_ref_add_sm!, ref, data, pm_it_sym)
 end
 
 
@@ -226,7 +226,7 @@ end
 
 ""
 function ref_add_sm_inv!(ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any})
-    _IM.ref_add_function!(_ref_add_sm_inv!, _pm_it_sym, ref, data)
+    _IM.ref_apply!(_ref_add_sm_inv!, ref, data, pm_it_sym)
 end
 
 

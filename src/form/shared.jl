@@ -34,8 +34,8 @@ function variable_shunt_admittance_factor(pm::AbstractWConvexModels; nw::Int=pm.
         start = comp_start_value(ref(pm, nw, :shunt, i), "wz_shunt_start", 1.001)
     )
 
-    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :shunt, :status, ids(pm, nw, :shunt), z_shunt)
-    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :shunt, :wz_shunt, ids(pm, nw, :shunt), wz_shunt)
+    report && _IM.sol_component_value(pm, pm_it_sym, nw, :shunt, :status, ids(pm, nw, :shunt), z_shunt)
+    report && _IM.sol_component_value(pm, pm_it_sym, nw, :shunt, :wz_shunt, ids(pm, nw, :shunt), wz_shunt)
 end
 
 
@@ -62,7 +62,7 @@ function variable_storage_current(pm::AbstractWConvexModels; nw::Int=pm.cnw, bou
         end
     end
 
-    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :storage, :ccms, ids(pm, nw, :storage), ccms)
+    report && _IM.sol_component_value(pm, pm_it_sym, nw, :storage, :ccms, ids(pm, nw, :storage), ccms)
 end
 
 
@@ -114,10 +114,10 @@ end
 
 ""
 function sol_data_model!(pm::AbstractWModels, solution::Dict)
-    if haskey(solution["it"]["ep"], "nw")
-        nws_data = solution["it"]["ep"]["nw"]
+    if haskey(solution["it"][pm_it_name], "nw")
+        nws_data = solution["it"][pm_it_name]["nw"]
     else
-        nws_data = Dict("0" => solution["it"]["ep"])
+        nws_data = Dict("0" => solution["it"][pm_it_name])
     end
 
     for (n, nw_data) in nws_data

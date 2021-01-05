@@ -55,7 +55,7 @@ function correct_network_data!(data::Dict{String,<:Any})
     check_branch_loops(data)
     correct_dcline_limits!(data)
 
-    data_ep = _IM.ismultiinfrastructure(data) ? data["it"][_pm_it_name] : data
+    data_ep = _IM.ismultiinfrastructure(data) ? data["it"][pm_it_name] : data
 
     if length(data_ep["gen"]) > 0 && any(gen["gen_status"] != 0 for (i, gen) in data_ep["gen"])
         mod_bus[:type] = correct_bus_types!(data)

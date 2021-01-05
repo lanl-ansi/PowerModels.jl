@@ -25,7 +25,7 @@ function variable_buspair_current_magnitude_sqr(pm::AbstractBFModel; nw::Int=pm.
         end
     end
 
-    report && _IM.sol_component_value(pm, _pm_it_sym, nw, :branch, :ccm, ids(pm, nw, :branch), ccm)
+    report && _IM.sol_component_value(pm, pm_it_sym, nw, :branch, :ccm, ids(pm, nw, :branch), ccm)
 end
 
 ""
