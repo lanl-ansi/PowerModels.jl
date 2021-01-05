@@ -313,6 +313,11 @@ function _make_per_unit!(data::Dict{String,<:Any})
             _apply_func!(gen, "qmax", rescale)
             _apply_func!(gen, "qmin", rescale)
 
+            _apply_func!(gen, "ramp_agc", rescale)
+            _apply_func!(gen, "ramp_10", rescale)
+            _apply_func!(gen, "ramp_30", rescale)
+            _apply_func!(gen, "ramp_q", rescale)
+
             _rescale_cost_model!(gen, mva_base)
         end
     end
@@ -458,6 +463,11 @@ function _make_mixed_units!(data::Dict{String,<:Any})
 
             _apply_func!(gen, "qmax", rescale)
             _apply_func!(gen, "qmin", rescale)
+
+            _apply_func!(gen, "ramp_agc", rescale)
+            _apply_func!(gen, "ramp_10", rescale)
+            _apply_func!(gen, "ramp_30", rescale)
+            _apply_func!(gen, "ramp_q", rescale)
 
             _rescale_cost_model!(gen, 1.0/mva_base)
         end
