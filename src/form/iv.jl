@@ -55,8 +55,8 @@ function variable_gen_current(pm::AbstractIVRModel; nw::Int=pm.cnw, bounded::Boo
     end
     var(pm, nw)[:pg] = pg
     var(pm, nw)[:qg] = qg
-    report && _IM.sol_component_value(pm, pm_it_sym, nw, :gen, :pg, ids(pm, nw, :gen), pg)
-    report && _IM.sol_component_value(pm, pm_it_sym, nw, :gen, :qg, ids(pm, nw, :gen), qg)
+    report && sol_component_value(pm, nw, :gen, :pg, ids(pm, nw, :gen), pg)
+    report && sol_component_value(pm, nw, :gen, :qg, ids(pm, nw, :gen), qg)
 
     if bounded
         for (i,gen) in ref(pm, nw, :gen)
@@ -437,7 +437,7 @@ function objective_variable_pg_cost(pm::AbstractIVRModel; report::Bool=true)
         pg_cost = var(pm, n)[:pg_cost] = JuMP.@variable(pm.model,
             [i in ids(pm, n, :gen)], base_name="$(n)_pg_cost",
         )
-        report && _IM.sol_component_value(pm, pm_it_sym, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
+        report && sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
 
         nc = length(conductor_ids(pm, n))
 
@@ -460,7 +460,7 @@ function objective_variable_dc_cost(pm::AbstractIVRModel; report::Bool=true)
         dc_p_cost = var(pm, n)[:p_dc_cost] = JuMP.@variable(pm.model,
             [i in ids(pm, n, :dcline)], base_name="$(n)_dc_p_cost",
         )
-        report && _IM.sol_component_value(pm, pm_it_sym, n, :dcline, :p_dc_cost, ids(pm, n, :dcline), dc_p_cost)
+        report && sol_component_value(pm, n, :dcline, :p_dc_cost, ids(pm, n, :dcline), dc_p_cost)
 
         #to avoid function calls inside of @NLconstraint:
         nc = length(conductor_ids(pm, n))

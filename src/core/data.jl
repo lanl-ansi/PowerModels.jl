@@ -1,6 +1,17 @@
 # tools for working with a PowerModels data dict structure
 import LinearAlgebra: pinv
 
+"PowerModels wrapper for the InfrastructureModels `apply!` function."
+function apply_pm!(func!::Function, data::Dict{String, <:Any}; is_multinetwork_function::Bool = true)
+    _IM.apply!(func!, data, pm_it_name; is_multinetwork_function = is_multinetwork_function)
+end
+
+
+"Convenience function for retrieving the power-only portion of network data."
+function get_pm_data(data::Dict{String, <:Any})
+    return _IM.ismultiinfrastructure(data) ? data["it"][pm_it_name] : data
+end
+
 
 ""
 function calc_branch_t(branch::Dict{String,<:Any})
@@ -252,7 +263,7 @@ end
 
 "Transforms network data into per-unit"
 function make_per_unit!(data::Dict{String,<:Any})
-    _IM.apply!(_make_per_unit!, data, pm_it_name; is_multinetwork_function = false)
+    apply_pm!(_make_per_unit!, data; is_multinetwork_function = false)
 end
 
 "Transforms network data into per-unit"
@@ -1032,7 +1043,7 @@ end
 
 ""
 function check_conductors(data::Dict{String,<:Any})
-    _IM.apply!(_check_conductors, data, pm_it_name; is_multinetwork_function = false)
+    apply_pm!(_check_conductors, data; is_multinetwork_function = false)
 end
 
 
@@ -1046,7 +1057,7 @@ end
 
 "checks that voltage angle differences are within 90 deg., if not tightens"
 function correct_voltage_angle_differences!(data_all::Dict{String,<:Any}, default_pad = 1.0472)
-    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][pm_it_name] : data_all
+    data = get_pm_data(data_all)
 
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_voltage_angle_differences! does not yet support multinetwork data")
@@ -1103,7 +1114,7 @@ end
 
 "checks that each branch has non-negative thermal ratings and removes zero thermal ratings"
 function correct_thermal_limits!(data_all::Dict{String,<:Any})
-    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][pm_it_name] : data_all
+    data = get_pm_data(data_all)
 
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_thermal_limits! does not yet support multinetwork data")
@@ -1207,7 +1218,7 @@ end
 
 "checks that each branch has non-negative current ratings and removes zero current ratings"
 function correct_current_limits!(data_all::Dict{String,<:Any})
-    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][pm_it_name] : data_all
+    data = get_pm_data(data_all)
 
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_current_limits! does not yet support multinetwork data")
@@ -1312,7 +1323,7 @@ end
 
 "checks that all parallel branches have the same orientation"
 function correct_branch_directions!(data_all::Dict{String,<:Any})
-    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][pm_it_name] : data_all
+    data = get_pm_data(data_all)
 
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_branch_directions! does not yet support multinetwork data")
@@ -1353,12 +1364,13 @@ end
 
 
 "checks that all branches connect two distinct buses"
-function check_branch_loops(data::Dict{String,<:Any})
-    _IM.apply!(_check_branch_loops, data, pm_it_name)
-end
+function check_branch_loops(data_all::Dict{String, <:Any})
+    data = get_pm_data(data_all)
 
-"checks that all branches connect two distinct buses"
-function _check_branch_loops(data::Dict{String,<:Any})
+    if _IM.ismultinetwork(data)
+        Memento.error(_LOGGER, "check_branch_loops does not yet support multinetwork data")
+    end
+
     for (i, branch) in data["branch"]
         if branch["f_bus"] == branch["t_bus"]
             Memento.error(_LOGGER, "both sides of branch $(i) connect to bus $(branch["f_bus"])")
@@ -1369,7 +1381,7 @@ end
 
 "checks that all buses are unique and other components link to valid buses"
 function check_connectivity(data::Dict{String,<:Any})
-    _IM.apply!(_check_connectivity, data, pm_it_name; is_multinetwork_function = false)
+    apply_pm!(_check_connectivity, data; is_multinetwork_function = false)
 end
 
 
@@ -1440,7 +1452,7 @@ end
 
 "checks that active components are not connected to inactive buses, otherwise prints warnings"
 function check_status(data::Dict{String,<:Any})
-    _IM.apply!(_check_status, data, pm_it_name; is_multinetwork_function = false)
+    apply_pm!(_check_status, data; is_multinetwork_function = false)
 end
 
 
@@ -1512,7 +1524,7 @@ end
 
 "checks that the network contains at least one reference bus"
 function check_reference_bus(data::Dict{String,<:Any})
-    _IM.apply!(_check_reference_bus, data, pm_it_name)
+    apply_pm!(_check_reference_bus, data)
 end
 
 
@@ -1538,7 +1550,7 @@ checks that each branch has a reasonable transformer parameters
 this is important because setting tap == 0.0 leads to NaN computations, which are hard to debug
 """
 function correct_transformer_parameters!(data_all::Dict{String,<:Any})
-    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][pm_it_name] : data_all
+    data = get_pm_data(data_all)
 
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_transformer_parameters! does not yet support multinetwork data")
@@ -1589,7 +1601,7 @@ end
 checks that each storage unit has a reasonable parameters
 """
 function check_storage_parameters(data::Dict{String,<:Any})
-    _IM.apply!(_check_storage_parameters, data, pm_it_name; is_multinetwork_function = false)
+    apply_pm!(_check_storage_parameters, data; is_multinetwork_function = false)
 end
 
 """
@@ -1657,7 +1669,7 @@ end
 checks that each switch has a reasonable parameters
 """
 function check_switch_parameters(data::Dict{String,<:Any})
-    _IM.apply!(_check_switch_parameters, data, pm_it_name)
+    apply_pm!(_check_switch_parameters, data)
 end
 
 
@@ -1691,7 +1703,7 @@ active connected generator.
 assumes that the network is a single connected component
 """
 function correct_bus_types!(data_all::Dict{String,<:Any})
-    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][pm_it_name] : data_all
+    data = get_pm_data(data_all)
 
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_bus_types! does not yet support multinetwork data")
@@ -1784,7 +1796,7 @@ end
 
 "checks that parameters for dc lines are reasonable"
 function correct_dcline_limits!(data_all::Dict{String,<:Any})
-    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][pm_it_name] : data_all
+    data = get_pm_data(data_all)
 
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_dcline_limits! does not yet support multinetwork data")
@@ -1855,7 +1867,7 @@ end
 
 "throws warnings if generator and dc line voltage setpoints are not consistent with the bus voltage setpoint"
 function check_voltage_setpoints(data::Dict{String,<:Any})
-    _IM.apply!(_check_voltage_setpoints, data, pm_it_name; is_multinetwork_function = false)
+    apply_pm!(_check_voltage_setpoints, data; is_multinetwork_function = false)
 end
 
 "throws warnings if generator and dc line voltage setpoints are not consistent with the bus voltage setpoint"
@@ -1896,7 +1908,7 @@ end
 
 "throws warnings if cost functions are malformed"
 function correct_cost_functions!(data_all::Dict{String,<:Any})
-    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][pm_it_name] : data_all
+    data = get_pm_data(data_all)
 
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "correct_cost_functions! does not yet support multinetwork data")
@@ -2094,7 +2106,7 @@ end
 
 "trims zeros from higher order cost terms"
 function simplify_cost_terms!(data::Dict{String,<:Any})
-    _IM.apply!(_simplify_cost_terms!, data, pm_it_name; is_multinetwork_function = false)
+    apply_pm!(_simplify_cost_terms!, data; is_multinetwork_function = false)
 end
 
 
@@ -2258,7 +2270,7 @@ returns true if any component was modified.
 """
 function propagate_topology_status!(data_all::Dict{String, <:Any})
     revised = false
-    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][pm_it_name] : data_all
+    data = get_pm_data(data_all)
 
     if _IM.ismultinetwork(data)
         for (i, nw_data) in data["nw"]
@@ -2411,7 +2423,7 @@ also deactivates 0 valued loads and shunts.
 """
 function deactivate_isolated_components!(data_all::Dict{String, <:Any})
     revised = false
-    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][pm_it_name] : data_all
+    data = get_pm_data(data_all)
 
     if _IM.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
@@ -2616,7 +2628,7 @@ end
 determines the largest connected component of the network and turns everything else off
 """
 function select_largest_component!(data_all::Dict{String, <:Any})
-    data = _IM.ismultiinfrastructure(data_all) ? data_all["it"][pm_it_name] : data_all
+    data = get_pm_data(data_all)
 
     if _IM.ismultinetwork(data)
         for (i,nw_data) in data["nw"]
