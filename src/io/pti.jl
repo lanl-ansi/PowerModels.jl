@@ -943,4 +943,139 @@ function _populate_defaults!(data::Dict)
     end
 end
 
+"Export power network data in the pti format"
+function export_pti(data::Dict{String,Any})
+    return sprint(export_pti, data)
+end
 
+"Export power network data to a file in the pti format
+ TODO: The extension should be checked in export_file function
+"
+function export_pti(file::AbstractString, data::Dict{String,Any})
+    open(file, "w") do io
+        export_pti(io, data)
+    end
+end
+
+"Export power network data in the pti format"
+function export_pti(io::IO, data::Dict{String,Any})
+    if _IM.ismultinetwork(data)
+        Memento.error(_LOGGER, "export_pti does not yet support multinetwork data")
+    end
+
+    data = deepcopy(data)
+
+    #convert data to mixed unit
+    if data["per_unit"]
+       make_mixed_units!(data)
+    end
+
+    pti_data = _powermodels_to_pti(data)
+
+
+    # HEADER
+    _print_str(io, pti_data["CASE IDENTIFICATION"], _transaction_dtypes)
+
+    println(io, pti_data["COMMENT LINE 1"])
+    println(io, pti_data["COMMENT LINE 2"])
+
+    # BUS
+    for bus in pti_data["BUS"]
+        _print_str(io, bus, _bus_dtypes)
+    end
+
+    println(io, "0 / END OF BUS DATA, BEGIN LOAD DATA")
+
+    # LOAD
+    for load in pti_data["LOAD"]
+        _print_str(io, load, _load_dtypes)
+    end
+
+
+end
+
+"Given a PTI component dict print it in the file"
+function _print_str(io::IO, component, _dtype)
+    str = ""
+    for (data, _) in _dtype
+        str *= "$(component[data]), "
+    end
+    println(io, str)
+end
+
+"Create a dict from PM dict data format to be compatible with PTI style"
+function _powermodels_to_pti(pm_data::Dict{String,Any})
+    # TODO add import all
+
+    pti_data = Dict{String, Any}()
+
+    pti_data["CASE IDENTIFICATION"] = _default_case_identification
+    pti_data["CASE IDENTIFICATION"]["SBASE"] = pm_data["baseMVA"]
+
+    pti_data["COMMENT LINE 1"] = "PM -> PSSE"
+    pti_data["COMMENT LINE 2"] = "Case $(pm_data["name"])"
+
+    _pm2psse_bus!(pti_data, pm_data)
+    _pm2psse_load!(pti_data, pm_data)
+
+    return pti_data
+
+end
+
+
+"""
+Parses PM Bus data to PSS(R)E-style.
+"""
+function _pm2psse_bus!(pti_data::Dict{String, Any}, pm_data::Dict{String, Any})
+    pti_data["BUS"] = []
+    if haskey(pm_data, "bus")
+        for (i, bus) in pm_data["bus"]
+            sub_data = Dict{String, Any}()         
+
+            sub_data["I"] = bus["bus_i"]
+            sub_data["NAME"] = "\'$(pop!(bus, "name"))\'"
+            sub_data["BASKV"] = pop!(bus, "base_kv")
+            sub_data["IDE"] =  pop!(bus, "bus_type")
+            sub_data["AREA"] = pop!(bus, "area")
+            sub_data["ZONE"] = pop!(bus, "zone")
+            sub_data["OWNER"] = _default_bus["OWNER"]
+            sub_data["VM"] = pop!(bus, "vm")
+            sub_data["VA"] = pop!(bus, "va")
+            sub_data["NVHI"] = pop!(bus, "vmax")
+            sub_data["NVLO"] = pop!(bus, "vmin")
+            sub_data["EVHI"] = _default_bus["EVHI"]
+            sub_data["EVLO"] = _default_bus["EVLO"]
+            
+            push!(pti_data["BUS"], sub_data)
+        end
+    end
+end
+
+"""
+Parses PM Load data to PSS(R)E-style.
+"""
+function _pm2psse_load!(pti_data::Dict{String, Any}, pm_data::Dict{String, Any})
+    pti_data["LOAD"] = []
+    if haskey(pm_data, "load")
+        for (i, load) in pm_data["load"]
+            sub_data = Dict{String, Any}()         
+
+            sub_data["I"] = load["load_bus"]
+            sub_data["ID"] = load["source_id"][end]
+            sub_data["STATUS"] = pop!(load, "status")
+            sub_data["AREA"] = 0
+            sub_data["ZONE"] = 0
+            sub_data["PL"] = pop!(load, "pd")
+            sub_data["QL"] = pop!(load, "qd")
+            sub_data["IP"] = _default_load["IP"]
+            sub_data["IQ"] = _default_load["IQ"]
+            sub_data["YP"] = _default_load["YP"]
+            sub_data["YQ"] = _default_load["YP"]
+            sub_data["OWNER"] = 0
+            sub_data["SCALE"] = _default_load["SCALE"]
+            sub_data["INTRPT"] = _default_load["INTRPT"]
+
+            push!(pti_data["LOAD"], sub_data)
+        end
+    end
+end
