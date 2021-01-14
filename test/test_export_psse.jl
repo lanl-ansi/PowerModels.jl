@@ -103,3 +103,29 @@ end
         end
     end  
 end
+
+@testset "Test Generators:" begin
+
+    for file in readdir("data/pti")
+
+        non_sense_cases = [
+            ]
+
+        skip_cases = [
+
+        ]
+
+        if file in non_sense_cases
+            continue
+        end
+
+        @testset "Test Generators @ $(file)" begin
+            file = "case3.raw"
+            file_case = "../test/data/pti/" * file
+            case_base, case_tmp = generate_pm_dicts(file_case, import_all=true)
+
+            @test InfrastructureModels.compare_dict(case_base["gen"], case_tmp["gen"])
+            @test InfrastructureModels.compare_dict(case_base["gen"]["1"], case_tmp["gen"]["1"])
+        end
+    end  
+end
