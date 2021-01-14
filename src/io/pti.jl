@@ -970,32 +970,51 @@ function export_pti(io::IO, data::Dict{String,Any})
        make_mixed_units!(data)
     end
 
-    pti_data = _powermodels_to_pti(data)
-
-
     # HEADER
-    _print_str(io, pti_data["CASE IDENTIFICATION"], _transaction_dtypes)
+    header = _pm2psse_header(data)
+    _print_pti_str(io, header, _transaction_dtypes)
 
-    println(io, pti_data["COMMENT LINE 1"])
-    println(io, pti_data["COMMENT LINE 2"])
+    # COMMENT SECTION
+    # TODO: See how PM calls the comments
+    Comment_Line_1 = get(data, "Comment_Line_1", "PSSE case made from PowerModels")
+    Comment_Line_2 = get(data, "Comment_Line_1", "Some items will not work") 
+
+    println(io, Comment_Line_1)
+    println(io, Comment_Line_2)
+
+    # TODO check if has keys
 
     # BUS
-    for bus in pti_data["BUS"]
-        _print_str(io, bus, _bus_dtypes)
+    for (_, bus) in sort(data["bus"], by = (x) -> parse(Int64, x))
+        # Skip star-bus
+        if bus["source_id"][1] != "bus"
+            continue
+        end
+
+        # Get Dict in a PSSE way
+        psse_comp = _pm2psse_bus(bus)
+
+        # Print it in the file
+        _print_pti_str(io, psse_comp, _bus_dtypes)
     end
 
     println(io, "0 / END OF BUS DATA, BEGIN LOAD DATA")
 
     # LOAD
-    for load in pti_data["LOAD"]
-        _print_str(io, load, _load_dtypes)
+    for (_, load) in sort(data["load"], by = (x) -> parse(Int64, x))
+        
+        # Get Dict in a PSSE way
+        psse_comp = _pm2psse_load(load)
+
+        # Print it in the file
+        _print_pti_str(io, psse_comp, _load_dtypes)
     end
 
 
 end
 
 "Given a PTI component dict print it in the file"
-function _print_str(io::IO, component, _dtype)
+function _print_pti_str(io::IO, component, _dtype)
     str = ""
     for (data, _) in _dtype
         str *= "$(component[data]), "
@@ -1003,79 +1022,71 @@ function _print_str(io::IO, component, _dtype)
     println(io, str)
 end
 
-"Create a dict from PM dict data format to be compatible with PTI style"
-function _powermodels_to_pti(pm_data::Dict{String,Any})
-    # TODO add import all
+"""
+Create a header for the case
+"""
+function _pm2psse_header(pm::Dict{String, Any})
+    sub_data = Dict{String, Any}()
 
-    pti_data = Dict{String, Any}()
+    for (dtype, _) in _transaction_dtypes
+        sub_data[dtype] = get(pm, dtype, _default_case_identification[dtype])
+    end
 
-    pti_data["CASE IDENTIFICATION"] = _default_case_identification
-    pti_data["CASE IDENTIFICATION"]["SBASE"] = pm_data["baseMVA"]
-
-    pti_data["COMMENT LINE 1"] = "PM -> PSSE"
-    pti_data["COMMENT LINE 2"] = "Case $(pm_data["name"])"
-
-    _pm2psse_bus!(pti_data, pm_data)
-    _pm2psse_load!(pti_data, pm_data)
-
-    return pti_data
-
+    return sub_data
 end
-
-
 """
 Parses PM Bus data to PSS(R)E-style.
-"""
-function _pm2psse_bus!(pti_data::Dict{String, Any}, pm_data::Dict{String, Any})
-    pti_data["BUS"] = []
-    if haskey(pm_data, "bus")
-        for (i, bus) in pm_data["bus"]
-            sub_data = Dict{String, Any}()         
 
-            sub_data["I"] = bus["bus_i"]
-            sub_data["NAME"] = "\'$(pop!(bus, "name"))\'"
-            sub_data["BASKV"] = pop!(bus, "base_kv")
-            sub_data["IDE"] =  pop!(bus, "bus_type")
-            sub_data["AREA"] = pop!(bus, "area")
-            sub_data["ZONE"] = pop!(bus, "zone")
-            sub_data["OWNER"] = _default_bus["OWNER"]
-            sub_data["VM"] = pop!(bus, "vm")
-            sub_data["VA"] = pop!(bus, "va")
-            sub_data["NVHI"] = pop!(bus, "vmax")
-            sub_data["NVLO"] = pop!(bus, "vmin")
-            sub_data["EVHI"] = _default_bus["EVHI"]
-            sub_data["EVLO"] = _default_bus["EVLO"]
-            
-            push!(pti_data["BUS"], sub_data)
-        end
+Returns a PSSE dict
+"""
+function _pm2psse_bus(pm_bus::Dict{String, Any})
+    sub_data = Dict{String, Any}()         
+    sub_data["I"] = pm_bus["bus_i"]
+
+    if haskey(pm_bus, "name")
+        sub_data["NAME"] = "\'$(pm_bus["name"])\'"
+    elseif haskey(pm_bus, "string")
+        sub_data["NAME"] = "\'$(pm_bus["string"])\'"
+    else
+        sub_data["NAME"] = "\'$(_default_bus["NAME"])\'"
     end
+
+    sub_data["BASKV"] = get(pm_bus, "base_kv", _default_bus["BASKV"])
+    sub_data["IDE"] =  get(pm_bus, "bus_type", _default_bus["IDE"])
+    sub_data["AREA"] = get(pm_bus, "area", _default_bus["AREA"])
+    sub_data["ZONE"] = get(pm_bus, "zone", _default_bus["ZONE"])
+    sub_data["OWNER"] = get(pm_bus, "owner", _default_bus["OWNER"])
+    sub_data["VM"] = get(pm_bus, "vm", _default_bus["VM"])
+    sub_data["VA"] = get(pm_bus, "va", _default_bus["VA"])
+    sub_data["NVHI"] = get(pm_bus, "vmax", _default_bus["NVHI"])
+    sub_data["NVLO"] = get(pm_bus, "vmin", _default_bus["NVLO"])
+    sub_data["EVHI"] = get(pm_bus, "EVHI", _default_bus["EVHI"])
+    sub_data["EVLO"] = get(pm_bus, "EVLO", _default_bus["EVLO"])
+    
+    return sub_data
 end
 
 """
 Parses PM Load data to PSS(R)E-style.
 """
-function _pm2psse_load!(pti_data::Dict{String, Any}, pm_data::Dict{String, Any})
-    pti_data["LOAD"] = []
-    if haskey(pm_data, "load")
-        for (i, load) in pm_data["load"]
-            sub_data = Dict{String, Any}()         
+function _pm2psse_load(pm_load::Dict{String, Any})
 
-            sub_data["I"] = load["load_bus"]
-            sub_data["ID"] = load["source_id"][end]
-            sub_data["STATUS"] = pop!(load, "status")
-            sub_data["AREA"] = 0
-            sub_data["ZONE"] = 0
-            sub_data["PL"] = pop!(load, "pd")
-            sub_data["QL"] = pop!(load, "qd")
-            sub_data["IP"] = _default_load["IP"]
-            sub_data["IQ"] = _default_load["IQ"]
-            sub_data["YP"] = _default_load["YP"]
-            sub_data["YQ"] = _default_load["YP"]
-            sub_data["OWNER"] = 0
-            sub_data["SCALE"] = _default_load["SCALE"]
-            sub_data["INTRPT"] = _default_load["INTRPT"]
+    sub_data = Dict{String, Any}()         
 
-            push!(pti_data["LOAD"], sub_data)
-        end
-    end
+    sub_data["I"] = pm_load["load_bus"]
+    sub_data["ID"] = "\'$(pm_load["source_id"][end])\'" # CHECK WITH DICTS FROM MATPOWER
+    sub_data["STATUS"] = get(pm_load, "status", _default_load["STATUS"])
+    sub_data["AREA"] = 0
+    sub_data["ZONE"] = 0
+    sub_data["PL"] = get(pm_load, "pd", _default_load["PL"])
+    sub_data["QL"] = get(pm_load, "qd", _default_load["QL"])
+    sub_data["IP"] = get(pm_load, "IP", _default_load["IP"])
+    sub_data["IQ"] = get(pm_load, "IQ", _default_load["IQ"])
+    sub_data["YP"] = get(pm_load, "YP", _default_load["YP"])
+    sub_data["YQ"] = get(pm_load, "YQ", _default_load["YP"])
+    sub_data["OWNER"] = get(pm_load, "OWNER", 0)
+    sub_data["SCALE"] = get(pm_load, "SCALE", _default_load["SCALE"])
+    sub_data["INTRPT"] = get(pm_load, "INTRPT", _default_load["INTRPT"])
+
+    return sub_data
 end
