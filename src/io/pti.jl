@@ -1022,6 +1022,7 @@ function _print_pti_str(io::IO, component, _dtype)
     println(io, str)
 end
 
+
 """
 Create a header for the case
 """
@@ -1034,10 +1035,15 @@ function _pm2psse_header(pm::Dict{String, Any})
 
     return sub_data
 end
+
+
 """
 Parses PM Bus data to PSS(R)E-style.
+Things that make it fail:
 
-Returns a PSSE dict
+- Trailing whitespace in bus ID, eg: "1 "
+- MATPOWER calls key "name" as "string", It is better to unify a criterium
+
 """
 function _pm2psse_bus(pm_bus::Dict{String, Any})
     sub_data = Dict{String, Any}()         
