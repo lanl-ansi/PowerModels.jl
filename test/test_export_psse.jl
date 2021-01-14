@@ -95,7 +95,7 @@ end
 
         @testset "Test Loads @ $(file)" begin
             file_case = "../test/data/pti/" * file
-            case_base, case_tmp = generate_pm_dicts(file_case, import_all=false)
+            case_base, case_tmp = generate_pm_dicts(file_case, import_all=true)
 
             @test InfrastructureModels.compare_dict(case_base["load"], case_tmp["load"])
         end
@@ -119,7 +119,6 @@ end
         end
 
         @testset "Test Generators @ $(file)" begin
-            file = "frankenstein_00.raw"
             file_case = "../test/data/pti/" * file
             case_base, case_tmp = generate_pm_dicts(file_case, import_all=true)
 

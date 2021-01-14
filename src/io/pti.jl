@@ -971,7 +971,7 @@ function export_pti(io::IO, data::Dict{String,Any})
     end
 
     # maps bus -> area, owner, zone to ser default in other componentes
-    # See Load Data Notes in PSSE-33 docs POM 5-10 
+    # See `Load Data Notes` in PSSE-33 docs POM 5-10 
     bus_zone = Dict{Int64, Any}()
     bus_area = Dict{Int64, Any}()
     bus_owner = Dict{Int64, Any}()
@@ -987,9 +987,8 @@ function export_pti(io::IO, data::Dict{String,Any})
     _print_pti_str(io, header, _transaction_dtypes)
 
     # Comment Section
-    # TODO: See how PM calls the comments
-    Comment_Line_1 = get(data, "Comment_Line_1", "PSSE case made from PowerModels")
-    Comment_Line_2 = get(data, "Comment_Line_1", "Some items will not work") 
+    Comment_Line_1 = get(data, "comment_line_1", "PSSE case made from PowerModels data model")
+    Comment_Line_2 = get(data, "comment_line_2", "Only some items works") 
 
     println(io, Comment_Line_1)
     println(io, Comment_Line_2)
@@ -1058,6 +1057,7 @@ function _print_pti_str(io::IO, component, _dtype)
     str = ""
     for (data, type) in _dtype
         if type == String
+            # Avoid losing the trailing whitespace in ID of components
             str *= "$(component[data]),"
         else
             str *= "$(component[data]),\t"
@@ -1097,7 +1097,6 @@ end
 Parses PM Bus data to PSS(R)E-style.
 Things that make it fail:
 
-- Trailing whitespace in bus ID, eg: "1 "
 - MATPOWER calls key "name" as "string", It is better to unify a criterium
 - source_id fails in matpower cases
 
