@@ -157,3 +157,35 @@ end
         end
     end  
 end
+
+@testset "Test Branches:" begin
+
+    for file in readdir("data/pti")
+
+        skip_cases = [
+            "parser_test_b.raw",
+            "parser_test_d.raw",
+            "parser_test_defaults.raw",
+            "parser_test_j.raw",
+            "case0.raw"
+            ]
+
+        if file in skip_cases
+            continue
+        end
+
+        @testset "Test Branches @ $(file)" begin
+            file_case = "../test/data/pti/" * file
+            case_base, case_tmp = generate_pm_dicts(file_case, import_all=true)
+            
+            for (i, branch_base) in case_base["branch"]
+                if branch_base["transformer"]
+                    continue
+                end
+                branch_tmp = case_tmp["branch"][i]
+
+                @test InfrastructureModels.compare_dict(branch_base, branch_tmp)
+            end
+        end
+    end  
+end

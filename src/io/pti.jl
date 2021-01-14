@@ -1049,7 +1049,7 @@ function export_pti(io::IO, data::Dict{String,Any})
         # Get bus number
         bus_i = gen["gen_bus"]
 
-        # Get zone, area, owner
+        # Get default zone, area, owner
         area = bus_area[bus_i]
         owner = bus_owner[bus_i]
         zone = bus_zone[bus_i]
@@ -1061,6 +1061,24 @@ function export_pti(io::IO, data::Dict{String,Any})
         _print_pti_str(io, psse_comp, _generator_dtypes)
     end
 
+    println(io, "0 / END OF GENERATOR DATA, BEGIN BRANCH DATA")
+
+    # Branches
+    for (_, branch) in sort(data["branch"], by = (x) -> parse(Int64, x))
+        # Skip transformers
+        if branch["transformer"]
+            continue
+        end
+        # Get default owner
+        bus_i = branch["f_bus"]
+        owner = bus_owner[bus_i]
+
+        # Get Dict in a PSSE way
+        psse_comp = _pm2psse_branch(branch, owner)
+
+        # Print it in the file
+        _print_pti_str(io, psse_comp, _pti_dtypes["BRANCH"])
+    end
 end
 
 
@@ -1163,6 +1181,9 @@ function _pm2psse_load(pm_load::Dict{String, Any}, area::Int64, owner::Int64, zo
 end
 
 
+"""
+Parses PM fixed shunt to PSS(R)E-style
+"""
 function _pm2psse_fixed_shunt(pm_shunt::Dict{String, Any})
     sub_data = Dict{String, Any}()
     sub_data["I"] = pm_shunt["shunt_bus"] # Not defaul allowed
@@ -1195,8 +1216,34 @@ function _pm2psse_generator(pm_gen::Dict{String, Any},area::Int64, owner::Int64,
     sub_data["OWNER"] = get(pm_gen, "owner", owner)
     sub_data["ZONE"] = get(pm_gen, "zone", zone)
     sub_data["O1"] = get(pm_gen, "o1", owner)
-
+    
     _export_remaining!(sub_data, pm_gen, _pti_defaults["GENERATOR"])
+    
+    return sub_data
+end
+
+"""
+Parses PM branch data to PSS(R) E-style.
+"""
+function _pm2psse_branch(pm_br::Dict{String, Any}, owner::Int64)
+    sub_data = Dict{String, Any}()
+    sub_data["I"] = pm_br["f_bus"] # Not default allowed
+    sub_data["J"] = pm_br["t_bus"] # Not default allowed
+    sub_data["CKT"] = "\'$(pm_br["source_id"][end])\'"
+    sub_data["R"] = pm_br["br_r"]
+    sub_data["X"] = pm_br["br_x"]
+    sub_data["B"] = 0. # or (b_fr + b_to)/2
+    sub_data["RATEA"] = get(pm_br, "rate_a", _default_branch["RATEA"])
+    sub_data["RATEB"] = get(pm_br, "rate_b", _default_branch["RATEB"])
+    sub_data["RATEC"] = get(pm_br, "rate_c", _default_branch["RATEC"])
+    sub_data["GI"] = get(pm_br, "g_fr", _default_branch["GI"])
+    sub_data["BI"] = get(pm_br, "b_fr", _default_branch["BI"])
+    sub_data["GJ"] = get(pm_br, "g_to", _default_branch["GJ"])
+    sub_data["BJ"] = get(pm_br, "b_to", _default_branch["BJ"])
+    sub_data["ST"] = get(pm_br, "br_status", _default_branch["ST"])
+    sub_data["O1"] = get(pm_br, "o1", owner)
+
+    _export_remaining!(sub_data, pm_br, _pti_defaults["BRANCH"])
 
     return sub_data
 end
