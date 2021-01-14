@@ -119,6 +119,7 @@ end
         end
 
         @testset "Test Generators @ $(file)" begin
+            file = "frankenstein_00.raw"
             file_case = "../test/data/pti/" * file
             case_base, case_tmp = generate_pm_dicts(file_case, import_all=true)
 
