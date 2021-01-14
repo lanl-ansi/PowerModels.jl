@@ -102,6 +102,37 @@ end
     end  
 end
 
+@testset "Test Shunts:" begin
+
+    for file in readdir("data/pti")
+
+        skip_cases = [
+            "parser_test_b.raw",
+            "parser_test_d.raw",
+            "parser_test_defaults.raw",
+            "parser_test_j.raw",
+            "case0.raw",
+            "case14.raw", # sw shunt
+            "case24.raw", # sw shunt
+            "case30.raw", # sw shunt
+            "case73.raw", # sw shunt
+            "frankenstein_20.raw", # sw shunt
+            "frankenstein_70.raw", # sw shunt
+            ]
+
+        if file in skip_cases
+            continue
+        end
+
+        @testset "Test Shunts @ $(file)" begin
+            file_case = "../test/data/pti/" * file
+            case_base, case_tmp = generate_pm_dicts(file_case, import_all=true)
+
+            @test InfrastructureModels.compare_dict(case_base["shunt"], case_tmp["shunt"])
+        end
+    end  
+end
+
 @testset "Test Generators:" begin
 
     for file in readdir("data/pti")

@@ -1029,6 +1029,18 @@ function export_pti(io::IO, data::Dict{String,Any})
     println(io, "0 / END OF LOAD DATA, BEGIN FIXED SHUNT DATA")
 
     # Fixed Shunt
+    for (_, shunt) in sort(data["shunt"], by = (x) -> parse(Int64, x))
+        # Skip Switched Shunts
+        if shunt["source_id"][1] != "fixed shunt"
+            continue
+        end
+        
+        # Get Dict in a PSSE way
+        psse_comp = _pm2psse_fixed_shunt(shunt)
+
+        # Print it in the file
+        _print_pti_str(io, psse_comp, _pti_dtypes["FIXED SHUNT"])
+    end
 
     println(io, "0 / END OF FIXED SHUNT DATA, BEGIN GENERATOR DATA")
 
@@ -1071,6 +1083,7 @@ end
 Export remaining keys of a componet
 """
 function _export_remaining!(sub_data::Dict{String, Any}, pm_comp::Dict{String, Any}, pti_default::Dict{String, Any})
+    # Try to get the value from the PM component (is in lower case), else use the default
     for (key, default) in pti_default
         if ! haskey(sub_data, key)
             sub_data[key] = get(pm_comp, lowercase(key), default)
@@ -1146,6 +1159,18 @@ function _pm2psse_load(pm_load::Dict{String, Any}, area::Int64, owner::Int64, zo
 
     _export_remaining!(sub_data, pm_load, _pti_defaults["LOAD"])
 
+    return sub_data
+end
+
+
+function _pm2psse_fixed_shunt(pm_shunt::Dict{String, Any})
+    sub_data = Dict{String, Any}()
+    sub_data["I"] = pm_shunt["shunt_bus"] # Not defaul allowed
+    sub_data["ID"] = "\'$(pm_shunt["source_id"][end])\'"
+    sub_data["STATUS"] = get(pm_shunt, "status", _default_fixed_shunt["STATUS"])
+    sub_data["GL"] = get(pm_shunt, "gs", _default_fixed_shunt["GL"])
+    sub_data["BL"] = get(pm_shunt, "bs", _default_fixed_shunt["BL"])
+    
     return sub_data
 end
 
