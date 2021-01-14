@@ -1035,11 +1035,19 @@ function export_pti(io::IO, data::Dict{String,Any})
 
     # Generator
     for (_, gen) in sort(data["gen"], by = (x) -> parse(Int64, x))
-            # Get Dict in a PSSE way
-            psse_comp = _pm2psse_generator(gen)
+        # Get bus number
+        bus_i = gen["gen_bus"]
 
-            # Print it in the file
-            _print_pti_str(io, psse_comp, _generator_dtypes)
+        # Get zone, area, owner
+        area = bus_area[bus_i]
+        owner = bus_owner[bus_i]
+        zone = bus_zone[bus_i]
+
+        # Get Dict in a PSSE way
+        psse_comp = _pm2psse_generator(gen, area, owner, zone)
+
+        # Print it in the file
+        _print_pti_str(io, psse_comp, _generator_dtypes)
     end
 
 end
@@ -1125,7 +1133,7 @@ end
 """
 Parses PM Load data to PSS(R)E-style.
 """
-function _pm2psse_load(pm_load::Dict{String, Any}, area, owner, zone)
+function _pm2psse_load(pm_load::Dict{String, Any}, area::Int64, owner::Int64, zone::Int64)
     
     sub_data = Dict{String, Any}()
     sub_data["I"] = pm_load["load_bus"] 
@@ -1146,9 +1154,10 @@ end
 """
 Parses PM generator data to PSS(R)E-style.
 """
-function _pm2psse_generator(pm_gen::Dict{String, Any})
+function _pm2psse_generator(pm_gen::Dict{String, Any},area::Int64, owner::Int64, zone::Int64)
     sub_data = Dict{String, Any}()
     sub_data["I"] = pm_gen["gen_bus"] # Not default allowed
+    sub_data["ID"] = "\'$(pm_gen["source_id"][end])\'"
     sub_data["STAT"] = get(pm_gen, "gen_status", _default_generator["STAT"])
     sub_data["PG"] = get(pm_gen, "pg", _default_generator["PG"])
     sub_data["QG"] = get(pm_gen, "qg", _default_generator["QG"])
@@ -1158,27 +1167,12 @@ function _pm2psse_generator(pm_gen::Dict{String, Any})
     sub_data["MBASE"] = get(pm_gen, "mbase", _default_generator["MBASE"])
     sub_data["PT"] = get(pm_gen, "pmax", _default_generator["PT"])
     sub_data["PB"] = get(pm_gen, "pmin", _default_generator["PB"])
-    sub_data["O1"] = get(pm_gen, "o1", _default_generator["O1"])
-    sub_data["F1"] = get(pm_gen, "f1", _default_generator["F1"])
-    sub_data["O2"] = get(pm_gen, "o2", _default_generator["O2"])
-    sub_data["F2"] = get(pm_gen, "f2", _default_generator["F2"])
-    sub_data["O3"] = get(pm_gen, "o3", _default_generator["O3"])
-    sub_data["F3"] = get(pm_gen, "f3", _default_generator["F3"])
-    sub_data["O4"] = get(pm_gen, "o4", _default_generator["O4"])
-    sub_data["F4"] = get(pm_gen, "f4", _default_generator["F4"])
-    sub_data["ZR"] = get(pm_gen, "ZR", _default_generator["ZR"])
-    sub_data["ZX"] = get(pm_gen, "ZX", _default_generator["ZX"])
-    sub_data["RT"] = get(pm_gen, "RT", _default_generator["RT"])
-    sub_data["XT"] = get(pm_gen, "XT", _default_generator["XT"])
-    
-    
-    sub_data["ID"] = get(pm_gen, "ID", _default_generator["ID"])
-    sub_data["IREG"] = get(pm_gen, "IREG", _default_generator["IREG"])
-    sub_data["GTAP"] = get(pm_gen, "GTAP", _default_generator["GTAP"])
-    sub_data["STAT"] = get(pm_gen, "STAT", _default_generator["STAT"])
-    sub_data["RMPCT"] = get(pm_gen, "RMPCT", _default_generator["RMPCT"])
-    sub_data["WMOD"] = get(pm_gen, "WMOD", _default_generator["WMOD"])
-    sub_data["WPF"] = get(pm_gen, "WPF", _default_generator["WPF"])
+    sub_data["AREA"] = get(pm_gen, "area", area)
+    sub_data["OWNER"] = get(pm_gen, "owner", owner)
+    sub_data["ZONE"] = get(pm_gen, "zone", zone)
+    sub_data["O1"] = get(pm_gen, "o1", owner)
+
+    _export_remaining!(sub_data, pm_gen, _pti_defaults["GENERATOR"])
 
     return sub_data
 end

@@ -102,7 +102,7 @@ end
 
         @testset "Test Loads @ $(file)" begin
             file_case = "../test/data/pti/" * file
-            case_base, case_tmp = generate_pm_dicts(file_case, import_all=true)
+            case_base, case_tmp = generate_pm_dicts(file_case, import_all=false)
 
             @test InfrastructureModels.compare_dict(case_base["load"], case_tmp["load"])
         end
@@ -113,27 +113,23 @@ end
 
     for file in readdir("data/pti")
 
-        non_sense_cases = [
+        skip_cases = [
             "parser_test_b.raw",
             "parser_test_d.raw",
             "parser_test_defaults.raw",
             "parser_test_j.raw",
+            "case0.raw"
             ]
 
-        skip_cases = [
-        ]
-
-        if file in vcat(non_sense_cases, skip_cases)
+        if file in skip_cases
             continue
         end
 
         @testset "Test Generators @ $(file)" begin
-            file = "case3.raw"
             file_case = "../test/data/pti/" * file
             case_base, case_tmp = generate_pm_dicts(file_case, import_all=true)
 
             @test InfrastructureModels.compare_dict(case_base["gen"], case_tmp["gen"])
-            @test InfrastructureModels.compare_dict(case_base["gen"]["1"], case_tmp["gen"]["1"])
         end
     end  
 end
