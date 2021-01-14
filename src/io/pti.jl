@@ -970,41 +970,31 @@ function export_pti(io::IO, data::Dict{String,Any})
        make_mixed_units!(data)
     end
 
-    # HEADER
+    # maps bus -> area, owner, zone to ser default in other componentes
+    # See Load Data Notes in PSSE-33 docs POM 5-10 
+    bus_zone = Dict{Int64, Any}()
+    bus_area = Dict{Int64, Any}()
+    bus_owner = Dict{Int64, Any}()
+    for (i, bus) in data["bus"]
+        bus_i = bus["bus_i"]
+        bus_area[bus_i] = get(bus, "area", _default_bus["AREA"])
+        bus_owner[bus_i] =  get(bus, "owner", _default_bus["OWNER"])
+        bus_zone[bus_i] = get(bus, "zone", _default_bus["ZONE"])
+    end
+
+    # Header
     header = _pm2psse_header(data)
     _print_pti_str(io, header, _transaction_dtypes)
 
-    # COMMENT SECTION
+    # Comment Section
     # TODO: See how PM calls the comments
     Comment_Line_1 = get(data, "Comment_Line_1", "PSSE case made from PowerModels")
     Comment_Line_2 = get(data, "Comment_Line_1", "Some items will not work") 
 
     println(io, Comment_Line_1)
     println(io, Comment_Line_2)
-#
-    ## maps PM component to conversion function and dtypes
-    #map_pm2psse = Dict(
-    #    "bus" => (_pm2psse_bus, _bus_dtypes),
-    #    "load" => (_pm2psse_load, _load_dtypes),
-    #    "gen" => (_pm2psse_gen, _generator_dtypes)
-    #)
-    #
-#
-    #for (pm_comp, (pm2psse, dtypes)) in map_pm2psse
-    #    if haskey(data, pm_comp)
-#
-    #        for (_, comp) in sort(data[pm_comp], by = (x) -> parse(Int64, x))
-    #            psse_comp = pm2psse(comp)
-    #            _print_pti_str(io, psse_comp, dtypes)
-    #        end
-#
-    #    else
-    #        # Warning that skip the pm_comp
-    #    end
-#
-    #end
-#
-    # BUS
+
+    # Bus
     for (_, bus) in sort(data["bus"], by = (x) -> parse(Int64, x))
         # Skip star-bus
         if bus["source_id"][1] != "bus"
@@ -1020,20 +1010,30 @@ function export_pti(io::IO, data::Dict{String,Any})
 
     println(io, "0 / END OF BUS DATA, BEGIN LOAD DATA")
 
-    # LOAD
+    # Load
     for (_, load) in sort(data["load"], by = (x) -> parse(Int64, x))
+        # Get bus number
+        bus_i = load["load_bus"]
+
+        # Get zone, area, owner
+        area = bus_area[bus_i]
+        owner = bus_owner[bus_i]
+        zone = bus_zone[bus_i]
         
         # Get Dict in a PSSE way
-        psse_comp = _pm2psse_load(load)
+        psse_comp = _pm2psse_load(load, area, owner, zone)
 
         # Print it in the file
         _print_pti_str(io, psse_comp, _load_dtypes)
     end
 
     println(io, "0 / END OF LOAD DATA, BEGIN FIXED SHUNT DATA")
+
+    # Fixed Shunt
+
     println(io, "0 / END OF FIXED SHUNT DATA, BEGIN GENERATOR DATA")
 
-    # GENERATOR
+    # Generator
     for (_, gen) in sort(data["gen"], by = (x) -> parse(Int64, x))
             # Get Dict in a PSSE way
             psse_comp = _pm2psse_generator(gen)
@@ -1058,17 +1058,18 @@ function _print_pti_str(io::IO, component, _dtype)
     println(io, str)
 end
 
+
 """
 Export remaining keys of a componet
 """
 function _export_remaining!(sub_data::Dict{String, Any}, pm_comp::Dict{String, Any}, pti_default::Dict{String, Any})
     for (key, default) in pti_default
         if ! haskey(sub_data, key)
-            sub_data[key] = get(pm_comp, key, default)
-
+            sub_data[key] = get(pm_comp, lowercase(key), default)
         end
     end
 end
+
 
 """
 Create a header for the case
@@ -1120,28 +1121,23 @@ function _pm2psse_bus(pm_bus::Dict{String, Any})
     return sub_data
 end
 
+
 """
 Parses PM Load data to PSS(R)E-style.
 """
-function _pm2psse_load(pm_load::Dict{String, Any})
+function _pm2psse_load(pm_load::Dict{String, Any}, area, owner, zone)
     
     sub_data = Dict{String, Any}()
     sub_data["I"] = pm_load["load_bus"] 
     sub_data["ID"] = "\'$(pm_load["source_id"][end])\'" # CHECK WITH DICTS FROM MATPOWER
     sub_data["STATUS"] = get(pm_load, "status", _default_load["STATUS"])
-    sub_data["AREA"] = sub_data["I"] # AREA of bus
-    sub_data["ZONE"] = sub_data["I"] # ZONE of bus
-    sub_data["OWNER"] = get(pm_load, "OWNER", sub_data["I"]) # OWNER of BUS
-
-    # Maybe do _import_reamining_pti!(sub_data, default_dict)
     sub_data["PL"] = get(pm_load, "pd", _default_load["PL"])
     sub_data["QL"] = get(pm_load, "qd", _default_load["QL"])
-    sub_data["IP"] = get(pm_load, "IP", _default_load["IP"])
-    sub_data["IQ"] = get(pm_load, "IQ", _default_load["IQ"])
-    sub_data["YP"] = get(pm_load, "YP", _default_load["YP"])
-    sub_data["YQ"] = get(pm_load, "YQ", _default_load["YP"])
-    sub_data["SCALE"] = get(pm_load, "SCALE", _default_load["SCALE"])
-    sub_data["INTRPT"] = get(pm_load, "INTRPT", _default_load["INTRPT"])
+    sub_data["AREA"] = get(pm_load, "area", area)
+    sub_data["OWNER"] = get(pm_load, "owner", owner)
+    sub_data["ZONE"] = get(pm_load, "zone", zone)
+
+    _export_remaining!(sub_data, pm_load, _pti_defaults["LOAD"])
 
     return sub_data
 end
@@ -1153,22 +1149,13 @@ Parses PM generator data to PSS(R)E-style.
 function _pm2psse_generator(pm_gen::Dict{String, Any})
     sub_data = Dict{String, Any}()
     sub_data["I"] = pm_gen["gen_bus"] # Not default allowed
-    sub_data["ID"] = get(pm_gen, "ID", _default_generator["ID"])
     sub_data["STAT"] = get(pm_gen, "gen_status", _default_generator["STAT"])
     sub_data["PG"] = get(pm_gen, "pg", _default_generator["PG"])
     sub_data["QG"] = get(pm_gen, "qg", _default_generator["QG"])
     sub_data["QT"] = get(pm_gen, "qmax", _default_generator["QT"])
     sub_data["QB"] = get(pm_gen, "qmin", _default_generator["QB"])
     sub_data["VS"] = get(pm_gen, "vg", _default_generator["VS"])
-    sub_data["IREG"] = get(pm_gen, "IREG", _default_generator["IREG"])
     sub_data["MBASE"] = get(pm_gen, "mbase", _default_generator["MBASE"])
-    sub_data["ZR"] = get(pm_gen, "ZR", _default_generator["ZR"])
-    sub_data["ZX"] = get(pm_gen, "ZX", _default_generator["ZX"])
-    sub_data["RT"] = get(pm_gen, "RT", _default_generator["RT"])
-    sub_data["XT"] = get(pm_gen, "XT", _default_generator["XT"])
-    sub_data["GTAP"] = get(pm_gen, "GTAP", _default_generator["GTAP"])
-    sub_data["STAT"] = get(pm_gen, "STAT", _default_generator["STAT"])
-    sub_data["RMPCT"] = get(pm_gen, "RMPCT", _default_generator["RMPCT"])
     sub_data["PT"] = get(pm_gen, "pmax", _default_generator["PT"])
     sub_data["PB"] = get(pm_gen, "pmin", _default_generator["PB"])
     sub_data["O1"] = get(pm_gen, "o1", _default_generator["O1"])
@@ -1179,6 +1166,17 @@ function _pm2psse_generator(pm_gen::Dict{String, Any})
     sub_data["F3"] = get(pm_gen, "f3", _default_generator["F3"])
     sub_data["O4"] = get(pm_gen, "o4", _default_generator["O4"])
     sub_data["F4"] = get(pm_gen, "f4", _default_generator["F4"])
+    sub_data["ZR"] = get(pm_gen, "ZR", _default_generator["ZR"])
+    sub_data["ZX"] = get(pm_gen, "ZX", _default_generator["ZX"])
+    sub_data["RT"] = get(pm_gen, "RT", _default_generator["RT"])
+    sub_data["XT"] = get(pm_gen, "XT", _default_generator["XT"])
+    
+    
+    sub_data["ID"] = get(pm_gen, "ID", _default_generator["ID"])
+    sub_data["IREG"] = get(pm_gen, "IREG", _default_generator["IREG"])
+    sub_data["GTAP"] = get(pm_gen, "GTAP", _default_generator["GTAP"])
+    sub_data["STAT"] = get(pm_gen, "STAT", _default_generator["STAT"])
+    sub_data["RMPCT"] = get(pm_gen, "RMPCT", _default_generator["RMPCT"])
     sub_data["WMOD"] = get(pm_gen, "WMOD", _default_generator["WMOD"])
     sub_data["WPF"] = get(pm_gen, "WPF", _default_generator["WPF"])
 

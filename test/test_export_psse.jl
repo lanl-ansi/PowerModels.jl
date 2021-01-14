@@ -85,6 +85,11 @@ end
     for file in readdir("data/pti")
 
         non_sense_cases = [
+            "case0.raw",
+            "parser_test_b.raw",
+            "parser_test_d.raw",
+            "parser_test_defaults.raw",
+            "parser_test_j.raw",
             ]
 
         skip_cases = [
@@ -109,13 +114,16 @@ end
     for file in readdir("data/pti")
 
         non_sense_cases = [
+            "parser_test_b.raw",
+            "parser_test_d.raw",
+            "parser_test_defaults.raw",
+            "parser_test_j.raw",
             ]
 
         skip_cases = [
-
         ]
 
-        if file in non_sense_cases
+        if file in vcat(non_sense_cases, skip_cases)
             continue
         end
 
