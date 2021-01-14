@@ -19,23 +19,20 @@ end
     # PSSE -> PM1 -> PSSE -> PM2, checks PM1 == PM2
     for file in readdir("data/pti")
         
-        non_sense_cases = [
+        skip_cases = [
             "case0.raw",
             "parser_test_b.raw",
             "parser_test_d.raw",
             "parser_test_defaults.raw",
             "parser_test_j.raw",
-            ]
-            
-        skip_cases = [
-            "frankenstein_20.raw",
+            "frankenstein_20.raw", # this because 3w tran
             "frankenstein_70.raw",
             "three_winding_mag_test.raw",
             "three_winding_test.raw",
             "three_winding_test_2.raw"
             ]
             
-            if file in vcat(non_sense_cases, skip_cases)
+            if file in skip_cases
                 continue
             end
             
@@ -66,25 +63,25 @@ end
         end
     end  
     
-    # MATPOWER -> PM1 -> PSSE -> PM2, checks PM1 == PM2
-    for file in readdir("data/matpower")
-        @testset "Test Buses @ $(file)" begin
-        # From MATPOWER -> PM1
-        file_case = "../test/data/matpower/" * file
-
-        # PM1 -> PSSE -> PM2
-        case_base, case_tmp = generate_pm_dicts(file_case, import_all=false)
-        
-        @test InfrastructureModels.compare_dict(case_base["bus"], case_tmp["bus"])
-        end
-    end  
+    ## MATPOWER -> PM1 -> PSSE -> PM2, checks PM1 == PM2
+    #for file in readdir("data/matpower")
+    #    @testset "Test Buses @ $(file)" begin
+    #    # From MATPOWER -> PM1
+    #    file_case = "../test/data/matpower/" * file
+#
+    #    # PM1 -> PSSE -> PM2
+    #    case_base, case_tmp = generate_pm_dicts(file_case, import_all=false)
+    #    
+    #    @test InfrastructureModels.compare_dict(case_base["bus"], case_tmp["bus"])
+    #    end
+    #end  
 end
 
 @testset "Test Loads:" begin
 
     for file in readdir("data/pti")
 
-        non_sense_cases = [
+        skip_cases = [
             "case0.raw",
             "parser_test_b.raw",
             "parser_test_d.raw",
@@ -92,11 +89,7 @@ end
             "parser_test_j.raw",
             ]
 
-        skip_cases = [
-
-        ]
-
-        if file in non_sense_cases
+        if file in skip_cases
             continue
         end
 
