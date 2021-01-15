@@ -975,11 +975,31 @@ function export_pti(io::IO, data::Dict{String,Any})
     bus_zone = Dict{Int64, Any}()
     bus_area = Dict{Int64, Any}()
     bus_owner = Dict{Int64, Any}()
+
+    # maps Three Windings star buses and transformers
+    three_winding_tran = Dict{Tuple, Any}()
+
     for (i, bus) in data["bus"]
         bus_i = bus["bus_i"]
+        
+        # maps area, owner, zone. 
+        # It is better in a only Dict?
         bus_area[bus_i] = get(bus, "area", _default_bus["AREA"])
         bus_owner[bus_i] =  get(bus, "owner", _default_bus["OWNER"])
         bus_zone[bus_i] = get(bus, "zone", _default_bus["ZONE"])
+
+        # maps three winding
+        source_id = bus["source_id"]
+        if source_id[1] != "bus" && length(source_id) == 7
+            _, _, _, i, j, k, ckt = source_id
+
+            three_winding_tran[i, j, k, ckt] = Dict{String, Any}(
+                "bus" => bus,
+                "w1" => nothing,
+                "w2" => nothing,
+                "w3" => nothing,
+            )
+        end
     end
 
     # Header
@@ -1072,13 +1092,53 @@ function export_pti(io::IO, data::Dict{String,Any})
         # Get default owner
         bus_i = branch["f_bus"]
         owner = bus_owner[bus_i]
-
+        
         # Get Dict in a PSSE way
         psse_comp = _pm2psse_branch(branch, owner)
-
+        
         # Print it in the file
         _print_pti_str(io, psse_comp, _pti_dtypes["BRANCH"])
     end
+    
+    println(io, "0 / END OF BRANCH DATA, BEGIN TRANSFORMER DATA")
+    
+    # Transformers (✖╭╮✖)
+    # It should be better to iterate trough the branch record for 2W
+    # And iterate trough starbus for 3W; Needs to create a map starbus -> index of branches 3W
+
+    for (_, branch) in sort(data["branch"], by = (x) -> parse(Int64, x))
+        # Skip transformers
+        if ! branch["transformer"]
+            continue
+        end
+
+        _, i, j, k, ckt, _ = branch["source_id"]
+
+        if k !=  0 # Tree Winding
+            side = branch["f_bus"]
+
+            if side == i
+                three_winding_tran[i, j, k, ckt]["w1"] = branch
+            elseif side == j
+                three_winding_tran[i, j, k, ckt]["w2"] = branch
+            else
+                three_winding_tran[i, j, k, ckt]["w3"] = branch
+            end
+
+        else # Two Windings
+            # Convert to two winding transformer
+        end
+
+        
+    end
+
+    for (_, three_w) in three_winding_tran
+        # Convert to Three winding transformer
+        continue
+    end
+
+
+
 end
 
 
