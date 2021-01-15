@@ -199,7 +199,15 @@ end
             "parser_test_d.raw",
             "parser_test_defaults.raw",
             "parser_test_j.raw",
-            "case0.raw"
+            "case0.raw",
+            "case5.raw", #3w tran
+            "case5_alc.raw", #3w tran
+            "frankenstein_20.raw", #3w tran
+            "frankenstein_70.raw", #3w tran
+            "three_winding_mag_test.raw", #3w tran
+            "three_winding_test.raw", # 3w tran
+            "three_winding_test_2.raw", # 3w tran
+            "frankenstein_00_2.raw", # CW = 3
             ]
 
         if file in skip_cases
@@ -208,8 +216,8 @@ end
 
         @testset "Test Transformers @ $(file)" begin
             file_case = "../test/data/pti/" * file
-            case_base, case_tmp = generate_pm_dicts(file_case, import_all=true)
-            
+            case_base, case_tmp = generate_pm_dicts(file_case, import_all=true);
+
             for (i, branch_base) in case_base["branch"]
                 if ! branch_base["transformer"]
                     continue
@@ -221,5 +229,3 @@ end
         end
     end  
 end
-
-

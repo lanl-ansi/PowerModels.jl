@@ -1102,21 +1102,20 @@ function export_pti(io::IO, data::Dict{String,Any})
     
     println(io, "0 / END OF BRANCH DATA, BEGIN TRANSFORMER DATA")
     
-    # Transformers (✖╭╮✖)
+    # Transformers
     # It should be better to iterate trough the branch record for 2W
     # And iterate trough starbus for 3W; Needs to create a map starbus -> index of branches 3W
-
+    
     for (_, branch) in sort(data["branch"], by = (x) -> parse(Int64, x))
         # Skip transformers
         if ! branch["transformer"]
             continue
         end
-
-        _, i, j, k, ckt, _ = branch["source_id"]
-
-        if k !=  0 # Tree Winding
+        
+        if branch["source_id"] == 7 # Tree Winding
+            _, _, _, i, j, k, ckt = branch["source_id"]
             side = branch["f_bus"]
-
+            
             if side == i
                 three_winding_tran[i, j, k, ckt]["w1"] = branch
             elseif side == j
@@ -1124,21 +1123,38 @@ function export_pti(io::IO, data::Dict{String,Any})
             else
                 three_winding_tran[i, j, k, ckt]["w3"] = branch
             end
-
-        else # Two Windings
+            
+        else # Two Winding    
+            # Get default owner
+            bus_i = branch["f_bus"]
+            owner = bus_owner[bus_i]
+            
+            # Get default transformer base
+            sbase = data["baseMVA"]
+            
             # Convert to two winding transformer
+            psse_comp = _pm2psse_2w_tran(branch, owner, sbase)
+            
+            lines = [
+                "TRANSFORMER",
+                "TRANSFORMER TWO-WINDING LINE 1",
+                "TRANSFORMER TWO-WINDING LINE 2",
+                "TRANSFORMER TWO-WINDING LINE 3",
+                ]
+                
+                for (psse_part, line) in zip(psse_comp, lines)
+                    _print_pti_str(io, psse_comp, _pti_dtypes[line])
+                end        
+            end            
         end
 
+        for (_, three_w) in three_winding_tran
+            # Convert to Three winding transformer
+            # TODO: what happen with the indices
+            continue
+        end
         
-    end
-
-    for (_, three_w) in three_winding_tran
-        # Convert to Three winding transformer
-        continue
-    end
-
-
-
+        println(io, "0 / END OF TRANSFORMER DATA, BEGIN AREA DATA")
 end
 
 
@@ -1282,6 +1298,7 @@ function _pm2psse_generator(pm_gen::Dict{String, Any},area::Int64, owner::Int64,
     return sub_data
 end
 
+
 """
 Parses PM branch data to PSS(R) E-style.
 """
@@ -1306,4 +1323,57 @@ function _pm2psse_branch(pm_br::Dict{String, Any}, owner::Int64)
     _export_remaining!(sub_data, pm_br, _pti_defaults["BRANCH"])
 
     return sub_data
+end
+
+
+"""
+Parses PM transformer branch to PSS(R) E-style.
+returns a dict with all the keys
+later pass this dict to _print_pti_str with differents _transformer_dtypes
+
+Reference: PSSE 33 - POM - 5-20
+
+TODO check what happened with MATPOWER transformers
+
+What to do with CW, CM, CZ? I gonna put it to 1 (system base).
+maybe with `import_all=true` we can replicate the transformer
+"""
+function _pm2psse_2w_tran(pm_br::Dict{String, Any}, owner::Int64, sbase::Float64)
+
+    sub_data = Dict{String, Any}()
+
+    # TRANSFORMER FIRST LINE PARAMETERS
+    sub_data["I"] = pm_br["f_bus"]
+    sub_data["J"] = pm_br["t_bus"]
+    sub_data["K"] = 0
+    sub_data["CKT"] = "\'$(pm_br["source_id"][5])\'"
+    sub_data["CW"] = _default_transformer["CW"]
+    sub_data["CZ"] =  _default_transformer["CZ"]
+    sub_data["CM"] = _default_transformer["CM"]
+    sub_data["MAG1"] = pm_br["g_fr"]
+    sub_data["MAG2"] = pm_br["b_fr"]
+    sub_data["NAME"] = "\'$(get(pm_br, "name", _default_transformer["NAME"]))\'"
+    sub_data["STAT"] = get(pm_br, "br_status", _default_transformer["STAT"])
+    sub_data["O1"] = get(pm_br, "o1", owner)
+
+    # TRANSFORMER SECOND LINE PARAMETERS
+    sub_data["R1-2"] = pm_br["br_r"]
+    sub_data["X1-2"] = pm_br["br_x"]
+    sub_data["SBASE1-2"] = get(pm_br, "SBASE1-2", sbase)
+
+    # TRANSFORMER WINDING ONE
+    sub_data["WINDV1"] = pm_br["tap"]
+    sub_data["ANG1"] = get(pm_br, "shift", _default_transformer["ANG1"])
+    sub_data["RATA1"] = get(pm_br, "rate_a", _default_transformer["RATA1"])
+    sub_data["RATB1"] = get(pm_br, "rate_b", _default_transformer["RATB1"])
+    sub_data["RATC1"] = get(pm_br, "rate_c", _default_transformer["RATC1"])
+
+    # TRANSFORMER WINDING TWO
+    sub_data["WINDV2"] = get(pm_br, "windv2", 1.0)
+    
+    # Defaults
+    _export_remaining!(sub_data, pm_br, _pti_defaults["TRANSFORMER"])
+    
+    return sub_data
+    
 end
