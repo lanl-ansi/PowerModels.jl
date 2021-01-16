@@ -1083,68 +1083,55 @@ function export_pti(io::IO, data::Dict{String,Any})
 
     println(io, "0 / END OF GENERATOR DATA, BEGIN BRANCH DATA")
 
+    transformers = Array{Tuple{String, Any}, 1}()
+
     # Branches
     for (_, branch) in sort(data["branch"], by = (x) -> parse(Int64, x))
-        # Skip transformers
+        # Skip transformers and put it in transformers Array
         if branch["transformer"]
-            continue
+            _, i, j, k, ckt, _ = branch["source_id"]
+
+            if k != 0 # Tree Winding
+                side = branch["f_bus"]
+            
+                if side == i
+                    three_winding_tran[i, j, k, ckt]["w1"] = branch
+                elseif side == j
+                    three_winding_tran[i, j, k, ckt]["w2"] = branch
+                else
+                    three_winding_tran[i, j, k, ckt]["w3"] = branch
+                end
+
+                windings = [
+                    three_winding_tran[i, j, k, ckt]["w1"],
+                    three_winding_tran[i, j, k, ckt]["w2"],
+                    three_winding_tran[i, j, k, ckt]["w3"],
+                ]
+
+                # if 3w Transformer Dict is full 
+                if ! (nothing in windings)
+                    push!(transformers, ("3W", three_winding_tran[i, j, k, ckt]))
+                end
+
+            else # Two Winding    
+                push!(transformers, ("2W", branch))
+            end            
+
+        else
+            # Get default owner
+            bus_i = branch["f_bus"]
+            owner = bus_owner[bus_i]
+            
+            # Get Dict in a PSSE way
+            psse_comp = _pm2psse_branch(branch, owner)
+            
+            # Print it in the file
+            _print_pti_str(io, psse_comp, _pti_dtypes["BRANCH"])
         end
-        # Get default owner
-        bus_i = branch["f_bus"]
-        owner = bus_owner[bus_i]
-        
-        # Get Dict in a PSSE way
-        psse_comp = _pm2psse_branch(branch, owner)
-        
-        # Print it in the file
-        _print_pti_str(io, psse_comp, _pti_dtypes["BRANCH"])
     end
     
     println(io, "0 / END OF BRANCH DATA, BEGIN TRANSFORMER DATA")
     
-    # Transformers
-    # It should be better to iterate trough the branch record for 2W
-    # And iterate trough starbus for 3W; Needs to create a map starbus -> index of branches 3W
-    # There are some troubles with the index, i think that is better to make an array of 2W and 3W and write it later in the file
-    
-    transformers = Array{Tuple{String, Any}, 1}()
-
-    for (_, branch) in sort(data["branch"], by = (x) -> parse(Int64, x))
-        # Skip transformers
-        if ! branch["transformer"]
-            continue
-        end
-        
-        _, i, j, k, ckt, _ = branch["source_id"]
-
-        if k != 0 # Tree Winding
-            side = branch["f_bus"]
-            
-            if side == i
-                three_winding_tran[i, j, k, ckt]["w1"] = branch
-            elseif side == j
-                three_winding_tran[i, j, k, ckt]["w2"] = branch
-            else
-                three_winding_tran[i, j, k, ckt]["w3"] = branch
-            end
-
-            windings = [
-                three_winding_tran[i, j, k, ckt]["w1"],
-                three_winding_tran[i, j, k, ckt]["w2"],
-                three_winding_tran[i, j, k, ckt]["w3"],
-            ]
-
-            # if 3w Transformer Dict is full 
-            if ! (nothing in windings)
-                push!(transformers, ("3W", three_winding_tran[i, j, k, ckt]))
-            end
-
-        else # Two Winding    
-            push!(transformers, ("2W", branch))
-        end            
-    end
-        
-    # This should be better
     for (type, transformer) in transformers
         # Get default transformer base
         sbase = data["baseMVA"]
@@ -1188,6 +1175,23 @@ function export_pti(io::IO, data::Dict{String,Any})
 
         
     println(io, "0 / END OF TRANSFORMER DATA, BEGIN AREA DATA")
+
+    # TODO: Next items
+    
+    println(io, "0 / END OF TRANSFORMER DATA, BEGIN AREA DATA")
+    println(io, "0 / END OF AREA DATA, BEGIN TWO-TERMINAL DC DATA")
+    println(io, "0 / END OF TWO-TERMINAL DC DATA, BEGIN VOLTAGE SOURCE CONVERTER DATA")
+    println(io, "0 / END OF VOLTAGE SOURCE CONVERTER DATA, BEGIN IMPEDANCE CORRECTION DATA")
+    println(io, "0 / END OF IMPEDANCE CORRECTION DATA, BEGIN MULTI-TERMINAL DC DATA")
+    println(io, "0 / END OF MULTI-TERMINAL DC DATA, BEGIN MULTI-SECTION LINE DATA")
+    println(io, "0 / END OF MULTI-SECTION LINE DATA, BEGIN ZONE DATA")
+    println(io, "0 / END OF ZONE DATA, BEGIN INTER-AREA TRANSFER DATA")
+    println(io, "0 / END OF INTER-AREA TRANSFER DATA, BEGIN OWNER DATA")
+    println(io, "0 / END OF OWNER DATA, BEGIN FACTS CONTROL DEVICE DATA")
+    println(io, "0 / END OF FACTS CONTROL DEVICE DATA, BEGIN SWITCHED SHUNT DATA")
+    println(io, "0 /END OF SWITCHED SHUNT DATA, BEGIN GNE DEVICE DATA")
+    println(io, "0 /END OF GNE DEVICE DATA")
+    println(io, "Q")
 end
 
 
@@ -1383,8 +1387,8 @@ function _pm2psse_2w_tran(pm_br::Dict{String, Any}, owner::Int64, sbase::Float64
     sub_data["CW"] = _default_transformer["CW"]
     sub_data["CZ"] =  _default_transformer["CZ"]
     sub_data["CM"] = _default_transformer["CM"]
-    sub_data["MAG1"] = pm_br["g_fr"]
-    sub_data["MAG2"] = pm_br["b_fr"]
+    sub_data["MAG1"] = pm_br["g_fr"] + pm_br["g_to"]
+    sub_data["MAG2"] = pm_br["b_fr"] + pm_br["b_to"]
     sub_data["NAME"] = "\'$(get(pm_br, "name", _default_transformer["NAME"]))\'"
     sub_data["STAT"] = get(pm_br, "br_status", _default_transformer["STAT"])
     sub_data["O1"] = get(pm_br, "o1", owner)

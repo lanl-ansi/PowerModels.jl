@@ -237,3 +237,44 @@ TESTLOG = Memento.getlogger(PowerModels)
         # @test parsed_pti == pti
     end
 end
+
+
+@testset "test idempotent pti export" begin
+
+    function test_pti_idempotent(filename::AbstractString, parse_file::Function)
+        source_data = parse_file(filename)
+
+        file_tmp = "../test/data/tmp.raw"
+        PowerModels.export_pti(file_tmp, source_data)
+
+        destination_data = PowerModels.parse_file(file_tmp)
+        rm(file_tmp)
+
+        # Delete "name"  key
+        delete!(source_data, "name")
+        delete!(destination_data, "name")
+
+        @test InfrastructureModels.compare_dict(source_data, destination_data)
+    end
+
+    @testset "test parser_three_winding_test" begin
+        file = "../test/data/pti/three_winding_test.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    @testset "test case3" begin
+        file = "../test/data/pti/case3.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    # Fails at branch["5"] because I=4, J=3 -> PM parse it as f_bus=3, t_bus=4
+    # Diference in the "source_id"
+    # Source: Any["transformer", 4, 3, 0, "1 ", 0]
+    # Destination: Any["transformer", 3, 4, 0, "1 ", 0]
+
+    #@testset "test case5" begin
+    #    file = "../test/data/pti/case5.raw"
+    #    test_pti_idempotent(file, PowerModels.parse_file)
+    #end
+
+end

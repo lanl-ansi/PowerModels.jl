@@ -25,11 +25,6 @@ end
             "parser_test_d.raw",
             "parser_test_defaults.raw",
             "parser_test_j.raw",
-            "frankenstein_20.raw", # this because 3w tran
-            "frankenstein_70.raw",
-            "three_winding_mag_test.raw",
-            "three_winding_test.raw",
-            "three_winding_test_2.raw"
             ]
             
             if file in skip_cases
@@ -68,7 +63,7 @@ end
     #    @testset "Test Buses @ $(file)" begin
     #    # From MATPOWER -> PM1
     #    file_case = "../test/data/matpower/" * file
-#
+    #
     #    # PM1 -> PSSE -> PM2
     #    case_base, case_tmp = generate_pm_dicts(file_case, import_all=false)
     #    
@@ -151,7 +146,7 @@ end
 
         @testset "Test Generators @ $(file)" begin
             file_case = "../test/data/pti/" * file
-            case_base, case_tmp = generate_pm_dicts(file_case, import_all=true)
+            case_base, case_tmp = generate_pm_dicts(file_case, import_all=false)
 
             @test InfrastructureModels.compare_dict(case_base["gen"], case_tmp["gen"])
         end
@@ -176,7 +171,7 @@ end
 
         @testset "Test Branches @ $(file)" begin
             file_case = "../test/data/pti/" * file
-            case_base, case_tmp = generate_pm_dicts(file_case, import_all=true)
+            case_base, case_tmp = generate_pm_dicts(file_case, import_all=false)
             
             for (i, branch_base) in case_base["branch"]
                 if branch_base["transformer"]
@@ -243,18 +238,27 @@ end
         "frankenstein_00_2.raw", # CW = 3
         ]
 
-    for file in cases
-        @testset "Test 3W Transformers @ $(file)" begin
+    #for file in cases
+    #    @testset "Test 3W Transformers @ $(file)" begin
+            file = "case5.raw"
             file_case = "../test/data/pti/" * file
             case_base, case_tmp = generate_pm_dicts(file_case, import_all=false);
 
-            for (i, branch_base) in case_base["branch"]
-                if ! branch_base["transformer"]
-                    continue
-                end
-                branch_tmp = case_tmp["branch"][i]
-                @test InfrastructureModels.compare_dict(branch_base, branch_tmp)
-            end
-        end
-    end
+
+            branch_base = case_base["branch"]["6"]
+            branch_tmp = case_tmp["branch"]["6"]
+
+            @test InfrastructureModels.compare_dict(branch_base, branch_tmp)
+
+
+    #        for (i, branch_base) in case_base["branch"]
+    #            if ! branch_base["transformer"]
+    #                continue
+    #            end
+    #            branch_tmp = case_tmp["branch"][i]
+    #            @test InfrastructureModels.compare_dict(branch_base, branch_tmp)
+    #        end
+    #    end
+    #end
 end
+
