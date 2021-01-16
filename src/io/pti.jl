@@ -330,9 +330,9 @@ const _default_facts = Dict("J" => 0, "MODE" => 1, "PDES" => 0.0, "QDES" => 0.0,
 
 const _default_switched_shunt = Dict("MODSW" => 1, "ADJM" => 0, "STAT" => 1,
     "VSWHI" => 1.0, "VSWLO" => 1.0, "SWREM" => 0, "RMPCT" => 100.0,
-    "RMIDNT" => "", "BINIT" => 0.0,
-    "N1" => 0.0, "N2" => 0.0, "N3" => 0.0, "N4" => 0.0, "N5" => 0.0,
-    "N6" => 0.0, "N7" => 0.0, "N8" => 0.0,
+    "RMIDNT" => "        ", "BINIT" => 0.0,
+    "N1" => 0, "N2" => 0, "N3" => 0, "N4" => 0, "N5" => 0,
+    "N6" => 0, "N7" => 0, "N8" => 0,
     "B1" => 0.0, "B2" => 0.0, "B3" => 0.0, "B4" => 0.0, "B5" => 0.0,
     "B6" => 0.0, "B7" => 0.0, "B8" => 0.0)
 
@@ -1178,7 +1178,6 @@ function export_pti(io::IO, data::Dict{String,Any})
 
     # TODO: Next items
     
-    println(io, "0 / END OF TRANSFORMER DATA, BEGIN AREA DATA")
     println(io, "0 / END OF AREA DATA, BEGIN TWO-TERMINAL DC DATA")
     println(io, "0 / END OF TWO-TERMINAL DC DATA, BEGIN VOLTAGE SOURCE CONVERTER DATA")
     println(io, "0 / END OF VOLTAGE SOURCE CONVERTER DATA, BEGIN IMPEDANCE CORRECTION DATA")
@@ -1189,6 +1188,21 @@ function export_pti(io::IO, data::Dict{String,Any})
     println(io, "0 / END OF INTER-AREA TRANSFER DATA, BEGIN OWNER DATA")
     println(io, "0 / END OF OWNER DATA, BEGIN FACTS CONTROL DEVICE DATA")
     println(io, "0 / END OF FACTS CONTROL DEVICE DATA, BEGIN SWITCHED SHUNT DATA")
+
+    # Switched Shunt
+    for (_, shunt) in sort(data["shunt"], by = (x) -> parse(Int64, x))
+        # Skip Fixed Shunts
+        if shunt["source_id"][1] != "switched shunt"
+            continue
+        end
+        
+        # Get Dict in a PSSE way
+        psse_comp = _pm2psse_switched_shunt(shunt)
+
+        # Print it in the file
+        _print_pti_str(io, psse_comp, _pti_dtypes["SWITCHED SHUNT"])
+    end
+
     println(io, "0 /END OF SWITCHED SHUNT DATA, BEGIN GNE DEVICE DATA")
     println(io, "0 /END OF GNE DEVICE DATA")
     println(io, "Q")
@@ -1488,5 +1502,21 @@ function _pm2psse_3w_tran(pm_tr::Dict{String, Any}, owner::Int64, sbase::Float64
     _export_remaining!(sub_data, w2, _pti_defaults["TRANSFORMER"])
     _export_remaining!(sub_data, w3, _pti_defaults["TRANSFORMER"])
     
+    return sub_data
+end
+
+
+"""
+Parses PM fixed shunt to PSS(R)E-style
+"""
+function _pm2psse_switched_shunt(pm_shunt::Dict{String, Any})
+    sub_data = Dict{String, Any}()
+    sub_data["I"] = pm_shunt["shunt_bus"] # Not defaul allowed
+    sub_data["STAT"] = get(pm_shunt, "status", _default_switched_shunt["STAT"])
+    sub_data["BINIT"] = get(pm_shunt, "bs", _default_switched_shunt["BINIT"])
+    sub_data["RMIDNT"] = "\'$(get(pm_shunt, "rmidnt", _default_switched_shunt["RMIDNT"]))\'"
+
+    _export_remaining!(sub_data, pm_shunt, _pti_defaults["SWITCHED SHUNT"])
+
     return sub_data
 end

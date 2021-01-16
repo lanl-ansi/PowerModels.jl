@@ -276,5 +276,49 @@ end
     #    file = "../test/data/pti/case5.raw"
     #    test_pti_idempotent(file, PowerModels.parse_file)
     #end
+    #
+    #@testset "test case5_alc" begin
+    #    file = "../test/data/pti/case5_alc.raw"
+    #    test_pti_idempotent(file, PowerModels.parse_file)
+    #end
+
+    @testset "test case14" begin
+        file = "../test/data/pti/case14.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    # Same as the case5.raw since there is a branch with I=23, J=20. If u open it and save it from PSSE
+    # the data of this branch is I=20, J=23 but with MET = 2
+    #@testset "test case24" begin
+    #    file = "../test/data/pti/case24.raw"
+    #    test_pti_idempotent(file, PowerModels.parse_file)
+    #end
+
+    @testset "test case30" begin
+        file = "../test/data/pti/case30.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    @testset "test case73" begin
+        file = "../test/data/pti/case73.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    @testset "test frankenstein_00_2" begin
+        file = "../test/data/pti/frankenstein_00_2.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    @testset "test frankenstein_20" begin
+        file = "../test/data/pti/frankenstein_20.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    # Same as case5 and case 24
+    # See line 27 of frankenstein_70.raw
+    #@testset "test frankenstein_70" begin
+    #    file = "../test/data/pti/frankenstein_70.raw"
+    #    test_pti_idempotent(file, PowerModels.parse_file)
+    #end
 
 end
