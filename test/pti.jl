@@ -322,3 +322,28 @@ end
     #end
 
 end
+
+
+@testset "test export all to pti" begin
+
+    function test_pti_export_all(filename::AbstractString)
+        source_data = parse_file(filename, import_all=import_all)
+
+        file_tmp = "../test/data/tmp.raw"
+        PowerModels.export_pti(file_tmp, source_data)
+
+        destination_data = PowerModels.parse_file(file_tmp, import_all=true)
+        rm(file_tmp)
+
+        # Delete "name" key
+        delete!(source_data, "name")
+        delete!(destination_data, "name")
+
+        @test InfrastructureModels.compare_dict(source_data, destination_data)
+    end
+
+    @testset "test case3" begin
+        file = "../test/data/pti/case3.raw"
+        test_pti_export_all(file)
+    end
+end

@@ -949,7 +949,7 @@ function export_pti(data::Dict{String,Any})
 end
 
 "Export power network data to a file in the pti format
- TODO: The extension should be checked in export_file function
+ TODO: The extension should be checked in export_file function make one in common.jl
 "
 function export_pti(file::AbstractString, data::Dict{String,Any})
     open(file, "w") do io
@@ -1132,6 +1132,7 @@ function export_pti(io::IO, data::Dict{String,Any})
     
     println(io, "0 / END OF BRANCH DATA, BEGIN TRANSFORMER DATA")
     
+    # Transformers
     for (type, transformer) in transformers
         # Get default transformer base
         sbase = data["baseMVA"]
@@ -1173,19 +1174,50 @@ function export_pti(io::IO, data::Dict{String,Any})
         end
     end
 
-        
     println(io, "0 / END OF TRANSFORMER DATA, BEGIN AREA DATA")
 
-    # TODO: Next items
+    # Area Interchange
+    if haskey(data, "area interchange") 
+        for (_, area) in sort(data["area interchange"], by = (x) -> parse(Int64, x))
+            # Get Dict in a PSSE way and print it
+            psse_comp = _pm2psse_area_interchange(area)
+            _print_pti_str(io, psse_comp, _pti_dtypes["AREA INTERCHANGE"])
+        end
+    end
     
     println(io, "0 / END OF AREA DATA, BEGIN TWO-TERMINAL DC DATA")
+    # TODO : See how PM converts the DC line and do the oposite
+    
     println(io, "0 / END OF TWO-TERMINAL DC DATA, BEGIN VOLTAGE SOURCE CONVERTER DATA")
+    # TODO : See how PM converts the DC line and do the oposite
+
     println(io, "0 / END OF VOLTAGE SOURCE CONVERTER DATA, BEGIN IMPEDANCE CORRECTION DATA")
     println(io, "0 / END OF IMPEDANCE CORRECTION DATA, BEGIN MULTI-TERMINAL DC DATA")
     println(io, "0 / END OF MULTI-TERMINAL DC DATA, BEGIN MULTI-SECTION LINE DATA")
     println(io, "0 / END OF MULTI-SECTION LINE DATA, BEGIN ZONE DATA")
+
+    # Zone Data
+    if haskey(data, "zone") 
+        for (_, zone) in sort(data["zone"], by = (x) -> parse(Int64, x))
+            # Get Dict in a PSSE way and print it
+            psse_comp = _pm2psse_zone(zone)
+            _print_pti_str(io, psse_comp, _pti_dtypes["ZONE"])
+        end
+    end
+
+
     println(io, "0 / END OF ZONE DATA, BEGIN INTER-AREA TRANSFER DATA")
     println(io, "0 / END OF INTER-AREA TRANSFER DATA, BEGIN OWNER DATA")
+
+    # Owner Data
+    if haskey(data, "owner") 
+        for (_, owner) in sort(data["zone"], by = (x) -> parse(Int64, x))
+            # Get Dict in a PSSE way and print it
+            psse_comp = _pm2psse_owner(owner)
+            _print_pti_str(io, psse_comp, _pti_dtypes["OWNER"])
+        end
+    end
+
     println(io, "0 / END OF OWNER DATA, BEGIN FACTS CONTROL DEVICE DATA")
     println(io, "0 / END OF FACTS CONTROL DEVICE DATA, BEGIN SWITCHED SHUNT DATA")
 
@@ -1507,6 +1539,20 @@ end
 
 
 """
+Parses PM area interchange to PSS(R) E-style
+"""
+function _pm2psse_area_interchange(area::Dict{String, Any})
+    sub_data = Dict{String, Any}()
+    sub_data["I"] = area["i"]
+    sub_data["ARNAME"] = "\'$(get(area, "arname", _default_area_interchange["ARNAME"]))\'"
+    
+    _export_remaining!(sub_data, area, _pti_defaults["AREA INTERCHANGE"])
+    
+    return sub_data
+end
+
+
+"""
 Parses PM fixed shunt to PSS(R)E-style
 """
 function _pm2psse_switched_shunt(pm_shunt::Dict{String, Any})
@@ -1517,6 +1563,30 @@ function _pm2psse_switched_shunt(pm_shunt::Dict{String, Any})
     sub_data["RMIDNT"] = "\'$(get(pm_shunt, "rmidnt", _default_switched_shunt["RMIDNT"]))\'"
 
     _export_remaining!(sub_data, pm_shunt, _pti_defaults["SWITCHED SHUNT"])
+
+    return sub_data
+end
+
+
+"""
+Parses PM zone to PSS(R) E-style
+"""
+function _pm2psse_zone(zone::Dict{String, Any})
+    sub_data = Dict{String, Any}()
+    sub_data["I"] = zone["index"]
+    sub_data["ZONAME"] = "\'$(get(zone, "zoname", _default_zone["ZONAME"]))\'"
+    
+    return sub_data
+end
+
+
+"""
+Parses PM zone to PSS(R) E-style
+"""
+function _pm2psse_owner(owner::Dict{String, Any})
+    sub_data = Dict{String, Any}()
+    sub_data["I"] = owner["index"]
+    sub_data["OWNAME"] = "\'$(get(owner, "owname", _default_owner["OWNAME"]))\'"
 
     return sub_data
 end
