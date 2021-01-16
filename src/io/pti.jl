@@ -1107,6 +1107,8 @@ function export_pti(io::IO, data::Dict{String,Any})
     # And iterate trough starbus for 3W; Needs to create a map starbus -> index of branches 3W
     # There are some troubles with the index, i think that is better to make an array of 2W and 3W and write it later in the file
     
+    transformers = Array{Tuple{String, Any}, 1}()
+
     for (_, branch) in sort(data["branch"], by = (x) -> parse(Int64, x))
         # Skip transformers
         if ! branch["transformer"]
@@ -1125,17 +1127,35 @@ function export_pti(io::IO, data::Dict{String,Any})
             else
                 three_winding_tran[i, j, k, ckt]["w3"] = branch
             end
-            
+
+            windings = [
+                three_winding_tran[i, j, k, ckt]["w1"],
+                three_winding_tran[i, j, k, ckt]["w2"],
+                three_winding_tran[i, j, k, ckt]["w3"],
+            ]
+
+            # if 3w Transformer Dict is full 
+            if ! (nothing in windings)
+                push!(transformers, ("3W", three_winding_tran[i, j, k, ckt]))
+            end
+
         else # Two Winding    
+            push!(transformers, ("2W", branch))
+        end            
+    end
+        
+    # This should be better
+    for (type, transformer) in transformers
+        # Get default transformer base
+        sbase = data["baseMVA"]
+
+        if type == "2W"
             # Get default owner
-            bus_i = branch["f_bus"]
+            bus_i = transformer["f_bus"]
             owner = bus_owner[bus_i]
-            
-            # Get default transformer base
-            sbase = data["baseMVA"]
-            
+                        
             # Convert to two winding transformer
-            psse_comp = _pm2psse_2w_tran(branch, owner, sbase)
+            psse_comp = _pm2psse_2w_tran(transformer, owner, sbase)
             
             lines = [
                 "TRANSFORMER",
@@ -1144,37 +1164,28 @@ function export_pti(io::IO, data::Dict{String,Any})
                 "TRANSFORMER TWO-WINDING LINE 3",
                 ]
                 
-            for (psse_part, line) in zip(psse_comp, lines)
-                _print_pti_str(io, psse_comp, _pti_dtypes[line])
-            end        
-        end            
-    end
-        
-    # TODO: the order of this transformers should be sorted by starbus number
-    for (_, transformer) in three_winding_tran
-        
-        # Get default owner
-        bus_i = transformer["w1"]["f_bus"]
-        owner = bus_owner[bus_i]
-        
-        # Get default transformer base
-        sbase = data["baseMVA"]
-
-        # Convert to Three winding transformer
-        psse_comp = _pm2psse_3w_tran(transformer, owner, sbase)
-        
-        lines = [
-            "TRANSFORMER",
-            "TRANSFORMER THREE-WINDING LINE 1",
-            "TRANSFORMER THREE-WINDING LINE 2",
-            "TRANSFORMER THREE-WINDING LINE 3",
-            "TRANSFORMER THREE-WINDING LINE 4",
-            ]
+        elseif type == "3W"
+            # Get default owner
+            bus_i = transformer["w1"]["f_bus"]
+            owner = bus_owner[bus_i]
             
+            # Convert to Three winding transformer
+            psse_comp = _pm2psse_3w_tran(transformer, owner, sbase)
+            
+            lines = [
+                "TRANSFORMER",
+                "TRANSFORMER THREE-WINDING LINE 1",
+                "TRANSFORMER THREE-WINDING LINE 2",
+                "TRANSFORMER THREE-WINDING LINE 3",
+                "TRANSFORMER THREE-WINDING LINE 4",
+                ]
+        end
+        
         for (psse_part, line) in zip(psse_comp, lines)
             _print_pti_str(io, psse_comp, _pti_dtypes[line])
         end
     end
+
         
     println(io, "0 / END OF TRANSFORMER DATA, BEGIN AREA DATA")
 end
@@ -1355,7 +1366,7 @@ later pass this dict to _print_pti_str with differents _transformer_dtypes
 
 Reference: PSSE 33 - POM - 5-20
 
-TODO check what happened with MATPOWER transformers
+TODO: check what happened with MATPOWER transformers
 
 What to do with CW, CM, CZ? I gonna put it to 1 (system base).
 maybe with `import_all=true` we can replicate the transformer
@@ -1436,6 +1447,8 @@ function _pm2psse_3w_tran(pm_tr::Dict{String, Any}, owner::Int64, sbase::Float64
         sub_data["STAT"] = 3
     elseif !w1_stat && w2_stat && w3_stat
         sub_data["STAT"] = 4
+    else
+        sub_data["STAT"] = 0
     end
     
     sub_data["O1"] = get(w1, "o1", owner)
@@ -1454,7 +1467,7 @@ function _pm2psse_3w_tran(pm_tr::Dict{String, Any}, owner::Int64, sbase::Float64
     sub_data["SBASE3-1"] = get(w1, "SBASE3-1", sbase)
     
     sub_data["VMSTAR"] = get(bus, "vm", _default_transformer["VMSTAR"])
-    sub_data["ANSTAR"] = get(bus, "va", _default_transformer["VMSTAR"]) # Check radians
+    sub_data["ANSTAR"] = get(bus, "va", _default_transformer["VMSTAR"])
     
     # TRANSFORMER WINDINGS
     for (m, w) in enumerate([w1, w2, w3])

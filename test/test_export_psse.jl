@@ -216,7 +216,7 @@ end
 
         @testset "Test Transformers @ $(file)" begin
             file_case = "../test/data/pti/" * file
-            case_base, case_tmp = generate_pm_dicts(file_case, import_all=true);
+            case_base, case_tmp = generate_pm_dicts(file_case, import_all=false);
 
             for (i, branch_base) in case_base["branch"]
                 if ! branch_base["transformer"]
@@ -247,11 +247,6 @@ end
         @testset "Test 3W Transformers @ $(file)" begin
             file_case = "../test/data/pti/" * file
             case_base, case_tmp = generate_pm_dicts(file_case, import_all=false);
-
-            branch_base = case_base["branch"]["1"]
-            branch_tmp = case_tmp["branch"]["4"]
-
-            @test InfrastructureModels.compare_dict(branch_base, branch_tmp)
 
             for (i, branch_base) in case_base["branch"]
                 if ! branch_base["transformer"]
