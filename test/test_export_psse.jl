@@ -229,3 +229,37 @@ end
         end
     end  
 end
+
+@testset "Test 3W Transformers:" begin
+
+    cases = [
+        "case5.raw", #3w tran
+        "case5_alc.raw", #3w tran
+        "frankenstein_20.raw", #3w tran
+        "frankenstein_70.raw", #3w tran
+        "three_winding_mag_test.raw", #3w tran
+        "three_winding_test.raw", # 3w tran
+        "three_winding_test_2.raw", # 3w tran
+        "frankenstein_00_2.raw", # CW = 3
+        ]
+
+    for file in cases
+        @testset "Test 3W Transformers @ $(file)" begin
+            file_case = "../test/data/pti/" * file
+            case_base, case_tmp = generate_pm_dicts(file_case, import_all=false);
+
+            branch_base = case_base["branch"]["1"]
+            branch_tmp = case_tmp["branch"]["4"]
+
+            @test InfrastructureModels.compare_dict(branch_base, branch_tmp)
+
+            for (i, branch_base) in case_base["branch"]
+                if ! branch_base["transformer"]
+                    continue
+                end
+                branch_tmp = case_tmp["branch"][i]
+                @test InfrastructureModels.compare_dict(branch_base, branch_tmp)
+            end
+        end
+    end
+end

@@ -1105,6 +1105,7 @@ function export_pti(io::IO, data::Dict{String,Any})
     # Transformers
     # It should be better to iterate trough the branch record for 2W
     # And iterate trough starbus for 3W; Needs to create a map starbus -> index of branches 3W
+    # There are some troubles with the index, i think that is better to make an array of 2W and 3W and write it later in the file
     
     for (_, branch) in sort(data["branch"], by = (x) -> parse(Int64, x))
         # Skip transformers
@@ -1112,8 +1113,9 @@ function export_pti(io::IO, data::Dict{String,Any})
             continue
         end
         
-        if branch["source_id"] == 7 # Tree Winding
-            _, _, _, i, j, k, ckt = branch["source_id"]
+        _, i, j, k, ckt, _ = branch["source_id"]
+
+        if k != 0 # Tree Winding
             side = branch["f_bus"]
             
             if side == i
@@ -1142,19 +1144,39 @@ function export_pti(io::IO, data::Dict{String,Any})
                 "TRANSFORMER TWO-WINDING LINE 3",
                 ]
                 
-                for (psse_part, line) in zip(psse_comp, lines)
-                    _print_pti_str(io, psse_comp, _pti_dtypes[line])
-                end        
-            end            
-        end
-
-        for (_, three_w) in three_winding_tran
-            # Convert to Three winding transformer
-            # TODO: what happen with the indices
-            continue
-        end
+            for (psse_part, line) in zip(psse_comp, lines)
+                _print_pti_str(io, psse_comp, _pti_dtypes[line])
+            end        
+        end            
+    end
         
-        println(io, "0 / END OF TRANSFORMER DATA, BEGIN AREA DATA")
+    # TODO: the order of this transformers should be sorted by starbus number
+    for (_, transformer) in three_winding_tran
+        
+        # Get default owner
+        bus_i = transformer["w1"]["f_bus"]
+        owner = bus_owner[bus_i]
+        
+        # Get default transformer base
+        sbase = data["baseMVA"]
+
+        # Convert to Three winding transformer
+        psse_comp = _pm2psse_3w_tran(transformer, owner, sbase)
+        
+        lines = [
+            "TRANSFORMER",
+            "TRANSFORMER THREE-WINDING LINE 1",
+            "TRANSFORMER THREE-WINDING LINE 2",
+            "TRANSFORMER THREE-WINDING LINE 3",
+            "TRANSFORMER THREE-WINDING LINE 4",
+            ]
+            
+        for (psse_part, line) in zip(psse_comp, lines)
+            _print_pti_str(io, psse_comp, _pti_dtypes[line])
+        end
+    end
+        
+    println(io, "0 / END OF TRANSFORMER DATA, BEGIN AREA DATA")
 end
 
 
@@ -1341,7 +1363,7 @@ maybe with `import_all=true` we can replicate the transformer
 function _pm2psse_2w_tran(pm_br::Dict{String, Any}, owner::Int64, sbase::Float64)
 
     sub_data = Dict{String, Any}()
-
+    
     # TRANSFORMER FIRST LINE PARAMETERS
     sub_data["I"] = pm_br["f_bus"]
     sub_data["J"] = pm_br["t_bus"]
@@ -1355,25 +1377,99 @@ function _pm2psse_2w_tran(pm_br::Dict{String, Any}, owner::Int64, sbase::Float64
     sub_data["NAME"] = "\'$(get(pm_br, "name", _default_transformer["NAME"]))\'"
     sub_data["STAT"] = get(pm_br, "br_status", _default_transformer["STAT"])
     sub_data["O1"] = get(pm_br, "o1", owner)
-
+    
     # TRANSFORMER SECOND LINE PARAMETERS
     sub_data["R1-2"] = pm_br["br_r"]
     sub_data["X1-2"] = pm_br["br_x"]
     sub_data["SBASE1-2"] = get(pm_br, "SBASE1-2", sbase)
-
+    
     # TRANSFORMER WINDING ONE
     sub_data["WINDV1"] = pm_br["tap"]
     sub_data["ANG1"] = get(pm_br, "shift", _default_transformer["ANG1"])
     sub_data["RATA1"] = get(pm_br, "rate_a", _default_transformer["RATA1"])
     sub_data["RATB1"] = get(pm_br, "rate_b", _default_transformer["RATB1"])
     sub_data["RATC1"] = get(pm_br, "rate_c", _default_transformer["RATC1"])
-
+    
     # TRANSFORMER WINDING TWO
     sub_data["WINDV2"] = get(pm_br, "windv2", 1.0)
     
     # Defaults
     _export_remaining!(sub_data, pm_br, _pti_defaults["TRANSFORMER"])
     
-    return sub_data
+    return sub_data    
+end
+
+
+"""
+Parses 3 PM transformer branch to PSS(R) E-style.
+"""
+function _pm2psse_3w_tran(pm_tr::Dict{String, Any}, owner::Int64, sbase::Float64)
     
+    sub_data = Dict{String, Any}()
+    
+    bus = pm_tr["bus"]  
+    w1 = pm_tr["w1"]
+    w2 = pm_tr["w2"]
+    w3 = pm_tr["w3"]
+    
+    # TRANSFORMER FIRST LINE PARAMETERS
+    sub_data["I"] = w1["f_bus"] 
+    sub_data["J"] = w2["f_bus"] 
+    sub_data["K"] = w3["f_bus"] 
+    sub_data["CKT"] = "\'$(bus["source_id"][end])\'"
+    sub_data["CW"] = 1
+    sub_data["CZ"] = 1
+    sub_data["CM"] = 1
+    sub_data["MAG1"] = get(w1, "g_fr", _default_transformer["MAG1"])
+    sub_data["MAG2"] = get(w1, "b_fr", _default_transformer["MAG2"])
+    sub_data["NAME"] = "\'$(get(w1, "name", _default_transformer["NAME"]))\'"
+    
+    w1_stat = Bool(w1["br_status"])
+    w2_stat = Bool(w2["br_status"])
+    w3_stat = Bool(w3["br_status"])
+
+    if w1_stat && w2_stat && w3_stat
+        sub_data["STAT"] = 1
+    elseif w1_stat && !w2_stat && w3_stat
+        sub_data["STAT"] = 2
+    elseif w1_stat && w2_stat && !w3_stat
+        sub_data["STAT"] = 3
+    elseif !w1_stat && w2_stat && w3_stat
+        sub_data["STAT"] = 4
+    end
+    
+    sub_data["O1"] = get(w1, "o1", owner)
+    
+    # TRANSFORMER SECOND LINE PARAMETERS
+    sub_data["R1-2"] = w1["br_r"] + w2["br_r"]
+    sub_data["X1-2"] = w1["br_x"] + w2["br_x"]
+    sub_data["SBASE1-2"] = get(w1, "SBASE1-2", sbase)
+
+    sub_data["R2-3"] = w2["br_r"] + w3["br_r"]
+    sub_data["X2-3"] = w2["br_x"] + w3["br_x"]
+    sub_data["SBASE2-3"] = get(w1, "SBASE2-3", sbase)
+
+    sub_data["R3-1"] = w3["br_r"] + w1["br_r"]
+    sub_data["X3-1"] = w3["br_x"] + w1["br_x"]
+    sub_data["SBASE3-1"] = get(w1, "SBASE3-1", sbase)
+    
+    sub_data["VMSTAR"] = get(bus, "vm", _default_transformer["VMSTAR"])
+    sub_data["ANSTAR"] = get(bus, "va", _default_transformer["VMSTAR"]) # Check radians
+    
+    # TRANSFORMER WINDINGS
+    for (m, w) in enumerate([w1, w2, w3])
+        sub_data["WINDV$m"] = w["tap"]
+        sub_data["ANG$m"] = get(w, "shift", _default_transformer["ANG$m"])
+        sub_data["RATA$m"] = get(w, "rate_a", _default_transformer["RATA$m"])
+        sub_data["RATB$m"] = get(w, "rate_b", _default_transformer["RATB$m"])
+        sub_data["RATC$m"] = get(w, "rate_c", _default_transformer["RATC$m"])
+    end
+    
+    # Defaults
+    _export_remaining!(sub_data, bus, _pti_defaults["TRANSFORMER"])
+    _export_remaining!(sub_data, w1, _pti_defaults["TRANSFORMER"])
+    _export_remaining!(sub_data, w2, _pti_defaults["TRANSFORMER"])
+    _export_remaining!(sub_data, w3, _pti_defaults["TRANSFORMER"])
+    
+    return sub_data
 end
