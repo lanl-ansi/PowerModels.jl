@@ -352,4 +352,85 @@ end
         test_pti_export_all(file)
     end
 
+    # No intentions to export INTER AREA TRANSFER
+    #@testset "test parser_test_k" begin
+    #    file = "../test/data/pti/parser_test_k.raw"
+    #    test_pti_export_all(file)
+    #end
+
+end
+
+@testset "Export pti: Check Power Flows" begin
+
+    function test_pf(filename::AbstractString)
+        source_data = parse_file(filename)
+        source_pf = PowerModels.compute_ac_pf(source_data)
+
+        file_tmp = "../test/data/tmp.raw"
+        PowerModels.export_pti(file_tmp, source_data)
+
+        destination_data = PowerModels.parse_file(file_tmp)
+        destination_pf = PowerModels.compute_ac_pf(destination_data)
+        rm(file_tmp)
+
+        @test InfrastructureModels.compare_dict(source_pf, destination_pf)
+    end
+
+    @testset "test parser_three_winding_test" begin
+        file = "../test/data/pti/three_winding_test.raw"
+        test_pf(file)
+    end
+
+    @testset "test case3" begin
+        file = "../test/data/pti/case3.raw"
+        test_pf(file)
+    end
+
+    @testset "test case30" begin
+        file = "../test/data/pti/case30.raw"
+        test_pf(file)
+    end    
+    
+    @testset "test case14" begin
+        file = "../test/data/pti/case14.raw"
+        test_pf(file)
+    end
+    
+    @testset "test case73" begin
+        file = "../test/data/pti/case73.raw"
+        test_pf(file)
+    end
+
+end
+
+@testset "Export to pti from MP source" begin
+    function test_export_from_mp(filename::AbstractString)
+        source_data = parse_file(filename)
+
+        file_tmp = "../test/data/tmp.raw"
+        PowerModels.export_pti(file_tmp, source_data)
+
+        @test true
+    end
+
+    @testset "test case5" begin
+        file = "../test/data/matpower/case5.m"
+        test_export_from_mp(file)
+    end
+
+    @testset "test case14" begin
+        file = "../test/data/matpower/case14.m"
+        test_export_from_mp(file)
+    end
+
+    @testset "test case24" begin
+        file = "../test/data/matpower/case24.m"
+        test_export_from_mp(file)
+    end
+    
+    @testset "test case30" begin
+        file = "../test/data/matpower/case30.m"
+        test_export_from_mp(file)
+    end
+
 end

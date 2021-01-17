@@ -957,7 +957,48 @@ function export_pti(file::AbstractString, data::Dict{String,Any})
     end
 end
 
-"Export power network data in the pti format"
+"""
+    export_pti(io::IO, data::Dict{String, Any})
+
+Export PowerModels network data dictionary to the as a power flow raw data
+acording to the pti format `RAW V33`. 
+
+It is highly recommend to export the PowerModel data dictionary in the same
+format as the source data. 
+
+The `export_pti` function exports the essential components of a network:
+- Buses
+- Loads
+- Fixed Shunts
+- Generators
+- Non Tansformers Branchs
+- Transformers (Two-Windings and Three-Windings)
+- Switched Shunts (aproximate)
+
+If the PowerModels was parsed from a pti file with the `import_all=true` parameter:
+`data = parse_file(case3.raw, import_all=true)` 
+
+Is gonna export this aditionals items:
+- Header Options
+- Comment Lines
+- Zone Data
+- Area Data
+- Owner Data
+- Switched Shunts (with block steps)
+
+Things that is not exported:
+- Inter Area Transfer Data
+- TNEP network specification
+- Generation Cost Data
+- Storage
+- Switches
+- DC Lines (Maybe in future work)
+
+Things that is not exported if you use `import_all = true` to make the PowerModel data dict:
+- FACTS (Maybe in future work)
+- GNE (No intentions to export it)
+
+"""
 function export_pti(io::IO, data::Dict{String,Any})
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "export_pti does not yet support multinetwork data")
@@ -1007,6 +1048,7 @@ function export_pti(io::IO, data::Dict{String,Any})
     _print_pti_str(io, header, _transaction_dtypes)
 
     # Comment Section
+    # TODO: What to put as a comment?
     Comment_Line_1 = get(data, "comment_line_1", "PSSE case made from PowerModels data model")
     Comment_Line_2 = get(data, "comment_line_2", "Only some items works") 
 
@@ -1089,7 +1131,12 @@ function export_pti(io::IO, data::Dict{String,Any})
     for (_, branch) in sort(data["branch"], by = (x) -> parse(Int64, x))
         # Skip transformers and put it in transformers Array
         if branch["transformer"]
-            _, i, j, k, ckt, _ = branch["source_id"]
+
+            if data["source_type"] == "matpower"
+                k = 0
+            else 
+                _, i, j, k, ckt, _ = branch["source_id"]
+            end
 
             if k != 0 # Tree Winding
                 side = branch["f_bus"]
@@ -1142,8 +1189,11 @@ function export_pti(io::IO, data::Dict{String,Any})
             bus_i = transformer["f_bus"]
             owner = bus_owner[bus_i]
                         
+            # Get the source data
+            source_type = data["source_type"]
+
             # Convert to two winding transformer
-            psse_comp = _pm2psse_2w_tran(transformer, owner, sbase)
+            psse_comp = _pm2psse_2w_tran(transformer, owner, sbase, source_type)
             
             lines = [
                 "TRANSFORMER",
@@ -1209,19 +1259,20 @@ function export_pti(io::IO, data::Dict{String,Any})
     println(io, "0 / END OF ZONE DATA, BEGIN INTER-AREA TRANSFER DATA")
 
     # Inter Area Data
-    if haskey(data, "inter area") 
-        for (_, area) in sort(data["inter area"], by = (x) -> parse(Int64, x))
-            # Get Dict in a PSSE way and print it
-            psse_comp = _pm2psse_interarea(area)
-            _print_pti_str(io, psse_comp, _pti_dtypes["INTER-AREA TRANSFER"])
-        end
-    end
+    # Since parse_pti only parse "ptran", "trid" it cannot be replicated 
+    # if haskey(data, "inter-area transfer") 
+    #     for (_, interarea) in sort(data["inter-area transfer"], by = (x) -> parse(Int64, x))
+    #         # Get Dict in a PSSE way and print it
+    #         psse_comp = _pm2psse_interarea(interarea)
+    #         _print_pti_str(io, psse_comp, _pti_dtypes["INTER-AREA TRANSFER"])
+    #     end
+    # end
 
     println(io, "0 / END OF INTER-AREA TRANSFER DATA, BEGIN OWNER DATA")
 
     # Owner Data
     if haskey(data, "owner") 
-        for (_, owner) in sort(data["zone"], by = (x) -> parse(Int64, x))
+        for (_, owner) in sort(data["owner"], by = (x) -> parse(Int64, x))
             # Get Dict in a PSSE way and print it
             psse_comp = _pm2psse_owner(owner)
             _print_pti_str(io, psse_comp, _pti_dtypes["OWNER"])
@@ -1251,7 +1302,7 @@ function export_pti(io::IO, data::Dict{String,Any})
 end
 
 
-"Given a PTI component dict print it in the file"
+"Given a PTI component dict print it in the .raw file"
 function _print_pti_str(io::IO, component, _dtype)
     str = ""
     for (data, type) in _dtype
@@ -1295,11 +1346,6 @@ end
 
 """
 Parses PM Bus data to PSS(R)E-style.
-Things that make it fail:
-
-- MATPOWER calls key "name" as "string", It is better to unify a criterium
-- source_id fails in matpower cases
-
 """
 function _pm2psse_bus(pm_bus::Dict{String, Any})
     sub_data = Dict{String, Any}()         
@@ -1425,13 +1471,8 @@ returns a dict with all the keys
 later pass this dict to _print_pti_str with differents _transformer_dtypes
 
 Reference: PSSE 33 - POM - 5-20
-
-TODO: check what happened with MATPOWER transformers
-
-What to do with CW, CM, CZ? I gonna put it to 1 (system base).
-maybe with `import_all=true` we can replicate the transformer
 """
-function _pm2psse_2w_tran(pm_br::Dict{String, Any}, owner::Int64, sbase::Float64)
+function _pm2psse_2w_tran(pm_br::Dict{String, Any}, owner::Int64, sbase::Real, source="pti")
 
     sub_data = Dict{String, Any}()
     
@@ -1439,7 +1480,7 @@ function _pm2psse_2w_tran(pm_br::Dict{String, Any}, owner::Int64, sbase::Float64
     sub_data["I"] = pm_br["f_bus"]
     sub_data["J"] = pm_br["t_bus"]
     sub_data["K"] = 0
-    sub_data["CKT"] = "\'$(pm_br["source_id"][5])\'"
+    sub_data["CKT"] = source == "pti" ? "\'$(pm_br["source_id"][5])\'" : "\'$(pm_br["source_id"][end])\'"
     sub_data["CW"] = _default_transformer["CW"]
     sub_data["CZ"] =  _default_transformer["CZ"]
     sub_data["CM"] = _default_transformer["CM"]
@@ -1573,7 +1614,7 @@ function _pm2psse_switched_shunt(pm_shunt::Dict{String, Any})
     sub_data["RMIDNT"] = "\'$(get(pm_shunt, "rmidnt", _default_switched_shunt["RMIDNT"]))\'"
 
     _export_remaining!(sub_data, pm_shunt, _pti_defaults["SWITCHED SHUNT"])
-
+    
     return sub_data
 end
 
@@ -1593,12 +1634,14 @@ end
 """
 Parses PM interarea to PSS(R) E-style
 """
-function _pm2psse_interarea(owner::Dict{String, Any})
+function _pm2psse_interarea(interarea::Dict{String, Any})
     sub_data = Dict{String, Any}()
-    #sub_data["I"] = owner["index"]
-    #sub_data["OWNAME"] = "\'$(get(owner, "owname", _default_owner["OWNAME"]))\'"
+    sub_data["ARFROM"] = interarea["arfrom"]
+    sub_data["ARTO"] = interarea["arto"]
     
-    #return sub_data
+    _export_remaining!(sub_data, interarea, _pti_defaults["INTER-AREA TRANSFER"])
+    
+    return sub_data
 end
 
 
