@@ -327,7 +327,7 @@ end
 @testset "test export all to pti" begin
 
     function test_pti_export_all(filename::AbstractString)
-        source_data = parse_file(filename, import_all=import_all)
+        source_data = parse_file(filename, import_all=true)
 
         file_tmp = "../test/data/tmp.raw"
         PowerModels.export_pti(file_tmp, source_data)
@@ -346,4 +346,10 @@ end
         file = "../test/data/pti/case3.raw"
         test_pti_export_all(file)
     end
+
+    @testset "test case30" begin
+        file = "../test/data/pti/case30.raw"
+        test_pti_export_all(file)
+    end
+
 end

@@ -1207,6 +1207,16 @@ function export_pti(io::IO, data::Dict{String,Any})
 
 
     println(io, "0 / END OF ZONE DATA, BEGIN INTER-AREA TRANSFER DATA")
+
+    # Inter Area Data
+    if haskey(data, "inter area") 
+        for (_, area) in sort(data["inter area"], by = (x) -> parse(Int64, x))
+            # Get Dict in a PSSE way and print it
+            psse_comp = _pm2psse_interarea(area)
+            _print_pti_str(io, psse_comp, _pti_dtypes["INTER-AREA TRANSFER"])
+        end
+    end
+
     println(io, "0 / END OF INTER-AREA TRANSFER DATA, BEGIN OWNER DATA")
 
     # Owner Data
@@ -1577,6 +1587,18 @@ function _pm2psse_zone(zone::Dict{String, Any})
     sub_data["ZONAME"] = "\'$(get(zone, "zoname", _default_zone["ZONAME"]))\'"
     
     return sub_data
+end
+
+
+"""
+Parses PM interarea to PSS(R) E-style
+"""
+function _pm2psse_interarea(owner::Dict{String, Any})
+    sub_data = Dict{String, Any}()
+    #sub_data["I"] = owner["index"]
+    #sub_data["OWNAME"] = "\'$(get(owner, "owname", _default_owner["OWNAME"]))\'"
+    
+    #return sub_data
 end
 
 
