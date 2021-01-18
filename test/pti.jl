@@ -409,6 +409,7 @@ end
 
         file_tmp = "../test/data/tmp.raw"
         PowerModels.export_pti(file_tmp, source_data)
+        rm(file_tmp)
 
         @test true
     end
