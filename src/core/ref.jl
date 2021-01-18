@@ -1,9 +1,9 @@
 # tools for working with a PowerModels ref dict structures
 
 
-"PowerModels wrapper for the InfrastructureModels `ref_apply!` function."
-function ref_apply_pm!(func!::Function, ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any}; is_multinetwork_function::Bool = true)
-    _IM.ref_apply!(func!, ref, data, pm_it_sym; is_multinetwork_function = is_multinetwork_function)
+"PowerModels wrapper for the InfrastructureModels `apply!` function."
+function apply_pm!(func!::Function, ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any}; apply_to_subnetworks::Bool = true)
+    _IM.apply!(func!, ref, data, pm_it_sym; apply_to_subnetworks = apply_to_subnetworks)
 end
 
 

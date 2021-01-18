@@ -69,7 +69,7 @@ end
 
 ""
 function ref_add_ne_branch!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
-    ref_apply_pm!(_ref_add_ne_branch!, ref, data)
+    apply_pm!(_ref_add_ne_branch!, ref, data)
 end
 
 

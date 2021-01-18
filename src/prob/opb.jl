@@ -23,7 +23,7 @@ end
 
 ""
 function ref_add_connected_components!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
-    ref_apply_pm!(_ref_add_connected_components!, ref, data)
+    apply_pm!(_ref_add_connected_components!, ref, data)
 end
 
 

@@ -1,5 +1,5 @@
 function _IM.solution_preprocessor(pm::AbstractPowerModel, solution::Dict)
-    per_unit = _IM.get_data(x -> x["per_unit"], pm.data, pm_it_name; is_multinetwork_function = false)
+    per_unit = _IM.get_data(x -> x["per_unit"], pm.data, pm_it_name; apply_to_subnetworks = false)
     solution["it"][pm_it_name]["per_unit"] = per_unit
 
     for (nw_id, nw_ref) in nws(pm)

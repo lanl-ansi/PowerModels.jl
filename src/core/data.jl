@@ -2,8 +2,8 @@
 import LinearAlgebra: pinv
 
 "PowerModels wrapper for the InfrastructureModels `apply!` function."
-function apply_pm!(func!::Function, data::Dict{String, <:Any}; is_multinetwork_function::Bool = true)
-    _IM.apply!(func!, data, pm_it_name; is_multinetwork_function = is_multinetwork_function)
+function apply_pm!(func!::Function, data::Dict{String, <:Any}; apply_to_subnetworks::Bool = true)
+    _IM.apply!(func!, data, pm_it_name; apply_to_subnetworks = apply_to_subnetworks)
 end
 
 
@@ -269,7 +269,7 @@ function make_per_unit!(data::Dict{String,<:Any})
 
     if !haskey(pm_data, "per_unit") || pm_data["per_unit"] == false
         pm_data["per_unit"] = true
-        apply_pm!(_make_per_unit!, pm_data; is_multinetwork_function = true)
+        apply_pm!(_make_per_unit!, pm_data; apply_to_subnetworks = true)
     end
 end
 
@@ -416,7 +416,7 @@ function make_mixed_units!(data::Dict{String,<:Any})
 
     if !haskey(pm_data, "per_unit") || pm_data["per_unit"] == true
         pm_data["per_unit"] = false
-        apply_pm!(_make_mixed_units!, pm_data; is_multinetwork_function = true)
+        apply_pm!(_make_mixed_units!, pm_data; apply_to_subnetworks = true)
     end
 end
 
@@ -1063,7 +1063,7 @@ end
 
 ""
 function check_conductors(data::Dict{String,<:Any})
-    apply_pm!(_check_conductors, data; is_multinetwork_function = false)
+    apply_pm!(_check_conductors, data; apply_to_subnetworks = false)
 end
 
 
@@ -1407,7 +1407,7 @@ end
 
 "checks that all buses are unique and other components link to valid buses"
 function check_connectivity(data::Dict{String,<:Any})
-    apply_pm!(_check_connectivity, data; is_multinetwork_function = false)
+    apply_pm!(_check_connectivity, data; apply_to_subnetworks = false)
 end
 
 
@@ -1478,7 +1478,7 @@ end
 
 "checks that active components are not connected to inactive buses, otherwise prints warnings"
 function check_status(data::Dict{String,<:Any})
-    apply_pm!(_check_status, data; is_multinetwork_function = false)
+    apply_pm!(_check_status, data; apply_to_subnetworks = false)
 end
 
 
@@ -1550,7 +1550,7 @@ end
 
 "checks that the network contains at least one reference bus"
 function check_reference_bus(data::Dict{String,<:Any})
-    apply_pm!(_check_reference_bus, data; is_multinetwork_function = false)
+    apply_pm!(_check_reference_bus, data; apply_to_subnetworks = false)
 end
 
 
@@ -1631,7 +1631,7 @@ end
 checks that each storage unit has a reasonable parameters
 """
 function check_storage_parameters(data::Dict{String,<:Any})
-    apply_pm!(_check_storage_parameters, data; is_multinetwork_function = false)
+    apply_pm!(_check_storage_parameters, data; apply_to_subnetworks = false)
 end
 
 """
@@ -1699,7 +1699,7 @@ end
 checks that each switch has a reasonable parameters
 """
 function check_switch_parameters(data::Dict{String,<:Any})
-    apply_pm!(_check_switch_parameters, data; is_multinetwork_function = false)
+    apply_pm!(_check_switch_parameters, data; apply_to_subnetworks = false)
 end
 
 
@@ -1902,7 +1902,7 @@ end
 
 "throws warnings if generator and dc line voltage setpoints are not consistent with the bus voltage setpoint"
 function check_voltage_setpoints(data::Dict{String,<:Any})
-    apply_pm!(_check_voltage_setpoints, data; is_multinetwork_function = false)
+    apply_pm!(_check_voltage_setpoints, data; apply_to_subnetworks = false)
 end
 
 
@@ -2661,7 +2661,7 @@ end
 determines the largest connected component of the network and turns everything else off
 """
 function select_largest_component!(data::Dict{String, <:Any})
-    apply_pm!(_select_largest_component!, data; is_multinetwork_function = true)
+    apply_pm!(_select_largest_component!, data; apply_to_subnetworks = true)
 end
 
 
@@ -2690,7 +2690,7 @@ end
 checks that each connected components has a reference bus, if not, adds one
 """
 function correct_reference_buses!(data::Dict{String,<:Any})
-    apply_pm!(_correct_reference_buses!, data; is_multinetwork_function = true)
+    apply_pm!(_correct_reference_buses!, data; apply_to_subnetworks = true)
 end
 
 
