@@ -242,6 +242,55 @@ function make_multinetwork(data::Dict{String, <:Any}; global_keys::Set{String}=S
     return _IM.make_multinetwork(data, union(global_keys, _pm_global_keys))
 end
 
+"""
+Make a PM multinetwork data structure of the given filenames
+"""
+function parse_files(filenames::Array{String, 1})
+    mn_data = Dict{String, Any}(
+        "nw" => Dict{String, Any}()
+    )
+    per_unit = nothing
+    names = Array{String, 1}()
+
+    for (i, filename) in enumerate(filenames)
+        data = PowerModels.parse_file(filename)
+
+        # Check if per unit or mixed unit and convert it
+        if per_unit === nothing
+            per_unit = data["per_unit"]
+            Memento.info(_LOGGER, "All cases parsed as $(per_unit ? "per unit" : "mixed units")")
+        end
+
+        if data["per_unit"] != per_unit
+            if per_unit
+                make_per_unit!(data)
+            else
+                make_mixed_units!(data)
+            end
+        end
+        
+        delete!(data, "multinetwork")
+        delete!(data, "per_unit")
+
+        mn_data["nw"]["$i"] = data
+        push!(names, "$(data["name"])")
+    end
+
+    mn_data["per_unit"] = per_unit
+    mn_data["multinetwork"] = true
+    mn_data["name"] = join(names, " + ")
+
+    PowerModels.standardize_cost_terms!(mn_data)
+
+    return mn_data
+end
+
+
+function parse_files(filename::String; replicates::Int=2)
+    data = PowerModels.parse_file(filename)
+    return PowerModels.replicate(data, replicates)
+end
+
 
 ""
 function _apply_func!(data::Dict{String,<:Any}, key::String, func)
