@@ -6,25 +6,25 @@ TESTLOG = Memento.getlogger(PowerModels)
 
     @testset "idempotent unit transformation" begin
         @testset "5-bus replicate case" begin
-            mn_data = PowerModels.parse_files("../test/data/matpower/case5_dc.m")
+            mn_data = build_mn_data("../test/data/matpower/case5_dc.m")
             PowerModels.make_mixed_units!(mn_data)
             PowerModels.make_per_unit!(mn_data)
 
-            @test InfrastructureModels.compare_dict(mn_data, PowerModels.parse_files("../test/data/matpower/case5_dc.m"))
+            @test InfrastructureModels.compare_dict(mn_data, build_mn_data("../test/data/matpower/case5_dc.m"))
         end
         @testset "14+24 hybrid case" begin
-            mn_data = PowerModels.parse_files(["../test/data/matpower/case14.m", "../test/data/matpower/case24.m"])
+            mn_data = PowerModels.parse_files("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
             PowerModels.make_mixed_units!(mn_data)
             PowerModels.make_per_unit!(mn_data)
 
-            @test InfrastructureModels.compare_dict(mn_data, PowerModels.parse_files(["../test/data/matpower/case14.m", "../test/data/matpower/case24.m"]))
+            @test InfrastructureModels.compare_dict(mn_data, PowerModels.parse_files("../test/data/matpower/case14.m", "../test/data/matpower/case24.m"))
         end
     end
 
 
     @testset "topology processing" begin
         @testset "7-bus replicate status case" begin
-            mn_data = PowerModels.parse_files("../test/data/matpower/case7_tplgy.m")
+            mn_data = build_mn_data("../test/data/matpower/case7_tplgy.m")
             PowerModels.simplify_network!(mn_data)
 
             active_buses = Set(["2", "4", "5", "7"])
@@ -58,7 +58,7 @@ TESTLOG = Memento.getlogger(PowerModels)
             end
         end
         @testset "7-bus replicate filer case" begin
-            mn_data = PowerModels.parse_files("../test/data/matpower/case7_tplgy.m")
+            mn_data = build_mn_data("../test/data/matpower/case7_tplgy.m")
             PowerModels.simplify_network!(mn_data)
             PowerModels.select_largest_component!(mn_data)
 
@@ -93,7 +93,7 @@ TESTLOG = Memento.getlogger(PowerModels)
             end
         end
         @testset "7+14 hybrid filer case" begin
-            mn_data = PowerModels.parse_files(["../test/data/matpower/case7_tplgy.m", "../test/data/matpower/case14.m"])
+            mn_data = PowerModels.parse_files("../test/data/matpower/case7_tplgy.m", "../test/data/matpower/case14.m")
             PowerModels.simplify_network!(mn_data)
             PowerModels.select_largest_component!(mn_data)
 
@@ -110,7 +110,7 @@ TESTLOG = Memento.getlogger(PowerModels)
 
 
     @testset "test run_opf with multinetwork data" begin
-        mn_data = PowerModels.parse_files("../test/data/matpower/case5.m")
+        mn_data = build_mn_data("../test/data/matpower/case5.m")
         @test_throws(TESTLOG, ErrorException, PowerModels.run_opf(mn_data, ACPPowerModel, ipopt_solver))
     end
 
@@ -120,7 +120,7 @@ TESTLOG = Memento.getlogger(PowerModels)
 
     @testset "test multi-network solution" begin
         # test case where generator status is 1 but the gen_bus status is 0
-        mn_data = PowerModels.parse_files("../test/data/matpower/case5.m")
+        mn_data = build_mn_data("../test/data/matpower/case5.m")
         result = PowerModels.run_mn_opf(mn_data, ACPPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
@@ -131,7 +131,7 @@ TESTLOG = Memento.getlogger(PowerModels)
 
 
     @testset "2 period 5-bus asymmetric case" begin
-        mn_data = PowerModels.parse_files("../test/data/matpower/case5_asym.m")
+        mn_data = build_mn_data("../test/data/matpower/case5_asym.m")
 
 
         @testset "test dc polar opb" begin
@@ -222,7 +222,7 @@ TESTLOG = Memento.getlogger(PowerModels)
     end
 
     @testset "2 period 5-bus dual variable case" begin
-        mn_data = PowerModels.parse_files("../test/data/matpower/case5.m")
+        mn_data = build_mn_data("../test/data/matpower/case5.m")
 
         @testset "test dc polar opf" begin
             result = PowerModels.run_mn_opf(mn_data, DCPPowerModel, ipopt_solver, setting = Dict("output" => Dict("duals" => true)))
@@ -249,7 +249,7 @@ TESTLOG = Memento.getlogger(PowerModels)
 
 
     @testset "hybrid network case - polar" begin
-        mn_data = PowerModels.parse_files(["../test/data/matpower/case14.m", "../test/data/matpower/case24.m"])
+        mn_data = PowerModels.parse_files("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
 
         @testset "test ac polar opf" begin
             result = PowerModels.run_mn_opf(mn_data, ACPPowerModel, ipopt_solver)
@@ -275,7 +275,7 @@ TESTLOG = Memento.getlogger(PowerModels)
 
 
     @testset "opf with storage case" begin
-        mn_data = PowerModels.parse_files("../test/data/matpower/case5_strg.m", replicates=4)
+        mn_data = build_mn_data("../test/data/matpower/case5_strg.m", replicates=4)
 
         @testset "test ac polar opf" begin
             result = PowerModels.run_mn_opf_strg(mn_data, PowerModels.ACPPowerModel, juniper_solver)
@@ -426,7 +426,7 @@ TESTLOG = Memento.getlogger(PowerModels)
 
 
     @testset "test solution feedback" begin
-        mn_data = PowerModels.parse_files("../test/data/matpower/case5_asym.m")
+        mn_data = build_mn_data("../test/data/matpower/case5_asym.m")
 
         opf_result = PowerModels.run_mn_opf(mn_data, ACPPowerModel, ipopt_solver)
         @test opf_result["termination_status"] == LOCALLY_SOLVED
@@ -464,7 +464,7 @@ TESTLOG = Memento.getlogger(PowerModels)
     end
 
     @testset "test errors and warnings" begin
-        mn_data = PowerModels.parse_files("../test/data/matpower/case5.m")
+        mn_data = build_mn_data("../test/data/matpower/case5.m")
 
         @test_throws(TESTLOG, ErrorException, PowerModels.correct_voltage_angle_differences!(mn_data))
         @test_throws(TESTLOG, ErrorException, PowerModels.correct_thermal_limits!(mn_data))

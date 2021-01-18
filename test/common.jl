@@ -1,4 +1,9 @@
 
+function build_mn_data(base_data; replicates::Int=2)
+    mp_data = PowerModels.parse_file(base_data)
+    return PowerModels.replicate(mp_data, replicates)
+end
+
 "checks that no bounds are in Inf"
 function check_variable_bounds(model)
     for v in JuMP.all_variables(model)

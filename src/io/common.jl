@@ -31,6 +31,34 @@ end
 
 
 """
+Make a PM multinetwork data structure of the given filenames
+"""
+function parse_files(filenames::String...)
+    mn_data = Dict{String, Any}(
+        "nw" => Dict{String, Any}(),
+        "per_unit" => true,
+        "multinetwork" => true,
+    )
+
+    names = Array{String, 1}()
+
+    for (i, filename) in enumerate(filenames)
+        data = PowerModels.parse_file(filename)
+
+        delete!(data, "multinetwork")
+        delete!(data, "per_unit")
+
+        mn_data["nw"]["$i"] = data
+        push!(names, "$(data["name"])")
+    end
+
+    mn_data["name"] = join(names, " + ")
+
+    return mn_data
+end
+
+
+"""
     export_file(file, data)
 
 Export a PowerModels data structure to the file according of the extension:
@@ -39,8 +67,12 @@ Export a PowerModels data structure to the file according of the extension:
     - `.json` : JSON 
 """
 function export_file(file::AbstractString, data::Dict{String, Any})
-    open(file, "w") do io
-        export_file(io, data, filetype=split(lowercase(file), '.')[end])
+    if occursin(".", file) 
+        open(file, "w") do io
+            export_file(io, data, filetype=split(lowercase(file), '.')[end])
+        end
+    else
+        Memento.error(_LOGGER, "The file must have an extension")
     end
 end
 
@@ -49,13 +81,12 @@ function export_file(io::IO, data::Dict{String, Any}; filetype="json")
     if filetype == "m"
         PowerModels.export_matpower(io, data)
     elseif filetype == "raw"
-        Memento.info(_LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
         PowerModels.export_pti(io, data)
     elseif filetype == "json"
         stringdata = JSON.json(data)
         write(io, stringdata)
     else
-        Memento.error(_LOGGER, "Unrecognized filetype")
+        Memento.error(_LOGGER, "Unrecognized filetype: \".$filetype\", Supported extensions are \".raw\", \".m\" and \".json\"")
     end
 end
 
