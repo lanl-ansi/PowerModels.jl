@@ -360,14 +360,14 @@ end
 
 end
 
-@testset "Export pti: Check Power Flows" begin
+@testset "Export File and Check Power Flows" begin
 
     function test_pf(filename::AbstractString)
         source_data = parse_file(filename)
         source_pf = PowerModels.compute_ac_pf(source_data)
 
         file_tmp = "../test/data/tmp.raw"
-        PowerModels.export_pti(file_tmp, source_data)
+        PowerModels.export_file(file_tmp, source_data)
 
         destination_data = PowerModels.parse_file(file_tmp)
         destination_pf = PowerModels.compute_ac_pf(destination_data)

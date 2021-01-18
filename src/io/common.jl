@@ -31,6 +31,35 @@ end
 
 
 """
+    export_file(file, data)
+
+Export a PowerModels data structure to the file according of the extension:
+    - `.m` : Matpower
+    - `.raw` : PTI (PSS(R)E-v33)
+    - `.json` : JSON 
+"""
+function export_file(file::AbstractString, data::Dict{String, Any})
+    open(file, "w") do io
+        export_file(io, data, filetype=split(lowercase(file), '.')[end])
+    end
+end
+
+
+function export_file(io::IO, data::Dict{String, Any}; filetype="json")
+    if filetype == "m"
+        PowerModels.export_matpower(io, data)
+    elseif filetype == "raw"
+        Memento.info(_LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
+        PowerModels.export_pti(io, data)
+    elseif filetype == "json"
+        PowerModels.export_json(io, data)
+    else
+        Memento.error(_LOGGER, "Unrecognized filetype")
+    end
+end
+
+
+"""
 Runs various data quality checks on a PowerModels data dictionary.
 Applies modifications in some cases.  Reports modified component ids.
 """
