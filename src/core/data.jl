@@ -1063,7 +1063,7 @@ end
 
 ""
 function check_conductors(data::Dict{String,<:Any})
-    apply_pm!(_check_conductors, data; apply_to_subnetworks = false)
+    apply_pm!(_check_conductors, data; apply_to_subnetworks = true)
 end
 
 
