@@ -1004,6 +1004,10 @@ function export_pti(io::IO, data::Dict{String,Any})
         Memento.error(_LOGGER, "export_pti does not yet support multinetwork data")
     end
 
+    # Warnings for elements incompatibles with pti
+    Memento.warn(_LOGGER, string("Skipping storage data because is not suported in the PSSE 33 .raw file"))
+    Memento.warn(_LOGGER, string("Skipping switches data because is not suported in the PSSE 33 .raw file"))
+
     data = deepcopy(data)
 
     #convert data to mixed unit
@@ -1048,9 +1052,8 @@ function export_pti(io::IO, data::Dict{String,Any})
     _print_pti_str(io, header, _transaction_dtypes)
 
     # Comment Section
-    # TODO: What to put as a comment?
-    Comment_Line_1 = get(data, "comment_line_1", "PSSE case made from PowerModels data model")
-    Comment_Line_2 = get(data, "comment_line_2", "Only some items works") 
+    Comment_Line_1 = get(data, "comment_line_1", "File name: $(data["name"]) - Generate by PowerModels.jl")
+    Comment_Line_2 = get(data, "comment_line_2", "Some items is not supported, please checks the docs.") 
 
     println(io, Comment_Line_1)
     println(io, Comment_Line_2)
@@ -1233,17 +1236,32 @@ function export_pti(io::IO, data::Dict{String,Any})
             psse_comp = _pm2psse_area_interchange(area)
             _print_pti_str(io, psse_comp, _pti_dtypes["AREA INTERCHANGE"])
         end
+    else
+        Memento.warn(_LOGGER, string("Skipping AREA INTERCHANGE data because it does not found"))
     end
     
     println(io, "0 / END OF AREA DATA, BEGIN TWO-TERMINAL DC DATA")
+
     # TODO : See how PM converts the DC line and do the oposite
+    Memento.warn(_LOGGER, string("Export TWO-TERMINAL DC data is not yet supported"))
     
     println(io, "0 / END OF TWO-TERMINAL DC DATA, BEGIN VOLTAGE SOURCE CONVERTER DATA")
+    
     # TODO : See how PM converts the DC line and do the oposite
-
+    Memento.warn(_LOGGER, string("Export VSC data is not yet supported"))
+    
     println(io, "0 / END OF VOLTAGE SOURCE CONVERTER DATA, BEGIN IMPEDANCE CORRECTION DATA")
+
+    Memento.warn(_LOGGER, string("Export IMPEDANCE CORRECTION data is not yet supported"))
+    
     println(io, "0 / END OF IMPEDANCE CORRECTION DATA, BEGIN MULTI-TERMINAL DC DATA")
+    
+    Memento.warn(_LOGGER, string("Export MULTI-TERMINAL DC data is not yet supported"))
+    
     println(io, "0 / END OF MULTI-TERMINAL DC DATA, BEGIN MULTI-SECTION LINE DATA")
+    
+    Memento.warn(_LOGGER, string("Export MULTI-SECTION data is not yet supported"))
+    
     println(io, "0 / END OF MULTI-SECTION LINE DATA, BEGIN ZONE DATA")
 
     # Zone Data
@@ -1253,11 +1271,14 @@ function export_pti(io::IO, data::Dict{String,Any})
             psse_comp = _pm2psse_zone(zone)
             _print_pti_str(io, psse_comp, _pti_dtypes["ZONE"])
         end
+    else
+        Memento.warn(_LOGGER, string("Skipping ZONE data because it does not found"))
     end
 
 
     println(io, "0 / END OF ZONE DATA, BEGIN INTER-AREA TRANSFER DATA")
 
+    Memento.warn(_LOGGER, string("Export inter-area transfer data is not yet supported"))
     # Inter Area Data
     # Since parse_pti only parse "ptran", "trid" it cannot be replicated 
     # if haskey(data, "inter-area transfer") 
@@ -1277,9 +1298,14 @@ function export_pti(io::IO, data::Dict{String,Any})
             psse_comp = _pm2psse_owner(owner)
             _print_pti_str(io, psse_comp, _pti_dtypes["OWNER"])
         end
+    else
+        Memento.warn(_LOGGER, string("Skipping OWNER data because it does not found"))
     end
 
     println(io, "0 / END OF OWNER DATA, BEGIN FACTS CONTROL DEVICE DATA")
+
+    Memento.warn(_LOGGER, string("Export FACTS data is not yet supported"))
+
     println(io, "0 / END OF FACTS CONTROL DEVICE DATA, BEGIN SWITCHED SHUNT DATA")
 
     # Switched Shunt
@@ -1297,6 +1323,9 @@ function export_pti(io::IO, data::Dict{String,Any})
     end
 
     println(io, "0 /END OF SWITCHED SHUNT DATA, BEGIN GNE DEVICE DATA")
+
+    Memento.warn(_LOGGER, string("Export GNE data is not yet supported"))
+
     println(io, "0 /END OF GNE DEVICE DATA")
     println(io, "Q")
 end
