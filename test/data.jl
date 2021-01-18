@@ -107,6 +107,15 @@ end
 
         @test InfrastructureModels.compare_dict(data, data_base)
     end
+    @testset "14-bus case with ramp rates" begin
+        data = PowerModels.parse_file("../test/data/matpower/case14.m")
+        data_base = deepcopy(data)
+
+        PowerModels.make_mixed_units!(data)
+        PowerModels.make_per_unit!(data)
+
+        @test InfrastructureModels.compare_dict(data, data_base)
+    end
     @testset "24-bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case24.m")
         data_base = deepcopy(data)
