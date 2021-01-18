@@ -35,7 +35,7 @@ function logger_config!(level)
 end
 
 const _pm_global_keys = Set(["time_series", "per_unit"])
-const pm_it_name = "ep"
+const pm_it_name = "pm"
 const pm_it_sym = Symbol(pm_it_name)
 
 
