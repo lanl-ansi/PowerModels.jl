@@ -52,7 +52,8 @@ function export_file(io::IO, data::Dict{String, Any}; filetype="json")
         Memento.info(_LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
         PowerModels.export_pti(io, data)
     elseif filetype == "json"
-        PowerModels.export_json(io, data)
+        stringdata = JSON.json(data)
+        write(io, stringdata)
     else
         Memento.error(_LOGGER, "Unrecognized filetype")
     end

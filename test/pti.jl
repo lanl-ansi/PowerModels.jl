@@ -403,35 +403,72 @@ end
 
 end
 
-@testset "Export to pti from MP source" begin
-    function test_export_from_mp(filename::AbstractString)
+
+@testset "Export to other file type" begin
+
+    function test_export(filename::AbstractString, extension::AbstractString)
         source_data = parse_file(filename)
 
-        file_tmp = "../test/data/tmp.raw"
-        PowerModels.export_pti(file_tmp, source_data)
+        file_tmp = "../test/data/tmp." * extension
+        PowerModels.export_file(file_tmp, source_data)
+
+        destination_data = PowerModels.parse_file(file_tmp)
         rm(file_tmp)
 
         @test true
     end
 
-    @testset "test case5" begin
-        file = "../test/data/matpower/case5.m"
-        test_export_from_mp(file)
-    end
-
-    @testset "test case14" begin
-        file = "../test/data/matpower/case14.m"
-        test_export_from_mp(file)
-    end
-
-    @testset "test case24" begin
-        file = "../test/data/matpower/case24.m"
-        test_export_from_mp(file)
-    end
-    
-    @testset "test case30" begin
+    @testset "test case30.m" begin
         file = "../test/data/matpower/case30.m"
-        test_export_from_mp(file)
+        test_export(file, "raw")
+        test_export(file, "json")
     end
 
+        @testset "test case5.m" begin
+        file = "../test/data/matpower/case5.m"
+        test_export(file, "raw")
+        test_export(file, "json")
+    end
+
+    @testset "test case14.m" begin
+        file = "../test/data/matpower/case14.m"
+        test_export(file, "raw")
+        test_export(file, "json")
+    end
+
+    @testset "test case24.m" begin
+        file = "../test/data/matpower/case24.m"
+        test_export(file, "raw")
+        test_export(file, "json")
+    end
+
+    @testset "test case30.m" begin
+        file = "../test/data/matpower/case30.m"
+        test_export(file, "raw")
+        test_export(file, "json")
+    end
+
+    @testset "test case30.raw" begin
+        file = "../test/data/pti/case30.raw"
+        test_export(file, "m")
+        test_export(file, "json")
+    end
+
+    @testset "test case73.raw" begin
+        file = "../test/data/pti/case73.raw"
+        test_export(file, "m")
+        test_export(file, "json")
+    end
+
+    @testset "test frankenstein_00_2.raw" begin
+        file = "../test/data/pti/frankenstein_00_2.raw"
+        test_export(file, "m")
+        test_export(file, "json")
+    end
+
+    @testset "test frankenstein_20.raw" begin
+        file = "../test/data/pti/frankenstein_20.raw"
+        test_export(file, "m")
+        test_export(file, "json")
+    end
 end
