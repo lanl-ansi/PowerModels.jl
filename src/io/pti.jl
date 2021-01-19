@@ -1009,7 +1009,7 @@ function export_pti(io::IO, data::Dict{String,Any})
     incompatible_items = ["storage", "switch"]
 
     for item in incompatible_items 
-        if haskey(data, item)
+        if haskey(data, item) && length(data[item]) > 0
             components = length(data[item])
             Memento.warn(_LOGGER, string("Skipping export of the $(components) $(item) items because it is not suported in the PSSE 33 .raw file")) 
         end
@@ -1151,13 +1151,13 @@ function export_pti(io::IO, data::Dict{String,Any})
 
     println(io, "0 / END OF GENERATOR DATA, BEGIN BRANCH DATA")
 
-    transformers = Array{Tuple{Symbol, Any}, 1}()
     # Branches
+    transformers = Array{Tuple{Symbol, Any}, 1}()
     for (_, branch) in sort(data["branch"], by = (x) -> parse(Int64, x))
         # Skip transformers and put it in transformers Array
         if branch["transformer"]
 
-            if get(data, "source_type", "matpower") == "pti"
+            if get(data, "source_type", "undefined") == "pti"
                 _, i, j, k, ckt, _ = branch["source_id"]
             else
                 k = 0 
@@ -1230,7 +1230,7 @@ function export_pti(io::IO, data::Dict{String,Any})
             owner = bus_owner[bus_i]
                         
             # Get the source data
-            source_type = get(data, "source_type", "matpower")
+            source_type = get(data, "source_type", "undefined")
 
             # Convert to two winding transformer and print it
             psse_comp = _pm2psse_2w_tran(transformer, owner, sbase, source_type)
