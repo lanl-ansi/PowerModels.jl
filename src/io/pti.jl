@@ -985,22 +985,25 @@ It will export these aditionals items:
 - Switched Shunts (with block steps)
 
 Things that are not exported:
-- Inter Area Transfer Data
 - TNEP network specification
 - Generation Cost Data
 - Storage
 - Switches
-- DC Lines (Maybe in future work)
+- DC Lines (future work, #754)
 
 Things that are not exported if you use `import_all = true` to make the PowerModel data dict:
 - FACTS (Maybe in future work)
 - GNE (No intentions to export it)
+- Inter Area Transfer Data (No intentions to export it)
 
 """
 function export_pti(io::IO, data::Dict{String,Any})
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "export_pti does not yet support multinetwork data")
     end
+
+    # Info for items that will be exported
+    "The PSS(R)E writer currently supports buses, loads, shunts, generators, branches, transformers"
 
     # Warnings for elements incompatibles with pti
     incompatible_items = ["storage", "switch"]
@@ -1013,12 +1016,16 @@ function export_pti(io::IO, data::Dict{String,Any})
     end
     
     # Warnings for not yet exported items
-    not_exported_items = ["dcline"]
+    not_exported_items = ["dcline", "impedance correction",
+     "multi-terminal dc", "multi-section line", "inter-area transfer",
+     "facts control device", "gne device", "induction machine"]
 
-    for item in incompatible_items 
+    for item in not_exported_items 
         if haskey(data, item)
             components = length(data[item])
-            Memento.warn(_LOGGER, string("Skipping $(components) $(item) data because is not yet implemented")) 
+            if components > 0
+                Memento.warn(_LOGGER, string("Skipping export of the $(components) $(item) data because is not yet implemented")) 
+            end
         end
     end
 
@@ -1042,22 +1049,23 @@ function export_pti(io::IO, data::Dict{String,Any})
         bus_i = bus["bus_i"]
         
         # maps area, owner, zone. 
-        # It is better in a only Dict?
         bus_area[bus_i] = get(bus, "area", _default_bus["AREA"])
         bus_owner[bus_i] =  get(bus, "owner", _default_bus["OWNER"])
         bus_zone[bus_i] = get(bus, "zone", _default_bus["ZONE"])
 
-        # maps three winding
-        source_id = bus["source_id"]
-        if source_id[1] != "bus" && length(source_id) == 7
-            _, _, _, i, j, k, ckt = source_id
+        # maps three winding (check if bus is the star bus of transformer)
+        if haskey(bus, "source_id")
+            source_id = bus["source_id"]
+            if source_id[1] == "transformer" && length(source_id) == 7
+                _, _, _, i, j, k, ckt = source_id
 
-            three_winding_tran[i, j, k, ckt] = Dict{String, Any}(
-                "bus" => bus,
-                "w1" => nothing,
-                "w2" => nothing,
-                "w3" => nothing,
-            )
+                three_winding_tran[i, j, k, ckt] = Dict{String, Any}(
+                    "bus" => bus,
+                    "w1" => nothing,
+                    "w2" => nothing,
+                    "w3" => nothing,
+                )
+            end
         end
     end
 
@@ -1110,7 +1118,8 @@ function export_pti(io::IO, data::Dict{String,Any})
     # Fixed Shunt
     for (_, shunt) in sort(data["shunt"], by = (x) -> parse(Int64, x))
         # Skip Switched Shunts
-        if shunt["source_id"][1] != "fixed shunt"
+        type = haskey(shunt, "source_id") ? shunt["source_id"][1] : "fixed shunt"
+        if type != "fixed shunt"
             continue
         end
         
@@ -1267,18 +1276,9 @@ function export_pti(io::IO, data::Dict{String,Any})
     println(io, "0 / END OF TWO-TERMINAL DC DATA, BEGIN VOLTAGE SOURCE CONVERTER DATA")    
     # TODO : See how PM converts the DC line and do the oposite
 
-    println(io, "0 / END OF VOLTAGE SOURCE CONVERTER DATA, BEGIN IMPEDANCE CORRECTION DATA")
-
-    Memento.warn(_LOGGER, string("Export IMPEDANCE CORRECTION data is not yet supported"))
-    
+    println(io, "0 / END OF VOLTAGE SOURCE CONVERTER DATA, BEGIN IMPEDANCE CORRECTION DATA")   
     println(io, "0 / END OF IMPEDANCE CORRECTION DATA, BEGIN MULTI-TERMINAL DC DATA")
-    
-    Memento.warn(_LOGGER, string("Export MULTI-TERMINAL DC data is not yet supported"))
-    
     println(io, "0 / END OF MULTI-TERMINAL DC DATA, BEGIN MULTI-SECTION LINE DATA")
-    
-    Memento.warn(_LOGGER, string("Export MULTI-SECTION data is not yet supported"))
-    
     println(io, "0 / END OF MULTI-SECTION LINE DATA, BEGIN ZONE DATA")
 
     # Zone Data
@@ -1293,7 +1293,6 @@ function export_pti(io::IO, data::Dict{String,Any})
 
     println(io, "0 / END OF ZONE DATA, BEGIN INTER-AREA TRANSFER DATA")
 
-    Memento.warn(_LOGGER, string("Export inter-area transfer data is not yet supported"))
     # Inter Area Data
     # Since parse_pti only parse "ptran", "trid" it cannot be replicated 
     # if haskey(data, "inter-area transfer") 
@@ -1316,15 +1315,13 @@ function export_pti(io::IO, data::Dict{String,Any})
     end
 
     println(io, "0 / END OF OWNER DATA, BEGIN FACTS CONTROL DEVICE DATA")
-
-    Memento.warn(_LOGGER, string("Export FACTS data is not yet supported"))
-
     println(io, "0 / END OF FACTS CONTROL DEVICE DATA, BEGIN SWITCHED SHUNT DATA")
 
     # Switched Shunt
     for (_, shunt) in sort(data["shunt"], by = (x) -> parse(Int64, x))
         # Skip Fixed Shunts
-        if shunt["source_id"][1] != "switched shunt"
+        type = haskey(shunt, "source_id") ? shunt["source_id"][1] : "fixed shunt"
+        if type != "switched shunt"
             continue
         end
         
@@ -1336,9 +1333,6 @@ function export_pti(io::IO, data::Dict{String,Any})
     end
 
     println(io, "0 /END OF SWITCHED SHUNT DATA, BEGIN GNE DEVICE DATA")
-
-    Memento.warn(_LOGGER, string("Export GNE data is not yet supported"))
-
     println(io, "0 /END OF GNE DEVICE DATA")
     println(io, "Q")
 end
@@ -1486,7 +1480,7 @@ function _pm2psse_branch(pm_br::Dict{String, Any}, owner::Int64)
     sub_data["CKT"] = "\'$(ckt)\'"
     sub_data["R"] = pm_br["br_r"]
     sub_data["X"] = pm_br["br_x"]
-    sub_data["B"] = 0.
+    sub_data["B"] = 0.0
     sub_data["RATEA"] = get(pm_br, "rate_a", _default_branch["RATEA"])
     sub_data["RATEB"] = get(pm_br, "rate_b", _default_branch["RATEB"])
     sub_data["RATEC"] = get(pm_br, "rate_c", _default_branch["RATEC"])

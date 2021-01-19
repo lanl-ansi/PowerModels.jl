@@ -360,49 +360,6 @@ end
 
 end
 
-@testset "Export File and Check Power Flows" begin
-
-    function test_pf(filename::AbstractString)
-        source_data = parse_file(filename)
-        source_pf = PowerModels.compute_ac_pf(source_data)
-
-        file_tmp = "../test/data/tmp.raw"
-        PowerModels.export_file(file_tmp, source_data)
-
-        destination_data = PowerModels.parse_file(file_tmp)
-        destination_pf = PowerModels.compute_ac_pf(destination_data)
-        rm(file_tmp)
-
-        @test InfrastructureModels.compare_dict(source_pf, destination_pf)
-    end
-
-    @testset "test parser_three_winding_test" begin
-        file = "../test/data/pti/three_winding_test.raw"
-        test_pf(file)
-    end
-
-    @testset "test case3" begin
-        file = "../test/data/pti/case3.raw"
-        test_pf(file)
-    end
-
-    @testset "test case30" begin
-        file = "../test/data/pti/case30.raw"
-        test_pf(file)
-    end    
-    
-    @testset "test case14" begin
-        file = "../test/data/pti/case14.raw"
-        test_pf(file)
-    end
-    
-    @testset "test case73" begin
-        file = "../test/data/pti/case73.raw"
-        test_pf(file)
-    end
-
-end
-
 
 @testset "Export to other file type" begin
 
