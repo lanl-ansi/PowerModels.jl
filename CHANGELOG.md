@@ -2,6 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added `export_pti` to write a PSSE file (#752)
+- Added `parse_files` to create a PM-multinetwork from multiples files
 - Add support for convering matpower ramp rates into per-unit (#561)
 - Fixed bug in dual reporting in `constraint_power_balance_ls` (#741)
 

@@ -234,26 +234,26 @@ const _default_bus = Dict("BASKV" => 0.0, "IDE" => 1, "AREA" => 1, "ZONE" => 1,
     "OWNER" => 1, "VM" => 1.0, "VA" => 0.0, "NVHI" => 1.1, "NVLO" => 0.9,
     "EVHI" => 1.1, "EVLO" => 0.9, "NAME" => "            ")
 
-const _default_load = Dict("ID" => 1, "STATUS" => 1, "PL" => 0.0, "QL" => 0.0,
+const _default_load = Dict("ID" => "1", "STATUS" => 1, "PL" => 0.0, "QL" => 0.0,
     "IP" => 0.0, "IQ" => 0.0, "YP" => 0.0, "YQ" => 0.0, "SCALE" => 1,
     "INTRPT" => 0, "AREA" => nothing, "ZONE" => nothing, "OWNER" => nothing)
 
-const _default_fixed_shunt = Dict("ID" => 1, "STATUS" => 1, "GL" => 0.0, "BL" => 0.0)
+const _default_fixed_shunt = Dict("ID" => "1", "STATUS" => 1, "GL" => 0.0, "BL" => 0.0)
 
-const _default_generator = Dict("ID" => 1, "PG" => 0.0, "QG" => 0.0, "QT" => 9999.0,
+const _default_generator = Dict("ID" => "1", "PG" => 0.0, "QG" => 0.0, "QT" => 9999.0,
     "QB" => -9999.0, "VS" => 1.0, "IREG" => 0, "MBASE" => nothing, "ZR" => 0.0,
     "ZX" => 1.0, "RT" => 0.0, "XT" => 0.0, "GTAP" => 1.0, "STAT" => 1,
     "RMPCT" => 100.0, "PT" => 9999.0, "PB" => -9999.0, "O1" => nothing,
     "O2" => 0, "O3" => 0, "O4" => 0, "F1" => 1.0,"F2" => 1.0, "F3" => 1.0,
     "F4" => 1.0, "WMOD" => 0, "WPF" => 1.0)
 
-const _default_branch = Dict("CKT" => 1, "B" => 0.0, "RATEA" => 0.0,
+const _default_branch = Dict("CKT" => "1", "B" => 0.0, "RATEA" => 0.0,
     "RATEB" => 0.0, "RATEC" => 0.0, "GI" => 0.0, "BI" => 0.0, "GJ" => 0.0,
     "BJ" => 0.0, "ST" => 1, "MET" => 1, "LEN" => 0.0, "O1" => nothing,
     "O2" => 0, "O3" => 0, "O4" => 0, "F1" => 1.0, "F2" => 1.0, "F3" => 1.0,
     "F4" => 1.0)
 
-const _default_transformer = Dict("K" => 0, "CKT" => 1, "CW" => 1, "CZ" => 1,
+const _default_transformer = Dict("K" => 0, "CKT" => "1", "CW" => 1, "CZ" => 1,
     "CM" => 1, "MAG1" => 0.0, "MAG2" => 0.0, "NMETR" => 2,
     "NAME" => "            ", "STAT" => 1, "O1" => nothing, "O2" => 0,
     "O3" => 0, "O4" => 0, "F1" => 1.0, "F2" => 1.0, "F3" => 1.0, "F4" => 1.0,
@@ -1151,8 +1151,7 @@ function export_pti(io::IO, data::Dict{String,Any})
 
     println(io, "0 / END OF GENERATOR DATA, BEGIN BRANCH DATA")
 
-    transformers = Array{Tuple{String, Any}, 1}()
-
+    transformers = Array{Tuple{Symbol, Any}, 1}()
     # Branches
     for (_, branch) in sort(data["branch"], by = (x) -> parse(Int64, x))
         # Skip transformers and put it in transformers Array
@@ -1183,11 +1182,11 @@ function export_pti(io::IO, data::Dict{String,Any})
 
                 # if 3w Transformer Dict is full 
                 if ! (nothing in windings)
-                    push!(transformers, ("3W", three_winding_tran[i, j, k, ckt]))
+                    push!(transformers, (:W3, three_winding_tran[i, j, k, ckt]))
                 end
 
             else # Two Winding    
-                push!(transformers, ("2W", branch))
+                push!(transformers, (:W2, branch))
             end            
 
         else
@@ -1225,7 +1224,7 @@ function export_pti(io::IO, data::Dict{String,Any})
         # Get default transformer base
         sbase = data["baseMVA"]
 
-        if type == "2W"
+        if type == :W2
             # Get default owner
             bus_i = transformer["f_bus"]
             owner = bus_owner[bus_i]
@@ -1241,7 +1240,7 @@ function export_pti(io::IO, data::Dict{String,Any})
             end
             
                 
-        elseif type == "3W"
+        elseif type == :W3
             # Get default owner
             bus_i = transformer["w1"]["f_bus"]
             owner = bus_owner[bus_i]
@@ -1268,7 +1267,6 @@ function export_pti(io::IO, data::Dict{String,Any})
             _print_pti_str(io, psse_comp, _pti_dtypes["AREA INTERCHANGE"])
         end
     end
-
     
     println(io, "0 / END OF AREA DATA, BEGIN TWO-TERMINAL DC DATA")
     # TODO : See how PM converts the DC line and do the oposite
@@ -1289,7 +1287,6 @@ function export_pti(io::IO, data::Dict{String,Any})
             _print_pti_str(io, psse_comp, _pti_dtypes["ZONE"])
         end
     end
-
 
     println(io, "0 / END OF ZONE DATA, BEGIN INTER-AREA TRANSFER DATA")
 
@@ -1433,12 +1430,13 @@ function _pm2psse_fixed_shunt(pm_shunt::Dict{String, Any})
     sub_data["I"] = pm_shunt["shunt_bus"] # Not defaul allowed
     id = haskey(pm_shunt, "source_id") ? pm_shunt["source_id"][end] : _default_fixed_shunt["ID"]
     sub_data["ID"] = "\'$(id)\'"
-    sub_data["STATUS"] = get(pm_shunt, "status", _default_fixed_shunt["STATUS"])
     sub_data["GL"] = get(pm_shunt, "gs", _default_fixed_shunt["GL"])
     sub_data["BL"] = get(pm_shunt, "bs", _default_fixed_shunt["BL"])
     
+    _export_remaining!(sub_data, pm_shunt, _pti_defaults["FIXED SHUNT"])
+    
     return sub_data
-end
+end 
 
 
 """
