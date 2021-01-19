@@ -13,11 +13,11 @@ TESTLOG = Memento.getlogger(PowerModels)
             @test InfrastructureModels.compare_dict(mn_data, build_mn_data("../test/data/matpower/case5_dc.m"))
         end
         @testset "14+24 hybrid case" begin
-            mn_data = build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
+            mn_data = PowerModels.parse_files("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
             PowerModels.make_mixed_units!(mn_data)
             PowerModels.make_per_unit!(mn_data)
 
-            @test InfrastructureModels.compare_dict(mn_data, build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m"))
+            @test InfrastructureModels.compare_dict(mn_data, PowerModels.parse_files("../test/data/matpower/case14.m", "../test/data/matpower/case24.m"))
         end
     end
 
@@ -93,7 +93,7 @@ TESTLOG = Memento.getlogger(PowerModels)
             end
         end
         @testset "7+14 hybrid filer case" begin
-            mn_data = build_mn_data("../test/data/matpower/case7_tplgy.m", "../test/data/matpower/case14.m")
+            mn_data = PowerModels.parse_files("../test/data/matpower/case7_tplgy.m", "../test/data/matpower/case14.m")
             PowerModels.simplify_network!(mn_data)
             PowerModels.select_largest_component!(mn_data)
 
@@ -249,7 +249,7 @@ TESTLOG = Memento.getlogger(PowerModels)
 
 
     @testset "hybrid network case - polar" begin
-        mn_data = build_mn_data("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
+        mn_data = PowerModels.parse_files("../test/data/matpower/case14.m", "../test/data/matpower/case24.m")
 
         @testset "test ac polar opf" begin
             result = PowerModels.run_mn_opf(mn_data, ACPPowerModel, ipopt_solver)

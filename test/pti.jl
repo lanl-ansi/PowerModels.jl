@@ -237,3 +237,195 @@ TESTLOG = Memento.getlogger(PowerModels)
         # @test parsed_pti == pti
     end
 end
+
+
+@testset "test idempotent pti export" begin
+
+    function test_pti_idempotent(filename::AbstractString, parse_file::Function)
+        source_data = parse_file(filename)
+
+        file_tmp = "../test/data/tmp.raw"
+        PowerModels.export_pti(file_tmp, source_data)
+
+        destination_data = PowerModels.parse_file(file_tmp)
+        rm(file_tmp)
+
+        # Delete "name"  key
+        delete!(source_data, "name")
+        delete!(destination_data, "name")
+
+        @test InfrastructureModels.compare_dict(source_data, destination_data)
+    end
+
+    @testset "test parser_three_winding_test" begin
+        file = "../test/data/pti/three_winding_test.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    @testset "test case3" begin
+        file = "../test/data/pti/case3.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    # Fails at branch["5"] because I=4, J=3 -> PM parse it as f_bus=3, t_bus=4
+    # Diference in the "source_id"
+    # Source: Any["transformer", 4, 3, 0, "1 ", 0]
+    # Destination: Any["transformer", 3, 4, 0, "1 ", 0]
+
+    #@testset "test case5" begin
+    #    file = "../test/data/pti/case5.raw"
+    #    test_pti_idempotent(file, PowerModels.parse_file)
+    #end
+    #
+    #@testset "test case5_alc" begin
+    #    file = "../test/data/pti/case5_alc.raw"
+    #    test_pti_idempotent(file, PowerModels.parse_file)
+    #end
+
+    @testset "test case14" begin
+        file = "../test/data/pti/case14.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    # Same as the case5.raw since there is a branch with I=23, J=20. If u open it and save it from PSSE
+    # the data of this branch is I=20, J=23 but with MET = 2
+    #@testset "test case24" begin
+    #    file = "../test/data/pti/case24.raw"
+    #    test_pti_idempotent(file, PowerModels.parse_file)
+    #end
+
+    @testset "test case30" begin
+        file = "../test/data/pti/case30.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    @testset "test case73" begin
+        file = "../test/data/pti/case73.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    @testset "test frankenstein_00_2" begin
+        file = "../test/data/pti/frankenstein_00_2.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    @testset "test frankenstein_20" begin
+        file = "../test/data/pti/frankenstein_20.raw"
+        test_pti_idempotent(file, PowerModels.parse_file)
+    end
+
+    # Same as case5 and case 24
+    # See line 27 of frankenstein_70.raw
+    #@testset "test frankenstein_70" begin
+    #    file = "../test/data/pti/frankenstein_70.raw"
+    #    test_pti_idempotent(file, PowerModels.parse_file)
+    #end
+
+end
+
+
+@testset "test export all to pti" begin
+
+    function test_pti_export_all(filename::AbstractString)
+        source_data = parse_file(filename, import_all=true)
+
+        file_tmp = "../test/data/tmp.raw"
+        PowerModels.export_pti(file_tmp, source_data)
+
+        destination_data = PowerModels.parse_file(file_tmp, import_all=true)
+        rm(file_tmp)
+
+        # Delete "name" key
+        delete!(source_data, "name")
+        delete!(destination_data, "name")
+
+        @test InfrastructureModels.compare_dict(source_data, destination_data)
+    end
+
+    @testset "test case3" begin
+        file = "../test/data/pti/case3.raw"
+        test_pti_export_all(file)
+    end
+
+    @testset "test case30" begin
+        file = "../test/data/pti/case30.raw"
+        test_pti_export_all(file)
+    end
+
+    # No intentions to export INTER AREA TRANSFER
+    #@testset "test parser_test_k" begin
+    #    file = "../test/data/pti/parser_test_k.raw"
+    #    test_pti_export_all(file)
+    #end
+
+end
+
+
+@testset "Export to other file type" begin
+
+    function test_export(filename::AbstractString, extension::AbstractString)
+        source_data = parse_file(filename)
+
+        file_tmp = "../test/data/tmp." * extension
+        PowerModels.export_file(file_tmp, source_data)
+
+        destination_data = PowerModels.parse_file(file_tmp)
+        rm(file_tmp)
+
+        @test true
+    end
+
+    @testset "test case30.m" begin
+        file = "../test/data/matpower/case30.m"
+        test_export(file, "raw")
+        test_export(file, "json")
+    end
+
+        @testset "test case5.m" begin
+        file = "../test/data/matpower/case5.m"
+        test_export(file, "raw")
+        test_export(file, "json")
+    end
+
+    @testset "test case14.m" begin
+        file = "../test/data/matpower/case14.m"
+        test_export(file, "raw")
+        test_export(file, "json")
+    end
+
+    @testset "test case24.m" begin
+        file = "../test/data/matpower/case24.m"
+        test_export(file, "raw")
+        test_export(file, "json")
+    end
+
+    @testset "test case30.m" begin
+        file = "../test/data/matpower/case30.m"
+        test_export(file, "raw")
+        test_export(file, "json")
+    end
+
+    @testset "test case30.raw" begin
+        file = "../test/data/pti/case30.raw"
+        test_export(file, "m")
+        test_export(file, "json")
+    end
+
+    @testset "test case73.raw" begin
+        file = "../test/data/pti/case73.raw"
+        test_export(file, "m")
+        test_export(file, "json")
+    end
+
+    @testset "test frankenstein_00_2.raw" begin
+        file = "../test/data/pti/frankenstein_00_2.raw"
+        test_export(file, "m")
+        test_export(file, "json")
+    end
+
+    @testset "test frankenstein_20.raw" begin
+        file = "../test/data/pti/frankenstein_20.raw"
+        test_export(file, "m")
+        test_export(file, "json")
+    end
+end
