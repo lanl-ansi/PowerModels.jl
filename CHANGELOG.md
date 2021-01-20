@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added support for `relax_integrality` in `run_model`
 - Added `export_pti` to write a PSSE file (#752)
 - Added `parse_files` to create a PM-multinetwork from multiples files
 - Add support for convering matpower ramp rates into per-unit (#561)

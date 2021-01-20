@@ -44,3 +44,25 @@ end
         @test isapprox(result["objective"], 17613.2; atol = 1e0)
     end
 end
+
+
+
+@testset "relax integrality" begin
+    @testset "relax OTS model" begin
+        result = run_ots("../test/data/matpower/case5.m", DCPPowerModel, ipopt_solver, relax_integrality=true)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 14810.0; atol = 1e0)
+
+        br_status_total = sum(branch["br_status"] for (i,branch) in result["solution"]["branch"])
+        @test isapprox(br_status_total, 5.100; atol = 1e-2)
+    end
+
+    @testset "relax TNEP model" begin
+        result = run_tnep("../test/data/matpower/case5_tnep.m", SOCWRPowerModel, ipopt_solver, relax_integrality=true)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 0.1236; atol = 1e-2)
+    end
+end
+
