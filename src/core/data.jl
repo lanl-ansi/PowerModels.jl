@@ -2197,7 +2197,7 @@ function _standardize_cost_terms!(components::Dict{String,<:Any}, comp_order::In
             comp["ncost"] = comp_order
             #println("std gen cost: $(comp["cost"])")
 
-            Memento.warn(_LOGGER, "Updated $(cost_comp_name) $(comp["index"]) cost function with order $(length(current_cost)) to a function of order $(comp_order): $(comp["cost"])")
+            Memento.info(_LOGGER, "Updated $(cost_comp_name) $(comp["index"]) cost function with order $(length(current_cost)) to a function of order $(comp_order): $(comp["cost"])")
             push!(modified, comp["index"])
         end
     end
