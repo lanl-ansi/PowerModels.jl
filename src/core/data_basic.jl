@@ -26,9 +26,6 @@ function make_basic_network(data::Dict{String,<:Any})
     # switch resolution can result in new parallel branches
     correct_branch_directions!(data)
 
-    # equivalence parallel lines?
-    #merge_parallel_branches!(data)
-
     # set remaining unsupported components as inactive
     dcline_status_key = pm_component_status["dcline"]
     dcline_inactive_status = pm_component_status_inactive["dcline"]
@@ -73,68 +70,6 @@ function make_basic_network(data::Dict{String,<:Any})
 
     return data
 end
-
-
-#=
-"""
-given a network data dict, replaces parallel branches with an equivalent single
-branch.
-assumes that all parallel branches have a consistent orientation
-"""
-function merge_parallel_branches!(data::Dict{String,<:Any})
-    if _IM.ismultinetwork(data)
-        for (i,nw_data) in data["nw"]
-            _merge_parallel_branches!(nw_data)
-        end
-    else
-         _merge_parallel_branches!(data)
-    end
-end
-
-""
-function _merge_parallel_branches!(data::Dict{String,<:Any})
-    # assumes parallel branches have a consistent orientation
-    branch_sets = Dict()
-
-    for (i,branch) in data["branch"]
-        bus_pair = (fr=branch["f_bus"], to=branch["t_bus"])
-        if !haskey(branch_sets, bus_pair)
-            branch_sets[bus_pair] = []
-        end
-        push!(branch_sets[bus_pair], branch)
-    end
-
-    merged = false
-    branch_list = []
-    for (bp, branches) in branch_sets
-        if length(branches) > 1
-            branch_ids = [branch["index"] for branch in branches]
-            Memento.info(_LOGGER, "merging parallel branches $(join(branch_ids, ","))")
-
-            branch_new = copy(branches[1])
-
-            branch_new["g_to"] = sum(branch["g_to"] for branch in branches)
-            branch_new["b_to"] = sum(branch["b_to"] for branch in branches)
-            branch_new["g_fr"] = sum(branch["g_fr"] for branch in branches)
-            branch_new["b_fr"] = sum(branch["b_fr"] for branch in branches)
-
-            z_total = 1/sum(1/(branch["br_r"] + branch["br_x"]im) for branch in branches)
-            #t_total = sum((branch["tap"]*cos(branch["shift"]) + branch["tap"]*sin(branch["shift"])im) for branch in branches)
-
-            println([(branch["br_r"] + branch["br_x"]im) for branch in branches])
-            #println([(branch["tap"]*cos(branch["shift"]) + branch["tap"]*sin(branch["shift"])im) for branch in branches])
-            println(z_total)
-            #println(t_total)
-
-            #push!(branch_list, branch_new)
-        else
-            push!(branch_list, branches[1])
-        end
-    end
-
-    #data["branch"] = Dict{String,Any}("$(branch["index"])" => branch for branch in branch_list)
-end
-=#
 
 
 """
