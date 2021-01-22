@@ -804,3 +804,43 @@ end
     end
 
 end
+
+
+
+@testset "test renumber bus ids" begin
+     @testset "5-bus with dcline" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
+        result_1 = run_opf(data, ACPPowerModel, ipopt_solver)
+
+        update_bus_ids!(data, Dict(1 => 10, 2=>20, 3=>30, 4=>40, 5=>50))
+
+        result_2 = run_opf(data, ACPPowerModel, ipopt_solver)
+
+        @test isapprox(result_1["objective"], result_2["objective"]; atol=1e-6)
+    end
+
+     @testset "5-bus with switches" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        result_1 = PowerModels._run_opf_sw(data, DCPPowerModel, ipopt_solver)
+
+        update_bus_ids!(data, Dict(1 => 10, 2=>20, 3=>30, 4=>40, 10=>100))
+
+        result_2 = PowerModels._run_opf_sw(data, DCPPowerModel, ipopt_solver)
+
+        @test isapprox(result_1["objective"], result_2["objective"]; atol=1e-6)
+    end
+end
+
+@testset "test resolve switches" begin
+     @testset "5-bus with switches" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        resolve_swithces!(data)
+
+        @test length(data["switch"]) == 0
+        @test length(data["bus"]) == 4
+
+        result = run_opf(data, ACPPowerModel, ipopt_solver)
+
+        @test isapprox(result["objective"], 16641.20; atol=1e0)
+    end
+end
