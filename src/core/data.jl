@@ -2585,21 +2585,24 @@ end
 ""
 function _select_largest_component!(data::Dict{String,<:Any})
     ccs = calc_connected_components(data)
-    Memento.info(_LOGGER, "found $(length(ccs)) components")
 
-    ccs_order = sort(collect(ccs); by=length)
-    largest_cc = ccs_order[end]
+    if length(ccs) > 1
+        Memento.info(_LOGGER, "found $(length(ccs)) components")
 
-    Memento.info(_LOGGER, "largest component has $(length(largest_cc)) buses")
+        ccs_order = sort(collect(ccs); by=length)
+        largest_cc = ccs_order[end]
 
-    for (i,bus) in data["bus"]
-        if bus["bus_type"] != 4 && !(bus["index"] in largest_cc)
-            bus["bus_type"] = 4
-            Memento.info(_LOGGER, "deactivating bus $(i) due to small connected component")
+        Memento.info(_LOGGER, "largest component has $(length(largest_cc)) buses")
+
+        for (i,bus) in data["bus"]
+            if bus["bus_type"] != 4 && !(bus["index"] in largest_cc)
+                bus["bus_type"] = 4
+                Memento.info(_LOGGER, "deactivating bus $(i) due to small connected component")
+            end
         end
-    end
 
-    correct_reference_buses!(data)
+        correct_reference_buses!(data)
+    end
 end
 
 
