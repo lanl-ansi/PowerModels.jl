@@ -86,7 +86,7 @@ function make_basic_network(data::Dict{String,<:Any})
     # re-number non-bus component ids
     for comp_key in keys(pm_component_status)
         if comp_key != "bus"
-            data[comp_key] = renumber_components(data[comp_key])
+            data[comp_key] = _renumber_components(data[comp_key])
         end
     end
 
@@ -189,6 +189,48 @@ function calc_basic_susceptance_matrix(data::Dict{String,<:Any})
     # -1.0 can be removed once #734 is resolved
     return -1.0*am.matrix
 end
+
+
+"""
+given a basic network data dict, returns a sparse susceptance matrix
+"""
+function compute_basic_dc_pf(data::Dict{String,<:Any})
+    if !get(data, "basic_network", false)
+        Memento.warn(_LOGGER, "compute_basic_dc_pf requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+    end
+
+    num_bus = length(data["bus"])
+    ref_bus_id = reference_bus(data)["index"]
+
+    bi = calc_bus_injection_active(data)
+    bi = [bi[i] for i in 1:num_bus]
+
+    # accounts for vm = 1.0 assumption
+    for (i,shunt) in data["shunt"]
+        if !isapprox(shunt["gs"], 0.0)
+            bi[shunt["shunt_bus"]] += shunt["gs"]
+        end
+    end
+
+    sm = -1.0*calc_basic_susceptance_matrix(data)
+
+    for i in 1:num_bus
+        if i == ref_bus_id
+            # TODO improve scaling of this value
+            sm[i,i] = 1.0
+        else
+            if !iszero(sm[ref_bus_id,i])
+                sm[ref_bus_id,i] = 0.0
+            end
+        end
+    end
+    bi[ref_bus_id] = 0.0
+
+    theta = sm \ -bi
+
+    return theta
+end
+
 
 
 """
