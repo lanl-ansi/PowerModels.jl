@@ -192,7 +192,7 @@ end
 
 
 """
-given a basic network data dict, returns a sparse susceptance matrix
+given a basic network data dict, computes the voltage phase angles of a dc power flow
 """
 function compute_basic_dc_pf(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)

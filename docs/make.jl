@@ -16,7 +16,8 @@ makedocs(
             "Storage Model" => "storage.md",
             "Switch Model" => "switch.md",
             "Multi Networks" => "multi-networks.md",
-            "Utilities" => "utilities.md"
+            "Utilities" => "utilities.md",
+            "Basic Data Utilities" => "basic-data-utilities.md"
         ],
         "Library" => [
             "Network Formulations" => "formulations.md",
