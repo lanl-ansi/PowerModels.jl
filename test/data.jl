@@ -717,9 +717,9 @@ end
         result = run_opf(data, ACPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
-        balance = PowerModels.calc_power_balance(data)
+        PowerModels.calc_power_balance!(data)
 
-        for (i,bus) in balance["bus"]
+        for (i,bus) in data["bus"]
             @test isapprox(bus["p_delta"], 0.0; atol=1e-6)
             @test isapprox(bus["q_delta"], 0.0; atol=1e-6)
         end
@@ -731,9 +731,9 @@ end
         result = run_opf(data, DCPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
-        balance = PowerModels.calc_power_balance(data)
+        PowerModels.calc_power_balance!(data)
 
-        for (i,bus) in balance["bus"]
+        for (i,bus) in data["bus"]
             @test isapprox(bus["p_delta"], 0.0; atol=1e-6)
             @test isnan(bus["q_delta"])
         end
@@ -746,9 +746,9 @@ end
         result = PowerModels._run_opf_strg(data, ACPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
-        balance = PowerModels.calc_power_balance(data)
+        PowerModels.calc_power_balance!(data)
 
-        for (i,bus) in balance["bus"]
+        for (i,bus) in data["bus"]
             @test isapprox(bus["p_delta"], 0.0; atol=1e-6)
             @test isapprox(bus["q_delta"], 0.0; atol=1e-6)
         end
@@ -760,9 +760,9 @@ end
         result = PowerModels._run_opf_strg(data, DCPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
-        balance = PowerModels.calc_power_balance(data)
+        PowerModels.calc_power_balance!(data)
 
-        for (i,bus) in balance["bus"]
+        for (i,bus) in data["bus"]
             @test isapprox(bus["p_delta"], 0.0; atol=1e-6)
             @test isnan(bus["q_delta"])
         end
@@ -775,12 +775,10 @@ end
         result = run_opf(data, ACPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
-        flows = PowerModels.calc_branch_flow_ac(data)
-        PowerModels.update_data!(data, flows)
+        PowerModels.calc_branch_flow_ac!(data)
+        PowerModels.calc_power_balance!(data)
 
-        balance = PowerModels.calc_power_balance(data)
-
-        for (i,bus) in balance["bus"]
+        for (i,bus) in data["bus"]
             @test isapprox(bus["p_delta"], 0.0; atol=1e-6)
             @test isapprox(bus["q_delta"], 0.0; atol=1e-6)
         end
@@ -792,15 +790,13 @@ end
         result = run_opf(data, DCPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
-        flows = PowerModels.calc_branch_flow_dc(data)
-        PowerModels.update_data!(data, flows)
+        PowerModels.calc_branch_flow_dc!(data)
+        PowerModels.calc_power_balance!(data)
 
-        balance = PowerModels.calc_power_balance(data)
-
-        for (i,bus) in balance["bus"]
+        for (i,bus) in data["bus"]
             @test isapprox(bus["p_delta"], 0.0; atol=1e-6)
             @test isnan(bus["q_delta"])
         end
     end
-
+	
 end

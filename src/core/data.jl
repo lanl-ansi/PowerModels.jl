@@ -764,6 +764,13 @@ function calc_branch_flow_ac(data::Dict{String,<:Any})
 end
 
 
+"In place calculation calc_branch_flow_ac"
+function calc_branch_flow_ac!(data::Dict{String,<:Any})
+	flows = calc_branch_flow_ac(data)
+	update_data!(data, flows)
+end
+
+
 "helper function for calc_branch_flow_ac"
 function _calc_branch_flow_ac(data::Dict{String,<:Any})
     vm = Dict(bus["index"] => bus["vm"] for (i,bus) in data["bus"])
@@ -839,6 +846,13 @@ function calc_branch_flow_dc(data::Dict{String,<:Any})
 end
 
 
+"In place calculation of calc_branch_flow_dc"
+function calc_branch_flow_dc!(data::Dict{String,<:Any})
+	flows = calc_branch_flow_dc(data)
+	update_data!(data, flows)
+end
+
+
 "helper function for calc_branch_flow_dc"
 function _calc_branch_flow_dc(data::Dict{String,<:Any})
     vm = Dict(bus["index"] => bus["vm"] for (i,bus) in data["bus"])
@@ -892,6 +906,13 @@ function calc_power_balance(data::Dict{String,<:Any})
         flows["baseMVA"] = data["baseMVA"]
         return flows
     end
+end
+
+
+"In place calculation of calc_power_balance"
+function calc_power_balance!(data::Dict{String,<:Any})
+	flows = calc_power_balance(data)
+	update_data!(data, flows)
 end
 
 
