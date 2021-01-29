@@ -38,7 +38,7 @@ calc_basic_bus_injection
 calc_basic_incidence_matrix
 calc_basic_admittance_matrix
 calc_basic_ptdf_matrix
-calc_basic_ptdf_column
+calc_basic_ptdf_row
 calc_basic_jacobian_matrix
 ```
 

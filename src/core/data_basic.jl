@@ -328,14 +328,14 @@ function calc_basic_ptdf_matrix(data::Dict{String,<:Any})
     # -1.0 can be removed once #734 is resolved
     b_inv = -1.0*calc_susceptance_matrix_inv(data).matrix
 
-    ptdf = zeros(num_bus, num_branch)
+    ptdf = zeros(num_branch, num_bus)
     for (i,branch) in data["branch"]
         branch_idx = branch["index"]
         bus_fr = branch["f_bus"]
         bus_to = branch["t_bus"]
         g,b = calc_branch_y(branch)
         for n in 1:num_bus
-            ptdf[n, branch_idx] = -b*(b_inv[bus_fr, n] - b_inv[bus_to, n])
+            ptdf[branch_idx, n] = -b*(b_inv[bus_fr, n] - b_inv[bus_to, n])
         end
     end
 
@@ -346,9 +346,9 @@ end
 given a basic network data dict and a branch index returns a column of the ptdf
 matrix for that column.
 """
-function calc_basic_ptdf_column(data::Dict{String,<:Any}, branch_index::Int)
+function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
     if !get(data, "basic_network", false)
-        Memento.warn(_LOGGER, "calc_basic_ptdf_column requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        Memento.warn(_LOGGER, "calc_basic_ptdf_row requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     if branch_index < 1 || branch_index > length(data["branch"])

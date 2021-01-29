@@ -130,8 +130,8 @@ end
 
         P = calc_basic_ptdf_matrix(data)
 
-        @test size(P, 1) == length(data["bus"])
-        @test size(P, 2) == length(data["branch"])
+        @test size(P, 1) == length(data["branch"])
+        @test size(P, 2) == length(data["bus"])
         @test isapprox(sum(P), -0.9894736; atol=1e-6)
 
 
@@ -148,7 +148,7 @@ end
 
         va = angle.(calc_basic_bus_voltage(data))
 
-        branch_power = P'*bi
+        branch_power = P*bi
 
         for (i,branch) in data["branch"]
             g,b = calc_branch_y(branch)
@@ -163,8 +163,8 @@ end
         P = calc_basic_ptdf_matrix(data)
 
         for i in 1:length(data["branch"])
-            c = calc_basic_ptdf_column(data, i)
-            @test isapprox(P[:,i], c; atol=1e-6)
+            row = calc_basic_ptdf_row(data, i)
+            @test isapprox(P[i,:], row; atol=1e-6)
         end
     end
 
