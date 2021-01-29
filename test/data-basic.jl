@@ -16,7 +16,7 @@
         @test length(data["storage"]) == 0
 
         result = run_opf(data, ACPPowerModel, ipopt_solver)
-        @test isapprox(result["objective"], 1046.62; atol=1e0)
+        @test isapprox(result["objective"], 1036.52; atol=1e0)
     end
 
     @testset "5-bus with switches components" begin
@@ -32,7 +32,7 @@
         @test length(data["storage"]) == 0
 
         result = run_opf(data, ACPPowerModel, ipopt_solver)
-        @test isapprox(result["objective"], 16635.0; atol=1e0)
+        @test isapprox(result["objective"], 16551.7; atol=1e0)
     end
 
 end
@@ -77,7 +77,7 @@ end
 
         @test size(AM, 1) == length(data["bus"])
         @test size(AM, 2) == length(data["bus"])
-        @test isapprox(sum(AM), 0.06511867 + 0.00624668im; atol=1e-6)
+        @test isapprox(sum(AM), 0.0151187 + 0.00624668im; atol=1e-6)
     end
 
     @testset "basic branch series impedance and susceptance matrix" begin
@@ -88,12 +88,12 @@ end
 
         SM_1 = imag(A'*LinearAlgebra.Diagonal(inv.(bz))*A)
 
-        SM_2 = -1.0*calc_susceptance_matrix(data).matrix
+        SM_2 = calc_basic_susceptance_matrix(data)
 
         @test isapprox(SM_1, SM_2; atol=1e-6)
     end
 
-    @testset "basic bus voltage and branch power flow matrix" begin
+    @testset "basic bus voltage and branch power matrix" begin
         data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case5_sw.m"))
 
         va = angle.(calc_basic_bus_voltage(data))
@@ -101,9 +101,14 @@ end
         bz = calc_basic_branch_series_impedance(data)
         A = calc_basic_incidence_matrix(data)
 
-        BFM = imag(A'*LinearAlgebra.Diagonal(conj.(inv.(bz))))'
+        BFM_1 = imag(A'*LinearAlgebra.Diagonal(conj.(inv.(bz))))'
 
-        branch_power = BFM*va
+        BFM_2 = calc_basic_branch_power_matrix(data)
+
+        @test isapprox(BFM_1, BFM_2; atol=1e-6)
+
+
+        branch_power = BFM_1*va
 
         @test length(branch_power) == length(data["branch"])
 
@@ -175,7 +180,7 @@ end
 
         @test size(J, 1) == 2*length(data["bus"])
         @test size(J, 2) == 2*length(data["bus"])
-        @test isapprox(sum(J), 10.19339; atol=1e-4)
+        @test isapprox(sum(J), 10.0933; atol=1e-4)
     end
 
 end

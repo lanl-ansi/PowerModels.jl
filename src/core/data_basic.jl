@@ -11,7 +11,10 @@ following basic network model requirements.
 - there exactly one phase angle reference bus
 - generation cost functions are quadratic
 - all branches have explicit thermal limits
-- phase shift on all transformers is set to 0
+- phase shift on all transformers is set to 0.0
+- bus shunts have 0.0 conductance values
+users requring any of the features listed above for thier anlysis should use 
+the non-basic PowerModels routines.
 """
 function make_basic_network(data::Dict{String,<:Any})
     if _IM.ismultinetwork(data)
@@ -28,6 +31,14 @@ function make_basic_network(data::Dict{String,<:Any})
         end
     end
     standardize_cost_terms!(data, order=2)
+
+    # set conductance to zero on all shunts
+    for (i,shunt) in data["shunt"]
+        if !isapprox(shunt["gs"], 0.0)
+            Memento.warn(_LOGGER, "setting conductance on shunt $(i) from $(shunt["gs"]) to 0.0")
+            shunt["gs"] = 0.0
+        end
+    end
 
     # ensure that branch components always have a rate_a value
     calc_thermal_limits!(data)
@@ -149,10 +160,9 @@ end
 
 
 
-
 """
-given a basic network data dict, returns a vector of bus voltage values in
-rectangular cordinates.
+given a basic network data dict, returns a complex valued vector of bus voltage
+values in rectangular cordinates.
 """
 function calc_basic_bus_voltage(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
@@ -166,7 +176,7 @@ function calc_basic_bus_voltage(data::Dict{String,<:Any})
 end
 
 """
-given a basic network data dict, returns a vector of bus power injection values.
+given a basic network data dict, returns a complex valued vector of bus power injections.
 """
 function calc_basic_bus_injection(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
@@ -180,7 +190,7 @@ function calc_basic_bus_injection(data::Dict{String,<:Any})
 end
 
 """
-given a basic network data dict, returns a vector of the branch series impedance values
+given a basic network data dict, returns a complex valued vector of branch series impedances.
 """
 function calc_basic_branch_series_impedance(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
@@ -195,8 +205,10 @@ end
 
 
 """
-given a basic network data dict, returns a sparse incidence matrix with one row
-for each branch and one column for each bus in the network
+given a basic network data dict, returns a sparse integer valued incidence
+matrix with one row for each branch and one column for each bus in the network.
+In each branch row a +1 is used to indicate the _from_ bus and -1 is used to
+indicate _to_ bus.
 """
 function calc_basic_incidence_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
@@ -218,7 +230,8 @@ function calc_basic_incidence_matrix(data::Dict{String,<:Any})
 end
 
 """
-given a basic network data dict, returns a sparse admittance matrix
+given a basic network data dict, returns a sparse complex valued admittance
+matrix with one row and column for each bus in the network.
 """
 function calc_basic_admittance_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
@@ -232,49 +245,51 @@ function calc_basic_admittance_matrix(data::Dict{String,<:Any})
 end
 
 
-# """
-# given a basic network data dict, returns a sparse susceptance matrix
-# """
-# function calc_basic_susceptance_matrix(data::Dict{String,<:Any})
-#     if !get(data, "basic_network", false)
-#         Memento.warn(_LOGGER, "calc_basic_susceptance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
-#     end
+"""
+given a basic network data dict, returns a sparse real valued susceptance
+matrix with one row and column for each bus in the network.
+"""
+function calc_basic_susceptance_matrix(data::Dict{String,<:Any})
+    if !get(data, "basic_network", false)
+        Memento.warn(_LOGGER, "calc_basic_susceptance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+    end
 
-#     am = calc_susceptance_matrix(data)
+    am = calc_susceptance_matrix(data)
 
-#     # -1.0 can be removed once #734 is resolved
-#     return -1.0*am.matrix
-# end
+    # -1.0 can be removed once #734 is resolved
+    return -1.0*am.matrix
+end
 
-
-# """
-# given a basic network data dict, returns a sparse branch flow matrix with one
-# row for each branch and one column for each bus in the network.
-# multipling the branch flow matrix by bus phase angels yields a vector of branch
-# power flow values.
-# """
-# function calc_basic_branch_flow_matrix(data::Dict{String,<:Any})
-#     if !get(data, "basic_network", false)
-#         Memento.warn(_LOGGER, "calc_basic_branch_flow_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
-#     end
-
-#     I = Int64[]
-#     J = Int64[]
-#     V = Float64[]
-
-#     b = [branch for (i,branch) in data["branch"] if branch["br_status"] != 0]
-#     branch_ordered = sort(b, by=(x) -> x["index"])
-#     for (i,branch) in enumerate(branch_ordered)
-#         g,b = calc_branch_y(branch)
-#         push!(I, i); push!(J, branch["f_bus"]); push!(V, -b)
-#         push!(I, i); push!(J, branch["t_bus"]); push!(V,  b)
-#     end
-
-#     return sparse(I,J,V)
-# end
 
 """
-given a basic network data dict, computes the voltage phase angles of a dc power flow
+given a basic network data dict, returns a sparse real valued branch flow
+matrix with one row for each branch and one column for each bus in the network.
+multipling the branch power matrix by bus phase angels yields a vector
+active power flow values on each branch.
+"""
+function calc_basic_branch_power_matrix(data::Dict{String,<:Any})
+    if !get(data, "basic_network", false)
+        Memento.warn(_LOGGER, "calc_basic_branch_power_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+    end
+
+    I = Int64[]
+    J = Int64[]
+    V = Float64[]
+
+    b = [branch for (i,branch) in data["branch"] if branch["br_status"] != 0]
+    branch_ordered = sort(b, by=(x) -> x["index"])
+    for (i,branch) in enumerate(branch_ordered)
+        g,b = calc_branch_y(branch)
+        push!(I, i); push!(J, branch["f_bus"]); push!(V, -b)
+        push!(I, i); push!(J, branch["t_bus"]); push!(V,  b)
+    end
+
+    return sparse(I,J,V)
+end
+
+"""
+given a basic network data dict, computes real valued vector of bus voltage
+phase angles by solving a dc power flow.
 """
 function compute_basic_dc_pf(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
@@ -286,14 +301,7 @@ function compute_basic_dc_pf(data::Dict{String,<:Any})
 
     bi = real.(calc_basic_bus_injection(data))
 
-    # accounts for vm = 1.0 assumption
-    for (i,shunt) in data["shunt"]
-        if !isapprox(shunt["gs"], 0.0)
-            bi[shunt["shunt_bus"]] += shunt["gs"]
-        end
-    end
-
-    sm = calc_susceptance_matrix(data).matrix
+    sm = calc_basic_susceptance_matrix(data)
 
     for i in 1:num_bus
         if i == ref_bus_id
@@ -307,7 +315,7 @@ function compute_basic_dc_pf(data::Dict{String,<:Any})
     end
     bi[ref_bus_id] = 0.0
 
-    theta = sm \ -bi
+    theta = sm \ bi
 
     return theta
 end
@@ -315,7 +323,10 @@ end
 
 
 """
-given a basic network data dict, returns a ptdf matrix
+given a basic network data dict, returns a real valued ptdf matrix with one
+row for each branch and one column for each bus in the network.
+multipling the ptdf matrix by bus injection values yields a vector
+active power flow values on each branch.
 """
 function calc_basic_ptdf_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
@@ -343,8 +354,8 @@ function calc_basic_ptdf_matrix(data::Dict{String,<:Any})
 end
 
 """
-given a basic network data dict and a branch index returns a column of the ptdf
-matrix for that column.
+given a basic network data dict and a branch index returns a row of the ptdf
+matrix reflecting that branch.
 """
 function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
     if !get(data, "basic_network", false)
@@ -376,9 +387,9 @@ end
 
 
 """
-given a basic network data dict, returns the Jacobian matrix of the ac power
-flow problem.  Power variables are ordered by p and then q while voltage
-values are ordered by voltage angle and then voltage magnitude.
+given a basic network data dict, returns a sparse real valued Jacobian matrix
+of the ac power flow problem.  The power variables are ordered by p and then q
+while voltage values are ordered by voltage angle and then voltage magnitude.
 """
 function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
