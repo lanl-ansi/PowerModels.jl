@@ -33,9 +33,10 @@ distinguishes these functions from similar tools that operate on any type of
 PowerModels data, but require addition bookkeeping.
 
 ```@docs
+calc_basic_bus_voltage
+calc_basic_bus_injection
 calc_basic_incidence_matrix
 calc_basic_admittance_matrix
-calc_basic_susceptance_matrix
 calc_basic_ptdf_matrix
 calc_basic_ptdf_column
 calc_basic_jacobian_matrix

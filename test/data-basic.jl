@@ -32,7 +32,7 @@
         @test length(data["storage"]) == 0
 
         result = run_opf(data, ACPPowerModel, ipopt_solver)
-        @test isapprox(result["objective"], 16641.20; atol=1e0)
+        @test isapprox(result["objective"], 16635.0; atol=1e0)
     end
 
 end
@@ -40,14 +40,34 @@ end
 
 @testset "test basic network functions" begin
 
+    @testset "basic bus injection" begin
+        data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case14.m"))
+
+        result = run_opf(data, DCPPowerModel, ipopt_solver)
+        update_data!(data, result["solution"])
+
+        bi = calc_basic_bus_injection(data)
+
+        @test isapprox(real(sum(bi)), 0.0; atol=1e-6)
+
+
+        result = run_opf(data, ACPPowerModel, ipopt_solver)
+        update_data!(data, result["solution"])
+
+        bi = calc_basic_bus_injection(data)
+
+        @test isapprox(sum(bi), -0.092872 + 0.0586887im; atol=1e-6)
+    end
+
     @testset "basic incidence matrix" begin
         data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case5_sw.m"))
 
         I = calc_basic_incidence_matrix(data)
 
-        @test size(I, 1) == length(data["bus"])
-        @test size(I, 2) == length(data["branch"])
-        @test sum(I) == 2*length(data["branch"])
+        @test size(I, 1) == length(data["branch"])
+        @test size(I, 2) == length(data["bus"])
+        @test sum(I) == 0
+        @test sum(abs.(I)) == 2*length(data["branch"])
     end
 
     @testset "basic admittance matrix" begin
@@ -57,24 +77,48 @@ end
 
         @test size(AM, 1) == length(data["bus"])
         @test size(AM, 2) == length(data["bus"])
-        @test isapprox(sum(AM), 0.0670529 - 0.0130956im; atol=1e-6)
+        @test isapprox(sum(AM), 0.06511867 + 0.00624668im; atol=1e-6)
     end
 
-    @testset "basic susceptance matrix" begin
+    @testset "basic branch series impedance and susceptance matrix" begin
         data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case5_sw.m"))
 
-        SM = calc_basic_susceptance_matrix(data)
+        bz = calc_basic_branch_series_impedance(data)
+        A = calc_basic_incidence_matrix(data)
 
-        @test size(SM, 1) == length(data["bus"])
-        @test size(SM, 2) == length(data["bus"])
-        @test isapprox(sum(SM), 0.0; atol=1e-6)
+        SM_1 = imag(A'*LinearAlgebra.Diagonal(inv.(bz))*A)
+
+        SM_2 = -1.0*calc_susceptance_matrix(data).matrix
+
+        @test isapprox(SM_1, SM_2; atol=1e-6)
+    end
+
+    @testset "basic bus voltage and branch power flow matrix" begin
+        data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case5_sw.m"))
+
+        va = angle.(calc_basic_bus_voltage(data))
+
+        bz = calc_basic_branch_series_impedance(data)
+        A = calc_basic_incidence_matrix(data)
+
+        BFM = imag(A'*LinearAlgebra.Diagonal(conj.(inv.(bz))))'
+
+        branch_power = BFM*va
+
+        @test length(branch_power) == length(data["branch"])
+
+        for (i,branch) in data["branch"]
+            g,b = calc_branch_y(branch)
+            pf = -b*(va[branch["f_bus"]] - va[branch["t_bus"]])
+            @test isapprox(branch_power[branch["index"]], pf; atol=1e-6)
+        end
     end
 
     @testset "basic dc power flow" begin
         data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case5_sw.m"))
         solution = compute_dc_pf(data)
 
-        va = PowerModels.compute_basic_dc_pf(data)
+        va = compute_basic_dc_pf(data)
 
         for (i,val) in enumerate(va)
             @test isapprox(solution["bus"]["$(i)"]["va"], val; atol=1e-6)
@@ -88,7 +132,29 @@ end
 
         @test size(P, 1) == length(data["bus"])
         @test size(P, 2) == length(data["branch"])
-        @test isapprox(sum(P), 0.030133084; atol=1e-6)
+        @test isapprox(sum(P), -0.9894736; atol=1e-6)
+
+
+        result = run_opf(data, DCPPowerModel, ipopt_solver)
+        update_data!(data, result["solution"])
+
+        bi = real(calc_basic_bus_injection(data))
+        # accounts for vm = 1.0 assumption
+        for (i,shunt) in data["shunt"]
+            if !isapprox(shunt["gs"], 0.0)
+                bi[shunt["shunt_bus"]] += shunt["gs"]
+            end
+        end
+
+        va = angle.(calc_basic_bus_voltage(data))
+
+        branch_power = P'*bi
+
+        for (i,branch) in data["branch"]
+            g,b = calc_branch_y(branch)
+            pf = -b*(va[branch["f_bus"]] - va[branch["t_bus"]])
+            @test isapprox(branch_power[branch["index"]], pf; atol=1e-6)
+        end
     end
 
     @testset "basic ptdf columns" begin
@@ -98,7 +164,7 @@ end
 
         for i in 1:length(data["branch"])
             c = calc_basic_ptdf_column(data, i)
-            isapprox(P[:,i], c; atol=1e-6)
+            @test isapprox(P[:,i], c; atol=1e-6)
         end
     end
 
