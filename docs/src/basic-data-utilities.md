@@ -37,7 +37,8 @@ messages in the terminal.
 Using a basic network dataset the following functions can be used to extract
 key power system quantities in vectors and matrix forms. The prefix `_basic_`
 distinguishes these functions from similar tools that operate on any type of
-PowerModels data, but require addition bookkeeping.
+PowerModels data, including those that are not amenable to a vector/matrix
+format.
 
 ```@docs
 calc_basic_bus_voltage
@@ -46,7 +47,7 @@ calc_basic_branch_series_impedance
 calc_basic_incidence_matrix
 calc_basic_admittance_matrix
 calc_basic_susceptance_matrix
-calc_basic_branch_power_matrix
+calc_basic_branch_susceptance_matrix
 calc_basic_ptdf_matrix
 calc_basic_ptdf_row
 calc_basic_jacobian_matrix
@@ -63,7 +64,7 @@ calc_basic_jacobian_matrix
 
 Matrix-based network data can be combined to compute a number of useful
 quantities. For example, by combining the incidence matrix and the series
-impedance one can drive the susceptance and branch power matrices as follows,
+impedance one can drive the susceptance and branch susceptance matrices as follows,
 
 ```julia
 import LinearAlgebra: Diagonal
@@ -73,19 +74,19 @@ A  = calc_basic_incidence_matrix(data)
 
 Y = imag(Diagonal(inv.(bz)))
 B = A'*Y*A           # equivalent to calc_basic_susceptance_matrix
-BFM = -1.0*(A'*Y)'   # equivalent to calc_basic_branch_power_matrix
+BBM = -(A'*Y)'   # equivalent to calc_basic_branch_susceptance_matrix
 ```
 
-The bus voltage angles can be combined with the susceptance and branch power
+The bus voltage angles can be combined with the susceptance and branch susceptance
 matrices to observe how power flows through the network as follows,
 
 ```julia
 va  = angle.(calc_basic_bus_voltage(data))
 B   = calc_basic_susceptance_matrix(data)
-BFM = calc_basic_branch_power_matrix(data)
+BBM = calc_basic_branch_susceptance_matrix(data)
 
-bus_injection = B * va
-branch_power = BFM * va
+bus_injection = -B * va
+branch_power = BBM * va
 ```
 
 In the inverse operation, bus injection values can be combined with a PTDF matrix to compute branch flow values as follows,

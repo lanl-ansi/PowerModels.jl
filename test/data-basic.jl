@@ -86,11 +86,24 @@ end
         bz = calc_basic_branch_series_impedance(data)
         A = calc_basic_incidence_matrix(data)
 
-        SM_1 = imag(A'*LinearAlgebra.Diagonal(inv.(bz))*A)
+        # docs example
+        Y = imag(LinearAlgebra.Diagonal(inv.(bz)))
+        SM_1 = A'*Y*A
 
         SM_2 = calc_basic_susceptance_matrix(data)
 
         @test isapprox(SM_1, SM_2; atol=1e-6)
+
+
+        result = run_opf(data, DCPPowerModel, ipopt_solver)
+        update_data!(data, result["solution"])
+
+        va = angle.(calc_basic_bus_voltage(data))
+        B = calc_basic_susceptance_matrix(data)
+
+        # docs example
+        bus_injection = -B * va
+        @test isapprox(bus_injection, real(calc_basic_bus_injection(data)); atol=1e-6)
     end
 
     @testset "basic bus voltage and branch power matrix" begin
@@ -101,14 +114,14 @@ end
         bz = calc_basic_branch_series_impedance(data)
         A = calc_basic_incidence_matrix(data)
 
-        BFM_1 = imag(A'*LinearAlgebra.Diagonal(conj.(inv.(bz))))'
+        BBM_1 = imag(A'*LinearAlgebra.Diagonal(conj.(inv.(bz))))'
 
-        BFM_2 = calc_basic_branch_power_matrix(data)
+        BBM_2 = calc_basic_branch_susceptance_matrix(data)
 
-        @test isapprox(BFM_1, BFM_2; atol=1e-6)
+        @test isapprox(BBM_1, BBM_2; atol=1e-6)
 
-
-        branch_power = BFM_1*va
+        # docs example
+        branch_power = BBM_1*va
 
         @test length(branch_power) == length(data["branch"])
 
@@ -117,6 +130,7 @@ end
             pf = -b*(va[branch["f_bus"]] - va[branch["t_bus"]])
             @test isapprox(branch_power[branch["index"]], pf; atol=1e-6)
         end
+        println()
     end
 
     @testset "basic dc power flow" begin
@@ -153,6 +167,7 @@ end
 
         va = angle.(calc_basic_bus_voltage(data))
 
+        # docs example
         branch_power = P*bi
 
         for (i,branch) in data["branch"]

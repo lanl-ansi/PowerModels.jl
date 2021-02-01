@@ -7,6 +7,7 @@ PowerModels.jl Change Log
 - Added `parse_files` to create a PM-multinetwork from multiples files
 - Add support for convering matpower ramp rates into per-unit (#561)
 - Fixed bug in dual reporting in `constraint_power_balance_ls` (#741)
+- Fixed sign convetion for power injection in `calc_bus_injection`
 
 ### v0.17.3
 - Added a to file variant of `export_matpower`

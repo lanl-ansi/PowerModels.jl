@@ -13,7 +13,7 @@ following basic network model requirements.
 - all branches have explicit thermal limits
 - phase shift on all transformers is set to 0.0
 - bus shunts have 0.0 conductance values
-users requring any of the features listed above for thier anlysis should use 
+users requiring any of the features listed above for their analysis should use 
 the non-basic PowerModels routines.
 """
 function make_basic_network(data::Dict{String,<:Any})
@@ -162,7 +162,7 @@ end
 
 """
 given a basic network data dict, returns a complex valued vector of bus voltage
-values in rectangular cordinates.
+values in rectangular coordinates as they appear in the network data.
 """
 function calc_basic_bus_voltage(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
@@ -176,7 +176,8 @@ function calc_basic_bus_voltage(data::Dict{String,<:Any})
 end
 
 """
-given a basic network data dict, returns a complex valued vector of bus power injections.
+given a basic network data dict, returns a complex valued vector of bus power
+injections as they appear in the network data.
 """
 function calc_basic_bus_injection(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
@@ -190,7 +191,8 @@ function calc_basic_bus_injection(data::Dict{String,<:Any})
 end
 
 """
-given a basic network data dict, returns a complex valued vector of branch series impedances.
+given a basic network data dict, returns a complex valued vector of branch
+series impedances.
 """
 function calc_basic_branch_series_impedance(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
@@ -248,6 +250,8 @@ end
 """
 given a basic network data dict, returns a sparse real valued susceptance
 matrix with one row and column for each bus in the network.
+This susceptance matrix reflects the imaginary part of an admittance
+matrix that only considers the branch series impedance.
 """
 function calc_basic_susceptance_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
@@ -262,14 +266,14 @@ end
 
 
 """
-given a basic network data dict, returns a sparse real valued branch flow
+given a basic network data dict, returns a sparse real valued branch susceptance
 matrix with one row for each branch and one column for each bus in the network.
-multipling the branch power matrix by bus phase angels yields a vector
-active power flow values on each branch.
+Multiplying the branch susceptance matrix by bus phase angels yields a vector
+active power flow values for each branch.
 """
-function calc_basic_branch_power_matrix(data::Dict{String,<:Any})
+function calc_basic_branch_susceptance_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
-        Memento.warn(_LOGGER, "calc_basic_branch_power_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        Memento.warn(_LOGGER, "calc_basic_branch_susceptance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     I = Int64[]
@@ -325,7 +329,7 @@ end
 """
 given a basic network data dict, returns a real valued ptdf matrix with one
 row for each branch and one column for each bus in the network.
-multipling the ptdf matrix by bus injection values yields a vector
+Multiplying the ptdf matrix by bus injection values yields a vector
 active power flow values on each branch.
 """
 function calc_basic_ptdf_matrix(data::Dict{String,<:Any})
