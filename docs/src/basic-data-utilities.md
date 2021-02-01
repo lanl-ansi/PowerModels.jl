@@ -50,7 +50,6 @@ calc_basic_susceptance_matrix
 calc_basic_branch_susceptance_matrix
 calc_basic_ptdf_matrix
 calc_basic_ptdf_row
-calc_basic_jacobian_matrix
 ```
 
 !!! warning

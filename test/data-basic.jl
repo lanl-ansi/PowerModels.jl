@@ -188,15 +188,15 @@ end
         end
     end
 
-    @testset "basic jacobian matrix" begin
-        data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case5_sw.m"))
+    # @testset "basic jacobian matrix" begin
+    #     data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case5_sw.m"))
 
-        J = calc_basic_jacobian_matrix(data)
+    #     J = calc_basic_jacobian_matrix(data)
 
-        @test size(J, 1) == 2*length(data["bus"])
-        @test size(J, 2) == 2*length(data["bus"])
-        @test isapprox(sum(J), 10.0933; atol=1e-4)
-    end
+    #     @test size(J, 1) == 2*length(data["bus"])
+    #     @test size(J, 2) == 2*length(data["bus"])
+    #     @test isapprox(sum(J), 10.0933; atol=1e-4)
+    # end
 
 end
 

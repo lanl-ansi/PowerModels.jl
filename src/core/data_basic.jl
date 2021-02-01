@@ -390,6 +390,7 @@ function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
 end
 
 
+#=
 """
 given a basic network data dict, returns a sparse real valued Jacobian matrix
 of the ac power flow problem.  The power variables are ordered by p and then q
@@ -493,5 +494,5 @@ function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
 
     return J
 end
-
+=#
 
