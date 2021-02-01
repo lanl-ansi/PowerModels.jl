@@ -114,14 +114,15 @@ end
         bz = calc_basic_branch_series_impedance(data)
         A = calc_basic_incidence_matrix(data)
 
-        BBM_1 = imag(A'*LinearAlgebra.Diagonal(conj.(inv.(bz))))'
+        Y = imag(Diagonal(inv.(bz)))
+        BB_1 = (A'*Y)'
 
-        BBM_2 = calc_basic_branch_susceptance_matrix(data)
+        BB_2 = calc_basic_branch_susceptance_matrix(data)
 
-        @test isapprox(BBM_1, BBM_2; atol=1e-6)
+        @test isapprox(BB_1, BB_2; atol=1e-6)
 
         # docs example
-        branch_power = BBM_1*va
+        branch_power = -BB_1*va
 
         @test length(branch_power) == length(data["branch"])
 

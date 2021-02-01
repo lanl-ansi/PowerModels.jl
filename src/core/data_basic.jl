@@ -284,8 +284,8 @@ function calc_basic_branch_susceptance_matrix(data::Dict{String,<:Any})
     branch_ordered = sort(b, by=(x) -> x["index"])
     for (i,branch) in enumerate(branch_ordered)
         g,b = calc_branch_y(branch)
-        push!(I, i); push!(J, branch["f_bus"]); push!(V, -b)
-        push!(I, i); push!(J, branch["t_bus"]); push!(V,  b)
+        push!(I, i); push!(J, branch["f_bus"]); push!(V,  b)
+        push!(I, i); push!(J, branch["t_bus"]); push!(V, -b)
     end
 
     return sparse(I,J,V)
@@ -303,7 +303,7 @@ function compute_basic_dc_pf(data::Dict{String,<:Any})
     num_bus = length(data["bus"])
     ref_bus_id = reference_bus(data)["index"]
 
-    bi = real.(calc_basic_bus_injection(data))
+    bi = real(calc_basic_bus_injection(data))
 
     sm = calc_basic_susceptance_matrix(data)
 

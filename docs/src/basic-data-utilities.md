@@ -71,21 +71,21 @@ import LinearAlgebra: Diagonal
 bz = calc_basic_branch_series_impedance(data)
 A  = calc_basic_incidence_matrix(data)
 
-Y = imag(Diagonal(inv.(bz)))
-B = A'*Y*A           # equivalent to calc_basic_susceptance_matrix
-BBM = -(A'*Y)'   # equivalent to calc_basic_branch_susceptance_matrix
+Y  = imag(Diagonal(inv.(bz)))
+B  = A'*Y*A    # equivalent to calc_basic_susceptance_matrix
+BB = (A'*Y)'   # equivalent to calc_basic_branch_susceptance_matrix
 ```
 
 The bus voltage angles can be combined with the susceptance and branch susceptance
 matrices to observe how power flows through the network as follows,
 
 ```julia
-va  = angle.(calc_basic_bus_voltage(data))
-B   = calc_basic_susceptance_matrix(data)
-BBM = calc_basic_branch_susceptance_matrix(data)
+va = angle.(calc_basic_bus_voltage(data))
+B  = calc_basic_susceptance_matrix(data)
+BB = calc_basic_branch_susceptance_matrix(data)
 
-bus_injection = -B * va
-branch_power = BBM * va
+bus_injection =  -B * va
+branch_power  = -BB * va
 ```
 
 In the inverse operation, bus injection values can be combined with a PTDF matrix to compute branch flow values as follows,
