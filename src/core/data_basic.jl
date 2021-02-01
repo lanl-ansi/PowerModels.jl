@@ -315,7 +315,7 @@ function compute_basic_dc_pf(data::Dict{String,<:Any})
     end
     bi[ref_bus_id] = 0.0
 
-    theta = sm \ bi
+    theta = -sm \ bi
 
     return theta
 end
@@ -337,7 +337,7 @@ function calc_basic_ptdf_matrix(data::Dict{String,<:Any})
     num_branch = length(data["branch"])
 
     # -1.0 can be removed once #734 is resolved
-    b_inv = -1.0*calc_susceptance_matrix_inv(data).matrix
+    b_inv = calc_susceptance_matrix_inv(data).matrix
 
     ptdf = zeros(num_branch, num_bus)
     for (i,branch) in data["branch"]
@@ -379,7 +379,7 @@ function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
     ptdf_column = zeros(num_bus)
     for n in 1:num_bus
         # -1.0 can be removed once #734 is resolved
-        ptdf_column[n] = -1.0*-b*(get(if_fr, n, 0.0) - get(if_to, n, 0.0))
+        ptdf_column[n] = -b*(get(if_fr, n, 0.0) - get(if_to, n, 0.0))
     end
 
     return ptdf_column

@@ -295,8 +295,8 @@ function calc_bus_injection(data::Dict{String,<:Any})
     for (i,bus) in data["bus"]
         if bus["bus_type"] != 4
             bvals = bus_values[bus["index"]]
-            p_delta = - bvals["pg"] + bvals["ps"] + bvals["pd"]
-            q_delta = - bvals["qg"] + bvals["qs"] + bvals["qd"]
+            p_delta = bvals["pg"] - bvals["ps"] - bvals["pd"]
+            q_delta = bvals["qg"] - bvals["qs"] - bvals["qd"]
         else
             p_delta = NaN
             q_delta = NaN
@@ -333,7 +333,7 @@ function solve_theta(am::AdmittanceMatrix, bus_injection::Vector{Float64})
     end
     bi[am.ref_idx] = 0.0
 
-    theta = m \ -bi
+    theta = m \ bi
 
     return theta
 end

@@ -56,7 +56,7 @@ end
 
         bi = calc_basic_bus_injection(data)
 
-        @test isapprox(sum(bi), -0.092872 + 0.0586887im; atol=1e-6)
+        @test isapprox(sum(bi), 0.092872 - 0.0586887im; atol=1e-6)
     end
 
     @testset "basic incidence matrix" begin
@@ -137,7 +137,7 @@ end
 
         @test size(P, 1) == length(data["branch"])
         @test size(P, 2) == length(data["bus"])
-        @test isapprox(sum(P), -0.9894736; atol=1e-6)
+        @test isapprox(sum(P), 0.9894736; atol=1e-6)
 
 
         result = run_opf(data, DCPPowerModel, ipopt_solver)
