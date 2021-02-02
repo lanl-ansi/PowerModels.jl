@@ -114,7 +114,7 @@ end
         bz = calc_basic_branch_series_impedance(data)
         A = calc_basic_incidence_matrix(data)
 
-        Y = imag(Diagonal(inv.(bz)))
+        Y = imag(LinearAlgebra.Diagonal(inv.(bz)))
         BB_1 = (A'*Y)'
 
         BB_2 = calc_basic_branch_susceptance_matrix(data)
