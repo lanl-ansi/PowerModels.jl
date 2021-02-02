@@ -2197,7 +2197,7 @@ function _standardize_cost_terms!(components::Dict{String,<:Any}, comp_order::In
             comp["ncost"] = comp_order
             #println("std gen cost: $(comp["cost"])")
 
-            Memento.warn(_LOGGER, "Updated $(cost_comp_name) $(comp["index"]) cost function with order $(length(current_cost)) to a function of order $(comp_order): $(comp["cost"])")
+            Memento.info(_LOGGER, "updated $(cost_comp_name) $(comp["index"]) cost function with order $(length(current_cost)) to a function of order $(comp_order): $(comp["cost"])")
             push!(modified, comp["index"])
         end
     end
@@ -2585,21 +2585,24 @@ end
 ""
 function _select_largest_component!(data::Dict{String,<:Any})
     ccs = calc_connected_components(data)
-    Memento.info(_LOGGER, "found $(length(ccs)) components")
 
-    ccs_order = sort(collect(ccs); by=length)
-    largest_cc = ccs_order[end]
+    if length(ccs) > 1
+        Memento.info(_LOGGER, "found $(length(ccs)) components")
 
-    Memento.info(_LOGGER, "largest component has $(length(largest_cc)) buses")
+        ccs_order = sort(collect(ccs); by=length)
+        largest_cc = ccs_order[end]
 
-    for (i,bus) in data["bus"]
-        if bus["bus_type"] != 4 && !(bus["index"] in largest_cc)
-            bus["bus_type"] = 4
-            Memento.info(_LOGGER, "deactivating bus $(i) due to small connected component")
+        Memento.info(_LOGGER, "largest component has $(length(largest_cc)) buses")
+
+        for (i,bus) in data["bus"]
+            if bus["bus_type"] != 4 && !(bus["index"] in largest_cc)
+                bus["bus_type"] = 4
+                Memento.info(_LOGGER, "deactivating bus $(i) due to small connected component")
+            end
         end
-    end
 
-    correct_reference_buses!(data)
+        correct_reference_buses!(data)
+    end
 end
 
 
@@ -2769,4 +2772,165 @@ function _cc_dfs(i, neighbors, component_lookup, touched)
             _cc_dfs(j, neighbors, component_lookup, touched)
         end
     end
+end
+
+
+
+"""
+given a network data dict and a mapping of current-bus-ids to new-bus-ids
+modifies the data dict to reflect the proposed new bus ids.
+"""
+function update_bus_ids!(data::Dict{String,<:Any}, bus_id_map::Dict{Int,Int}; injective=true)
+    if _IM.ismultinetwork(data)
+        for (i,nw_data) in data["nw"]
+            _update_bus_ids!(nw_data, bus_id_map; injective=injective)
+        end
+    else
+         _update_bus_ids!(data, bus_id_map; injective=injective)
+    end
+end
+
+
+function _update_bus_ids!(data::Dict{String,<:Any}, bus_id_map::Dict{Int,Int}; injective=true)
+    # verify bus id map is injective
+    if injective
+        new_bus_ids = Set{Int}()
+        for (i,bus) in data["bus"]
+            new_id = get(bus_id_map, bus["index"], bus["index"])
+            if !(new_id in new_bus_ids)
+                push!(new_bus_ids, new_id)
+            else
+                Memento.error(_LOGGER, "bus id mapping given to update_bus_ids has an id clash on new bus id $(new_id)")
+            end
+        end
+    end
+
+
+    # start renumbering process
+    renumbered_bus_dict = Dict{String,Any}()
+
+    for (i,bus) in data["bus"]
+        new_id = get(bus_id_map, bus["index"], bus["index"])
+        bus["index"] = new_id
+        bus["bus_i"] = new_id
+        renumbered_bus_dict["$new_id"] = bus
+    end
+
+    data["bus"] = renumbered_bus_dict
+
+
+    # update bus numbering in dependent components
+    for (i, load) in data["load"]
+        load["load_bus"] = get(bus_id_map, load["load_bus"], load["load_bus"])
+    end
+
+    for (i, shunt) in data["shunt"]
+        shunt["shunt_bus"] = get(bus_id_map, shunt["shunt_bus"], shunt["shunt_bus"])
+    end
+
+    for (i, gen) in data["gen"]
+        gen["gen_bus"] = get(bus_id_map, gen["gen_bus"], gen["gen_bus"])
+    end
+
+    for (i, strg) in data["storage"]
+        strg["storage_bus"] = get(bus_id_map, strg["storage_bus"], strg["storage_bus"])
+    end
+
+
+    for (i, switch) in data["switch"]
+        switch["f_bus"] = get(bus_id_map, switch["f_bus"], switch["f_bus"])
+        switch["t_bus"] = get(bus_id_map, switch["t_bus"], switch["t_bus"])
+    end
+
+    branches = []
+    if haskey(data, "branch")
+        append!(branches, values(data["branch"]))
+    end
+
+    if haskey(data, "ne_branch")
+        append!(branches, values(data["ne_branch"]))
+    end
+
+    for branch in branches
+        branch["f_bus"] = get(bus_id_map, branch["f_bus"], branch["f_bus"])
+        branch["t_bus"] = get(bus_id_map, branch["t_bus"], branch["t_bus"])
+    end
+
+    for (i, dcline) in data["dcline"]
+        dcline["f_bus"] = get(bus_id_map, dcline["f_bus"], dcline["f_bus"])
+        dcline["t_bus"] = get(bus_id_map, dcline["t_bus"], dcline["t_bus"])
+    end
+end
+
+
+
+"""
+given a network data dict merges buses that are connected by closed switches
+converting the dataset into a pure bus-branch model.
+"""
+function resolve_swithces!(data::Dict{String,<:Any})
+    if _IM.ismultinetwork(data)
+        for (i,nw_data) in data["nw"]
+            _resolve_swithces!(nw_data)
+        end
+    else
+         _resolve_swithces!(data)
+    end
+end
+
+""
+function _resolve_swithces!(data::Dict{String,<:Any})
+    if length(data["switch"]) <= 0
+        return
+    end
+
+    bus_sets = Dict{Int,Set{Int}}()
+
+    switch_status_key = pm_component_status["switch"]
+    switch_status_value = pm_component_status_inactive["switch"]
+
+    for (i,switch) in data["switch"]
+        if switch[switch_status_key] != switch_status_value && switch["state"] == 1
+            if !haskey(bus_sets, switch["f_bus"])
+                bus_sets[switch["f_bus"]] = Set{Int}([switch["f_bus"]])
+            end
+            if !haskey(bus_sets, switch["t_bus"])
+                bus_sets[switch["t_bus"]] = Set{Int}([switch["t_bus"]])
+            end
+
+            merged_set = Set{Int}([bus_sets[switch["f_bus"]]..., bus_sets[switch["t_bus"]]...])
+            bus_sets[switch["f_bus"]] = merged_set
+            bus_sets[switch["t_bus"]] = merged_set
+        end
+    end
+
+    bus_id_map = Dict{Int,Int}()
+    for bus_set in Set(values(bus_sets))
+        bus_min = minimum(bus_set)
+        Memento.info(_LOGGER, "merged buses $(join(bus_set, ",")) in to bus $(bus_min) based on switch status")
+        for i in bus_set
+            if i != bus_min
+                bus_id_map[i] = bus_min
+            end
+        end
+    end
+
+    update_bus_ids!(data, bus_id_map, injective=false)
+
+    for (i, branch) in data["branch"]
+        if branch["f_bus"] == branch["t_bus"]
+            Memento.warn(_LOGGER, "switch removal resulted in both sides of branch $(i) connect to bus $(branch["f_bus"]), deactivating branch")
+            branch[pm_component_status["branch"]] = pm_component_status_inactive["branch"]
+        end
+    end
+
+    for (i, dcline) in data["dcline"]
+        if dcline["f_bus"] == dcline["t_bus"]
+            Memento.warn(_LOGGER, "switch removal resulted in both sides of dcline $(i) connect to bus $(branch["f_bus"]), deactivating dcline")
+            branch[pm_component_status["dcline"]] = pm_component_status_inactive["dcline"]
+        end
+    end
+
+    Memento.info(_LOGGER, "removed $(length(data["switch"])) switch components")
+    data["switch"] = Dict{String,Any}()
 end
