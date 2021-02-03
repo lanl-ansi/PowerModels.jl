@@ -2,10 +2,13 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.17.4
 - Added support for matrix-based analysis of basic network data (#728)
 - Added support for `relax_integrality` in `run_model`
 - Added `export_pti` to write a PSSE file (#752)
-- Added `parse_files` to create a PM-multinetwork from multiples files
+- Added `parse_files` to create a multinetwork from multiples source files
 - Added support for convering matpower ramp rates into per-unit (#561)
 - Fixed bug in dual reporting in `constraint_power_balance_ls` (#741)
 - Fixed sign convetion for power injection in `calc_bus_injection`
