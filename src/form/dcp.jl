@@ -402,7 +402,7 @@ function constraint_ohms_yt_from(pm::AbstractDCPLLModel, n::Int, f_bus, t_bus, f
     JuMP.@constraint(pm.model, p_fr <= p_fr_no_loss -  r*(p_fr_no_loss^2))
 end
 
-# TODO: update to be symetric
+# TODO: update to be symmetric
 ""
 function constraint_ohms_yt_to_on_off(pm::AbstractDCPLLModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
     p_fr  = var(pm, n,  :p, f_idx)
