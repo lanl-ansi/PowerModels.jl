@@ -374,15 +374,35 @@ end
 Creates Ohms constraints (yt post fix indicates that Y and T values are in rectangular form)
 """
 function constraint_ohms_yt_to(pm::AbstractDCPLLModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
-    p_fr  = var(pm, n,  :p, f_idx)
     p_to  = var(pm, n,  :p, t_idx)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
-    r = g/(g^2 + b^2)
-    JuMP.@constraint(pm.model, p_fr + p_to >= r*(p_fr^2))
+    # get b only based on br_x (b = -1 / br_x) and take tap + shift into account
+    x = -b / (g^2 + b^2)
+    ta = atan(ti, tr)
+
+    r = 0.5*g/(g^2 + b^2)
+    p_to_no_loss = (va_to - va_fr - ta)/(x*tm)
+    JuMP.@constraint(pm.model, p_to <= p_to_no_loss -  r*(p_to_no_loss^2))
 end
 
+""
+function constraint_ohms_yt_from(pm::AbstractDCPLLModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
+    p_fr  = var(pm, n,  :p, f_idx)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+
+    # get b only based on br_x (b = -1 / br_x) and take tap + shift into account
+    x = -b / (g^2 + b^2)
+    ta = atan(ti, tr)
+
+    r = 0.5*g/(g^2 + b^2)
+    p_fr_no_loss = (va_fr - va_to - ta)/(x*tm)
+    JuMP.@constraint(pm.model, p_fr <= p_fr_no_loss -  r*(p_fr_no_loss^2))
+end
+
+# TODO: update to be symetric
 ""
 function constraint_ohms_yt_to_on_off(pm::AbstractDCPLLModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
     p_fr  = var(pm, n,  :p, f_idx)
