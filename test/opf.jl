@@ -438,6 +438,32 @@ end
     end
 end
 
+@testset "test dc+ll symmetric opf" begin
+
+    @testset "5-bus case" begin
+        result = run_opf("../test/data/matpower/case5.m", SymmetricDCPLLPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 17765; atol = 1e0)
+        @test isapprox(result["solution"]["branch"]["1"]["pt"], -2.40978; atol = 1e-3)
+        @test isapprox(result["solution"]["branch"]["1"]["pf"], 2.39357; atol = 1e-3)
+    end
+
+    data = PowerModels.parse_file("../test/data/matpower/case5.m")
+    new_f_bus = data["branch"]["1"]["t_bus"]
+    data["branch"]["1"]["t_bus"] = data["branch"]["1"]["f_bus"]
+    data["branch"]["1"]["f_bus"] = new_f_bus
+
+    @testset "5-bus reverse case" begin
+        result = run_opf(data, SymmetricDCPLLPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 17765; atol = 1e0)
+        @test isapprox(result["solution"]["branch"]["1"]["pt"], 2.40978; atol = 1e-3)
+        @test isapprox(result["solution"]["branch"]["1"]["pf"], -2.39357; atol = 1e-3)
+    end
+
+end
 
 @testset "test lpac-c opf" begin
     @testset "3-bus case" begin
