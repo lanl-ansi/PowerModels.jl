@@ -445,8 +445,8 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 17765; atol = 1e0)
-        @test isapprox(result["solution"]["branch"]["1"]["pt"], -2.40978; atol = 1e-3)
-        @test isapprox(result["solution"]["branch"]["1"]["pf"], 2.39357; atol = 1e-3)
+        @test isapprox(result["solution"]["branch"]["1"]["pt"], -2.39357; atol = 1e-3)
+        @test isapprox(result["solution"]["branch"]["1"]["pf"], 2.40978; atol = 1e-3)
     end
 
     data = PowerModels.parse_file("../test/data/matpower/case5.m")
