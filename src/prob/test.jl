@@ -210,8 +210,8 @@ function _build_oswpf_nb(pm::AbstractPowerModel)
             end
         end
 
-        branch_z = var(pm, pm.cnw, :z_branch, br)
-        switch_z = var(pm, pm.cnw, :z_switch)
+        branch_z = var(pm, :z_branch, br)
+        switch_z = var(pm, :z_switch)
         for sw in bus_switches
             JuMP.@constraint(pm.model, branch_z >= switch_z[sw])
         end

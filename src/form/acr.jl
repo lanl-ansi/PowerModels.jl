@@ -1,7 +1,7 @@
 ### rectangular form of the non-convex AC equations
 
 ""
-function variable_bus_voltage(pm::AbstractACRModel; nw::Int=pm.cnw, bounded::Bool=true, kwargs...)
+function variable_bus_voltage(pm::AbstractACRModel; nw::Int=nw_id_default, bounded::Bool=true, kwargs...)
     variable_bus_voltage_real(pm; nw=nw, bounded=bounded, kwargs...)
     variable_bus_voltage_imaginary(pm; nw=nw, bounded=bounded, kwargs...)
 

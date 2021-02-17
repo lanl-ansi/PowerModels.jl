@@ -8,7 +8,7 @@ function variable_bus_voltage(pm::AbstractLPACModel; kwargs...)
 end
 
 ""
-function variable_bus_voltage_magnitude(pm::AbstractLPACModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_magnitude(pm::AbstractLPACModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     phi = var(pm, nw)[:phi] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_phi",
         start = comp_start_value(ref(pm, nw, :bus, i), "phi_start")
@@ -164,7 +164,7 @@ function variable_ne_branch_voltage(pm::AbstractLPACCModel; kwargs...)
 end
 
 ""
-function variable_ne_branch_voltage_magnitude_fr(pm::AbstractLPACModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_voltage_magnitude_fr(pm::AbstractLPACModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
 
@@ -179,7 +179,7 @@ function variable_ne_branch_voltage_magnitude_fr(pm::AbstractLPACModel; nw::Int=
 end
 
 ""
-function variable_ne_branch_voltage_magnitude_to(pm::AbstractLPACModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_voltage_magnitude_to(pm::AbstractLPACModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
 
@@ -195,7 +195,7 @@ function variable_ne_branch_voltage_magnitude_to(pm::AbstractLPACModel; nw::Int=
 end
 
 ""
-function variable_ne_branch_cosine(pm::AbstractLPACCModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_ne_branch_cosine(pm::AbstractLPACCModel; nw::Int=nw_id_default, report::Bool=true)
     cos_min = Dict((l, -Inf) for l in ids(pm, nw, :ne_branch))
     cos_max = Dict((l,  Inf) for l in ids(pm, nw, :ne_branch))
 
@@ -227,7 +227,7 @@ function variable_ne_branch_cosine(pm::AbstractLPACCModel; nw::Int=pm.cnw, repor
 end
 
 ""
-function variable_ne_branch_voltage_product_angle(pm::AbstractLPACCModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_voltage_product_angle(pm::AbstractLPACCModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
      buspair = ref(pm, nw, :ne_buspairs)
      td_ne = var(pm, nw)[:td_ne] = JuMP.@variable(pm.model,
@@ -390,7 +390,7 @@ end
 
 
 ""
-function variable_branch_voltage_magnitude_fr_on_off(pm::AbstractLPACCModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_magnitude_fr_on_off(pm::AbstractLPACCModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
@@ -405,7 +405,7 @@ function variable_branch_voltage_magnitude_fr_on_off(pm::AbstractLPACCModel; nw:
 end
 
 ""
-function variable_branch_voltage_magnitude_to_on_off(pm::AbstractLPACCModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_magnitude_to_on_off(pm::AbstractLPACCModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 

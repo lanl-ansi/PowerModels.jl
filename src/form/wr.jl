@@ -283,7 +283,7 @@ function variable_ne_branch_voltage(pm::AbstractWRModel; kwargs...)
 end
 
 ""
-function variable_ne_branch_voltage_magnitude_fr_sqr(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_ne_branch_voltage_magnitude_fr_sqr(pm::AbstractWRModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
 
@@ -298,7 +298,7 @@ function variable_ne_branch_voltage_magnitude_fr_sqr(pm::AbstractWRModel; nw::In
 end
 
 ""
-function variable_ne_branch_voltage_magnitude_to_sqr(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_ne_branch_voltage_magnitude_to_sqr(pm::AbstractWRModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
 
@@ -313,7 +313,7 @@ function variable_ne_branch_voltage_magnitude_to_sqr(pm::AbstractWRModel; nw::In
 end
 
 ""
-function variable_ne_branch_voltage_product(pm::AbstractWRModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_ne_branch_voltage_product(pm::AbstractWRModel; nw::Int=nw_id_default, report::Bool=true)
     wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :ne_buspairs))
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
 
@@ -340,7 +340,7 @@ end
 
 
 "Creates variables associated with differences in voltage angles"
-function variable_buspair_voltage_product_angle(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_voltage_product_angle(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     td = var(pm, nw)[:td] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_td",
         start = comp_start_value(ref(pm, nw, :buspairs, bp), "td_start")
@@ -357,7 +357,7 @@ function variable_buspair_voltage_product_angle(pm::AbstractPowerModel; nw::Int=
 end
 
 "Creates the voltage magnitude product variables"
-function variable_buspair_voltage_product_magnitude(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_voltage_product_magnitude(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     buspairs = ref(pm, nw, :buspairs)
     vv = var(pm, nw)[:vv] = JuMP.@variable(pm.model,
         [bp in keys(buspairs)], base_name="$(nw)_vv",
@@ -376,7 +376,7 @@ end
 
 
 ""
-function variable_buspair_current_magnitude_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_current_magnitude_sqr(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     ccm = var(pm, nw)[:ccm] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_ccm",
         start = comp_start_value(ref(pm, nw, :buspairs, bp), "ccm_start")
@@ -538,7 +538,7 @@ function variable_bus_voltage_on_off(pm::AbstractQCWRModel; kwargs...)
 end
 
 ""
-function variable_branch_voltage_product_angle_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_product_angle_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     td = var(pm, nw)[:td] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_td",
         lower_bound = min(0, ref(pm, nw, :branch, l, "angmin")),
@@ -550,7 +550,7 @@ function variable_branch_voltage_product_angle_on_off(pm::AbstractPowerModel; nw
 end
 
 ""
-function variable_buspair_voltage_product_magnitude_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_buspair_voltage_product_magnitude_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     branches = ref(pm, nw, :branch)
     buses = ref(pm, nw, :bus)
 
@@ -569,7 +569,7 @@ end
 
 
 ""
-function variable_branch_cosine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_cosine_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     cos_min = Dict((l, -Inf) for l in ids(pm, nw, :branch))
     cos_max = Dict((l,  Inf) for l in ids(pm, nw, :branch))
 
@@ -601,7 +601,7 @@ function variable_branch_cosine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, r
 end
 
 ""
-function variable_branch_sine_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_sine_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     si = var(pm, nw)[:si] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_si",
         lower_bound = min(0, sin(ref(pm, nw, :branch, l, "angmin"))),
@@ -614,7 +614,7 @@ end
 
 
 ""
-function variable_branch_current_magnitude_sqr_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_current_magnitude_sqr_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     ccm_min = Dict((l, 0) for l in ids(pm, nw, :branch))
 
     branches = ref(pm, nw, :branch)
@@ -737,12 +737,12 @@ end
 
 
 ""
-function variable_buspair_voltage_product_magnitude(pm::AbstractQCLSModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_buspair_voltage_product_magnitude(pm::AbstractQCLSModel; nw::Int=nw_id_default, report::Bool=true)
     # do nothing - no lifted variables required for voltage variable product
 end
 
 "creates lambda variables for convex combination model"
-function variable_buspair_voltage_product_magnitude_multipliers(pm::AbstractQCLSModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_buspair_voltage_product_magnitude_multipliers(pm::AbstractQCLSModel; nw::Int=nw_id_default, report::Bool=true)
     lambda_wr = var(pm, nw)[:lambda_wr] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs), i=1:8], base_name="$(nw)_lambda",
         lower_bound = 0, upper_bound = 1, start = 0.0)

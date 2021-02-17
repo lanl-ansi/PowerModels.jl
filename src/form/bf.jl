@@ -1,7 +1,7 @@
 # this file contains (balanced) convexified DistFlow formulation, in W space
 
 ""
-function variable_buspair_current_magnitude_sqr(pm::AbstractBFModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_current_magnitude_sqr(pm::AbstractBFModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     branch = ref(pm, nw, :branch)
 
     ccm = var(pm, nw)[:ccm] = JuMP.@variable(pm.model,
@@ -186,7 +186,7 @@ function constraint_model_current(pm::AbstractBFAModel, n::Int)
 end
 
 ""
-function variable_buspair_current_magnitude_sqr(pm::AbstractBFAModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_current_magnitude_sqr(pm::AbstractBFAModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
 
 end
 

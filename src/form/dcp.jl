@@ -10,7 +10,7 @@ function variable_bus_voltage(pm::AbstractDCPModel; kwargs...)
 end
 
 ""
-function variable_bus_voltage_magnitude(pm::AbstractDCPModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_magnitude(pm::AbstractDCPModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
 end
 
@@ -218,7 +218,7 @@ end
 ######## Lossless Models ########
 
 ""
-function variable_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     p = var(pm, nw)[:p] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_p",
         start = comp_start_value(ref(pm, nw, :branch, l), "p_start")
@@ -254,7 +254,7 @@ function variable_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=pm.cnw
 end
 
 ""
-function variable_ne_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     p_ne = var(pm, nw)[:p_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs_from)], base_name="$(nw)_p_ne",
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "p_start")
