@@ -4,33 +4,6 @@ function build_mn_data(base_data; replicates::Int=2)
     return PowerModels.replicate(mp_data, replicates)
 end
 
-function build_mn_data(base_data_1, base_data_2)
-    data_1 = PowerModels.parse_file(base_data_1)
-    data_2 = PowerModels.parse_file(base_data_2)
-
-    @assert data_1["per_unit"] == data_2["per_unit"]
-
-    mn_data = Dict(
-        "name" => "$(data_1["name"]) + $(data_2["name"])",
-        "multinetwork" => true,
-        "per_unit" => data_1["per_unit"],
-        "nw" => Dict{String,Any}()
-    )
-
-    delete!(data_1, "multinetwork")
-    delete!(data_1, "per_unit")
-    mn_data["nw"]["1"] = data_1
-
-    delete!(data_2, "multinetwork")
-    delete!(data_2, "per_unit")
-    mn_data["nw"]["2"] = data_2
-
-    PowerModels.standardize_cost_terms!(mn_data)
-
-    return mn_data
-end
-
-
 "checks that no bounds are in Inf"
 function check_variable_bounds(model)
     for v in JuMP.all_variables(model)

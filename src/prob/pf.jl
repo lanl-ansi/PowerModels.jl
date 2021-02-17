@@ -158,10 +158,10 @@ function instantiate_pf_data(data::Dict{String,<:Any})
         gen_bus = data["bus"]["$(gen["gen_bus"])"]
         if gen["gen_status"] != 0
             if gen_bus["bus_type"] == 3
-                p_delta[gen_bus["index"]] += gen["pg"]
-                q_delta[gen_bus["index"]] += gen["qg"]
+                p_delta[gen_bus["index"]] -= gen["pg"]
+                q_delta[gen_bus["index"]] -= gen["qg"]
             elseif gen_bus["bus_type"] == 2
-                q_delta[gen_bus["index"]] += gen["qg"]
+                q_delta[gen_bus["index"]] -= gen["qg"]
             else
                 @assert false
             end
@@ -192,8 +192,8 @@ function instantiate_pf_data(data::Dict{String,<:Any})
 
     bus_type_idx = Int[data["bus"]["$(bus_id)"]["bus_type"] for bus_id in am.idx_to_bus]
 
-    p_delta_base_idx = Float64[p_delta[bus_id] for bus_id in am.idx_to_bus]
-    q_delta_base_idx = Float64[q_delta[bus_id] for bus_id in am.idx_to_bus]
+    p_delta_base_idx = Float64[-p_delta[bus_id] for bus_id in am.idx_to_bus]
+    q_delta_base_idx = Float64[-q_delta[bus_id] for bus_id in am.idx_to_bus]
 
     p_inject_idx = [0.0 for bus_id in am.idx_to_bus]
     q_inject_idx = [0.0 for bus_id in am.idx_to_bus]

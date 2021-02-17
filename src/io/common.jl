@@ -18,15 +18,75 @@ function parse_file(io::IO; import_all=false, validate=true, filetype="json")
     if filetype == "m"
         pm_data = PowerModels.parse_matpower(io, validate=validate)
     elseif filetype == "raw"
-        Memento.info(_LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
         pm_data = PowerModels.parse_psse(io; import_all=import_all, validate=validate)
     elseif filetype == "json"
         pm_data = PowerModels.parse_json(io; validate=validate)
     else
-        Memento.error(_LOGGER, "Unrecognized filetype")
+        Memento.error(_LOGGER, "Unrecognized filetype: \".$filetype\", Supported extensions are \".raw\", \".m\" and \".json\"")
     end
 
     return pm_data
+end
+
+
+"""
+Make a PM multinetwork data structure of the given filenames
+"""
+function parse_files(filenames::String...)
+    mn_data = Dict{String, Any}(
+        "nw" => Dict{String, Any}(),
+        "per_unit" => true,
+        "multinetwork" => true,
+    )
+
+    names = Array{String, 1}()
+
+    for (i, filename) in enumerate(filenames)
+        data = PowerModels.parse_file(filename)
+
+        delete!(data, "multinetwork")
+        delete!(data, "per_unit")
+
+        mn_data["nw"]["$i"] = data
+        push!(names, "$(data["name"])")
+    end
+
+    mn_data["name"] = join(names, " + ")
+
+    return mn_data
+end
+
+
+"""
+    export_file(file, data)
+
+Export a PowerModels data structure to the file according of the extension:
+    - `.m` : Matpower
+    - `.raw` : PTI (PSS(R)E-v33)
+    - `.json` : JSON 
+"""
+function export_file(file::AbstractString, data::Dict{String, Any})
+    if occursin(".", file) 
+        open(file, "w") do io
+            export_file(io, data, filetype=split(lowercase(file), '.')[end])
+        end
+    else
+        Memento.error(_LOGGER, "The file must have an extension")
+    end
+end
+
+
+function export_file(io::IO, data::Dict{String, Any}; filetype="json")
+    if filetype == "m"
+        PowerModels.export_matpower(io, data)
+    elseif filetype == "raw"
+        PowerModels.export_pti(io, data)
+    elseif filetype == "json"
+        stringdata = JSON.json(data)
+        write(io, stringdata)
+    else
+        Memento.error(_LOGGER, "Unrecognized filetype: \".$filetype\", Supported extensions are \".raw\", \".m\" and \".json\"")
+    end
 end
 
 

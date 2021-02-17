@@ -805,6 +805,7 @@ end
 Parses directly from iostream
 """
 function parse_psse(io::IO; kwargs...)::Dict
+    Memento.info(_LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
     pti_data = parse_pti(io)
     pm = _pti_to_powermodels!(pti_data; kwargs...)
     return pm
