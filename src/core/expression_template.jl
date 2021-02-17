@@ -18,7 +18,7 @@
 """
 defines va in terms of power injections
 """
-function expression_bus_voltage(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function expression_bus_voltage(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     @assert haskey(var(pm, nw), :inj_p)
     @assert haskey(var(pm, nw), :inj_q)
 
@@ -39,7 +39,7 @@ end
 """
 defines power injection at each bus
 """
-function expression_bus_power_injection(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function expression_bus_power_injection(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     if !haskey(var(pm, nw), :inj_p)
         var(pm, nw)[:inj_p] = Dict{Int,Any}()
     end
@@ -65,7 +65,7 @@ end
 
 
 ""
-function expression_branch_power_ohms_yt_from(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function expression_branch_power_ohms_yt_from(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     if !haskey(var(pm, nw), :p)
         var(pm, nw)[:p] = Dict{Tuple{Int,Int,Int},Any}()
     end
@@ -90,7 +90,7 @@ end
 
 
 ""
-function expression_branch_power_ohms_yt_to(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function expression_branch_power_ohms_yt_to(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     if !haskey(var(pm, nw), :p)
         var(pm, nw)[:p] = Dict{Tuple{Int,Int,Int},Any}()
     end
@@ -116,7 +116,7 @@ end
 
 
 ""
-function expression_branch_power_ohms_yt_from_ptdf(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function expression_branch_power_ohms_yt_from_ptdf(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     if !haskey(var(pm, nw), :p)
         var(pm, nw)[:p] = Dict{Tuple{Int,Int,Int},Any}()
     end
@@ -156,7 +156,7 @@ end
 
 
 ""
-function expression_branch_power_ohms_yt_to_ptdf(pm::AbstractPowerModel, i::Int; nw::Int=pm.cnw)
+function expression_branch_power_ohms_yt_to_ptdf(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     if !haskey(var(pm, nw), :p)
         var(pm, nw)[:p] = Dict{Tuple{Int,Int,Int},Any}()
     end

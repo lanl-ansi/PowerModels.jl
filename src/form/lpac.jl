@@ -8,7 +8,7 @@ function variable_bus_voltage(pm::AbstractLPACModel; kwargs...)
 end
 
 ""
-function variable_bus_voltage_magnitude(pm::AbstractLPACModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_magnitude(pm::AbstractLPACModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     phi = var(pm, nw)[:phi] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_phi",
         start = comp_start_value(ref(pm, nw, :bus, i), "phi_start")
@@ -21,29 +21,28 @@ function variable_bus_voltage_magnitude(pm::AbstractLPACModel; nw::Int=pm.cnw, b
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :bus, :phi, ids(pm, nw, :bus), phi)
+    report && sol_component_value(pm, nw, :bus, :phi, ids(pm, nw, :bus), phi)
 end
 
 
 ""
 function sol_data_model!(pm::AbstractLPACModel, solution::Dict)
-    if haskey(solution, "nw")
-        nws_data = solution["nw"]
-    else
-        nws_data = Dict("0" => solution)
-    end
+    apply_pm!(_sol_data_model_lpac!, solution)
+end
 
-    for (n, nw_data) in nws_data
-        if haskey(nw_data, "bus")
-            for (i,bus) in nw_data["bus"]
-                if haskey(bus, "phi")
-                    bus["vm"] = 1.0 + bus["phi"]
-                    delete!(bus, "phi")
-                end
+
+""
+function _sol_data_model_lpac!(solution::Dict)
+    if haskey(solution, "bus")
+        for (i, bus) in solution["bus"]
+            if haskey(bus, "phi")
+                bus["vm"] = 1.0 + bus["phi"]
+                delete!(bus, "phi")
             end
         end
     end
 end
+
 
 ""
 function constraint_model_voltage(pm::AbstractLPACModel, n::Int)
@@ -165,7 +164,7 @@ function variable_ne_branch_voltage(pm::AbstractLPACCModel; kwargs...)
 end
 
 ""
-function variable_ne_branch_voltage_magnitude_fr(pm::AbstractLPACModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_voltage_magnitude_fr(pm::AbstractLPACModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
 
@@ -176,11 +175,11 @@ function variable_ne_branch_voltage_magnitude_fr(pm::AbstractLPACModel; nw::Int=
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["f_bus"]), "phi_fr_start")
     )
 
-    report && _IM.sol_component_value(pm, nw, :ne_branch, :phi_fr, ids(pm, nw, :ne_branch), phi_fr_ne)
+    report && sol_component_value(pm, nw, :ne_branch, :phi_fr, ids(pm, nw, :ne_branch), phi_fr_ne)
 end
 
 ""
-function variable_ne_branch_voltage_magnitude_to(pm::AbstractLPACModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_voltage_magnitude_to(pm::AbstractLPACModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
 
@@ -192,11 +191,11 @@ function variable_ne_branch_voltage_magnitude_to(pm::AbstractLPACModel; nw::Int=
     )
 
 
-    report && _IM.sol_component_value(pm, nw, :ne_branch, :phi_to, ids(pm, nw, :ne_branch), phi_to_ne)
+    report && sol_component_value(pm, nw, :ne_branch, :phi_to, ids(pm, nw, :ne_branch), phi_to_ne)
 end
 
 ""
-function variable_ne_branch_cosine(pm::AbstractLPACCModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_ne_branch_cosine(pm::AbstractLPACCModel; nw::Int=nw_id_default, report::Bool=true)
     cos_min = Dict((l, -Inf) for l in ids(pm, nw, :ne_branch))
     cos_max = Dict((l,  Inf) for l in ids(pm, nw, :ne_branch))
 
@@ -224,11 +223,11 @@ function variable_ne_branch_cosine(pm::AbstractLPACCModel; nw::Int=pm.cnw, repor
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "cs_start", 1.0)
     )
 
-    report && _IM.sol_component_value(pm, nw, :ne_branch, :cs_ne, ids(pm, nw, :ne_branch), cs_ne)
+    report && sol_component_value(pm, nw, :ne_branch, :cs_ne, ids(pm, nw, :ne_branch), cs_ne)
 end
 
 ""
-function variable_ne_branch_voltage_product_angle(pm::AbstractLPACCModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_voltage_product_angle(pm::AbstractLPACCModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
      buspair = ref(pm, nw, :ne_buspairs)
      td_ne = var(pm, nw)[:td_ne] = JuMP.@variable(pm.model,
@@ -238,7 +237,7 @@ function variable_ne_branch_voltage_product_angle(pm::AbstractLPACCModel; nw::In
         start = comp_start_value(ref(pm, nw, :ne_buspairs, bi_bp[b]), "td_start")
     )
 
-    report && _IM.sol_component_value(pm, nw, :ne_branch, :td_ne, ids(pm, nw, :ne_branch), td_ne)
+    report && sol_component_value(pm, nw, :ne_branch, :td_ne, ids(pm, nw, :ne_branch), td_ne)
 end
 
 ""
@@ -391,7 +390,7 @@ end
 
 
 ""
-function variable_branch_voltage_magnitude_fr_on_off(pm::AbstractLPACCModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_magnitude_fr_on_off(pm::AbstractLPACCModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
@@ -402,11 +401,11 @@ function variable_branch_voltage_magnitude_fr_on_off(pm::AbstractLPACCModel; nw:
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["f_bus"]), "phi_fr_start")
     )
 
-    report && _IM.sol_component_value(pm, nw, :branch, :phi_fr, ids(pm, nw, :branch), phi_fr)
+    report && sol_component_value(pm, nw, :branch, :phi_fr, ids(pm, nw, :branch), phi_fr)
 end
 
 ""
-function variable_branch_voltage_magnitude_to_on_off(pm::AbstractLPACCModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_magnitude_to_on_off(pm::AbstractLPACCModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
@@ -417,7 +416,7 @@ function variable_branch_voltage_magnitude_to_on_off(pm::AbstractLPACCModel; nw:
         start = comp_start_value(ref(pm, nw, :bus, branches[i]["t_bus"]), "phi_to_start")
     )
 
-    report && _IM.sol_component_value(pm, nw, :branch, :phi_to, ids(pm, nw, :branch), phi_to)
+    report && sol_component_value(pm, nw, :branch, :phi_to, ids(pm, nw, :branch), phi_to)
 end
 
 

@@ -104,7 +104,6 @@ function correct_network_data!(data::Dict{String,<:Any})
     check_connectivity(data)
     check_status(data)
     check_reference_bus(data)
-
     make_per_unit!(data)
 
     mod_branch[:xfer_fix] = correct_transformer_parameters!(data)
@@ -112,15 +111,17 @@ function correct_network_data!(data::Dict{String,<:Any})
     mod_branch[:mva_zero] = correct_thermal_limits!(data)
     mod_branch[:ma_zero] = correct_current_limits!(data)
     mod_branch[:orientation] = correct_branch_directions!(data)
+
     check_branch_loops(data)
+    correct_dcline_limits!(data)
 
-    mod_dcline[:losses] = correct_dcline_limits!(data)
+    data_ep = _IM.ismultiinfrastructure(data) ? data["it"][pm_it_name] : data
 
-    if length(data["gen"]) > 0 && any(gen["gen_status"] != 0 for (i,gen) in data["gen"])
+    if length(data_ep["gen"]) > 0 && any(gen["gen_status"] != 0 for (i, gen) in data_ep["gen"])
         mod_bus[:type] = correct_bus_types!(data)
     end
-    check_voltage_setpoints(data)
 
+    check_voltage_setpoints(data)
     check_storage_parameters(data)
     check_switch_parameters(data)
 

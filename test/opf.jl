@@ -1004,7 +1004,7 @@ end
         # too slow for unit tests
         #data = PowerModels.parse_file("../test/data/matpower/case14.m")
         data = PowerModels.parse_file("../test/data/pti/case5_alc.raw")
-        pm = InfrastructureModels.InitializeInfrastructureModel(SparseSDPWRMPowerModel, data, PowerModels._pm_global_keys)
+        pm = InfrastructureModels.InitializeInfrastructureModel(SparseSDPWRMPowerModel, data, PowerModels._pm_global_keys, PowerModels.pm_it_sym)
         PowerModels.ref_add_core!(pm.ref)
 
         cadj, lookup_index, sigma = PowerModels._chordal_extension(pm)

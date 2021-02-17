@@ -19,17 +19,17 @@ end
 
 
 "variable: `t[i]` for `i` in `bus`es"
-function variable_bus_voltage_angle(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_angle(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     va = var(pm, nw)[:va] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_va",
         start = comp_start_value(ref(pm, nw, :bus, i), "va_start")
     )
 
-    report && _IM.sol_component_value(pm, nw, :bus, :va, ids(pm, nw, :bus), va)
+    report && sol_component_value(pm, nw, :bus, :va, ids(pm, nw, :bus), va)
 end
 
 "variable: `v[i]` for `i` in `bus`es"
-function variable_bus_voltage_magnitude(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_magnitude(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     vm = var(pm, nw)[:vm] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_vm",
         start = comp_start_value(ref(pm, nw, :bus, i), "vm_start", 1.0)
@@ -42,12 +42,12 @@ function variable_bus_voltage_magnitude(pm::AbstractPowerModel; nw::Int=pm.cnw, 
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :bus, :vm, ids(pm, nw, :bus), vm)
+    report && sol_component_value(pm, nw, :bus, :vm, ids(pm, nw, :bus), vm)
 end
 
 
 "real part of the voltage variable `i` in `bus`es"
-function variable_bus_voltage_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_real(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     vr = var(pm, nw)[:vr] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_vr",
         start = comp_start_value(ref(pm, nw, :bus, i), "vr_start", 1.0)
@@ -60,11 +60,11 @@ function variable_bus_voltage_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bound
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :bus, :vr, ids(pm, nw, :bus), vr)
+    report && sol_component_value(pm, nw, :bus, :vr, ids(pm, nw, :bus), vr)
 end
 
 "real part of the voltage variable `i` in `bus`es"
-function variable_bus_voltage_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     vi = var(pm, nw)[:vi] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_vi",
         start = comp_start_value(ref(pm, nw, :bus, i), "vi_start")
@@ -77,13 +77,13 @@ function variable_bus_voltage_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, 
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :bus, :vi, ids(pm, nw, :bus), vi)
+    report && sol_component_value(pm, nw, :bus, :vi, ids(pm, nw, :bus), vi)
 end
 
 
 
 "variable: `0 <= vm_fr[l] <= buses[branches[l][\"f_bus\"]][\"vmax\"]` for `l` in `branch`es"
-function variable_branch_voltage_magnitude_fr_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_magnitude_fr_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
@@ -94,11 +94,11 @@ function variable_branch_voltage_magnitude_fr_on_off(pm::AbstractPowerModel; nw:
         start = comp_start_value(ref(pm, nw, :branch, i), "vm_fr_start", 1.0)
     )
 
-    report && _IM.sol_component_value(pm, nw, :branch, :vm_fr, ids(pm, nw, :branch), vm_fr)
+    report && sol_component_value(pm, nw, :branch, :vm_fr, ids(pm, nw, :branch), vm_fr)
 end
 
 "variable: `0 <= vm_to[l] <= buses[branches[l][\"t_bus\"]][\"vmax\"]` for `l` in `branch`es"
-function variable_branch_voltage_magnitude_to_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_magnitude_to_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
@@ -109,12 +109,12 @@ function variable_branch_voltage_magnitude_to_on_off(pm::AbstractPowerModel; nw:
         start = comp_start_value(ref(pm, nw, :branch, i), "vm_to_start", 1.0)
     )
 
-    report && _IM.sol_component_value(pm, nw, :branch, :vm_to, ids(pm, nw, :branch), vm_to)
+    report && sol_component_value(pm, nw, :branch, :vm_to, ids(pm, nw, :branch), vm_to)
 end
 
 
 "variable: `w[i] >= 0` for `i` in `bus`es"
-function variable_bus_voltage_magnitude_sqr(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage_magnitude_sqr(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     w = var(pm, nw)[:w] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_w",
         lower_bound = 0.0,
@@ -128,11 +128,11 @@ function variable_bus_voltage_magnitude_sqr(pm::AbstractPowerModel; nw::Int=pm.c
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :bus, :w, ids(pm, nw, :bus), w)
+    report && sol_component_value(pm, nw, :bus, :w, ids(pm, nw, :bus), w)
 end
 
 "variable: `0 <= w_fr[l] <= buses[branches[l][\"f_bus\"]][\"vmax\"]^2` for `l` in `branch`es"
-function variable_branch_voltage_magnitude_fr_sqr_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_magnitude_fr_sqr_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
@@ -143,11 +143,11 @@ function variable_branch_voltage_magnitude_fr_sqr_on_off(pm::AbstractPowerModel;
         start = comp_start_value(ref(pm, nw, :branch, i), "w_fr_start", 1.001)
     )
 
-    report && _IM.sol_component_value(pm, nw, :branch, :w_fr, ids(pm, nw, :branch), w_fr)
+    report && sol_component_value(pm, nw, :branch, :w_fr, ids(pm, nw, :branch), w_fr)
 end
 
 "variable: `0 <= w_to[l] <= buses[branches[l][\"t_bus\"]][\"vmax\"]^2` for `l` in `branch`es"
-function variable_branch_voltage_magnitude_to_sqr_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_magnitude_to_sqr_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
 
@@ -158,11 +158,11 @@ function variable_branch_voltage_magnitude_to_sqr_on_off(pm::AbstractPowerModel;
         start = comp_start_value(ref(pm, nw, :branch, i), "w_to_start", 1.001)
     )
 
-    report && _IM.sol_component_value(pm, nw, :branch, :w_to, ids(pm, nw, :branch), w_to)
+    report && sol_component_value(pm, nw, :branch, :w_to, ids(pm, nw, :branch), w_to)
 end
 
 ""
-function variable_buspair_cosine(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_cosine(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     cs = var(pm, nw)[:cs] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_cs",
         start = comp_start_value(ref(pm, nw, :buspairs, bp), "cs_start", 1.0)
@@ -194,7 +194,7 @@ function variable_buspair_cosine(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded
 end
 
 ""
-function variable_buspair_sine(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_sine(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     si = var(pm, nw)[:si] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_si",
         start = comp_start_value(ref(pm, nw, :buspairs, bp), "si_start")
@@ -211,7 +211,7 @@ function variable_buspair_sine(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::
 end
 
 ""
-function variable_buspair_voltage_product(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_buspair_voltage_product(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     wr = var(pm, nw)[:wr] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_wr",
         start = comp_start_value(ref(pm, nw, :buspairs, bp), "wr_start", 1.0)
@@ -238,7 +238,7 @@ function variable_buspair_voltage_product(pm::AbstractPowerModel; nw::Int=pm.cnw
 end
 
 ""
-function variable_branch_voltage_product_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_branch_voltage_product_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs))
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :branch))
 
@@ -255,8 +255,8 @@ function variable_branch_voltage_product_on_off(pm::AbstractPowerModel; nw::Int=
         start = comp_start_value(ref(pm, nw, :buspairs, bi_bp[b]), "wi_start")
     )
 
-    report && _IM.sol_component_value(pm, nw, :branch, :wr, ids(pm, nw, :branch), wr)
-    report && _IM.sol_component_value(pm, nw, :branch, :wi, ids(pm, nw, :branch), wi)
+    report && sol_component_value(pm, nw, :branch, :wr, ids(pm, nw, :branch), wr)
+    report && sol_component_value(pm, nw, :branch, :wi, ids(pm, nw, :branch), wi)
 end
 
 
@@ -268,7 +268,7 @@ end
 
 
 "variable: `pg[j]` for `j` in `gen`"
-function variable_gen_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_gen_power_real(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     pg = var(pm, nw)[:pg] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :gen)], base_name="$(nw)_pg",
         start = comp_start_value(ref(pm, nw, :gen, i), "pg_start")
@@ -281,11 +281,11 @@ function variable_gen_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :gen, :pg, ids(pm, nw, :gen), pg)
+    report && sol_component_value(pm, nw, :gen, :pg, ids(pm, nw, :gen), pg)
 end
 
 "variable: `qq[j]` for `j` in `gen`"
-function variable_gen_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_gen_power_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     qg = var(pm, nw)[:qg] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :gen)], base_name="$(nw)_qg",
         start = comp_start_value(ref(pm, nw, :gen, i), "qg_start")
@@ -298,11 +298,11 @@ function variable_gen_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bo
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :gen, :qg, ids(pm, nw, :gen), qg)
+    report && sol_component_value(pm, nw, :gen, :qg, ids(pm, nw, :gen), qg)
 end
 
 "variable: `crg[j]` for `j` in `gen`"
-function variable_gen_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_gen_current_real(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     crg = var(pm, nw)[:crg] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :gen)], base_name="$(nw)_crg",
         start = comp_start_value(ref(pm, nw, :gen, i), "crg_start")
@@ -321,11 +321,11 @@ function variable_gen_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bound
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :gen, :crg, ids(pm, nw, :gen), crg)
+    report && sol_component_value(pm, nw, :gen, :crg, ids(pm, nw, :gen), crg)
 end
 
 "variable: `cig[j]` for `j` in `gen`"
-function variable_gen_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_gen_current_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     cig = var(pm, nw)[:cig] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :gen)], base_name="$(nw)_cig",
         start = comp_start_value(ref(pm, nw, :gen, i), "cig_start")
@@ -344,10 +344,10 @@ function variable_gen_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, 
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :gen, :cig, ids(pm, nw, :gen), cig)
+    report && sol_component_value(pm, nw, :gen, :cig, ids(pm, nw, :gen), cig)
 end
 
-function variable_gen_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+function variable_gen_indicator(pm::AbstractPowerModel; nw::Int=nw_id_default, relax::Bool=false, report::Bool=true)
     if !relax
         z_gen = var(pm, nw)[:z_gen] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :gen)], base_name="$(nw)_z_gen",
@@ -363,7 +363,7 @@ function variable_gen_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::B
         )
     end
 
-    report && _IM.sol_component_value(pm, nw, :gen, :gen_status, ids(pm, nw, :gen), z_gen)
+    report && sol_component_value(pm, nw, :gen, :gen_status, ids(pm, nw, :gen), z_gen)
 end
 
 
@@ -372,7 +372,7 @@ function variable_gen_power_on_off(pm::AbstractPowerModel; kwargs...)
     variable_gen_power_imaginary_on_off(pm; kwargs...)
 end
 
-function variable_gen_power_real_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_gen_power_real_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     pg = var(pm, nw)[:pg] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :gen)], base_name="$(nw)_pg",
         lower_bound = min(0, ref(pm, nw, :gen, i, "pmin")),
@@ -380,10 +380,10 @@ function variable_gen_power_real_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, 
         start = comp_start_value(ref(pm, nw, :gen, i), "pg_start")
     )
 
-    report && _IM.sol_component_value(pm, nw, :gen, :pg, ids(pm, nw, :gen), pg)
+    report && sol_component_value(pm, nw, :gen, :pg, ids(pm, nw, :gen), pg)
 end
 
-function variable_gen_power_imaginary_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_gen_power_imaginary_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     qg = var(pm, nw)[:qg] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :gen)], base_name="$(nw)_qg",
         lower_bound = min(0, ref(pm, nw, :gen, i, "qmin")),
@@ -391,7 +391,7 @@ function variable_gen_power_imaginary_on_off(pm::AbstractPowerModel; nw::Int=pm.
         start = comp_start_value(ref(pm, nw, :gen, i), "qg_start")
     )
 
-    report && _IM.sol_component_value(pm, nw, :gen, :qg, ids(pm, nw, :gen), qg)
+    report && sol_component_value(pm, nw, :gen, :qg, ids(pm, nw, :gen), qg)
 end
 
 
@@ -404,7 +404,7 @@ end
 
 
 "variable: `p[l,i,j]` for `(l,i,j)` in `arcs`"
-function variable_branch_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_power_real(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     p = var(pm, nw)[:p] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_p",
         start = comp_start_value(ref(pm, nw, :branch, l), "p_start")
@@ -435,11 +435,11 @@ function variable_branch_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, boun
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p)
+    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p)
 end
 
 "variable: `q[l,i,j]` for `(l,i,j)` in `arcs`"
-function variable_branch_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_power_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     q = var(pm, nw)[:q] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_q",
         start = comp_start_value(ref(pm, nw, :branch, l), "q_start")
@@ -470,7 +470,7 @@ function variable_branch_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw,
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, nw, :branch, :qf, :qt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), q)
+    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :branch, :qf, :qt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), q)
 end
 
 function variable_branch_transform(pm::AbstractPolarModels; kwargs...)
@@ -479,7 +479,7 @@ function variable_branch_transform(pm::AbstractPolarModels; kwargs...)
 end
 
 "variable: `0 <= tm[l]` for `l` in `branch`es"
-function variable_branch_transform_magnitude(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_transform_magnitude(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     tm = var(pm, nw)[:tm] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :branch)], base_name="$(nw)_tm",
         start = comp_start_value(ref(pm, nw, :branch, i), "tm_start")
@@ -492,12 +492,12 @@ function variable_branch_transform_magnitude(pm::AbstractPowerModel; nw::Int=pm.
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :branch, :tm, ids(pm, nw, :branch), tm)
+    report && sol_component_value(pm, nw, :branch, :tm, ids(pm, nw, :branch), tm)
 end
 
 
 "variable: `ta[l]` for `l` in `branch`es"
-function variable_branch_transform_angle(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_transform_angle(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     ta = var(pm, nw)[:ta] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :branch)], base_name="$(nw)_ta",
         start = comp_start_value(ref(pm, nw, :branch, i), "ta_start")
@@ -510,11 +510,11 @@ function variable_branch_transform_angle(pm::AbstractPowerModel; nw::Int=pm.cnw,
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :branch, :ta, ids(pm, nw, :branch), ta)
+    report && sol_component_value(pm, nw, :branch, :ta, ids(pm, nw, :branch), ta)
 end
 
 "variable: `cr[l,i,j]` for `(l,i,j)` in `arcs`"
-function variable_branch_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_current_real(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     cr = var(pm, nw)[:cr] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_cr",
         start = comp_start_value(ref(pm, nw, :branch, l), "cr_start")
@@ -546,12 +546,12 @@ function variable_branch_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bo
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, nw, :branch, :cr_fr, :cr_to, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), cr)
+    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :branch, :cr_fr, :cr_to, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), cr)
 end
 
 
 "variable: `ci[l,i,j] ` for `(l,i,j)` in `arcs`"
-function variable_branch_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_current_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     ci = var(pm, nw)[:ci] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs)], base_name="$(nw)_ci",
         start = comp_start_value(ref(pm, nw, :branch, l), "ci_start")
@@ -583,12 +583,12 @@ function variable_branch_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cn
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, nw, :branch, :ci_fr, :ci_to, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), ci)
+    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :branch, :ci_fr, :ci_to, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), ci)
 end
 
 
 "variable: `csr[l,i,j]` for `(l,i,j)` in `arcs_from`"
-function variable_branch_series_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_series_current_real(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     csr = var(pm, nw)[:csr] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_csr",
         start = comp_start_value(ref(pm, nw, :branch, l), "csr_start", 0.0)
@@ -624,11 +624,11 @@ function variable_branch_series_current_real(pm::AbstractPowerModel; nw::Int=pm.
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :branch, :csr_fr, ids(pm, nw, :branch), csr)
+    report && sol_component_value(pm, nw, :branch, :csr_fr, ids(pm, nw, :branch), csr)
 end
 
 "variable: `csi[l,i,j] ` for `(l,i,j)` in `arcs_from`"
-function variable_branch_series_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_branch_series_current_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     csi = var(pm, nw)[:csi] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_csi",
         start = comp_start_value(ref(pm, nw, :branch, l), "csi_start", 0.0)
@@ -664,7 +664,7 @@ function variable_branch_series_current_imaginary(pm::AbstractPowerModel; nw::In
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :branch, :csi_fr, ids(pm, nw, :branch), csi)
+    report && sol_component_value(pm, nw, :branch, :csi_fr, ids(pm, nw, :branch), csi)
 end
 
 
@@ -674,7 +674,7 @@ function variable_dcline_power(pm::AbstractPowerModel; kwargs...)
 end
 
 "variable: `p_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
-function variable_dcline_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_dcline_power_real(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     p_dc = var(pm, nw)[:p_dc] = JuMP.@variable(pm.model,
         [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_p_dc",
     )
@@ -704,11 +704,11 @@ function variable_dcline_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, boun
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, nw, :dcline, :pf, :pt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), p_dc)
+    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :dcline, :pf, :pt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), p_dc)
 end
 
 "variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
-function variable_dcline_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_dcline_power_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     q_dc = var(pm, nw)[:q_dc] = JuMP.@variable(pm.model,
         [arc in ref(pm, nw, :arcs_dc)], base_name="$(nw)_q_dc",
     )
@@ -738,11 +738,11 @@ function variable_dcline_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw,
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, nw, :dcline, :qf, :qt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), q_dc)
+    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :dcline, :qf, :qt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), q_dc)
 end
 
 "variable: `crdc[j]` for `j` in `dcline`"
-function variable_dcline_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_dcline_current_real(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     crdc = var(pm, nw)[:crdc] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_crdc",
         start = comp_start_value(ref(pm, nw, :dcline, l), "crdc_start")
@@ -768,11 +768,11 @@ function variable_dcline_current_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bo
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, nw, :dcline, :crdc_fr, :crdc_to, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), crdc)
+    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :dcline, :crdc_fr, :crdc_to, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), crdc)
 end
 
 "variable:  `cidc[j]` for `j` in `dcline`"
-function variable_dcline_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_dcline_current_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     cidc = var(pm, nw)[:cidc] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs_dc)], base_name="$(nw)_cidc",
         start = comp_start_value(ref(pm, nw, :dcline, l), "cidc_start")
@@ -798,12 +798,12 @@ function variable_dcline_current_imaginary(pm::AbstractPowerModel; nw::Int=pm.cn
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, nw, :dcline, :cidc_fr, :cidc_to, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), cidc)
+    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :dcline, :cidc_fr, :cidc_to, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), cidc)
 end
 
 
 ""
-function variable_switch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+function variable_switch_indicator(pm::AbstractPowerModel; nw::Int=nw_id_default, relax::Bool=false, report::Bool=true)
     if !relax
         z_switch = var(pm, nw)[:z_switch] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :switch)], base_name="$(nw)_z_switch",
@@ -819,7 +819,7 @@ function variable_switch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax
         )
     end
 
-    report && _IM.sol_component_value(pm, nw, :switch, :status, ids(pm, nw, :switch), z_switch)
+    report && sol_component_value(pm, nw, :switch, :status, ids(pm, nw, :switch), z_switch)
 end
 
 
@@ -831,7 +831,7 @@ end
 
 
 "variable: `pws[l,i,j]` for `(l,i,j)` in `arcs_sw`"
-function variable_switch_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_switch_power_real(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     psw = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_psw",
         start = comp_start_value(ref(pm, nw, :switch, l), "psw_start")
@@ -856,12 +856,12 @@ function variable_switch_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, boun
     psw_expr = merge(psw_expr, Dict( (l,j,i) => -1.0*psw[(l,i,j)] for (l,i,j) in ref(pm, nw, :arcs_from_sw)))
     var(pm, nw)[:psw] = psw_expr
 
-    report && _IM.sol_component_value_edge(pm, nw, :switch, :psw_fr, :psw_to, ref(pm, nw, :arcs_from_sw), ref(pm, nw, :arcs_to_sw), psw_expr)
+    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :switch, :psw_fr, :psw_to, ref(pm, nw, :arcs_from_sw), ref(pm, nw, :arcs_to_sw), psw_expr)
 end
 
 
 "variable: `pws[l,i,j]` for `(l,i,j)` in `arcs_sw`"
-function variable_switch_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_switch_power_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     qsw = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs_from_sw)], base_name="$(nw)_qsw",
         start = comp_start_value(ref(pm, nw, :switch, l), "qsw_start")
@@ -886,7 +886,7 @@ function variable_switch_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw,
     qsw_expr = merge(qsw_expr, Dict( (l,j,i) => -1.0*qsw[(l,i,j)] for (l,i,j) in ref(pm, nw, :arcs_from_sw)))
     var(pm, nw)[:qsw] = qsw_expr
 
-    report && _IM.sol_component_value_edge(pm, nw, :switch, :qsw_fr, :qsw_to, ref(pm, nw, :arcs_from_sw), ref(pm, nw, :arcs_to_sw), qsw_expr)
+    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :switch, :qsw_fr, :qsw_to, ref(pm, nw, :arcs_from_sw), ref(pm, nw, :arcs_to_sw), qsw_expr)
 end
 
 
@@ -916,7 +916,7 @@ end
 
 
 ""
-function variable_storage_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_power_real(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     ps = var(pm, nw)[:ps] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_ps",
         start = comp_start_value(ref(pm, nw, :storage, i), "ps_start")
@@ -935,11 +935,11 @@ function variable_storage_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bou
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :storage, :ps, ids(pm, nw, :storage), ps)
+    report && sol_component_value(pm, nw, :storage, :ps, ids(pm, nw, :storage), ps)
 end
 
 ""
-function variable_storage_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_power_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     qs = var(pm, nw)[:qs] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_qs",
         start = comp_start_value(ref(pm, nw, :storage, i), "qs_start")
@@ -954,7 +954,7 @@ function variable_storage_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :storage, :qs, ids(pm, nw, :storage), qs)
+    report && sol_component_value(pm, nw, :storage, :qs, ids(pm, nw, :storage), qs)
 end
 
 
@@ -963,7 +963,7 @@ a reactive power slack variable that enables the storage device to inject or
 consume reactive power at its connecting bus, subject to the injection limits
 of the device.
 """
-function variable_storage_power_control_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_power_control_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     qsc = var(pm, nw)[:qsc] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_qsc",
         start = comp_start_value(ref(pm, nw, :storage, i), "qsc_start")
@@ -983,17 +983,17 @@ function variable_storage_power_control_imaginary(pm::AbstractPowerModel; nw::In
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :storage, :qsc, ids(pm, nw, :storage), qsc)
+    report && sol_component_value(pm, nw, :storage, :qsc, ids(pm, nw, :storage), qsc)
 end
 
 
 "do nothing by default but some formulations require this"
-function variable_storage_current(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_current(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
 end
 
 
 ""
-function variable_storage_energy(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_energy(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     se = var(pm, nw)[:se] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_se",
         start = comp_start_value(ref(pm, nw, :storage, i), "se_start", 1)
@@ -1006,11 +1006,11 @@ function variable_storage_energy(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :storage, :se, ids(pm, nw, :storage), se)
+    report && sol_component_value(pm, nw, :storage, :se, ids(pm, nw, :storage), se)
 end
 
 ""
-function variable_storage_charge(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_charge(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     sc = var(pm, nw)[:sc] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_sc",
         start = comp_start_value(ref(pm, nw, :storage, i), "sc_start", 1)
@@ -1023,11 +1023,11 @@ function variable_storage_charge(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :storage, :sc, ids(pm, nw, :storage), sc)
+    report && sol_component_value(pm, nw, :storage, :sc, ids(pm, nw, :storage), sc)
 end
 
 ""
-function variable_storage_discharge(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_discharge(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     sd = var(pm, nw)[:sd] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_sd",
         start = comp_start_value(ref(pm, nw, :storage, i), "sd_start", 1)
@@ -1040,11 +1040,11 @@ function variable_storage_discharge(pm::AbstractPowerModel; nw::Int=pm.cnw, boun
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :storage, :sd, ids(pm, nw, :storage), sd)
+    report && sol_component_value(pm, nw, :storage, :sd, ids(pm, nw, :storage), sd)
 end
 
 ""
-function variable_storage_complementary_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+function variable_storage_complementary_indicator(pm::AbstractPowerModel; nw::Int=nw_id_default, relax::Bool=false, report::Bool=true)
     if !relax
         sc_on = var(pm, nw)[:sc_on] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :storage)], base_name="$(nw)_sc_on",
@@ -1071,8 +1071,8 @@ function variable_storage_complementary_indicator(pm::AbstractPowerModel; nw::In
         )
     end
 
-    report && _IM.sol_component_value(pm, nw, :storage, :sc_on, ids(pm, nw, :storage), sc_on)
-    report && _IM.sol_component_value(pm, nw, :storage, :sd_on, ids(pm, nw, :storage), sd_on)
+    report && sol_component_value(pm, nw, :storage, :sc_on, ids(pm, nw, :storage), sc_on)
+    report && sol_component_value(pm, nw, :storage, :sd_on, ids(pm, nw, :storage), sd_on)
 end
 
 function variable_storage_power_mi_on_off(pm::AbstractPowerModel; kwargs...)
@@ -1086,7 +1086,7 @@ function variable_storage_power_mi_on_off(pm::AbstractPowerModel; kwargs...)
     variable_storage_complementary_indicator(pm; kwargs...)
 end
 
-function variable_storage_power_real_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_storage_power_real_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     ps = var(pm, nw)[:ps] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_ps",
         start = comp_start_value(ref(pm, nw, :storage, i), "ps_start")
@@ -1103,10 +1103,10 @@ function variable_storage_power_real_on_off(pm::AbstractPowerModel; nw::Int=pm.c
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :storage, :ps, ids(pm, nw, :storage), ps)
+    report && sol_component_value(pm, nw, :storage, :ps, ids(pm, nw, :storage), ps)
 end
 
-function variable_storage_power_imaginary_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, report::Bool=true)
+function variable_storage_power_imaginary_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     inj_lb, inj_ub = ref_calc_storage_injection_bounds(ref(pm, nw, :storage), ref(pm, nw, :bus))
 
     qs = var(pm, nw)[:qs] = JuMP.@variable(pm.model,
@@ -1116,7 +1116,7 @@ function variable_storage_power_imaginary_on_off(pm::AbstractPowerModel; nw::Int
         start = comp_start_value(ref(pm, nw, :storage, i), "qs_start")
     )
 
-    report && _IM.sol_component_value(pm, nw, :storage, :qs, ids(pm, nw, :storage), qs)
+    report && sol_component_value(pm, nw, :storage, :qs, ids(pm, nw, :storage), qs)
 end
 
 
@@ -1125,7 +1125,7 @@ a reactive power slack variable that enables the storage device to inject or
 consume reactive power at its connecting bus, subject to the injection limits
 of the device.
 """
-function variable_storage_power_control_imaginary_on_off(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_power_control_imaginary_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     qsc = var(pm, nw)[:qsc] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_qsc",
         start = comp_start_value(ref(pm, nw, :storage, i), "qsc_start")
@@ -1147,11 +1147,11 @@ function variable_storage_power_control_imaginary_on_off(pm::AbstractPowerModel;
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :storage, :qsc, ids(pm, nw, :storage), qsc)
+    report && sol_component_value(pm, nw, :storage, :qsc, ids(pm, nw, :storage), qsc)
 end
 
 
-function variable_storage_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+function variable_storage_indicator(pm::AbstractPowerModel; nw::Int=nw_id_default, relax::Bool=false, report::Bool=true)
     if !relax
         z_storage = var(pm, nw)[:z_storage] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :storage)], base_name="$(nw)_z_storage",
@@ -1167,7 +1167,7 @@ function variable_storage_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, rela
         )
     end
 
-    report && _IM.sol_component_value(pm, nw, :storage, :status, ids(pm, nw, :storage), z_storage)
+    report && sol_component_value(pm, nw, :storage, :status, ids(pm, nw, :storage), z_storage)
 end
 
 
@@ -1181,7 +1181,7 @@ function variable_ne_branch_power(pm::AbstractPowerModel; kwargs...)
 end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= p_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
-function variable_ne_branch_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_power_real(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     p_ne = var(pm, nw)[:p_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs)], base_name="$(nw)_p_ne",
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "p_start")
@@ -1201,11 +1201,11 @@ function variable_ne_branch_power_real(pm::AbstractPowerModel; nw::Int=pm.cnw, b
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, nw, :ne_branch, :pf, :pt, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne)
+    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :ne_branch, :pf, :pt, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne)
 end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= q_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
-function variable_ne_branch_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_ne_branch_power_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     q_ne = var(pm, nw)[:q_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs)], base_name="$(nw)_q_ne",
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "q_start")
@@ -1225,11 +1225,11 @@ function variable_ne_branch_power_imaginary(pm::AbstractPowerModel; nw::Int=pm.c
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, nw, :ne_branch, :qf, :qt, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), q_ne)
+    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :ne_branch, :qf, :qt, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), q_ne)
 end
 
 "variable: `0 <= z_branch[l] <= 1` for `l` in `branch`es"
-function variable_branch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+function variable_branch_indicator(pm::AbstractPowerModel; nw::Int=nw_id_default, relax::Bool=false, report::Bool=true)
     if !relax
         z_branch = var(pm, nw)[:z_branch] = JuMP.@variable(pm.model,
             [l in ids(pm, nw, :branch)], base_name="$(nw)_z_branch",
@@ -1245,11 +1245,11 @@ function variable_branch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax
         )
     end
 
-    report && _IM.sol_component_value(pm, nw, :branch, :br_status, ids(pm, nw, :branch), z_branch)
+    report && sol_component_value(pm, nw, :branch, :br_status, ids(pm, nw, :branch), z_branch)
 end
 
 "variable: `0 <= branch_ne[l] <= 1` for `l` in `branch`es"
-function variable_ne_branch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+function variable_ne_branch_indicator(pm::AbstractPowerModel; nw::Int=nw_id_default, relax::Bool=false, report::Bool=true)
     if !relax
         z_branch_ne = var(pm, nw)[:branch_ne] = JuMP.@variable(pm.model,
             [l in ids(pm, nw, :ne_branch)], base_name="$(nw)_branch_ne",
@@ -1265,12 +1265,12 @@ function variable_ne_branch_indicator(pm::AbstractPowerModel; nw::Int=pm.cnw, re
         )
     end
 
-    report && _IM.sol_component_value(pm, nw, :ne_branch, :built, ids(pm, nw, :ne_branch), z_branch_ne)
+    report && sol_component_value(pm, nw, :ne_branch, :built, ids(pm, nw, :ne_branch), z_branch_ne)
 end
 
 
 ""
-function variable_load_power_factor(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+function variable_load_power_factor(pm::AbstractPowerModel; nw::Int=nw_id_default, relax::Bool=false, report::Bool=true)
     if !relax
         z_demand = var(pm, nw)[:z_demand] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :load)], base_name="$(nw)_z_demand",
@@ -1287,17 +1287,17 @@ function variable_load_power_factor(pm::AbstractPowerModel; nw::Int=pm.cnw, rela
     end
 
     if report
-        _IM.sol_component_value(pm, nw, :load, :status, ids(pm, nw, :load), z_demand)
+        sol_component_value(pm, nw, :load, :status, ids(pm, nw, :load), z_demand)
         sol_pd = Dict(i => z_demand[i]*ref(pm, nw, :load, i)["pd"] for i in ids(pm, nw, :load))
-        _IM.sol_component_value(pm, nw, :load, :pd, ids(pm, nw, :load), sol_pd)
+        sol_component_value(pm, nw, :load, :pd, ids(pm, nw, :load), sol_pd)
         sol_qd = Dict(i => z_demand[i]*ref(pm, nw, :load, i)["qd"] for i in ids(pm, nw, :load))
-        _IM.sol_component_value(pm, nw, :load, :qd, ids(pm, nw, :load), sol_qd)
+        sol_component_value(pm, nw, :load, :qd, ids(pm, nw, :load), sol_qd)
     end
 end
 
 
 ""
-function variable_shunt_admittance_factor(pm::AbstractPowerModel; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+function variable_shunt_admittance_factor(pm::AbstractPowerModel; nw::Int=nw_id_default, relax::Bool=false, report::Bool=true)
     if !relax
         z_shunt = var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt",
@@ -1314,10 +1314,10 @@ function variable_shunt_admittance_factor(pm::AbstractPowerModel; nw::Int=pm.cnw
     end
 
     if report
-        _IM.sol_component_value(pm, nw, :shunt, :status, ids(pm, nw, :shunt), z_shunt)
+        sol_component_value(pm, nw, :shunt, :status, ids(pm, nw, :shunt), z_shunt)
         sol_gs = Dict(i => z_shunt[i]*ref(pm, nw, :shunt, i)["gs"] for i in ids(pm, nw, :shunt))
-        _IM.sol_component_value(pm, nw, :shunt, :gs, ids(pm, nw, :shunt), sol_gs)
+        sol_component_value(pm, nw, :shunt, :gs, ids(pm, nw, :shunt), sol_gs)
         sol_bs = Dict(i => z_shunt[i]*ref(pm, nw, :shunt, i)["bs"] for i in ids(pm, nw, :shunt))
-        _IM.sol_component_value(pm, nw, :shunt, :bs, ids(pm, nw, :shunt), sol_bs)
+        sol_component_value(pm, nw, :shunt, :bs, ids(pm, nw, :shunt), sol_bs)
     end
 end

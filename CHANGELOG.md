@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Update to InfrastructureModels v0.6 (breaking)
 
 ### v0.17.4
 - Added support for matrix-based analysis of basic network data (#728)

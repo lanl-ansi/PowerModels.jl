@@ -201,11 +201,11 @@ end
         ref = PowerModels.build_ref(data)
 
         @assert !PowerModels.InfrastructureModels.ismultinetwork(data)
-        ref = ref[:nw][0]
+        ref_nw = ref[:it][pm_it_sym][:nw][0]
 
         @test haskey(data, "name")
-        @test haskey(ref, :name)
-        @test data["name"] == ref[:name]
+        @test haskey(ref_nw, :name)
+        @test data["name"] == ref_nw[:name]
     end
 end
 
