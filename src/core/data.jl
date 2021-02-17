@@ -269,7 +269,7 @@ function make_per_unit!(data::Dict{String,<:Any})
 
     if !haskey(pm_data, "per_unit") || pm_data["per_unit"] == false
         pm_data["per_unit"] = true
-        apply_pm!(_make_per_unit!, pm_data; apply_to_subnetworks = true)
+        apply_pm!(_make_per_unit!, pm_data)
     end
 end
 
@@ -416,7 +416,7 @@ function make_mixed_units!(data::Dict{String,<:Any})
 
     if !haskey(pm_data, "per_unit") || pm_data["per_unit"] == true
         pm_data["per_unit"] = false
-        apply_pm!(_make_mixed_units!, pm_data; apply_to_subnetworks = true)
+        apply_pm!(_make_mixed_units!, pm_data)
     end
 end
 
@@ -1063,7 +1063,7 @@ end
 
 ""
 function check_conductors(data::Dict{String,<:Any})
-    apply_pm!(_check_conductors, data; apply_to_subnetworks = true)
+    apply_pm!(_check_conductors, data)
 end
 
 
@@ -2661,7 +2661,7 @@ end
 determines the largest connected component of the network and turns everything else off
 """
 function select_largest_component!(data::Dict{String, <:Any})
-    apply_pm!(_select_largest_component!, data; apply_to_subnetworks = true)
+    apply_pm!(_select_largest_component!, data)
 end
 
 
@@ -2693,7 +2693,7 @@ end
 checks that each connected components has a reference bus, if not, adds one
 """
 function correct_reference_buses!(data::Dict{String,<:Any})
-    apply_pm!(_correct_reference_buses!, data; apply_to_subnetworks = true)
+    apply_pm!(_correct_reference_buses!, data)
 end
 
 
@@ -2860,12 +2860,14 @@ given a network data dict and a mapping of current-bus-ids to new-bus-ids
 modifies the data dict to reflect the proposed new bus ids.
 """
 function update_bus_ids!(data::Dict{String,<:Any}, bus_id_map::Dict{Int,Int}; injective=true)
-    if _IM.ismultinetwork(data)
-        for (i,nw_data) in data["nw"]
+    data_it = _IM.ismultiinfrastructure(data) ? data["it"][pm_it_name] : data
+
+    if _IM.ismultinetwork(data_it) && apply_to_subnetworks
+        for (nw, nw_data) in data_it["nw"]
             _update_bus_ids!(nw_data, bus_id_map; injective=injective)
         end
     else
-         _update_bus_ids!(data, bus_id_map; injective=injective)
+        _update_bus_ids!(data_it, bus_id_map; injective=injective)
     end
 end
 
@@ -2948,13 +2950,7 @@ given a network data dict merges buses that are connected by closed switches
 converting the dataset into a pure bus-branch model.
 """
 function resolve_swithces!(data::Dict{String,<:Any})
-    if _IM.ismultinetwork(data)
-        for (i,nw_data) in data["nw"]
-            _resolve_swithces!(nw_data)
-        end
-    else
-         _resolve_swithces!(data)
-    end
+    apply_pm!(_resolve_swithces!, data)
 end
 
 ""
