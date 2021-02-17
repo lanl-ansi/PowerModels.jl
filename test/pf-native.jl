@@ -304,14 +304,14 @@ end
         # Ipopt log can be used for manual verification, for now
         data = PowerModels.parse_file("../test/data/matpower/case24.m")
         result = run_ac_pf(data, ipopt_solver)
-        #result = run_ac_pf(data, JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6))
+        #result = run_ac_pf(data, JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6))
         @test result["termination_status"] == LOCALLY_SOLVED
 
         update_data!(data, result["solution"])
         set_ac_pf_start_values!(data)
 
         result_ws = run_ac_pf(data, ipopt_solver)
-        #result_ws = run_ac_pf(data, JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6))
+        #result_ws = run_ac_pf(data, JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6))
         @test result_ws["termination_status"] == LOCALLY_SOLVED
 
         bus_pg_ini = bus_gen_values(data, result["solution"], "pg")

@@ -559,7 +559,7 @@ end
         @test haskey(pm.ext, :some_data)
         @test pm.ext[:some_data] == "bloop"
 
-        result = optimize_model!(pm, optimizer=JuMP.with_optimizer(Ipopt.Optimizer, print_level=0))
+        result = optimize_model!(pm, optimizer=JuMP.optimizer_with_attributes(Ipopt.Optimizer, "print_level"=>0))
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 5907; atol = 1e0)

@@ -13,7 +13,7 @@ Convex Relaxations with Bound Tightening for Power Network Optimization".
 The function can be invoked as follows:
 
 ```
-data, stats = run_obbt_opf!("matpower/case3.m", JuMP.with_optimizer(Ipopt.Optimizer, kwargs...)
+data, stats = run_obbt_opf!("matpower/case3.m", Ipopt.Optimizer)
 ```
 
 `data` contains the parsed network data with tightened bounds. `stats` contains
