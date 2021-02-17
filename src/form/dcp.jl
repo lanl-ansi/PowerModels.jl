@@ -209,7 +209,8 @@ function expression_bus_voltage(pm::AbstractPowerModel, n::Int, i, am::Union{Adm
         # this can be removed once, JuMP.jl/issues/2120 is resolved
         var(pm, n, :va)[i] = 0.0
     else
-        var(pm, n, :va)[i] = JuMP.@expression(pm.model, sum(f*inj_p[j] for (j,f) in inj_factors))
+        expr = sum(f*inj_p[j] for (j,f) in inj_factors)
+        var(pm, n, :va)[i] = JuMP.@expression(pm.model, expr)
     end
 end
 
