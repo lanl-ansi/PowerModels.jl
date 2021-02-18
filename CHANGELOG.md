@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Update to InfrastructureModels v0.6 (breaking)
+- Rename `run_*` methods to `solve_*` (#649) (breaking)
 
 ### v0.17.4
 - Added support for matrix-based analysis of basic network data (#728)
