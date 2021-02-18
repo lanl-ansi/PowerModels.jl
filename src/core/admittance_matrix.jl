@@ -57,10 +57,10 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
             t = tr + ti*im
             lc_fr = branch["g_fr"] + branch["b_fr"]im
             lc_to = branch["g_to"] + branch["b_to"]im
-            push!(I, f_bus); push!(J, t_bus); push!(V, -conj(y)/t)
-            push!(I, t_bus); push!(J, f_bus); push!(V, -conj(y/t))
-            push!(I, f_bus); push!(J, f_bus); push!(V, conj(y + lc_fr)/abs2(t))
-            push!(I, t_bus); push!(J, t_bus); push!(V, conj(y + lc_to))
+            push!(I, f_bus); push!(J, t_bus); push!(V, -y/conj(t))
+            push!(I, t_bus); push!(J, f_bus); push!(V, -(y/t))
+            push!(I, f_bus); push!(J, f_bus); push!(V, (y + lc_fr)/abs2(t))
+            push!(I, t_bus); push!(J, t_bus); push!(V, (y + lc_to))
         end
     end
 
@@ -69,7 +69,7 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
         if shunt[pm_component_status["shunt"]] != pm_component_status_inactive["shunt"] && haskey(bus_to_idx, shunt_bus)
             bus = bus_to_idx[shunt_bus]
 
-            ys = conj(shunt["gs"] + shunt["bs"]im)
+            ys = shunt["gs"] + shunt["bs"]im
 
             push!(I, bus); push!(J, bus); push!(V, ys)
         end
@@ -113,10 +113,10 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
             f_bus = bus_to_idx[f_bus]
             t_bus = bus_to_idx[t_bus]
             b_val = imag(inv(branch["br_r"] + branch["br_x"]im))
-            push!(I, f_bus); push!(J, t_bus); push!(V,  b_val)
-            push!(I, t_bus); push!(J, f_bus); push!(V,  b_val)
-            push!(I, f_bus); push!(J, f_bus); push!(V, -b_val)
-            push!(I, t_bus); push!(J, t_bus); push!(V, -b_val)
+            push!(I, f_bus); push!(J, t_bus); push!(V, -b_val)
+            push!(I, t_bus); push!(J, f_bus); push!(V, -b_val)
+            push!(I, f_bus); push!(J, f_bus); push!(V,  b_val)
+            push!(I, t_bus); push!(J, t_bus); push!(V,  b_val)
         end
     end
 
@@ -333,7 +333,7 @@ function solve_theta(am::AdmittanceMatrix, bus_injection::Vector{Float64})
     end
     bi[am.ref_idx] = 0.0
 
-    theta = m \ bi
+    theta = -m \ bi
 
     return theta
 end

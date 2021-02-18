@@ -502,11 +502,11 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
             balance_imag = q_delta_base_idx[i] + q_inject_idx[i]
             for j in neighbors[i]
                 if i == j
-                    balance_real += vm_idx[i] * vm_idx[i] * real(am.matrix[i,i])
-                    balance_imag += vm_idx[i] * vm_idx[i] * imag(am.matrix[i,i])
+                    balance_real += vm_idx[i] * vm_idx[i] *  real(am.matrix[i,i])
+                    balance_imag += vm_idx[i] * vm_idx[i] * -imag(am.matrix[i,i])
                 else
-                    balance_real += vm_idx[i] * vm_idx[j] * (real(am.matrix[i,j]) * cos(va_idx[i] - va_idx[j]) - imag(am.matrix[i,j]) * sin(va_idx[i] - va_idx[j]))
-                    balance_imag += vm_idx[i] * vm_idx[j] * (imag(am.matrix[i,j]) * cos(va_idx[i] - va_idx[j]) + real(am.matrix[i,j]) * sin(va_idx[i] - va_idx[j]))
+                    balance_real += vm_idx[i] * vm_idx[j] * ( real(am.matrix[i,j]) * cos(va_idx[i] - va_idx[j]) + imag(am.matrix[i,j]) * sin(va_idx[i] - va_idx[j]))
+                    balance_imag += vm_idx[i] * vm_idx[j] * (-imag(am.matrix[i,j]) * cos(va_idx[i] - va_idx[j]) + real(am.matrix[i,j]) * sin(va_idx[i] - va_idx[j]))
                 end
             end
             F[2*i - 1] = balance_real
@@ -539,18 +539,18 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
                 if bus_type == 1
                     if i == j
                         y_ii = am.matrix[i,i]
-                        J[f_i_r, x_j_fst] = 2*real(y_ii)*vm_idx[i] +            sum( real(am.matrix[i,k]) * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) - imag(am.matrix[i,k]) * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
-                        J[f_i_r, x_j_snd] =                         vm_idx[i] * sum( real(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) - imag(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                        J[f_i_r, x_j_fst] =  2*real(y_ii)*vm_idx[i] +            sum(  real(am.matrix[i,k]) * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) + imag(am.matrix[i,k]) * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                        J[f_i_r, x_j_snd] =                          vm_idx[i] * sum(  real(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + imag(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
 
-                        J[f_i_i, x_j_fst] = 2*imag(y_ii)*vm_idx[i] +            sum( imag(am.matrix[i,k]) * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
-                        J[f_i_i, x_j_snd] =                         vm_idx[i] * sum( imag(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                        J[f_i_i, x_j_fst] = -2*imag(y_ii)*vm_idx[i] +            sum( -imag(am.matrix[i,k]) * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                        J[f_i_i, x_j_snd] =                          vm_idx[i] * sum( -imag(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
                     else
                         y_ij = am.matrix[i,j]
-                        J[f_i_r, x_j_fst] =             vm_idx[i] * (real(y_ij) * cos(va_idx[i] - va_idx[j]) - imag(y_ij) *  sin(va_idx[i] - va_idx[j]))
-                        J[f_i_r, x_j_snd] = vm_idx[i] * vm_idx[j] * (real(y_ij) * sin(va_idx[i] - va_idx[j]) - imag(y_ij) * -cos(va_idx[i] - va_idx[j]))
+                        J[f_i_r, x_j_fst] =             vm_idx[i] * ( real(y_ij) * cos(va_idx[i] - va_idx[j]) + imag(y_ij) *  sin(va_idx[i] - va_idx[j]))
+                        J[f_i_r, x_j_snd] = vm_idx[i] * vm_idx[j] * ( real(y_ij) * sin(va_idx[i] - va_idx[j]) + imag(y_ij) * -cos(va_idx[i] - va_idx[j]))
 
-                        J[f_i_i, x_j_fst] =             vm_idx[i] * (imag(y_ij) * cos(va_idx[i] - va_idx[j]) + real(y_ij) *  sin(va_idx[i] - va_idx[j]))
-                        J[f_i_i, x_j_snd] = vm_idx[i] * vm_idx[j] * (imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j]))
+                        J[f_i_i, x_j_fst] =             vm_idx[i] * (-imag(y_ij) * cos(va_idx[i] - va_idx[j]) + real(y_ij) *  sin(va_idx[i] - va_idx[j]))
+                        J[f_i_i, x_j_snd] = vm_idx[i] * vm_idx[j] * (-imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j]))
                     end
                 elseif bus_type == 2
                     if i == j
@@ -558,17 +558,17 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
                         J[f_i_i, x_j_fst] = 1.0
 
                         y_ii = am.matrix[i,i]
-                        J[f_i_r, x_j_snd] =              vm_idx[i] * sum( real(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) - imag(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                        J[f_i_r, x_j_snd] =              vm_idx[i] * sum(  real(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + imag(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
 
-                        J[f_i_i, x_j_snd] =              vm_idx[i] * sum( imag(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                        J[f_i_i, x_j_snd] =              vm_idx[i] * sum( -imag(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
                     else
                         J[f_i_r, x_j_fst] = 0.0
                         J[f_i_i, x_j_fst] = 0.0
 
                         y_ij = am.matrix[i,j]
-                        J[f_i_r, x_j_snd] = vm_idx[i] * vm_idx[j] * (real(y_ij) * sin(va_idx[i] - va_idx[j]) - imag(y_ij) * -cos(va_idx[i] - va_idx[j]))
+                        J[f_i_r, x_j_snd] = vm_idx[i] * vm_idx[j] * ( real(y_ij) * sin(va_idx[i] - va_idx[j]) + imag(y_ij) * -cos(va_idx[i] - va_idx[j]))
 
-                        J[f_i_i, x_j_snd] = vm_idx[i] * vm_idx[j] * (imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j]))
+                        J[f_i_i, x_j_snd] = vm_idx[i] * vm_idx[j] * (-imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j]))
                     end
                 elseif bus_type == 3
                     # p_inject_idx[i] = p_delta_base_idx[i] + x[2*i - 1]
