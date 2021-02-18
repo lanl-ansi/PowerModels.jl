@@ -202,15 +202,9 @@ end
 ""
 function expression_bus_voltage(pm::AbstractPowerModel, n::Int, i, am::Union{AdmittanceMatrix,AdmittanceMatrixInverse})
     inj_factors = injection_factors_va(am, i)
-
     inj_p = var(pm, n, :inj_p)
 
-    if length(inj_factors) == 0
-        # this can be removed once, JuMP.jl/issues/2120 is resolved
-        var(pm, n, :va)[i] = 0.0
-    else
-        var(pm, n, :va)[i] = JuMP.@expression(pm.model, sum(f*inj_p[j] for (j,f) in inj_factors))
-    end
+    var(pm, n, :va)[i] = JuMP.@expression(pm.model, sum(f*inj_p[j] for (j,f) in inj_factors))
 end
 
 
