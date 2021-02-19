@@ -1,6 +1,9 @@
 @testset "admittance matrix computation" begin
-    @testset "5-bus case" begin
+    @testset "5-bus case, no ref bus" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        for (i,bus) in data["bus"]
+            bus["bus_type"] = 2
+        end
         am = calc_admittance_matrix(data)
 
         @test isa(am, AdmittanceMatrix{Complex{Float64}})
@@ -80,7 +83,7 @@ end
 
         ref_bus = reference_bus(data)
         for (i,bus) in data["bus"]
-            sm_injection_factors = injection_factors_va(sm, bus["index"])
+            sm_injection_factors = injection_factors_va(sm, ref_bus["index"], bus["index"])
             sm_inv_injection_factors = injection_factors_va(sm_inv, bus["index"])
 
             @test length(sm_injection_factors) == length(sm_inv_injection_factors)
@@ -94,7 +97,7 @@ end
 
         ref_bus = reference_bus(data)
         for (i,bus) in data["bus"]
-            sm_injection_factors = injection_factors_va(sm, bus["index"])
+            sm_injection_factors = injection_factors_va(sm, ref_bus["index"], bus["index"])
             sm_inv_injection_factors = injection_factors_va(sm_inv, bus["index"])
 
             @test length(sm_injection_factors) == length(sm_inv_injection_factors)
@@ -108,7 +111,7 @@ end
 
         ref_bus = reference_bus(data)
         for (i,bus) in data["bus"]
-            sm_injection_factors = injection_factors_va(sm, bus["index"])
+            sm_injection_factors = injection_factors_va(sm, ref_bus["index"], bus["index"])
             sm_inv_injection_factors = injection_factors_va(sm_inv, bus["index"])
 
             @test length(sm_injection_factors) == length(sm_inv_injection_factors)
@@ -126,7 +129,7 @@ end
 
         ref_bus = reference_bus(data)
         for (i,bus) in data["bus"]
-            sm_injection_factors = injection_factors_va(sm, bus["index"])
+            sm_injection_factors = injection_factors_va(sm, ref_bus["index"], bus["index"])
             sm_inv_injection_factors = injection_factors_va(sm_inv, bus["index"])
 
             @test length(sm_injection_factors) == length(sm_inv_injection_factors)

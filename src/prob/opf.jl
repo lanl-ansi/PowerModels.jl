@@ -200,7 +200,7 @@ function build_opf_ptdf(pm::DCPPowerModel)
         # requires optional vad parameters
         #constraint_voltage_angle_difference(pm, i)
 
-        # only create these exressions if a line flow is specificed
+        # only create these expressions if a line flow is specified
         if haskey(branch, "rate_a")
             expression_branch_power_ohms_yt_from_ptdf(pm, i)
             expression_branch_power_ohms_yt_to_ptdf(pm, i)
@@ -220,6 +220,7 @@ end
 
 ""
 function _ref_add_sm!(ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any})
+    reference_bus(data) # throws an error if an incorrect number of reference buses are defined
     ref[:sm] = calc_susceptance_matrix(data)
 end
 

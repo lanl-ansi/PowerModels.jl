@@ -370,12 +370,12 @@ function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
     g,b = calc_branch_y(branch)
 
     num_bus = length(data["bus"])
-    num_branch = length(data["branch"])
 
+    ref_bus = reference_bus(data)
     am = calc_susceptance_matrix(data)
 
-    if_fr = injection_factors_va(am, branch["f_bus"])
-    if_to = injection_factors_va(am, branch["t_bus"])
+    if_fr = injection_factors_va(am, ref_bus["index"], branch["f_bus"])
+    if_to = injection_factors_va(am, ref_bus["index"], branch["t_bus"])
 
     ptdf_column = zeros(num_bus)
     for n in 1:num_bus

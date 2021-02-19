@@ -79,7 +79,9 @@ returns a solution data structure in PowerModels Dict format
 """
 function compute_dc_pf(data::Dict{String,<:Any})
     time_start = time()
-    #TODO check single connected component
+    #TODO check single connected component and ref bus
+
+    ref_bus = reference_bus(data)
 
     bi = calc_bus_injection_active(data)
 
@@ -93,7 +95,10 @@ function compute_dc_pf(data::Dict{String,<:Any})
     sm = calc_susceptance_matrix(data)
 
     bi_idx = [bi[bus_id] for bus_id in sm.idx_to_bus]
-    theta_idx = solve_theta(sm, bi_idx)
+
+    ref_idx = sm.bus_to_idx[ref_bus["index"]]
+
+    theta_idx = solve_theta(sm, ref_idx, bi_idx)
 
     bus_assignment= Dict{String,Any}()
     for (i,bus) in data["bus"]

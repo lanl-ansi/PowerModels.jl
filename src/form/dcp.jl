@@ -200,13 +200,21 @@ end
 
 
 ""
-function expression_bus_voltage(pm::AbstractPowerModel, n::Int, i, am::Union{AdmittanceMatrix,AdmittanceMatrixInverse})
-    inj_factors = injection_factors_va(am, i)
+function expression_bus_voltage(pm::AbstractPowerModel, n::Int, i, am::AdmittanceMatrix)
+    ref_bus = collect(ids(pm, n, :ref_buses))[1]
+    inj_factors = injection_factors_va(am, ref_bus, i)
     inj_p = var(pm, n, :inj_p)
 
     var(pm, n, :va)[i] = JuMP.@expression(pm.model, sum(f*inj_p[j] for (j,f) in inj_factors))
 end
 
+""
+function expression_bus_voltage(pm::AbstractPowerModel, n::Int, i, am::AdmittanceMatrixInverse)
+    inj_factors = injection_factors_va(am, i)
+    inj_p = var(pm, n, :inj_p)
+
+    var(pm, n, :va)[i] = JuMP.@expression(pm.model, sum(f*inj_p[j] for (j,f) in inj_factors))
+end
 
 
 ######## Lossless Models ########
