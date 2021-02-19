@@ -6,6 +6,7 @@ PowerModels.jl Change Log
 
 ### v0.18.0
 - Update to InfrastructureModels v0.6 (#757) (breaking)
+- Update native power flow solvers to output results dict (#739) (breaking)
 - Dropped support for JuMP v0.20 (#673) (breaking)
 - Removed `_extend_pwl_cost!` function (#716)
 
