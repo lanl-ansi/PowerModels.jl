@@ -70,5 +70,27 @@ TESTLOG = Memento.getlogger(PowerModels)
         @test_throws(TESTLOG, ErrorException, PowerModels.run_opf_ptdf("../test/data/matpower/case5_sw.m", DCPPowerModel, ipopt_solver))
     end
 
-end
+    @testset "expressions with parameters" begin
+        function build_w_parameter(pm::DCPPowerModel)
+            m = ParameterJuMP.ModelWithParams()
+            pr = ParameterJuMP.add_parameter(m,1.0)
+            v = JuMP.@variable(m)
+            expr = ParameterJuMP.ParametrizedGenericAffExpr{Float64, JuMP.VariableRef}()
+            JuMP.add_to_expression!(expr, pr + v == 0.0)
 
+            for (nw, network) in nws(pm)
+                var(pm, nw)[:inj_p] = Dict{Int,Any}()
+                for i in ids(pm, :bus)
+                    var(pm, nw, :inj_p)[i] = expr
+                end
+                for (i, branch) in ref(pm, :branch)
+                    expression_branch_power_ohms_yt_from_ptdf(pm, i, nw = nw)
+                end
+            end
+        end
+
+        # `instantiate_model` will error if the `expression_bus_voltage` builds the expression in the `@expression` call
+        pm = instantiate_model("../test/data/matpower/case5.m", DCPPowerModel, build_w_parameter, ref_extensions = [ref_add_connected_components!, ref_add_sm!])
+        @test typeof(var(pm, 0, :va)[10]) == ParameterJuMP.DoubleGenericAffExpr{Float64,JuMP.VariableRef,ParameterJuMP.ParameterRef}
+    end
+end

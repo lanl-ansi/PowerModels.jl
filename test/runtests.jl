@@ -12,6 +12,7 @@ import SCS
 import Juniper
 
 import JuMP
+import ParameterJuMP
 import JSON
 
 import LinearAlgebra
