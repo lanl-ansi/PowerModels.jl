@@ -16,6 +16,6 @@ run_obbt_opf!
 The following functions are meta-algorithms for solving OPF problems where line flow limit constraints are added iteratively to exploit the property that the majority of line flows constraints will be inactive in the optimal solution.
 
 ```@docs
-run_opf_flow_cuts
-run_opf_ptdf_flow_cuts
+run_opf_branch_power_cuts
+run_opf_ptdf_branch_power_cuts
 ```

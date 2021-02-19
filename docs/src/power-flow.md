@@ -115,7 +115,7 @@ marginal performance saving due to reduced data-wrangling overhead.  The
 primary use-case of this model is to compute the voltage angle values from
 a collection of bus injections when working with a formulation that does not
 explicitly model these values, such as a PTDF or LODF formulation.
-The [`run_opf_ptdf_flow_cuts`](@ref) utility function provides an example of
+The [`run_opf_ptdf_branch_power_cuts`](@ref) utility function provides an example of
 how `compute_dc_pf` is typically used.
 
 This solver does not support warm starting.
