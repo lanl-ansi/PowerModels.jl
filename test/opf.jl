@@ -449,12 +449,12 @@ end
         @test isapprox(result["solution"]["branch"]["1"]["pf"], 2.40978; atol = 1e-3)
     end
 
-    data = PowerModels.parse_file("../test/data/matpower/case5.m")
-    new_f_bus = data["branch"]["1"]["t_bus"]
-    data["branch"]["1"]["t_bus"] = data["branch"]["1"]["f_bus"]
-    data["branch"]["1"]["f_bus"] = new_f_bus
-
     @testset "5-bus reverse case" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        new_f_bus = data["branch"]["1"]["t_bus"]
+        data["branch"]["1"]["t_bus"] = data["branch"]["1"]["f_bus"]
+        data["branch"]["1"]["f_bus"] = new_f_bus
+        
         result = run_opf(data, SymmetricDCPLLPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
