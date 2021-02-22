@@ -1228,20 +1228,12 @@ end
 
 
 "checks that each branch has non-negative current ratings and removes zero current ratings"
-function calc_thermal_limits!(data::Dict{String,<:Any})
-    apply_pm!(_calc_thermal_limits!, data)
+function correct_current_limits!(data::Dict{String,<:Any})
+    apply_pm!(_correct_current_limits!, data)
 end
 
 ""
-function correct_current_limits!(data::Dict{String,<:Any})
-    pm_data = get_pm_data(data)
-
-    if _IM.ismultinetwork(pm_data)
-        Memento.error(_LOGGER, "correct_current_limits! does not yet support multinetwork data")
-    end
-
-    modified = Set{Int}()
-
+function _correct_current_limits!(pm_data::Dict{String,<:Any})
     branches = [branch for branch in values(pm_data["branch"])]
 
     if haskey(pm_data, "ne_branch")
@@ -1262,13 +1254,11 @@ function correct_current_limits!(data::Dict{String,<:Any})
                 if all(isapprox(rate_value[c], 0.0) for c in conductors)
                     delete!(branch, rate_key)
                     Memento.warn(_LOGGER, "removing zero $(rate_key) limit on branch $(branch["index"])")
-                    push!(modified, branch["index"])
                 end
             end
         end
     end
 
-    return modified
 end
 
 "checks that each branch has a reasonable current rating-a, if not computes one"
