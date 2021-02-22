@@ -7,9 +7,11 @@ PowerModels.jl Change Log
 ### v0.18.0
 - Update to InfrastructureModels v0.6 (#757) (breaking)
 - Update native power flow solvers to output results dict (#739) (breaking)
+- Improved multi-network support in data function (#764)
 - Ranamed `*_flow_cuts` to `_branch_power_cuts` (#713) (breaking)
 - Removed ref bus index from AdmittanceMatrix (#760) (breaking)
 - Dropped support for JuMP v0.20 (#673) (breaking)
+- Removed data change tracking from `correct_network_data!` (breaking)
 - Removed `_extend_pwl_cost!` function (#716)
 
 ### v0.17.4
