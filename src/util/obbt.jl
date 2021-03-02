@@ -13,7 +13,7 @@ Convex Relaxations with Bound Tightening for Power Network Optimization".
 The function can be invoked as follows:
 
 ```
-data, stats = run_obbt_opf!("matpower/case3.m", JuMP.with_optimizer(Ipopt.Optimizer, kwargs...)
+data, stats = run_obbt_opf!("matpower/case3.m", Ipopt.Optimizer)
 ```
 
 `data` contains the parsed network data with tightened bounds. `stats` contains
@@ -84,7 +84,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
     Memento.info(_LOGGER, "maximum time limit for OBBT set to default value of $time_limit seconds")
 
     model_relaxation = instantiate_model(data, model_type, PowerModels.build_opf)
-    (_IM.ismultinetwork(model_relaxation)) && (Memento.error(_LOGGER, "OBBT is not supported for multi-networks"))
+    (_IM.ismultinetwork(model_relaxation, pm_it_sym)) && (Memento.error(_LOGGER, "OBBT is not supported for multi-networks"))
     (ismulticonductor(model_relaxation)) && (Memento.error(_LOGGER, "OBBT is not supported for multi-conductor networks"))
 
     # check for model_type compatability with OBBT

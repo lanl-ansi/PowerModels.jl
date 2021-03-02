@@ -4,14 +4,24 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.18.0
+- Update to InfrastructureModels v0.6 (#757) (breaking)
+- Update native power flow solvers to output results dict (#739) (breaking)
+- Improved multi-network support in data function (#764)
+- Renamed `*_flow_cuts` to `_branch_power_cuts` (#713) (breaking)
+- Dropped support for JuMP v0.20 (#673) (breaking)
+- Removed ref bus index from AdmittanceMatrix (#760) (breaking)
+- Removed data change tracking from `correct_network_data!` (breaking)
+- Removed `_extend_pwl_cost!` function (#716)
+
 ### v0.17.4
 - Added support for matrix-based analysis of basic network data (#728)
 - Added support for `relax_integrality` in `run_model`
 - Added `export_pti` to write a PSSE file (#752)
 - Added `parse_files` to create a multinetwork from multiples source files
-- Added support for convering matpower ramp rates into per-unit (#561)
+- Added support for converting matpower ramp rates into per-unit (#561)
 - Fixed bug in dual reporting in `constraint_power_balance_ls` (#741)
-- Fixed sign convetion for power injection in `calc_bus_injection`
+- Fixed sign convention for power injection in `calc_bus_injection`
 
 ### v0.17.3
 - Added a to file variant of `export_matpower`

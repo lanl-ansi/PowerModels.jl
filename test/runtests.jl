@@ -19,12 +19,12 @@ import SparseArrays
 using Test
 
 # default setup for solvers
-ipopt_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, print_level=0)
-ipopt_ws_solver = JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-6, mu_init=1e-4, print_level=0)
+ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6, "print_level"=>0)
+ipopt_ws_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6, "mu_init"=>1e-4, "print_level"=>0)
 
-cbc_solver = JuMP.with_optimizer(Cbc.Optimizer, logLevel=0)
-juniper_solver = JuMP.with_optimizer(Juniper.Optimizer, nl_solver=JuMP.with_optimizer(Ipopt.Optimizer, tol=1e-4, print_level=0), log_levels=[])
-scs_solver = JuMP.with_optimizer(SCS.Optimizer, max_iters=100000, eps=1e-4, verbose=0)
+cbc_solver = JuMP.optimizer_with_attributes(Cbc.Optimizer, "logLevel"=>0)
+juniper_solver = JuMP.optimizer_with_attributes(Juniper.Optimizer, "nl_solver"=>JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-4, "print_level"=>0), "log_levels"=>[])
+scs_solver = JuMP.optimizer_with_attributes(SCS.Optimizer, "max_iters"=>100000, "eps"=>1e-4, "verbose"=>0)
 
 include("common.jl")
 
@@ -75,4 +75,5 @@ include("common.jl")
     include("warmstart.jl")
 
     include("docs.jl")
+
 end

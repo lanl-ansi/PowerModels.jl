@@ -467,22 +467,11 @@ TESTLOG = Memento.getlogger(PowerModels)
         mn_data = build_mn_data("../test/data/matpower/case5.m")
 
         @test_throws(TESTLOG, ErrorException, PowerModels.correct_voltage_angle_differences!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_thermal_limits!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_branch_directions!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_branch_loops(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_transformer_parameters!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_bus_types!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_dcline_limits!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_setpoints(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(mn_data))
         @test_throws(TESTLOG, ErrorException, PowerModels.calc_connected_components(mn_data))
 
         Memento.setlevel!(TESTLOG, "warn")
         @test_nowarn PowerModels.correct_reference_buses!(mn_data)
         Memento.setlevel!(TESTLOG, "error")
-
-        @test_throws(TESTLOG, ErrorException, PowerModels.run_ac_opf(mn_data, ipopt_solver))
     end
 
 end

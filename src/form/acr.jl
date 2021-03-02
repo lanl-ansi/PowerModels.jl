@@ -1,7 +1,7 @@
 ### rectangular form of the non-convex AC equations
 
 ""
-function variable_bus_voltage(pm::AbstractACRModel; nw::Int=pm.cnw, bounded::Bool=true, kwargs...)
+function variable_bus_voltage(pm::AbstractACRModel; nw::Int=nw_id_default, bounded::Bool=true, kwargs...)
     variable_bus_voltage_real(pm; nw=nw, bounded=bounded, kwargs...)
     variable_bus_voltage_imaginary(pm; nw=nw, bounded=bounded, kwargs...)
 
@@ -275,27 +275,23 @@ function constraint_voltage_angle_difference(pm::AbstractACRModel, n::Int, f_idx
     JuMP.@constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to))
 end
 
-
 ""
 function sol_data_model!(pm::AbstractACRModel, solution::Dict)
-    if haskey(solution, "nw")
-        nws_data = solution["nw"]
-    else
-        nws_data = Dict("0" => solution)
-    end
+    apply_pm!(_sol_data_model_acr!, solution)
+end
 
-    for (n, nw_data) in nws_data
-        if haskey(nw_data, "bus")
-            for (i,bus) in nw_data["bus"]
-                if haskey(bus, "vr") && haskey(bus, "vi")
-                    bus["vm"] = sqrt(bus["vr"]^2 + bus["vi"]^2)
-                    bus["va"] = atan(bus["vi"], bus["vr"])
 
-                    delete!(bus, "vr")
-                    delete!(bus, "vi")
-                end
+""
+function _sol_data_model_acr!(solution::Dict)
+    if haskey(solution, "bus")
+        for (i, bus) in solution["bus"]
+            if haskey(bus, "vr") && haskey(bus, "vi")
+                bus["vm"] = sqrt(bus["vr"]^2 + bus["vi"]^2)
+                bus["va"] = atan(bus["vi"], bus["vr"])
+
+                delete!(bus, "vr")
+                delete!(bus, "vi")
             end
         end
     end
 end
-

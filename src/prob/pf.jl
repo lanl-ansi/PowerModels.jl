@@ -78,7 +78,10 @@ data using Julia's native linear equation solvers.
 returns a solution data structure in PowerModels Dict format
 """
 function compute_dc_pf(data::Dict{String,<:Any})
-    #TODO check single connected component
+    time_start = time()
+    #TODO check single connected component and ref bus
+
+    ref_bus = reference_bus(data)
 
     bi = calc_bus_injection_active(data)
 
@@ -92,7 +95,10 @@ function compute_dc_pf(data::Dict{String,<:Any})
     sm = calc_susceptance_matrix(data)
 
     bi_idx = [bi[bus_id] for bus_id in sm.idx_to_bus]
-    theta_idx = solve_theta(sm, bi_idx)
+
+    ref_idx = sm.bus_to_idx[ref_bus["index"]]
+
+    theta_idx = solve_theta(sm, ref_idx, bi_idx)
 
     bus_assignment= Dict{String,Any}()
     for (i,bus) in data["bus"]
@@ -103,7 +109,17 @@ function compute_dc_pf(data::Dict{String,<:Any})
         bus_assignment[i] = Dict("va" => va)
     end
 
-    return Dict("per_unit" => data["per_unit"], "bus" => bus_assignment)
+    solution = Dict("per_unit" => data["per_unit"], "bus" => bus_assignment)
+
+    result = Dict(
+        "optimizer" => string(\),
+        "termination_status" => true,
+        "objective" => 0.0,
+        "solution" => solution,
+        "solve_time" => time() - time_start
+    )
+
+    return result
 end
 
 
@@ -267,79 +283,95 @@ documentation for solver configuration parameters.
 Returns a solution data structure in PowerModels Dict format
 """
 function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
-    result = _compute_ac_pf(pf_data; kwargs...)
+    time_start = time()
 
-    if !(result.x_converged || result.f_converged)
+    pf_result = _compute_ac_pf(pf_data; kwargs...)
+
+    solution = Dict("per_unit" => pf_data.data["per_unit"])
+
+    converged = pf_result.x_converged || pf_result.f_converged
+
+    if !converged
         Memento.warn(_LOGGER, "ac power flow solver convergence failed!  use `show_trace = true` for more details")
-        return Dict("per_unit" => pf_data.data["per_unit"])
-    end
-
-    data = pf_data.data
-    bus_gens = pf_data.bus_gens
-    am = pf_data.am
-    bus_type_idx = pf_data.bus_type_idx
+    else
+        data = pf_data.data
+        bus_gens = pf_data.bus_gens
+        am = pf_data.am
+        bus_type_idx = pf_data.bus_type_idx
 
 
-    bus_assignment= Dict{String,Any}()
-    for (i,bus) in data["bus"]
-        if bus["bus_type"] != 4
-            bus_assignment[i] = Dict(
-                "vm" => bus["vm"],
-                "va" => bus["va"]
-            )
-        end
-    end
-
-    gen_assignment= Dict{String,Any}()
-    for (i,gen) in data["gen"]
-        if gen["gen_status"] != 0
-            gen_assignment[i] = Dict(
-                "pg" => gen["pg"],
-                "qg" => gen["qg"]
-            )
-        end
-    end
-
-
-    for (i,bid) in enumerate(am.idx_to_bus)
-        bus = bus_assignment["$(bid)"]
-
-        if bus_type_idx[i] == 1
-            @assert !haskey(bus_gens, bid)
-            bus["vm"] = result.zero[2*i - 1]
-            bus["va"] = result.zero[2*i]
-        elseif bus_type_idx[i] == 2
-            for gen in bus_gens[bid]
-                sol_gen = gen_assignment["$(gen["index"])"]
-                sol_gen["qg"] = 0.0
+        bus_assignment= Dict{String,Any}()
+        for (i,bus) in data["bus"]
+            if bus["bus_type"] != 4
+                bus_assignment[i] = Dict(
+                    "vm" => bus["vm"],
+                    "va" => bus["va"]
+                )
             end
-
-            qg_remaining = -result.zero[2*i - 1]
-            _assign_qg!(gen_assignment, bus_gens[bid], qg_remaining)
-
-            bus["va"] = result.zero[2*i]
-
-        elseif bus_type_idx[i] == 3
-            for gen in bus_gens[bid]
-                sol_gen = gen_assignment["$(gen["index"])"]
-                sol_gen["pg"] = 0.0
-                sol_gen["qg"] = 0.0
-            end
-
-            pg_remaining = -result.zero[2*i - 1]
-            _assign_pg!(gen_assignment, bus_gens[bid], pg_remaining)
-
-            qg_remaining = -result.zero[2*i]
-            _assign_qg!(gen_assignment, bus_gens[bid], qg_remaining)
-        else
-            @assert false
         end
+
+        gen_assignment= Dict{String,Any}()
+        for (i,gen) in data["gen"]
+            if gen["gen_status"] != 0
+                gen_assignment[i] = Dict(
+                    "pg" => gen["pg"],
+                    "qg" => gen["qg"]
+                )
+            end
+        end
+
+
+        for (i,bid) in enumerate(am.idx_to_bus)
+            bus = bus_assignment["$(bid)"]
+
+            if bus_type_idx[i] == 1
+                @assert !haskey(bus_gens, bid)
+                bus["vm"] = pf_result.zero[2*i - 1]
+                bus["va"] = pf_result.zero[2*i]
+            elseif bus_type_idx[i] == 2
+                for gen in bus_gens[bid]
+                    sol_gen = gen_assignment["$(gen["index"])"]
+                    sol_gen["qg"] = 0.0
+                end
+
+                qg_remaining = -pf_result.zero[2*i - 1]
+                _assign_qg!(gen_assignment, bus_gens[bid], qg_remaining)
+
+                bus["va"] = pf_result.zero[2*i]
+
+            elseif bus_type_idx[i] == 3
+                for gen in bus_gens[bid]
+                    sol_gen = gen_assignment["$(gen["index"])"]
+                    sol_gen["pg"] = 0.0
+                    sol_gen["qg"] = 0.0
+                end
+
+                pg_remaining = -pf_result.zero[2*i - 1]
+                _assign_pg!(gen_assignment, bus_gens[bid], pg_remaining)
+
+                qg_remaining = -pf_result.zero[2*i]
+                _assign_qg!(gen_assignment, bus_gens[bid], qg_remaining)
+            else
+                @assert false
+            end
+        end
+
+        solution = Dict(
+            "per_unit" => data["per_unit"],
+            "bus" => bus_assignment,
+            "gen" => gen_assignment,
+        )
     end
 
-    return Dict("per_unit" => data["per_unit"],
-        "bus" => bus_assignment,
-        "gen" => gen_assignment,
+    result = Dict(
+        "optimizer" => "NLsolve",
+        "termination_status" => converged,
+        "objective" => 0.0,
+        "solution" => solution,
+        "solve_time" => time() - time_start
     )
+
+    return result
 end
 
 
@@ -358,9 +390,9 @@ similar to compute_ac_pf but places the solution in the power model's data
 dict instead of a seperate result object
 """
 function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
-    result = _compute_ac_pf(pf_data; kwargs...)
+    pf_result = _compute_ac_pf(pf_data; kwargs...)
 
-    if !(result.x_converged || result.f_converged)
+    if !(pf_result.x_converged || pf_result.f_converged)
         Memento.warn(_LOGGER, "ac power flow solver convergence failed!  use `show_trace = true` for more details")
     end
 
@@ -375,17 +407,17 @@ function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
 
         if bus_type_idx[i] == 1
             @assert !haskey(bus_gens, bid)
-            bus["vm"] = result.zero[2*i - 1]
-            bus["va"] = result.zero[2*i]
+            bus["vm"] = pf_result.zero[2*i - 1]
+            bus["va"] = pf_result.zero[2*i]
         elseif bus_type_idx[i] == 2
             for gen in bus_gens[bid]
                 gen["qg"] = 0.0
             end
 
-            qg_remaining = -result.zero[2*i - 1]
+            qg_remaining = -pf_result.zero[2*i - 1]
             _assign_qg!(data["gen"], bus_gens[bid], qg_remaining)
 
-            bus["va"] = result.zero[2*i]
+            bus["va"] = pf_result.zero[2*i]
 
         elseif bus_type_idx[i] == 3
             for gen in bus_gens[bid]
@@ -393,10 +425,10 @@ function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
                 gen["qg"] = 0.0
             end
 
-            pg_remaining = -result.zero[2*i - 1]
+            pg_remaining = -pf_result.zero[2*i - 1]
             _assign_pg!(data["gen"], bus_gens[bid], pg_remaining)
 
-            qg_remaining = -result.zero[2*i]
+            qg_remaining = -pf_result.zero[2*i]
             _assign_qg!(data["gen"], bus_gens[bid], qg_remaining)
         else
             @assert false
@@ -502,11 +534,11 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
             balance_imag = q_delta_base_idx[i] + q_inject_idx[i]
             for j in neighbors[i]
                 if i == j
-                    balance_real += vm_idx[i] * vm_idx[i] * real(am.matrix[i,i])
-                    balance_imag += vm_idx[i] * vm_idx[i] * imag(am.matrix[i,i])
+                    balance_real += vm_idx[i] * vm_idx[i] *  real(am.matrix[i,i])
+                    balance_imag += vm_idx[i] * vm_idx[i] * -imag(am.matrix[i,i])
                 else
-                    balance_real += vm_idx[i] * vm_idx[j] * (real(am.matrix[i,j]) * cos(va_idx[i] - va_idx[j]) - imag(am.matrix[i,j]) * sin(va_idx[i] - va_idx[j]))
-                    balance_imag += vm_idx[i] * vm_idx[j] * (imag(am.matrix[i,j]) * cos(va_idx[i] - va_idx[j]) + real(am.matrix[i,j]) * sin(va_idx[i] - va_idx[j]))
+                    balance_real += vm_idx[i] * vm_idx[j] * ( real(am.matrix[i,j]) * cos(va_idx[i] - va_idx[j]) + imag(am.matrix[i,j]) * sin(va_idx[i] - va_idx[j]))
+                    balance_imag += vm_idx[i] * vm_idx[j] * (-imag(am.matrix[i,j]) * cos(va_idx[i] - va_idx[j]) + real(am.matrix[i,j]) * sin(va_idx[i] - va_idx[j]))
                 end
             end
             F[2*i - 1] = balance_real
@@ -539,18 +571,18 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
                 if bus_type == 1
                     if i == j
                         y_ii = am.matrix[i,i]
-                        J[f_i_r, x_j_fst] = 2*real(y_ii)*vm_idx[i] +            sum( real(am.matrix[i,k]) * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) - imag(am.matrix[i,k]) * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
-                        J[f_i_r, x_j_snd] =                         vm_idx[i] * sum( real(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) - imag(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                        J[f_i_r, x_j_fst] =  2*real(y_ii)*vm_idx[i] +            sum(  real(am.matrix[i,k]) * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) + imag(am.matrix[i,k]) * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                        J[f_i_r, x_j_snd] =                          vm_idx[i] * sum(  real(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + imag(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
 
-                        J[f_i_i, x_j_fst] = 2*imag(y_ii)*vm_idx[i] +            sum( imag(am.matrix[i,k]) * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
-                        J[f_i_i, x_j_snd] =                         vm_idx[i] * sum( imag(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                        J[f_i_i, x_j_fst] = -2*imag(y_ii)*vm_idx[i] +            sum( -imag(am.matrix[i,k]) * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                        J[f_i_i, x_j_snd] =                          vm_idx[i] * sum( -imag(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
                     else
                         y_ij = am.matrix[i,j]
-                        J[f_i_r, x_j_fst] =             vm_idx[i] * (real(y_ij) * cos(va_idx[i] - va_idx[j]) - imag(y_ij) *  sin(va_idx[i] - va_idx[j]))
-                        J[f_i_r, x_j_snd] = vm_idx[i] * vm_idx[j] * (real(y_ij) * sin(va_idx[i] - va_idx[j]) - imag(y_ij) * -cos(va_idx[i] - va_idx[j]))
+                        J[f_i_r, x_j_fst] =             vm_idx[i] * ( real(y_ij) * cos(va_idx[i] - va_idx[j]) + imag(y_ij) *  sin(va_idx[i] - va_idx[j]))
+                        J[f_i_r, x_j_snd] = vm_idx[i] * vm_idx[j] * ( real(y_ij) * sin(va_idx[i] - va_idx[j]) + imag(y_ij) * -cos(va_idx[i] - va_idx[j]))
 
-                        J[f_i_i, x_j_fst] =             vm_idx[i] * (imag(y_ij) * cos(va_idx[i] - va_idx[j]) + real(y_ij) *  sin(va_idx[i] - va_idx[j]))
-                        J[f_i_i, x_j_snd] = vm_idx[i] * vm_idx[j] * (imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j]))
+                        J[f_i_i, x_j_fst] =             vm_idx[i] * (-imag(y_ij) * cos(va_idx[i] - va_idx[j]) + real(y_ij) *  sin(va_idx[i] - va_idx[j]))
+                        J[f_i_i, x_j_snd] = vm_idx[i] * vm_idx[j] * (-imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j]))
                     end
                 elseif bus_type == 2
                     if i == j
@@ -558,17 +590,17 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
                         J[f_i_i, x_j_fst] = 1.0
 
                         y_ii = am.matrix[i,i]
-                        J[f_i_r, x_j_snd] =              vm_idx[i] * sum( real(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) - imag(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                        J[f_i_r, x_j_snd] =              vm_idx[i] * sum(  real(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + imag(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
 
-                        J[f_i_i, x_j_snd] =              vm_idx[i] * sum( imag(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                        J[f_i_i, x_j_snd] =              vm_idx[i] * sum( -imag(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
                     else
                         J[f_i_r, x_j_fst] = 0.0
                         J[f_i_i, x_j_fst] = 0.0
 
                         y_ij = am.matrix[i,j]
-                        J[f_i_r, x_j_snd] = vm_idx[i] * vm_idx[j] * (real(y_ij) * sin(va_idx[i] - va_idx[j]) - imag(y_ij) * -cos(va_idx[i] - va_idx[j]))
+                        J[f_i_r, x_j_snd] = vm_idx[i] * vm_idx[j] * ( real(y_ij) * sin(va_idx[i] - va_idx[j]) + imag(y_ij) * -cos(va_idx[i] - va_idx[j]))
 
-                        J[f_i_i, x_j_snd] = vm_idx[i] * vm_idx[j] * (imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j]))
+                        J[f_i_i, x_j_snd] = vm_idx[i] * vm_idx[j] * (-imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j]))
                     end
                 elseif bus_type == 3
                     # p_inject_idx[i] = p_delta_base_idx[i] + x[2*i - 1]

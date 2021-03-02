@@ -501,7 +501,7 @@ function objective_variable_pg_cost(pm::AbstractPowerModel, report::Bool=true)
             pg_cost[i] = pg_cost_expr
         end
 
-        report && _IM.sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
+        report && sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
     end
 end
 
@@ -533,7 +533,7 @@ function objective_variable_dc_cost(pm::AbstractPowerModel, report::Bool=true)
             p_dc_cost[i] = dc_p_cost_expr
         end
 
-        report && _IM.sol_component_value(pm, n, :dcline, :p_dc_cost, ids(pm, n, :dcline), p_dc_cost)
+        report && sol_component_value(pm, n, :dcline, :p_dc_cost, ids(pm, n, :dcline), p_dc_cost)
     end
 end
 

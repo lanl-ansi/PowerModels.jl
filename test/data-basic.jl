@@ -136,7 +136,7 @@ end
 
     @testset "basic dc power flow" begin
         data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case5_sw.m"))
-        solution = compute_dc_pf(data)
+        solution = compute_dc_pf(data)["solution"]
 
         va = compute_basic_dc_pf(data)
 

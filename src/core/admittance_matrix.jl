@@ -9,13 +9,11 @@ sparse matrices.
 
 * `idx_to_bus` - a mapping from 1-to-n bus idx values to data model bus ids
 * `bus_to_idx` - a mapping from data model bus ids to 1-to-n bus idx values
-* `ref_idx` - idx representing the reference bus
 * `matrix` - the sparse admittance matrix values
 """
 struct AdmittanceMatrix{T}
     idx_to_bus::Vector{Int}
     bus_to_idx::Dict{Int,Int}
-    ref_idx::Int
     matrix::SparseArrays.SparseMatrixCSC{T,Int}
 end
 
@@ -32,9 +30,6 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
     end
 
     #TODO check single connected component
-
-    # NOTE currently exactly one reference bus is required
-    ref_bus = reference_bus(data)
 
     buses = [x.second for x in data["bus"] if (x.second[pm_component_status["bus"]] != pm_component_status_inactive["bus"])]
     sort!(buses, by=x->x["index"])
@@ -57,10 +52,10 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
             t = tr + ti*im
             lc_fr = branch["g_fr"] + branch["b_fr"]im
             lc_to = branch["g_to"] + branch["b_to"]im
-            push!(I, f_bus); push!(J, t_bus); push!(V, -conj(y)/t)
-            push!(I, t_bus); push!(J, f_bus); push!(V, -conj(y/t))
-            push!(I, f_bus); push!(J, f_bus); push!(V, conj(y + lc_fr)/abs2(t))
-            push!(I, t_bus); push!(J, t_bus); push!(V, conj(y + lc_to))
+            push!(I, f_bus); push!(J, t_bus); push!(V, -y/conj(t))
+            push!(I, t_bus); push!(J, f_bus); push!(V, -(y/t))
+            push!(I, f_bus); push!(J, f_bus); push!(V, (y + lc_fr)/abs2(t))
+            push!(I, t_bus); push!(J, t_bus); push!(V, (y + lc_to))
         end
     end
 
@@ -69,7 +64,7 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
         if shunt[pm_component_status["shunt"]] != pm_component_status_inactive["shunt"] && haskey(bus_to_idx, shunt_bus)
             bus = bus_to_idx[shunt_bus]
 
-            ys = conj(shunt["gs"] + shunt["bs"]im)
+            ys = shunt["gs"] + shunt["bs"]im
 
             push!(I, bus); push!(J, bus); push!(V, ys)
         end
@@ -77,7 +72,7 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
 
     m = sparse(I,J,V)
 
-    return AdmittanceMatrix(idx_to_bus, bus_to_idx, bus_to_idx[ref_bus["index"]], m)
+    return AdmittanceMatrix(idx_to_bus, bus_to_idx, m)
 end
 
 
@@ -91,9 +86,6 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
     end
 
     #TODO check single connected component
-
-    # NOTE currently exactly one reference bus is required
-    ref_bus = reference_bus(data)
 
     buses = [x.second for x in data["bus"] if (x.second[pm_component_status["bus"]] != pm_component_status_inactive["bus"])]
     sort!(buses, by=x->x["index"])
@@ -113,16 +105,16 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
             f_bus = bus_to_idx[f_bus]
             t_bus = bus_to_idx[t_bus]
             b_val = imag(inv(branch["br_r"] + branch["br_x"]im))
-            push!(I, f_bus); push!(J, t_bus); push!(V,  b_val)
-            push!(I, t_bus); push!(J, f_bus); push!(V,  b_val)
-            push!(I, f_bus); push!(J, f_bus); push!(V, -b_val)
-            push!(I, t_bus); push!(J, t_bus); push!(V, -b_val)
+            push!(I, f_bus); push!(J, t_bus); push!(V, -b_val)
+            push!(I, t_bus); push!(J, f_bus); push!(V, -b_val)
+            push!(I, f_bus); push!(J, f_bus); push!(V,  b_val)
+            push!(I, t_bus); push!(J, t_bus); push!(V,  b_val)
         end
     end
 
     m = sparse(I,J,V)
 
-    return AdmittanceMatrix(idx_to_bus, bus_to_idx, bus_to_idx[ref_bus["index"]], m)
+    return AdmittanceMatrix(idx_to_bus, bus_to_idx, m)
 end
 
 
@@ -149,25 +141,35 @@ function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     #TODO check single connected component
 
     sm = calc_susceptance_matrix(data)
-    sm_inv = calc_admittance_matrix_inv(sm)
+
+    ref_bus = reference_bus(data)
+    sm_inv = calc_admittance_matrix_inv(sm, sm.bus_to_idx[ref_bus["index"]])
 
     return sm_inv
 end
 
 "calculates the inverse of the susceptance matrix"
-function calc_admittance_matrix_inv(am::AdmittanceMatrix)
+function calc_admittance_matrix_inv(am::AdmittanceMatrix, ref_idx::Int)
+    num_buses = length(am.idx_to_bus)
+
+    if !(ref_idx > 0 && ref_idx <= num_buses)
+        Memento.error(_LOGGER, "invalid ref_idx in calc_admittance_matrix_inv")
+    end
+
     M = Matrix(am.matrix)
 
-    num_buses = length(am.idx_to_bus)
-    nonref_buses = Int64[i for i in 1:num_buses if i != am.ref_idx]
+    nonref_buses = Int64[i for i in 1:num_buses if i != ref_idx]
     am_inv = zeros(Float64, num_buses, num_buses)
     am_inv[nonref_buses, nonref_buses] = inv(M[nonref_buses, nonref_buses])
 
-    return AdmittanceMatrixInverse(am.idx_to_bus, am.bus_to_idx, am.ref_idx, am_inv)
+    return AdmittanceMatrixInverse(am.idx_to_bus, am.bus_to_idx, ref_idx, am_inv)
 end
 
 
-"extracts a mapping from bus injections to voltage angles from the inverse of an admittance matrix."
+"""
+extracts a mapping from bus injections to voltage angles from the inverse of an admittance matrix.
+refrence bus is defined as part of the given AdmittanceMatrixInverse.
+"""
 function injection_factors_va(am_inv::AdmittanceMatrixInverse{T}, bus_id::Int)::Dict{Int,T} where T
     if !haskey(am_inv.bus_to_idx, bus_id)
         return Dict{Int,T}()
@@ -184,8 +186,11 @@ function injection_factors_va(am_inv::AdmittanceMatrixInverse{T}, bus_id::Int)::
 end
 
 
-"computes a mapping from bus injections to voltage angles implicitly by solving a system of linear equations."
-function injection_factors_va(am::AdmittanceMatrix{T}, bus_id::Int; ref_bus::Int=am.idx_to_bus[am.ref_idx])::Dict{Int,T} where T
+"""
+computes a mapping from bus injections to voltage angles implicitly by solving a system of linear equations.
+an explicit refrence bus id required.
+"""
+function injection_factors_va(am::AdmittanceMatrix{T}, ref_bus::Int, bus_id::Int)::Dict{Int,T} where T
     # !haskey(am.bus_to_idx, bus_id) occurs when the bus is inactive
     if ref_bus == bus_id || !haskey(am.bus_to_idx, bus_id)
         return Dict{Int,T}()
@@ -314,26 +319,26 @@ calc_bus_injection_active(data::Dict{String,<:Any}) = calc_bus_injection(data)[1
 
 
 """
-solves a DC power flow, assumes a single slack power variable at the refrence bus
+solves a DC power flow, assumes a single slack power variable at the given refrence bus
 """
-function solve_theta(am::AdmittanceMatrix, bus_injection::Vector{Float64})
+function solve_theta(am::AdmittanceMatrix, ref_idx::Int, bus_injection::Vector{Float64})
     # TODO can copy be avoided?  @view?
     m = deepcopy(am.matrix)
     bi = deepcopy(bus_injection)
 
     for i in 1:length(am.idx_to_bus)
-        if i == am.ref_idx
+        if i == ref_idx
             # TODO improve scaling of this value
             m[i,i] = 1.0
         else
-            if !iszero(m[am.ref_idx,i])
-                m[am.ref_idx,i] = 0.0
+            if !iszero(m[ref_idx,i])
+                m[ref_idx,i] = 0.0
             end
         end
     end
-    bi[am.ref_idx] = 0.0
+    bi[ref_idx] = 0.0
 
-    theta = m \ bi
+    theta = -m \ bi
 
     return theta
 end

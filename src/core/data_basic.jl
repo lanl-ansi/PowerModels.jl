@@ -17,6 +17,10 @@ users requiring any of the features listed above for their analysis should use
 the non-basic PowerModels routines.
 """
 function make_basic_network(data::Dict{String,<:Any})
+    if _IM.ismultiinfrastructure(data)
+        Memento.error(_LOGGER, "make_basic_network does not support multiinfrastructure data")
+    end
+
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "make_basic_network does not support multinetwork data")
     end
@@ -240,10 +244,7 @@ function calc_basic_admittance_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_admittance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    am = calc_admittance_matrix(data)
-
-    # conj can be removed once #734 is resolved
-    return conj.(am.matrix)
+    return calc_admittance_matrix(data).matrix
 end
 
 
@@ -258,10 +259,7 @@ function calc_basic_susceptance_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_susceptance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    am = calc_susceptance_matrix(data)
-
-    # -1.0 can be removed once #734 is resolved
-    return -1.0*am.matrix
+    return calc_susceptance_matrix(data).matrix
 end
 
 
@@ -340,7 +338,6 @@ function calc_basic_ptdf_matrix(data::Dict{String,<:Any})
     num_bus = length(data["bus"])
     num_branch = length(data["branch"])
 
-    # -1.0 can be removed once #734 is resolved
     b_inv = calc_susceptance_matrix_inv(data).matrix
 
     ptdf = zeros(num_branch, num_bus)
@@ -350,7 +347,7 @@ function calc_basic_ptdf_matrix(data::Dict{String,<:Any})
         bus_to = branch["t_bus"]
         g,b = calc_branch_y(branch)
         for n in 1:num_bus
-            ptdf[branch_idx, n] = -b*(b_inv[bus_fr, n] - b_inv[bus_to, n])
+            ptdf[branch_idx, n] = b*(b_inv[bus_fr, n] - b_inv[bus_to, n])
         end
     end
 
@@ -373,17 +370,16 @@ function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
     g,b = calc_branch_y(branch)
 
     num_bus = length(data["bus"])
-    num_branch = length(data["branch"])
 
+    ref_bus = reference_bus(data)
     am = calc_susceptance_matrix(data)
 
-    if_fr = injection_factors_va(am, branch["f_bus"])
-    if_to = injection_factors_va(am, branch["t_bus"])
+    if_fr = injection_factors_va(am, ref_bus["index"], branch["f_bus"])
+    if_to = injection_factors_va(am, ref_bus["index"], branch["t_bus"])
 
     ptdf_column = zeros(num_bus)
     for n in 1:num_bus
-        # -1.0 can be removed once #734 is resolved
-        ptdf_column[n] = -b*(get(if_fr, n, 0.0) - get(if_to, n, 0.0))
+        ptdf_column[n] = b*(get(if_fr, n, 0.0) - get(if_to, n, 0.0))
     end
 
     return ptdf_column
@@ -391,6 +387,8 @@ end
 
 
 #=
+TODO needs to be updated to new admittance matrix convention
+
 """
 given a basic network data dict, returns a sparse real valued Jacobian matrix
 of the ac power flow problem.  The power variables are ordered by p and then q

@@ -1,6 +1,12 @@
 # tools for working with a PowerModels ref dict structures
 
 
+"PowerModels wrapper for the InfrastructureModels `apply!` function."
+function apply_pm!(func!::Function, ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any}; apply_to_subnetworks::Bool = true)
+    _IM.apply!(func!, ref, data, pm_it_sym; apply_to_subnetworks = apply_to_subnetworks)
+end
+
+
 "compute bus pair level data, can be run on data or ref data structures"
 function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcutor)
     bus_lookup = Dict(bus["index"] => bus for (i,bus) in buses if bus["bus_type"] != 4)

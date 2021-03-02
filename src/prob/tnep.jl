@@ -69,27 +69,31 @@ end
 
 ""
 function ref_add_ne_branch!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
-    for (nw, nw_ref) in ref[:nw]
-        if !haskey(nw_ref, :ne_branch)
-            error(_LOGGER, "required ne_branch data not found")
-        end
+    apply_pm!(_ref_add_ne_branch!, ref, data)
+end
 
-        nw_ref[:ne_branch] = Dict(x for x in nw_ref[:ne_branch] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(nw_ref[:bus]) && x.second["t_bus"] in keys(nw_ref[:bus])))
 
-        nw_ref[:ne_arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in nw_ref[:ne_branch]]
-        nw_ref[:ne_arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in nw_ref[:ne_branch]]
-        nw_ref[:ne_arcs] = [nw_ref[:ne_arcs_from]; nw_ref[:ne_arcs_to]]
+""
+function _ref_add_ne_branch!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
+    if !haskey(ref, :ne_branch)
+        error(_LOGGER, "required ne_branch data not found")
+    end
 
-        ne_bus_arcs = Dict((i, []) for (i,bus) in nw_ref[:bus])
-        for (l,i,j) in nw_ref[:ne_arcs]
-            push!(ne_bus_arcs[i], (l,i,j))
-        end
-        nw_ref[:ne_bus_arcs] = ne_bus_arcs
+    ref[:ne_branch] = Dict(x for x in ref[:ne_branch] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus])))
 
-        if !haskey(nw_ref, :ne_buspairs)
-            ismc = haskey(nw_ref, :conductors)
-            cid = nw_ref[:conductor_ids]
-            nw_ref[:ne_buspairs] = calc_buspair_parameters(nw_ref[:bus], nw_ref[:ne_branch], cid, ismc)
-        end
+    ref[:ne_arcs_from] = [(i,branch["f_bus"],branch["t_bus"]) for (i,branch) in ref[:ne_branch]]
+    ref[:ne_arcs_to]   = [(i,branch["t_bus"],branch["f_bus"]) for (i,branch) in ref[:ne_branch]]
+    ref[:ne_arcs] = [ref[:ne_arcs_from]; ref[:ne_arcs_to]]
+
+    ne_bus_arcs = Dict((i, []) for (i,bus) in ref[:bus])
+    for (l,i,j) in ref[:ne_arcs]
+        push!(ne_bus_arcs[i], (l,i,j))
+    end
+    ref[:ne_bus_arcs] = ne_bus_arcs
+
+    if !haskey(ref, :ne_buspairs)
+        ismc = haskey(ref, :conductors)
+        cid = ref[:conductor_ids]
+        ref[:ne_buspairs] = calc_buspair_parameters(ref[:bus], ref[:ne_branch], cid, ismc)
     end
 end

@@ -12,7 +12,7 @@
 
 
 ""
-function variable_shunt_admittance_factor(pm::AbstractWConvexModels; nw::Int=pm.cnw, relax::Bool=false, report::Bool=true)
+function variable_shunt_admittance_factor(pm::AbstractWConvexModels; nw::Int=nw_id_default, relax::Bool=false, report::Bool=true)
     if !relax
         z_shunt = var(pm, nw)[:z_shunt] = JuMP.@variable(pm.model,
             [i in ids(pm, nw, :shunt)], base_name="$(nw)_z_shunt",
@@ -34,13 +34,13 @@ function variable_shunt_admittance_factor(pm::AbstractWConvexModels; nw::Int=pm.
         start = comp_start_value(ref(pm, nw, :shunt, i), "wz_shunt_start", 1.001)
     )
 
-    report && _IM.sol_component_value(pm, nw, :shunt, :status, ids(pm, nw, :shunt), z_shunt)
-    report && _IM.sol_component_value(pm, nw, :shunt, :wz_shunt, ids(pm, nw, :shunt), wz_shunt)
+    report && sol_component_value(pm, nw, :shunt, :status, ids(pm, nw, :shunt), z_shunt)
+    report && sol_component_value(pm, nw, :shunt, :wz_shunt, ids(pm, nw, :shunt), wz_shunt)
 end
 
 
 "do nothing by default but some formulations require this"
-function variable_storage_current(pm::AbstractWConvexModels; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_storage_current(pm::AbstractWConvexModels; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     ccms = var(pm, nw)[:ccms] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_ccms",
         start = comp_start_value(ref(pm, nw, :storage, i), "ccms_start")
@@ -62,7 +62,7 @@ function variable_storage_current(pm::AbstractWConvexModels; nw::Int=pm.cnw, bou
         end
     end
 
-    report && _IM.sol_component_value(pm, nw, :storage, :ccms, ids(pm, nw, :storage), ccms)
+    report && sol_component_value(pm, nw, :storage, :ccms, ids(pm, nw, :storage), ccms)
 end
 
 
@@ -112,21 +112,20 @@ end
 function constraint_theta_ref(pm::AbstractWModels, n::Int, ref_bus::Int)
 end
 
+
 ""
 function sol_data_model!(pm::AbstractWModels, solution::Dict)
-    if haskey(solution, "nw")
-        nws_data = solution["nw"]
-    else
-        nws_data = Dict("0" => solution)
-    end
+    apply_pm!(_sol_data_model_w!, solution)
+end
 
-    for (n, nw_data) in nws_data
-        if haskey(nw_data, "bus")
-            for (i,bus) in nw_data["bus"]
-                if haskey(bus, "w")
-                    bus["vm"] = sqrt(bus["w"])
-                    delete!(bus, "w")
-                end
+
+""
+function _sol_data_model_w!(solution::Dict)
+    if haskey(solution, "bus")
+        for (i, bus) in solution["bus"]
+            if haskey(bus, "w")
+                bus["vm"] = sqrt(bus["w"])
+                delete!(bus, "w")
             end
         end
     end

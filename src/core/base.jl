@@ -13,12 +13,12 @@ end
 
 
 ""
-ismulticonductor(pm::AbstractPowerModel, nw::Int) = haskey(pm.ref[:nw][nw], :conductors)
-ismulticonductor(pm::AbstractPowerModel; nw::Int=pm.cnw) = haskey(pm.ref[:nw][nw], :conductors)
+ismulticonductor(pm::AbstractPowerModel, nw::Int) = haskey(pm.ref[:it][pm_it_sym][:nw][nw], :conductors)
+ismulticonductor(pm::AbstractPowerModel; nw::Int=nw_id_default) = haskey(pm.ref[:it][pm_it_sym][:nw][nw], :conductors)
 
 ""
-conductor_ids(pm::AbstractPowerModel, nw::Int) = pm.ref[:nw][nw][:conductor_ids]
-conductor_ids(pm::AbstractPowerModel; nw::Int=pm.cnw) = pm.ref[:nw][nw][:conductor_ids]
+conductor_ids(pm::AbstractPowerModel, nw::Int) = pm.ref[:it][pm_it_sym][:nw][nw][:conductor_ids]
+conductor_ids(pm::AbstractPowerModel; nw::Int=nw_id_default) = pm.ref[:it][pm_it_sym][:nw][nw][:conductor_ids]
 
 
 ""
@@ -64,13 +64,13 @@ end
 
 ""
 function instantiate_model(data::Dict{String,<:Any}, model_type::Type, build_method; kwargs...)
-    return _IM.instantiate_model(data, model_type, build_method, ref_add_core!, _pm_global_keys; kwargs...)
+    return _IM.instantiate_model(data, model_type, build_method, ref_add_core!, _pm_global_keys, pm_it_sym; kwargs...)
 end
 
 
 "used for building ref without the need to build a initialize an AbstractPowerModel"
 function build_ref(data::Dict{String,<:Any}; ref_extensions=[])
-    return _IM.build_ref(data, ref_add_core!, _pm_global_keys, ref_extensions=ref_extensions)
+    return _IM.build_ref(data, ref_add_core!, _pm_global_keys, pm_it_name; ref_extensions=ref_extensions)
 end
 
 
@@ -104,7 +104,7 @@ If `:ne_branch` exists, then the following keys are also available with similar 
 * `:ne_branch`, `:ne_arcs_from`, `:ne_arcs_to`, `:ne_arcs`, `:ne_bus_arcs`, `:ne_buspairs`.
 """
 function ref_add_core!(ref::Dict{Symbol,Any})
-    for (nw, nw_ref) in ref[:nw]
+    for (nw, nw_ref) in ref[:it][pm_it_sym][:nw]
         if !haskey(nw_ref, :conductor_ids)
             if !haskey(nw_ref, :conductors)
                 nw_ref[:conductor_ids] = 1:1
@@ -218,3 +218,37 @@ function _check_missing_keys(dict, keys, type)
     end
 end
 
+
+nw_ids(pm::AbstractPowerModel) = _IM.nw_ids(pm, pm_it_sym)
+nws(pm::AbstractPowerModel) = _IM.nws(pm, pm_it_sym)
+
+ids(pm::AbstractPowerModel, nw::Int, key::Symbol) = _IM.ids(pm, pm_it_sym, nw, key)
+ids(pm::AbstractPowerModel, key::Symbol; nw::Int=nw_id_default) = _IM.ids(pm, pm_it_sym, key; nw = nw)
+
+ref(pm::AbstractPowerModel, nw::Int=nw_id_default) = _IM.ref(pm, pm_it_sym, nw)
+ref(pm::AbstractPowerModel, nw::Int, key::Symbol) = _IM.ref(pm, pm_it_sym, nw, key)
+ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = _IM.ref(pm, pm_it_sym, nw, key, idx)
+ref(pm::AbstractPowerModel, nw::Int, key::Symbol, idx, param::String) = _IM.ref(pm, pm_it_sym, nw, key, idx, param)
+ref(pm::AbstractPowerModel, key::Symbol; nw::Int=nw_id_default) = _IM.ref(pm, pm_it_sym, key; nw = nw)
+ref(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=nw_id_default) = _IM.ref(pm, pm_it_sym, key, idx; nw = nw)
+ref(pm::AbstractPowerModel, key::Symbol, idx, param::String; nw::Int=nw_id_default) = _IM.ref(pm, pm_it_sym, key, idx, param; nw = nw)
+
+var(pm::AbstractPowerModel, nw::Int=nw_id_default) = _IM.var(pm, pm_it_sym, nw)
+var(pm::AbstractPowerModel, nw::Int, key::Symbol) = _IM.var(pm, pm_it_sym, nw, key)
+var(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = _IM.var(pm, pm_it_sym, nw, key, idx)
+var(pm::AbstractPowerModel, key::Symbol; nw::Int=nw_id_default) = _IM.var(pm, pm_it_sym, key; nw = nw)
+var(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=nw_id_default) = _IM.var(pm, pm_it_sym, key, idx; nw = nw)
+
+con(pm::AbstractPowerModel, nw::Int=nw_id_default) = _IM.con(pm, pm_it_sym; nw = nw)
+con(pm::AbstractPowerModel, nw::Int, key::Symbol) = _IM.con(pm, pm_it_sym, nw, key)
+con(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = _IM.con(pm, pm_it_sym, nw, key, idx)
+con(pm::AbstractPowerModel, key::Symbol; nw::Int=nw_id_default) = _IM.con(pm, pm_it_sym, key; nw = nw)
+con(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=nw_id_default) = _IM.con(pm, pm_it_sym, key, idx; nw = nw)
+
+sol(pm::AbstractPowerModel, nw::Int=nw_id_default) = _IM.sol(pm, pm_it_sym; nw = nw)
+sol(pm::AbstractPowerModel, nw::Int, key::Symbol) = _IM.sol(pm, pm_it_sym, nw, key)
+sol(pm::AbstractPowerModel, nw::Int, key::Symbol, idx) = _IM.sol(pm, pm_it_sym, nw, key, idx)
+sol(pm::AbstractPowerModel, key::Symbol; nw::Int=nw_id_default) = _IM.sol(pm, pm_it_sym, key; nw = nw)
+sol(pm::AbstractPowerModel, key::Symbol, idx; nw::Int=nw_id_default) = _IM.sol(pm, pm_it_sym, key, idx; nw = nw)
+
+ismultinetwork(pm::AbstractPowerModel) = _IM.ismultinetwork(pm, pm_it_sym)

@@ -33,7 +33,7 @@ end
 
 
 ""
-function variable_bus_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage(pm::AbstractWRMModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs))
     bus_ids = ids(pm, nw, :bus)
 
@@ -93,7 +93,7 @@ function variable_bus_voltage(pm::AbstractWRMModel; nw::Int=pm.cnw, bounded::Boo
         w_idx = lookup_w_index[i]
         var(pm, nw, :w)[i] = WR[w_idx,w_idx]
     end
-    report && _IM.sol_component_value(pm, nw, :bus, :w, ids(pm, nw, :bus), var(pm, nw)[:w])
+    report && sol_component_value(pm, nw, :bus, :w, ids(pm, nw, :bus), var(pm, nw)[:w])
 
     var(pm, nw)[:wr] = Dict{Tuple{Int,Int},Any}()
     var(pm, nw)[:wi] = Dict{Tuple{Int,Int},Any}()
@@ -129,7 +129,7 @@ function ==(d1::_SDconstraintDecomposition, d2::_SDconstraintDecomposition)
     return eq
 end
 
-function variable_bus_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=pm.cnw, bounded::Bool=true, report::Bool=true)
+function variable_bus_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
 
     if haskey(pm.ext, :SDconstraintDecomposition)
         decomp = pm.ext[:SDconstraintDecomposition]
@@ -288,7 +288,7 @@ Return:
 - `lookup_index` s.t. `lookup_index[bus_id]` returns the integer index
 of the bus with `bus_id` in the adjacency matrix.
 """
-function _adjacency_matrix(pm::AbstractPowerModel, nw::Int=pm.cnw)
+function _adjacency_matrix(pm::AbstractPowerModel, nw::Int=nw_id_default)
     bus_ids = ids(pm, nw, :bus)
     buspairs = ref(pm, nw, :buspairs)
 
@@ -312,7 +312,7 @@ of the power grid graph.
 of the bus with `bus_id` in the adjacency matrix.
 - the graph ordering that may be used to reconstruct the chordal extension
 """
-function _chordal_extension(pm::AbstractPowerModel, nw::Int=pm.cnw)
+function _chordal_extension(pm::AbstractPowerModel, nw::Int=nw_id_default)
     adj, lookup_index = _adjacency_matrix(pm, nw)
     nb = size(adj, 1)
     diag_el = sum(adj, dims=1)[:]

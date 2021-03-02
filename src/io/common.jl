@@ -95,45 +95,32 @@ Runs various data quality checks on a PowerModels data dictionary.
 Applies modifications in some cases.  Reports modified component ids.
 """
 function correct_network_data!(data::Dict{String,<:Any})
-    mod_bus = Dict{Symbol,Set{Int}}()
-    mod_gen = Dict{Symbol,Set{Int}}()
-    mod_branch = Dict{Symbol,Set{Int}}()
-    mod_dcline = Dict{Symbol,Set{Int}}()
-
     check_conductors(data)
     check_connectivity(data)
     check_status(data)
     check_reference_bus(data)
-
     make_per_unit!(data)
 
-    mod_branch[:xfer_fix] = correct_transformer_parameters!(data)
-    mod_branch[:vad_bounds] = correct_voltage_angle_differences!(data)
-    mod_branch[:mva_zero] = correct_thermal_limits!(data)
-    mod_branch[:ma_zero] = correct_current_limits!(data)
-    mod_branch[:orientation] = correct_branch_directions!(data)
+    correct_transformer_parameters!(data)
+    correct_voltage_angle_differences!(data)
+    correct_thermal_limits!(data)
+    correct_current_limits!(data)
+    correct_branch_directions!(data)
+
     check_branch_loops(data)
+    correct_dcline_limits!(data)
 
-    mod_dcline[:losses] = correct_dcline_limits!(data)
+    data_ep = _IM.ismultiinfrastructure(data) ? data["it"][pm_it_name] : data
 
-    if length(data["gen"]) > 0 && any(gen["gen_status"] != 0 for (i,gen) in data["gen"])
-        mod_bus[:type] = correct_bus_types!(data)
+    if length(data_ep["gen"]) > 0 && any(gen["gen_status"] != 0 for (i, gen) in data_ep["gen"])
+        correct_bus_types!(data)
     end
-    check_voltage_setpoints(data)
 
+    check_voltage_setpoints(data)
     check_storage_parameters(data)
     check_switch_parameters(data)
 
-    gen, dcline = correct_cost_functions!(data)
-    mod_gen[:cost_pwl] = gen
-    mod_dcline[:cost_pwl] = dcline
+    correct_cost_functions!(data)
 
     simplify_cost_terms!(data)
-
-    return Dict(
-        "bus" => mod_bus,
-        "gen" => mod_gen,
-        "branch" => mod_branch,
-        "dcline" => mod_dcline
-    )
 end

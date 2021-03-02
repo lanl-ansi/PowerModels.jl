@@ -200,7 +200,7 @@ function build_opf_ptdf(pm::DCPPowerModel)
         # requires optional vad parameters
         #constraint_voltage_angle_difference(pm, i)
 
-        # only create these exressions if a line flow is specificed
+        # only create these expressions if a line flow is specified
         if haskey(branch, "rate_a")
             expression_branch_power_ohms_yt_from_ptdf(pm, i)
             expression_branch_power_ohms_yt_to_ptdf(pm, i)
@@ -213,34 +213,25 @@ end
 
 
 ""
-function ref_add_sm!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
-    if _IM.ismultinetwork(data)
-        nws_data = data["nw"]
-    else
-        nws_data = Dict("0" => data)
-    end
-
-    for (n, nw_data) in nws_data
-        nw_id = parse(Int, n)
-        nw_ref = ref[:nw][nw_id]
-
-        nw_ref[:sm] = calc_susceptance_matrix(nw_data)
-    end
+function ref_add_sm!(ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any})
+    apply_pm!(_ref_add_sm!, ref, data)
 end
+
 
 ""
-function ref_add_sm_inv!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
-    if _IM.ismultinetwork(data)
-        nws_data = data["nw"]
-    else
-        nws_data = Dict("0" => data)
-    end
-
-    for (n, nw_data) in nws_data
-        nw_id = parse(Int, n)
-        nw_ref = ref[:nw][nw_id]
-
-        nw_ref[:sm] = calc_susceptance_matrix_inv(nw_data)
-    end
+function _ref_add_sm!(ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any})
+    reference_bus(data) # throws an error if an incorrect number of reference buses are defined
+    ref[:sm] = calc_susceptance_matrix(data)
 end
 
+
+""
+function ref_add_sm_inv!(ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any})
+    apply_pm!(_ref_add_sm_inv!, ref, data)
+end
+
+
+""
+function _ref_add_sm_inv!(ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any})
+    ref[:sm] = calc_susceptance_matrix_inv(data)
+end

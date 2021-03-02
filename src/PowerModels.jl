@@ -12,7 +12,7 @@ import MathOptInterface
 const _MOI = MathOptInterface
 
 import InfrastructureModels
-import InfrastructureModels: ids, ref, var, con, sol, nw_ids, nws, optimize_model!, @im_fields
+import InfrastructureModels: optimize_model!, @im_fields, nw_id_default
 const _IM = InfrastructureModels
 
 # Create our module level logger (this will get precompiled)
@@ -35,6 +35,8 @@ function logger_config!(level)
 end
 
 const _pm_global_keys = Set(["time_series", "per_unit"])
+const pm_it_name = "pm"
+const pm_it_sym = Symbol(pm_it_name)
 
 
 include("io/matpower.jl")

@@ -160,11 +160,11 @@ PowerModels.print_summary(network_data) # mixed units form
 Another useful helper function is `update_data`, which takes two network data dictionaries and updates the values in the first dictionary with the values from the second dictionary.  This is particularly helpful when applying sparse updates to network data.  A good example is using the solution of one computation to update the data in preparation for a second computation, like so,
 ```
 data = PowerModels.parse_file("matpower/case3.m")
-opf_result = run_ac_opf(data, with_optimizer(Ipopt.Optimizer))
+opf_result = run_ac_opf(data, Ipopt.Optimizer)
 PowerModels.print_summary(opf_result["solution"])
 
 PowerModels.update_data!(data, opf_result["solution"])
-pf_result = run_ac_pf(data, with_optimizer(Ipopt.Optimizer))
+pf_result = run_ac_pf(data, Ipopt.Optimizer)
 PowerModels.print_summary(pf_result["solution"])
 ```
 
@@ -172,7 +172,7 @@ A variety of helper functions are available for processing the topology of the n
 ```
 data = PowerModels.parse_file("matpower/case3.m")
 PowerModels.propagate_topology_status!(data)
-opf_result = run_ac_opf(data, with_optimizer(Ipopt.Optimizer))
+opf_result = run_ac_opf(data, Ipopt.Optimizer)
 ```
 The `test/data/matpower/case7_tplgy.m` case provides an example of the kind of component status deductions that can be made.  The `simplify_network!`, `propagate_topology_status!` and `deactivate_isolated_components!` functions can be helpful in diagnosing network models that do not converge or have an infeasible solution.
 
