@@ -30,7 +30,7 @@ This enables the definition of a wide variety of power network formulations and 
 
 **Network Data Formats**
 * Matpower ".m" files
-* PTI ".raw" files (PSS(R)E v33 specfication)
+* PTI ".raw" files (PSS(R)E v33 specification)
 
 
 ## Documentation
@@ -51,7 +51,7 @@ Community-driven development and enhancement of PowerModels are welcome and enco
 ## Acknowledgments
 
 This code has been developed as part of the Advanced Network Science Initiative at Los Alamos National Laboratory.
-The primary developer is Carleton Coffrin(@ccoffrin) with support from the following contributors,
+The primary developer is Carleton Coffrin (@ccoffrin) with support from the following contributors,
 - Per Aaslid (@peraaslid) SINTEF ER, Branch flow storage model and linear branch flow formulation
 - Juan Luis Barbería (@jbarberia) UTN-BA, PSS(R)E v33 data export
 - Russell Bent (@rb004f) LANL, Matpower export, TNEP problem specification
@@ -65,6 +65,7 @@ The primary developer is Carleton Coffrin(@ccoffrin) with support from the follo
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 - Kaarthik Sundar (@kaarthiksundar) LANL, OBBT utility
+- Byron Tasseff (@tasseff) LANL, multi-infrastructure updates
 
 
 ## Citing PowerModels
@@ -81,7 +82,7 @@ If you find PowerModels useful in your work, we kindly request that you cite the
   doi = {10.23919/PSCC.2018.8442948}
 }
 ```
-Citation of the orginal works for problem denifitions (e.g. OPF) and [power flow formulations](https://lanl-ansi.github.io/PowerModels.jl/stable/formulation-details/) (e.g. SOC) is also encouraged when publishing works that use PowerModels.
+Citation of the original works for problem definitions (e.g. OPF) and [power flow formulations](https://lanl-ansi.github.io/PowerModels.jl/stable/formulation-details/) (e.g. SOC) is also encouraged when publishing works that use PowerModels.
 
 
 ## License
