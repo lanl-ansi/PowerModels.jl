@@ -1007,7 +1007,9 @@ end
         pm = InfrastructureModels.InitializeInfrastructureModel(SparseSDPWRMPowerModel, data, PowerModels._pm_global_keys, PowerModels.pm_it_sym)
         PowerModels.ref_add_core!(pm.ref)
 
-        cadj, lookup_index, sigma = PowerModels._chordal_extension(pm)
+        nw = collect(nw_ids(pm))[1]
+
+        cadj, lookup_index, sigma = PowerModels._chordal_extension(pm, nw)
         cliques = PowerModels._maximal_cliques(cadj)
         lookup_bus_index = Dict((reverse(p) for p = pairs(lookup_index)))
         groups = [[lookup_bus_index[gi] for gi in g] for g in cliques]

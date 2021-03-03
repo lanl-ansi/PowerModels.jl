@@ -137,7 +137,7 @@ function variable_bus_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=nw_id_defau
         lookup_index = decomp.lookup_index
         lookup_bus_index = Dict((reverse(p) for p = pairs(lookup_index)))
     else
-        cadj, lookup_index, ordering = _chordal_extension(pm)
+        cadj, lookup_index, ordering = _chordal_extension(pm, nw)
         groups = _maximal_cliques(cadj)
         lookup_bus_index = Dict((reverse(p) for p = pairs(lookup_index)))
         groups = [[lookup_bus_index[gi] for gi in g] for g in groups]
@@ -312,7 +312,7 @@ of the power grid graph.
 of the bus with `bus_id` in the adjacency matrix.
 - the graph ordering that may be used to reconstruct the chordal extension
 """
-function _chordal_extension(pm::AbstractPowerModel, nw::Int=nw_id_default)
+function _chordal_extension(pm::AbstractPowerModel, nw::Int)
     adj, lookup_index = _adjacency_matrix(pm, nw)
     nb = size(adj, 1)
     diag_el = sum(adj, dims=1)[:]

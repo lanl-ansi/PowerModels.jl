@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fixed multi-network support in sparse SDP models (#769)
 
 ### v0.18.0
 - Update to InfrastructureModels v0.6 (#757) (breaking)
