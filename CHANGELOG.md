@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Fixed multi-network support in sparse SDP models (#769)
+- Fixed data processing of pwl costs with identical points
 
 ### v0.18.0
 - Update to InfrastructureModels v0.6 (#757) (breaking)
