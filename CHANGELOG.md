@@ -3,6 +3,8 @@ PowerModels.jl Change Log
 
 ### Staged
 - Fixed multi-network support in sparse SDP models (#769)
+- Fixed data processing of PWL costs with identical points
+- Relax test bounds to support cross-platform variation in Julia v1.6
 
 ### v0.18.0
 - Update to InfrastructureModels v0.6 (#757) (breaking)

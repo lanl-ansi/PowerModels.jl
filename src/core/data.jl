@@ -1937,12 +1937,20 @@ function _remove_pwl_cost_duplicates!(id, comp, type_name; tolerance=1e-2)
         end
     end
 
+    # in the event that all of the given points are the same
+    # this code ensures that at least two of the points remain
+    if length(unique_costs) <= 2
+        push!(unique_costs, comp["cost"][end-1])
+        push!(unique_costs, comp["cost"][end])
+    end
+
     if length(unique_costs) < length(comp["cost"])
         Memento.warn(_LOGGER, "removing duplicate points from pwl cost on $(type_name) $(id), $(comp["cost"]) -> $(unique_costs)")
         comp["cost"] = unique_costs
         comp["ncost"] = div(length(unique_costs), 2)
         return true
     end
+
     return false
 end
 

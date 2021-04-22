@@ -65,6 +65,8 @@
 end
 
 
+# updated pg/qg tolerance to 1e-6 on 04/21/2021 to fix cross platform stability
+
 @testset "test native ac pf solver" begin
     # requires dc line support in ac solver
     # @testset "3-bus case" begin
@@ -84,8 +86,8 @@ end
     #         @test isapprox(result["solution"]["bus"][i]["va"], native["solution"]["bus"][i]["va"]; atol = 1e-7)
     #         @test isapprox(result["solution"]["bus"][i]["vm"], native["solution"]["bus"][i]["vm"]; atol = 1e-7)
 
-    #         @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-7)
-    #         @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-7)
+    #         @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-6)
+    #         @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
     #     end
     # end
     @testset "5-bus case" begin
@@ -111,8 +113,8 @@ end
             @test isapprox(result["solution"]["bus"][i]["va"], native["solution"]["bus"][i]["va"]; atol = 1e-7)
             @test isapprox(result["solution"]["bus"][i]["vm"], native["solution"]["bus"][i]["vm"]; atol = 1e-7)
 
-            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-7)
-            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-7)
+            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-6)
+            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
         end
     end
     @testset "5-bus asymmetric case" begin
@@ -133,8 +135,8 @@ end
             @test isapprox(result["solution"]["bus"][i]["va"], native["solution"]["bus"][i]["va"]; atol = 1e-7)
             @test isapprox(result["solution"]["bus"][i]["vm"], native["solution"]["bus"][i]["vm"]; atol = 1e-7)
 
-            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-7)
-            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-7)
+            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-6)
+            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
         end
     end
     # compute_ac_pf does not yet support multiple slack buses
@@ -155,8 +157,8 @@ end
     #         @test isapprox(result["solution"]["bus"][i]["va"], native["solution"]["bus"][i]["va"]; atol = 1e-7)
     #         @test isapprox(result["solution"]["bus"][i]["vm"], native["solution"]["bus"][i]["vm"]; atol = 1e-7)
 
-    #         @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-7)
-    #         @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-7)
+    #         @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-6)
+    #         @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
     #     end
     # end
     @testset "14-bus case, vm fixed non-1.0 value" begin
@@ -177,8 +179,8 @@ end
             @test isapprox(result["solution"]["bus"][i]["va"], native["solution"]["bus"][i]["va"]; atol = 1e-7)
             @test isapprox(result["solution"]["bus"][i]["vm"], native["solution"]["bus"][i]["vm"]; atol = 1e-7)
 
-            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-7)
-            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-7)
+            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-6)
+            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
         end
     end
     @testset "24-bus rts case" begin
@@ -200,8 +202,8 @@ end
             @test isapprox(result["solution"]["bus"][i]["va"], native["solution"]["bus"][i]["va"]; atol = 1e-7)
             @test isapprox(result["solution"]["bus"][i]["vm"], native["solution"]["bus"][i]["vm"]; atol = 1e-7)
 
-            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-7)
-            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-7)
+            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-6)
+            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
         end
     end
 end
@@ -221,8 +223,8 @@ end
     #         @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
     #     end
     #     for (i,gen) in native["solution"]["gen"]
-    #         @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
-    #         @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+    #         @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-6)
+    #         @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-6)
     #     end
     # end
     @testset "5-bus case" begin
@@ -237,8 +239,8 @@ end
             @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
         end
         for (i,gen) in native["solution"]["gen"]
-            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
-            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-6)
+            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-6)
         end
     end
     @testset "5-bus asymmetric case" begin
@@ -253,8 +255,8 @@ end
             @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
         end
         for (i,gen) in native["solution"]["gen"]
-            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
-            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-6)
+            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-6)
         end
     end
     # compute_ac_pf does not yet support multiple slack buses
@@ -270,8 +272,8 @@ end
     #         @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
     #     end
     #     for (i,gen) in native["solution"]["gen"]
-    #         @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
-    #         @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+    #         @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-6)
+    #         @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-6)
     #     end
     # end
     @testset "14-bus case, vm fixed non-1.0 value" begin
@@ -286,8 +288,8 @@ end
             @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
         end
         for (i,gen) in native["solution"]["gen"]
-            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
-            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-6)
+            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-6)
         end
     end
     @testset "24-bus rts case" begin
@@ -302,8 +304,8 @@ end
             @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
         end
         for (i,gen) in native["solution"]["gen"]
-            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
-            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-6)
+            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-6)
         end
     end
 end
@@ -335,8 +337,8 @@ end
             @test isapprox(result["solution"]["bus"][i]["va"], result_ws["solution"]["bus"][i]["va"]; atol = 1e-7)
             @test isapprox(result["solution"]["bus"][i]["vm"], result_ws["solution"]["bus"][i]["vm"]; atol = 1e-7)
 
-            @test isapprox(bus_pg_ini[i], bus_pg_ws[i]; atol = 1e-7)
-            @test isapprox(bus_qg_ini[i], bus_qg_ws[i]; atol = 1e-7)
+            @test isapprox(bus_pg_ini[i], bus_pg_ws[i]; atol = 1e-6)
+            @test isapprox(bus_qg_ini[i], bus_qg_ws[i]; atol = 1e-6)
         end
     end
 
@@ -365,8 +367,8 @@ end
             @test isapprox(solution["solution"]["bus"][i]["va"], solution_ws["solution"]["bus"][i]["va"]; atol = 1e-7)
             @test isapprox(solution["solution"]["bus"][i]["vm"], solution_ws["solution"]["bus"][i]["vm"]; atol = 1e-7)
 
-            @test isapprox(bus_pg_ini[i], bus_pg_ws[i]; atol = 1e-7)
-            @test isapprox(bus_qg_ini[i], bus_qg_ws[i]; atol = 1e-7)
+            @test isapprox(bus_pg_ini[i], bus_pg_ws[i]; atol = 1e-6)
+            @test isapprox(bus_qg_ini[i], bus_qg_ws[i]; atol = 1e-6)
         end
     end
 end
@@ -391,8 +393,8 @@ end
             @test isapprox(result["solution"]["bus"][i]["va"], native["solution"]["bus"][i]["va"]; atol = 1e-7)
             @test isapprox(result["solution"]["bus"][i]["vm"], native["solution"]["bus"][i]["vm"]; atol = 1e-7)
 
-            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-7)
-            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-7)
+            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-6)
+            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
         end
     end
     @testset "5-bus case, flat_start" begin
@@ -413,8 +415,8 @@ end
             @test isapprox(result["solution"]["bus"][i]["va"], native["solution"]["bus"][i]["va"]; atol = 1e-7)
             @test isapprox(result["solution"]["bus"][i]["vm"], native["solution"]["bus"][i]["vm"]; atol = 1e-7)
 
-            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-7)
-            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-7)
+            @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-6)
+            @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
         end
     end
     @testset "5-bus case, in-place and nsolve method parameter" begin
@@ -429,8 +431,8 @@ end
             @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
         end
         for (i,gen) in native["solution"]["gen"]
-            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-7)
-            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-7)
+            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-6)
+            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-6)
         end
     end
 end

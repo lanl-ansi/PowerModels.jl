@@ -183,7 +183,8 @@ end
     @testset "5-bus with asymmetric line charge" begin
         result = run_ots("../test/data/pti/case5_alc.raw", QCRMPowerModel, juniper_solver)
 
-        check_br_status(result["solution"], 4, 4)
+        # updated ub to 5 on 04/21/2021 to fix cross platform stability
+        check_br_status(result["solution"], 4, 5)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 1003.97; atol = 5e0)
