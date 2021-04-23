@@ -4,6 +4,7 @@ PowerModels.jl Change Log
 ### Staged
 - Fixed multi-network support in sparse SDP models (#769)
 - Fixed data processing of PWL costs with identical points
+- Fixed parsing of impedance correction keys in PSSE parser
 - Relax test bounds to support cross-platform variation in Julia v1.6
 
 ### v0.18.0
