@@ -427,6 +427,20 @@ end
             end
         end
 
+        @testset "impedance correction keys" begin
+            data = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw"; import_all=true)
+
+            for (i,icd) in data["impedance correction"]
+                for i in 1:11
+                    t_key = "t$(i)"
+                    f_key = "f$(i)"
+                    if haskey(icd, t_key) || haskey(icd, f_key)
+                        @test haskey(icd, t_key) && haskey(icd, f_key)
+                    end
+                end
+            end
+        end
+
         @testset "arrays in VSC-HVDC" begin
             data = PowerModels.parse_file("../test/data/pti/vsc-hvdc_test.raw"; import_all=true)
 

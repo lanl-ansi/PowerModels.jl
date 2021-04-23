@@ -96,30 +96,52 @@ function _create_starbus_from_transformer(pm_data::Dict, transformer::Dict, star
 end
 
 
-"Imports remaining keys from `data_in` into `data_out`, excluding keys in `exclude`"
-function _import_remaining!(data_out::Dict, data_in::Dict, import_all::Bool; exclude=[])
-    if import_all
-        for (k, v) in data_in
-            if !(k in exclude)
-                if isa(v, Array)
-                    for (n, item) in enumerate(v)
-                        if isa(item, Dict)
-                            _import_remaining!(item, item, import_all)
-                            if !("index" in keys(item))
-                                item["index"] = n
-                            end
+"Imports remaining top level component lists from `data_in` into `data_out`, excluding keys in `exclude`"
+function _import_remaining_comps!(data_out::Dict, data_in::Dict; exclude=[])
+    for (comp_class, v) in data_in
+        if !(comp_class in exclude)
+            comps_out = Dict{String,Any}()
+
+            if isa(v, Array)
+                for (n, item) in enumerate(v)
+                    if isa(item, Dict)
+                        comp_out = Dict{String,Any}()
+                        _import_remaining_keys!(comp_out, item)
+                        if !("index" in keys(item))
+                            comp_out["index"] = n
                         end
+                        comps_out["$(n)"] = comp_out
+                    else
+                        error(_LOGGER, "psse data parsing error, please post an issue")
                     end
-                elseif isa(v, Dict)
-                    _import_remaining!(v, v, import_all)
                 end
-                data_out[lowercase(k)] = v
-                delete!(data_in, k)
+            elseif isa(v, Dict)
+                comps_out = Dict{String,Any}()
+                _import_remaining_keys!(comps_out, v)
+            else
+                error(_LOGGER, "psse data parsing error, please post an issue")
             end
+
+            data_out[lowercase(comp_class)] = comps_out
         end
     end
 end
 
+"Imports remaining keys from a source component into detestation component, excluding keys in `exclude`"
+function _import_remaining_keys!(comp_dest::Dict, comp_src::Dict; exclude=[])
+    for (k, v) in comp_src
+        if !(k in exclude)
+            key = lowercase(k)
+            if !haskey(comp_dest, key)
+                comp_dest[key] = v
+            else
+                if key != "index"
+                    warn(_LOGGER, "duplicate key $(key), please post an issue")
+                end
+            end
+        end
+    end
+end
 
 """
     _psse2pm_branch!(pm_data, pti_data)
@@ -156,7 +178,9 @@ function _psse2pm_branch!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["source_id"] = ["branch", sub_data["f_bus"], sub_data["t_bus"], pop!(branch, "CKT")]
             sub_data["index"] = i
 
-            _import_remaining!(sub_data, branch, import_all; exclude=["B", "BI", "BJ"])
+            if import_all
+                _import_remaining_keys!(sub_data, branch; exclude=["B", "BI", "BJ"])
+            end
 
             if sub_data["rate_a"] == 0.0
                 delete!(sub_data, "rate_a")
@@ -207,7 +231,9 @@ function _psse2pm_generator!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["source_id"] = ["generator", sub_data["gen_bus"], pop!(gen, "ID")]
             sub_data["index"] = length(pm_data["gen"]) + 1
 
-            _import_remaining!(sub_data, gen, import_all)
+            if import_all
+                _import_remaining_keys!(sub_data, gen)
+            end
 
             push!(pm_data["gen"], sub_data)
         end
@@ -241,7 +267,9 @@ function _psse2pm_bus!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["source_id"] = ["bus", "$(bus["I"])"]
             sub_data["index"] = pop!(bus, "I")
 
-            _import_remaining!(sub_data, bus, import_all)
+            if import_all
+                _import_remaining_keys!(sub_data, bus)
+            end
 
             push!(pm_data["bus"], sub_data)
         end
@@ -269,7 +297,9 @@ function _psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["source_id"] = ["load", sub_data["load_bus"], pop!(load, "ID")]
             sub_data["index"] = length(pm_data["load"]) + 1
 
-            _import_remaining!(sub_data, load, import_all)
+            if import_all
+                _import_remaining_keys!(sub_data, load)
+            end
 
             push!(pm_data["load"], sub_data)
         end
@@ -300,7 +330,9 @@ function _psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["source_id"] = ["fixed shunt", sub_data["shunt_bus"], pop!(shunt, "ID")]
             sub_data["index"] = length(pm_data["shunt"]) + 1
 
-            _import_remaining!(sub_data, shunt, import_all)
+            if import_all
+                _import_remaining_keys!(sub_data, shunt)
+            end
 
             push!(pm_data["shunt"], sub_data)
         end
@@ -320,7 +352,9 @@ function _psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["source_id"] = ["switched shunt", sub_data["shunt_bus"], pop!(shunt, "SWREM")]
             sub_data["index"] = length(pm_data["shunt"]) + 1
 
-            _import_remaining!(sub_data, shunt, import_all)
+            if import_all
+                _import_remaining_keys!(sub_data, shunt)
+            end
 
             push!(pm_data["shunt"], sub_data)
         end
@@ -454,10 +488,12 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 sub_data["transformer"] = true
                 sub_data["index"] = length(pm_data["branch"]) + 1
 
-                _import_remaining!(sub_data, transformer, import_all;
-                    exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
-                        "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3",
-                        "SBASE3-1", "MAG1", "MAG2", "STAT", "NOMV1", "NOMV2"])
+                if import_all
+                    _import_remaining_keys!(sub_data, transformer;
+                        exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
+                            "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3",
+                            "SBASE3-1", "MAG1", "MAG2", "STAT", "NOMV1", "NOMV2"])
+                end
 
                 push!(pm_data["branch"], sub_data)
             else  # Three-winding Transformers
@@ -572,14 +608,16 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     sub_data["transformer"] = true
                     sub_data["index"] = length(pm_data["branch"]) + 1
 
-                    _import_remaining!(sub_data, transformer, import_all; 
-                        exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
-                              "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3", "CKT",
-                              "SBASE3-1", "MAG1", "MAG2", "STAT","NOMV1", "NOMV2",
-                              "NOMV3", "WINDV1", "WINDV2", "WINDV3", "RATA1",
-                              "RATA2", "RATA3", "RATB1", "RATB2", "RATB3", "RATC1",
-                              "RATC2", "RATC3", "ANG1", "ANG2", "ANG3"]
-                        )
+                    if import_all
+                        _import_remaining_keys!(sub_data, transformer; 
+                            exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
+                                  "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3", "CKT",
+                                  "SBASE3-1", "MAG1", "MAG2", "STAT","NOMV1", "NOMV2",
+                                  "NOMV3", "WINDV1", "WINDV2", "WINDV3", "RATA1",
+                                  "RATA2", "RATA3", "RATB1", "RATB2", "RATB3", "RATC1",
+                                  "RATC2", "RATC3", "ANG1", "ANG2", "ANG3"]
+                            )
+                    end
 
                     push!(pm_data["branch"], sub_data)
                 end
@@ -657,7 +695,9 @@ function _psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["source_id"] = ["two-terminal dc", sub_data["f_bus"], sub_data["t_bus"], pop!(dcline, "NAME")]
             sub_data["index"] = length(pm_data["dcline"]) + 1
 
-            _import_remaining!(sub_data, dcline, import_all)
+            if import_all
+                _import_remaining_keys!(sub_data, dcline)
+            end
 
             push!(pm_data["dcline"], sub_data)
         end
@@ -711,7 +751,16 @@ function _psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["source_id"] = ["vsc dc", sub_data["f_bus"], sub_data["t_bus"], pop!(dcline, "NAME")]
             sub_data["index"] = length(pm_data["dcline"]) + 1
 
-            _import_remaining!(sub_data, dcline, import_all)
+            if import_all
+                _import_remaining_keys!(sub_data, dcline)
+
+                for cb in sub_data["converter buses"]
+                    for (k,v) in cb
+                        cb[lowercase(k)] = v
+                        delete!(cb, k)
+                    end
+                end
+            end
 
             push!(pm_data["dcline"], sub_data)
         end
@@ -746,7 +795,9 @@ function _pti_to_powermodels!(pti_data::Dict; import_all=false, validate=true)::
     pm_data["baseMVA"] = pop!(pti_data["CASE IDENTIFICATION"][1], "SBASE")
     pm_data["name"] = pop!(pti_data["CASE IDENTIFICATION"][1], "NAME")
 
-    _import_remaining!(pm_data, pti_data["CASE IDENTIFICATION"][1], import_all)
+    if import_all
+        _import_remaining_keys!(pm_data, pti_data["CASE IDENTIFICATION"][1])
+    end
 
     _psse2pm_bus!(pm_data, pti_data, import_all)
     _psse2pm_load!(pm_data, pti_data, import_all)
@@ -758,11 +809,13 @@ function _pti_to_powermodels!(pti_data::Dict; import_all=false, validate=true)::
     _psse2pm_storage!(pm_data, pti_data, import_all)
     _psse2pm_switch!(pm_data, pti_data, import_all)
 
-    _import_remaining!(pm_data, pti_data, import_all; exclude=[
-        "CASE IDENTIFICATION", "BUS", "LOAD", "FIXED SHUNT",
-        "SWITCHED SHUNT", "GENERATOR","BRANCH", "TRANSFORMER",
-        "TWO-TERMINAL DC", "VOLTAGE SOURCE CONVERTER"
-    ])
+    if import_all
+        _import_remaining_comps!(pm_data, pti_data; exclude=[
+            "CASE IDENTIFICATION", "BUS", "LOAD", "FIXED SHUNT",
+            "SWITCHED SHUNT", "GENERATOR","BRANCH", "TRANSFORMER",
+            "TWO-TERMINAL DC", "VOLTAGE SOURCE CONVERTER"
+        ])
+    end
 
     # update lookup structure
     for (k, v) in pm_data
