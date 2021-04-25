@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.18.1
 - Fixed multi-network support in sparse SDP models (#769)
 - Fixed data processing of PWL costs with identical points
 - Fixed parsing of impedance correction keys in PSSE parser
