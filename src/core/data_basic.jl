@@ -386,8 +386,6 @@ function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
 end
 
 
-#=
-TODO needs to be updated to new admittance matrix convention
 
 """
 given a basic network data dict, returns a sparse real valued Jacobian matrix
@@ -399,98 +397,40 @@ function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_jacobian_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    num_bus = length(data["bus"])
-
-    vm = [bus["vm"] for (i,bus) in data["bus"]]
-    va = [bus["va"] for (i,bus) in data["bus"]]
     am = calc_admittance_matrix(data)
 
+    vm = Dict(am.bus_to_idx[bus["index"]] => bus["vm"] for (i, bus) in data["bus"])
+    va = Dict(am.bus_to_idx[bus["index"]] => bus["va"] for (i, bus) in data["bus"])
 
-    neighbors = [Set{Int}([i]) for i in 1:num_bus]
-    I, J, V = findnz(am.matrix)
-    for nz in eachindex(V)
-        push!(neighbors[I[nz]], J[nz])
-        push!(neighbors[J[nz]], I[nz])
-    end
+    V = [vmag * exp(va[i] * 1im) for (i, vmag) in sort(vm)]
+    diag_V = LinearAlgebra.Diagonal(V)
+    diag_V_norm = LinearAlgebra.Diagonal([1.0 * exp(vang * 1im) for (i, vang) in sort(va)])
 
+    I = am.matrix * V
+    diag_I = LinearAlgebra.Diagonal(I)
 
-    J0_I = Int64[]
-    J0_J = Int64[]
-    J0_V = Float64[]
+    dSdva = 1im * diag_V * conj(diag_I .- am.matrix * diag_V)
+    dSdvm = diag_V * conj(am.matrix * diag_V_norm) + conj(diag_I) * diag_V
 
-    for i in 1:num_bus
-        f_i_r = i
-        f_i_i = i + num_bus
-
-        for j in neighbors[i]
-            x_j_fst = j + num_bus
-            x_j_snd = j
-
-            push!(J0_I, f_i_r); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
-            push!(J0_I, f_i_r); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
-            push!(J0_I, f_i_i); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
-            push!(J0_I, f_i_i); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
+    pv = []; pq = []; ref = []
+    for (_, bus) in data["bus"]
+        i, type = bus["index"], bus["bus_type"]
+        if type == 1
+            push!(pq, am.bus_to_idx[i])
+        elseif type == 2
+            push!(pv, am.bus_to_idx[i])
+        elseif type == 3
+            push!(ref, am.bus_to_idx[i])
+        else
+            @assert false
         end
     end
 
-    J = sparse(J0_I, J0_J, J0_V)
+    H = real(dSdva[[pv; pq], [pv; pq]])
+    M = real(dSdvm[[pv; pq], pq])
+    N = imag(dSdva[pq, [pv; pq]])
+    L = imag(dSdvm[pq, pq])
 
-
-    for i in 1:num_bus
-        f_i_r = i
-        f_i_i = i + num_bus
-
-        for j in neighbors[i]
-            x_j_fst = j + num_bus
-            x_j_snd = j
-
-            bus_type = data["bus"]["$(j)"]["bus_type"]
-            if bus_type == 1
-                if i == j
-                    y_ii = am.matrix[i,i]
-                    J[f_i_r, x_j_fst] = 2*real(y_ii)*vm[i] +            sum( real(am.matrix[i,k]) * vm[k] *  cos(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i)
-                    J[f_i_r, x_j_snd] =                         vm[i] * sum( real(am.matrix[i,k]) * vm[k] * -sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
-
-                    J[f_i_i, x_j_fst] = 2*imag(y_ii)*vm[i] +            sum( imag(am.matrix[i,k]) * vm[k] *  cos(va[i] - va[k]) + real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i)
-                    J[f_i_i, x_j_snd] =                         vm[i] * sum( imag(am.matrix[i,k]) * vm[k] * -sin(va[i] - va[k]) + real(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
-                else
-                    y_ij = am.matrix[i,j]
-                    J[f_i_r, x_j_fst] =         vm[i] * (real(y_ij) * cos(va[i] - va[j]) - imag(y_ij) *  sin(va[i] - va[j]))
-                    J[f_i_r, x_j_snd] = vm[i] * vm[j] * (real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * -cos(va[i] - va[j]))
-
-                    J[f_i_i, x_j_fst] =         vm[i] * (imag(y_ij) * cos(va[i] - va[j]) + real(y_ij) *  sin(va[i] - va[j]))
-                    J[f_i_i, x_j_snd] = vm[i] * vm[j] * (imag(y_ij) * sin(va[i] - va[j]) + real(y_ij) * -cos(va[i] - va[j]))
-                end
-            elseif bus_type == 2
-                if i == j
-                    J[f_i_r, x_j_fst] = 0.0
-                    J[f_i_i, x_j_fst] = 1.0
-
-                    y_ii = am.matrix[i,i]
-                    J[f_i_r, x_j_snd] =   vm[i] * sum( real(am.matrix[i,k]) * vm[k] * -sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
-                    J[f_i_i, x_j_snd] =   vm[i] * sum( imag(am.matrix[i,k]) * vm[k] * -sin(va[i] - va[k]) + real(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
-                else
-                    J[f_i_r, x_j_fst] = 0.0
-                    J[f_i_i, x_j_fst] = 0.0
-
-                    y_ij = am.matrix[i,j]
-                    J[f_i_r, x_j_snd] = vm[i] * vm[j] * (real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * -cos(va[i] - va[j]))
-                    J[f_i_i, x_j_snd] = vm[i] * vm[j] * (imag(y_ij) * sin(va[i] - va[j]) + real(y_ij) * -cos(va[i] - va[j]))
-                end
-            elseif bus_type == 3
-                if i == j
-                    J[f_i_r, x_j_fst] = 1.0
-                    J[f_i_r, x_j_snd] = 0.0
-                    J[f_i_i, x_j_fst] = 0.0
-                    J[f_i_i, x_j_snd] = 1.0
-                end
-            else
-                @assert false
-            end
-        end
-    end
-
-    return J
+    return [H M; N L]
 end
-=#
 

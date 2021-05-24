@@ -189,15 +189,49 @@ end
         end
     end
 
-    # @testset "basic jacobian matrix" begin
-    #     data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case5_sw.m"))
-
-    #     J = calc_basic_jacobian_matrix(data)
-
-    #     @test size(J, 1) == 2*length(data["bus"])
-    #     @test size(J, 2) == 2*length(data["bus"])
-    #     @test isapprox(sum(J), 10.0933; atol=1e-4)
-    # end
+    @testset "test basic jacobian" begin
+        function test_size(data, J)
+            buses = 0; pv = 0; pq = 0;
+            for (_, bus) in data["bus"]
+                bus_type = bus["bus_type"]
+                if bus_type == 1
+                    pq += 1
+                    buses += 1
+                elseif bus_type == 2
+                    pv += 1
+                    buses += 1
+                elseif bus_type == 3
+                    buses += 1 
+                end
+            end
+            matrix_size = 2*(buses - 1) - pv
+            size(J) == (matrix_size, matrix_size)
+        end
+        
+        @testset "14-bus-case" begin
+            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case14.m"))
+            J = PowerModels.calc_basic_jacobian_matrix(data)
+    
+            @test test_size(data, J)
+            @test isapprox(J[1, 1], 32.7603; atol = 1e-4)
+            @test isapprox(J[1, 14], -1.2558, atol = 1e-4)
+            @test isapprox(J[14, 1], 2.2955, atol = 1e-4)
+            @test isapprox(J[14, 14], 39.4697, atol = 1e-4)
+            @test isapprox(sum(J), 63.1; atol = 1e-1)
+        end
+    
+        @testset "30-bus-case" begin
+            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case30.m"))
+            J = PowerModels.calc_basic_jacobian_matrix(data)
+    
+            @test test_size(data, J)
+            @test isapprox(J[1, 1], 32.7707; atol = 1e-4) 
+            @test isapprox(J[1, 31], -1.3548; atol = 1e-4)
+            @test isapprox(J[31, 1], 2.1783; atol = 1e-4)
+            @test isapprox(J[31, 31], 55.7408; atol = 1e-4)
+            @test isapprox(sum(J), 82.4; atol = 1e-1)
+        end
+    end
 
 end
 
