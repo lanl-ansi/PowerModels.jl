@@ -385,46 +385,55 @@ function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
     return ptdf_column
 end
 
+#= TODO:
+    - Make ACPF 
+=#
+"""
+give a basic network data dict, returns three arrays with the bus types 
+"""
+function calc_basic_bus_type(data::Dict{String,<:Any})
+    ref = []; pv = []; pq = []
+    for i in 1:length(data["bus"])
+        type = data["bus"]["$i"]["bus_type"]
+        if type == 1
+            push!(pq, i)
+        elseif type == 2
+            push!(pv, i)
+        elseif type == 3
+            push!(ref, i)
+        else
+            @assert false
+        end
+    end
+    return ref, pv, pq
+end
+
 
 
 """
 given a basic network data dict, returns a sparse real valued Jacobian matrix
 of the ac power flow problem.  The power variables are ordered by p and then q
 while voltage values are ordered by voltage angle and then voltage magnitude.
+
+The bus index are given in the same way as the matpower computation, first the
+PV buses later the PQ buses.
 """
-function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
+function calc_basic_jacobian_matrix(data::Dict{String,<:Any}, V::Array{Complex{Float64}, 1})
     if !get(data, "basic_network", false)
         Memento.warn(_LOGGER, "calc_basic_jacobian_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
-
-    am = calc_admittance_matrix(data)
-
-    vm = Dict(am.bus_to_idx[bus["index"]] => bus["vm"] for (i, bus) in data["bus"])
-    va = Dict(am.bus_to_idx[bus["index"]] => bus["va"] for (i, bus) in data["bus"])
-
-    V = [vmag * exp(va[i] * 1im) for (i, vmag) in sort(vm)]
+    Y = calc_basic_admittance_matrix(data)
+    
     diag_V = LinearAlgebra.Diagonal(V)
-    diag_V_norm = LinearAlgebra.Diagonal([1.0 * exp(vang * 1im) for (i, vang) in sort(va)])
-
-    I = am.matrix * V
+    diag_V_norm = LinearAlgebra.Diagonal(V ./ abs.(diag_V))
+    
+    I = Y * V
     diag_I = LinearAlgebra.Diagonal(I)
 
-    dSdva = 1im * diag_V * conj(diag_I .- am.matrix * diag_V)
-    dSdvm = diag_V * conj(am.matrix * diag_V_norm) + conj(diag_I) * diag_V
+    dSdva = 1im * diag_V * conj(diag_I .- Y * diag_V)
+    dSdvm = diag_V * conj(Y * diag_V_norm) + conj(diag_I) * diag_V
 
-    pv = []; pq = []; ref = []
-    for (_, bus) in data["bus"]
-        i, type = bus["index"], bus["bus_type"]
-        if type == 1
-            push!(pq, am.bus_to_idx[i])
-        elseif type == 2
-            push!(pv, am.bus_to_idx[i])
-        elseif type == 3
-            push!(ref, am.bus_to_idx[i])
-        else
-            @assert false
-        end
-    end
+    ref, pv, pq = calc_basic_bus_type(data)
 
     H = real(dSdva[[pv; pq], [pv; pq]])
     M = real(dSdvm[[pv; pq], pq])
@@ -434,3 +443,62 @@ function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
     return [H M; N L]
 end
 
+function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
+    if !get(data, "basic_network", false)
+        Memento.warn(_LOGGER, "calc_basic_jacobian_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+    end
+    V = calc_basic_bus_voltage(data)
+    calc_basic_jacobian_matrix(data, V)
+end
+
+
+"""
+given a basic network data dict, computes vector of bus voltage 
+by solving a ac power flow.
+"""
+function compute_basic_ac_pf(data::Dict{String, Any})
+    # Update voltage magnitude of PV buses
+    for (_, gen) in data["gen"]
+        i = gen["gen_bus"]
+
+        if data["bus"]["$i"]["bus_type"] == 2
+            data["bus"]["$i"]["vm"] = gen["vg"]
+        end
+    end
+
+    # Type of buses
+    ref, pv, pq = calc_basic_bus_type(data)
+    pvpq = [pv; pq]
+
+    # Y matrix and S
+    Y = calc_basic_admittance_matrix(data)
+    S = calc_basic_bus_injection(data)
+    
+    # Start values
+    V = calc_basic_bus_voltage(data)
+    
+    itr = 0
+    while LinearAlgebra.norm((V .* conj(Y * V) - S)[pvpq] |> real, Inf) > 1e-4 && itr < 10
+        dS = V .* conj(Y * V) - S
+        dP = real(dS[pvpq])
+        dQ = imag(dS[pq]) 
+
+        # Caculate J and solve the linear sistem J * [δ; V] = [dP; dQ]
+        J = calc_basic_jacobian_matrix(data, V)
+        dx = J \ -[dP; dQ]
+
+        # Extract the variables to a vector of correction
+        v_ang = zeros(length(V), 1)
+        v_ang[pvpq] = dx[1:length(pvpq)]
+        v_mag = zeros(length(V), 1)
+        v_mag[pq] = dx[length(pvpq)+1:end]
+
+        # Update voltages
+        V = [abs(v + v_mag[i]*v) * exp((angle(v) + v_ang[i]) * 1im) for (i, v) in enumerate(V)]
+        
+        # Update iterator
+        itr += 1
+        println(itr)
+    end
+    return V
+end
