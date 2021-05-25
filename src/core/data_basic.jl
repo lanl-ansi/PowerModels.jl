@@ -385,120 +385,175 @@ function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
     return ptdf_column
 end
 
-#= TODO:
-    - Make ACPF 
-=#
-"""
-give a basic network data dict, returns three arrays with the bus types 
-"""
-function calc_basic_bus_type(data::Dict{String,<:Any})
-    ref = []; pv = []; pq = []
-    for i in 1:length(data["bus"])
-        type = data["bus"]["$i"]["bus_type"]
-        if type == 1
-            push!(pq, i)
-        elseif type == 2
-            push!(pv, i)
-        elseif type == 3
-            push!(ref, i)
-        else
-            @assert false
-        end
-    end
-    return ref, pv, pq
-end
 
+function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
+    if !get(data, "basic_network", false)
+        Memento.warn(_LOGGER, "calc_basic_jacobian_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+    end
+    v = calc_basic_bus_voltage(data)
+    calc_basic_jacobian_matrix(data, v)
+end
 
 
 """
 given a basic network data dict, returns a sparse real valued Jacobian matrix
 of the ac power flow problem.  The power variables are ordered by p and then q
 while voltage values are ordered by voltage angle and then voltage magnitude.
-
-The bus index are given in the same way as the matpower computation, first the
-PV buses later the PQ buses.
 """
-function calc_basic_jacobian_matrix(data::Dict{String,<:Any}, V::Array{Complex{Float64}, 1})
+function calc_basic_jacobian_matrix(data::Dict{String,<:Any}, v::Vector{ComplexF64})
     if !get(data, "basic_network", false)
         Memento.warn(_LOGGER, "calc_basic_jacobian_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
-    Y = calc_basic_admittance_matrix(data)
-    
-    diag_V = LinearAlgebra.Diagonal(V)
-    diag_V_norm = LinearAlgebra.Diagonal(V ./ abs.(diag_V))
-    
-    I = Y * V
-    diag_I = LinearAlgebra.Diagonal(I)
-
-    dSdva = 1im * diag_V * conj(diag_I .- Y * diag_V)
-    dSdvm = diag_V * conj(Y * diag_V_norm) + conj(diag_I) * diag_V
-
-    ref, pv, pq = calc_basic_bus_type(data)
-
-    H = real(dSdva[[pv; pq], [pv; pq]])
-    M = real(dSdvm[[pv; pq], pq])
-    N = imag(dSdva[pq, [pv; pq]])
-    L = imag(dSdvm[pq, pq])
-
-    return [H M; N L]
-end
-
-function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
-    if !get(data, "basic_network", false)
-        Memento.warn(_LOGGER, "calc_basic_jacobian_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+    num_bus = length(data["bus"])
+    vm, va = abs.(v), angle.(v)
+    am = calc_admittance_matrix(data)
+    neighbors = [Set{Int}([i]) for i in 1:num_bus]
+    I, J, V = findnz(am.matrix)
+    for nz in eachindex(V)
+        push!(neighbors[I[nz]], J[nz])
+        push!(neighbors[J[nz]], I[nz])
     end
-    V = calc_basic_bus_voltage(data)
-    calc_basic_jacobian_matrix(data, V)
+    J0_I = Int64[]
+    J0_J = Int64[]
+    J0_V = Float64[]
+    for i in 1:num_bus
+        f_i_r = i
+        f_i_i = i + num_bus
+        for j in neighbors[i]
+            x_j_fst = j + num_bus
+            x_j_snd = j
+            push!(J0_I, f_i_r); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
+            push!(J0_I, f_i_r); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
+            push!(J0_I, f_i_i); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
+            push!(J0_I, f_i_i); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
+        end
+    end
+    J = sparse(J0_I, J0_J, J0_V)
+    for i in 1:num_bus
+        i1 = i
+        i2 = i + num_bus
+        for j in neighbors[i]
+            j1 = j
+            j2 = j + num_bus
+            bus_type = data["bus"]["$(j)"]["bus_type"]
+            if bus_type == 1
+                if i == j
+                    y_ii = am.matrix[i,i]
+                    J[i1, j1] =                      - vm[i] * sum( real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    J[i1, j2] =  + 2*real(y_ii)*vm[i] +        sum( real(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) + imag(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    J[i2, j1] =                        vm[i] * sum( real(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) + imag(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    J[i2, j2] = - 2*imag(y_ii)*vm[i] +         sum( real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
+                else
+                    y_ij = am.matrix[i,j]
+                    J[i1, j1] = - vm[i] * vm[j] * (imag(y_ij) * cos(va[i] - va[j]) - real(y_ij) * sin(va[i] - va[j]))
+                    J[i1, j2] =           vm[i] * (real(y_ij) * cos(va[i] - va[j]) + imag(y_ij) * sin(va[i] - va[j]))
+                    J[i2, j1] = - vm[i] * vm[j] * (imag(y_ij) * sin(va[i] - va[j]) + real(y_ij) * cos(va[i] - va[j]))
+                    J[i2, j2] =           vm[i] * (real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]))
+                end
+            elseif bus_type == 2
+                if i == j
+                    y_ii = am.matrix[i,i]
+                    J[i1, j1] = - vm[i] * sum( real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    J[i1, j2] = 0.0
+                    J[i2, j1] = vm[i] * sum( real(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) + imag(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    J[i2, j2] = 1.0
+                else
+                    y_ij = am.matrix[i,j]
+                    J[i1, j1] = - vm[i] * vm[j] * (imag(y_ij) * cos(va[i] - va[j]) - real(y_ij) * sin(va[i] - va[j]))
+                    J[i1, j2] = 0.0
+                    J[i2, j1] = - vm[i] * vm[j] * (imag(y_ij) * sin(va[i] - va[j]) + real(y_ij) * cos(va[i] - va[j]))
+                    J[i2, j2] = 0.0
+                end
+            elseif bus_type == 3
+                if i == j
+                    J[i1, j1] = 1.0
+                    J[i1, j2] = 0.0
+                    J[i2, j1] = 0.0
+                    J[i2, j2] = 1.0
+                end
+            else
+                @assert false
+            end
+        end
+    end
+    return J
 end
 
 
 """
-given a basic network data dict, computes vector of bus voltage 
-by solving a ac power flow.
+given a basic network data dict, computes a Newton Raphson AC power flow
 """
-function compute_basic_ac_pf(data::Dict{String, Any})
-    # Update voltage magnitude of PV buses
-    for (_, gen) in data["gen"]
-        i = gen["gen_bus"]
+function compute_basic_ac_pf!(data::Dict{String, Any})
+    if !get(data, "basic_network", false)
+        Memento.warn(_LOGGER, "compute_basic_ac_pf requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+    end
+    bus_num = length(data["bus"])
+    gen_num = length(data["gen"])
 
-        if data["bus"]["$i"]["bus_type"] == 2
-            data["bus"]["$i"]["vm"] = gen["vg"]
+    # Count the number of generators per bus
+    gen_per_bus = Dict()
+    for (i, gen) in data["gen"]
+        bus_i = gen["gen_bus"]
+        gen_per_bus[bus_i] = get(gen_per_bus, bus_i, 0) + 1
+
+        # Update set point in PV buses
+        if data["bus"]["$bus_i"]["bus_type"] == 2
+            data["bus"]["$bus_i"]["vm"] = gen["vg"]
         end
     end
 
-    # Type of buses
-    ref, pv, pq = calc_basic_bus_type(data)
-    pvpq = [pv; pq]
-
-    # Y matrix and S
     Y = calc_basic_admittance_matrix(data)
-    S = calc_basic_bus_injection(data)
-    
-    # Start values
-    V = calc_basic_bus_voltage(data)
-    
+    tol = 1e-4
+    itr_max = 20
     itr = 0
-    while LinearAlgebra.norm((V .* conj(Y * V) - S)[pvpq] |> real, Inf) > 1e-4 && itr < 10
-        dS = V .* conj(Y * V) - S
-        dP = real(dS[pvpq])
-        dQ = imag(dS[pq]) 
 
-        # Caculate J and solve the linear sistem J * [δ; V] = [dP; dQ]
+    while itr < itr_max
+        # STEP 1: Compute mismatch and check convergence
+        V = calc_basic_bus_voltage(data)
+        S = calc_basic_bus_injection(data)
+        Si = V .* conj(Y * V)
+        delta_P, delta_Q = real(S - Si), imag(S - Si)
+
+        if LinearAlgebra.normInf([delta_P; delta_Q]) < tol
+            break
+        end
+
+        # STEP 2: Compute the jacobian
         J = calc_basic_jacobian_matrix(data, V)
-        dx = J \ -[dP; dQ]
 
-        # Extract the variables to a vector of correction
-        v_ang = zeros(length(V), 1)
-        v_ang[pvpq] = dx[1:length(pvpq)]
-        v_mag = zeros(length(V), 1)
-        v_mag[pq] = dx[length(pvpq)+1:end]
+        # STEP 3: Update step
+        x = J \ [delta_P; delta_Q]
 
-        # Update voltages
-        V = [abs(v + v_mag[i]*v) * exp((angle(v) + v_ang[i]) * 1im) for (i, v) in enumerate(V)]
-        
-        # Update iterator
+        # STEP 4
+        # update voltage variables
+        for i in 1:bus_num
+            bus_type = data["bus"]["$(i)"]["bus_type"]
+            if bus_type == 1
+                data["bus"]["$(i)"]["va"] = data["bus"]["$(i)"]["va"] + x[i]
+                data["bus"]["$(i)"]["vm"] = data["bus"]["$(i)"]["vm"] + x[i+bus_num] * data["bus"]["$(i)"]["vm"] 
+            end
+            if bus_type == 2
+                data["bus"]["$(i)"]["va"] = data["bus"]["$(i)"]["va"] + x[i]
+            end
+        end
+        # update power variables
+        for i in 1:gen_num
+            bus_i = data["gen"]["$i"]["gen_bus"]
+            bus_type = data["bus"]["$bus_i"]["bus_type"]
+            num_gens = gen_per_bus[bus_i]
+
+            if bus_type == 2
+                data["gen"]["$i"]["qg"] = data["gen"]["$i"]["qg"] - delta_Q[bus_i] / num_gens # TODO it is ok for multiples gens in same bus?
+            else bus_type == 3
+                data["gen"]["$i"]["qg"] = data["gen"]["$i"]["qg"] - delta_Q[bus_i] / num_gens
+                data["gen"]["$i"]["pg"] = data["gen"]["$i"]["pg"] - delta_P[bus_i] / num_gens
+            end
+        end
+        # update iteration counter
         itr += 1
-        println(itr)
     end
-    return V
+
+    if itr == itr_max
+        Memento.warn(_LOGGER, "Max iteration limit")
+    end
 end

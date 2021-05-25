@@ -189,49 +189,96 @@ end
         end
     end
 
-    @testset "test basic jacobian" begin
-        function test_size(data, J)
-            buses = 0; pv = 0; pq = 0;
-            for (_, bus) in data["bus"]
-                bus_type = bus["bus_type"]
-                if bus_type == 1
-                    pq += 1
-                    buses += 1
-                elseif bus_type == 2
-                    pv += 1
-                    buses += 1
-                elseif bus_type == 3
-                    buses += 1 
-                end
-            end
-            matrix_size = 2*(buses - 1) - pv
-            size(J) == (matrix_size, matrix_size)
-        end
-        
-        @testset "14-bus-case" begin
-            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case14.m"))
+    @testset "test basic jacobian" begin       
+        @testset "24-bus-case" begin
+            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case24.m"))
             J = PowerModels.calc_basic_jacobian_matrix(data)
-    
-            @test test_size(data, J)
-            @test isapprox(J[1, 1], 32.7603; atol = 1e-4)
-            @test isapprox(J[1, 14], -1.2558, atol = 1e-4)
-            @test isapprox(J[14, 1], 2.2955, atol = 1e-4)
-            @test isapprox(J[14, 14], 39.4697, atol = 1e-4)
-            @test isapprox(sum(J), 63.1; atol = 1e-1)
-        end
-    
-        @testset "30-bus-case" begin
-            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case30.m"))
-            J = PowerModels.calc_basic_jacobian_matrix(data)
-    
-            @test test_size(data, J)
-            @test isapprox(J[1, 1], 32.7707; atol = 1e-4) 
-            @test isapprox(J[1, 31], -1.3548; atol = 1e-4)
-            @test isapprox(J[31, 1], 2.1783; atol = 1e-4)
-            @test isapprox(J[31, 31], 55.7408; atol = 1e-4)
-            @test isapprox(sum(J), 82.4; atol = 1e-1)
+            
+            num_bus = length(data["bus"])
+
+            @test size(J)[1] == num_bus * 2
+            @test size(J)[2] == num_bus * 2
+
+            # PV bus - diagonal
+            @test isapprox(J[1, 1], 90.2500; atol = 1e-4)                   # dP/dva diagonal
+            @test isapprox(J[num_bus+1, 1], -17.2488; atol = 1e-4)          # dQ/dva diagonal
+            @test isapprox(J[1, num_bus+1], 0.0; atol = 1e-4)               # dP/dvm diagonal
+            @test isapprox(J[num_bus+1, num_bus+1], 1.0; atol = 1e-4)       # dQ/dvm diagonal
+            
+            # PV bus - non-diagonal
+            @test isapprox(J[1, 2], -73.6728; atol = 1e-4)                  # dP/dva non-diagonal
+            @test isapprox(J[num_bus+1, 2], 13.8150; atol = 1e-4)           # dQ/dva non-diagonal
+            @test isapprox(J[1, num_bus+2], 0.0; atol = 1e-4)               # dP/dvm non-diagonal
+            @test isapprox(J[num_bus+1, num_bus+2], 0.0; atol = 1e-4)       # dQ/dvm non-diagonal
+            
+            # PQ bus - diagonal
+            @test isapprox(J[3, 3], 24.5256; atol = 1e-4)                   # dP/dva diagonal
+            @test isapprox(J[num_bus+3, 3], -5.3917; atol = 1e-4)           # dQ/dva diagonal
+            @test isapprox(J[3, num_bus+3], 1.7671; atol = 1e-4)            # dP/dvm diagonal 
+            @test isapprox(J[num_bus+3, num_bus+3], 23.4586; atol = 1e-4)   # dQ/dvm diagonal
+            
+            # PQ bus - non-diagonal
+            @test isapprox(J[3, 9], -8.1751; atol = 1e-4)                  # dP/dva non-diagonal
+            @test isapprox(J[num_bus+3, 9], 2.2208; atol = 1e-4)           # dQ/dva non-diagonal
+            @test isapprox(J[3, num_bus+9], -2.1624; atol = 1e-4)          # dP/dvm non-diagonal
+            @test isapprox(J[num_bus+3, num_bus+9], -7.9603; atol = 1e-4)   # dQ/dvm non-diagonal
         end
     end
 
+    @testset "basic ac power flow" begin
+        @testset "5-bus-case" begin     
+            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case9.m"))
+            solution = compute_ac_pf(data)["solution"]
+
+            compute_basic_ac_pf!(data)
+            
+            for (i, bus) in data["bus"]
+                @test isapprox(solution["bus"][i]["va"], bus["va"]; atol=1e-4)
+                @test isapprox(solution["bus"][i]["vm"], bus["vm"]; atol=1e-4)
+            end
+            
+            for (i, gen) in data["gen"]
+                @test isapprox(solution["gen"][i]["pg"], gen["pg"]; atol=1e-4)
+                @test isapprox(solution["gen"][i]["qg"], gen["qg"]; atol=1e-4)
+            end
+        end
+
+        @testset "14-bus-case" begin     
+            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case14.m"))
+            solution = compute_ac_pf(data)["solution"]
+
+            compute_basic_ac_pf!(data)
+            
+            for (i, bus) in data["bus"]
+                @test isapprox(solution["bus"][i]["va"], bus["va"]; atol=1e-4)
+                @test isapprox(solution["bus"][i]["vm"], bus["vm"]; atol=1e-4)
+            end
+            
+            for (i, gen) in data["gen"]
+                @test isapprox(solution["gen"][i]["pg"], gen["pg"]; atol=1e-4)
+                @test isapprox(solution["gen"][i]["qg"], gen["qg"]; atol=1e-4)
+            end
+        end
+        
+        @testset "24-bus-case" begin     
+            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case24.m"))
+            solution = compute_ac_pf(data)["solution"]
+            
+            compute_basic_ac_pf!(data)
+            
+            for (i, bus) in data["bus"]
+                @test isapprox(solution["bus"][i]["va"], bus["va"]; atol=1e-4)
+                @test isapprox(solution["bus"][i]["vm"], bus["vm"]; atol=1e-4)
+            end
+            
+            #= TODO Criterium for multiples gens in same bus
+            for (i, gen) in data["gen"]
+                @test isapprox(solution["gen"][i]["pg"], gen["pg"]; atol=1e-4)
+                @test isapprox(solution["gen"][i]["qg"], gen["qg"]; atol=1e-4)
+            end
+            =#
+        end
+        
+    end
 end
 
