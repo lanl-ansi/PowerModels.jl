@@ -189,7 +189,7 @@ end
         end
     end
 
-    @testset "test basic jacobian" begin       
+    @testset "test basic jacobian" begin  
         @testset "24-bus-case" begin
             data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case24.m"))
             J = PowerModels.calc_basic_jacobian_matrix(data)
@@ -223,10 +223,8 @@ end
             @test isapprox(J[3, num_bus+9], -2.1624; atol = 1e-4)          # dP/dvm non-diagonal
             @test isapprox(J[num_bus+3, num_bus+9], -7.9603; atol = 1e-4)   # dQ/dvm non-diagonal
         end
-    end
 
-    @testset "basic decoupled matrices" begin
-        @testset "30-bus-case" begin
+        @testset "30-bus-case-decoupled-matrices" begin
             data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case24.m"))
             H, L = calc_basic_decoupled_jacobian_matrices(data)
             J = calc_basic_jacobian_matrix(data)
@@ -236,12 +234,13 @@ end
         end
     end
 
-    @testset "basic decoupled ac power flow" begin
-        @testset "9-bus-case" begin
+    @testset "basic ac power flow" begin
+
+        @testset "9-bus-case" begin     
             data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case9.m"))
             solution = compute_ac_pf(data)["solution"]
 
-            compute_basic_decoupled_ac_pf!(data)
+            compute_basic_ac_pf!(data)
             
             for (i, bus) in data["bus"]
                 @test isapprox(solution["bus"][i]["va"], bus["va"]; atol=1e-4)
@@ -253,14 +252,12 @@ end
                 @test isapprox(solution["gen"][i]["qg"], gen["qg"]; atol=1e-4)
             end
         end
-    end
 
-    @testset "basic ac power flow" begin
         @testset "9-bus-case" begin     
             data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case9.m"))
             solution = compute_ac_pf(data)["solution"]
 
-            compute_basic_ac_pf!(data)
+            compute_basic_ac_pf!(data; decoupled=true)
             
             for (i, bus) in data["bus"]
                 @test isapprox(solution["bus"][i]["va"], bus["va"]; atol=1e-4)
@@ -305,10 +302,8 @@ end
             for (i, gen) in data["gen"]
                 @test isapprox(solution["gen"][i]["pg"], gen["pg"]; atol=1e-4)
                 @test isapprox(solution["gen"][i]["qg"], gen["qg"]; atol=1e-4)
-            end
-            =#
+            end =#
         end
-        
     end
 end
 
