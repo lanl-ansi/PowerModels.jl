@@ -465,6 +465,20 @@ end
     end
 end
 
+
+@testset "bus type corrections" begin
+    @testset "no generator in connecected comp." begin
+        data = parse_file("../test/data/matpower/case7_tplgy.m")
+
+        data["gen"]["2"]["gen_status"] = 0
+
+        correct_reference_buses!(data)
+
+        @test data["bus"]["2"]["bus_type"] == 2
+    end
+end
+
+
 @testset "test errors and warnings" begin
     data = PowerModels.parse_file("../test/data/matpower/case3.m")
 

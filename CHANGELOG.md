@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fixed `correct_component_refrence_bus!` when no active generators are present (#776)
 
 ### v0.18.1
 - Fixed multi-network support in sparse SDP models (#769)

@@ -2572,7 +2572,7 @@ end
 
 
 """
-checks that a connected component has a reference bus, if not, adds one
+checks that a connected component has a reference bus, if not, tries to add one
 """
 function correct_component_refrence_bus!(component_bus_ids, bus_lookup, component_gens)
     refrence_buses = Set()
@@ -2586,13 +2586,15 @@ function correct_component_refrence_bus!(component_bus_ids, bus_lookup, componen
     if length(refrence_buses) == 0
         Memento.warn(_LOGGER, "no reference bus found in connected component $(component_bus_ids)")
 
-        if length(component_gens) > 0
-            big_gen = _biggest_generator(component_gens)
+        component_gens_active = Dict(k => v for (k,v) in component_gens if v["gen_status"] != 0)
+
+        if length(component_gens_active) > 0
+            big_gen = _biggest_generator(component_gens_active)
             gen_bus = bus_lookup[big_gen["gen_bus"]]
             gen_bus["bus_type"] = 3
             Memento.warn(_LOGGER, "setting bus $(gen_bus["index"]) as reference bus in connected component $(component_bus_ids), based on generator $(big_gen["index"])")
         else
-            Memento.warn(_LOGGER, "no generators found in connected component $(component_bus_ids), try running propagate_topology_status!(")
+            Memento.warn(_LOGGER, "no active generators found in connected component $(component_bus_ids), try running propagate_topology_status!")
         end
     end
 end
