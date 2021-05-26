@@ -385,7 +385,89 @@ function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
     return ptdf_column
 end
 
+"""
+Computes the jacobian submatrices
+H = dP/dδ
+L = dQ/dV
+"""
+function calc_basic_decoupled_jacobian_matrices(data::Dict{String,<:Any})
+    if !get(data, "basic_network", false)
+        Memento.warn(_LOGGER, "calc_basic_jacobian_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+    end
+    v = calc_basic_bus_voltage(data)
+    calc_basic_decoupled_jacobian_matrices(data, v)
+end
 
+"""
+Computes the jacobian submatrices
+H = dP/dδ
+L = dQ/dV
+"""
+function calc_basic_decoupled_jacobian_matrices(data::Dict{String,<:Any}, v::Vector{ComplexF64})
+    if !get(data, "basic_network", false)
+        Memento.warn(_LOGGER, "calc_basic_decoupled_jacobian_matrices requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+    end
+    num_bus = length(data["bus"])
+    vm, va = abs.(v), angle.(v)
+    am = calc_admittance_matrix(data)
+    neighbors = [Set{Int}([i]) for i in 1:num_bus]
+    I, J, V = findnz(am.matrix)
+    for nz in eachindex(V)
+        push!(neighbors[I[nz]], J[nz])
+        push!(neighbors[J[nz]], I[nz])
+    end
+    H0_I = Int64[]; H0_J = Int64[]; H0_V = Float64[];
+    L0_I = Int64[]; L0_J = Int64[]; L0_V = Float64[];
+    for i in 1:num_bus
+        for j in neighbors[i]
+            push!(H0_I, i); push!(H0_J, j); push!(H0_V, 0.0)
+            push!(L0_I, i); push!(L0_J, j); push!(L0_V, 0.0)
+        end
+    end
+    H = sparse(H0_I, H0_J, H0_V)
+    L = sparse(L0_I, L0_J, L0_V)
+    for i in 1:num_bus
+        for j in neighbors[i]
+            bus_type = data["bus"]["$(j)"]["bus_type"]
+            if bus_type == 1
+                if i == j
+                    y_ii = am.matrix[i,i]
+                    H[i, j] =                      - vm[i] * sum( real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    L[i, j] = - 2*imag(y_ii)*vm[i] +         sum( real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
+                else
+                    y_ij = am.matrix[i,j]
+                    H[i, j] = - vm[i] * vm[j] * (imag(y_ij) * cos(va[i] - va[j]) - real(y_ij) * sin(va[i] - va[j]))
+                    L[i, j] =           vm[i] * (real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]))
+                end
+            elseif bus_type == 2
+                if i == j
+                    y_ii = am.matrix[i,i]
+                    H[i, j] = - vm[i] * sum( real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    L[i, j] = 1.0
+                else
+                    y_ij = am.matrix[i,j]
+                    H[i, j] = - vm[i] * vm[j] * (imag(y_ij) * cos(va[i] - va[j]) - real(y_ij) * sin(va[i] - va[j]))
+                    L[i, j] = 0.0
+                end
+            elseif bus_type == 3
+                if i == j
+                    H[i, j] = 1.0
+                    L[i, j] = 1.0
+                end
+            else
+                @assert false
+            end
+        end
+    end
+    return H, L
+end
+
+
+"""
+given a basic network data dict, returns a sparse real valued Jacobian matrix
+of the ac power flow problem.  The power variables are ordered by p and then q
+while voltage values are ordered by voltage angle and then voltage magnitude.
+"""
 function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
         Memento.warn(_LOGGER, "calc_basic_jacobian_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
@@ -479,6 +561,83 @@ function calc_basic_jacobian_matrix(data::Dict{String,<:Any}, v::Vector{ComplexF
     return J
 end
 
+"""
+given a basic network data dict, computes a decoupled Newton Raphson AC power flow
+"""
+function compute_basic_decoupled_ac_pf!(data::Dict{String, Any})
+    if !get(data, "basic_network", false)
+        Memento.warn(_LOGGER, "compute_basic_decoupled_ac_pf! requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+    end
+    bus_num = length(data["bus"])
+    gen_num = length(data["gen"])
+
+    # Count the number of generators per bus
+    gen_per_bus = Dict()
+    for (i, gen) in data["gen"]
+        bus_i = gen["gen_bus"]
+        gen_per_bus[bus_i] = get(gen_per_bus, bus_i, 0) + 1
+
+        # Update set point in PV buses
+        if data["bus"]["$bus_i"]["bus_type"] == 2
+            data["bus"]["$bus_i"]["vm"] = gen["vg"]
+        end
+    end
+
+    Y = calc_basic_admittance_matrix(data)
+    tol = 1e-4
+    itr_max = 20
+    itr = 0
+    while itr < itr_max
+        # STEP 1: Compute mismatch and check convergence
+        V = calc_basic_bus_voltage(data)
+        S = calc_basic_bus_injection(data)
+        Si = V .* conj(Y * V)
+        delta_P, delta_Q = real(S - Si), imag(S - Si)
+
+        if LinearAlgebra.normInf([delta_P; delta_Q]) < tol
+            break
+        end
+
+        # STEP 2: Compute the jacobian submatrices
+        H, L = calc_basic_decoupled_jacobian_matrices(data, V)
+
+        # STEP 3: Update step
+        va = H \ delta_P
+        vm = L \ delta_Q
+
+        # STEP 4
+        # update voltage variables
+        for i in 1:bus_num
+            bus_type = data["bus"]["$(i)"]["bus_type"]
+            if bus_type == 1
+                data["bus"]["$(i)"]["va"] = data["bus"]["$(i)"]["va"] + va[i]
+                data["bus"]["$(i)"]["vm"] = data["bus"]["$(i)"]["vm"] + vm[i] * data["bus"]["$(i)"]["vm"] 
+            end
+            if bus_type == 2
+                data["bus"]["$(i)"]["va"] = data["bus"]["$(i)"]["va"] + va[i]
+            end
+        end
+        # update power variables
+        for i in 1:gen_num
+            bus_i = data["gen"]["$i"]["gen_bus"]
+            bus_type = data["bus"]["$bus_i"]["bus_type"]
+            num_gens = gen_per_bus[bus_i]
+
+            if bus_type == 2
+                data["gen"]["$i"]["qg"] = data["gen"]["$i"]["qg"] - delta_Q[bus_i] / num_gens # TODO it is ok for multiples gens in same bus?
+            else bus_type == 3
+                data["gen"]["$i"]["qg"] = data["gen"]["$i"]["qg"] - delta_Q[bus_i] / num_gens
+                data["gen"]["$i"]["pg"] = data["gen"]["$i"]["pg"] - delta_P[bus_i] / num_gens
+            end
+        end
+        # update iteration counter
+        itr += 1
+    end
+
+    if itr == itr_max
+        Memento.warn(_LOGGER, "Max iteration limit")
+    end
+end
 
 """
 given a basic network data dict, computes a Newton Raphson AC power flow

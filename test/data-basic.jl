@@ -225,8 +225,38 @@ end
         end
     end
 
+    @testset "basic decoupled matrices" begin
+        @testset "30-bus-case" begin
+            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case24.m"))
+            H, L = calc_basic_decoupled_jacobian_matrices(data)
+            J = calc_basic_jacobian_matrix(data)
+            n = length(data["bus"])
+            @test isapprox(J[1:n, 1:n], H; atol = 1e-6)
+            @test isapprox(J[n+1:end, n+1:end], L; atol = 1e-6)
+        end
+    end
+
+    @testset "basic decoupled ac power flow" begin
+        @testset "9-bus-case" begin
+            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case9.m"))
+            solution = compute_ac_pf(data)["solution"]
+
+            compute_basic_decoupled_ac_pf!(data)
+            
+            for (i, bus) in data["bus"]
+                @test isapprox(solution["bus"][i]["va"], bus["va"]; atol=1e-4)
+                @test isapprox(solution["bus"][i]["vm"], bus["vm"]; atol=1e-4)
+            end
+            
+            for (i, gen) in data["gen"]
+                @test isapprox(solution["gen"][i]["pg"], gen["pg"]; atol=1e-4)
+                @test isapprox(solution["gen"][i]["qg"], gen["qg"]; atol=1e-4)
+            end
+        end
+    end
+
     @testset "basic ac power flow" begin
-        @testset "5-bus-case" begin     
+        @testset "9-bus-case" begin     
             data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case9.m"))
             solution = compute_ac_pf(data)["solution"]
 
