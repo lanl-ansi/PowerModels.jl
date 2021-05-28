@@ -403,9 +403,9 @@ function calc_basic_decoupled_jacobian_matrices(data::Dict{String,<:Any})
     num_bus = length(data["bus"])
     v = calc_basic_bus_voltage(data)
     vm, va = abs.(v), angle.(v)
-    am = calc_admittance_matrix(data)
+    Y = calc_basic_admittance_matrix(data)
     neighbors = [Set{Int}([i]) for i in 1:num_bus]
-    I, J, V = findnz(am.matrix)
+    I, J, V = findnz(Y)
     for nz in eachindex(V)
         push!(neighbors[I[nz]], J[nz])
         push!(neighbors[J[nz]], I[nz])
@@ -425,22 +425,22 @@ function calc_basic_decoupled_jacobian_matrices(data::Dict{String,<:Any})
             bus_type = data["bus"]["$(j)"]["bus_type"]
             if bus_type == 1
                 if i == j
-                    y_ii = am.matrix[i,i]
-                    H[i, j] =                      - vm[i] * sum( real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
-                    L[i, j] = - 2*imag(y_ii)*vm[i] +         sum( real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    y_ii = Y[i,i]
+                    H[i, j] =                      + vm[i] * sum( -real(Y[i,k]) * vm[k] * sin(va[i] - va[k]) + imag(Y[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i )
+                    L[i, j] = - 2*imag(y_ii)*vm[i] +         sum(  real(Y[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(Y[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i )
                 else
-                    y_ij = am.matrix[i,j]
-                    H[i, j] = - vm[i] * vm[j] * (imag(y_ij) * cos(va[i] - va[j]) - real(y_ij) * sin(va[i] - va[j]))
-                    L[i, j] =           vm[i] * (real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]))
+                    y_ij = Y[i,j]
+                    H[i, j] = vm[i] * vm[j] * (  real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]) )
+                    L[i, j] =         vm[i] * (  real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]) )
                 end
             elseif bus_type == 2
                 if i == j
-                    y_ii = am.matrix[i,i]
-                    H[i, j] = - vm[i] * sum( real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    y_ii = Y[i,i]
+                    H[i, j] = vm[i] * sum( -real(Y[i,k]) * vm[k] * sin(va[i] - va[k]) + imag(Y[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i )
                     L[i, j] = 1.0
                 else
-                    y_ij = am.matrix[i,j]
-                    H[i, j] = - vm[i] * vm[j] * (imag(y_ij) * cos(va[i] - va[j]) - real(y_ij) * sin(va[i] - va[j]))
+                    y_ij = Y[i,j]
+                    H[i, j] = vm[i] * vm[j] * (  real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]) )
                     L[i, j] = 0.0
                 end
             elseif bus_type == 3
@@ -468,9 +468,9 @@ function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
     num_bus = length(data["bus"])
     v = calc_basic_bus_voltage(data)
     vm, va = abs.(v), angle.(v)
-    am = calc_admittance_matrix(data)
+    Y = calc_basic_admittance_matrix(data)
     neighbors = [Set{Int}([i]) for i in 1:num_bus]
-    I, J, V = findnz(am.matrix)
+    I, J, V = findnz(Y)
     for nz in eachindex(V)
         push!(neighbors[I[nz]], J[nz])
         push!(neighbors[J[nz]], I[nz])
@@ -500,30 +500,29 @@ function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
             bus_type = data["bus"]["$(j)"]["bus_type"]
             if bus_type == 1
                 if i == j
-                    y_ii = am.matrix[i,i]
-                    J[i1, j1] =                      - vm[i] * sum( real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
-                    J[i1, j2] =  + 2*real(y_ii)*vm[i] +        sum( real(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) + imag(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i)
-                    J[i2, j1] =                        vm[i] * sum( real(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) + imag(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i)
-                    J[i2, j2] = - 2*imag(y_ii)*vm[i] +         sum( real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    y_ii = Y[i,i]
+                    J[i1, j1] =                      + vm[i] * sum( -real(Y[i,k]) * vm[k] * sin(va[i] - va[k]) + imag(Y[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i )
+                    J[i1, j2] = + 2*real(y_ii)*vm[i] +         sum(  real(Y[i,k]) * vm[k] * cos(va[i] - va[k]) + imag(Y[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i )
+                    J[i2, j1] =                        vm[i] * sum(  real(Y[i,k]) * vm[k] * cos(va[i] - va[k]) + imag(Y[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i )
+                    J[i2, j2] = - 2*imag(y_ii)*vm[i] +         sum(  real(Y[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(Y[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i )
                 else
-                    y_ij = am.matrix[i,j]
-                    J[i1, j1] = - vm[i] * vm[j] * (imag(y_ij) * cos(va[i] - va[j]) - real(y_ij) * sin(va[i] - va[j]))
-                    J[i1, j2] =           vm[i] * (real(y_ij) * cos(va[i] - va[j]) + imag(y_ij) * sin(va[i] - va[j]))
-                    J[i2, j1] = - vm[i] * vm[j] * (imag(y_ij) * sin(va[i] - va[j]) + real(y_ij) * cos(va[i] - va[j]))
-                    J[i2, j2] =           vm[i] * (real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]))
+                    y_ij = Y[i,j]
+                    J[i1, j1] = vm[i] * vm[j] * (  real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]) )
+                    J[i1, j2] =         vm[i] * (  real(y_ij) * cos(va[i] - va[j]) + imag(y_ij) * sin(va[i] - va[j]) )
+                    J[i2, j1] = vm[i] * vm[j] * ( -real(y_ij) * cos(va[i] - va[j]) - imag(y_ij) * sin(va[i] - va[j]) )
+                    J[i2, j2] =         vm[i] * (  real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]) )
                 end
             elseif bus_type == 2
                 if i == j
-                    y_ii = am.matrix[i,i]
-                    J[i1, j1] = - vm[i] * sum( real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    J[i1, j1] = vm[i] * sum( -real(Y[i,k]) * vm[k] * sin(va[i] - va[k]) + imag(Y[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i )
                     J[i1, j2] = 0.0
-                    J[i2, j1] = vm[i] * sum( real(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) + imag(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    J[i2, j1] = vm[i] * sum(  real(Y[i,k]) * vm[k] * cos(va[i] - va[k]) + imag(Y[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i )
                     J[i2, j2] = 1.0
                 else
-                    y_ij = am.matrix[i,j]
-                    J[i1, j1] = - vm[i] * vm[j] * (imag(y_ij) * cos(va[i] - va[j]) - real(y_ij) * sin(va[i] - va[j]))
+                    y_ij = Y[i,j]
+                    J[i1, j1] = vm[i] * vm[j] * (  real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]) )
                     J[i1, j2] = 0.0
-                    J[i2, j1] = - vm[i] * vm[j] * (imag(y_ij) * sin(va[i] - va[j]) + real(y_ij) * cos(va[i] - va[j]))
+                    J[i2, j1] = vm[i] * vm[j] * ( -real(y_ij) * cos(va[i] - va[j]) - imag(y_ij) * sin(va[i] - va[j]) )
                     J[i2, j2] = 0.0
                 end
             elseif bus_type == 3

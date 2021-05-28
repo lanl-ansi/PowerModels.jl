@@ -189,39 +189,61 @@ end
         end
     end
 
-    @testset "test basic jacobian" begin  
+    @testset "test basic jacobian" begin
+        @testset "5-bus-case" begin
+            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case5.m"))
+            for (i, bus) in data["bus"] # All buses PQ
+                bus["bus_type"] = 1
+            end
+            J = PowerModels.calc_basic_jacobian_matrix(data);
+
+            num_bus = length(data["bus"])
+            
+            @test size(J)[2] == num_bus * 2
+            @test size(J)[1] == num_bus * 2
+            @test isapprox(LinearAlgebra.det(J), 1524.5588; atol=1e-4)
+            
+            # PQ bus - diagonal
+            @test isapprox(J[1, 1], 225.5254; atol=1e-4)                  # dP/dva diagonal
+            @test isapprox(J[num_bus+1, 1], -20.7074; atol=1e-4)          # dQ/dva diagonal
+            @test isapprox(J[1, num_bus+1], 23.7940; atol=1e-4)           # dP/dvm diagonal
+            @test isapprox(J[num_bus+1, num_bus+1], 219.4434; atol=1e-4)  # dQ/dvm diagonal
+        end
+        
         @testset "24-bus-case" begin
             data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case24.m"))
             J = PowerModels.calc_basic_jacobian_matrix(data)
             
             num_bus = length(data["bus"])
-
+            
             @test size(J)[1] == num_bus * 2
             @test size(J)[2] == num_bus * 2
+            @test isapprox(LinearAlgebra.det(J), 3.133520767308452e+57)
+            @test isapprox(sum(J), -3.5289; atol=1e-4)
 
             # PV bus - diagonal
-            @test isapprox(J[1, 1], 90.2500; atol = 1e-4)                   # dP/dva diagonal
-            @test isapprox(J[num_bus+1, 1], -17.2488; atol = 1e-4)          # dQ/dva diagonal
-            @test isapprox(J[1, num_bus+1], 0.0; atol = 1e-4)               # dP/dvm diagonal
-            @test isapprox(J[num_bus+1, num_bus+1], 1.0; atol = 1e-4)       # dQ/dvm diagonal
+            @test isapprox(J[1, 1], 90.2500; atol=1e-4)                   # dP/dva diagonal
+            @test isapprox(J[num_bus+1, 1], -17.2488; atol=1e-4)          # dQ/dva diagonal
+            @test isapprox(J[1, num_bus+1], 0.0; atol=1e-4)               # dP/dvm diagonal
+            @test isapprox(J[num_bus+1, num_bus+1], 1.0; atol=1e-4)       # dQ/dvm diagonal
             
             # PV bus - non-diagonal
-            @test isapprox(J[1, 2], -73.6728; atol = 1e-4)                  # dP/dva non-diagonal
-            @test isapprox(J[num_bus+1, 2], 13.8150; atol = 1e-4)           # dQ/dva non-diagonal
-            @test isapprox(J[1, num_bus+2], 0.0; atol = 1e-4)               # dP/dvm non-diagonal
-            @test isapprox(J[num_bus+1, num_bus+2], 0.0; atol = 1e-4)       # dQ/dvm non-diagonal
+            @test isapprox(J[1, 2], -73.6728; atol=1e-4)                  # dP/dva non-diagonal
+            @test isapprox(J[num_bus+1, 2], 13.8150; atol=1e-4)           # dQ/dva non-diagonal
+            @test isapprox(J[1, num_bus+2], 0.0; atol=1e-4)               # dP/dvm non-diagonal
+            @test isapprox(J[num_bus+1, num_bus+2], 0.0; atol=1e-4)       # dQ/dvm non-diagonal
             
             # PQ bus - diagonal
-            @test isapprox(J[3, 3], 24.5256; atol = 1e-4)                   # dP/dva diagonal
-            @test isapprox(J[num_bus+3, 3], -5.3917; atol = 1e-4)           # dQ/dva diagonal
-            @test isapprox(J[3, num_bus+3], 1.7671; atol = 1e-4)            # dP/dvm diagonal 
-            @test isapprox(J[num_bus+3, num_bus+3], 23.4586; atol = 1e-4)   # dQ/dvm diagonal
+            @test isapprox(J[3, 3], 24.5256; atol=1e-4)                   # dP/dva diagonal
+            @test isapprox(J[num_bus+3, 3], -5.3917; atol=1e-4)           # dQ/dva diagonal
+            @test isapprox(J[3, num_bus+3], 1.7671; atol=1e-4)            # dP/dvm diagonal 
+            @test isapprox(J[num_bus+3, num_bus+3], 23.4586; atol=1e-4)   # dQ/dvm diagonal
             
             # PQ bus - non-diagonal
-            @test isapprox(J[3, 9], -8.1751; atol = 1e-4)                  # dP/dva non-diagonal
-            @test isapprox(J[num_bus+3, 9], 2.2208; atol = 1e-4)           # dQ/dva non-diagonal
-            @test isapprox(J[3, num_bus+9], -2.1624; atol = 1e-4)          # dP/dvm non-diagonal
-            @test isapprox(J[num_bus+3, num_bus+9], -7.9603; atol = 1e-4)   # dQ/dvm non-diagonal
+            @test isapprox(J[3, 9], -8.1751; atol=1e-4)                  # dP/dva non-diagonal
+            @test isapprox(J[num_bus+3, 9], 2.2208; atol=1e-4)           # dQ/dva non-diagonal
+            @test isapprox(J[3, num_bus+9], -2.1624; atol=1e-4)          # dP/dvm non-diagonal
+            @test isapprox(J[num_bus+3, num_bus+9], -7.9603; atol=1e-4)  # dQ/dvm non-diagonal
         end
 
         @testset "30-bus-case-decoupled-matrices" begin
@@ -229,13 +251,12 @@ end
             H, L = calc_basic_decoupled_jacobian_matrices(data)
             J = calc_basic_jacobian_matrix(data)
             n = length(data["bus"])
-            @test isapprox(J[1:n, 1:n], H; atol = 1e-6)
-            @test isapprox(J[n+1:end, n+1:end], L; atol = 1e-6)
+            @test isapprox(J[1:n, 1:n], H; atol=1e-6)
+            @test isapprox(J[n+1:end, n+1:end], L; atol=1e-6)
         end
     end
 
     @testset "basic ac power flow" begin
-
         @testset "9-bus-case" begin     
             data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case9.m"))
             solution = compute_ac_pf(data)["solution"]
