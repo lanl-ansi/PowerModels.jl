@@ -201,7 +201,7 @@ end
             
             @test size(J)[2] == num_bus * 2
             @test size(J)[1] == num_bus * 2
-            @test isapprox(LinearAlgebra.det(J), 1524.5588; atol=1e-4)
+            @test isapprox(sum(J), 1.0098308; atol=1e-6)
             
             # PQ bus - diagonal
             @test isapprox(J[1, 1], 225.5254; atol=1e-4)                  # dP/dva diagonal
@@ -218,7 +218,6 @@ end
             
             @test size(J)[1] == num_bus * 2
             @test size(J)[2] == num_bus * 2
-            @test isapprox(LinearAlgebra.det(J), 3.133520767308452e+57)
             @test isapprox(sum(J), -3.5289; atol=1e-4)
 
             # PV bus - diagonal
