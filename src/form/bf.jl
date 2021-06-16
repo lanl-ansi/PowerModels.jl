@@ -162,8 +162,8 @@ function constraint_power_losses(pm::AbstractBFAModel, n::Int, i, f_bus, t_bus, 
     w_fr = var(pm, n, :w, f_bus)
     w_to = var(pm, n, :w, t_bus)
 
-    JuMP.@constraint(pm.model, p_fr + p_to == g_sh_fr*(w_fr/tm^2) + g_sh_to*w_to)
-    JuMP.@constraint(pm.model, q_fr + q_to == b_sh_fr*(w_fr/tm^2) + b_sh_to*w_to)
+    JuMP.@constraint(pm.model, p_fr + p_to ==  g_sh_fr*(w_fr/tm^2) + g_sh_to*w_to)
+    JuMP.@constraint(pm.model, q_fr + q_to == -b_sh_fr*(w_fr/tm^2) - b_sh_to*w_to)
 end
 
 

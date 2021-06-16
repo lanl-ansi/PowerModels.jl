@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Fixed sign bug in BFA models (#779)
 - Fixed `correct_component_refrence_bus!` when no active generators are present (#776)
 
 ### v0.18.1
