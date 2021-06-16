@@ -748,7 +748,7 @@ end
         result = run_opf_bf("../test/data/matpower/case3.m", BFAPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 5658.22; atol = 1e0)
+        @test isapprox(result["objective"], 5638.97; atol = 1e0)
     end
     @testset "5-bus transformer swap case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
