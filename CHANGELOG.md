@@ -2,8 +2,12 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.18.2
 - Fixed sign bug in BFA models (#779)
 - Fixed `correct_component_refrence_bus!` when no active generators are present (#776)
+- Add support for Memento v1.2
 
 ### v0.18.1
 - Fixed multi-network support in sparse SDP models (#769)
