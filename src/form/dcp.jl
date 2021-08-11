@@ -169,8 +169,13 @@ function constraint_ohms_yt_from_on_off(pm::AbstractDCPModel, n::Int, i, f_bus, 
     va_to = var(pm, n, :va, t_bus)
     z = var(pm, n, :z_branch, i)
 
-    JuMP.@constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_max*(1-z)) )
-    JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
+    if b <= 0
+        JuMP.@constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_max*(1-z)) )
+        JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
+    else # account for bound reversal when b is positive
+        JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_max*(1-z)) )
+        JuMP.@constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_min*(1-z)) )
+    end
 end
 
 

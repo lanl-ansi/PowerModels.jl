@@ -34,6 +34,16 @@ end
         @test result["objective"] < 16600
     end
     =#
+    @testset "5-bus with negative branch reactance case" begin
+        result = run_ots("../test/data/matpower/case5_ext.m", ACPPowerModel, juniper_solver)
+
+        check_br_status(result["solution"], 5, 5)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 15174; atol = 1e0)
+        # increased from 15174 to 16588 in Ipopt v0.4.4 to v0.5.0
+        #@test result["objective"] < 16600
+    end
     @testset "5-bus with asymmetric line charge" begin
         result = run_ots("../test/data/pti/case5_alc.raw", ACPPowerModel, juniper_solver)
 
@@ -80,6 +90,14 @@ end
         @test result["termination_status"] == OPTIMAL
         @test isapprox(result["objective"], 14991.3; atol = 1e0)
     end
+    @testset "5-bus with negative branch reactance case" begin
+        result = run_ots("../test/data/matpower/case5_ext.m", DCPPowerModel, juniper_solver)
+
+        check_br_status(result["solution"], 5, 5)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 14991.2; atol = 1e0)
+    end
     @testset "6-bus case" begin
         result = run_ots("../test/data/matpower/case6.m", DCPPowerModel, juniper_solver)
 
@@ -102,6 +120,14 @@ end
     end
     @testset "5-bus case" begin
         result = run_ots("../test/data/matpower/case5.m", DCPLLPowerModel, juniper_solver)
+
+        check_br_status(result["solution"], 5, 5)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 15275.2; atol = 1e0)
+    end
+    @testset "5-bus with negative branch reactance case" begin
+        result = run_ots("../test/data/matpower/case5_ext.m", DCPLLPowerModel, juniper_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -135,6 +161,14 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 15051.4; atol = 5e1)
+    end
+    @testset "5-bus with negative branch reactance case" begin
+        result = run_ots("../test/data/matpower/case5_ext.m", SOCWRPowerModel, juniper_solver)
+
+        check_br_status(result["solution"], 5, 5)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 15009.9; atol = 1e0)
     end
     @testset "5-bus with asymmetric line charge" begin
         result = run_ots("../test/data/pti/case5_alc.raw", SOCWRPowerModel, juniper_solver)
@@ -171,6 +205,14 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 15051.4; atol = 5e1)
+    end
+    @testset "5-bus with negative branch reactance case" begin
+        result = run_ots("../test/data/matpower/case5_ext.m", QCRMPowerModel, juniper_solver)
+
+        check_br_status(result["solution"], 5, 5)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 15010.0; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
         result = run_ots("../test/data/matpower/case5_asym.m", QCRMPowerModel, juniper_solver)
@@ -216,6 +258,14 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 15241.4; atol = 5e1)
+    end
+    @testset "5-bus with negative branch reactance case" begin
+        result = run_ots("../test/data/matpower/case5_ext.m", LPACCPowerModel, juniper_solver)
+
+        check_br_status(result["solution"], 5, 5)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 15241.4; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
         result = run_ots("../test/data/matpower/case5_asym.m", LPACCPowerModel, juniper_solver)

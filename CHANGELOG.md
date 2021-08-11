@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fixed bug in `constraint_ohms_yt_from_on_off` for DCP models on branches with negative reactance values
 
 ### v0.18.2
 - Fixed sign bug in BFA models (#779)

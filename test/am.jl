@@ -16,7 +16,7 @@
 
         @test isa(am, AdmittanceMatrix{Complex{Float64}})
         @test SparseArrays.nnz(am.matrix) == 17
-        @test isapprox(LinearAlgebra.det(am.matrix), 7.133429246315739e6 - 1.0156167905437486e7im)
+        @test isapprox(LinearAlgebra.det(am.matrix), -7.57163005901563e6 + 2.19099590749748e7im)
     end
     @testset "14-bus pti case" begin
         data = PowerModels.parse_file("../test/data/pti/case14.raw")
