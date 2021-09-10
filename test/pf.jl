@@ -32,6 +32,15 @@
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
     end
+    @testset "5-bus multiple slack gens case" begin
+        result = run_pf("../test/data/matpower/case5_ext.m", ACPPowerModel, ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+
+        @test isapprox(result["solution"]["gen"]["1"]["pg"], 0.40; atol = 1e-3)
+        @test isapprox(result["solution"]["gen"]["1"]["qg"], 0.30; atol = 1e-3)
+    end
     @testset "5-bus case with hvdc line" begin
         result = run_ac_pf("../test/data/matpower/case5_dc.m", ipopt_solver)
 
@@ -50,7 +59,6 @@
 
         @test isapprox(result["solution"]["dcline"]["1"]["pf"],  0.15; atol = 1e-5)
         @test isapprox(result["solution"]["dcline"]["1"]["pt"], -0.089; atol = 1e-5)
-
     end
     @testset "6-bus case" begin
         result = run_pf("../test/data/matpower/case6.m", ACPPowerModel, ipopt_solver)
@@ -193,6 +201,14 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
+    end
+    @testset "5-bus multiple slack gens case" begin
+        result = run_dc_pf("../test/data/matpower/case5_ext.m", ipopt_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 0; atol = 1e-2)
+
+        @test isapprox(result["solution"]["gen"]["1"]["pg"], 0.40; atol = 1e-3)
     end
     @testset "6-bus case" begin
         result = run_dc_pf("../test/data/matpower/case6.m", ipopt_solver)

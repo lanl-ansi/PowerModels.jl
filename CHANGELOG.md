@@ -2,6 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Improved support in `build_pf` for slack buses with multiple generators
+- Fixed bug in `compute_ac_pf` when reporting slack bus `va` values
 - Fixed bug in `constraint_ohms_yt_from_on_off` for DCP models on branches with negative reactance values
 
 ### v0.18.2
