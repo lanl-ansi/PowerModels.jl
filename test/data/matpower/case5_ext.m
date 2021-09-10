@@ -1,6 +1,9 @@
 % used in tests of,
 % - inactive bus 11
 % - negative branch susceptance
+% - power flow slack bus with multiple generators
+% - power flow slack bus with non-zero va value
+
 
 function mpc = case5
 mpc.version = '2';
@@ -9,10 +12,10 @@ mpc.baseMVA = 100.0;
 %% bus data
 %	bus_i	type	Pd	Qd	Gs	Bs	area	Vm	Va	baseKV	zone	Vmax	Vmin
 mpc.bus = [
-	1	 2	 0.0	 0.0	 0.0	  0.0	 1	    1.00000	    2.80377	 230.0	 1	    1.10000	    0.90000;
+	1	 3	 0.0	 0.0	 0.0	  0.0	 1	    1.00000	    2.80377	 230.0	 1	    1.10000	    0.90000;
 	2	 1	 300.0	 98.61	 0.0	  0.0	 1	    1.08407	   -0.73465	 230.0	 1	    1.10000	    0.90000;
 	3	 2	 300.0	 98.61	 0.0	  0.0	 1	    1.00000	   -0.55972	 230.0	 1	    1.10000	    0.90000;
-	4	 3	 400.0	 131.47	 0.0	  0.0	 1	    1.00000	    0.00000	 230.0	 1	    1.10000	    0.90000;
+	4	 1	 400.0	 131.47	 0.0	  0.0	 1	    1.00000	    0.00000	 230.0	 1	    1.10000	    0.90000;
 	10	 2	 0.0	 0.0	 0.0	  0.0	 1	    1.00000	    3.59033	 230.0	 1	    1.10000	    0.90000;
 	11	 4	 0.0	 0.0	 1.0	 10.0	 1	    1.00000	    3.59033	 230.0	 1	    1.10000	    0.90000;
 ];

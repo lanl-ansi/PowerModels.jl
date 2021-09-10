@@ -39,6 +39,19 @@
             @test isapprox(opt_val, lin_val; atol = 1e-10)
         end
     end
+    @testset "5-bus multiple slack gens case" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_ext.m")
+        result = run_dc_pf(data, ipopt_solver)
+        native = compute_dc_pf(data)
+
+        for (i,bus) in data["bus"]
+            if bus["bus_type"] != pm_component_status_inactive["bus"]
+                opt_val = result["solution"]["bus"][i]["va"]
+                lin_val = native["solution"]["bus"][i]["va"]
+                @test isapprox(opt_val, lin_val; atol = 1e-10)
+            end
+        end
+    end
     # compute_dc_pf does not yet support multiple slack buses
     # @testset "6-bus case" begin
     #     data = PowerModels.parse_file("../test/data/matpower/case6.m")
@@ -139,6 +152,31 @@ end
             @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
         end
     end
+    @testset "5-bus multiple slack gens case" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_ext.m")
+        result = run_ac_pf(data, ipopt_solver)
+        native = compute_ac_pf(data)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test length(native["solution"]) >= 3
+
+        bus_pg_nlp = bus_gen_values(data, result["solution"], "pg")
+        bus_qg_nlp = bus_gen_values(data, result["solution"], "qg")
+
+        bus_pg_nls = bus_gen_values(data, native["solution"], "pg")
+        bus_qg_nls = bus_gen_values(data, native["solution"], "qg")
+
+        for (i,bus) in data["bus"]
+            if bus["bus_type"] != pm_component_status_inactive["bus"]
+                @test isapprox(result["solution"]["bus"][i]["va"], native["solution"]["bus"][i]["va"]; atol = 1e-7)
+                @test isapprox(result["solution"]["bus"][i]["vm"], native["solution"]["bus"][i]["vm"]; atol = 1e-7)
+
+                @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-6)
+                @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
+            end
+        end
+    end
+
     # compute_ac_pf does not yet support multiple slack buses
     # @testset "6-bus case" begin
     #     data = PowerModels.parse_file("../test/data/matpower/case6.m")
@@ -245,6 +283,22 @@ end
     end
     @testset "5-bus asymmetric case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_asym.m")
+        native = compute_ac_pf(data)
+        compute_ac_pf!(data)
+
+        @test length(native["solution"]) >= 3
+
+        for (i,bus) in native["solution"]["bus"]
+            @test isapprox(data["bus"][i]["va"], bus["va"]; atol = 1e-7)
+            @test isapprox(data["bus"][i]["vm"], bus["vm"]; atol = 1e-7)
+        end
+        for (i,gen) in native["solution"]["gen"]
+            @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-6)
+            @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-6)
+        end
+    end
+    @testset "5-bus non-zero slack va case" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_ext.m")
         native = compute_ac_pf(data)
         compute_ac_pf!(data)
 

@@ -30,6 +30,14 @@ function build_pf(pm::AbstractPowerModel)
         @assert bus["bus_type"] == 3
         constraint_theta_ref(pm, i)
         constraint_voltage_magnitude_setpoint(pm, i)
+
+        # if multiple generators, fix power generation degeneracies
+        if length(ref(pm, :bus_gens, i)) > 1
+            for j in collect(ref(pm, :bus_gens, i))[2:end]
+                constraint_gen_setpoint_active(pm, j)
+                constraint_gen_setpoint_reactive(pm, j)
+            end
+        end
     end
 
     for (i,bus) in ref(pm, :bus)
@@ -299,13 +307,14 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
         am = pf_data.am
         bus_type_idx = pf_data.bus_type_idx
 
-
         bus_assignment= Dict{String,Any}()
         for (i,bus) in data["bus"]
             if bus["bus_type"] != 4
+                bus_idx = am.bus_to_idx[bus["index"]]
+
                 bus_assignment[i] = Dict(
-                    "vm" => bus["vm"],
-                    "va" => bus["va"]
+                    "vm" => pf_data.vm_idx[bus_idx],
+                    "va" => pf_data.va_idx[bus_idx]
                 )
             end
         end
@@ -328,6 +337,7 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
                 @assert !haskey(bus_gens, bid)
                 bus["vm"] = pf_result.zero[2*i - 1]
                 bus["va"] = pf_result.zero[2*i]
+
             elseif bus_type_idx[i] == 2
                 for gen in bus_gens[bid]
                     sol_gen = gen_assignment["$(gen["index"])"]
@@ -387,7 +397,7 @@ end
 
 """
 similar to compute_ac_pf but places the solution in the power model's data
-dict instead of a seperate result object
+dict instead of a separate result object
 """
 function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
     pf_result = _compute_ac_pf(pf_data; kwargs...)
@@ -405,10 +415,13 @@ function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
     for (i,bid) in enumerate(am.idx_to_bus)
         bus = data["bus"]["$(bid)"]
 
+        bus["vm"] = pf_data.vm_idx[i]
+        bus["va"] = pf_data.va_idx[i]
+
         if bus_type_idx[i] == 1
             @assert !haskey(bus_gens, bid)
-            bus["vm"] = pf_result.zero[2*i - 1]
-            bus["va"] = pf_result.zero[2*i]
+            #update covered by default update
+
         elseif bus_type_idx[i] == 2
             for gen in bus_gens[bid]
                 gen["qg"] = 0.0
@@ -416,8 +429,6 @@ function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
 
             qg_remaining = -pf_result.zero[2*i - 1]
             _assign_qg!(data["gen"], bus_gens[bid], qg_remaining)
-
-            bus["va"] = pf_result.zero[2*i]
 
         elseif bus_type_idx[i] == 3
             for gen in bus_gens[bid]
