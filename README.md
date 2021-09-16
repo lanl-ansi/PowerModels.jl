@@ -53,7 +53,7 @@ Community-driven development and enhancement of PowerModels are welcome and enco
 This code has been developed as part of the Advanced Network Science Initiative at Los Alamos National Laboratory.
 The primary developer is Carleton Coffrin (@ccoffrin) with support from the following contributors,
 - Per Aaslid (@peraaslid) SINTEF ER, Branch flow storage model and linear branch flow formulation
-- Juan Luis Barbería (@jbarberia) UTN-BA, PSS(R)E v33 data export
+- Juan Luis Barbería (@jbarberia) UTN-BA, PSS(R)E v33 data export, Jacobian support for basic network data
 - Russell Bent (@rb004f) LANL, Matpower export, TNEP problem specification
 - Jose Daniel Lara (@jd-lara) Berkeley, Julia v1.0 compatibility
 - Jay Dave (@jay-dave) KU Leuven, LPAC for TNEP and OTS problems
