@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.18.3
 - Added Jacobian calculation of basic network data (#762)
 - Improved support in `build_pf` for slack buses with multiple generators (#785)
 - Fixed bug in `compute_ac_pf` when reporting slack bus `va` values
