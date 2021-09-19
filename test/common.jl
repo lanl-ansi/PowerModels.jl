@@ -72,7 +72,7 @@ end
 """
 An AC Power Flow Solver from scratch. 
 """
-function compute_basic_ac_pf!(data::Dict{String, Any}; decoupled=false)
+function compute_basic_ac_pf!(data::Dict{String, Any})
     if !get(data, "basic_network", false)
         Memento.warn(_LOGGER, "compute_basic_ac_pf requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
@@ -104,16 +104,11 @@ function compute_basic_ac_pf!(data::Dict{String, Any}; decoupled=false)
         if LinearAlgebra.normInf([delta_P; delta_Q]) < tol
             break
         end
+
         # STEP 2 and 3: Compute the jacobian and update step
-        if !decoupled
-            J = calc_basic_jacobian_matrix(data)
-            x = J \ [delta_P; delta_Q]
-        else
-            H, L = calc_basic_decoupled_jacobian_matrices(data)
-            va = H \ delta_P
-            vm = L \ delta_Q
-            x = [va; vm]
-        end
+        J = calc_basic_jacobian_matrix(data)
+        x = J \ [delta_P; delta_Q]
+
         # STEP 4
         # update voltage variables
         for i in 1:bus_num
