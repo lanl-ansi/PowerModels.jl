@@ -195,7 +195,7 @@ end
             for (i, bus) in data["bus"] # All buses PQ
                 bus["bus_type"] = 1
             end
-            J = PowerModels.calc_basic_jacobian_matrix(data);
+            J = calc_basic_jacobian_matrix(data)
 
             num_bus = length(data["bus"])
             
@@ -212,7 +212,7 @@ end
         
         @testset "24-bus-case" begin
             data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case24.m"))
-            J = PowerModels.calc_basic_jacobian_matrix(data)
+            J = calc_basic_jacobian_matrix(data)
             
             num_bus = length(data["bus"])
             
@@ -244,15 +244,6 @@ end
             @test isapprox(J[3, num_bus+9], -2.1624; atol=1e-4)          # dP/dvm non-diagonal
             @test isapprox(J[num_bus+3, num_bus+9], -7.9603; atol=1e-4)  # dQ/dvm non-diagonal
         end
-
-        @testset "30-bus-case-decoupled-matrices" begin
-            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case24.m"))
-            H, L = calc_basic_decoupled_jacobian_matrices(data)
-            J = calc_basic_jacobian_matrix(data)
-            n = length(data["bus"])
-            @test isapprox(J[1:n, 1:n], H; atol=1e-6)
-            @test isapprox(J[n+1:end, n+1:end], L; atol=1e-6)
-        end
     end
 
     @testset "basic ac power flow" begin
@@ -261,23 +252,6 @@ end
             solution = compute_ac_pf(data)["solution"]
 
             compute_basic_ac_pf!(data)
-            
-            for (i, bus) in data["bus"]
-                @test isapprox(solution["bus"][i]["va"], bus["va"]; atol=1e-4)
-                @test isapprox(solution["bus"][i]["vm"], bus["vm"]; atol=1e-4)
-            end
-            
-            for (i, gen) in data["gen"]
-                @test isapprox(solution["gen"][i]["pg"], gen["pg"]; atol=1e-4)
-                @test isapprox(solution["gen"][i]["qg"], gen["qg"]; atol=1e-4)
-            end
-        end
-
-        @testset "9-bus-case" begin     
-            data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case9.m"))
-            solution = compute_ac_pf(data)["solution"]
-
-            compute_basic_ac_pf!(data; decoupled=true)
             
             for (i, bus) in data["bus"]
                 @test isapprox(solution["bus"][i]["va"], bus["va"]; atol=1e-4)
