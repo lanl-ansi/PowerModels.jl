@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Improved formulation of `relaxation_sin_on_off` constraint (#786)
 
 ### v0.18.3
 - Added Jacobian calculation of basic network data (#762)
