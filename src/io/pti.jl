@@ -1270,6 +1270,19 @@ function export_pti(io::IO, data::Dict{String,Any})
     
     println(io, "0 / END OF AREA DATA, BEGIN TWO-TERMINAL DC DATA")
     # TODO : See how PM converts the DC line and do the oposite
+    if haskey(data, "dcline")
+        for (_, dcline) in sort(data["dcline"], by = (x) -> parse(Int64, x))
+            # Get AC buses from inverter and rectifier side
+            f_bus = data["bus"]["$(dcline["f_bus"])"]
+            t_bus = data["bus"]["$(dcline["t_bus"])"]
+
+            # Generate an equivalent DC-Line
+            psse_comp = _pm2psse_tt_dc_line(dcline, f_bus, t_bus)
+
+            # Print in io
+            _print_pti_str(io, psse_comp, _pti_dtypes["TWO-TERMINAL DC"])
+        end 
+    end
 
     println(io, "0 / END OF TWO-TERMINAL DC DATA, BEGIN VOLTAGE SOURCE CONVERTER DATA")    
     # TODO : See how PM converts the DC line and do the oposite
@@ -1638,6 +1651,37 @@ function _pm2psse_area_interchange(area::Dict{String, Any})
     return sub_data
 end
 
+"""
+Parses PM dcline to PSS(R)E style
+"""
+function _pm2psse_tt_dc_line(pm_dcline::Dict{String, Any}, f_bus::Dict{String, Any}, t_bus::Dict{String, Any})
+    # @infiltrate
+    sub_data = Dict{String, Any}()
+    name = pm_dcline["source_id"][end]
+    sub_data["NAME"] =  "\'$(name * repeat(" ", 12 - length(name)))\'"
+    sub_data["MDC"] = pm_dcline["br_status"] == 1 ? 1 : 0 # Only power mode
+    sub_data["RDC"] = get(pm_dcline, "rdc", 1) # No default allowed - needs a warning 
+    sub_data["SETVL"] = - pm_dcline["pf"] # Rectifier to Inverter
+    sub_data["VSCHD"] = pm_dcline["vt"] * f_bus["base_kv"]
+    sub_data["IPR"] = pm_dcline["f_bus"]
+    sub_data["NBR"] = get(pm_dcline, "nbr", 1)
+    sub_data["ANMXR"] = get(pm_dcline, "anmxr", 90)
+    sub_data["ANMNR"] = get(pm_dcline, "anmnr", 0)
+    sub_data["RCR"] = get(pm_dcline, "rcr", 0)
+    sub_data["XCR"] = get(pm_dcline, "xcr", 0)
+    sub_data["EBASR"] = f_bus["base_kv"]
+    sub_data["IPI"] = pm_dcline["t_bus"]
+    sub_data["NBI"] = get(pm_dcline, "nbi", 1)
+    sub_data["ANMXI"] = get(pm_dcline, "anmxi", 90)
+    sub_data["ANMNI"] = get(pm_dcline, "anmni", 0)
+    sub_data["RCI"] = get(pm_dcline, "rci", 0)
+    sub_data["XCI"] = get(pm_dcline, "xci", 0)
+    sub_data["EBASI"] = t_bus["base_kv"] 
+
+    _export_remaining!(sub_data, pm_dcline, _pti_defaults["TWO-TERMINAL DC"])
+    
+    return sub_data
+end
 
 """
 Parses PM fixed shunt to PSS(R)E-style

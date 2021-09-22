@@ -669,7 +669,7 @@ function _psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             anmn = []
             for key in ["ANMNR", "ANMNI"]
                 if abs(dcline[key]) <= 90.
-                    push!(anmn, pop!(dcline, key))
+                    push!(anmn, dcline[key])
                 else
                     push!(anmn, 0)
                     Memento.warn(_LOGGER, "$key outside reasonable limits, setting to 0 degress")
@@ -698,7 +698,7 @@ function _psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             if import_all
                 _import_remaining_keys!(sub_data, dcline)
             end
-
+            
             push!(pm_data["dcline"], sub_data)
         end
     end
