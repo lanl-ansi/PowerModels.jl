@@ -1273,11 +1273,15 @@ function export_pti(io::IO, data::Dict{String,Any})
     if haskey(data, "dcline")
         for (_, dcline) in sort(data["dcline"], by = (x) -> parse(Int64, x))
             # Get AC buses from inverter and rectifier side
-            f_bus = data["bus"]["$(dcline["f_bus"])"]
-            t_bus = data["bus"]["$(dcline["t_bus"])"]
+            r_bus = data["bus"]["$(dcline["f_bus"])"]
+            i_bus = data["bus"]["$(dcline["t_bus"])"]
+
+            if dcline["pf"] > 0 # Swap buses
+                r_bus, i_bus = i_bus, r_bus
+            end
 
             # Generate an equivalent DC-Line
-            psse_comp = _pm2psse_tt_dc_line(dcline, f_bus, t_bus)
+            psse_comp = _pm2psse_tt_dc_line(dcline, r_bus, i_bus)
 
             # Print in io
             _print_pti_str(io, psse_comp, _pti_dtypes["TWO-TERMINAL DC"])
@@ -1383,7 +1387,7 @@ function _pm2psse_header(pm::Dict{String, Any})
     sub_data = Dict{String, Any}()
 
     for (dtype, _) in _transaction_dtypes
-        sub_data[dtype] = get(pm, dtype, _default_case_identification[dtype])
+        sub_data[dtype] = get(pm, lowercase(dtype), _default_case_identification[dtype])
     end
 
     return sub_data
@@ -1654,29 +1658,28 @@ end
 """
 Parses PM dcline to PSS(R)E style
 """
-function _pm2psse_tt_dc_line(pm_dcline::Dict{String, Any}, f_bus::Dict{String, Any}, t_bus::Dict{String, Any})
-    # @infiltrate
+function _pm2psse_tt_dc_line(pm_dcline::Dict{String, Any}, r_bus::Dict{String, Any}, i_bus::Dict{String, Any})
     sub_data = Dict{String, Any}()
     name = pm_dcline["source_id"][end]
-    sub_data["NAME"] =  "\'$(name * repeat(" ", 12 - length(name)))\'"
+    sub_data["NAME"] =  name
     sub_data["MDC"] = pm_dcline["br_status"] == 1 ? 1 : 0 # Only power mode
     sub_data["RDC"] = get(pm_dcline, "rdc", 1) # No default allowed - needs a warning 
-    sub_data["SETVL"] = - pm_dcline["pf"] # Rectifier to Inverter
-    sub_data["VSCHD"] = pm_dcline["vt"] * f_bus["base_kv"]
-    sub_data["IPR"] = pm_dcline["f_bus"]
+    sub_data["SETVL"] = pm_dcline["pf"] # Rectifier to Inverter
+    sub_data["VSCHD"] = get(pm_dcline, "vschd", 0)
+    sub_data["IPR"] = i_bus["bus_i"] 
     sub_data["NBR"] = get(pm_dcline, "nbr", 1)
     sub_data["ANMXR"] = get(pm_dcline, "anmxr", 90)
     sub_data["ANMNR"] = get(pm_dcline, "anmnr", 0)
     sub_data["RCR"] = get(pm_dcline, "rcr", 0)
     sub_data["XCR"] = get(pm_dcline, "xcr", 0)
-    sub_data["EBASR"] = f_bus["base_kv"]
-    sub_data["IPI"] = pm_dcline["t_bus"]
+    sub_data["EBASR"] = get(pm_dcline, "ebasr", r_bus["base_kv"])
+    sub_data["IPI"] = r_bus["bus_i"]
     sub_data["NBI"] = get(pm_dcline, "nbi", 1)
     sub_data["ANMXI"] = get(pm_dcline, "anmxi", 90)
     sub_data["ANMNI"] = get(pm_dcline, "anmni", 0)
     sub_data["RCI"] = get(pm_dcline, "rci", 0)
     sub_data["XCI"] = get(pm_dcline, "xci", 0)
-    sub_data["EBASI"] = t_bus["base_kv"] 
+    sub_data["EBASI"] = get(pm_dcline, "ebasi", i_bus["base_kv"]) 
 
     _export_remaining!(sub_data, pm_dcline, _pti_defaults["TWO-TERMINAL DC"])
     

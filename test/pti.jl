@@ -243,17 +243,16 @@ end
 
     function test_pti_idempotent(filename::AbstractString, parse_file::Function)
         source_data = parse_file(filename)
-
         file_tmp = "../test/data/tmp.raw"
         PowerModels.export_pti(file_tmp, source_data)
-
-        destination_data = PowerModels.parse_file(file_tmp)
+        
+        destination_data = parse_file(file_tmp)
         rm(file_tmp)
-
+        
         # Delete "name"  key
         delete!(source_data, "name")
         delete!(destination_data, "name")
-
+        
         @test InfrastructureModels.compare_dict(source_data, destination_data)
     end
 
@@ -321,6 +320,11 @@ end
     #    test_pti_idempotent(file, PowerModels.parse_file)
     #end
 
+    # Needs import all flag to replicate the dc lines
+    @testset "test TT HVDC" begin
+        file = "../test/data/pti/two-terminal-hvdc_test.raw"
+        test_pti_idempotent(file, (x) -> PowerModels.parse_file(x, import_all=true))
+    end
 end
 
 
