@@ -663,7 +663,7 @@ function _psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
             sub_data["pminf"] = 0.0
             sub_data["pmaxf"] = dcline["SETVL"] > 0 ? power_demand : -power_demand
-            sub_data["pmint"] = pop!(dcline, "SETVL") > 0 ? -power_demand : power_demand
+            sub_data["pmint"] = dcline["SETVL"] > 0 ? -power_demand : power_demand
             sub_data["pmaxt"] = 0.0
 
             anmn = []

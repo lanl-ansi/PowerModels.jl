@@ -325,6 +325,11 @@ end
         file = "../test/data/pti/two-terminal-hvdc_test.raw"
         test_pti_idempotent(file, (x) -> PowerModels.parse_file(x, import_all=true))
     end
+
+    @testset "test TT HVDC 2" begin
+        file = "../test/data/pti/two-terminal-hvdc_test_2.raw"
+        test_pti_idempotent(file, (x) -> PowerModels.parse_file(x, import_all=true))
+    end
 end
 
 

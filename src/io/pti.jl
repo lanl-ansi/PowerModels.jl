@@ -17,7 +17,7 @@ const _pti_sections = ["CASE IDENTIFICATION", "BUS", "LOAD", "FIXED SHUNT",
 
 
 const _transaction_dtypes = [("IC", Int64), ("SBASE", Float64), ("REV", Int64),
-    ("XFRRAT", Float64), ("NXFRAT", Float64), ("BASFRQ", Float64)]
+    ("XFRRAT", Int64), ("NXFRAT", Int64), ("BASFRQ", Float64)]
 
 const _bus_dtypes = [("I", Int64), ("NAME", String), ("BASKV", Float64),
     ("IDE", Int64), ("AREA", Int64), ("ZONE", Int64), ("OWNER", Int64),
@@ -1664,7 +1664,7 @@ function _pm2psse_tt_dc_line(pm_dcline::Dict{String, Any}, r_bus::Dict{String, A
     sub_data["NAME"] =  name
     sub_data["MDC"] = pm_dcline["br_status"] == 1 ? 1 : 0 # Only power mode
     sub_data["RDC"] = get(pm_dcline, "rdc", 1) # No default allowed - needs a warning 
-    sub_data["SETVL"] = pm_dcline["pf"] # Rectifier to Inverter
+    sub_data["SETVL"] = get(pm_dcline, "setvl", pm_dcline["pf"])
     sub_data["VSCHD"] = get(pm_dcline, "vschd", 0)
     sub_data["IPR"] = i_bus["bus_i"] 
     sub_data["NBR"] = get(pm_dcline, "nbr", 1)
@@ -1673,6 +1673,8 @@ function _pm2psse_tt_dc_line(pm_dcline::Dict{String, Any}, r_bus::Dict{String, A
     sub_data["RCR"] = get(pm_dcline, "rcr", 0)
     sub_data["XCR"] = get(pm_dcline, "xcr", 0)
     sub_data["EBASR"] = get(pm_dcline, "ebasr", r_bus["base_kv"])
+    idr = get(pm_dcline, "idr", _pti_defaults["TWO-TERMINAL DC"]["IDR"])
+    sub_data["IDR"] = "\'$idr\'"
     sub_data["IPI"] = r_bus["bus_i"]
     sub_data["NBI"] = get(pm_dcline, "nbi", 1)
     sub_data["ANMXI"] = get(pm_dcline, "anmxi", 90)
@@ -1680,6 +1682,8 @@ function _pm2psse_tt_dc_line(pm_dcline::Dict{String, Any}, r_bus::Dict{String, A
     sub_data["RCI"] = get(pm_dcline, "rci", 0)
     sub_data["XCI"] = get(pm_dcline, "xci", 0)
     sub_data["EBASI"] = get(pm_dcline, "ebasi", i_bus["base_kv"]) 
+    idi = get(pm_dcline, "idi", _pti_defaults["TWO-TERMINAL DC"]["IDI"])
+    sub_data["IDI"] = "\'$idi\'"
 
     _export_remaining!(sub_data, pm_dcline, _pti_defaults["TWO-TERMINAL DC"])
     
