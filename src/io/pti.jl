@@ -85,7 +85,7 @@ const _transformer_2_1_dtypes = [("R1-2", Float64), ("X1-2", Float64),
 const _transformer_2_2_dtypes = [("WINDV1", Float64), ("NOMV1", Float64),
     ("ANG1", Float64), ("RATA1", Float64), ("RATB1", Float64),
     ("RATC1", Float64), ("COD1", Int64), ("CONT1", Int64), ("RMA1", Float64),
-    ("RMI1", Float64), ("VMA1", Float64), ("VMI1", Float64), ("NTP1", Float64),
+    ("RMI1", Float64), ("VMA1", Float64), ("VMI1", Float64), ("NTP1", Int64),
     ("TAB1", Int64), ("CR1", Float64), ("CX1", Float64), ("CNXA1", Float64)]
 
 const _transformer_2_3_dtypes = [("WINDV2", Float64), ("NOMV2", Float64)]
@@ -1282,9 +1282,21 @@ function export_pti(io::IO, data::Dict{String,Any})
 
             # Generate an equivalent DC-Line
             psse_comp = _pm2psse_tt_dc_line(dcline, r_bus, i_bus)
-
-            # Print in io
             _print_pti_str(io, psse_comp, _pti_dtypes["TWO-TERMINAL DC"])
+
+            #= split in three lines and print in io
+            # PSSE 33 cannot handle a TT DC LINE RECORD in one line (needs 3)
+            # but PM cannot handle this way
+            lines = [
+                _pti_dtypes["TWO-TERMINAL DC"][1:12],
+                _pti_dtypes["TWO-TERMINAL DC"][13:29],
+                _pti_dtypes["TWO-TERMINAL DC"][30:end]
+            ]
+            # @infiltrate
+            for line in lines
+                _print_pti_str(io, psse_comp, line)
+            end
+            =#
         end 
     end
 
@@ -1661,12 +1673,12 @@ Parses PM dcline to PSS(R)E style
 function _pm2psse_tt_dc_line(pm_dcline::Dict{String, Any}, r_bus::Dict{String, Any}, i_bus::Dict{String, Any})
     sub_data = Dict{String, Any}()
     name = pm_dcline["source_id"][end]
-    sub_data["NAME"] =  name
+    sub_data["NAME"] =  "\'$name\'"
     sub_data["MDC"] = pm_dcline["br_status"] == 1 ? 1 : 0 # Only power mode
     sub_data["RDC"] = get(pm_dcline, "rdc", 1) # No default allowed - needs a warning 
     sub_data["SETVL"] = get(pm_dcline, "setvl", pm_dcline["pf"])
     sub_data["VSCHD"] = get(pm_dcline, "vschd", 0)
-    sub_data["IPR"] = i_bus["bus_i"] 
+    sub_data["IPR"] = i_bus["bus_i"]
     sub_data["NBR"] = get(pm_dcline, "nbr", 1)
     sub_data["ANMXR"] = get(pm_dcline, "anmxr", 90)
     sub_data["ANMNR"] = get(pm_dcline, "anmnr", 0)
