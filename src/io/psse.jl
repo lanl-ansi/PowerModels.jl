@@ -288,10 +288,30 @@ function _psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     if haskey(pti_data, "LOAD")
         for load in pti_data["LOAD"]
             sub_data = Dict{String,Any}()
-
             sub_data["load_bus"] = pop!(load, "I")
             sub_data["pd"] = pop!(load, "PL")
             sub_data["qd"] = pop!(load, "QL")
+
+            if (load["IP"] > 0.0) | (load["IQ"] > 0.0)
+                bus = filter(x -> x["index"] == sub_data["load_bus"], pm_data["bus"])[1]
+                V = bus["vm"]*cosd(bus["va"]) + 1im*bus["vm"]*sind(bus["va"])
+                # Uses matpower transformation instead of pd = real(V*I) and qd = imag(V*I)
+                # where I and V are in vector form.
+                sub_data["pd"] += bus["vm"]*load["IP"]
+                sub_data["qd"] += bus["vm"]*load["IQ"]
+                Memento.warn(_LOGGER, "Current Load detected IP = $(load["IP"]) IQ = $(load["IQ"]). Converting to Power Load Pd = $(bus["vm"]*load["IP"]) Qd = $(bus["vm"]*load["IQ"])")
+            end
+
+            if (load["YP"] > 0.0) | (load["YQ"] > 0.0)
+                bus = filter(x -> x["index"] == sub_data["load_bus"], pm_data["bus"])[1]
+                V = bus["vm"]*cosd(bus["va"]) + 1im*bus["vm"]*sind(bus["va"])
+                # Uses matpower transformation instead of pd = real(V*(V*Y)^*) and qd = imag(V*(V*Y)^*)
+                # where Y and V are in vector form.
+                sub_data["pd"] += bus["vm"]^2*load["YP"]
+                # NOTE: In PSSe reactive power in constant admittance loads is negative for inductive loads and positive for capacitive loads
+                sub_data["qd"] -= bus["vm"]^2*load["YQ"]
+                Memento.warn(_LOGGER, "Impedance Load detected YP = $(load["YP"]) YQ = $(load["YQ"]). Converting to Power Load Pd = $(bus["vm"]^2*load["YP"]) Qd = $(-1*bus["vm"]^2*load["YQ"])")
+            end
             sub_data["status"] = pop!(load, "STATUS")
 
             sub_data["source_id"] = ["load", sub_data["load_bus"], pop!(load, "ID")]
@@ -609,7 +629,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     sub_data["index"] = length(pm_data["branch"]) + 1
 
                     if import_all
-                        _import_remaining_keys!(sub_data, transformer; 
+                        _import_remaining_keys!(sub_data, transformer;
                             exclude=["I", "J", "K", "CZ", "CW", "R1-2", "R2-3", "R3-1",
                                   "X1-2", "X2-3", "X3-1", "SBASE1-2", "SBASE2-3", "CKT",
                                   "SBASE3-1", "MAG1", "MAG2", "STAT","NOMV1", "NOMV2",
