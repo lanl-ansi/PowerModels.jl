@@ -292,7 +292,7 @@ function _psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["pd"] = pop!(load, "PL")
             sub_data["qd"] = pop!(load, "QL")
 
-            if (load["IP"] > 0.0) | (load["IQ"] > 0.0)
+            if (load["IP"] > 0.0) || (load["IQ"] > 0.0)
                 bus = filter(x -> x["index"] == sub_data["load_bus"], pm_data["bus"])[1]
                 V = bus["vm"]*cosd(bus["va"]) + 1im*bus["vm"]*sind(bus["va"])
                 # Uses matpower transformation instead of pd = real(V*I) and qd = imag(V*I)
@@ -302,7 +302,7 @@ function _psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 Memento.warn(_LOGGER, "Current Load detected IP = $(load["IP"]) IQ = $(load["IQ"]). Converting to Power Load Pd = $(bus["vm"]*load["IP"]) Qd = $(bus["vm"]*load["IQ"])")
             end
 
-            if (load["YP"] > 0.0) | (load["YQ"] > 0.0)
+            if (load["YP"] > 0.0) || (load["YQ"] > 0.0)
                 bus = filter(x -> x["index"] == sub_data["load_bus"], pm_data["bus"])[1]
                 V = bus["vm"]*cosd(bus["va"]) + 1im*bus["vm"]*sind(bus["va"])
                 # Uses matpower transformation instead of pd = real(V*(V*Y)^*) and qd = imag(V*(V*Y)^*)
