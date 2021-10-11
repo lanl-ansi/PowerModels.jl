@@ -299,7 +299,7 @@ function _psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             if (load["IP"] != 0.0) || (load["IQ"] != 0.0) || (load["YP"] != 0.0) || (load["YQ"] != 0.0)
                 if isempty(bus_lookup)
                     bus_lookup = Dict(bus["index"] => bus for bus in pm_data["bus"])
-                else
+                end
 
                 bus_vm = bus_lookup[sub_data["load_bus"]]["vm"]
                 if (load["IP"] != 0.0) || (load["IQ"] != 0.0)
