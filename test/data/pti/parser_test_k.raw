@@ -1,0 +1,35 @@
+0,   100.00, 33, 0, 0, 60.00     / PSS(R)E 33 RAW created by rawd33  TUE, JUL 21 2020  17:55
+
+
+   101,'BUS 1', 138.0000,3,   1,   1,   1,1.05000,   0.0000,1.10000,0.90000,1.10000,0.90000
+   102,'BUS 2', 138.0000,2,   1,   1,   1,1.02000,  -0.9440,1.10000,0.90000,1.10000,0.90000
+   103,'BUS 3', 138.0000,1,   1,   1,   1,0.99341,  -8.7697,1.10000,0.90000,1.10000,0.90000
+ 0 /End of Bus data, Begin Load data
+   103,'1 ',1,   1,   1,   250.000,    30.000,       0.000,      0.000,       0.000,       0.000,   1,1,0
+   103,'2 ',1,   1,   1,     0.000,     0.000,     250.000,     30.000,       0.000,       0.000,   1,1,0
+   103,'3 ',1,   1,   1,     0.000,     0.000,       0.000,      0.000,     250.000,     -30.000,   1,1,0
+   103,'4 ',1,   1,   1,   250.000,    30.000,     250.000,      0.000,       0.000,     -30.000,   1,1,0
+ 0 /End of Load data, Begin Fixed shunt data
+ 0 /End of Fixed shunt data, Begin Generator data
+   101,'1 ',   153.335,    73.271,   100.000,  -100.000,1.05000,     0,   100.000, 0.00000E+0, 1.00000E-5, 0.00000E+0, 0.00000E+0,1.00000,1,  100.0,   318.000,     0.000,   1,1.0000
+   102,'1 ',   100.000,    -3.247,   100.000,  -100.000,1.02000,     0,   100.000, 0.00000E+0, 2.500E-1, 0.00000E+0, 0.00000E+0,1.00000,1,  100.0,   318.000,     0.000,   1,1.0000
+ 0 /End of Generator data, Begin Branch data
+   101,   102,'1 ', 1.00000E-2, 1.20000E-1,   0.00000,  250.00,  250.00,  250.00,  0.00000,  0.00000,  0.00000,  0.00000,1,1,   0.00,   1,1.0000
+   101,   103,'1 ', 1.00000E-2, 1.20000E-1,   0.00000,  250.00,  250.00,  250.00,  0.00000,  0.00000,  0.00000,  0.00000,1,1,   0.00,   1,1.0000
+   102,   103,'1 ', 1.00000E-2, 1.20000E-1,   0.00000,  250.00,  250.00,  250.00,  0.00000,  0.00000,  0.00000,  0.00000,1,1,   0.00,   1,1.0000
+ 0 /End of Branch data, Begin Transformer data
+ 0 /End of Transformer data, Begin Area interchange data
+ 0 /End of Area interchange data, Begin Two-terminal dc line data
+ 0 /End of Two-terminal dc line data, Begin VSC dc line data
+ 0 /End of VSC dc line data, Begin Impedance correction table data
+ 0 /End of Impedance correction table data, Begin Multi-terminal dc line data
+ 0 /End of Multi-terminal dc line data, Begin Multi-section line data
+ 0 /End of Multi-section line data, Begin Zone data
+ 0 /End of Zone data, Begin Inter-area transfer data
+ 0 /End of Inter-area transfer data, Begin Owner data
+ 0 /End of Owner data, Begin FACTS device data
+ 0 /End of FACTS device data, Begin Switched shunt data
+ 0 /End of Switched shunt data, Begin GNE device data
+ 0 /End of GNE device data, Begin Induction machine data
+ 0 /End of Induction machine data
+Q
