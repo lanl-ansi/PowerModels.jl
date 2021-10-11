@@ -297,7 +297,10 @@ function _psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
             # Only build lookup once if necessary
             if (load["IP"] != 0.0) || (load["IQ"] != 0.0) || (load["YP"] != 0.0) || (load["YQ"] != 0.0)
-                bus_lookup = Dict(bus["index"] => bus for bus in pm_data["bus"])
+                if isempty(bus_lookup)
+                    bus_lookup = Dict(bus["index"] => bus for bus in pm_data["bus"])
+                else
+
                 bus_vm = bus_lookup[sub_data["load_bus"]]["vm"]
                 if (load["IP"] != 0.0) || (load["IQ"] != 0.0)
                     # Uses matpower transformation instead of pd = real(V*I) and qd = imag(V*I)
