@@ -515,7 +515,7 @@ end
     end
 
      @testset "Impedance and Current Load Conversions" begin
-        data = PowerModels.parse_file("/Users/jdlara/.julia/dev/PowerModels/test/data/pti/parser_test_k.raw")
+        data = PowerModels.parse_file("../test/data/pti//parser_test_k.raw")
         Vm_load = data["bus"]["103"]["vm"]
         # Test current load only
         @test isapprox(data["load"]["2"]["pd"], 250*Vm_load/data["baseMVA"], atol = 1e-6)
