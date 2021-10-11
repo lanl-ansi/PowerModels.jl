@@ -294,7 +294,6 @@ function _psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
             if (load["IP"] > 0.0) || (load["IQ"] > 0.0)
                 bus = filter(x -> x["index"] == sub_data["load_bus"], pm_data["bus"])[1]
-                V = bus["vm"]*cosd(bus["va"]) + 1im*bus["vm"]*sind(bus["va"])
                 # Uses matpower transformation instead of pd = real(V*I) and qd = imag(V*I)
                 # where I and V are in vector form.
                 sub_data["pd"] += bus["vm"]*load["IP"]
@@ -304,7 +303,6 @@ function _psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
             if (load["YP"] > 0.0) || (load["YQ"] > 0.0)
                 bus = filter(x -> x["index"] == sub_data["load_bus"], pm_data["bus"])[1]
-                V = bus["vm"]*cosd(bus["va"]) + 1im*bus["vm"]*sind(bus["va"])
                 # Uses matpower transformation instead of pd = real(V*(V*Y)^*) and qd = imag(V*(V*Y)^*)
                 # where Y and V are in vector form.
                 sub_data["pd"] += bus["vm"]^2*load["YP"]
