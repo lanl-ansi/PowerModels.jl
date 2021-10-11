@@ -296,11 +296,10 @@ function _psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data["index"] = length(pm_data["load"]) + 1
 
             # Only build lookup once if necessary
-            if (load["IP"] > 0.0) || (load["IQ"] > 0.0) || (load["YP"] > 0.0) || (load["YQ"] > 0.0)
+            if (load["IP"] != 0.0) || (load["IQ"] != 0.0) || (load["YP"] != 0.0) || (load["YQ"] != 0.0)
                 bus_lookup = Dict(bus["index"] => bus for bus in pm_data["bus"])
 
-
-                if (load["IP"] > 0.0) || (load["IQ"] > 0.0)
+                if (load["IP"] != 0.0) || (load["IQ"] != 0.0)
                     bus = bus_lookup[sub_data["load_bus"]]
                     # Uses matpower transformation instead of pd = real(V*I) and qd = imag(V*I)
                     # where I and V are in vector form.
@@ -308,8 +307,7 @@ function _psse2pm_load!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     sub_data["qd"] += bus["vm"]*load["IQ"]
                     Memento.warn(_LOGGER, "Load id = $(sub_data["index"]) detected as I Load  IP = $(load["IP"]) IQ = $(load["IQ"]). Converting to Power Load Pd = $(bus["vm"]*load["IP"]) Qd = $(bus["vm"]*load["IQ"]) using Vm = $(bus["vm"])")
                 end
-
-                if (load["YP"] > 0.0) || (load["YQ"] > 0.0)
+                if (load["YP"] != 0.0) || (load["YQ"] != 0.0)
                     bus = bus_lookup[sub_data["load_bus"]]
                     # Uses matpower transformation instead of pd = real(V*(V*Y)^*) and qd = imag(V*(V*Y)^*)
                     # where Y and V are in vector form.
