@@ -1677,7 +1677,7 @@ function _pm2psse_tt_dc_line(pm_dcline::Dict{String, Any}, r_bus::Dict{String, A
     sub_data["MDC"] = pm_dcline["br_status"] == 1 ? 1 : 0 # Only power mode
     sub_data["RDC"] = get(pm_dcline, "rdc", 1) # No default allowed - needs a warning 
     sub_data["SETVL"] = get(pm_dcline, "setvl", pm_dcline["pf"])
-    sub_data["VSCHD"] = get(pm_dcline, "vschd", 0)
+    sub_data["VSCHD"] = get(pm_dcline, "vschd", get(pm_dcline, "vt", 0) * r_bus["base_kv"])
     sub_data["IPR"] = i_bus["bus_i"]
     sub_data["NBR"] = get(pm_dcline, "nbr", 1)
     sub_data["ANMXR"] = get(pm_dcline, "anmxr", 90)

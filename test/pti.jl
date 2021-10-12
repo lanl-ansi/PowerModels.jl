@@ -325,11 +325,46 @@ end
         file = "../test/data/pti/two-terminal-hvdc_test.raw"
         test_pti_idempotent(file, (x) -> PowerModels.parse_file(x, import_all=true))
     end
-
+    
     @testset "test TT HVDC 2" begin
         file = "../test/data/pti/two-terminal-hvdc_test_2.raw"
         test_pti_idempotent(file, (x) -> PowerModels.parse_file(x, import_all=true))
     end
+
+    # Only fails in qminf/qmaxf because it lost amnr amni values in the export function.
+    # @testset "test TT HVDC 3" begin
+    #     file = "../test/data/pti/two-terminal-hvdc_test.raw"
+    #     test_pti_idempotent(file, PowerModels.parse_file)
+    # end
+end
+
+@testset "test HVDC Power Flow" begin
+
+    function compare_pf(filename::String)
+        source_data = parse_file(filename)
+        source_solution = PowerModels.run_pf(source_data, ACPPowerModel, ipopt_solver)["solution"]
+        
+        file_tmp = "../test/data/tmp.raw"
+        PowerModels.export_pti(file_tmp, source_data)
+        destination_data = parse_file(file_tmp)
+        destination_solution = PowerModels.run_pf(destination_data, ACPPowerModel, ipopt_solver)["solution"]
+        rm(file_tmp)
+        
+        @test InfrastructureModels.compare_dict(source_solution, destination_solution)
+    end
+
+    @testset "HVDC RAW" begin
+        file = "../test/data/pti/two-terminal-hvdc_test.raw"
+        compare_pf(file)
+    end
+    
+    # Fails because missing info to recreate the exact DCLINE (loss1)
+    # @testset "HVDC MAT" begin
+    #     file = "../test/data/matpower/case5_dc.m"
+    #     compare_pf(file)
+    # end
+
+
 end
 
 
