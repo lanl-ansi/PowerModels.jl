@@ -4,11 +4,10 @@ PowerModels.jl Change Log
 - nothing
 
 ### v0.19.0
-- tbd
+- Added conversion of impedance and current loads from PSSE raw files into constant power loads (#792)
 
 ### Staged
 - Improved formulation of `relaxation_sin_on_off` constraint (#786)
-- Enable parsing Impedance and Current loads from PSS/e raw files converting to Power Loads (#792)
 
 ### v0.18.3
 - Added Jacobian calculation of basic network data (#762)
