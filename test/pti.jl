@@ -326,11 +326,6 @@ end
         test_pti_idempotent(file, (x) -> PowerModels.parse_file(x, import_all=true))
     end
     
-    @testset "test TT HVDC 2" begin
-        file = "../test/data/pti/two-terminal-hvdc_test_2.raw"
-        test_pti_idempotent(file, (x) -> PowerModels.parse_file(x, import_all=true))
-    end
-
     # Only fails in qminf/qmaxf because it lost amnr amni values in the export function.
     # @testset "test TT HVDC 3" begin
     #     file = "../test/data/pti/two-terminal-hvdc_test.raw"
@@ -363,8 +358,6 @@ end
     #     file = "../test/data/matpower/case5_dc.m"
     #     compare_pf(file)
     # end
-
-
 end
 
 
@@ -401,5 +394,4 @@ end
     #    file = "../test/data/pti/parser_test_k.raw"
     #    test_pti_export_all(file)
     #end
-
 end
