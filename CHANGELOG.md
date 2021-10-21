@@ -1,5 +1,10 @@
 PowerModels.jl Change Log
 =========================
+### Staged
+- nothing
+
+### v0.19.0
+- tbd
 
 ### Staged
 - Improved formulation of `relaxation_sin_on_off` constraint (#786)
