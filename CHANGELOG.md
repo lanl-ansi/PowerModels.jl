@@ -7,6 +7,7 @@ PowerModels.jl Change Log
 - Added conversion of impedance and current loads from PSSE raw files into constant power loads (#792)
 
 ### Staged
+- Added support for two-terminal HVDC lines to PSSE export (#754)
 - Improved formulation of `relaxation_sin_on_off` constraint (#786)
 
 ### v0.18.3

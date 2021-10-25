@@ -17,7 +17,7 @@ const _pti_sections = ["CASE IDENTIFICATION", "BUS", "LOAD", "FIXED SHUNT",
 
 
 const _transaction_dtypes = [("IC", Int64), ("SBASE", Float64), ("REV", Int64),
-    ("XFRRAT", Float64), ("NXFRAT", Float64), ("BASFRQ", Float64)]
+    ("XFRRAT", Int64), ("NXFRAT", Int64), ("BASFRQ", Float64)]
 
 const _bus_dtypes = [("I", Int64), ("NAME", String), ("BASKV", Float64),
     ("IDE", Int64), ("AREA", Int64), ("ZONE", Int64), ("OWNER", Int64),
@@ -85,7 +85,7 @@ const _transformer_2_1_dtypes = [("R1-2", Float64), ("X1-2", Float64),
 const _transformer_2_2_dtypes = [("WINDV1", Float64), ("NOMV1", Float64),
     ("ANG1", Float64), ("RATA1", Float64), ("RATB1", Float64),
     ("RATC1", Float64), ("COD1", Int64), ("CONT1", Int64), ("RMA1", Float64),
-    ("RMI1", Float64), ("VMA1", Float64), ("VMI1", Float64), ("NTP1", Float64),
+    ("RMI1", Float64), ("VMA1", Float64), ("VMI1", Float64), ("NTP1", Int64),
     ("TAB1", Int64), ("CR1", Float64), ("CX1", Float64), ("CNXA1", Float64)]
 
 const _transformer_2_3_dtypes = [("WINDV2", Float64), ("NOMV2", Float64)]
@@ -1270,6 +1270,35 @@ function export_pti(io::IO, data::Dict{String,Any})
     
     println(io, "0 / END OF AREA DATA, BEGIN TWO-TERMINAL DC DATA")
     # TODO : See how PM converts the DC line and do the oposite
+    if haskey(data, "dcline")
+        for (_, dcline) in sort(data["dcline"], by = (x) -> parse(Int64, x))
+            # Get AC buses from inverter and rectifier side
+            r_bus = data["bus"]["$(dcline["f_bus"])"]
+            i_bus = data["bus"]["$(dcline["t_bus"])"]
+
+            if dcline["pf"] > 0 # Swap buses
+                r_bus, i_bus = i_bus, r_bus
+            end
+
+            # Generate an equivalent DC-Line
+            psse_comp = _pm2psse_tt_dc_line(dcline, r_bus, i_bus)
+            _print_pti_str(io, psse_comp, _pti_dtypes["TWO-TERMINAL DC"])
+
+            #= split in three lines and print in io
+            # PSSE 33 cannot handle a TT DC LINE RECORD in one line (needs 3)
+            # but PM cannot handle this way
+            lines = [
+                _pti_dtypes["TWO-TERMINAL DC"][1:12],
+                _pti_dtypes["TWO-TERMINAL DC"][13:29],
+                _pti_dtypes["TWO-TERMINAL DC"][30:end]
+            ]
+            # @infiltrate
+            for line in lines
+                _print_pti_str(io, psse_comp, line)
+            end
+            =#
+        end 
+    end
 
     println(io, "0 / END OF TWO-TERMINAL DC DATA, BEGIN VOLTAGE SOURCE CONVERTER DATA")    
     # TODO : See how PM converts the DC line and do the oposite
@@ -1370,7 +1399,7 @@ function _pm2psse_header(pm::Dict{String, Any})
     sub_data = Dict{String, Any}()
 
     for (dtype, _) in _transaction_dtypes
-        sub_data[dtype] = get(pm, dtype, _default_case_identification[dtype])
+        sub_data[dtype] = get(pm, lowercase(dtype), _default_case_identification[dtype])
     end
 
     return sub_data
@@ -1638,6 +1667,40 @@ function _pm2psse_area_interchange(area::Dict{String, Any})
     return sub_data
 end
 
+"""
+Parses PM dcline to PSS(R)E style
+"""
+function _pm2psse_tt_dc_line(pm_dcline::Dict{String, Any}, r_bus::Dict{String, Any}, i_bus::Dict{String, Any})
+    sub_data = Dict{String, Any}()
+    name = pm_dcline["source_id"][end]
+    sub_data["NAME"] =  "\'$name\'"
+    sub_data["MDC"] = pm_dcline["br_status"] == 1 ? 1 : 0 # Only power mode
+    sub_data["RDC"] = get(pm_dcline, "rdc", 1) # No default allowed - needs a warning 
+    sub_data["SETVL"] = get(pm_dcline, "setvl", pm_dcline["pf"])
+    sub_data["VSCHD"] = get(pm_dcline, "vschd", get(pm_dcline, "vt", 0) * r_bus["base_kv"])
+    sub_data["IPR"] = i_bus["bus_i"]
+    sub_data["NBR"] = get(pm_dcline, "nbr", 1)
+    sub_data["ANMXR"] = get(pm_dcline, "anmxr", 90)
+    sub_data["ANMNR"] = get(pm_dcline, "anmnr", 0)
+    sub_data["RCR"] = get(pm_dcline, "rcr", 0)
+    sub_data["XCR"] = get(pm_dcline, "xcr", 0)
+    sub_data["EBASR"] = get(pm_dcline, "ebasr", r_bus["base_kv"])
+    idr = get(pm_dcline, "idr", _pti_defaults["TWO-TERMINAL DC"]["IDR"])
+    sub_data["IDR"] = "\'$idr\'"
+    sub_data["IPI"] = r_bus["bus_i"]
+    sub_data["NBI"] = get(pm_dcline, "nbi", 1)
+    sub_data["ANMXI"] = get(pm_dcline, "anmxi", 90)
+    sub_data["ANMNI"] = get(pm_dcline, "anmni", 0)
+    sub_data["RCI"] = get(pm_dcline, "rci", 0)
+    sub_data["XCI"] = get(pm_dcline, "xci", 0)
+    sub_data["EBASI"] = get(pm_dcline, "ebasi", i_bus["base_kv"]) 
+    idi = get(pm_dcline, "idi", _pti_defaults["TWO-TERMINAL DC"]["IDI"])
+    sub_data["IDI"] = "\'$idi\'"
+
+    _export_remaining!(sub_data, pm_dcline, _pti_defaults["TWO-TERMINAL DC"])
+    
+    return sub_data
+end
 
 """
 Parses PM fixed shunt to PSS(R)E-style
