@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Added support for two-terminal HVDC lines to PSSE export (#754)
 - Improved formulation of `relaxation_sin_on_off` constraint (#786)
 
 ### v0.18.3
