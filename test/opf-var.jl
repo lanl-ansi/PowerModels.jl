@@ -404,6 +404,19 @@ end
             @test isapprox(result["objective"], 17613.2; atol = 1e0)
             @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0)
         end
+
+        @testset "5-bus uc pwl case" begin
+            data = parse_file("../test/data/matpower/case5_pwlc.m")
+            for (i,load) in data["load"]
+                load["pd"] = 0.5*load["pd"]
+            end
+            result = PowerModels._run_ucopf(data, DCPPowerModel, cbc_solver)
+
+            @test result["termination_status"] == OPTIMAL
+            @test isapprox(result["objective"], 8008.0; atol = 1e0)
+            @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0)
+            @test isapprox(result["solution"]["gen"]["5"]["gen_status"], 0.0)
+        end
     end
 
 
