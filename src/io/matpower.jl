@@ -154,11 +154,15 @@ function _parse_matpower_string(data_string::String)
 
     if haskey(matlab_data, "mpc.bus")
         buses = []
+        pv_bus_lookup = Dict{Int, Any}()
         for bus_row in matlab_data["mpc.bus"]
             bus_data = _IM.row_to_typed_dict(bus_row, _mp_bus_columns)
             bus_data["index"] = _IM.check_type(Int, bus_row[1])
             bus_data["source_id"] = ["bus", bus_data["index"]]
             push!(buses, bus_data)
+            if bus_data["bus_type"] ∈ [1, 2]
+                pv_bus_lookup[bus_data["index"]] = bus_data
+            end
         end
         case["bus"] = buses
     else
@@ -169,6 +173,13 @@ function _parse_matpower_string(data_string::String)
         gens = []
         for (i, gen_row) in enumerate(matlab_data["mpc.gen"])
             gen_data = _IM.row_to_typed_dict(gen_row, _mp_gen_columns)
+            bus_data = get(pv_bus_lookup, gen_data["gen_bus"], nothing)
+            if bus_data !== nothing
+                if bus_data["bus_type"] ∈ [1, 2] && bus_data["vm"] != gen_data["vg"]
+                    Memento.warn(_LOGGER, string("Correcting vm in bus $(gen_data["gen_bus"]) to $(gen_data["vg"]) to match generator set-point"))
+                    bus_data["vm"] = gen_data["vg"]
+                end
+            end
             gen_data["index"] = i
             gen_data["source_id"] = ["gen", i]
             push!(gens, gen_data)
@@ -839,7 +850,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
         if idx != gen["index"]
             Memento.warn(_LOGGER, "The index of the generator does not match the matpower assigned index. Any data that uses generator indexes for reference is corrupted.");
         end
-        println(io, 
+        println(io,
             "\t", gen["gen_bus"],
             "\t", _get_default(gen, "pg"),
             "\t", _get_default(gen, "qg"),
@@ -945,7 +956,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     println(io, "];")
     println(io)
 
-    if length(dclines) > 0 
+    if length(dclines) > 0
         # print the dcline data
         println(io, "%% dcline data")
         println(io, "%    f_bus    t_bus    status    Pf    Pt    Qf    Qt    Vf    Vt    Pmin    Pmax    QminF    QmaxF    QminT    QmaxT    loss0    loss1")
