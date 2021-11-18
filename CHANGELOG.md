@@ -4,6 +4,10 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.19.0
+- Add support for JuMP v0.22
+- Remove dependency on MathOptInterface package
+
 ### v0.18.4
 - Improved support for PWL costs with on/off generators
 - Added support for two-terminal HVDC lines to PSSE export (#754)
