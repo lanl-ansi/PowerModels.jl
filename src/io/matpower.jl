@@ -4,6 +4,8 @@
 #                                                                       #
 #########################################################################
 
+const MP_FIX_VOLTAGE_BUSES = [2, 3]
+
 "Parses the matpwer data from either a filename or an IO object"
 function parse_matpower(io::IO; validate=true)::Dict
     mp_data = _parse_matpower_string(read(io, String))
@@ -160,7 +162,7 @@ function _parse_matpower_string(data_string::String)
             bus_data["index"] = _IM.check_type(Int, bus_row[1])
             bus_data["source_id"] = ["bus", bus_data["index"]]
             push!(buses, bus_data)
-            if bus_data["bus_type"] ∈ [1, 2]
+            if bus_data["bus_type"] ∈ MP_FIX_VOLTAGE_BUSES
                 pv_bus_lookup[bus_data["index"]] = bus_data
             end
         end
@@ -175,7 +177,7 @@ function _parse_matpower_string(data_string::String)
             gen_data = _IM.row_to_typed_dict(gen_row, _mp_gen_columns)
             bus_data = get(pv_bus_lookup, gen_data["gen_bus"], nothing)
             if bus_data !== nothing
-                if bus_data["bus_type"] ∈ [1, 2] && bus_data["vm"] != gen_data["vg"]
+                if bus_data["bus_type"] ∈ MP_FIX_VOLTAGE_BUSES && bus_data["vm"] != gen_data["vg"]
                     Memento.warn(_LOGGER, string("Correcting vm in bus $(gen_data["gen_bus"]) to $(gen_data["vg"]) to match generator set-point"))
                     bus_data["vm"] = gen_data["vg"]
                 end
