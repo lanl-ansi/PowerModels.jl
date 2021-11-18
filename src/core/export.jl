@@ -29,15 +29,15 @@ end
 import JuMP: optimizer_with_attributes
 export optimizer_with_attributes
 
-import MathOptInterface: TerminationStatusCode
+import JuMP: TerminationStatusCode
 export TerminationStatusCode
 
-import MathOptInterface: ResultStatusCode
+import JuMP: ResultStatusCode
 export ResultStatusCode
 
 for status_code_enum in [TerminationStatusCode, ResultStatusCode]
     for status_code in instances(status_code_enum)
-        @eval import MathOptInterface: $(Symbol(status_code))
+        @eval import JuMP: $(Symbol(status_code))
         @eval export $(Symbol(status_code))
     end
 end

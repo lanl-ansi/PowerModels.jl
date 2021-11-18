@@ -643,7 +643,8 @@ end
         result = run_opf("../test/data/matpower/case24.m", SOCWRConicPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 70688.5; atol = 1e0)
+        #@test isapprox(result["objective"], 70688.5; atol = 1e0)
+        @test isapprox(result["objective"], 70693.9; atol = 1e0)
     end
     @testset "14-bus variable bounds" begin
         pm = instantiate_model("../test/data/matpower/case14.m", SOCWRConicPowerModel, PowerModels.build_opf)
