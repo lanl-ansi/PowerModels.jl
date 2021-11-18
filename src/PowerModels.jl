@@ -8,8 +8,6 @@ import Memento
 import NLsolve
 
 import JuMP
-import MathOptInterface
-const _MOI = MathOptInterface
 
 import InfrastructureModels
 import InfrastructureModels: optimize_model!, @im_fields, nw_id_default
