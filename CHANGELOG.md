@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.18.4
 - Improved support for PWL costs with on/off generators
 - Added support for two-terminal HVDC lines to PSSE export (#754)
 - Improved formulation of `relaxation_sin_on_off` constraint (#786)
