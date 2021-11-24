@@ -4,6 +4,9 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.19.1
+- Add support for Memento v1.3
+
 ### v0.19.0
 - Add support for JuMP v0.22
 - Remove dependency on MathOptInterface package
