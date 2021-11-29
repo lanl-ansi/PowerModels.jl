@@ -19,6 +19,15 @@ TESTLOG = Memento.getlogger(PowerModels)
         Memento.setlevel!(TESTLOG, "error")
     end
 
+    @testset "Check PSSE exception handling" begin
+        Memento.setlevel!(TESTLOG, "warn")
+
+        @test_throws(TESTLOG, Exception, PowerModels.parse_psse("../test/data/pti/parser_test_b.raw"))
+        @test_throws(TESTLOG, Exception, PowerModels.parse_psse("../test/data/pti/parser_test_d.raw"))
+
+        Memento.setlevel!(TESTLOG, "error")
+    end
+
     @testset "4-bus frankenstein file" begin
         data_dict = PowerModels.parse_pti("../test/data/pti/frankenstein_00.raw")
         @test isa(data_dict, Dict)
