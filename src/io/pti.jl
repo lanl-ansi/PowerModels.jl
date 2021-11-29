@@ -890,7 +890,7 @@ function parse_pti(io::IO)::Dict
     try
         pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"^\<file\s[\/\\]*(?:.*[\/\\])*(.*)\.raw\>$", lowercase(io.name)).captures[1]
     catch
-        throw(Memento.error(_LOGGER, "This file is unrecognized and cannot be parsed"))
+        Memento.info(_LOGGER, "unable to recover case name from io file name in parse_pti")
     end
 
     return pti_data
