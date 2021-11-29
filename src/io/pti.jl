@@ -890,7 +890,7 @@ function parse_pti(io::IO)::Dict
     try
         pti_data["CASE IDENTIFICATION"][1]["NAME"] = match(r"^\<file\s[\/\\]*(?:.*[\/\\])*(.*)\.raw\>$", lowercase(io.name)).captures[1]
     catch
-        throw(Memento.error(_LOGGER, "This file is unrecognized and cannot be parsed"))
+        Memento.info(_LOGGER, "unable to recover case name from io file name in parse_pti")
     end
 
     return pti_data
@@ -1081,7 +1081,7 @@ function export_pti(io::IO, data::Dict{String,Any})
     println(io, Comment_Line_2)
 
     # Bus
-    for (_, bus) in sort(data["bus"], by = (x) -> parse(Int64, x))
+    for (_, bus) in sort(collect(data["bus"]), by=(x) -> x.second["index"])
         # Skip star-buses created by three-winding transformers from importing raw source files
         if bus["source_id"][1] == "transformer"
             continue
@@ -1097,7 +1097,7 @@ function export_pti(io::IO, data::Dict{String,Any})
     println(io, "0 / END OF BUS DATA, BEGIN LOAD DATA")
 
     # Load
-    for (_, load) in sort(data["load"], by = (x) -> parse(Int64, x))
+    for (_, load) in sort(collect(data["load"]), by=(x) -> x.second["index"])
         # Get bus number
         bus_i = load["load_bus"]
 
@@ -1116,7 +1116,7 @@ function export_pti(io::IO, data::Dict{String,Any})
     println(io, "0 / END OF LOAD DATA, BEGIN FIXED SHUNT DATA")
 
     # Fixed Shunt
-    for (_, shunt) in sort(data["shunt"], by = (x) -> parse(Int64, x))
+    for (_, shunt) in sort(collect(data["shunt"]), by=(x) -> x.second["index"])
         # Skip Switched Shunts
         type = haskey(shunt, "source_id") ? shunt["source_id"][1] : "fixed shunt"
         if type != "fixed shunt"
@@ -1133,7 +1133,7 @@ function export_pti(io::IO, data::Dict{String,Any})
     println(io, "0 / END OF FIXED SHUNT DATA, BEGIN GENERATOR DATA")
 
     # Generator
-    for (_, gen) in sort(data["gen"], by = (x) -> parse(Int64, x))
+    for (_, gen) in sort(collect(data["gen"]), by=(x) -> x.second["index"])
         # Get bus number
         bus_i = gen["gen_bus"]
 
@@ -1153,7 +1153,7 @@ function export_pti(io::IO, data::Dict{String,Any})
 
     # Branches
     transformers = Array{Tuple{Symbol, Any}, 1}()
-    for (_, branch) in sort(data["branch"], by = (x) -> parse(Int64, x))
+    for (_, branch) in sort(collect(data["branch"]), by=(x) -> x.second["index"])
         # Skip transformers and put it in transformers Array
         if branch["transformer"]
 
@@ -1261,7 +1261,7 @@ function export_pti(io::IO, data::Dict{String,Any})
 
     # Area Interchange
     if haskey(data, "area interchange") 
-        for (_, area) in sort(data["area interchange"], by = (x) -> parse(Int64, x))
+        for (_, area) in sort(collect(data["area interchange"]), by=(x) -> x.second["index"])
             # Get Dict in a PSSE way and print it
             psse_comp = _pm2psse_area_interchange(area)
             _print_pti_str(io, psse_comp, _pti_dtypes["AREA INTERCHANGE"])
@@ -1271,7 +1271,7 @@ function export_pti(io::IO, data::Dict{String,Any})
     println(io, "0 / END OF AREA DATA, BEGIN TWO-TERMINAL DC DATA")
     # TODO : See how PM converts the DC line and do the oposite
     if haskey(data, "dcline")
-        for (_, dcline) in sort(data["dcline"], by = (x) -> parse(Int64, x))
+        for (_, dcline) in sort(collect(data["dcline"]), by=(x) -> x.second["index"])
             # Get AC buses from inverter and rectifier side
             r_bus = data["bus"]["$(dcline["f_bus"])"]
             i_bus = data["bus"]["$(dcline["t_bus"])"]
@@ -1310,7 +1310,7 @@ function export_pti(io::IO, data::Dict{String,Any})
 
     # Zone Data
     if haskey(data, "zone") 
-        for (_, zone) in sort(data["zone"], by = (x) -> parse(Int64, x))
+        for (_, zone) in sort(collect(data["zone"]), by=(x) -> x.second["index"])
             # Get Dict in a PSSE way and print it
             psse_comp = _pm2psse_zone(zone)
             _print_pti_str(io, psse_comp, _pti_dtypes["ZONE"])
@@ -1333,7 +1333,7 @@ function export_pti(io::IO, data::Dict{String,Any})
 
     # Owner Data
     if haskey(data, "owner") 
-        for (_, owner) in sort(data["owner"], by = (x) -> parse(Int64, x))
+        for (_, owner) in sort(collect(data["owner"]), by=(x) -> x.second["index"])
             # Get Dict in a PSSE way and print it
             psse_comp = _pm2psse_owner(owner)
             _print_pti_str(io, psse_comp, _pti_dtypes["OWNER"])
@@ -1344,7 +1344,7 @@ function export_pti(io::IO, data::Dict{String,Any})
     println(io, "0 / END OF FACTS CONTROL DEVICE DATA, BEGIN SWITCHED SHUNT DATA")
 
     # Switched Shunt
-    for (_, shunt) in sort(data["shunt"], by = (x) -> parse(Int64, x))
+    for (_, shunt) in sort(collect(data["shunt"]), by=(x) -> x.second["index"])
         # Skip Fixed Shunts
         type = haskey(shunt, "source_id") ? shunt["source_id"][1] : "fixed shunt"
         if type != "switched shunt"

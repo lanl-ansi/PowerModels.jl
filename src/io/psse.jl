@@ -793,7 +793,10 @@ function _pti_to_powermodels!(pti_data::Dict; import_all=false, validate=true)::
     pm_data["source_type"] = "pti"
     pm_data["source_version"] = "$rev"
     pm_data["baseMVA"] = pop!(pti_data["CASE IDENTIFICATION"][1], "SBASE")
-    pm_data["name"] = pop!(pti_data["CASE IDENTIFICATION"][1], "NAME")
+ 
+    if haskey(pti_data["CASE IDENTIFICATION"][1], "NAME")
+        pm_data["name"] = pop!(pti_data["CASE IDENTIFICATION"][1], "NAME")
+    end
 
     if import_all
         _import_remaining_keys!(pm_data, pti_data["CASE IDENTIFICATION"][1])

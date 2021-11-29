@@ -12,9 +12,18 @@ TESTLOG = Memento.getlogger(PowerModels)
                    PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
         @test_warn(TESTLOG, "At line 4, new section started with '0', but additional non-comment data is present. Pattern '^\\s*0\\s*[/]*.*' is reserved for section start/end.",
                     PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
-        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
+        #@test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
         @test_warn(TESTLOG, "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))
         @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_j.raw"))
+
+        Memento.setlevel!(TESTLOG, "error")
+    end
+
+    @testset "Check PSSE exception handling" begin
+        Memento.setlevel!(TESTLOG, "warn")
+
+        @test_throws(TESTLOG, Exception, PowerModels.parse_psse("../test/data/pti/parser_test_b.raw"))
+        @test_throws(TESTLOG, Exception, PowerModels.parse_psse("../test/data/pti/parser_test_d.raw"))
 
         Memento.setlevel!(TESTLOG, "error")
     end
@@ -241,29 +250,27 @@ end
 
 @testset "test idempotent pti export" begin
 
-    function test_pti_idempotent(filename::AbstractString, parse_file::Function)
-        source_data = parse_file(filename)
-        file_tmp = "../test/data/tmp.raw"
-        PowerModels.export_pti(file_tmp, source_data)
-        
-        destination_data = parse_file(file_tmp)
-        rm(file_tmp)
-        
-        # Delete "name"  key
+    function test_pti_idempotent(filename::AbstractString; kwargs...)
+        source_data = PowerModels.parse_file(filename; kwargs...)
+
+        io = PipeBuffer()
+        PowerModels.export_pti(io, source_data)
+
+        destination_data = PowerModels.parse_psse(io; kwargs...)
+
         delete!(source_data, "name")
-        delete!(destination_data, "name")
-        
+
         @test InfrastructureModels.compare_dict(source_data, destination_data)
     end
 
     @testset "test parser_three_winding_test" begin
         file = "../test/data/pti/three_winding_test.raw"
-        test_pti_idempotent(file, PowerModels.parse_file)
+        test_pti_idempotent(file)
     end
 
     @testset "test case3" begin
         file = "../test/data/pti/case3.raw"
-        test_pti_idempotent(file, PowerModels.parse_file)
+        test_pti_idempotent(file)
     end
 
     # Fails at branch["5"] because I=4, J=3 -> PM parse it as f_bus=3, t_bus=4
@@ -273,63 +280,63 @@ end
 
     #@testset "test case5" begin
     #    file = "../test/data/pti/case5.raw"
-    #    test_pti_idempotent(file, PowerModels.parse_file)
+    #    test_pti_idempotent(file)
     #end
     #
     #@testset "test case5_alc" begin
     #    file = "../test/data/pti/case5_alc.raw"
-    #    test_pti_idempotent(file, PowerModels.parse_file)
+    #    test_pti_idempotent(file)
     #end
 
     @testset "test case14" begin
         file = "../test/data/pti/case14.raw"
-        test_pti_idempotent(file, PowerModels.parse_file)
+        test_pti_idempotent(file)
     end
 
     # Same as the case5.raw since there is a branch with I=23, J=20. If u open it and save it from PSSE
     # the data of this branch is I=20, J=23 but with MET = 2
     #@testset "test case24" begin
     #    file = "../test/data/pti/case24.raw"
-    #    test_pti_idempotent(file, PowerModels.parse_file)
+    #    test_pti_idempotent(file)
     #end
 
     @testset "test case30" begin
         file = "../test/data/pti/case30.raw"
-        test_pti_idempotent(file, PowerModels.parse_file)
+        test_pti_idempotent(file)
     end
 
     @testset "test case73" begin
         file = "../test/data/pti/case73.raw"
-        test_pti_idempotent(file, PowerModels.parse_file)
+        test_pti_idempotent(file)
     end
 
     @testset "test frankenstein_00_2" begin
         file = "../test/data/pti/frankenstein_00_2.raw"
-        test_pti_idempotent(file, PowerModels.parse_file)
+        test_pti_idempotent(file)
     end
 
     @testset "test frankenstein_20" begin
         file = "../test/data/pti/frankenstein_20.raw"
-        test_pti_idempotent(file, PowerModels.parse_file)
+        test_pti_idempotent(file)
     end
 
     # Same as case5 and case 24
     # See line 27 of frankenstein_70.raw
     #@testset "test frankenstein_70" begin
     #    file = "../test/data/pti/frankenstein_70.raw"
-    #    test_pti_idempotent(file, PowerModels.parse_file)
+    #    test_pti_idempotent(file)
     #end
 
     # Needs import all flag to replicate the dc lines
     @testset "test TT HVDC" begin
         file = "../test/data/pti/two-terminal-hvdc_test.raw"
-        test_pti_idempotent(file, (x) -> PowerModels.parse_file(x, import_all=true))
+        test_pti_idempotent(file, import_all=true)
     end
     
     # Only fails in qminf/qmaxf because it lost amnr amni values in the export function.
     # @testset "test TT HVDC 3" begin
     #     file = "../test/data/pti/two-terminal-hvdc_test.raw"
-    #     test_pti_idempotent(file, PowerModels.parse_file)
+    #     test_pti_idempotent(file)
     # end
 end
 
