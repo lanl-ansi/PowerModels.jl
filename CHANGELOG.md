@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Made case name recovery optional in PTI parsing
+- Fixed Julia deprecation warning when calling sort on Dict
 
 ### v0.19.1
 - Add support for Memento v1.3
