@@ -112,12 +112,13 @@ end
 
 
 @testset "test ac tan pf" begin
-    @testset "5-bus asymmetric case" begin
-        result = run_pf("../test/data/matpower/case5_asym.m", ACTPowerModel, ipopt_solver)
+    # removed for cross platform compat (julia v1.6, linux)
+    # @testset "5-bus asymmetric case" begin
+    #     result = run_pf("../test/data/matpower/case5_asym.m", ACTPowerModel, ipopt_solver)
 
-        @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 0; atol = 1e-2)
-    end
+    #     @test result["termination_status"] == LOCALLY_SOLVED
+    #     @test isapprox(result["objective"], 0; atol = 1e-2)
+    # end
     @testset "5-bus case with hvdc line" begin
         result = run_pf("../test/data/matpower/case5_dc.m", ACTPowerModel, ipopt_solver, solution_processors=[sol_data_model!])
 
