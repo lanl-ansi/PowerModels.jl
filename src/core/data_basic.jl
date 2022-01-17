@@ -221,9 +221,9 @@ function calc_basic_incidence_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_incidence_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    I = Int64[]
-    J = Int64[]
-    V = Int64[]
+    I = Int[]
+    J = Int[]
+    V = Int[]
 
     b = [branch for (i,branch) in data["branch"] if branch["br_status"] != 0]
     branch_ordered = sort(b, by=(x) -> x["index"])
@@ -274,8 +274,8 @@ function calc_basic_branch_susceptance_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_branch_susceptance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    I = Int64[]
-    J = Int64[]
+    I = Int[]
+    J = Int[]
     V = Float64[]
 
     b = [branch for (i,branch) in data["branch"] if branch["br_status"] != 0]
@@ -406,8 +406,8 @@ function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
         push!(neighbors[I[nz]], J[nz])
         push!(neighbors[J[nz]], I[nz])
     end
-    J0_I = Int64[]
-    J0_J = Int64[]
+    J0_I = Int[]
+    J0_J = Int[]
     J0_V = Float64[]
     for i in 1:num_bus
         f_i_r = i

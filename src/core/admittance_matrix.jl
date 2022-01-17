@@ -37,8 +37,8 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
     idx_to_bus = [x["index"] for x in buses]
     bus_to_idx = Dict(x["index"] => i for (i,x) in enumerate(buses))
 
-    I = Int64[]
-    J = Int64[]
+    I = Int[]
+    J = Int[]
     V = Complex{Float64}[]
 
     for (i,branch) in data["branch"]
@@ -94,8 +94,8 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
     bus_type = [x["bus_type"] for x in buses]
     bus_to_idx = Dict(x["index"] => i for (i,x) in enumerate(buses))
 
-    I = Int64[]
-    J = Int64[]
+    I = Int[]
+    J = Int[]
     V = Float64[]
 
     for (i,branch) in data["branch"]
@@ -158,7 +158,7 @@ function calc_admittance_matrix_inv(am::AdmittanceMatrix, ref_idx::Int)
 
     M = Matrix(am.matrix)
 
-    nonref_buses = Int64[i for i in 1:num_buses if i != ref_idx]
+    nonref_buses = Int[i for i in 1:num_buses if i != ref_idx]
     am_inv = zeros(Float64, num_buses, num_buses)
     am_inv[nonref_buses, nonref_buses] = inv(M[nonref_buses, nonref_buses])
 
@@ -201,7 +201,7 @@ function injection_factors_va(am::AdmittanceMatrix{T}, ref_bus::Int, bus_id::Int
 
     # need to remap the indexes to omit the ref_bus id
     # a reverse lookup is also required
-    idx2_to_idx1 = Int64[]
+    idx2_to_idx1 = Int[]
     for i in 1:length(am.idx_to_bus)
         if i != ref_idx
             push!(idx2_to_idx1, i)
@@ -210,8 +210,8 @@ function injection_factors_va(am::AdmittanceMatrix{T}, ref_bus::Int, bus_id::Int
     idx1_to_idx2 = Dict(v => i for (i,v) in enumerate(idx2_to_idx1))
 
     # rebuild the sparse version of the AdmittanceMatrix without the reference bus
-    I = Int64[]
-    J = Int64[]
+    I = Int[]
+    J = Int[]
     V = Float64[]
 
     I_src, J_src, V_src = findnz(am.matrix)
