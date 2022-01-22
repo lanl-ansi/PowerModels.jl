@@ -4,7 +4,7 @@
 ################################################################################
 
 # enables support for v[1]
-Base.getindex(v::JuMP.VariableRef, i::Int64) = v
+Base.getindex(v::JuMP.VariableRef, i::Int) = v
 
 
 """

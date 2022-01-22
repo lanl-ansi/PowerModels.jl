@@ -2652,7 +2652,7 @@ function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "d
     end
 
     active_bus = Dict(x for x in pm_data["bus"] if x.second["bus_type"] != 4)
-    active_bus_ids = Set{Int64}([bus["bus_i"] for (i,bus) in active_bus])
+    active_bus_ids = Set{Int}([bus["bus_i"] for (i,bus) in active_bus])
 
     neighbors = Dict(i => Int[] for i in active_bus_ids)
     for comp_type in edges
@@ -2667,7 +2667,7 @@ function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "d
     end
 
     component_lookup = Dict(i => Set{Int}([i]) for i in active_bus_ids)
-    touched = Set{Int64}()
+    touched = Set{Int}()
 
     for i in active_bus_ids
         if !(i in touched)
