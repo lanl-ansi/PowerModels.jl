@@ -3,7 +3,7 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
-### v0.19.0
+### v0.20.0
 - Added conversion of impedance and current loads from PSSE raw files into constant power loads (#792)
 
 ### Staged
