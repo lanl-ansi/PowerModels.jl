@@ -15,7 +15,7 @@ function calc_buspair_parameters(buses, branches, conductor_ids, ismulticondcuto
 
     buspair_indexes = Set((branch["f_bus"], branch["t_bus"]) for (i,branch) in branch_lookup)
 
-    bp_branch = Dict((bp, typemax(Int64)) for bp in buspair_indexes)
+    bp_branch = Dict((bp, typemax(Int)) for bp in buspair_indexes)
 
     if ismulticondcutor
         bp_angmin = Dict((bp, [-Inf for c in conductor_ids]) for bp in buspair_indexes)

@@ -114,11 +114,11 @@ end
 
 struct _SDconstraintDecomposition
     "Each sub-vector consists of bus IDs corresponding to a clique grouping"
-    decomp::Vector{Vector{Int64}}
+    decomp::Vector{Vector{Int}}
     "`lookup_index[bus_id] --> idx` for mapping between 1:n and bus indices"
     lookup_index::Dict
     "A chordal extension and maximal cliques are uniquely determined by a graph ordering"
-    ordering::Vector{Int64}
+    ordering::Vector{Int}
 end
 import Base: ==
 function ==(d1::_SDconstraintDecomposition, d2::_SDconstraintDecomposition)
@@ -396,7 +396,7 @@ function _prim(A, minweight=false)
     candidate_edges = []
     unvisited = collect(1:n)
     next_node = 1 # convention
-    T = spzeros(Int64, n, n)
+    T = spzeros(Int, n, n)
 
     while length(unvisited) > 1
         current_node = next_node
@@ -479,5 +479,5 @@ computes the change in problem size for a proposed group merge.
 function _problem_size(groups)
     nvars(n::Integer) = n*(2*n + 1)
     A = _prim(_overlap_graph(groups))
-    return sum(nvars.(Int64.(nonzeros(A)))) + sum(nvars.(length.(groups)))
+    return sum(nvars.(Int.(nonzeros(A)))) + sum(nvars.(length.(groups)))
 end

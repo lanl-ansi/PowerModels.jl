@@ -7,6 +7,19 @@ PowerModels.jl Change Log
 - Added conversion of impedance and current loads from PSSE raw files into constant power loads (#792)
 
 ### Staged
+- Made case name recovery optional in PTI parsing
+- Fixed Julia deprecation warning when calling sort on Dict
+- Change `Int64` types to `Int`
+
+### v0.19.1
+- Add support for Memento v1.3
+
+### v0.19.0
+- Add support for JuMP v0.22
+- Remove dependency on MathOptInterface package
+
+### v0.18.4
+- Improved support for PWL costs with on/off generators
 - Added support for two-terminal HVDC lines to PSSE export (#754)
 - Improved formulation of `relaxation_sin_on_off` constraint (#786)
 

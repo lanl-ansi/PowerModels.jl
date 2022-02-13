@@ -44,7 +44,8 @@ end
     @testset "conic solver" begin
         result = run_opf(data, SOCWRConicPowerModel, scs_solver)
 
-        @test result["termination_status"] == OPTIMAL
+        # ALMOST_OPTIMAL only required for Julia 1.0 on Linux
+        @test result["termination_status"] == OPTIMAL || result["termination_status"] == ALMOST_OPTIMAL
         @test isapprox(result["objective"], 3096.04; atol = 1e0)
     end
 end

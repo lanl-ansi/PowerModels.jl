@@ -243,8 +243,8 @@ function instantiate_pf_data(data::Dict{String,<:Any})
     x0 = [0.0 for i in 1:2*length(am.idx_to_bus)]
     F0 = similar(x0)
 
-    J0_I = Int64[]
-    J0_J = Int64[]
+    J0_I = Int[]
+    J0_J = Int[]
     J0_V = Float64[]
 
     for i in eachindex(am.idx_to_bus)
@@ -569,7 +569,7 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
 
 
     # ac power flow, sparse jacobian computation
-    function jsp!(J::SparseMatrixCSC{Float64,Int64}, x::Vector{Float64})
+    function jsp!(J::SparseMatrixCSC{Float64,Int}, x::Vector{Float64})
         for i in eachindex(am.idx_to_bus)
             f_i_r = 2*i - 1
             f_i_i = 2*i
