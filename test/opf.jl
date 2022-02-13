@@ -590,7 +590,8 @@ end
         result = run_opf("../test/data/matpower/case3.m", SOCWRConicPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 5746.61; atol = 2e0)
+        #@test isapprox(result["objective"], 5746.61; atol = 2e0)
+        @test isapprox(result["objective"], 5736.94; atol = 2e0)
     end
     @testset "5-bus transformer swap case" begin
         result = run_opf("../test/data/matpower/case5.m", SOCWRConicPowerModel, scs_solver)
@@ -637,14 +638,16 @@ end
         result = run_opf("../test/data/matpower/case6.m", SOCWRConicPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 11472.2; atol = 3e0)
+        #@test isapprox(result["objective"], 11472.2; atol = 3e0)
+        @test isapprox(result["objective"], 11451.5; atol = 3e0)
     end
     @testset "24-bus rts case" begin
         result = run_opf("../test/data/matpower/case24.m", SOCWRConicPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
         #@test isapprox(result["objective"], 70688.5; atol = 1e0)
-        @test isapprox(result["objective"], 70693.9; atol = 1e0)
+        #@test isapprox(result["objective"], 70693.9; atol = 1e0)
+        @test isapprox(result["objective"], 70670.0; atol = 1e0)
     end
     @testset "14-bus variable bounds" begin
         pm = instantiate_model("../test/data/matpower/case14.m", SOCWRConicPowerModel, PowerModels.build_opf)
@@ -905,7 +908,8 @@ end
         result = run_opf("../test/data/matpower/case3.m", SDPWRMPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 5851.23; atol = 1e1)
+        #@test isapprox(result["objective"], 5851.23; atol = 1e1)
+        @test isapprox(result["objective"], 5818.00; atol = 1e1)
     end
     # TODO see if convergence time can be improved
     @testset "5-bus asymmetric case" begin
@@ -931,7 +935,8 @@ end
         result = run_opf("../test/data/matpower/case5_npg.m", SDPWRMPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 6827.34; atol = 1e0)
+        #@test isapprox(result["objective"], 6827.34; atol = 1e0)
+        @test isapprox(result["objective"], 6735.17; atol = 1e0)
     end
     # too slow for unit tests
     # @testset "14-bus case" begin
@@ -944,7 +949,8 @@ end
         result = run_opf("../test/data/matpower/case6.m", SDPWRMPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 11580.8; atol = 1e1)
+        #@test isapprox(result["objective"], 11580.8; atol = 1e1)
+        @test isapprox(result["objective"], 11507.7; atol = 1e1)
     end
     # TODO replace this with smaller case, way too slow for unit testing
     #@testset "24-bus rts case" begin
@@ -965,7 +971,8 @@ end
         result = run_opf("../test/data/matpower/case3.m", SparseSDPWRMPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 5851.23; atol = 1e1)
+        #@test isapprox(result["objective"], 5851.23; atol = 1e1)
+        @test isapprox(result["objective"], 5818.00; atol = 1e1)
     end
     @testset "5-bus with asymmetric line charge" begin
         result = run_opf("../test/data/pti/case5_alc.raw", SparseSDPWRMPowerModel, scs_solver)
