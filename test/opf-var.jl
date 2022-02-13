@@ -129,22 +129,20 @@ end
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 5728.62; atol = 1e0)
         end
-        #@testset "5-bus case" begin
-        #    data = build_current_data("../test/data/matpower/case5.m")
-        #    result = PowerModels._run_opf_cl(data, SDPWRMPowerModel, scs_solver)
+        @testset "5-bus case" begin
+           data = build_current_data("../test/data/matpower/case5.m")
+           result = PowerModels._run_opf_cl(data, SDPWRMPowerModel, scs_solver)
 
-        #    @test result["termination_status"] == OPTIMAL
-        #    @test isapprox(result["objective"], 15418.4; atol = 1e0)
-        #end
+           @test result["termination_status"] == OPTIMAL
+           @test isapprox(result["objective"], 15402.0; atol = 1e0)
+        end
+        @testset "14-bus case" begin
+            data = build_current_data("../test/data/matpower/case14.m")
+            result = PowerModels._run_opf_cl(data, SDPWRMPowerModel, scs_solver)
 
-        # too slow of unit tests
-        # @testset "14-bus case" begin
-        #     data = build_current_data("../test/data/matpower/case14.m")
-        #     result = PowerModels._run_opf_cl(data, SDPWRMPowerModel, scs_solver)
-
-        #     @test result["termination_status"] == OPTIMAL
-        #     @test isapprox(result["objective"], 8081.52; atol = 1e0)
-        # end
+            @test result["termination_status"] == OPTIMAL
+            @test isapprox(result["objective"], 7505.33; atol = 1e0)
+        end
     end
 
 end
