@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Made case name recovery optional in PTI parsing
 - Fixed Julia deprecation warning when calling sort on Dict
 - Change `Int64` types to `Int`
+- Update SCS version requirements
 
 ### v0.19.1
 - Add support for Memento v1.3
