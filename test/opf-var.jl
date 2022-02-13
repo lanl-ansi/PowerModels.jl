@@ -127,24 +127,22 @@ end
             result = PowerModels._run_opf_cl(data, SDPWRMPowerModel, scs_solver)
 
             @test result["termination_status"] == OPTIMAL
-            @test isapprox(result["objective"], 5747.32; atol = 1e0)
+            @test isapprox(result["objective"], 5728.62; atol = 1e0)
         end
-        #@testset "5-bus case" begin
-        #    data = build_current_data("../test/data/matpower/case5.m")
-        #    result = PowerModels._run_opf_cl(data, SDPWRMPowerModel, scs_solver)
+        @testset "5-bus case" begin
+           data = build_current_data("../test/data/matpower/case5.m")
+           result = PowerModels._run_opf_cl(data, SDPWRMPowerModel, scs_solver)
 
-        #    @test result["termination_status"] == OPTIMAL
-        #    @test isapprox(result["objective"], 15418.4; atol = 1e0)
-        #end
+           @test result["termination_status"] == OPTIMAL
+           @test isapprox(result["objective"], 15402.0; atol = 1e1)
+        end
+        @testset "14-bus case" begin
+            data = build_current_data("../test/data/matpower/case14.m")
+            result = PowerModels._run_opf_cl(data, SDPWRMPowerModel, scs_solver)
 
-        # too slow of unit tests
-        # @testset "14-bus case" begin
-        #     data = build_current_data("../test/data/matpower/case14.m")
-        #     result = PowerModels._run_opf_cl(data, SDPWRMPowerModel, scs_solver)
-
-        #     @test result["termination_status"] == OPTIMAL
-        #     @test isapprox(result["objective"], 8081.52; atol = 1e0)
-        # end
+            @test result["termination_status"] == OPTIMAL
+            @test isapprox(result["objective"], 7505.33; atol = 1e0)
+        end
     end
 
 end
@@ -293,7 +291,7 @@ end
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
             @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
-            @test all_loads_on(result; atol=1e-4)
+            @test all_loads_on(result; atol=5e-3)
             @test all_shunts_on(result)
         end
         @testset "14-bus case" begin
@@ -303,7 +301,7 @@ end
             @test isapprox(result["objective"], 3.59; atol = 1e-2)
             @test isapprox(active_power_served(result), 2.59; atol = 1e-2)
             @test all_loads_on(result; atol=1e-4)
-            @test all_shunts_on(result; atol=1e-4)
+            @test all_shunts_on(result; atol=5e-3)
         end
     end
 
@@ -314,7 +312,7 @@ end
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
             @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
-            @test all_loads_on(result; atol=1e-4)
+            @test all_loads_on(result; atol=5e-3)
             @test all_shunts_on(result)
         end
         @testset "14-bus case" begin
@@ -324,7 +322,7 @@ end
             @test isapprox(result["objective"], 3.59; atol = 1e-2)
             @test isapprox(active_power_served(result), 2.59; atol = 1e-2)
             @test all_loads_on(result, atol=1e-4)
-            @test all_shunts_on(result, atol=1e-4)
+            @test all_shunts_on(result, atol=5e-3)
         end
     end
 

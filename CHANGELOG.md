@@ -7,6 +7,11 @@ PowerModels.jl Change Log
 - Added conversion of impedance and current loads from PSSE raw files into constant power loads (#792)
 
 ### Staged
+- Updates for SCS v0.9
+- Update Julia to LTS v1.6
+- Made case name recovery optional in PTI parsing
+
+### Staged
 - Made case name recovery optional in PTI parsing
 - Fixed Julia deprecation warning when calling sort on Dict
 - Change `Int64` types to `Int`
