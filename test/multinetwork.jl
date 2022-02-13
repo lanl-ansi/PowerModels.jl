@@ -203,6 +203,24 @@ TESTLOG = Memento.getlogger(PowerModels)
             )
         end
 
+        @testset "test sdp with constraint decomposition opf" begin
+            result = PowerModels.run_mn_opf(mn_data, SparseSDPWRMPowerModel, scs_solver)
+
+            @test result["termination_status"] == OPTIMAL
+            # tolerance relaxed for cross platform compat.
+            @test isapprox(result["objective"], 33321.9; atol = 1e2)
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["2"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["2"]["pg"];
+                atol = 1e-3
+            )
+            @test isapprox(
+                result["solution"]["nw"]["1"]["gen"]["4"]["pg"],
+                result["solution"]["nw"]["2"]["gen"]["4"]["pg"];
+                atol = 1e-3
+            )
+        end
+
         @testset "test nfa opf" begin
             result = PowerModels.run_mn_opf(mn_data, NFAPowerModel, ipopt_solver)
 
@@ -367,22 +385,22 @@ TESTLOG = Memento.getlogger(PowerModels)
             @test isapprox(result["objective"], 57980.0; atol = 1e0)
 
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0543982; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["1"]["storage"]["1"]["qs"],  0.0562204; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["ps"], -0.0834412; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["1"]["storage"]["2"]["qs"],  0.0801070; atol = 1e-3)
 
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0552175; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["2"]["storage"]["1"]["qs"],  0.0569621; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["ps"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["2"]["storage"]["2"]["qs"],  0.0803519; atol = 1e-3)
 
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["ps"],  0.0000000; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0535058; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["3"]["storage"]["1"]["qs"],  0.0553956; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["ps"], -0.1565587; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["3"]["storage"]["2"]["qs"],  0.0806228; atol = 1e-3)
 
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["ps"], -0.1800000; atol = 1e-3)
-            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0549343; atol = 1e-3)
+            @test isapprox(result["solution"]["nw"]["4"]["storage"]["1"]["qs"],  0.0566681; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["ps"],  0.0000000; atol = 1e-3)
             @test isapprox(result["solution"]["nw"]["4"]["storage"]["2"]["qs"],  0.0802049; atol = 1e-3)
 
@@ -467,21 +485,11 @@ TESTLOG = Memento.getlogger(PowerModels)
         mn_data = build_mn_data("../test/data/matpower/case5.m")
 
         @test_throws(TESTLOG, ErrorException, PowerModels.correct_voltage_angle_differences!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_thermal_limits!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_branch_directions!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_transformer_parameters!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_bus_types!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_dcline_limits!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.check_voltage_setpoints(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(mn_data))
         @test_throws(TESTLOG, ErrorException, PowerModels.calc_connected_components(mn_data))
 
         Memento.setlevel!(TESTLOG, "warn")
         @test_nowarn PowerModels.correct_reference_buses!(mn_data)
         Memento.setlevel!(TESTLOG, "error")
-
-        @test_throws(TESTLOG, ErrorException, PowerModels.run_ac_opf(mn_data, ipopt_solver))
     end
 
 end

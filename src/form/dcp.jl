@@ -169,8 +169,13 @@ function constraint_ohms_yt_from_on_off(pm::AbstractDCPModel, n::Int, i, f_bus, 
     va_to = var(pm, n, :va, t_bus)
     z = var(pm, n, :z_branch, i)
 
-    JuMP.@constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_max*(1-z)) )
-    JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
+    if b <= 0
+        JuMP.@constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_max*(1-z)) )
+        JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_min*(1-z)) )
+    else # account for bound reversal when b is positive
+        JuMP.@constraint(pm.model, p_fr >= -b*(va_fr - va_to + vad_max*(1-z)) )
+        JuMP.@constraint(pm.model, p_fr <= -b*(va_fr - va_to + vad_min*(1-z)) )
+    end
 end
 
 
@@ -200,19 +205,21 @@ end
 
 
 ""
-function expression_bus_voltage(pm::AbstractPowerModel, n::Int, i, am::Union{AdmittanceMatrix,AdmittanceMatrixInverse})
-    inj_factors = injection_factors_va(am, i)
-
+function expression_bus_voltage(pm::AbstractPowerModel, n::Int, i, am::AdmittanceMatrix)
+    ref_bus = collect(ids(pm, n, :ref_buses))[1]
+    inj_factors = injection_factors_va(am, ref_bus, i)
     inj_p = var(pm, n, :inj_p)
 
-    if length(inj_factors) == 0
-        # this can be removed once, JuMP.jl/issues/2120 is resolved
-        var(pm, n, :va)[i] = 0.0
-    else
-        var(pm, n, :va)[i] = JuMP.@expression(pm.model, sum(f*inj_p[j] for (j,f) in inj_factors))
-    end
+    var(pm, n, :va)[i] = JuMP.@expression(pm.model, sum(f*inj_p[j] for (j,f) in inj_factors))
 end
 
+""
+function expression_bus_voltage(pm::AbstractPowerModel, n::Int, i, am::AdmittanceMatrixInverse)
+    inj_factors = injection_factors_va(am, i)
+    inj_p = var(pm, n, :inj_p)
+
+    var(pm, n, :va)[i] = JuMP.@expression(pm.model, sum(f*inj_p[j] for (j,f) in inj_factors))
+end
 
 
 ######## Lossless Models ########

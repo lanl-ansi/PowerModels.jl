@@ -238,7 +238,7 @@ constraints.
 @article{doi:10.1287/ijoc.2014.0594,
   author = {Coffrin, Carleton and Van Hentenryck, Pascal},
   title = {A Linear-Programming Approximation of AC Power Flows},
-  journal = {INModels Journal on Computing},
+  journal = {INFORMS Journal on Computing},
   volume = {26},
   number = {4},
   pages = {718-734},

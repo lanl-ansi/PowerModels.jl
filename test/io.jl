@@ -43,6 +43,12 @@
         test_export(file, "json")
     end
 
+    @testset "test case5_dc.m" begin
+        file = "../test/data/matpower/case5_dc.m"
+        test_export(file, "raw")
+        test_export(file, "json")
+    end
+
     @testset "test case30.raw" begin
         file = "../test/data/pti/case30.raw"
         test_export(file, "m")

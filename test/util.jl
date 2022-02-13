@@ -63,8 +63,8 @@ end
 
 @testset "opf with flow cuts" begin
     @testset "ac 5-bus case" begin
-        result_base = run_opf("../test/data/matpower/case5.m", ACPPowerModel, ipopt_solver)
-        result_cuts = run_opf_flow_cuts("../test/data/matpower/case5.m", ACPPowerModel, ipopt_solver)
+        result_base = solve_opf("../test/data/matpower/case5.m", ACPPowerModel, ipopt_solver)
+        result_cuts = solve_opf_branch_power_cuts("../test/data/matpower/case5.m", ACPPowerModel, ipopt_solver)
 
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
@@ -75,8 +75,8 @@ end
         end
     end
     @testset "ac 14-bus case" begin
-        result_base = run_opf("../test/data/matpower/case14.m", ACPPowerModel, ipopt_solver)
-        result_cuts = run_opf_flow_cuts("../test/data/matpower/case14.m", ACPPowerModel, ipopt_solver)
+        result_base = solve_opf("../test/data/matpower/case14.m", ACPPowerModel, ipopt_solver)
+        result_cuts = solve_opf_branch_power_cuts("../test/data/matpower/case14.m", ACPPowerModel, ipopt_solver)
 
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
@@ -88,8 +88,8 @@ end
     end
 
     @testset "soc 5-bus case" begin
-        result_base = run_opf("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver)
-        result_cuts = run_opf_flow_cuts("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver)
+        result_base = solve_opf("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver)
+        result_cuts = solve_opf_branch_power_cuts("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver)
 
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
@@ -99,8 +99,8 @@ end
         end
     end
     @testset "soc 14-bus case" begin
-        result_base = run_opf("../test/data/matpower/case14.m", SOCWRPowerModel, ipopt_solver)
-        result_cuts = run_opf_flow_cuts("../test/data/matpower/case14.m", SOCWRPowerModel, ipopt_solver)
+        result_base = solve_opf("../test/data/matpower/case14.m", SOCWRPowerModel, ipopt_solver)
+        result_cuts = solve_opf_branch_power_cuts("../test/data/matpower/case14.m", SOCWRPowerModel, ipopt_solver)
 
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
@@ -111,8 +111,8 @@ end
     end
 
     @testset "dc 5-bus case" begin
-        result_base = run_opf("../test/data/matpower/case5.m", DCPPowerModel, cbc_solver)
-        result_cuts = run_opf_flow_cuts("../test/data/matpower/case5.m", DCPPowerModel, cbc_solver)
+        result_base = solve_opf("../test/data/matpower/case5.m", DCPPowerModel, cbc_solver)
+        result_cuts = solve_opf_branch_power_cuts("../test/data/matpower/case5.m", DCPPowerModel, cbc_solver)
 
         @test result_base["termination_status"] == OPTIMAL
         @test result_cuts["termination_status"] == OPTIMAL
@@ -122,8 +122,8 @@ end
         end
     end
     @testset "dc 14-bus case" begin
-        result_base = run_opf("../test/data/matpower/case14.m", DCPPowerModel, ipopt_solver)
-        result_cuts = run_opf_flow_cuts("../test/data/matpower/case14.m", DCPPowerModel, ipopt_solver)
+        result_base = solve_opf("../test/data/matpower/case14.m", DCPPowerModel, ipopt_solver)
+        result_cuts = solve_opf_branch_power_cuts("../test/data/matpower/case14.m", DCPPowerModel, ipopt_solver)
 
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
@@ -137,8 +137,8 @@ end
 
 @testset "ptdf opf with flow cuts" begin
     @testset "dc 5-bus case" begin
-        result_base = run_opf("../test/data/matpower/case5.m", DCPPowerModel, cbc_solver)
-        result_cuts = run_opf_ptdf_flow_cuts("../test/data/matpower/case5.m", cbc_solver)
+        result_base = solve_opf("../test/data/matpower/case5.m", DCPPowerModel, cbc_solver)
+        result_cuts = solve_opf_ptdf_branch_power_cuts("../test/data/matpower/case5.m", cbc_solver)
 
         @test result_base["termination_status"] == OPTIMAL
         @test result_cuts["termination_status"] == OPTIMAL
@@ -148,8 +148,8 @@ end
         end
     end
     @testset "dc 5-bus ext case" begin
-        result_base = run_opf("../test/data/matpower/case5_ext.m", DCPPowerModel, cbc_solver)
-        result_cuts = run_opf_ptdf_flow_cuts("../test/data/matpower/case5_ext.m", cbc_solver)
+        result_base = solve_opf("../test/data/matpower/case5_ext.m", DCPPowerModel, cbc_solver)
+        result_cuts = solve_opf_ptdf_branch_power_cuts("../test/data/matpower/case5_ext.m", cbc_solver)
 
         @test result_base["termination_status"] == OPTIMAL
         @test result_cuts["termination_status"] == OPTIMAL
@@ -159,8 +159,8 @@ end
         end
     end
     @testset "dc 14-bus case" begin
-        result_base = run_opf("../test/data/matpower/case14.m", DCPPowerModel, ipopt_solver)
-        result_cuts = run_opf_ptdf_flow_cuts("../test/data/matpower/case14.m", ipopt_solver)
+        result_base = solve_opf("../test/data/matpower/case14.m", DCPPowerModel, ipopt_solver)
+        result_cuts = solve_opf_ptdf_branch_power_cuts("../test/data/matpower/case14.m", ipopt_solver)
 
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED

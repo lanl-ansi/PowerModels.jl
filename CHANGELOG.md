@@ -2,17 +2,59 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Update to InfrastructureModels v0.6 (breaking)
 - Rename `run_*` methods to `solve_*` (#649) (breaking)
+- Made case name recovery optional in PTI parsing
+- Fixed Julia deprecation warning when calling sort on Dict
+- Change `Int64` types to `Int`
+
+### v0.19.1
+- Add support for Memento v1.3
+
+### v0.19.0
+- Add support for JuMP v0.22
+- Remove dependency on MathOptInterface package
+
+### v0.18.4
+- Improved support for PWL costs with on/off generators
+- Added support for two-terminal HVDC lines to PSSE export (#754)
+- Improved formulation of `relaxation_sin_on_off` constraint (#786)
+
+### v0.18.3
+- Added Jacobian calculation of basic network data (#762)
+- Improved support in `build_pf` for slack buses with multiple generators (#785)
+- Fixed bug in `compute_ac_pf` when reporting slack bus `va` values
+- Fixed bug in `constraint_ohms_yt_from_on_off` for DCP models on branches with negative reactance values
+
+### v0.18.2
+- Fixed sign bug in BFA models (#779)
+- Fixed `correct_component_refrence_bus!` when no active generators are present (#776)
+- Add support for Memento v1.2
+
+### v0.18.1
+- Fixed multi-network support in sparse SDP models (#769)
+- Fixed data processing of PWL costs with identical points
+- Fixed parsing of impedance correction keys in PSSE parser
+- Relax test bounds to support cross-platform variation in Julia v1.6
+
+### v0.18.0
+- Update to InfrastructureModels v0.6 (#757) (breaking)
+- Update native power flow solvers to output results dict (#739) (breaking)
+- Improved multi-network support in data function (#764)
+- Renamed `*_flow_cuts` to `_branch_power_cuts` (#713) (breaking)
+- Dropped support for JuMP v0.20 (#673) (breaking)
+- Removed ref bus index from AdmittanceMatrix (#760) (breaking)
+- Removed data change tracking from `correct_network_data!` (breaking)
+- Removed `_extend_pwl_cost!` function (#716)
+>>>>>>> master
 
 ### v0.17.4
 - Added support for matrix-based analysis of basic network data (#728)
 - Added support for `relax_integrality` in `run_model`
 - Added `export_pti` to write a PSSE file (#752)
 - Added `parse_files` to create a multinetwork from multiples source files
-- Added support for convering matpower ramp rates into per-unit (#561)
+- Added support for converting matpower ramp rates into per-unit (#561)
 - Fixed bug in dual reporting in `constraint_power_balance_ls` (#741)
-- Fixed sign convetion for power injection in `calc_bus_injection`
+- Fixed sign convention for power injection in `calc_bus_injection`
 
 ### v0.17.3
 - Added a to file variant of `export_matpower`

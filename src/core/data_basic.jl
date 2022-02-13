@@ -221,9 +221,9 @@ function calc_basic_incidence_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_incidence_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    I = Int64[]
-    J = Int64[]
-    V = Int64[]
+    I = Int[]
+    J = Int[]
+    V = Int[]
 
     b = [branch for (i,branch) in data["branch"] if branch["br_status"] != 0]
     branch_ordered = sort(b, by=(x) -> x["index"])
@@ -244,10 +244,7 @@ function calc_basic_admittance_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_admittance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    am = calc_admittance_matrix(data)
-
-    # conj can be removed once #734 is resolved
-    return conj.(am.matrix)
+    return calc_admittance_matrix(data).matrix
 end
 
 
@@ -262,10 +259,7 @@ function calc_basic_susceptance_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_susceptance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    am = calc_susceptance_matrix(data)
-
-    # -1.0 can be removed once #734 is resolved
-    return -1.0*am.matrix
+    return calc_susceptance_matrix(data).matrix
 end
 
 
@@ -280,8 +274,8 @@ function calc_basic_branch_susceptance_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_branch_susceptance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    I = Int64[]
-    J = Int64[]
+    I = Int[]
+    J = Int[]
     V = Float64[]
 
     b = [branch for (i,branch) in data["branch"] if branch["br_status"] != 0]
@@ -344,7 +338,6 @@ function calc_basic_ptdf_matrix(data::Dict{String,<:Any})
     num_bus = length(data["bus"])
     num_branch = length(data["branch"])
 
-    # -1.0 can be removed once #734 is resolved
     b_inv = calc_susceptance_matrix_inv(data).matrix
 
     ptdf = zeros(num_branch, num_bus)
@@ -354,7 +347,7 @@ function calc_basic_ptdf_matrix(data::Dict{String,<:Any})
         bus_to = branch["t_bus"]
         g,b = calc_branch_y(branch)
         for n in 1:num_bus
-            ptdf[branch_idx, n] = -b*(b_inv[bus_fr, n] - b_inv[bus_to, n])
+            ptdf[branch_idx, n] = b*(b_inv[bus_fr, n] - b_inv[bus_to, n])
         end
     end
 
@@ -377,24 +370,22 @@ function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
     g,b = calc_branch_y(branch)
 
     num_bus = length(data["bus"])
-    num_branch = length(data["branch"])
 
+    ref_bus = reference_bus(data)
     am = calc_susceptance_matrix(data)
 
-    if_fr = injection_factors_va(am, branch["f_bus"])
-    if_to = injection_factors_va(am, branch["t_bus"])
+    if_fr = injection_factors_va(am, ref_bus["index"], branch["f_bus"])
+    if_to = injection_factors_va(am, ref_bus["index"], branch["t_bus"])
 
     ptdf_column = zeros(num_bus)
     for n in 1:num_bus
-        # -1.0 can be removed once #734 is resolved
-        ptdf_column[n] = -b*(get(if_fr, n, 0.0) - get(if_to, n, 0.0))
+        ptdf_column[n] = b*(get(if_fr, n, 0.0) - get(if_to, n, 0.0))
     end
 
     return ptdf_column
 end
 
 
-#=
 """
 given a basic network data dict, returns a sparse real valued Jacobian matrix
 of the ac power flow problem.  The power variables are ordered by p and then q
@@ -406,97 +397,76 @@ function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
     end
 
     num_bus = length(data["bus"])
-
-    vm = [bus["vm"] for (i,bus) in data["bus"]]
-    va = [bus["va"] for (i,bus) in data["bus"]]
-    am = calc_admittance_matrix(data)
-
-
+    v = calc_basic_bus_voltage(data)
+    vm, va = abs.(v), angle.(v)
+    Y = calc_basic_admittance_matrix(data)
     neighbors = [Set{Int}([i]) for i in 1:num_bus]
-    I, J, V = findnz(am.matrix)
+    I, J, V = findnz(Y)
     for nz in eachindex(V)
         push!(neighbors[I[nz]], J[nz])
         push!(neighbors[J[nz]], I[nz])
     end
-
-
-    J0_I = Int64[]
-    J0_J = Int64[]
+    J0_I = Int[]
+    J0_J = Int[]
     J0_V = Float64[]
-
     for i in 1:num_bus
         f_i_r = i
         f_i_i = i + num_bus
-
         for j in neighbors[i]
             x_j_fst = j + num_bus
             x_j_snd = j
-
             push!(J0_I, f_i_r); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
             push!(J0_I, f_i_r); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
             push!(J0_I, f_i_i); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
             push!(J0_I, f_i_i); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
         end
     end
-
     J = sparse(J0_I, J0_J, J0_V)
-
-
     for i in 1:num_bus
-        f_i_r = i
-        f_i_i = i + num_bus
-
+        i1 = i
+        i2 = i + num_bus
         for j in neighbors[i]
-            x_j_fst = j + num_bus
-            x_j_snd = j
-
+            j1 = j
+            j2 = j + num_bus
             bus_type = data["bus"]["$(j)"]["bus_type"]
             if bus_type == 1
                 if i == j
-                    y_ii = am.matrix[i,i]
-                    J[f_i_r, x_j_fst] = 2*real(y_ii)*vm[i] +            sum( real(am.matrix[i,k]) * vm[k] *  cos(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i)
-                    J[f_i_r, x_j_snd] =                         vm[i] * sum( real(am.matrix[i,k]) * vm[k] * -sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
-
-                    J[f_i_i, x_j_fst] = 2*imag(y_ii)*vm[i] +            sum( imag(am.matrix[i,k]) * vm[k] *  cos(va[i] - va[k]) + real(am.matrix[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i)
-                    J[f_i_i, x_j_snd] =                         vm[i] * sum( imag(am.matrix[i,k]) * vm[k] * -sin(va[i] - va[k]) + real(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    y_ii = Y[i,i]
+                    J[i1, j1] =                      + vm[i] * sum( -real(Y[i,k]) * vm[k] * sin(va[i] - va[k]) + imag(Y[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i )
+                    J[i1, j2] = + 2*real(y_ii)*vm[i] +         sum(  real(Y[i,k]) * vm[k] * cos(va[i] - va[k]) + imag(Y[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i )
+                    J[i2, j1] =                        vm[i] * sum(  real(Y[i,k]) * vm[k] * cos(va[i] - va[k]) + imag(Y[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i )
+                    J[i2, j2] = - 2*imag(y_ii)*vm[i] +         sum(  real(Y[i,k]) * vm[k] * sin(va[i] - va[k]) - imag(Y[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i )
                 else
-                    y_ij = am.matrix[i,j]
-                    J[f_i_r, x_j_fst] =         vm[i] * (real(y_ij) * cos(va[i] - va[j]) - imag(y_ij) *  sin(va[i] - va[j]))
-                    J[f_i_r, x_j_snd] = vm[i] * vm[j] * (real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * -cos(va[i] - va[j]))
-
-                    J[f_i_i, x_j_fst] =         vm[i] * (imag(y_ij) * cos(va[i] - va[j]) + real(y_ij) *  sin(va[i] - va[j]))
-                    J[f_i_i, x_j_snd] = vm[i] * vm[j] * (imag(y_ij) * sin(va[i] - va[j]) + real(y_ij) * -cos(va[i] - va[j]))
+                    y_ij = Y[i,j]
+                    J[i1, j1] = vm[i] * vm[j] * (  real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]) )
+                    J[i1, j2] =         vm[i] * (  real(y_ij) * cos(va[i] - va[j]) + imag(y_ij) * sin(va[i] - va[j]) )
+                    J[i2, j1] = vm[i] * vm[j] * ( -real(y_ij) * cos(va[i] - va[j]) - imag(y_ij) * sin(va[i] - va[j]) )
+                    J[i2, j2] =         vm[i] * (  real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]) )
                 end
             elseif bus_type == 2
                 if i == j
-                    J[f_i_r, x_j_fst] = 0.0
-                    J[f_i_i, x_j_fst] = 1.0
-
-                    y_ii = am.matrix[i,i]
-                    J[f_i_r, x_j_snd] =   vm[i] * sum( real(am.matrix[i,k]) * vm[k] * -sin(va[i] - va[k]) - imag(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
-                    J[f_i_i, x_j_snd] =   vm[i] * sum( imag(am.matrix[i,k]) * vm[k] * -sin(va[i] - va[k]) + real(am.matrix[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i)
+                    J[i1, j1] = vm[i] * sum( -real(Y[i,k]) * vm[k] * sin(va[i] - va[k]) + imag(Y[i,k]) * vm[k] * cos(va[i] - va[k]) for k in neighbors[i] if k != i )
+                    J[i1, j2] = 0.0
+                    J[i2, j1] = vm[i] * sum(  real(Y[i,k]) * vm[k] * cos(va[i] - va[k]) + imag(Y[i,k]) * vm[k] * sin(va[i] - va[k]) for k in neighbors[i] if k != i )
+                    J[i2, j2] = 1.0
                 else
-                    J[f_i_r, x_j_fst] = 0.0
-                    J[f_i_i, x_j_fst] = 0.0
-
-                    y_ij = am.matrix[i,j]
-                    J[f_i_r, x_j_snd] = vm[i] * vm[j] * (real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * -cos(va[i] - va[j]))
-                    J[f_i_i, x_j_snd] = vm[i] * vm[j] * (imag(y_ij) * sin(va[i] - va[j]) + real(y_ij) * -cos(va[i] - va[j]))
+                    y_ij = Y[i,j]
+                    J[i1, j1] = vm[i] * vm[j] * (  real(y_ij) * sin(va[i] - va[j]) - imag(y_ij) * cos(va[i] - va[j]) )
+                    J[i1, j2] = 0.0
+                    J[i2, j1] = vm[i] * vm[j] * ( -real(y_ij) * cos(va[i] - va[j]) - imag(y_ij) * sin(va[i] - va[j]) )
+                    J[i2, j2] = 0.0
                 end
             elseif bus_type == 3
                 if i == j
-                    J[f_i_r, x_j_fst] = 1.0
-                    J[f_i_r, x_j_snd] = 0.0
-                    J[f_i_i, x_j_fst] = 0.0
-                    J[f_i_i, x_j_snd] = 1.0
+                    J[i1, j1] = 1.0
+                    J[i1, j2] = 0.0
+                    J[i2, j1] = 0.0
+                    J[i2, j2] = 1.0
                 end
             else
                 @assert false
             end
         end
     end
-
     return J
 end
-=#
-

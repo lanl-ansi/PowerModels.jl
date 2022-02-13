@@ -643,7 +643,8 @@ end
         result = run_opf("../test/data/matpower/case24.m", SOCWRConicPowerModel, scs_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 70688.5; atol = 1e0)
+        #@test isapprox(result["objective"], 70688.5; atol = 1e0)
+        @test isapprox(result["objective"], 70693.9; atol = 1e0)
     end
     @testset "14-bus variable bounds" begin
         pm = instantiate_model("../test/data/matpower/case14.m", SOCWRConicPowerModel, PowerModels.build_opf)
@@ -748,7 +749,7 @@ end
         result = run_opf_bf("../test/data/matpower/case3.m", BFAPowerModel, ipopt_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 5658.22; atol = 1e0)
+        @test isapprox(result["objective"], 5638.97; atol = 1e0)
     end
     @testset "5-bus transformer swap case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
@@ -1007,7 +1008,9 @@ end
         pm = InfrastructureModels.InitializeInfrastructureModel(SparseSDPWRMPowerModel, data, PowerModels._pm_global_keys, PowerModels.pm_it_sym)
         PowerModels.ref_add_core!(pm.ref)
 
-        cadj, lookup_index, sigma = PowerModels._chordal_extension(pm)
+        nw = collect(nw_ids(pm))[1]
+
+        cadj, lookup_index, sigma = PowerModels._chordal_extension(pm, nw)
         cliques = PowerModels._maximal_cliques(cadj)
         lookup_bus_index = Dict((reverse(p) for p = pairs(lookup_index)))
         groups = [[lookup_bus_index[gi] for gi in g] for g in cliques]

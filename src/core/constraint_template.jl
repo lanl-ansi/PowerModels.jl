@@ -133,7 +133,7 @@ end
 function constraint_network_power_balance(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     comp_bus_ids = ref(pm, nw, :components, i)
 
-    comp_gen_ids = Set{Int64}()
+    comp_gen_ids = Set{Int}()
     for bus_id in comp_bus_ids, gen_id in PowerModels.ref(pm, nw, :bus_gens, bus_id)
         push!(comp_gen_ids, gen_id)
     end

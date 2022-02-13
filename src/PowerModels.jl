@@ -8,8 +8,6 @@ import Memento
 import NLsolve
 
 import JuMP
-import MathOptInterface
-const _MOI = MathOptInterface
 
 import InfrastructureModels
 import InfrastructureModels: optimize_model!, @im_fields, nw_id_default
@@ -118,10 +116,10 @@ include("core/export.jl")
 @deprecate run_ots(file, model_type::Type, optimizer; kwargs...) solve_ots(file, model_type::Type, optimizer; kwargs...)
 @deprecate run_tnep(file, model_type::Type, optimizer; kwargs...) solve_tnep(file, model_type::Type, optimizer; kwargs...)
 
-@deprecate run_opf_flow_cuts(file, model_type, optimizer; kwargs...) solve_opf_flow_cuts(file, model_type, optimizer; kwargs...)
-@deprecate run_opf_flow_cuts!(file, model_type, optimizer; kwargs...) solve_opf_flow_cuts!(file, model_type, optimizer; kwargs...)
-@deprecate run_opf_ptdf_flow_cuts(file, optimizer; kwargs...) solve_opf_ptdf_flow_cuts(file, optimizer; kwargs...)
-@deprecate run_opf_ptdf_flow_cuts!(file, optimizer; kwargs...) solve_opf_ptdf_flow_cuts!(file, optimizer; kwargs...)
+@deprecate run_opf_flow_cuts(file, model_type, optimizer; kwargs...) solve_opf_branch_power_cuts(file, model_type, optimizer; kwargs...)
+@deprecate run_opf_flow_cuts!(file, model_type, optimizer; kwargs...) solve_opf_branch_power_cuts!(file, model_type, optimizer; kwargs...)
+@deprecate run_opf_ptdf_flow_cuts(file, optimizer; kwargs...) solve_opf_ptdf_branch_power_cuts(file, optimizer; kwargs...)
+@deprecate run_opf_ptdf_flow_cuts!(file, optimizer; kwargs...) solve_opf_ptdf_branch_power_cuts!(file, optimizer; kwargs...)
 @deprecate run_obbt_opf!(file, optimizer; kwargs...) solve_obbt_opf!(file, optimizer; kwargs...)
 
 

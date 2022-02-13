@@ -97,7 +97,7 @@ function solve_obbt_opf!(data::Dict{String,<:Any}, optimizer;
     (termination != :avg && termination != :max) && (Memento.error(_LOGGER, "OBBT termination criteria can only be :max or :avg"))
 
     # pass status
-    status_pass = [_MOI.LOCALLY_SOLVED, _MOI.OPTIMAL]
+    status_pass = [JuMP.LOCALLY_SOLVED, JuMP.OPTIMAL]
 
     # compute initial relative gap between relaxation objective and upper_bound
     result_relaxation = optimize_model!(model_relaxation, optimizer=optimizer)
@@ -186,7 +186,7 @@ function solve_obbt_opf!(data::Dict{String,<:Any}, optimizer;
             lb = NaN
             JuMP.@objective(model_bt.model, Min, vm[bus])
             result_bt = optimize_model!(model_bt, optimizer=optimizer)
-            if (result_bt["termination_status"] == _MOI.LOCALLY_SOLVED || result_bt["termination_status"] == _MOI.OPTIMAL)
+            if (result_bt["termination_status"] == JuMP.LOCALLY_SOLVED || result_bt["termination_status"] == JuMP.OPTIMAL)
                 nlb = floor(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nlb > vm_lb[bus]) && (lb = nlb)
             else
@@ -198,7 +198,7 @@ function solve_obbt_opf!(data::Dict{String,<:Any}, optimizer;
             ub = NaN
             JuMP.@objective(model_bt.model, Max, vm[bus])
             result_bt = optimize_model!(model_bt, optimizer=optimizer)
-            if (result_bt["termination_status"] == _MOI.LOCALLY_SOLVED || result_bt["termination_status"] == _MOI.OPTIMAL)
+            if (result_bt["termination_status"] == JuMP.LOCALLY_SOLVED || result_bt["termination_status"] == JuMP.OPTIMAL)
                 nub = ceil(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nub < vm_ub[bus]) && (ub = nub)
             else
@@ -254,7 +254,7 @@ function solve_obbt_opf!(data::Dict{String,<:Any}, optimizer;
             lb = NaN
             JuMP.@objective(model_bt.model, Min, td[bp])
             result_bt = optimize_model!(model_bt, optimizer=optimizer)
-            if (result_bt["termination_status"] == _MOI.LOCALLY_SOLVED || result_bt["termination_status"] == _MOI.OPTIMAL)
+            if (result_bt["termination_status"] == JuMP.LOCALLY_SOLVED || result_bt["termination_status"] == JuMP.OPTIMAL)
                 nlb = floor(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nlb > td_lb[bp]) && (lb = nlb)
             else
@@ -266,7 +266,7 @@ function solve_obbt_opf!(data::Dict{String,<:Any}, optimizer;
             ub = NaN
             JuMP.@objective(model_bt.model, Max, td[bp])
             result_bt = optimize_model!(model_bt, optimizer=optimizer)
-            if (result_bt["termination_status"] == _MOI.LOCALLY_SOLVED || result_bt["termination_status"] == _MOI.OPTIMAL)
+            if (result_bt["termination_status"] == JuMP.LOCALLY_SOLVED || result_bt["termination_status"] == JuMP.OPTIMAL)
                 nub = ceil(10.0^precision * JuMP.objective_value(model_bt.model))/(10.0^precision)
                 (nub < td_ub[bp]) && (ub = nub)
             else
@@ -327,7 +327,7 @@ function solve_obbt_opf!(data::Dict{String,<:Any}, optimizer;
         td = var(model_bt, :td)
 
         # run the qc relaxation for the updated bounds
-        result_relaxation = run_opf(data, model_type::Type, optimizer)
+        result_relaxation = solve_opf(data, model_type::Type, optimizer)
 
         if result_relaxation["termination_status"] in status_pass
             current_rel_gap = (upper_bound - result_relaxation["objective"])/upper_bound

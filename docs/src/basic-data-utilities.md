@@ -48,6 +48,7 @@ calc_basic_incidence_matrix
 calc_basic_admittance_matrix
 calc_basic_susceptance_matrix
 calc_basic_branch_susceptance_matrix
+calc_basic_jacobian_matrix
 calc_basic_ptdf_matrix
 calc_basic_ptdf_row
 ```
@@ -103,6 +104,7 @@ basic network data using Julia's native linear equation solver,
 ```@docs
 compute_basic_dc_pf
 ```
+
 
 !!! tip
     By default PowerModels uses Julia's SparseArrays to ensure the best
