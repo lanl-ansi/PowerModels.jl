@@ -46,7 +46,8 @@ end
 
         # ALMOST_OPTIMAL only required for Julia 1.0 on Linux
         @test result["termination_status"] == OPTIMAL || result["termination_status"] == ALMOST_OPTIMAL
-        @test isapprox(result["objective"], 3096.04; atol = 1e0)
+        # 5e0 only required for Julia 1.6 on Linux
+        @test isapprox(result["objective"], 3096.04; atol = 5e0)
     end
 end
 
