@@ -1,16 +1,16 @@
 ""
-function run_ac_opf(file, optimizer; kwargs...)
-    return run_opf(file, ACPPowerModel, optimizer; kwargs...)
+function solve_ac_opf(file, optimizer; kwargs...)
+    return solve_opf(file, ACPPowerModel, optimizer; kwargs...)
 end
 
 ""
-function run_dc_opf(file, optimizer; kwargs...)
-    return run_opf(file, DCPPowerModel, optimizer; kwargs...)
+function solve_dc_opf(file, optimizer; kwargs...)
+    return solve_opf(file, DCPPowerModel, optimizer; kwargs...)
 end
 
 ""
-function run_opf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, build_opf; kwargs...)
+function solve_opf(file, model_type::Type, optimizer; kwargs...)
+    return solve_model(file, model_type, optimizer, build_opf; kwargs...)
 end
 
 ""
@@ -50,8 +50,8 @@ end
 
 
 "a toy example of how to model with multi-networks"
-function run_mn_opf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, build_mn_opf; multinetwork=true, kwargs...)
+function solve_mn_opf(file, model_type::Type, optimizer; kwargs...)
+    return solve_model(file, model_type, optimizer, build_mn_opf; multinetwork=true, kwargs...)
 end
 
 ""
@@ -92,8 +92,8 @@ end
 
 
 "a toy example of how to model with multi-networks and storage"
-function run_mn_opf_strg(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, build_mn_opf_strg; multinetwork=true, kwargs...)
+function solve_mn_opf_strg(file, model_type::Type, optimizer; kwargs...)
+    return solve_model(file, model_type, optimizer, build_mn_opf_strg; multinetwork=true, kwargs...)
 end
 
 ""
@@ -162,11 +162,11 @@ Solves an opf using ptdfs with no explicit voltage or line flow variables.
 This formulation is most often used when a small subset of the line flow
 constraints are active in the data model.
 """
-function run_opf_ptdf(file, model_type::Type, optimizer; full_inverse=false, kwargs...)
+function solve_opf_ptdf(file, model_type::Type, optimizer; full_inverse=false, kwargs...)
     if !full_inverse
-        return run_model(file, model_type, optimizer, build_opf_ptdf; ref_extensions=[ref_add_connected_components!,ref_add_sm!], kwargs...)
+        return solve_model(file, model_type, optimizer, build_opf_ptdf; ref_extensions=[ref_add_connected_components!,ref_add_sm!], kwargs...)
     else
-        return run_model(file, model_type, optimizer, build_opf_ptdf; ref_extensions=[ref_add_connected_components!,ref_add_sm_inv!], kwargs...)
+        return solve_model(file, model_type, optimizer, build_opf_ptdf; ref_extensions=[ref_add_connected_components!,ref_add_sm_inv!], kwargs...)
     end
 end
 

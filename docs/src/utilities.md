@@ -7,7 +7,7 @@ This section provides an overview of the some of the utility functions that are 
 To improve the quality of the convex relaxations available in PowerModels and also to obtain tightened bounds on the voltage-magnitude and phase-angle difference variables, an optimization-based bound-tightening algorithm is made available as a function in PowerModels.
 
 ```@docs
-run_obbt_opf!
+solve_obbt_opf!
 ```
 
 
@@ -16,6 +16,6 @@ run_obbt_opf!
 The following functions are meta-algorithms for solving OPF problems where line flow limit constraints are added iteratively to exploit the property that the majority of line flows constraints will be inactive in the optimal solution.
 
 ```@docs
-run_opf_branch_power_cuts
-run_opf_ptdf_branch_power_cuts
+solve_opf_branch_power_cuts
+solve_opf_ptdf_branch_power_cuts
 ```

@@ -1,11 +1,11 @@
 ""
-function run_opf_bf(file, model_type::Type{T}, optimizer; kwargs...) where T <: AbstractBFModel
-    return run_model(file, model_type, optimizer, build_opf_bf; kwargs...)
+function solve_opf_bf(file, model_type::Type{T}, optimizer; kwargs...) where T <: AbstractBFModel
+    return solve_model(file, model_type, optimizer, build_opf_bf; kwargs...)
 end
 
 ""
-function run_mn_opf_bf_strg(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, build_mn_opf_bf_strg; multinetwork=true, kwargs...)
+function solve_mn_opf_bf_strg(file, model_type::Type{T}, optimizer; kwargs...) where T <: AbstractBFModel
+    return solve_model(file, model_type, optimizer, build_mn_opf_bf_strg; multinetwork=true, kwargs...)
 end
 
 ""

@@ -11,9 +11,9 @@ All models were solved using [IPOPT](https://link.springer.com/article/10.1007/s
 This experiment consists of running the following PowerModels commands,
 ```
 solver = optimizer_with_attributes(Ipopt.Optimizer, "tol" => 1e-6)
-result_ac  = run_opf(case,   ACPPowerModel, solver)
-result_soc = run_opf(case, SOCWRPowerModel, solver)
-result_qc  = run_opf(case,  QCRMPowerModel, solver)
+result_ac  = solve_opf(case,   ACPPowerModel, solver)
+result_soc = solve_opf(case, SOCWRPowerModel, solver)
+result_qc  = solve_opf(case,  QCRMPowerModel, solver)
 ```
 for each case in the PGLib-OPF archive.
 If the value of `result["termination_status"]` is `LOCALLY_SOLVED` then the

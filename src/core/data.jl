@@ -1165,10 +1165,12 @@ end
 "checks that each branch has a reasonable thermal rating-a, if not computes one"
 function calc_thermal_limits!(data::Dict{String,<:Any})
     pm_data = get_pm_data(data)
+
     @assert("per_unit" in keys(pm_data) && pm_data["per_unit"])
 
     apply_pm!(_calc_thermal_limits!, data)
 end
+
 
 ""
 function _calc_thermal_limits!(pm_data::Dict{String,<:Any})
@@ -1264,6 +1266,7 @@ end
 "checks that each branch has a reasonable current rating-a, if not computes one"
 function calc_current_limits!(data::Dict{String,<:Any})
     pm_data = get_pm_data(data)
+
     @assert("per_unit" in keys(pm_data) && pm_data["per_unit"])
 
     apply_pm!(_calc_current_limits!, data)
@@ -1383,6 +1386,7 @@ end
 function check_connectivity(data::Dict{String,<:Any})
     apply_pm!(_check_connectivity, data)
 end
+
 
 ""
 function _check_connectivity(data::Dict{String,<:Any})
@@ -1547,10 +1551,12 @@ this is important because setting tap == 0.0 leads to NaN computations, which ar
 """
 function correct_transformer_parameters!(data::Dict{String,<:Any})
     pm_data = get_pm_data(data)
+
     @assert("per_unit" in keys(pm_data) && pm_data["per_unit"])
 
     apply_pm!(_correct_transformer_parameters!, data)
 end
+
 
 ""
 function _correct_transformer_parameters!(pm_data::Dict{String,<:Any})
@@ -1771,6 +1777,7 @@ end
 "checks that parameters for dc lines are reasonable"
 function correct_dcline_limits!(data::Dict{String,<:Any})
     pm_data = get_pm_data(data)
+
     @assert("per_unit" in keys(pm_data) && pm_data["per_unit"])
 
     apply_pm!(_correct_dcline_limits!, data)

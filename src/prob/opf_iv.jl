@@ -1,6 +1,6 @@
 ""
-function run_opf_iv(file, model_constructor, optimizer; kwargs...)
-    return run_model(file, model_constructor, optimizer, build_opf_iv; kwargs...)
+function solve_opf_iv(file, model_type::Type, optimizer; kwargs...)
+    return solve_model(file, model_type, optimizer, build_opf_iv; kwargs...)
 end
 
 ""
