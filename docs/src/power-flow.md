@@ -18,7 +18,7 @@ available in PowerModels and under what circumstances they may be beneficial.
 The general purpose power flow solver in PowerModels is,
 
 ```@docs
-run_pf
+solve_pf
 ```
 
 This function builds a JuMP model for a wide variety of the power flow formulations
@@ -28,15 +28,15 @@ supported by PowerModels.  For example it supports,
 * `SOCWRPowerModel` - a convex quadratic relaxation of the power flow problem
 * `DCPPowerModel` - a linear DC approximation of the power flow problem
 The typical `ACPPowerModel` and `DCPPowerModel` formulations are available via
-the shorthand form `run_ac_pf` and `run_dc_pf` respectively.
+the shorthand form `solve_ac_pf` and `solve_dc_pf` respectively.
 
-The `run_pf` solution method is both formulation and solver agnostic and
+The `solve_pf` solution method is both formulation and solver agnostic and
 can leverage the wide range of solvers that are available in the JuMP
 ecosystem.  Many of these solvers are commercial-grade, which in turn makes
-`run_pf` the most reliable power flow solution method in PowerModels.
+`solve_pf` the most reliable power flow solution method in PowerModels.
 
 !!! note
-    Use of `run_pf` is highly recommended over the other solution methods for
+    Use of `solve_pf` is highly recommended over the other solution methods for
     increased robustness.  Applications that benefit from the Julia native
     solution methods are an exception to this general rule.
 
@@ -61,7 +61,7 @@ For each bus,
 * `vi_start` - imaginary voltage starting point for the `ACRPowerModel` model
 
 The following helper function can be used to use the solution point in the
-network data as the starting point for `run_ac_pf`.
+network data as the starting point for `solve_ac_pf`.
 ```@docs
 set_ac_pf_start_values!
 ```
@@ -84,10 +84,10 @@ with voltages in polar coordinates with NLsolve.
 ```@docs
 compute_ac_pf
 ```
-`compute_ac_pf` will typically provide an identical result to `run_ac_pf`.
+`compute_ac_pf` will typically provide an identical result to `solve_ac_pf`.
 However, the existence of solution degeneracy around generator injection
 assignments and multiple power flow solutions can yield different results.
-The primary advantage of `compute_ac_pf` over `run_ac_pf` is that it does not
+The primary advantage of `compute_ac_pf` over `solve_ac_pf` is that it does not
 require building a JuMP model.  If the initial point for the AC Power Flow
 solution is near-feasible then `compute_ac_pf` can result in a significant
 runtime saving by converging quickly and reducing data-wrangling and memory
@@ -96,7 +96,7 @@ allocation overheads.  This initial guess is provided using the standard
 way of setting a suitable starting point.
 
 !!! tip
-    If `compute_ac_pf` fails to converge try `run_ac_pf` instead.
+    If `compute_ac_pf` fails to converge try `solve_ac_pf` instead.
 
 
 ## Native DC Power Flow
@@ -108,15 +108,14 @@ built-in linear systems solvers.
 ```@docs
 compute_dc_pf
 ```
-The `compute_dc_pf` method should provide identical results to `run_dc_pf`.
-The primary advantage of `compute_dc_pf` over `run_dc_pf` is that it does not
+The `compute_dc_pf` method should provide identical results to `solve_dc_pf`.
+The primary advantage of `compute_dc_pf` over `solve_dc_pf` is that it does not
 require building a JuMP model.  This results in significant memory saving and
 marginal performance saving due to reduced data-wrangling overhead.  The
 primary use-case of this model is to compute the voltage angle values from
 a collection of bus injections when working with a formulation that does not
 explicitly model these values, such as a PTDF or LODF formulation.
-The [`run_opf_ptdf_branch_power_cuts`](@ref) utility function provides an example of
-how `compute_dc_pf` is typically used.
+The [`solve_opf_ptdf_branch_power_cuts`](@ref) utility function provides an example of how `compute_dc_pf` is typically used.
 
 This solver does not support warm starting.
 
@@ -133,7 +132,7 @@ Both of these methods require a complete network data with a valid voltage solut
 for computing the branch flows.  For example, one common work flow to recover
 branch flow values is,
 ```julia
-result = run_ac_pf(network, ...)
+result = solve_ac_pf(network, ...)
 # check that the solver converged
 update_data!(network, result["solution"])
 flows = calc_branch_flow_ac(network)

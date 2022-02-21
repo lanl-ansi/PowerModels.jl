@@ -135,7 +135,7 @@ TESTLOG = Memento.getlogger(PowerModels)
 
 
         @testset "test dc polar opb" begin
-            result = PowerModels._run_mn_opb(mn_data, DCPPowerModel, ipopt_solver)
+            result = PowerModels._solve_mn_opb(mn_data, DCPPowerModel, ipopt_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 29620.0; atol = 1e0)
@@ -452,7 +452,7 @@ TESTLOG = Memento.getlogger(PowerModels)
 
         PowerModels.update_data!(mn_data, opf_result["solution"])
 
-        pf_result = PowerModels._run_mn_pf(mn_data, ACPPowerModel, ipopt_solver)
+        pf_result = PowerModels._solve_mn_pf(mn_data, ACPPowerModel, ipopt_solver)
         @test pf_result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(pf_result["objective"], 0.0; atol = 1e-3)
 

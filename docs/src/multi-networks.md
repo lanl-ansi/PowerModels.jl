@@ -41,7 +41,7 @@ PowerModels.ismultinetwork(pm3)
     ```
     will result in an error. Moreover, `instantiate_model()` (see )
 
-Because this is a common pattern of usage, we provide corresponding calls to `run_mn_opf` (which behaves analogously to `run_opf`, but for multinetwork data).
+Because this is a common pattern of usage, we provide corresponding calls to `solve_mn_opf` (which behaves analogously to `solve_opf`, but for multinetwork data).
 
 !!! note
 

@@ -1,16 +1,16 @@
 "solves the AC Power Flow in polar coordinates using a JuMP model"
-function run_ac_pf(file, optimizer; kwargs...)
-    return run_pf(file, ACPPowerModel, optimizer; kwargs...)
+function solve_ac_pf(file, optimizer; kwargs...)
+    return solve_pf(file, ACPPowerModel, optimizer; kwargs...)
 end
 
 "solves the linear DC Power Flow using a JuMP model"
-function run_dc_pf(file, optimizer; kwargs...)
-    return run_pf(file, DCPPowerModel, optimizer; kwargs...)
+function solve_dc_pf(file, optimizer; kwargs...)
+    return solve_pf(file, DCPPowerModel, optimizer; kwargs...)
 end
 
 "solves a formulation-agnostic Power Flow using a JuMP model"
-function run_pf(file, model_type::Type, optimizer; kwargs...)
-    return run_model(file, model_type, optimizer, build_pf; kwargs...)
+function solve_pf(file, model_type::Type, optimizer; kwargs...)
+    return solve_model(file, model_type, optimizer, build_pf; kwargs...)
 end
 
 "specification of the formulation agnostic Power Flow model"

@@ -13,7 +13,7 @@ Convex Relaxations with Bound Tightening for Power Network Optimization".
 The function can be invoked as follows:
 
 ```
-data, stats = run_obbt_opf!("matpower/case3.m", Ipopt.Optimizer)
+data, stats = solve_obbt_opf!("matpower/case3.m", Ipopt.Optimizer)
 ```
 
 `data` contains the parsed network data with tightened bounds. `stats` contains
@@ -62,12 +62,12 @@ Dict{String,Any} with 19 entries:
     `improvement_tol`.
 * `precision`: number of decimal digits to round the tightened bounds to.
 """
-function run_obbt_opf!(file::String, optimizer; kwargs...)
+function solve_obbt_opf!(file::String, optimizer; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_obbt_opf!(data, optimizer; kwargs...)
+    return solve_obbt_opf!(data, optimizer; kwargs...)
 end
 
-function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
+function solve_obbt_opf!(data::Dict{String,<:Any}, optimizer;
     model_type::Type = QCLSPowerModel,
     max_iter::Int = 100,
     time_limit::Float64 = 3600.0,
@@ -327,7 +327,7 @@ function run_obbt_opf!(data::Dict{String,<:Any}, optimizer;
         td = var(model_bt, :td)
 
         # run the qc relaxation for the updated bounds
-        result_relaxation = run_opf(data, model_type::Type, optimizer)
+        result_relaxation = solve_opf(data, model_type::Type, optimizer)
 
         if result_relaxation["termination_status"] in status_pass
             current_rel_gap = (upper_bound - result_relaxation["objective"])/upper_bound

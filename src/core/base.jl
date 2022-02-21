@@ -22,13 +22,13 @@ conductor_ids(pm::AbstractPowerModel; nw::Int=nw_id_default) = pm.ref[:it][pm_it
 
 
 ""
-function run_model(file::String, model_type::Type, optimizer, build_method; kwargs...)
+function solve_model(file::String, model_type::Type, optimizer, build_method; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_model(data, model_type, optimizer, build_method; kwargs...)
+    return solve_model(data, model_type, optimizer, build_method; kwargs...)
 end
 
 ""
-function run_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method;
+function solve_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method;
         ref_extensions=[], solution_processors=[], relax_integrality=false,
         multinetwork=false, multiconductor=false, kwargs...)
 

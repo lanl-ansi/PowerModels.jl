@@ -9,12 +9,12 @@ constraint violations
 * `max_iter`: maximum number of flow iterations to perform.
 * `time_limit`: maximum amount of time (sec) for the algorithm.
 """
-function run_opf_branch_power_cuts(file::String, model_type::Type, optimizer; kwargs...)
+function solve_opf_branch_power_cuts(file::String, model_type::Type, optimizer; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_opf_branch_power_cuts!(data, model_type, optimizer; kwargs...)
+    return solve_opf_branch_power_cuts!(data, model_type, optimizer; kwargs...)
 end
 
-function run_opf_branch_power_cuts!(data::Dict{String,<:Any}, model_type::Type, optimizer; solution_processors=[], max_iter::Int=100, time_limit::Float64=3600.0)
+function solve_opf_branch_power_cuts!(data::Dict{String,<:Any}, model_type::Type, optimizer; solution_processors=[], max_iter::Int=100, time_limit::Float64=3600.0)
     Memento.info(_LOGGER, "maximum cut iterations set to value of $max_iter")
 
     for (i,branch) in data["branch"]
@@ -26,7 +26,7 @@ function run_opf_branch_power_cuts!(data::Dict{String,<:Any}, model_type::Type, 
 
     start_time = time()
 
-    #result = run_opf(data, model_type, optimizer)
+    #result = solve_opf(data, model_type, optimizer)
     pm = instantiate_model(data, model_type, build_opf)
     result = optimize_model!(pm, optimizer=optimizer, solution_processors=solution_processors)
 
@@ -68,7 +68,7 @@ function run_opf_branch_power_cuts!(data::Dict{String,<:Any}, model_type::Type, 
 
         if violated
             iteration += 1
-            #result = run_opf(data, model_type, optimizer)
+            #result = solve_opf(data, model_type, optimizer)
             result = optimize_model!(pm, solution_processors=solution_processors)
 
             #print_summary(result["solution"])
@@ -96,12 +96,12 @@ supporting the PTDF problem specification at this time.
 * `time_limit`: maximum amount of time (sec) for the algorithm.
 * `full_inverse`: compute the complete admittance matrix inverse, instead of a branch by branch computation.
 """
-function run_opf_ptdf_branch_power_cuts(file::String, optimizer; kwargs...)
+function solve_opf_ptdf_branch_power_cuts(file::String, optimizer; kwargs...)
     data = PowerModels.parse_file(file)
-    return run_opf_ptdf_branch_power_cuts!(data, optimizer; kwargs...)
+    return solve_opf_ptdf_branch_power_cuts!(data, optimizer; kwargs...)
 end
 
-function run_opf_ptdf_branch_power_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::Int=100, time_limit::Float64=3600.0, full_inverse=false)
+function solve_opf_ptdf_branch_power_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::Int=100, time_limit::Float64=3600.0, full_inverse=false)
     Memento.info(_LOGGER, "maximum cut iterations set to value of $max_iter")
 
     for (i,branch) in data["branch"]
@@ -122,7 +122,7 @@ function run_opf_ptdf_branch_power_cuts!(data::Dict{String,<:Any}, optimizer; ma
     start_time = time()
 
 
-    #result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
+    #result = solve_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
     pm = instantiate_model(data, DCPPowerModel, build_opf_ptdf; ref_extensions=ref_extensions)
     result = optimize_model!(pm, optimizer=optimizer)
     update_data!(data, result["solution"])
@@ -170,7 +170,7 @@ function run_opf_ptdf_branch_power_cuts!(data::Dict{String,<:Any}, optimizer; ma
         if violated
             iteration += 1
 
-            #result = run_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
+            #result = solve_ptdf_opf(data, DCPPowerModel, optimizer, full_inverse=full_inverse)
             result = optimize_model!(pm)
 
             update_data!(data, result["solution"])

@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Rename `run_*` methods to `solve_*` and add depreciation warnings (#649)
 - Made case name recovery optional in PTI parsing
 - Fixed Julia deprecation warning when calling sort on Dict
 - Change `Int64` types to `Int`
@@ -45,6 +46,7 @@ PowerModels.jl Change Log
 - Removed ref bus index from AdmittanceMatrix (#760) (breaking)
 - Removed data change tracking from `correct_network_data!` (breaking)
 - Removed `_extend_pwl_cost!` function (#716)
+>>>>>>> master
 
 ### v0.17.4
 - Added support for matrix-based analysis of basic network data (#728)

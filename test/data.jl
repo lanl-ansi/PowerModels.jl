@@ -758,7 +758,7 @@ end
      @testset "5-bus ac polar balance with storage" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
         data["branch"]["4"]["br_status"] = 0
-        result = PowerModels._run_opf_strg(data, ACPPowerModel, ipopt_solver)
+        result = PowerModels._solve_opf_strg(data, ACPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)
@@ -772,7 +772,7 @@ end
      @testset "5-bus dc balance with storage" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
         data["branch"]["4"]["br_status"] = 0
-        result = PowerModels._run_opf_strg(data, DCPPowerModel, ipopt_solver)
+        result = PowerModels._solve_opf_strg(data, DCPPowerModel, ipopt_solver)
         PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)
@@ -836,11 +836,11 @@ end
 
      @testset "5-bus with switches" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
-        result_1 = PowerModels._run_opf_sw(data, DCPPowerModel, ipopt_solver)
+        result_1 = PowerModels._solve_opf_sw(data, DCPPowerModel, ipopt_solver)
 
         update_bus_ids!(data, Dict(1 => 10, 2=>20, 3=>30, 4=>40, 10=>100))
 
-        result_2 = PowerModels._run_opf_sw(data, DCPPowerModel, ipopt_solver)
+        result_2 = PowerModels._solve_opf_sw(data, DCPPowerModel, ipopt_solver)
 
         @test isapprox(result_1["objective"], result_2["objective"]; atol=1e-6)
     end
