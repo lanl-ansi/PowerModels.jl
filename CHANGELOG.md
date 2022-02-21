@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Rename `run_*` methods to `solve_*` (#649) (breaking)
+- Rename `run_*` methods to `solve_*` and add depreciation warnings (#649)
 - Made case name recovery optional in PTI parsing
 - Fixed Julia deprecation warning when calling sort on Dict
 - Change `Int64` types to `Int`
