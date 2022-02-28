@@ -43,14 +43,14 @@ function variable_bus_voltage(pm::AbstractWRMModel; nw::Int=nw_id_default, bound
     WR_start = zeros(length(bus_ids), length(bus_ids)) + I
 
     WR = var(pm, nw)[:WR] = JuMP.@variable(pm.model,
-        [i=1:length(bus_ids), j=1:length(bus_ids)], Symmetric, base_name="$(nw)_WR", start=WR_start[i,j]
+        [i=1:length(bus_ids), j=1:length(bus_ids)] in JuMP.SymMatrixSpace(), base_name="$(nw)_WR", start=WR_start[i,j]
     )
     if report
         sol(pm, nw)[:WR] = WR
     end
 
     WI = var(pm, nw)[:WI] = JuMP.@variable(pm.model,
-        [1:length(bus_ids), 1:length(bus_ids)], base_name="$(nw)_WI", start=0.0
+        [1:length(bus_ids), 1:length(bus_ids)] in JuMP.SkewSymmetricMatrixSpace(), base_name="$(nw)_WI", start=0.0
     )
     if report
         sol(pm, nw)[:WI] = WI
@@ -79,12 +79,19 @@ function variable_bus_voltage(pm::AbstractWRMModel; nw::Int=nw_id_default, bound
         wi_idx = lookup_w_index[i]
         wj_idx = lookup_w_index[j]
 
+        println(i, " ", j)
+
         if bounded
             JuMP.set_upper_bound(WR[wi_idx, wj_idx], wr_max[(i,j)])
             JuMP.set_lower_bound(WR[wi_idx, wj_idx], wr_min[(i,j)])
 
-            JuMP.set_upper_bound(WI[wi_idx, wj_idx], wi_max[(i,j)])
-            JuMP.set_lower_bound(WI[wi_idx, wj_idx], wi_min[(i,j)])
+            if i <= j
+                JuMP.set_upper_bound(WI[wi_idx, wj_idx], wi_max[(i,j)])
+                JuMP.set_lower_bound(WI[wi_idx, wj_idx], wi_min[(i,j)])
+            else
+                JuMP.set_upper_bound(WI[wj_idx, wi_idx], -wi_min[(i,j)])
+                JuMP.set_lower_bound(WI[wj_idx, wi_idx], -wi_max[(i,j)])
+            end
         end
     end
 
@@ -154,7 +161,7 @@ function variable_bus_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=nw_id_defau
         voltage_product_groups[gidx] = Dict()
         WR = voltage_product_groups[gidx][:WR] =
             var(pm, nw)[:voltage_product_groups][gidx][:WR] =
-            JuMP.@variable(pm.model, [i=1:n, j=1:n], Symmetric,
+            JuMP.@variable(pm.model, [i=1:n, j=1:n] in JuMP.SymMatrixSpace(),
                 base_name="$(nw)_$(gidx)_WR", start=wr_start[i,j])
         if report
             sol(pm, nw, :w_group, gidx)[:WR] = WR
@@ -162,7 +169,7 @@ function variable_bus_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=nw_id_defau
 
         WI = voltage_product_groups[gidx][:WI] =
             var(pm, nw)[:voltage_product_groups][gidx][:WI] =
-            JuMP.@variable(pm.model, [1:n, 1:n],
+            JuMP.@variable(pm.model, [1:n, 1:n] in JuMP.SkewSymmetricMatrixSpace(),
                 base_name="$(nw)_$(gidx)_WI", start=0.0)
         if report
             sol(pm, nw, :w_group, gidx)[:WI] = WI
