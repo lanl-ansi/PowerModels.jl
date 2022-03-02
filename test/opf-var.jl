@@ -135,7 +135,8 @@ end
 
            @test result["termination_status"] == OPTIMAL
            #@test isapprox(result["objective"], 15418.4; atol = 1e0)
-           @test isapprox(result["objective"], 15402.05; atol = 1e0)
+           # relaxed for cross platform compat with SCS v1.0.1
+           @test isapprox(result["objective"], 15402.05; atol = 2e1)
         end
         @testset "14-bus case" begin
             data = build_current_data("../test/data/matpower/case14.m")
