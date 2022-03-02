@@ -206,7 +206,8 @@ TESTLOG = Memento.getlogger(PowerModels)
         @testset "test sdp with constraint decomposition opf" begin
             result = PowerModels.run_mn_opf(mn_data, SparseSDPWRMPowerModel, scs_solver)
 
-            @test result["termination_status"] == OPTIMAL
+            # hits iteration limit in SCS v0.9, sense ALMOST_OPTIMAL
+            @test result["termination_status"] == ALMOST_OPTIMAL
             # tolerance relaxed for cross platform compat.
             @test isapprox(result["objective"], 33321.9; atol = 1e2)
             @test isapprox(

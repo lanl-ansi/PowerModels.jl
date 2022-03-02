@@ -6,7 +6,7 @@ import Memento
 Memento.setlevel!(Memento.getlogger(InfrastructureModels), "error")
 PowerModels.logger_config!("error")
 
-import Cbc
+import HiGHS
 import Ipopt
 import SCS
 import Juniper
@@ -22,9 +22,9 @@ using Test
 ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6, "print_level"=>0)
 ipopt_ws_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6, "mu_init"=>1e-4, "print_level"=>0)
 
-cbc_solver = JuMP.optimizer_with_attributes(Cbc.Optimizer, "logLevel"=>0)
+cbc_solver = JuMP.optimizer_with_attributes(HiGHS.Optimizer, "output_flag"=>false)
 juniper_solver = JuMP.optimizer_with_attributes(Juniper.Optimizer, "nl_solver"=>JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-4, "print_level"=>0), "log_levels"=>[])
-scs_solver = JuMP.optimizer_with_attributes(SCS.Optimizer, "max_iters"=>100000, "eps"=>1e-4, "verbose"=>0)
+scs_solver = JuMP.optimizer_with_attributes(SCS.Optimizer, "verbose"=>false)
 
 include("common.jl")
 
