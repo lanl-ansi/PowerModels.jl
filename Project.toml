@@ -14,15 +14,15 @@ NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
-HiGHS = "1"
+HiGHS = "~0.3, 1"
 InfrastructureModels = "~0.6, ~0.7"
-Ipopt = "1"
+Ipopt = "~0.8, ~0.9, ~1"
 JSON = "~0.18, ~0.19, ~0.20, ~0.21"
 JuMP = "~0.22, ~0.23"
 Juniper = "~0.8, ~0.9"
 Memento = "1"
 NLsolve = "4"
-SCS = "1"
+SCS = "~0.8, ~0.9, ~1"
 julia = "1"
 
 [extras]
