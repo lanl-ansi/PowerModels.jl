@@ -4,7 +4,7 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
-### v0.20.0
+### v0.19.3
 - Add support for JuMP v0.23
 - Update minimum Julia requirement v1.6 (LTS)
 - Replace CBC with HiGHS in tests

@@ -15,7 +15,7 @@
         x = JuMP.@variable(m, my_var >= 0, start=0.0)
         pm = instantiate_model("../test/data/matpower/case5.m", ACPPowerModel, PowerModels.build_opf, jump_model=m)
 
-        @test JuMP.num_nonlinear_constraints(pm.model) == 28
+        @test num_nonlinear_constraints(pm.model) == 28
         @test JuMP.num_variables(pm.model) == 49
 
         @test pm.model[:my_var] == x
