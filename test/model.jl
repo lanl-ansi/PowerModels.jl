@@ -15,7 +15,7 @@
         x = JuMP.@variable(m, my_var >= 0, start=0.0)
         pm = instantiate_model("../test/data/matpower/case5.m", ACPPowerModel, PowerModels.build_opf, jump_model=m)
 
-        @test JuMP.num_nl_constraints(pm.model) == 28
+        @test num_nonlinear_constraints(pm.model) == 28
         @test JuMP.num_variables(pm.model) == 49
 
         @test pm.model[:my_var] == x
@@ -36,11 +36,11 @@ end
     end
 
     @testset "optimizer_with_attributes and LP status" begin
-        result = run_opf("../test/data/matpower/case5.m", DCPPowerModel, optimizer_with_attributes(Cbc.Optimizer, "logLevel"=>0))
+        result = run_opf("../test/data/matpower/case5.m", DCPPowerModel, optimizer_with_attributes(HiGHS.Optimizer, "output_flag"=>false))
 
         @test result["termination_status"] == OPTIMAL
         @test result["primal_status"] == FEASIBLE_POINT
-        @test result["dual_status"] == NO_SOLUTION
+        @test result["dual_status"] == FEASIBLE_POINT
         @test isapprox(result["objective"], 17613.2; atol = 1e0)
     end
 end

@@ -6,7 +6,7 @@ import Memento
 Memento.setlevel!(Memento.getlogger(InfrastructureModels), "error")
 PowerModels.logger_config!("error")
 
-import Cbc
+import HiGHS
 import Ipopt
 import SCS
 import Juniper
@@ -18,13 +18,23 @@ import LinearAlgebra
 import SparseArrays
 using Test
 
+
+# compat for JuMP v0.22/v0.23 transition
+# can be removed after dropping support for v0.22
+if !isdefined(JuMP, :num_nonlinear_constraints)
+    num_nonlinear_constraints = JuMP.num_nl_constraints
+else
+    num_nonlinear_constraints = JuMP.num_nonlinear_constraints
+end
+
+
 # default setup for solvers
 ipopt_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6, "print_level"=>0)
 ipopt_ws_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6, "mu_init"=>1e-4, "print_level"=>0)
 
-cbc_solver = JuMP.optimizer_with_attributes(Cbc.Optimizer, "logLevel"=>0)
+cbc_solver = JuMP.optimizer_with_attributes(HiGHS.Optimizer, "output_flag"=>false)
 juniper_solver = JuMP.optimizer_with_attributes(Juniper.Optimizer, "nl_solver"=>JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-4, "print_level"=>0), "log_levels"=>[])
-scs_solver = JuMP.optimizer_with_attributes(SCS.Optimizer, "max_iters"=>100000, "eps"=>1e-4, "verbose"=>0)
+scs_solver = JuMP.optimizer_with_attributes(SCS.Optimizer, "verbose"=>false)
 
 include("common.jl")
 
