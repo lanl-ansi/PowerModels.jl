@@ -435,7 +435,7 @@ function variable_branch_power_real(pm::AbstractPowerModel; nw::Int=nw_id_defaul
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p)
+    report && sol_component_value_edge(pm, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p)
 end
 
 "variable: `q[l,i,j]` for `(l,i,j)` in `arcs`"
@@ -470,7 +470,7 @@ function variable_branch_power_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_d
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :branch, :qf, :qt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), q)
+    report && sol_component_value_edge(pm, nw, :branch, :qf, :qt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), q)
 end
 
 function variable_branch_transform(pm::AbstractPolarModels; kwargs...)
@@ -546,7 +546,7 @@ function variable_branch_current_real(pm::AbstractPowerModel; nw::Int=nw_id_defa
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :branch, :cr_fr, :cr_to, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), cr)
+    report && sol_component_value_edge(pm, nw, :branch, :cr_fr, :cr_to, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), cr)
 end
 
 
@@ -583,7 +583,7 @@ function variable_branch_current_imaginary(pm::AbstractPowerModel; nw::Int=nw_id
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :branch, :ci_fr, :ci_to, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), ci)
+    report && sol_component_value_edge(pm, nw, :branch, :ci_fr, :ci_to, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), ci)
 end
 
 
@@ -704,7 +704,7 @@ function variable_dcline_power_real(pm::AbstractPowerModel; nw::Int=nw_id_defaul
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :dcline, :pf, :pt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), p_dc)
+    report && sol_component_value_edge(pm, nw, :dcline, :pf, :pt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), p_dc)
 end
 
 "variable: `q_dc[l,i,j]` for `(l,i,j)` in `arcs_dc`"
@@ -738,7 +738,7 @@ function variable_dcline_power_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_d
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :dcline, :qf, :qt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), q_dc)
+    report && sol_component_value_edge(pm, nw, :dcline, :qf, :qt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), q_dc)
 end
 
 "variable: `crdc[j]` for `j` in `dcline`"
@@ -768,7 +768,7 @@ function variable_dcline_current_real(pm::AbstractPowerModel; nw::Int=nw_id_defa
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :dcline, :crdc_fr, :crdc_to, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), crdc)
+    report && sol_component_value_edge(pm, nw, :dcline, :crdc_fr, :crdc_to, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), crdc)
 end
 
 "variable:  `cidc[j]` for `j` in `dcline`"
@@ -798,7 +798,7 @@ function variable_dcline_current_imaginary(pm::AbstractPowerModel; nw::Int=nw_id
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :dcline, :cidc_fr, :cidc_to, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), cidc)
+    report && sol_component_value_edge(pm, nw, :dcline, :cidc_fr, :cidc_to, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), cidc)
 end
 
 
@@ -856,7 +856,7 @@ function variable_switch_power_real(pm::AbstractPowerModel; nw::Int=nw_id_defaul
     psw_expr = merge(psw_expr, Dict( (l,j,i) => -1.0*psw[(l,i,j)] for (l,i,j) in ref(pm, nw, :arcs_from_sw)))
     var(pm, nw)[:psw] = psw_expr
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :switch, :psw_fr, :psw_to, ref(pm, nw, :arcs_from_sw), ref(pm, nw, :arcs_to_sw), psw_expr)
+    report && sol_component_value_edge(pm, nw, :switch, :psw_fr, :psw_to, ref(pm, nw, :arcs_from_sw), ref(pm, nw, :arcs_to_sw), psw_expr)
 end
 
 
@@ -886,7 +886,7 @@ function variable_switch_power_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_d
     qsw_expr = merge(qsw_expr, Dict( (l,j,i) => -1.0*qsw[(l,i,j)] for (l,i,j) in ref(pm, nw, :arcs_from_sw)))
     var(pm, nw)[:qsw] = qsw_expr
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :switch, :qsw_fr, :qsw_to, ref(pm, nw, :arcs_from_sw), ref(pm, nw, :arcs_to_sw), qsw_expr)
+    report && sol_component_value_edge(pm, nw, :switch, :qsw_fr, :qsw_to, ref(pm, nw, :arcs_from_sw), ref(pm, nw, :arcs_to_sw), qsw_expr)
 end
 
 
@@ -1201,7 +1201,7 @@ function variable_ne_branch_power_real(pm::AbstractPowerModel; nw::Int=nw_id_def
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :ne_branch, :pf, :pt, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne)
+    report && sol_component_value_edge(pm, nw, :ne_branch, :pf, :pt, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne)
 end
 
 "variable: `-ne_branch[l][\"rate_a\"] <= q_ne[l,i,j] <= ne_branch[l][\"rate_a\"]` for `(l,i,j)` in `ne_arcs`"
@@ -1225,7 +1225,7 @@ function variable_ne_branch_power_imaginary(pm::AbstractPowerModel; nw::Int=nw_i
         end
     end
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :ne_branch, :qf, :qt, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), q_ne)
+    report && sol_component_value_edge(pm, nw, :ne_branch, :qf, :qt, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), q_ne)
 end
 
 "variable: `0 <= z_branch[l] <= 1` for `l` in `branch`es"
