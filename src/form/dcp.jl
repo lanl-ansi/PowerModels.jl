@@ -257,7 +257,7 @@ function variable_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=nw_id_
     p_expr = merge(p_expr, Dict( ((l,j,i), -1.0*p[(l,i,j)]) for (l,i,j) in ref(pm, nw, :arcs_from)))
     var(pm, nw)[:p] = p_expr
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p_expr)
+    report && sol_component_value_edge(pm, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p_expr)
 end
 
 ""
@@ -280,7 +280,7 @@ function variable_ne_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=nw_
     p_ne_expr = merge(p_ne_expr, Dict(((l,j,i), -1.0*var(pm, nw, :p_ne, (l,i,j))) for (l,i,j) in ref(pm, nw, :ne_arcs_from)))
     var(pm, nw)[:p_ne] = p_ne_expr
 
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :ne_branch, :p_ne_fr, :p_ne_to, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne_expr)
+    report && sol_component_value_edge(pm, nw, :ne_branch, :p_ne_fr, :p_ne_to, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne_expr)
 end
 
 ""

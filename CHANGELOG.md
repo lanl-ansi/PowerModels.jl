@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fix `sol_component_value_edge` implementation and usage (#811)
 
 ### v0.19.3
 - Add support for JuMP v0.23
