@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.19.4
 - Fix `sol_component_value_edge` implementation and usage (#811)
 
 ### v0.19.3
