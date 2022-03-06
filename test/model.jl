@@ -3,7 +3,7 @@
     @testset "run with user provided JuMP model" begin
         m = JuMP.Model()
         x = JuMP.@variable(m, my_var >= 0, start=0.0)
-        result = run_ac_opf("../test/data/matpower/case5.m", ipopt_solver, jump_model=m)
+        result = run_ac_opf("../test/data/matpower/case5.m", nlp_solver, jump_model=m)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 18269; atol = 1e0)
@@ -49,7 +49,7 @@ end
 
 @testset "relax integrality" begin
     @testset "relax OTS model" begin
-        result = run_ots("../test/data/matpower/case5.m", DCPPowerModel, ipopt_solver, relax_integrality=true)
+        result = run_ots("../test/data/matpower/case5.m", DCPPowerModel, nlp_solver, relax_integrality=true)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 14810.0; atol = 1e0)
@@ -59,7 +59,7 @@ end
     end
 
     @testset "relax TNEP model" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", SOCWRPowerModel, ipopt_solver, relax_integrality=true)
+        result = run_tnep("../test/data/matpower/case5_tnep.m", SOCWRPowerModel, nlp_solver, relax_integrality=true)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0.1236; atol = 1e-2)

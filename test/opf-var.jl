@@ -16,20 +16,20 @@ end
     @testset "test ac polar opf" begin
         @testset "5-bus case" begin
             data = build_current_data("../test/data/matpower/case5.m")
-            result = PowerModels._solve_opf_cl(data, ACPPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_cl(data, ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15669.8; atol = 1e0)
         end
         @testset "5-bus current limit case" begin
-           result = PowerModels._solve_opf_cl("../test/data/matpower/case5_clm.m", ACPPowerModel, ipopt_solver)
+           result = PowerModels._solve_opf_cl("../test/data/matpower/case5_clm.m", ACPPowerModel, nlp_solver)
 
            @test result["termination_status"] == LOCALLY_SOLVED
            @test isapprox(result["objective"], 17015.5; atol = 1e0)
         end
         @testset "14-bus no limits case" begin
             data = build_current_data("../test/data/matpower/case14.m")
-            result = PowerModels._solve_opf_cl(data, ACPPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_cl(data, ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 8081.52; atol = 1e0)
@@ -39,14 +39,14 @@ end
     @testset "test ac rect opf" begin
         @testset "5-bus case" begin
             data = build_current_data("../test/data/matpower/case5.m")
-            result = PowerModels._solve_opf_cl(data, ACRPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_cl(data, ACRPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15669.8; atol = 1e0)
         end
         @testset "14-bus no limits case" begin
             data = build_current_data("../test/data/matpower/case14.m")
-            result = PowerModels._solve_opf_cl(data, ACRPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_cl(data, ACRPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 8081.52; atol = 1e0)
@@ -56,14 +56,14 @@ end
     @testset "test ac tan opf" begin
         @testset "5-bus case" begin
             data = build_current_data("../test/data/matpower/case5.m")
-            result = PowerModels._solve_opf_cl(data, ACTPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_cl(data, ACTPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15669.8; atol = 1e0)
         end
         @testset "14-bus no limits case" begin
             data = build_current_data("../test/data/matpower/case14.m")
-            result = PowerModels._solve_opf_cl(data, ACTPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_cl(data, ACTPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 8081.52; atol = 1e0)
@@ -73,14 +73,14 @@ end
     @testset "test dc opf" begin
         @testset "5-bus case" begin
             data = build_current_data("../test/data/matpower/case5.m")
-            result = PowerModels._solve_opf_cl(data, DCPPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_cl(data, DCPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 16154.5; atol = 1e0)
         end
         @testset "14-bus no limits case" begin
             data = build_current_data("../test/data/matpower/case14.m")
-            result = PowerModels._solve_opf_cl(data, DCPPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_cl(data, DCPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 7642.59; atol = 1e0)
@@ -90,14 +90,14 @@ end
     @testset "test dc+ll opf" begin
         @testset "5-bus case" begin
             data = build_current_data("../test/data/matpower/case5.m")
-            result = PowerModels._solve_opf_cl(data, DCPLLPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_cl(data, DCPLLPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 16282.6; atol = 1e0)
         end
         @testset "14-bus no limits case" begin
             data = build_current_data("../test/data/matpower/case14.m")
-            result = PowerModels._solve_opf_cl(data, DCPLLPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_cl(data, DCPLLPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 8110.61; atol = 1e0)
@@ -107,14 +107,14 @@ end
     @testset "test soc (BIM) opf" begin
         @testset "5-bus case" begin
             data = build_current_data("../test/data/matpower/case5.m")
-            result = PowerModels._solve_opf_cl(data, SOCWRPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_cl(data, SOCWRPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15047.7; atol = 1e0)
         end
         @testset "14-bus no limits case" begin
             data = build_current_data("../test/data/matpower/case14.m")
-            result = PowerModels._solve_opf_cl(data, SOCWRPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_cl(data, SOCWRPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 8075.12; atol = 1e0)
@@ -124,14 +124,14 @@ end
     @testset "test sdp opf" begin
         @testset "3-bus case" begin
             data = build_current_data("../test/data/matpower/case3.m")
-            result = PowerModels._solve_opf_cl(data, SDPWRMPowerModel, scs_solver)
+            result = PowerModels._solve_opf_cl(data, SDPWRMPowerModel, sdp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 5728.62; atol = 1e0)
         end
         @testset "5-bus case" begin
            data = build_current_data("../test/data/matpower/case5.m")
-           result = PowerModels._solve_opf_cl(data, SDPWRMPowerModel, scs_solver)
+           result = PowerModels._solve_opf_cl(data, SDPWRMPowerModel, sdp_solver)
 
            @test result["termination_status"] == OPTIMAL
            #@test isapprox(result["objective"], 15418.4; atol = 1e0)
@@ -140,7 +140,7 @@ end
         end
         @testset "14-bus case" begin
             data = build_current_data("../test/data/matpower/case14.m")
-            result = PowerModels._solve_opf_cl(data, SDPWRMPowerModel, scs_solver)
+            result = PowerModels._solve_opf_cl(data, SDPWRMPowerModel, sdp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 7505.33; atol = 1e0)
@@ -155,7 +155,7 @@ end
 
     @testset "test ac polar mld" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case5.m", ACPPowerModel, ipopt_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case5.m", ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
@@ -165,7 +165,7 @@ end
 
         end
         @testset "14-bus current" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case14.m", ACPPowerModel, ipopt_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case14.m", ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 3.59; atol = 1e-2)
@@ -183,7 +183,7 @@ end
 
     @testset "test ac rect mld" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case5.m", ACRPowerModel, ipopt_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case5.m", ACRPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
@@ -192,7 +192,7 @@ end
             @test all_shunts_on(result)
         end
         @testset "14-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case14.m", ACRPowerModel, ipopt_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case14.m", ACRPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 3.59; atol = 1e-2)
@@ -204,7 +204,7 @@ end
 
     @testset "test ac tan mld" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case5.m", ACTPowerModel, ipopt_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case5.m", ACTPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
@@ -213,7 +213,7 @@ end
             @test all_shunts_on(result)
         end
         @testset "14-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case14.m", ACTPowerModel, ipopt_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case14.m", ACTPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 3.59; atol = 1e-2)
@@ -225,7 +225,7 @@ end
 
     @testset "test nfa mld" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case5.m", NFAPowerModel, ipopt_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case5.m", NFAPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
@@ -234,7 +234,7 @@ end
             @test all_shunts_on(result)
         end
         @testset "14-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case14.m", NFAPowerModel, ipopt_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case14.m", NFAPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 3.59; atol = 1e-2)
@@ -246,7 +246,7 @@ end
 
     @testset "test dc mld" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case5.m", DCPPowerModel, ipopt_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case5.m", DCPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
@@ -255,7 +255,7 @@ end
             @test all_shunts_on(result)
         end
         @testset "14-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case14.m", DCPPowerModel, ipopt_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case14.m", DCPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 3.59; atol = 1e-2)
@@ -267,7 +267,7 @@ end
 
     @testset "test soc (BIM) mld" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case5.m", SOCWRPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
@@ -276,7 +276,7 @@ end
             @test all_shunts_on(result)
         end
         @testset "14-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case14.m", SOCWRPowerModel, ipopt_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case14.m", SOCWRPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 3.59; atol = 1e-2)
@@ -288,7 +288,7 @@ end
 
     @testset "test soc conic (BIM) mld" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case5.m", SOCWRConicPowerModel, scs_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case5.m", SOCWRConicPowerModel, sdp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
@@ -297,7 +297,7 @@ end
             @test all_shunts_on(result)
         end
         @testset "14-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case14.m", SOCWRConicPowerModel, scs_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case14.m", SOCWRConicPowerModel, sdp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 3.59; atol = 1e-2)
@@ -309,7 +309,7 @@ end
 
     @testset "test sdp mld" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case5.m", SOCWRConicPowerModel, scs_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case5.m", SOCWRConicPowerModel, sdp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
@@ -318,7 +318,7 @@ end
             @test all_shunts_on(result)
         end
         @testset "14-bus case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case14.m", SOCWRConicPowerModel, scs_solver)
+            result = PowerModels._solve_mld("../test/data/matpower/case14.m", SOCWRConicPowerModel, sdp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 3.59; atol = 1e-2)
@@ -333,7 +333,7 @@ end
         settings = Dict("output" => Dict("duals" => true))
 
         @testset "ac case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case5.m", ACPPowerModel, ipopt_solver, setting=settings)
+            result = PowerModels._solve_mld("../test/data/matpower/case5.m", ACPPowerModel, nlp_solver, setting=settings)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
@@ -346,7 +346,7 @@ end
         end
 
         @testset "soc case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver, setting=settings)
+            result = PowerModels._solve_mld("../test/data/matpower/case5.m", SOCWRPowerModel, nlp_solver, setting=settings)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
@@ -359,7 +359,7 @@ end
         end
 
         @testset "dc case" begin
-            result = PowerModels._solve_mld("../test/data/matpower/case5.m", SOCWRPowerModel, ipopt_solver, setting=settings)
+            result = PowerModels._solve_mld("../test/data/matpower/case5.m", SOCWRPowerModel, nlp_solver, setting=settings)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
@@ -378,7 +378,7 @@ end
 
     @testset "test ac opf" begin
         @testset "5-bus uc case" begin
-            result = PowerModels._solve_ucopf("../test/data/matpower/case5_uc.m", ACPPowerModel, juniper_solver)
+            result = PowerModels._solve_ucopf("../test/data/matpower/case5_uc.m", ACPPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 18270.0; atol = 1e0)
@@ -388,7 +388,7 @@ end
 
     @testset "test soc opf" begin
         @testset "5-bus uc case" begin
-            result = PowerModels._solve_ucopf("../test/data/matpower/case5_uc.m", SOCWRPowerModel, juniper_solver)
+            result = PowerModels._solve_ucopf("../test/data/matpower/case5_uc.m", SOCWRPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15057.09; atol = 1e0)
@@ -398,7 +398,7 @@ end
 
     @testset "test dc opf" begin
         @testset "5-bus uc case" begin
-            result = PowerModels._solve_ucopf("../test/data/matpower/case5_uc.m", DCPPowerModel, cbc_solver)
+            result = PowerModels._solve_ucopf("../test/data/matpower/case5_uc.m", DCPPowerModel, milp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 17613.2; atol = 1e0)
@@ -410,7 +410,7 @@ end
             for (i,load) in data["load"]
                 load["pd"] = 0.5*load["pd"]
             end
-            result = PowerModels._solve_ucopf(data, DCPPowerModel, cbc_solver)
+            result = PowerModels._solve_ucopf(data, DCPPowerModel, milp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 8008.0; atol = 1e0)
@@ -422,7 +422,7 @@ end
 
     @testset "test ac opf" begin
         @testset "5-bus uc storage case" begin
-            result = PowerModels._solve_ucopf("../test/data/matpower/case5_uc_strg.m", ACPPowerModel, juniper_solver)
+            result = PowerModels._solve_ucopf("../test/data/matpower/case5_uc_strg.m", ACPPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 17740.9; atol = 1e0)
@@ -435,7 +435,7 @@ end
 
     @testset "test soc opf" begin
         @testset "5-bus uc storage case" begin
-            result = PowerModels._solve_ucopf("../test/data/matpower/case5_uc_strg.m", SOCWRPowerModel, juniper_solver)
+            result = PowerModels._solve_ucopf("../test/data/matpower/case5_uc_strg.m", SOCWRPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 14525.0; atol = 1e0)
@@ -448,7 +448,7 @@ end
 
     @testset "test dc opf" begin
         @testset "5-bus uc storage case" begin
-            result = PowerModels._solve_ucopf("../test/data/matpower/case5_uc_strg.m", DCPPowerModel, cbc_solver)
+            result = PowerModels._solve_ucopf("../test/data/matpower/case5_uc_strg.m", DCPPowerModel, milp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 16833.2; atol = 1e0)
@@ -467,7 +467,7 @@ end
 
     @testset "test ac opf" begin
         @testset "5-bus sw case" begin
-            result = PowerModels._solve_opf_sw("../test/data/matpower/case5_sw.m", ACPPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_sw("../test/data/matpower/case5_sw.m", ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 16641.2; atol = 1e0)
@@ -480,7 +480,7 @@ end
         end
 
         @testset "5-bus sw nb case" begin
-            result = PowerModels._solve_opf_sw("../test/data/matpower/case5_sw_nb.m", ACPPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_sw("../test/data/matpower/case5_sw_nb.m", ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 17915.3; atol = 1e0)
@@ -489,7 +489,7 @@ end
 
     @testset "test dc opf" begin
         @testset "5-bus sw case" begin
-            result = PowerModels._solve_opf_sw("../test/data/matpower/case5_sw.m", DCPPowerModel, cbc_solver)
+            result = PowerModels._solve_opf_sw("../test/data/matpower/case5_sw.m", DCPPowerModel, milp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 16554.7; atol = 1e0)
@@ -500,7 +500,7 @@ end
         end
 
         @testset "5-bus sw nb case" begin
-            result = PowerModels._solve_opf_sw("../test/data/matpower/case5_sw_nb.m", DCPPowerModel, cbc_solver)
+            result = PowerModels._solve_opf_sw("../test/data/matpower/case5_sw_nb.m", DCPPowerModel, milp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 17751.3; atol = 1e0)
@@ -509,7 +509,7 @@ end
 
     @testset "test soc opf" begin
         @testset "5-bus sw case" begin
-            result = PowerModels._solve_opf_sw("../test/data/matpower/case5_sw.m", SOCWRPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_sw("../test/data/matpower/case5_sw.m", SOCWRPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15110.0; atol = 1e0)
@@ -520,7 +520,7 @@ end
         end
 
         @testset "5-bus sw nb case" begin
-            result = PowerModels._solve_opf_sw("../test/data/matpower/case5_sw_nb.m", SOCWRPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_sw("../test/data/matpower/case5_sw_nb.m", SOCWRPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15192.8; atol = 1e0)
@@ -534,7 +534,7 @@ end
 
     @testset "test ac oswpf" begin
         @testset "5-bus sw case" begin
-            result = PowerModels._solve_oswpf("../test/data/matpower/case5_sw.m", ACPPowerModel, juniper_solver)
+            result = PowerModels._solve_oswpf("../test/data/matpower/case5_sw.m", ACPPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15053.6; atol = 1e0)
@@ -548,7 +548,7 @@ end
         end
 
         @testset "5-bus sw nb case" begin
-            result = PowerModels._solve_oswpf("../test/data/matpower/case5_sw_nb.m", ACPPowerModel, juniper_solver)
+            result = PowerModels._solve_oswpf("../test/data/matpower/case5_sw_nb.m", ACPPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 17915.2; atol = 1e0)
@@ -560,7 +560,7 @@ end
 
     @testset "test dc oswpf" begin
         @testset "5-bus sw case" begin
-            result = PowerModels._solve_oswpf("../test/data/matpower/case5_sw.m", DCPPowerModel, cbc_solver)
+            result = PowerModels._solve_oswpf("../test/data/matpower/case5_sw.m", DCPPowerModel, milp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 15054.1; atol = 1e0)
@@ -575,7 +575,7 @@ end
         end
 
         @testset "5-bus sw nb case" begin
-            result = PowerModels._solve_oswpf("../test/data/matpower/case5_sw_nb.m", DCPPowerModel, cbc_solver)
+            result = PowerModels._solve_oswpf("../test/data/matpower/case5_sw_nb.m", DCPPowerModel, milp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 15141.2; atol = 1e0)
@@ -587,7 +587,7 @@ end
 
     @testset "test soc oswpf" begin
         @testset "5-bus sw case" begin
-            result = PowerModels._solve_oswpf("../test/data/matpower/case5_sw.m", SOCWRPowerModel, juniper_solver)
+            result = PowerModels._solve_oswpf("../test/data/matpower/case5_sw.m", SOCWRPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15053.6; atol = 1e0)
@@ -601,7 +601,7 @@ end
         end
 
         @testset "5-bus sw nb case" begin
-            result = PowerModels._solve_oswpf("../test/data/matpower/case5_sw_nb.m", SOCWRPowerModel, juniper_solver)
+            result = PowerModels._solve_oswpf("../test/data/matpower/case5_sw_nb.m", SOCWRPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15175.7; atol = 1e0)
@@ -619,7 +619,7 @@ end
 
     @testset "test ac oswpf node-breaker" begin
         @testset "5-bus sw nb case" begin
-            result = PowerModels._solve_oswpf_nb("../test/data/matpower/case5_sw_nb.m", ACPPowerModel, juniper_solver)
+            result = PowerModels._solve_oswpf_nb("../test/data/matpower/case5_sw_nb.m", ACPPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15350.4; atol = 1e0)
@@ -634,7 +634,7 @@ end
 
     @testset "test dc oswpf node-breaker" begin
         @testset "5-bus sw nb case" begin
-            result = PowerModels._solve_oswpf_nb("../test/data/matpower/case5_sw_nb.m", DCPPowerModel, cbc_solver)
+            result = PowerModels._solve_oswpf_nb("../test/data/matpower/case5_sw_nb.m", DCPPowerModel, milp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 15141.2; atol = 1e0)
@@ -649,7 +649,7 @@ end
 
     @testset "test soc oswpf node-breaker" begin
         @testset "5-bus sw nb case" begin
-            result = PowerModels._solve_oswpf_nb("../test/data/matpower/case5_sw_nb.m", SOCWRPowerModel, juniper_solver)
+            result = PowerModels._solve_oswpf_nb("../test/data/matpower/case5_sw_nb.m", SOCWRPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 15175.7; atol = 1e0)
@@ -669,7 +669,7 @@ end
 
     @testset "test acp polar opf" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_opf_strg("../test/data/matpower/case5_strg.m", PowerModels.ACPPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_strg("../test/data/matpower/case5_strg.m", PowerModels.ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 17039.7; atol = 1e0)
@@ -683,7 +683,7 @@ end
 
     @testset "test mi acp polar opf" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_opf_strg_mi("../test/data/matpower/case5_strg.m", PowerModels.ACPPowerModel, juniper_solver)
+            result = PowerModels._solve_opf_strg_mi("../test/data/matpower/case5_strg.m", PowerModels.ACPPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 17039.7; atol = 1e0)
@@ -698,7 +698,7 @@ end
 
     @testset "test acr polar opf" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_opf_strg("../test/data/matpower/case5_strg.m", PowerModels.ACRPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_strg("../test/data/matpower/case5_strg.m", PowerModels.ACRPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 17039.7; atol = 1e0)
@@ -712,7 +712,7 @@ end
 
     @testset "test mi acr polar opf" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_opf_strg_mi("../test/data/matpower/case5_strg.m", PowerModels.ACRPowerModel, juniper_solver)
+            result = PowerModels._solve_opf_strg_mi("../test/data/matpower/case5_strg.m", PowerModels.ACRPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 17039.7; atol = 1e0)
@@ -727,7 +727,7 @@ end
 
     @testset "test soc polar opf" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_opf_strg("../test/data/matpower/case5_strg.m", PowerModels.SOCWRPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_strg("../test/data/matpower/case5_strg.m", PowerModels.SOCWRPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 13799.5; atol = 1e0)
@@ -741,7 +741,7 @@ end
 
     @testset "test mi soc polar opf" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_opf_strg_mi("../test/data/matpower/case5_strg.m", PowerModels.SOCWRPowerModel, juniper_solver)
+            result = PowerModels._solve_opf_strg_mi("../test/data/matpower/case5_strg.m", PowerModels.SOCWRPowerModel, minlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 13799.5; atol = 1e0)
@@ -756,7 +756,7 @@ end
 
     @testset "test dc opf" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_opf_strg("../test/data/matpower/case5_strg.m", PowerModels.DCPPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_strg("../test/data/matpower/case5_strg.m", PowerModels.DCPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 16840.7; atol = 1e0)
@@ -770,7 +770,7 @@ end
 
     @testset "test mi dc opf" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_opf_strg_mi("../test/data/matpower/case5_strg.m", PowerModels.DCPPowerModel, cbc_solver)
+            result = PowerModels._solve_opf_strg_mi("../test/data/matpower/case5_strg.m", PowerModels.DCPPowerModel, milp_solver)
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 16840.7; atol = 1e0)
@@ -785,7 +785,7 @@ end
 
     @testset "test dc+ll opf" begin
         @testset "5-bus case" begin
-            result = PowerModels._solve_opf_strg("../test/data/matpower/case5_strg.m", PowerModels.DCPLLPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_strg("../test/data/matpower/case5_strg.m", PowerModels.DCPLLPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 17048.4; atol = 1e0)
@@ -801,7 +801,7 @@ end
         mp_data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
         delete!(mp_data, "time_elapsed")
         Memento.setlevel!(TESTLOG, "warn")
-        @test_warn(TESTLOG, "network data should specify time_elapsed, using 1.0 as a default", PowerModels._solve_opf_strg(mp_data, PowerModels.ACPPowerModel, ipopt_solver))
+        @test_warn(TESTLOG, "network data should specify time_elapsed, using 1.0 as a default", PowerModels._solve_opf_strg(mp_data, PowerModels.ACPPowerModel, nlp_solver))
         Memento.setlevel!(TESTLOG, "error")
     end
 
@@ -846,31 +846,31 @@ end
     end
 
     @testset "3-bus case" begin
-        result = run_model("../test/data/matpower/case3.m", ACPPowerModel, ipopt_solver, build_opf_var)
+        result = run_model("../test/data/matpower/case3.m", ACPPowerModel, nlp_solver, build_opf_var)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 5907; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
-        result = run_model("../test/data/matpower/case5_asym.m", ACPPowerModel, ipopt_solver, build_opf_var)
+        result = run_model("../test/data/matpower/case5_asym.m", ACPPowerModel, nlp_solver, build_opf_var)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 17551; atol = 1e0)
     end
     @testset "5-bus gap case" begin
-        result = run_model("../test/data/matpower/case5_gap.m", ACPPowerModel, ipopt_solver, build_opf_var)
+        result = run_model("../test/data/matpower/case5_gap.m", ACPPowerModel, nlp_solver, build_opf_var)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], -27497.7; atol = 1e0)
     end
     @testset "5-bus with dcline costs" begin
-        result = run_model("../test/data/matpower/case5_dc.m", ACPPowerModel, ipopt_solver, build_opf_var)
+        result = run_model("../test/data/matpower/case5_dc.m", ACPPowerModel, nlp_solver, build_opf_var)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 18156.2; atol = 1e0)
     end
     @testset "6-bus case" begin
-        result = run_model("../test/data/matpower/case6.m", ACPPowerModel, ipopt_solver, build_opf_var)
+        result = run_model("../test/data/matpower/case6.m", ACPPowerModel, nlp_solver, build_opf_var)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 11625.3; atol = 1e0)
@@ -878,7 +878,7 @@ end
         @test isapprox(result["solution"]["bus"]["4"]["va"], 0.0; atol = 1e-4)
     end
     @testset "24-bus rts case" begin
-        result = run_model("../test/data/matpower/case24.m", ACPPowerModel, ipopt_solver, build_opf_var)
+        result = run_model("../test/data/matpower/case24.m", ACPPowerModel, nlp_solver, build_opf_var)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 79805; atol = 1e0)
@@ -891,7 +891,7 @@ end
         @testset "3-bus case with fixed phase shift / tap" begin
             file = "../test/data/matpower/case3_oltc_pst.m"
             data = PowerModels.parse_file(file)
-            result = PowerModels.run_opf(data, ACPPowerModel, ipopt_solver)
+            result = PowerModels.run_opf(data, ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 5820.1; atol = 1e0)
@@ -900,7 +900,7 @@ end
         @testset "3-bus case with optimal phase shifting / tap changing" begin
             file = "../test/data/matpower/case3_oltc_pst.m"
             data = PowerModels.parse_file(file)
-            result = PowerModels._solve_opf_oltc_pst(data, ACPPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_oltc_pst(data, ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 5738.6; atol = 1e0)
@@ -926,7 +926,7 @@ end
                 branch["tm_min"] = branch["tap"]
                 branch["tm_max"] = branch["tap"]
             end
-            result = PowerModels._solve_opf_oltc_pst(data, ACPPowerModel, ipopt_solver)
+            result = PowerModels._solve_opf_oltc_pst(data, ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 5820.1; atol = 1e0)
