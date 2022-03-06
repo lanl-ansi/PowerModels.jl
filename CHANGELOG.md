@@ -4,16 +4,21 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+<<<<<<< HEAD
 ### v0.20.0
 - Added conversion of impedance and current loads from PSSE raw files into constant power loads (#792)
 - Made case name recovery optional in PTI parsing
 
 ### Staged
 - nothing
+=======
+### v0.19.4
+- Fix `sol_component_value_edge` implementation and usage (#811)
+>>>>>>> master
 
 ### v0.19.3
 - Add support for JuMP v0.23
-- Update minimum Julia requirement v1.6 (LTS)
+- Update minimum Julia version to v1.6 (LTS)
 - Replace CBC with HiGHS in tests
 - Updates for SCS v0.9
 
@@ -28,8 +33,8 @@ PowerModels.jl Change Log
 - Add support for Memento v1.3
 
 ### v0.19.0
-- Add support for JuMP v0.22
-- Remove dependency on MathOptInterface package
+- Add support for JuMP v0.22 and dropped support for JuMP v0.21 (#799) (breaking)
+- Remove dependency on MathOptInterface package (#799)
 
 ### v0.18.4
 - Improved support for PWL costs with on/off generators
@@ -58,7 +63,7 @@ PowerModels.jl Change Log
 - Update native power flow solvers to output results dict (#739) (breaking)
 - Improved multi-network support in data function (#764)
 - Renamed `*_flow_cuts` to `_branch_power_cuts` (#713) (breaking)
-- Dropped support for JuMP v0.20 (#673) (breaking)
+- Dropped support for JuMP v0.19 and v0.20 (#673) (breaking)
 - Removed ref bus index from AdmittanceMatrix (#760) (breaking)
 - Removed data change tracking from `correct_network_data!` (breaking)
 - Removed `_extend_pwl_cost!` function (#716)

@@ -29,8 +29,8 @@ function variable_branch_current(pm::AbstractIVRModel; nw::Int=nw_id_default, bo
 
     var(pm, nw)[:p] = p
     var(pm, nw)[:q] = q
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p)
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :branch, :qf, :qt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), q)
+    report && sol_component_value_edge(pm, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p)
+    report && sol_component_value_edge(pm, nw, :branch, :qf, :qt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), q)
 
     variable_branch_series_current_real(pm, nw=nw, bounded=bounded, report=report; kwargs...)
     variable_branch_series_current_imaginary(pm, nw=nw, bounded=bounded, report=report; kwargs...)
@@ -93,8 +93,8 @@ function variable_dcline_current(pm::AbstractIVRModel; nw::Int=nw_id_default, bo
 
     var(pm, nw)[:p_dc] = p
     var(pm, nw)[:q_dc] = q
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :dcline, :pf, :pt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), p)
-    report && _IM.sol_component_value_edge(pm, pm_it_sym, nw, :dcline, :qf, :qt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), q)
+    report && sol_component_value_edge(pm, nw, :dcline, :pf, :pt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), p)
+    report && sol_component_value_edge(pm, nw, :dcline, :qf, :qt, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), q)
 
     if bounded
         for (i,dcline) in ref(pm, nw, :dcline)
