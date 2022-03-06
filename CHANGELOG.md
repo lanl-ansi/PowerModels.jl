@@ -4,17 +4,15 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
-<<<<<<< HEAD
 ### v0.20.0
 - Added conversion of impedance and current loads from PSSE raw files into constant power loads (#792)
 - Made case name recovery optional in PTI parsing
 
 ### Staged
 - nothing
-=======
+
 ### v0.19.4
 - Fix `sol_component_value_edge` implementation and usage (#811)
->>>>>>> master
 
 ### v0.19.3
 - Add support for JuMP v0.23
