@@ -28,8 +28,8 @@ end
 
             set_costs!(data_mp)
 
-            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
-            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
+            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_pti["termination_status"] == LOCALLY_SOLVED
             @test result_mp["termination_status"] == LOCALLY_SOLVED
@@ -42,8 +42,8 @@ end
 
             set_costs!(data_mp)
 
-            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
-            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
+            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_pti["termination_status"] == LOCALLY_SOLVED
             @test result_mp["termination_status"] == LOCALLY_SOLVED
@@ -58,8 +58,8 @@ end
 
                 set_costs!(data_mp)
 
-                result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
-                result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
+                result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
+                result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, nlp_solver)
 
                 @test result_pti["termination_status"] == LOCALLY_SOLVED
                 @test result_mp["termination_status"] == LOCALLY_SOLVED
@@ -82,12 +82,12 @@ end
                 end
             end
 
-            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_opf["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result_opf["objective"], 29.4043; atol=1e-4)
 
-            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
 
             for (bus, vm, va) in zip(["1002", "1005", "1008", "1009"],
                                      [1.0032721, 1.0199983, 1.0203627, 1.03],
@@ -105,8 +105,8 @@ end
 
             set_costs!(data_mp)
 
-            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
-            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
+            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_pti["termination_status"] == LOCALLY_SOLVED
             @test result_mp["termination_status"] == LOCALLY_SOLVED
@@ -123,8 +123,8 @@ end
 
             set_costs!(data_mp)
 
-            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
-            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
+            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_pti["termination_status"] == LOCALLY_SOLVED
             @test result_mp["termination_status"] == LOCALLY_SOLVED
@@ -143,8 +143,8 @@ end
 
             set_costs!(data_mp)
 
-            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
-            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
+            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_pti["termination_status"] == LOCALLY_SOLVED
             @test result_mp["termination_status"] == LOCALLY_SOLVED
@@ -161,8 +161,8 @@ end
 
             set_costs!(data_mp)
 
-            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
-            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
+            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_pti["termination_status"] == LOCALLY_SOLVED
             @test result_mp["termination_status"] == LOCALLY_SOLVED
@@ -178,8 +178,8 @@ end
 
             set_costs!(data_mp)
 
-            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
-            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
+            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_pti["termination_status"] == LOCALLY_SOLVED
             @test result_mp["termination_status"] == LOCALLY_SOLVED
@@ -196,8 +196,8 @@ end
 
             set_costs!(data_mp)
 
-            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
-            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pti = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
+            result_mp  = PowerModels.run_opf(data_mp, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_pti["termination_status"] == LOCALLY_SOLVED
             @test result_mp["termination_status"] == LOCALLY_SOLVED
@@ -259,12 +259,12 @@ end
             @test length(data_pti["bus"]) == 8
             @test length(data_pti["branch"]) == 15
 
-            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_opf["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result_opf["objective"], 10.00027; atol=1e-5)
 
-            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
 
             bus_data = zip(
                 ["1001", "1002", "1003", "10002", "10003", "10004"],
@@ -303,12 +303,12 @@ end
             end
 
 
-            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_opf["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result_opf["objective"], 10.0; atol=1e-5)
 
-            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
 
             for (bus, vm, va) in zip(["1001", "1002", "1003", "10001"], [1.09, 1.0, 1.0, 0.997], [2.304, 0., 6.042244, 2.5901])
                 @test isapprox(result_pf["solution"]["bus"][bus]["vm"], vm; atol=1e-1)
@@ -327,12 +327,12 @@ end
             @test isapprox(data_pti["branch"]["1"]["g_fr"], 5e-3; atol=1e-4)
             @test isapprox(data_pti["branch"]["1"]["b_fr"], 6.74e-3; atol=1e-4)
 
-            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_opf["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result_opf["objective"], 701.637157; atol=1e-5)
 
-            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_pf["termination_status"] == LOCALLY_SOLVED
             @test result_pf["objective"] == 0.0
@@ -351,12 +351,12 @@ end
             @test isapprox(data_pti["branch"]["1"]["g_fr"], 5e-3; atol=1e-4)
             @test isapprox(data_pti["branch"]["1"]["b_fr"], 6.74e-3; atol=1e-4)
 
-            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+            result_opf = PowerModels.run_opf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_opf["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result_opf["objective"], 10.4001; atol=1e-2)
 
-            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, ipopt_solver)
+            result_pf = PowerModels.run_pf(data_pti, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result_pf["termination_status"] == LOCALLY_SOLVED
             @test result_pf["objective"] == 0.0
@@ -412,7 +412,7 @@ end
                 end
             end
 
-            result = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
+            result = PowerModels.run_opf(data, PowerModels.ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 297.878089; atol=1e-4)
@@ -479,11 +479,11 @@ end
             @test length(data["dcline"]) == 1
             @test length(data["dcline"]["1"]) == 26
 
-            opf = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
+            opf = PowerModels.run_opf(data, PowerModels.ACPPowerModel, nlp_solver)
             @test opf["termination_status"] == LOCALLY_SOLVED
             @test isapprox(opf["objective"], 10.5; atol=1e-3)
 
-            pf = PowerModels.run_pf(data, PowerModels.ACPPowerModel, ipopt_solver)
+            pf = PowerModels.run_pf(data, PowerModels.ACPPowerModel, nlp_solver)
             @test pf["termination_status"] == LOCALLY_SOLVED
         end
 
@@ -493,11 +493,11 @@ end
             @test length(data["dcline"]) == 1
             @test length(data["dcline"]["1"]) == 26
 
-            opf = PowerModels.run_opf(data, PowerModels.ACPPowerModel, ipopt_solver)
+            opf = PowerModels.run_opf(data, PowerModels.ACPPowerModel, nlp_solver)
             @test opf["termination_status"] == LOCALLY_SOLVED
             @test isapprox(opf["objective"], 21.8842; atol=1e-3)
 
-            pf = PowerModels.run_pf(data, PowerModels.ACPPowerModel, ipopt_solver)
+            pf = PowerModels.run_pf(data, PowerModels.ACPPowerModel, nlp_solver)
             @test pf["termination_status"] == LOCALLY_SOLVED
         end
     end

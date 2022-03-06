@@ -1,6 +1,6 @@
 @testset "test matpower parser" begin
     @testset "30-bus case file" begin
-        result = run_opf("../test/data/matpower/case30.m", ACPPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case30.m", ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
@@ -10,7 +10,7 @@
         data = PowerModels.parse_file("../test/data/matpower/case30.m")
         @test isa(JSON.json(data), String)
 
-        result = run_opf(data, ACPPowerModel, ipopt_solver)
+        result = run_opf(data, ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
@@ -20,7 +20,7 @@
         data = PowerModels.parse_matpower("../test/data/matpower/case30.m")
         @test isa(JSON.json(data), String)
 
-        result = run_opf(data, ACPPowerModel, ipopt_solver)
+        result = run_opf(data, ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 204.96; atol = 1e-1)
@@ -31,7 +31,7 @@
             data = PowerModels.parse_matpower(f)
             @test isa(JSON.json(data), String)
 
-            result = run_opf(data, ACPPowerModel, ipopt_solver)
+            result = run_opf(data, ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 204.96; atol = 1e-1)
@@ -57,7 +57,7 @@
     end
 
     @testset "2-bus case file with spaces" begin
-        result = run_pf("../test/data/matpower/case2.m", ACPPowerModel, ipopt_solver)
+        result = run_pf("../test/data/matpower/case2.m", ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0.0; atol = 1e-1)
@@ -76,20 +76,20 @@ end
 
 @testset "test matpower data coercion" begin
     @testset "ACP Model" begin
-        result = run_opf("../test/data/matpower/case14.m", ACPPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case14.m", ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 8081.5; atol = 1e0)
         #@test result["status"] = bus_name
     end
     @testset "DC Model" begin
-        result = run_opf("../test/data/matpower/case14.m", DCPPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case14.m", DCPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 7642.6; atol = 1e0)
     end
     @testset "QC Model" begin
-        result = run_opf("../test/data/matpower/case14.m", QCRMPowerModel, ipopt_solver)
+        result = run_opf("../test/data/matpower/case14.m", QCRMPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 8075.1; atol = 1e0)
