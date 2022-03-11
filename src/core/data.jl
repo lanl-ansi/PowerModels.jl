@@ -1910,12 +1910,13 @@ function _correct_cost_function!(id, comp, type_name, pmin_key, pmax_key)
             _remove_pwl_cost_duplicates!(id, comp, type_name)
 
             for i in 3:2:length(comp["cost"])
-                if comp["cost"][i-2] >= comp["cost"][i]
+                if comp["cost"][i-2] > comp["cost"][i]
                     Memento.error(_LOGGER, "non-increasing x values in pwl cost model on $(type_name) $(id)")
                 end
             end
 
             _simplify_pwl_cost!(id, comp, type_name)
+
         elseif comp["model"] == 2
             if length(comp["cost"]) != comp["ncost"]
                 Memento.error(_LOGGER, "ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
