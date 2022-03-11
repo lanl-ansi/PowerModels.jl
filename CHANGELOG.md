@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Update `correct_cost_functions!` to support PWL costs with a constant power value
 
 ### v0.19.4
 - Fix `sol_component_value_edge` implementation and usage (#811)

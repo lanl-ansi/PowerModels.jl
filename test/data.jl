@@ -689,15 +689,6 @@ end
         @test isapprox(result["objective"], gen_cost + dcline_cost; atol=1e-1)
     end
 
-     @testset "5-bus pwlc gen cost identical points" begin
-        data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
-
-        data["gen"]["1"]["ncost"] = 2
-        data["gen"]["1"]["cost"] = [0.0, 0.0, 0.0, 0.0]
-
-        @test_throws(TESTLOG, ErrorException, correct_network_data!(data))
-    end
-
      @testset "5-bus polynomial gen and dcline cost" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         result = run_opf(data, ACPPowerModel, nlp_solver)
