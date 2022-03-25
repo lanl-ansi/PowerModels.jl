@@ -2,6 +2,10 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.19.5
+- Add support for JuMP v1.0
 - Update `correct_cost_functions!` to support PWL costs with a constant power value
 
 ### v0.19.4
