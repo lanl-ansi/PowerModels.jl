@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fix `tnep` ne_branch solution values to be consistent with regular branches (#820)
 
 ### v0.19.5
 - Add support for JuMP v1.0

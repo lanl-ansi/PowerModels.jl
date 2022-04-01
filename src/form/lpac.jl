@@ -223,7 +223,7 @@ function variable_ne_branch_cosine(pm::AbstractLPACCModel; nw::Int=nw_id_default
         start = comp_start_value(ref(pm, nw, :ne_branch, l), "cs_start", 1.0)
     )
 
-    report && sol_component_value(pm, nw, :ne_branch, :cs_ne, ids(pm, nw, :ne_branch), cs_ne)
+    report && sol_component_value(pm, nw, :ne_branch, :cs, ids(pm, nw, :ne_branch), cs_ne)
 end
 
 ""
@@ -237,7 +237,7 @@ function variable_ne_branch_voltage_product_angle(pm::AbstractLPACCModel; nw::In
         start = comp_start_value(ref(pm, nw, :ne_buspairs, bi_bp[b]), "td_start")
     )
 
-    report && sol_component_value(pm, nw, :ne_branch, :td_ne, ids(pm, nw, :ne_branch), td_ne)
+    report && sol_component_value(pm, nw, :ne_branch, :td, ids(pm, nw, :ne_branch), td_ne)
 end
 
 ""

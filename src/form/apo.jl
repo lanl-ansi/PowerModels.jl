@@ -29,8 +29,8 @@ end
 
 "apo models ignore reactive power flows"
 function variable_ne_branch_power_imaginary(pm::AbstractActivePowerModel; nw::Int=nw_id_default, report::Bool=true, kwargs...)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :ne_branch, :q_ne_fr, ids(pm, nw, :ne_branch), NaN)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :ne_branch, :q_ne_to, ids(pm, nw, :ne_branch), NaN)
+    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :ne_branch, :qf, ids(pm, nw, :ne_branch), NaN)
+    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :ne_branch, :qt, ids(pm, nw, :ne_branch), NaN)
 end
 
 "apo models ignore reactive power flows"

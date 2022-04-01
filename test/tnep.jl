@@ -6,6 +6,13 @@ function check_tnep_status(sol)
     end
 end
 
+# test that ne_branch solution information is a superset of regular branches
+function check_ne_branch_keys(sol)
+    branch = collect(sol["branch"])[1].second
+    ne_brnach = collect(sol["ne_branch"])[1].second
+    @test all(haskey(ne_brnach, k) for k in keys(branch))
+end
+
 
 @testset "test ac tnep" begin
     @testset "3-bus case" begin
@@ -14,6 +21,7 @@ end
         result = run_tnep(data, ACPPowerModel, minlp_solver)
 
         check_tnep_status(result["solution"])
+        check_ne_branch_keys(result["solution"])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 2; atol = 1e-2)
@@ -37,6 +45,7 @@ end
         result = run_tnep(data, SOCWRPowerModel, minlp_solver)
 
         check_tnep_status(result["solution"])
+        check_ne_branch_keys(result["solution"])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 2; atol = 1e-2)
@@ -53,27 +62,29 @@ end
 end
 
 
-@testset "test qc tnep" begin
-    @testset "3-bus case" begin
-        data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
-        calc_thermal_limits!(data)
-        result = run_tnep(data, QCRMPowerModel, minlp_solver)
+# requires a correct implementation of `variable_ne_branch_voltage`
+# @testset "test qc tnep" begin
+#     @testset "3-bus case" begin
+#         data = PowerModels.parse_file("../test/data/matpower/case3_tnep.m")
+#         calc_thermal_limits!(data)
+#         result = run_tnep(data, QCRMPowerModel, minlp_solver)
 
-        check_tnep_status(result["solution"])
+#         check_tnep_status(result["solution"])
+#         check_ne_branch_keys(result["solution"])
 
-        @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 2; atol = 1e-2)
-    end
+#         @test result["termination_status"] == LOCALLY_SOLVED
+#         @test isapprox(result["objective"], 2; atol = 1e-2)
+#     end
 
-    @testset "5-bus rts case" begin
-        result = run_tnep("../test/data/matpower/case5_tnep.m", QCRMPowerModel, minlp_solver)
+#     @testset "5-bus rts case" begin
+#         result = run_tnep("../test/data/matpower/case5_tnep.m", QCRMPowerModel, minlp_solver)
 
-        check_tnep_status(result["solution"])
+#         check_tnep_status(result["solution"])
 
-        @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 1; atol = 1e-2)
-    end
-end
+#         @test result["termination_status"] == LOCALLY_SOLVED
+#         @test isapprox(result["objective"], 1; atol = 1e-2)
+#     end
+# end
 
 
 @testset "test dc tnep" begin
@@ -83,6 +94,7 @@ end
         result = run_tnep(data, DCPPowerModel, minlp_solver)
 
         check_tnep_status(result["solution"])
+        check_ne_branch_keys(result["solution"])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 2; atol = 1e-2)
@@ -129,6 +141,7 @@ end
         result = run_tnep("../test/data/matpower/case5_tnep.m", DCPLLPowerModel, minlp_solver)
 
         check_tnep_status(result["solution"])
+        check_ne_branch_keys(result["solution"])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 1; atol = 1e-2)
@@ -142,6 +155,7 @@ end
         result = run_tnep(data, LPACCPowerModel, minlp_solver)
 
         check_tnep_status(result["solution"])
+        check_ne_branch_keys(result["solution"])
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 2; atol = 1e-2)
