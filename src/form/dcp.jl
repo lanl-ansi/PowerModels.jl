@@ -11,7 +11,7 @@ end
 
 ""
 function variable_bus_voltage_magnitude(pm::AbstractDCPModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
+    report && sol_component_fixed(pm, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
 end
 
 ""

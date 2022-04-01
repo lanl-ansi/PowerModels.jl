@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Add specialized version of `sol_component_fixed` for PowerModels (#821)
 - Fix `tnep` ne_branch solution values to be consistent with regular branches (#820)
 
 ### v0.19.5
