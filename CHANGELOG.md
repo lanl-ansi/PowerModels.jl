@@ -2,7 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Add specialized version of `sol_component_fixed` for PowerModels (#821)
+- Fix `tnep` ne_branch solution values to be consistent with regular branches (#820)
 
 ### v0.19.5
 - Add support for JuMP v1.0

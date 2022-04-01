@@ -3,40 +3,40 @@
 
 "apo models ignore reactive power flows"
 function variable_gen_power_imaginary(pm::AbstractActivePowerModel; nw::Int=nw_id_default, report::Bool=true, kwargs...)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :gen, :qg, ids(pm, nw, :gen), NaN)
+    report && sol_component_fixed(pm, nw, :gen, :qg, ids(pm, nw, :gen), NaN)
 end
 
 "apo models ignore reactive power flows"
 function variable_gen_power_imaginary_on_off(pm::AbstractActivePowerModel; nw::Int=nw_id_default, report::Bool=true, kwargs...)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :gen, :qg, ids(pm, nw, :gen), NaN)
+    report && sol_component_fixed(pm, nw, :gen, :qg, ids(pm, nw, :gen), NaN)
 end
 
 "apo models ignore reactive power flows"
 function variable_storage_power_imaginary(pm::AbstractActivePowerModel; nw::Int=nw_id_default, report::Bool=true, kwargs...)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :storage, :qs, ids(pm, nw, :storage), NaN)
+    report && sol_component_fixed(pm, nw, :storage, :qs, ids(pm, nw, :storage), NaN)
 end
 
 "apo models ignore reactive power flows"
 function variable_storage_power_imaginary_on_off(pm::AbstractActivePowerModel; nw::Int=nw_id_default, report::Bool=true, kwargs...)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :storage, :qs, ids(pm, nw, :storage), NaN)
+    report && sol_component_fixed(pm, nw, :storage, :qs, ids(pm, nw, :storage), NaN)
 end
 
 "apo models ignore reactive power flows"
 function variable_branch_power_imaginary(pm::AbstractActivePowerModel; nw::Int=nw_id_default, report::Bool=true, kwargs...)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :branch, :qf, ids(pm, nw, :branch), NaN)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :branch, :qt, ids(pm, nw, :branch), NaN)
+    report && sol_component_fixed(pm, nw, :branch, :qf, ids(pm, nw, :branch), NaN)
+    report && sol_component_fixed(pm, nw, :branch, :qt, ids(pm, nw, :branch), NaN)
 end
 
 "apo models ignore reactive power flows"
 function variable_ne_branch_power_imaginary(pm::AbstractActivePowerModel; nw::Int=nw_id_default, report::Bool=true, kwargs...)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :ne_branch, :q_ne_fr, ids(pm, nw, :ne_branch), NaN)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :ne_branch, :q_ne_to, ids(pm, nw, :ne_branch), NaN)
+    report && sol_component_fixed(pm, nw, :ne_branch, :qf, ids(pm, nw, :ne_branch), NaN)
+    report && sol_component_fixed(pm, nw, :ne_branch, :qt, ids(pm, nw, :ne_branch), NaN)
 end
 
 "apo models ignore reactive power flows"
 function variable_dcline_power_imaginary(pm::AbstractActivePowerModel; nw::Int=nw_id_default, report::Bool=true, kwargs...)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :dcline, :qf, ids(pm, nw, :dcline), NaN)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :dcline, :qt, ids(pm, nw, :dcline), NaN)
+    report && sol_component_fixed(pm, nw, :dcline, :qf, ids(pm, nw, :dcline), NaN)
+    report && sol_component_fixed(pm, nw, :dcline, :qt, ids(pm, nw, :dcline), NaN)
 end
 
 "do nothing, apo models do not have reactive variables"
