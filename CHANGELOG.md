@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.19.6
 - Add specialized version of `sol_component_fixed` for PowerModels (#821)
 - Add support for Memento v1.4
 - Fix `tnep` ne_branch solution values to be consistent with regular branches (#820)
