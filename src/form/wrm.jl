@@ -104,6 +104,8 @@ function variable_bus_voltage(pm::AbstractWRMModel; nw::Int=nw_id_default, bound
         var(pm, nw, :wr)[(i,j)] = WR[w_fr_index, w_to_index]
         var(pm, nw, :wi)[(i,j)] = WI[w_fr_index, w_to_index]
     end
+    report && sol_component_value_buspair(pm, nw, :buspairs, :wr, ids(pm, nw, :buspairs), var(pm, nw)[:wr])
+    report && sol_component_value_buspair(pm, nw, :buspairs, :wi, ids(pm, nw, :buspairs), var(pm, nw)[:wi])
 end
 
 
@@ -225,6 +227,10 @@ function variable_bus_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=nw_id_defau
             end
         end
     end
+
+    report && sol_component_value(pm, nw, :bus, :w, ids(pm, nw, :bus), var(pm, nw)[:w])
+    report && sol_component_value_buspair(pm, nw, :buspairs, :wr, ids(pm, nw, :buspairs), var(pm, nw)[:wr])
+    report && sol_component_value_buspair(pm, nw, :buspairs, :wi, ids(pm, nw, :buspairs), var(pm, nw)[:wi])
 end
 
 
