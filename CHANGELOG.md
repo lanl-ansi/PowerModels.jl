@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fix SDP solution reporting consistency (#833)
 
 ### v0.19.6
 - Add specialized version of `sol_component_fixed` for PowerModels (#821)
