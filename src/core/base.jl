@@ -218,6 +218,8 @@ function _check_missing_keys(dict, keys, type)
     end
 end
 
+# enables support for v[1]
+Base.getindex(v::JuMP.VariableRef, i::Int) = v
 
 nw_ids(pm::AbstractPowerModel) = _IM.nw_ids(pm, pm_it_sym)
 nws(pm::AbstractPowerModel) = _IM.nws(pm, pm_it_sym)
