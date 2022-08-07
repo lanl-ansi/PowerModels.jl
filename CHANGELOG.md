@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Drop support for JuMP v0.22 and v0.23 (breaking)
 - Add support for models with mixtures of PWL and polynomial cost functions (#829)
 - Rewrite code for building objective functions (#778) (breaking)
 
