@@ -689,6 +689,9 @@ function _calc_comp_lines(component::Dict{String,<:Any})
         y2 = points[i+1]
 
         m = (y2 - y1)/(x2 - x1)
+        if isapprox(x1,x2)
+            m = 0.0
+        end
         b = y1 - m * x1
 
         push!(line_data, (slope=m, intercept=b))

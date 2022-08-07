@@ -53,7 +53,7 @@
         result = run_opb("../test/data/matpower/case5_pwlc.m", NFAPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 42565.8; atol = 1e0)
+        @test isapprox(result["objective"], 42575.8; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_opb("../test/data/matpower/case6.m", NFAPowerModel, nlp_solver)
@@ -81,7 +81,7 @@ end
         result = run_opb("../test/data/matpower/case5_pwlc.m", DCPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 42565.8; atol = 1e0)
+        @test isapprox(result["objective"], 42575.8; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_opb("../test/data/matpower/case6.m", DCPPowerModel, nlp_solver)
@@ -109,7 +109,7 @@ end
         result = run_opb("../test/data/matpower/case5_pwlc.m", SOCWRPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 42565.7; atol = 1e0)
+        @test isapprox(result["objective"], 42575.7; atol = 1e0)
     end
     @testset "6-bus case" begin
         result = run_opb("../test/data/matpower/case6.m", SOCWRPowerModel, nlp_solver)

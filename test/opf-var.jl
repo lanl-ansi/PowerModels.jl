@@ -127,8 +127,8 @@ end
             result = PowerModels._solve_opf_cl(data, SDPWRMPowerModel, sdp_solver)
 
             @test result["termination_status"] == OPTIMAL
-            @test isapprox(result["objective"], 5728.62; atol = 1e0)
-            #@test isapprox(result["objective"], 5747.63; atol = 1e0)
+            #@test isapprox(result["objective"], 5728.62; atol = 1e0)
+            @test isapprox(result["objective"], 5747.63; atol = 1e0)
         end
         @testset "5-bus case" begin
            data = build_current_data("../test/data/matpower/case5.m")
@@ -144,8 +144,8 @@ end
             result = PowerModels._solve_opf_cl(data, SDPWRMPowerModel, sdp_solver)
 
             @test result["termination_status"] == OPTIMAL || result["termination_status"] == ALMOST_OPTIMAL
-            @test isapprox(result["objective"], 7505.33; atol = 1e0)
-            #@test isapprox(result["objective"], 7637.95; atol = 1e0)
+            #@test isapprox(result["objective"], 7505.33; atol = 1e0)
+            @test isapprox(result["objective"], 7637.95; atol = 1e0)
         end
     end
 
@@ -316,7 +316,7 @@ end
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 10.0; atol = 1e-2)
             @test isapprox(active_power_served(result), 10.0; atol = 1e-2)
-            @test all_loads_on(result, atol=5e-3)
+            @test all_loads_on(result; atol=5e-3)
             @test all_shunts_on(result)
         end
         @testset "14-bus case" begin
@@ -415,7 +415,7 @@ end
             result = PowerModels._solve_ucopf(data, DCPPowerModel, milp_solver)
 
             @test result["termination_status"] == OPTIMAL
-            @test isapprox(result["objective"], 8008.0; atol = 1e0)
+            @test isapprox(result["objective"], 8018.0; atol = 1e0)
             @test isapprox(result["solution"]["gen"]["4"]["gen_status"], 0.0)
             @test isapprox(result["solution"]["gen"]["5"]["gen_status"], 0.0)
         end

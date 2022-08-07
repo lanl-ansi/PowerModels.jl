@@ -17,6 +17,13 @@ PowerModels.jl Change Log
 - Add support for JuMP v1.0
 - Update `correct_cost_functions!` to support PWL costs with a constant power value
 
+### v0.20.0
+- Added conversion of impedance and current loads from PSSE raw files into constant power loads (#792)
+- Made case name recovery optional in PTI parsing
+
+### Staged
+- nothing
+
 ### v0.19.4
 - Fix `sol_component_value_edge` implementation and usage (#811)
 

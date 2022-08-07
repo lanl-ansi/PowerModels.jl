@@ -513,4 +513,18 @@ end
             end
         end
     end
+
+     @testset "Impedance and Current Load Conversions" begin
+        data = PowerModels.parse_file("../test/data/pti//parser_test_k.raw")
+        Vm_load = data["bus"]["103"]["vm"]
+        # Test current load only
+        @test isapprox(data["load"]["2"]["pd"], 250*Vm_load/data["baseMVA"], atol = 1e-6)
+        @test isapprox(data["load"]["2"]["qd"], 30*Vm_load/data["baseMVA"], atol = 1e-6)
+        # Test current impedance load only
+        @test isapprox(data["load"]["3"]["pd"], 250*Vm_load^2/data["baseMVA"], atol = 1e-6)
+        @test isapprox(data["load"]["3"]["qd"], 30*Vm_load^2/data["baseMVA"], atol = 1e-6)
+        # Test mixed load types
+        @test isapprox(data["load"]["4"]["pd"], (250 + 250*Vm_load)/data["baseMVA"], atol = 1e-6)
+        @test isapprox(data["load"]["4"]["qd"], (30 + 30*Vm_load^2)/data["baseMVA"], atol = 1e-6)
+    end
 end
