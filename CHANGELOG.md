@@ -2,6 +2,10 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Add support for models with mixtures of PWL and polynomial cost functions (#829)
+- Rewrite code for building objective functions (#778) (breaking)
+
+### Staged
 - Fix SDP solution reporting consistency (#833)
 
 ### v0.19.6
