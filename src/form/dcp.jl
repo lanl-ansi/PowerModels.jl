@@ -11,7 +11,7 @@ end
 
 ""
 function variable_bus_voltage_magnitude(pm::AbstractDCPModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
-    report && _IM.sol_component_fixed(pm, pm_it_sym, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
+    report && sol_component_fixed(pm, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
 end
 
 ""
@@ -280,7 +280,7 @@ function variable_ne_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=nw_
     p_ne_expr = merge(p_ne_expr, Dict(((l,j,i), -1.0*var(pm, nw, :p_ne, (l,i,j))) for (l,i,j) in ref(pm, nw, :ne_arcs_from)))
     var(pm, nw)[:p_ne] = p_ne_expr
 
-    report && sol_component_value_edge(pm, nw, :ne_branch, :p_ne_fr, :p_ne_to, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne_expr)
+    report && sol_component_value_edge(pm, nw, :ne_branch, :pf, :pt, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne_expr)
 end
 
 ""

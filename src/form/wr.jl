@@ -534,7 +534,12 @@ function variable_bus_voltage_on_off(pm::AbstractQCWRModel; kwargs...)
     variable_buspair_voltage_product_magnitude_on_off(pm; kwargs...)
     variable_branch_cosine_on_off(pm; kwargs...)
     variable_branch_sine_on_off(pm; kwargs...)
-    variable_branch_current_magnitude_sqr_on_off(pm; kwargs...) # includes 0, but needs new indexs
+    variable_branch_current_magnitude_sqr_on_off(pm; kwargs...) # includes 0, but needs new indexes
+end
+
+""
+function variable_ne_branch_voltage(pm::AbstractQCWRModel; kwargs...)
+    Memento.error(_LOGGER, "variable_ne_branch_voltage is not yet supported for QC formulations, open an issue if you would like this feature.")
 end
 
 ""

@@ -2,7 +2,16 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fix SDP solution reporting consistency (#833)
+
+### v0.19.6
+- Add specialized version of `sol_component_fixed` for PowerModels (#821)
+- Add support for Memento v1.4
+- Fix `tnep` ne_branch solution values to be consistent with regular branches (#820)
+
+### v0.19.5
+- Add support for JuMP v1.0
+- Update `correct_cost_functions!` to support PWL costs with a constant power value
 
 ### v0.20.0
 - Added conversion of impedance and current loads from PSSE raw files into constant power loads (#792)

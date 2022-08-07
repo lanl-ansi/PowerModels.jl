@@ -128,6 +128,7 @@ end
 
             @test result["termination_status"] == OPTIMAL
             @test isapprox(result["objective"], 5728.62; atol = 1e0)
+            #@test isapprox(result["objective"], 5747.63; atol = 1e0)
         end
         @testset "5-bus case" begin
            data = build_current_data("../test/data/matpower/case5.m")
@@ -142,8 +143,9 @@ end
             data = build_current_data("../test/data/matpower/case14.m")
             result = PowerModels._solve_opf_cl(data, SDPWRMPowerModel, sdp_solver)
 
-            @test result["termination_status"] == OPTIMAL
+            @test result["termination_status"] == OPTIMAL || result["termination_status"] == ALMOST_OPTIMAL
             @test isapprox(result["objective"], 7505.33; atol = 1e0)
+            #@test isapprox(result["objective"], 7637.95; atol = 1e0)
         end
     end
 

@@ -25,6 +25,12 @@ end
 
 
 "PowerModels wrapper for the InfrastructureModels `sol_component_value` function."
+function sol_component_fixed(aim::AbstractPowerModel, n::Int, comp_name::Symbol, field_name::Symbol, comp_ids, constant)
+    return _IM.sol_component_fixed(aim, pm_it_sym, n, comp_name, field_name, comp_ids, constant)
+end
+
+
+"PowerModels wrapper for the InfrastructureModels `sol_component_value` function."
 function sol_component_value(aim::AbstractPowerModel, n::Int, comp_name::Symbol, field_name::Symbol, comp_ids, variables)
     return _IM.sol_component_value(aim, pm_it_sym, n, comp_name, field_name, comp_ids, variables)
 end
