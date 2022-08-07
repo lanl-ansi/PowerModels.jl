@@ -38,8 +38,8 @@ function objective_min_fuel_and_flow_cost(pm::AbstractPowerModel; kwargs...)
 
     nl = nl_gen || nl_dc || typeof(pm) <: AbstractIVRModel
 
-    expression_pg_cost(pm; nonlinear=nl, kwargs...)
-    expression_p_dc_cost(pm; nonlinear=nl, kwargs...)
+    expression_pg_cost(pm; kwargs...)
+    expression_p_dc_cost(pm; kwargs...)
 
     if !nl
         return JuMP.@objective(pm.model, Min,
@@ -76,7 +76,7 @@ function objective_min_fuel_cost(pm::AbstractPowerModel; kwargs...)
 
     nl = nl_gen || typeof(pm) <: AbstractIVRModel
 
-    expression_pg_cost(pm; nonlinear=nl, kwargs...)
+    expression_pg_cost(pm; kwargs...)
 
     if !nl
         return JuMP.@objective(pm.model, Min,
@@ -191,7 +191,7 @@ end
 
 
 "adds pg_cost variables and constraints"
-function expression_pg_cost(pm::AbstractPowerModel; nonlinear::Bool=false, report::Bool=true)
+function expression_pg_cost(pm::AbstractPowerModel; report::Bool=true)
     for (n, nw_ref) in nws(pm)
         pg_cost = var(pm, n)[:pg_cost] = Dict{Int,Any}()
 
@@ -229,7 +229,7 @@ end
 
 
 "adds p_dc_cost variables and constraints"
-function expression_p_dc_cost(pm::AbstractPowerModel; nonlinear::Bool=false, report::Bool=true)
+function expression_p_dc_cost(pm::AbstractPowerModel; report::Bool=true)
     for (n, nw_ref) in nws(pm)
         p_dc_cost = var(pm, n)[:p_dc_cost] = Dict{Int,Any}()
 
