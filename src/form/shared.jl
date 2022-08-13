@@ -83,8 +83,7 @@ function constraint_voltage_angle_difference(pm::AbstractPolarModels, n::Int, f_
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
-    JuMP.@constraint(pm.model, va_fr - va_to <= angmax)
-    JuMP.@constraint(pm.model, va_fr - va_to >= angmin)
+    JuMP.@constraint(pm.model, angmin <= va_fr - va_to <= angmax)
 end
 
 
@@ -333,8 +332,7 @@ function constraint_voltage_angle_difference(pm::AbstractWModels, n::Int, f_idx,
     wr   = var(pm, n, :wr, (f_bus, t_bus))
     wi   = var(pm, n, :wi, (f_bus, t_bus))
 
-    JuMP.@constraint(pm.model, wi <= tan(angmax)*wr)
-    JuMP.@constraint(pm.model, wi >= tan(angmin)*wr)
+    JuMP.@constraint(pm.model, tan(angmin)*wr <= wi <= tan(angmax)*wr)
     cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 end
 

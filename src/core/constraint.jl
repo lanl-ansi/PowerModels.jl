@@ -103,10 +103,8 @@ function constraint_gen_power_on_off(pm::AbstractPowerModel, n::Int, i::Int, pmi
     qg = var(pm, n, :qg, i)
     z = var(pm, n, :z_gen, i)
 
-    JuMP.@constraint(pm.model, pg <= pmax*z)
-    JuMP.@constraint(pm.model, pg >= pmin*z)
-    JuMP.@constraint(pm.model, qg <= qmax*z)
-    JuMP.@constraint(pm.model, qg >= qmin*z)
+    JuMP.@constraint(pm.model, pmin*z <= pg <= pmax*z)
+    JuMP.@constraint(pm.model, qmin*z <= qg <= qmax*z)
 end
 
 
@@ -185,10 +183,8 @@ function constraint_switch_power_on_off(pm::AbstractPowerModel, n::Int, i, f_idx
     psw_lb, psw_ub = _IM.variable_domain(psw)
     qsw_lb, qsw_ub = _IM.variable_domain(qsw)
 
-    JuMP.@constraint(pm.model, psw <= psw_ub*z)
-    JuMP.@constraint(pm.model, psw >= psw_lb*z)
-    JuMP.@constraint(pm.model, qsw <= qsw_ub*z)
-    JuMP.@constraint(pm.model, qsw >= qsw_lb*z)
+    JuMP.@constraint(pm.model, psw_lb*z <= psw <= psw_ub*z)
+    JuMP.@constraint(pm.model, qsw_lb*z <= qsw <= qsw_ub*z)
 end
 
 
@@ -248,10 +244,7 @@ function constraint_storage_on_off(pm::AbstractPowerModel, n::Int, i, pmin, pmax
     qs = var(pm, n, :qs, i)
     qsc = var(pm, n, :qsc, i)
 
-    JuMP.@constraint(pm.model, ps <= z_storage*pmax)
-    JuMP.@constraint(pm.model, ps >= z_storage*pmin)
-    JuMP.@constraint(pm.model, qs <= z_storage*qmax)
-    JuMP.@constraint(pm.model, qs >= z_storage*qmin)
-    JuMP.@constraint(pm.model, qsc <= z_storage*qmax)
-    JuMP.@constraint(pm.model, qsc >= z_storage*qmin)
+    JuMP.@constraint(pm.model, z_storage*pmin <= ps  <= z_storage*pmax)
+    JuMP.@constraint(pm.model, z_storage*qmin <= qs  <= z_storage*qmax)
+    JuMP.@constraint(pm.model, z_storage*qmin <= qsc <= z_storage*qmax)
 end

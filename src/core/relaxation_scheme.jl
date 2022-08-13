@@ -80,16 +80,13 @@ function relaxation_sin(m, x, y)
     max_ad = max(abs(lb),abs(ub))
 
     if lb < 0 && ub > 0
-        JuMP.@constraint(m, y <= cos(max_ad/2)*(x - max_ad/2) + sin(max_ad/2))
-        JuMP.@constraint(m, y >= cos(max_ad/2)*(x + max_ad/2) - sin(max_ad/2))
+        JuMP.@constraint(m, cos(max_ad/2)*(x + max_ad/2) - sin(max_ad/2) <= y <= cos(max_ad/2)*(x - max_ad/2) + sin(max_ad/2))
     end
     if ub <= 0
-        JuMP.@constraint(m, y <= (sin(lb) - sin(ub))/(lb-ub)*(x - lb) + sin(lb))
-        JuMP.@constraint(m, y >= cos(max_ad/2)*(x + max_ad/2) - sin(max_ad/2))
+        JuMP.@constraint(m, cos(max_ad/2)*(x + max_ad/2) - sin(max_ad/2) <= y <= (sin(lb) - sin(ub))/(lb-ub)*(x - lb) + sin(lb))
     end
     if lb >= 0
-        JuMP.@constraint(m, y <= cos(max_ad/2)*(x - max_ad/2) + sin(max_ad/2))
-        JuMP.@constraint(m, y >= (sin(lb) - sin(ub))/(lb-ub)*(x - lb) + sin(lb))
+        JuMP.@constraint(m, (sin(lb) - sin(ub))/(lb-ub)*(x - lb) + sin(lb) <= y <= cos(max_ad/2)*(x - max_ad/2) + sin(max_ad/2))
     end
 end
 
