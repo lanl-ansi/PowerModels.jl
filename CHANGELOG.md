@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Fix `make_multinetwork` and add test (#823)
 - Fix SDP solution reporting consistency (#833)
 
 ### v0.19.6
