@@ -57,7 +57,7 @@ A complete mathematical model is as follows,
 & S_{ij} = \left( Y_{ij} + Y^c_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2} - Y^*_{ij} \frac{V_i V^*_j}{{T}_{ij}} \;\; \forall (i,j)\in E \label{eq_power_from}\\
 & S_{ji} = \left( Y_{ij} + Y^c_{ji} \right)^* |V_j|^2 - Y^*_{ij} \frac{V^*_i V_j}{{T}^*_{ij}} \;\; \forall (i,j)\in E \label{eq_power_to}\\
 & |S_{ij}| \leq s^u_{ij} \;\; \forall (i,j) \in E \cup E^R \label{eq_thermal_limit}\\
-& |I_{ij}| \leq i^u_{ij} \;\; \forall (i,j) \in E \cup E^R \label{eq_current_limit}\\
+& |S_{ij}| \leq |V_i| i^u_{ij} \;\; \forall (i,j) \in E \cup E^R \label{eq_current_limit}\\
 & \theta^{\Delta l}_{ij} \leq \angle (V_i V^*_j) \leq \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \label{eq_angle_difference}
 %
 \end{align}
@@ -143,13 +143,13 @@ The mathematical structure for a current-voltage formulation is conceived as:
 %
 \mbox{subject to: } & \nonumber \\
 & \angle V_{r} = 0  \;\; \forall r \in R \nonumber \\
-& S^{gl}_k \leq \Re(V_i (I^g_k)^*) + j \Im(V_i (I^g_k)^*) \leq S^{gu}_k \;\; \forall k \in G   \label{eq_complex_power_definition_gen}\\
+& S^{gl}_k \leq V_i (I^g_k)^* \leq S^{gu}_k \;\; \forall k \in G   \label{eq_complex_power_definition_gen}\\
 & v^l_i \leq |V_i| \leq v^u_i \;\; \forall i \in N \nonumber\\
-& \sum_{\substack{k \in G_i}} I^g_k - \sum_{\substack{k \in L_i}} (S^d_k/V_i)^{*} - \sum_{\substack{k \in S_i}} Y^s_k V_i = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} I_{ij} \;\; \forall i\in N  \label{eq_kcl_current} \\
+& \sum_{\substack{k \in G_i}} I^g_k - \sum_{\substack{k \in L_i}} \left(\frac{S^d_k}{V_i}\right)^{*} - \sum_{\substack{k \in S_i}} Y^s_k V_i = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} I_{ij} \;\; \forall i\in N  \label{eq_kcl_current} \\
 & I_{ij} =  \frac{I^{s}_{ij}}{T_{ij}^*} + Y^c_{ij} \frac{V_i}{|T_{ij}|^2}  \;\; \forall (i,j)\in E \label{eq_current_from} \\
 & I_{ji} = -I^{s}_{ij} + Y^c_{ji} V_j  \;\; \forall (i,j)\in E \label{eq_current_to} \\
 & \frac{V_i}{{T}_{ij}} = V_j + z_{ij} I^{s}_{ij}  \;\; \forall (i,j) \in E \label{eq_ohms_iv} \\
-& |S_{ij}| = |V_{i}| |I_{ij}| \leq s^u_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber\\
+& |V_{i}| |I_{ij}| \leq s^u_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber\\
 & |I_{ij}| \leq i^u_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber\\
 & \theta^{\Delta l}_{ij} \leq \angle (V_i V^*_j) \leq \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \nonumber
 %
