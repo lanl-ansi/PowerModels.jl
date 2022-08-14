@@ -84,6 +84,5 @@ function constraint_voltage_angle_difference(pm::AbstractACTModel, n::Int, f_idx
     va_fr = var(pm, n, :va)[f_bus]
     va_to = var(pm, n, :va)[t_bus]
 
-    JuMP.@constraint(pm.model, va_fr - va_to <= angmax)
-    JuMP.@constraint(pm.model, va_fr - va_to >= angmin)
+    JuMP.@constraint(pm.model, angmin <= va_fr - va_to <= angmax)
 end

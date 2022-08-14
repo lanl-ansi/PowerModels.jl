@@ -66,17 +66,10 @@ function variable_storage_current(pm::AbstractWConvexModels; nw::Int=nw_id_defau
 end
 
 
-"`t[ref_bus] == 0`"
 function constraint_theta_ref(pm::AbstractPolarModels, n::Int, i::Int)
     JuMP.@constraint(pm.model, var(pm, n, :va)[i] == 0)
 end
 
-"""
-```
-t[f_bus] - t[t_bus] <= angmax
-t[f_bus] - t[t_bus] >= angmin
-```
-"""
 function constraint_voltage_angle_difference(pm::AbstractPolarModels, n::Int, f_idx, angmin, angmax)
     i, f_bus, t_bus = f_idx
 
@@ -332,7 +325,9 @@ function constraint_voltage_angle_difference(pm::AbstractWModels, n::Int, f_idx,
     wr   = var(pm, n, :wr, (f_bus, t_bus))
     wi   = var(pm, n, :wi, (f_bus, t_bus))
 
-    JuMP.@constraint(pm.model, tan(angmin)*wr <= wi <= tan(angmax)*wr)
+    JuMP.@constraint(pm.model, wi <= tan(angmax)*wr)
+    JuMP.@constraint(pm.model, wi >= tan(angmin)*wr)
+
     cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 end
 

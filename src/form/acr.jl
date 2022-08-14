@@ -30,8 +30,7 @@ function constraint_voltage_magnitude_bounds(pm::AbstractACRModel, n::Int, i, vm
     vr = var(pm, n, :vr, i)
     vi = var(pm, n, :vi, i)
 
-    JuMP.@constraint(pm.model, vmin^2 <= (vr^2 + vi^2))
-    JuMP.@constraint(pm.model, vmax^2 >= (vr^2 + vi^2))
+    JuMP.@constraint(pm.model, vmin^2 <= (vr^2 + vi^2) <= vmax^2)
 end
 
 "`v[i] == vm`"
@@ -272,7 +271,7 @@ function constraint_voltage_angle_difference(pm::AbstractACRModel, n::Int, f_idx
     vi_to = var(pm, n, :vi, t_bus)
 
     JuMP.@constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) <= tan(angmax)*(vr_fr*vr_to + vi_fr*vi_to))
-    JuMP.@constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to))
+    JuMP.@constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to) )
 end
 
 ""
