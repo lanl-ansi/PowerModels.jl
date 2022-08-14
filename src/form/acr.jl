@@ -271,7 +271,7 @@ function constraint_voltage_angle_difference(pm::AbstractACRModel, n::Int, f_idx
     vi_to = var(pm, n, :vi, t_bus)
 
     JuMP.@constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) <= tan(angmax)*(vr_fr*vr_to + vi_fr*vi_to))
-    JuMP.@constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to) )
+    JuMP.@constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to))
 end
 
 ""
