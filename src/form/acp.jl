@@ -503,8 +503,7 @@ function constraint_ne_voltage_angle_difference(pm::AbstractACPModel, n::Int, f_
     va_to = var(pm, n, :va, t_bus)
     z = var(pm, n, :branch_ne, i)
 
-    JuMP.@constraint(pm.model, z*(va_fr - va_to) <= angmax)
-    JuMP.@constraint(pm.model, z*(va_fr - va_to) >= angmin)
+    JuMP.@constraint(pm.model, angmin <= z*(va_fr - va_to) <= angmax)
 end
 
 """

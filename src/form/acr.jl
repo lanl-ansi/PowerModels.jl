@@ -30,8 +30,7 @@ function constraint_voltage_magnitude_bounds(pm::AbstractACRModel, n::Int, i, vm
     vr = var(pm, n, :vr, i)
     vi = var(pm, n, :vi, i)
 
-    JuMP.@constraint(pm.model, vmin^2 <= (vr^2 + vi^2))
-    JuMP.@constraint(pm.model, vmax^2 >= (vr^2 + vi^2))
+    JuMP.@constraint(pm.model, vmin^2 <= (vr^2 + vi^2) <= vmax^2)
 end
 
 "`v[i] == vm`"

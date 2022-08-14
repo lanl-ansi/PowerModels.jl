@@ -169,8 +169,8 @@ function constraint_voltage_angle_difference(pm::AbstractIVRModel, n::Int, f_idx
     vvr = vr_fr*vr_to + vi_fr*vi_to
     vvi = vi_fr*vr_to - vr_fr*vi_to
 
-    JuMP.@constraint(pm.model, tan(angmin)*vvr <= vvi)
-    JuMP.@constraint(pm.model, tan(angmax)*vvr >= vvi)
+    JuMP.@constraint(pm.model, vvi <= tan(angmax)*vvr)
+    JuMP.@constraint(pm.model, vvi >= tan(angmin)*vvr)
 end
 
 """
@@ -259,8 +259,7 @@ function constraint_gen_active_bounds(pm::AbstractIVRModel, n::Int, i, bus, pmax
     cr = var(pm, n, :crg, i)
     ci = var(pm, n, :cig, i)
 
-    JuMP.@constraint(pm.model, pmin <= vr*cr  + vi*ci)
-    JuMP.@constraint(pm.model, pmax >= vr*cr  + vi*ci)
+    JuMP.@constraint(pm.model, pmin <= vr*cr  + vi*ci <= pmax)
 end
 
 """
@@ -274,8 +273,7 @@ function constraint_gen_reactive_bounds(pm::AbstractIVRModel, n::Int, i, bus, qm
     cr = var(pm, n, :crg, i)
     ci = var(pm, n, :cig, i)
 
-    JuMP.@constraint(pm.model, qmin <= vi*cr  - vr*ci)
-    JuMP.@constraint(pm.model, qmax >= vi*cr  - vr*ci)
+    JuMP.@constraint(pm.model, qmin <= vi*cr  - vr*ci <= qmax)
 end
 
 "`pg[i] == pg`"
@@ -332,11 +330,8 @@ function constraint_dcline_power_fr_bounds(pm::AbstractIVRModel, n::Int, i, f_bu
     p_fr = vr_fr*crdc_fr + vi_fr*cidc_fr
     q_fr = vi_fr*crdc_fr - vr_fr*cidc_fr
 
-    JuMP.@constraint(pm.model, pmax >= p_fr)
-    JuMP.@constraint(pm.model, pmin <= p_fr)
-
-    JuMP.@constraint(pm.model, qmax >= q_fr)
-    JuMP.@constraint(pm.model, qmin <= q_fr)
+    JuMP.@constraint(pm.model, pmin <= p_fr <= pmax)
+    JuMP.@constraint(pm.model, qmin <= q_fr <= qmax)
 end
 
 
@@ -351,11 +346,8 @@ function constraint_dcline_power_to_bounds(pm::AbstractIVRModel, n::Int, i, t_bu
     p_to = vr_to*crdc_to + vi_to*cidc_to
     q_to = vi_to*crdc_to - vr_to*cidc_to
 
-    JuMP.@constraint(pm.model, pmax >= p_to)
-    JuMP.@constraint(pm.model, pmin <= p_to)
-
-    JuMP.@constraint(pm.model, qmax >= q_to)
-    JuMP.@constraint(pm.model, qmin <= q_to)
+    JuMP.@constraint(pm.model, pmin <= p_to <= pmax)
+    JuMP.@constraint(pm.model, qmin <= q_to <= qmax)
 end
 
 "`p_fr[i] == pref_fr, p_to[i] == pref_to`"

@@ -583,7 +583,7 @@ end
             @test isapprox(result["objective"], 15141.2; atol = 1e0)
 
             switch_status_total = sum(switch["status"] for (i,switch) in result["solution"]["switch"])
-            @test switch_status_total <= 12.000 && switch_status_total >= 10.000 # two to four swtiches off
+            @test switch_status_total <= 12.001 && switch_status_total >= 10.000 # two to four swtiches off
         end
     end
 
