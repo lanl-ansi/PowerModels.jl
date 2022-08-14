@@ -129,6 +129,25 @@ TESTLOG = Memento.getlogger(PowerModels)
         @test InfrastructureModels.ismultinetwork(mn_data) == InfrastructureModels.ismultinetwork(result["solution"])
     end
 
+    @testset "test make_multinetwork" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        data["time_series"] = Dict(
+            "num_steps" => 3,
+            "load" => Dict(
+                "1" => Dict("pd" => [3.0, 3.5, 4.0]),
+                "2" => Dict("pd" => [3.0, 3.5, 4.0]),
+                "3" => Dict("pd" => [4.0, 3.5, 3.0])
+            )
+        )
+
+        mn_data = make_multinetwork(data)
+        result = PowerModels.run_mn_opf(mn_data, ACPPowerModel, nlp_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 57977.3; atol = 1e0)
+
+        @test InfrastructureModels.ismultinetwork(mn_data) == InfrastructureModels.ismultinetwork(result["solution"])
+    end
 
     @testset "2 period 5-bus asymmetric case" begin
         mn_data = build_mn_data("../test/data/matpower/case5_asym.m")

@@ -251,7 +251,7 @@ end
 
 "turns a single network and a time_series data block into a multi-network"
 function make_multinetwork(data::Dict{String, <:Any}; global_keys::Set{String}=Set{String}())
-    return _IM.make_multinetwork(data, union(global_keys, _pm_global_keys))
+    return _IM.make_multinetwork(data, pm_it_name, union(global_keys, _pm_global_keys))
 end
 
 

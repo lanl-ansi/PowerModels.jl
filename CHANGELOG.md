@@ -9,6 +9,7 @@ PowerModels.jl Change Log
 - Drop support for JSON v0.18, v0.19, v0.20 (breaking)
 
 ### Staged
+- Fix `make_multinetwork` and add test (#823)
 - Fix SDP solution reporting consistency (#833)
 
 ### v0.19.6

@@ -2,7 +2,7 @@
 
 This section provides references to understand the formulations as provided by PowerModels. The list is not meant as a literature discussion, but to give the main starting points to understand the implementation of the formulations.
 
-- Molzahn, D., & Hiskens, I. (forthcoming). A Survey of Relaxations and Approximations of the Power Flow Equations. Foundations and Trends in Electric Energy Systems
+- Molzahn, D., & Hiskens, I. (2019). A Survey of Relaxations and Approximations of the Power Flow Equations. Foundations and Trends in Electric Energy Systems <https://doi.org/10.1561/3100000012>
 - Coffrin, C., & Roald, L. (2018). Convex relaxations in power system optimization: a brief introduction. [Math.OC], 1–5. Retrieved from <http://arxiv.org/abs/1807.07227>
 - Coffrin, C., Hijazi, H., & Van Hentenryck, P. (2016). The QC relaxation: a theoretical and computational study on optimal power flow. IEEE Trans. Power Syst., 31(4), 3008–3018. <https://doi.org/10.1109/TPWRS.2015.2463111>
 
