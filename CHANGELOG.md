@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Fix tests on M1 computers (#827)
 - Fix `make_multinetwork` and add test (#823)
 - Fix SDP solution reporting consistency (#833)
 
