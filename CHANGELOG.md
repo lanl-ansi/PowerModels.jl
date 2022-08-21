@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Improve linear algebra test robustness (#827)
 - Fix `make_multinetwork` and add test (#823)
 - Fix SDP solution reporting consistency (#833)
 
