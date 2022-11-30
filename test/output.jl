@@ -5,7 +5,9 @@
 
         @test haskey(result, "optimizer") == true
         @test haskey(result, "termination_status") == true
+        @test result["termination_status"] == LOCALLY_SOLVED
         @test haskey(result, "primal_status") == true
+        @test result["primal_status"] == FEASIBLE_POINT
         @test haskey(result, "dual_status") == true
         @test haskey(result, "objective") == true
         @test haskey(result, "objective_lb") == true
@@ -33,12 +35,13 @@
 
         @test haskey(result, "optimizer")
         @test haskey(result, "termination_status")
+        @test result["termination_status"] == INFEASIBLE
         @test haskey(result, "primal_status")
+        @test result["primal_status"] == NO_SOLUTION
         @test haskey(result, "dual_status")
         @test haskey(result, "solve_time")
         @test haskey(result, "solution")
         @test !isnan(result["solve_time"])
-        @test length(result["solution"]) == 0
     end
 end
 

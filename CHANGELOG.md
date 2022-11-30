@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Improve linear algebra test robustness (#827)
 - Fix `make_multinetwork` and add test (#823)
 - Fix SDP solution reporting consistency (#833)
+- Fix solution output api test for infeasible models
 
 ### v0.19.6
 - Add specialized version of `sol_component_fixed` for PowerModels (#821)
