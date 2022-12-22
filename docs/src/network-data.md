@@ -7,22 +7,22 @@ Internally PowerModels utilizes a dictionary to store network data. The dictiona
 The data dictionary organization and key names are designed to be mostly consistent with the [Matpower](http://www.pserc.cornell.edu/matpower/) file format and should be familiar to power system researchers, with the notable exceptions that loads and shunts are now split into separate components (see example below), and in the case of `"multinetwork"` data, most often used for time series.
 
 Following the conventions of the InfrastructureModels ecosystem, all PowerModels components have the following standard parameters unless noted otherwise:
-- `"index": <int>` the component's unique integer id, which is also its lookup id
-- `"status": <int>` a {0,1} flag that determines if the component is active or not.
-- (`"name": <string>`) a human readable name for the component
-- (`"source_id": <vector{string}>`) a list of string data forming a unique id from a source data format
+- `"index":<int>` the component's unique integer id, which is also its lookup id
+- `"status":<int>` a {1,0} flag that determines if the component is active or not, respectively.
+- (`"name":<string>`) a human readable name for the component
+- (`"source_id":<vector{string}>`) a list of string data forming a unique id from a source data format
 
 The PowerModels network data dictionary structure is roughly as follows:
 ```json
 {
-"per_unit": <boolean>,            # A boolean value indicating if the component parameters are in mixed-units or per unit (p.u.)
-"baseMVA": <float, MVA>,          # The system wide MVA value for converting between mixed-units and p.u. unit values
-("time_elapsed": <float, hours>,) # An amount of time that has passed, used to computing time integrals in storage models
-("multinetwork": <boolean>,)      # A boolean value indicating if the data represents a single network or multiple networks (assumed `false` when not present)
-("name": <string>,)               # A human readable name for the network data
-("description": <string>,)        # A textual description of the network data and any other related notes
-("source_type": <string>,)        # The type of source data that generated this data
-("source_version":<string>,)      # The version of source data, if applicable
+"per_unit":<boolean>,            # A boolean value indicating if the component parameters are in mixed-units or per unit (p.u.)
+"baseMVA":<float, MVA>,          # The system wide MVA value for converting between mixed-units and p.u. unit values
+("time_elapsed":<float, hours>,) # An amount of time that has passed, used to computing time integrals in storage models
+("multinetwork":<boolean>,)      # A boolean value indicating if the data represents a single network or multiple networks (assumed `false` when not present)
+("name":<string>,)               # A human readable name for the network data
+("description":<string>,)        # A textual description of the network data and any other related notes
+("source_type":<string>,)        # The type of source data that generated this data
+("source_version":<string>,)     # The version of source data, if applicable
 "bus":{
     "1":{
         "va":<float, radians>,  # Voltage angle
