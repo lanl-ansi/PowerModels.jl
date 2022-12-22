@@ -6,20 +6,30 @@ Internally PowerModels utilizes a dictionary to store network data. The dictiona
 
 The data dictionary organization and key names are designed to be mostly consistent with the [Matpower](http://www.pserc.cornell.edu/matpower/) file format and should be familiar to power system researchers, with the notable exceptions that loads and shunts are now split into separate components (see example below), and in the case of `"multinetwork"` data, most often used for time series.
 
-The network data dictionary structure is roughly as follows:
+Following the conventions of the InfrastructureModels ecosystem, all PowerModels components have the following standard parameters unless noted otherwise:
+- `"index":<int>` the component's unique integer id, which is also its lookup id
+- `"status":<int>` a {1,0} flag that determines if the component is active or not, respectively.
+- (`"name":<string>`) a human readable name for the component
+- (`"source_id":<vector{string}>`) a list of string data forming a unique id from a source data format
 
+The PowerModels network data dictionary structure is roughly as follows:
 ```json
 {
-"name":<string>,
-"baseMVA":<float>,
-"source_type":<string>,
-"source_version":<string>,
+"per_unit":<boolean>,            # A boolean value indicating if the component parameters are in mixed-units or per unit (p.u.)
+"baseMVA":<float, MVA>,          # The system wide MVA value for converting between mixed-units and p.u. unit values
+("time_elapsed":<float, hours>,) # An amount of time that has passed, used to computing time integrals in storage models
+("multinetwork":<boolean>,)      # A boolean value indicating if the data represents a single network or multiple networks (assumed `false` when not present)
+("name":<string>,)               # A human readable name for the network data
+("description":<string>,)        # A textual description of the network data and any other related notes
+("source_type":<string>,)        # The type of source data that generated this data
+("source_version":<string>,)     # The version of source data, if applicable
 "bus":{
     "1":{
-        "index":<int>,
-        "bus_type":<int>,
-        "va":<float>,
-        "vm":<float>,
+        "va":<float, radians>,  # Voltage angle
+        "vm":<float, V p.u.>,   # Voltage magnitude
+        "vmin":<float, V p.u.>, # A minimum voltage magnitude
+        "vmax":<float, V p.u.>, # A maximum voltage magnitude
+        "bus_type":<int>,       # Bus status field inactive if 4, active otherwise; also used in power flow studies
         ...
     },
     "2":{...},
@@ -27,10 +37,9 @@ The network data dictionary structure is roughly as follows:
 },
 "load":{
     "1":{
-        "index":<int>,
-        "load_bus":<int>,
-        "pd":<float>,
-        "qd":<float>,
+        "load_bus":<int>,   # Index of the bus to which the load is attached
+        "pd":<float, MW>,   # Active power withdrawn
+        "qd":<float, MVar>, # Reactive power withdrawn
         ...
     },
     "2":{...},
@@ -38,10 +47,9 @@ The network data dictionary structure is roughly as follows:
 },
 "shunt":{
     "1":{
-        "index":<int>,
-        "shunt_bus":<int>,
-        "gs":<float>,
-        "bs":<float>,
+        "shunt_bus":<int>, # Index of the bus to which the shunt is attached
+        "gs":<float>,      # Active power withdrawn per voltage p.u.
+        "bs":<float>,      # Reactive power withdrawn per voltage p.u.
         ...
     },
     "2":{...},
@@ -49,10 +57,17 @@ The network data dictionary structure is roughly as follows:
 },
 "gen":{
     "1":{
-        "index":<int>,
-        "gen_bus":<int>,
-        "pg":<float>,
-        "qg":<float>,
+        "gen_bus":<int>,       # Index of the bus to which the generator is attached
+        "pg":<float, MW>,      # Active power injected
+        "qg":<float, MVAr>,    # Reactive power injected
+        "pmin":<float, MW>,    # Active power lower bound
+        "pmax":<float, MW>,    # Active power upper bound
+        "qmin":<float, MVAr>,  # Reactive power lower bound
+        "qmax":<float, MVAr>,  # Reactive power upper bound
+        "gen_status":<int>,    # Status flag for generators
+        ("model":<int>,)       # Cost model 1=piecewise linear, 2=polynomial
+        ("ncost":<int>,)       # Length of cost model data
+        ("cost"<vector{float}, $MWh>:) # Cost model data
         ...
     },
     "2":{...},
@@ -60,12 +75,23 @@ The network data dictionary structure is roughly as follows:
 },
 "storage":{
     "1":{
-        "index":<int>,
-        "storage_bus":<int>,
-        "ps"::<float>,
-        "qs"::<float>,
-        "energy":<float>,
-        "energy_rating":<float>,
+        "storage_bus":<int>,             # Index of the bus to which the storage is attached
+        "ps":<float, MW>,                # Active power withdrawn
+        "qs":<float, MVAr>,              # Reactive power withdrawn
+        "energy":<float, MWh>,           # Amount of stored energy
+        "energy_rating":<float, MWh>,    # Maximum amount of stored energy
+        "charge_rating":<float, MW>,     # Maximum amount of charge per unit time
+        "discharge_rating":<float, MW>,  # Maximum amount of discharge per unit time
+        "charge_efficiency":<float>,     # Relative efficiency when charging (between 0.0 and 1.0)
+        "discharge_efficiency":<float>,  # Relative efficiency when discharging (between 0.0 and 1.0)
+        "qmin":<float, MVar>,            # Reactive power lower bound
+        "qmax":<float, MVar>,            # Reactive power upper bound
+        "r":<float, p.u.>,               # Power inverter resistance
+        "x":<float, p.u.>,               # Power inverter reactance
+        "p_loss":<float, MW>,            # Active power standby losses
+        "q_loss":<float, MVar>,          # Reactive power standby losses
+        ("thermal_rating":<float, MVA>,) # Apparent power withdrawn limit
+        ("current_rating":<float, MA>,)  # Current magnitude withdrawn limit
         ...
     },
     "2":{...},
@@ -73,12 +99,30 @@ The network data dictionary structure is roughly as follows:
 },
 "branch":{
     "1":{
-        "index":<int>,
-        "f_bus":<int>,
-        "t_bus":<int>,
-        "br_r":<float>,
-        "g_fr":<float>,
-        "b_fr":<float>,
+        "f_bus":<int>,               # Index of the from bus to which the branch is attached
+        "t_bus":<int>,               # Index of the to bus to which the branch is attached
+        "br_r":<float, p.u.>,        # Branch series resistance
+        "br_x":<float, p.u.>,        # Branch series reactance
+        "tap": <float, p.u.>,        # Branch off nominal turns ratio
+        "shift": <float, radians>,   # Branch phase shift angle
+        "g_fr":<float, p.u.>,        # Line charging conductance at from bus
+        "b_fr":<float, p.u.>,        # Line charging susceptance at from bus
+        "g_to":<float, p.u.>,        # Line charging conductance at to bus
+        "b_to":<float, p.u.>,        # Line charging susceptance at to bus
+        "transformer":<boolean>,     # Status flag indicating if the branch is a transformer
+        "br_status":<int>,           # Status flag for branches
+        ("rate_a":<float, MVA>,)     # Long term thermal line rating
+        ("rate_b":<float, MVA>,)     # Short term thermal line rating
+        ("rate_c":<float, MVA>,)     # Emergency thermal line rating
+        ("angmin": <float, radians>, # Minimum angle difference between the from and to buses
+        ("angmax": <float, radians>, # Maximum angle difference between the from and to buses
+        ("c_rating_a":<float, MA>,)  # Long term current line rating
+        ("c_rating_b":<float, MA>,)  # Short term current line rating
+        ("c_rating_c":<float, MA>,)  # Emergency current line rating
+        ("pf":<float, MW>,)          # Active power withdrawn at the from bus
+        ("qf":<float, MVAr>,)        # Reactive power withdrawn at the from bus
+        ("pt":<float, MW>,)          # Active power withdrawn at the to bus
+        ("qt":<float, MVAr>,)        # Reactive power withdrawn at the to bus
         ...
     },
     "2":{...},
@@ -86,13 +130,28 @@ The network data dictionary structure is roughly as follows:
 },
 "dcline":{
     "1":{
-        "index":<int>,
-        "f_bus":<int>,
-        "t_bus":<int>,
-        "pf":<float>,
-        "qf":<float>,
-        "vf":<float>,
-        "loss0":<float>,
+        "f_bus":<int>,          # Index of the from bus to which the dcline is attached
+        "t_bus":<int>,          # Index of the to bus to which the dcline is attached
+        "pminf":<float, MW>,    # Active power lower bound at the from bus
+        "pmaxf":<float, MW>,    # Active power upper bound at the from bus
+        "qminf":<float, MVAr>,  # Reactive power lower bound at the from bus
+        "qmaxf":<float, MVAr>,  # Reactive power upper bound at the from bus
+        "pmint":<float, MW>,    # Active power lower bound at the to bus
+        "pmaxt":<float, MW>,    # Active power upper bound at the to bus
+        "qmint":<float, MVAr>,  # Reactive power lower bound at the to bus
+        "qmaxt":<float, MVAr>,  # Reactive power upper bound at the to bus
+        "loss0":<float>,        # Constant active power loss term linking the from and to buses
+        "loss1":<float>,        # Linear active power loss term linking the from and to buses
+        "br_status":<int>,      # Status flag for dclines
+        ("pf":<float, MW>,)     # Active power withdrawn at the from bus
+        ("qf":<float, MVAr>,)   # Reactive power withdrawn at the from bus
+        ("pt":<float, MW>,)     # Active power withdrawn at the to bus
+        ("qt":<float, MVAr>,)   # Reactive power withdrawn at the to bus
+        ("vf":<float, V p.u.>,) # Voltage set-point at the from bus
+        ("vt":<float, V p.u.>,) # Voltage set-point at the to bus
+        ("model":<int>,)        # Cost model 1=piecewise linear, 2=polynomial
+        ("ncost":<int>,)        # Length of cost model data
+        ("cost"<vector{float}, $MWh>:) # Cost model data
         ...
     },
     "2":{...},
@@ -100,13 +159,13 @@ The network data dictionary structure is roughly as follows:
 },
 "switch":{
     "1":{
-        "index":<int>,
-        "f_bus":<int>,
-        "t_bus":<int>,
-        "psw":<float>,
-        "qsw":<float>,
-        "state":<int>,
-        "thermal_rating":<float>,
+        "f_bus":<int>,                   # Index of the from bus to which the switch is attached
+        "t_bus":<int>,                   # Index of the to bus to which the switch is attached
+        "state":<int>,                   # A {0,1} flag that determines if the switch is open or closed, respectively.
+        ("thermal_rating":<float, MVA>,) # Apparent power flow limit
+        ("current_rating":<float, MA>,)  # Current magnitude flow limit
+        ("psw":<float, MW>,)             # Active power withdrawn at the from bus
+        ("qsw":<float, MVar>,)           # Reactive power withdrawn at the from bus
         ...
     },
     "2":{...},

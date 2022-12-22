@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Improved network data model documentation
 
 ### v0.19.7
 - Improve linear algebra test robustness (#827)
