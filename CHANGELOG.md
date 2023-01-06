@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Improved network data model documentation
+- Faster PTDF matrix computation (#849)
 
 ### v0.19.7
 - Improve linear algebra test robustness (#827)

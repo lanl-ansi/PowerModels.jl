@@ -322,8 +322,6 @@ function compute_basic_dc_pf(data::Dict{String,<:Any})
     return theta
 end
 
-
-
 """
 given a basic network data dict, returns a real valued ptdf matrix with one
 row for each branch and one column for each bus in the network.
@@ -335,24 +333,14 @@ function calc_basic_ptdf_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_ptdf_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    num_bus = length(data["bus"])
-    num_branch = length(data["branch"])
-
     b_inv = calc_susceptance_matrix_inv(data).matrix
 
-    ptdf = zeros(num_branch, num_bus)
-    for (i,branch) in data["branch"]
-        branch_idx = branch["index"]
-        bus_fr = branch["f_bus"]
-        bus_to = branch["t_bus"]
-        g,b = calc_branch_y(branch)
-        for n in 1:num_bus
-            ptdf[branch_idx, n] = b*(b_inv[bus_fr, n] - b_inv[bus_to, n])
-        end
-    end
+    B = calc_basic_branch_susceptance_matrix(data)
+    ptdf = B * b_inv
 
     return ptdf
 end
+
 
 """
 given a basic network data dict and a branch index returns a row of the ptdf
