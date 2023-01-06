@@ -322,8 +322,6 @@ function compute_basic_dc_pf(data::Dict{String,<:Any})
     return theta
 end
 
-
-
 """
 given a basic network data dict, returns a real valued ptdf matrix with one
 row for each branch and one column for each bus in the network.
@@ -335,42 +333,14 @@ function calc_basic_ptdf_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_ptdf_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    num_bus = length(data["bus"])
-    num_branch = length(data["branch"])
+    b_inv = calc_susceptance_matrix_inv(data).matrix
 
-    if num_branch == 0 || num_bus == 0
-        # no branch and/or no bus --> return an empty matrix already
-        return zeros(Float64, num_branch, num_bus)
-    end
-
-    S = calc_basic_susceptance_matrix(data)
     B = calc_basic_branch_susceptance_matrix(data)
-    i0::Int = reference_bus(data)["index"]
-    if !(i0 > 0 && i0 <= num_bus)
-        Memento.error(_LOGGER, "invalid slack bus index in calc_basic_ptdf_matrix")
-    end
-
-    # Zero-out line and column of S corresponding to slack bus and set diagonal element to 1
-    # (otherwise S is not invertible)
-    S[:, i0]  .= 0.0
-    S[i0, :]  .= 0.0
-    S[i0, i0]  = 1.0
-
-    # `S` has the form A' * D * A, which is quasi-definite, so the LDLᵀ is well-defined
-    # (assuming the underlying grid has a single connected component)
-    F = LinearAlgebra.ldlt(Symmetric(S); check=false)
-    if !LinearAlgebra.issuccess(F)
-        Memento.error(_LOGGER, "Failed factorization in calc_basic_ptdf_matrix")
-    end
-
-    # Recover the (dense) inverse of the susceptance matrix...
-    M = F \ Matrix(1.0I, num_bus, num_bus)
-    M[i0, :] .= 0.0  # zero-out the row of the slack bus
-    # ... and the PTDF matrix
-    ptdf = B * M
+    ptdf = B * b_inv
 
     return ptdf
 end
+
 
 """
 given a basic network data dict and a branch index returns a row of the ptdf

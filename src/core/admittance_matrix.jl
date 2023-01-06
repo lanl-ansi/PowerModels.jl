@@ -139,13 +139,27 @@ Base.show(io::IO, x::AdmittanceMatrixInverse{<:Number}) = print(io, "AdmittanceM
 "note, data should be a PowerModels network data model; only supports networks with exactly one refrence bus"
 function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     #TODO check single connected component
-
     sm = calc_susceptance_matrix(data)
-
+    S  = sm.matrix
+    num_buses = length(sm.idx_to_bus)  # this avoids inactive buses
+    
     ref_bus = reference_bus(data)
-    sm_inv = calc_admittance_matrix_inv(sm, sm.bus_to_idx[ref_bus["index"]])
-
-    return sm_inv
+    ref_idx = sm.bus_to_idx[ref_bus["index"]]
+    if !(ref_idx > 0 && ref_idx <= num_buses)
+        Memento.error(_LOGGER, "invalid ref_idx in calc_susceptance_matrix_inv")
+    end
+    S[ref_idx, :] .= 0.0
+    S[:, ref_idx] .= 0.0
+    S[ref_idx, ref_idx] = 1.0
+    
+    F = LinearAlgebra.ldlt(Symmetric(S); check=false)
+    if !LinearAlgebra.issuccess(F)
+        Memento.error(_LOGGER, "Failed factorization in calc_susceptance_matrix_inv")
+    end
+    M = F \ Matrix(1.0I, num_buses, num_buses)
+    M[ref_idx, :] .= 0.0  # zero-out the row of the slack bus
+    
+    return AdmittanceMatrixInverse(sm.idx_to_bus, sm.bus_to_idx, ref_idx, M)
 end
 
 "calculates the inverse of the susceptance matrix"
