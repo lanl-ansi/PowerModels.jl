@@ -65,6 +65,7 @@ The primary developer is Carleton Coffrin (@ccoffrin) with support from the foll
 - Miles Lubin (@mlubin) MIT, Julia/JuMP advise
 - Yeesian Ng (@yeesian) MIT, Documenter.jl setup
 - Kaarthik Sundar (@kaarthiksundar) LANL, OBBT utility
+- Mathieu Tanneau (@mtanneau) Georgia Tech, PTDF matrix computation
 - Byron Tasseff (@tasseff) LANL, multi-infrastructure updates
 
 
