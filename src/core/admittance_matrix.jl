@@ -136,7 +136,18 @@ end
 Base.show(io::IO, x::AdmittanceMatrixInverse{<:Number}) = print(io, "AdmittanceMatrixInverse($(length(x.idx_to_bus)) buses, $(length(x.matrix)) entries)")
 
 
-"note, data should be a PowerModels network data model; only supports networks with exactly one refrence bus"
+"""
+    calc_susceptance_matrix_inv(data)
+
+Compute the inverse of the network's susceptance matrix.
+
+Note: `data`` should be a PowerModels network data model; only supports networks with exactly one refrence bus.
+
+While the susceptance matrix is sparse, its inverse it typically quite dense.
+This implementation first computes a sparse factorization, then recovers the (dense)
+    matrix inverse via backward substitution. This is more efficient
+    than directly computing a dense inverse with `LinearAlgebra.inv`.
+"""
 function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     #TODO check single connected component
     sm = calc_susceptance_matrix(data)
