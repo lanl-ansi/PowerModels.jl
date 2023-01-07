@@ -2,7 +2,10 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Improved network data model documentation
+- nothing
+
+### v0.19.8
+- Improved network data model documentation (#848)
 - Faster PTDF matrix computation (#849)
 
 ### v0.19.7
