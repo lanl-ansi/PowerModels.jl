@@ -123,6 +123,15 @@ function objective_min_fuel_and_flow_cost_polynomial(pm::AbstractPowerModel; kwa
     end
 end
 
+function _unstable_pow(x, p)
+    if p == 0
+        return 1
+    elseif p == 1
+        return x
+    end
+    return x^p
+end
+
 ""
 function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractPowerModel; report::Bool=true)
     gen_cost = Dict()
@@ -131,31 +140,19 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractPowerM
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
             pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n) )
-
-            if length(gen["cost"]) == 1
-                gen_cost[(n,i)] = gen["cost"][1]
-            elseif length(gen["cost"]) == 2
-                gen_cost[(n,i)] = gen["cost"][1]*pg + gen["cost"][2]
-            elseif length(gen["cost"]) == 3
-                gen_cost[(n,i)] = gen["cost"][1]*pg^2 + gen["cost"][2]*pg + gen["cost"][3]
-            else
-                gen_cost[(n,i)] = 0.0
-            end
+            gen_cost[(n, i)] = JuMP.@expression(
+                pm.model,
+                sum(v * _unstable_pow(pg, d-1) for (d, v) in enumerate(reverse(gen["cost"]))),
+            )
         end
 
         from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
         for (i,dcline) in nw_ref[:dcline]
             p_dc = sum( var(pm, n, :p_dc, from_idx[i])[c] for c in conductor_ids(pm, n) )
-
-            if length(dcline["cost"]) == 1
-                dcline_cost[(n,i)] = dcline["cost"][1]
-            elseif length(dcline["cost"]) == 2
-                dcline_cost[(n,i)] = dcline["cost"][1]*p_dc + dcline["cost"][2]
-            elseif length(dcline["cost"]) == 3
-                dcline_cost[(n,i)] = dcline["cost"][1]*p_dc^2 + dcline["cost"][2]*p_dc + dcline["cost"][3]
-            else
-                dcline_cost[(n,i)] = 0.0
-            end
+            dcline_cost[(n, i)] = JuMP.@expression(
+                pm.model,
+                sum(v * _unstable_pow(p_dc, d-1) for (d, v) in enumerate(reverse(dcline["cost"]))),
+            )
         end
     end
 
@@ -273,44 +270,24 @@ function _objective_min_fuel_and_flow_cost_polynomial_nl(pm::AbstractPowerModel;
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
             pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n))
-
-            cost_rev = reverse(gen["cost"])
-            if length(cost_rev) == 1
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1])
-            elseif length(cost_rev) == 2
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg)
-            elseif length(cost_rev) == 3
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2)
-            elseif length(cost_rev) >= 4
-                cost_rev_nl = cost_rev[4:end]
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2 + sum( v*pg^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
-            else
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, 0.0)
-            end
+            gen_cost[(n,i)] = JuMP.@expression(
+                pm.model,
+                sum(v * _unstable_pow(pg, d-1) for (d, v) in enumerate(reverse(gen["cost"]))),
+            )
         end
 
         from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
 
         for (i,dcline) in nw_ref[:dcline]
             p_dc = sum( var(pm, n, :p_dc, from_idx[i])[c] for c in conductor_ids(pm, n))
-
-            cost_rev = reverse(dcline["cost"])
-            if length(cost_rev) == 1
-                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1])
-            elseif length(cost_rev) == 2
-                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc)
-            elseif length(cost_rev) == 3
-                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc + cost_rev[3]*p_dc^2)
-            elseif length(cost_rev) >= 4
-                cost_rev_nl = cost_rev[4:end]
-                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc + cost_rev[3]*p_dc^2 + sum( v*p_dc^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
-            else
-                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, 0.0)
-            end
+            dcline_cost[(n,i)] = JuMP.@expression(
+                pm.model,
+                sum(v * _unstable_pow(p_dc, d-1) for (d, v) in enumerate(reverse(dcline["cost"]))),
+            )
         end
     end
 
-    return JuMP.@NLobjective(pm.model, Min,
+    return JuMP.@objective(pm.model, Min,
         sum(
             sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen]) +
             sum( dcline_cost[(n,i)] for (i,dcline) in nw_ref[:dcline])
@@ -336,16 +313,10 @@ function _objective_min_fuel_cost_polynomial_linquad(pm::AbstractPowerModel; rep
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
             pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n) )
-
-            if length(gen["cost"]) == 1
-                gen_cost[(n,i)] = gen["cost"][1]
-            elseif length(gen["cost"]) == 2
-                gen_cost[(n,i)] = gen["cost"][1]*pg + gen["cost"][2]
-            elseif length(gen["cost"]) == 3
-                gen_cost[(n,i)] = gen["cost"][1]*pg^2 + gen["cost"][2]*pg + gen["cost"][3]
-            else
-                gen_cost[(n,i)] = 0.0
-            end
+            gen_cost[(n, i)] = JuMP.@expression(
+                pm.model,
+                sum(v * _unstable_pow(pg, d-1) for (d, v) in enumerate(reverse(gen["cost"]))),
+            )
         end
     end
 
@@ -363,24 +334,14 @@ function _objective_min_fuel_cost_polynomial_nl(pm::AbstractPowerModel; report::
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
             pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n))
-
-            cost_rev = reverse(gen["cost"])
-            if length(cost_rev) == 1
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1])
-            elseif length(cost_rev) == 2
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg)
-            elseif length(cost_rev) == 3
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2)
-            elseif length(cost_rev) >= 4
-                cost_rev_nl = cost_rev[4:end]
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2 + sum( v*pg^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
-            else
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, 0.0)
-            end
+            gen_cost[(n,i)] = JuMP.@expression(
+                pm.model,
+                sum(v * _unstable_pow(pg, d-1) for (d, v) in enumerate(reverse(gen["cost"]))),
+            )
         end
     end
 
-    return JuMP.@NLobjective(pm.model, Min,
+    return JuMP.@objective(pm.model, Min,
         sum(
             sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] )
         for (n, nw_ref) in nws(pm))
@@ -585,14 +546,14 @@ function objective_max_loadability(pm::AbstractPowerModel)
     time_elapsed = Dict(n => get(ref(pm, n), :time_elapsed, 1) for n in nws)
 
     load_weight = Dict(n =>
-        Dict(i => get(load, "weight", 1.0) for (i,load) in ref(pm, n, :load)) 
+        Dict(i => get(load, "weight", 1.0) for (i,load) in ref(pm, n, :load))
     for n in nws)
 
     #println(load_weight)
 
     return JuMP.@objective(pm.model, Max,
-        sum( 
-            ( 
+        sum(
+            (
             time_elapsed[n]*(
                 sum(z_shunt[n][i] for (i,shunt) in ref(pm, n, :shunt)) +
                 sum(load_weight[n][i]*abs(load["pd"])*z_demand[n][i] for (i,load) in ref(pm, n, :load))

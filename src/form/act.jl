@@ -22,7 +22,7 @@ function constraint_model_voltage(pm::AbstractACTModel, n::Int)
 
     for (i,j) in ids(pm, n, :buspairs)
         JuMP.@constraint(pm.model, wr[(i,j)]^2 + wi[(i,j)]^2 == w[i]*w[j])
-        JuMP.@NLconstraint(pm.model, wi[(i,j)] == tan(t[i] - t[j])*wr[(i,j)])
+        JuMP.@constraint(pm.model, wi[(i,j)] == tan(t[i] - t[j])*wr[(i,j)])
     end
 end
 
