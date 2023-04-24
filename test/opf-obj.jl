@@ -53,22 +53,22 @@ end
 
 @testset "nlp objective" begin
     data = PowerModels.parse_file("data/matpower/case5.m")
-    data["gen"]["1"]["cost"] = [100.0, 300.0, 1400.0, 1.0]
+    data["gen"]["1"]["cost"] = []
     data["gen"]["4"]["cost"] = [1.0]
-    data["gen"]["5"]["cost"] = []
+    data["gen"]["5"]["cost"] = [10.0, 100.0, 300.0, 1400.0, 1.0]
 
     @testset "opf objective" begin
         result = run_ac_opf(data, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 5452.04; atol = 1e0)
+        @test isapprox(result["objective"], 19005.9; atol = 1e0)
     end
 
     @testset "opb objective" begin
         result = run_opb(data, SOCWRPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 2999.80; atol = 1e0)
+        @test isapprox(result["objective"], 18911.70; atol = 1e0)
     end
 
 end
