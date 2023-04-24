@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fix implementation of polynomial costs above quadratic
 
 ### v0.19.8
 - Improved network data model documentation (#848)
