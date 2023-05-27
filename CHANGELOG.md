@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Fix implementation of polynomial costs above quadratic
+- Add tests for opf objective expression types
 
 ### v0.19.8
 - Improved network data model documentation (#848)

@@ -6,6 +6,11 @@
     data["gen"]["4"]["cost"] = [1.0]
     data["gen"]["5"]["cost"] = []
 
+    @testset "jump model objective type" begin
+        pm = instantiate_model(data, ACPPowerModel, build_opf)
+        @test isa(JuMP.objective_function(pm.model), JuMP.AffExpr)
+    end
+
     @testset "nlp solver" begin
         result = run_ac_opf(data, nlp_solver)
 
@@ -24,7 +29,7 @@
         result = run_dc_opf(data, milp_solver)
 
         @test result["termination_status"] == OPTIMAL
-        # @test isapprox(result["objective"], 4679.05; atol = 1e0)  # Problem upstream with JuMP.SecondOrderCone or JuMP.RotatedSecondOrderCone?
+        @test isapprox(result["objective"], 4679.05; atol = 1e0)
     end
 end
 
@@ -33,6 +38,11 @@ end
     data["gen"]["1"]["cost"] = [1.0, 1400.0, 1.0]
     data["gen"]["4"]["cost"] = [1.0]
     data["gen"]["5"]["cost"] = []
+
+    @testset "jump model objective type" begin
+        pm = instantiate_model(data, ACPPowerModel, build_opf)
+        @test isa(JuMP.objective_function(pm.model), JuMP.QuadExpr)
+    end
 
     @testset "nlp solver" begin
         result = run_ac_opf(data, nlp_solver)
@@ -56,6 +66,13 @@ end
     data["gen"]["1"]["cost"] = []
     data["gen"]["4"]["cost"] = [1.0]
     data["gen"]["5"]["cost"] = [10.0, 100.0, 300.0, 1400.0, 1.0]
+
+    @testset "jump model objective type" begin
+        pm = instantiate_model(data, ACPPowerModel, build_opf)
+
+        @test JuMP.objective_function(pm.model) == JuMP.AffExpr(0.0)
+        @test isa(JuMP._nlp_objective_function(pm.model), JuMP.MOI.Nonlinear.Expression)
+    end
 
     @testset "opf objective" begin
         result = run_ac_opf(data, nlp_solver)
