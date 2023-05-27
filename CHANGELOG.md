@@ -2,6 +2,9 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- nothing
+
+### v0.19.9
 - Fix implementation of polynomial costs above quadratic
 - Add tests for opf objective expression types
 - Update tests for compat with Julia v1.9 (#861)

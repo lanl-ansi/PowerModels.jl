@@ -71,7 +71,8 @@ end
         pm = instantiate_model(data, ACPPowerModel, build_opf)
 
         @test JuMP.objective_function(pm.model) == JuMP.AffExpr(0.0)
-        @test isa(JuMP._nlp_objective_function(pm.model), JuMP.MOI.Nonlinear.Expression)
+        # would be good to add a test like this one in a future version where the NL expression can be accessed with a public API
+        #@test isa(JuMP._nlp_objective_function(pm.model), JuMP.MOI.Nonlinear.Expression)
     end
 
     @testset "opf objective" begin
