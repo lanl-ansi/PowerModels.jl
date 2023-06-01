@@ -47,15 +47,15 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
         if branch[pm_component_status["branch"]] != pm_component_status_inactive["branch"] && haskey(bus_to_idx, f_bus) && haskey(bus_to_idx, t_bus)
             f_bus = bus_to_idx[f_bus]
             t_bus = bus_to_idx[t_bus]
-            y = inv(branch["br_r"] + branch["br_x"]im)
+            y = inv(big(branch["br_r"] + branch["br_x"]im))
             tr, ti = calc_branch_t(branch)
             t = tr + ti*im
             lc_fr = branch["g_fr"] + branch["b_fr"]im
             lc_to = branch["g_to"] + branch["b_to"]im
-            push!(I, f_bus); push!(J, t_bus); push!(V, -y/conj(t))
-            push!(I, t_bus); push!(J, f_bus); push!(V, -(y/t))
-            push!(I, f_bus); push!(J, f_bus); push!(V, (y + lc_fr)/abs2(t))
-            push!(I, t_bus); push!(J, t_bus); push!(V, (y + lc_to))
+            push!(I, f_bus); push!(J, t_bus); push!(V, convert(Float64, -y/conj(t)))
+            push!(I, t_bus); push!(J, f_bus); push!(V, convert(Float64, -(y/t)))
+            push!(I, f_bus); push!(J, f_bus); push!(V, convert(Float64, (y + lc_fr)/abs2(t)))
+            push!(I, t_bus); push!(J, t_bus); push!(V, convert(Float64, (y + lc_to)))
         end
     end
 
