@@ -104,7 +104,7 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
         if branch[pm_component_status["branch"]] != pm_component_status_inactive["branch"] && haskey(bus_to_idx, f_bus) && haskey(bus_to_idx, t_bus)
             f_bus = bus_to_idx[f_bus]
             t_bus = bus_to_idx[t_bus]
-            b_val = imag(inv(branch["br_r"] + branch["br_x"]im))
+            b_val = convert(Float64, imag(inv(big(branch["br_r"] + branch["br_x"]im))))
             push!(I, f_bus); push!(J, t_bus); push!(V, -b_val)
             push!(I, t_bus); push!(J, f_bus); push!(V, -b_val)
             push!(I, f_bus); push!(J, f_bus); push!(V,  b_val)
@@ -153,7 +153,7 @@ function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     sm = calc_susceptance_matrix(data)
     S  = sm.matrix
     num_buses = length(sm.idx_to_bus)  # this avoids inactive buses
-    
+
     ref_bus = reference_bus(data)
     ref_idx = sm.bus_to_idx[ref_bus["index"]]
     if !(ref_idx > 0 && ref_idx <= num_buses)
@@ -162,14 +162,14 @@ function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     S[ref_idx, :] .= 0.0
     S[:, ref_idx] .= 0.0
     S[ref_idx, ref_idx] = 1.0
-    
+
     F = LinearAlgebra.ldlt(Symmetric(S); check=false)
     if !LinearAlgebra.issuccess(F)
         Memento.error(_LOGGER, "Failed factorization in calc_susceptance_matrix_inv")
     end
     M = F \ Matrix(1.0I, num_buses, num_buses)
     M[ref_idx, :] .= 0.0  # zero-out the row of the slack bus
-    
+
     return AdmittanceMatrixInverse(sm.idx_to_bus, sm.bus_to_idx, ref_idx, M)
 end
 
