@@ -52,10 +52,10 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
             t = tr + ti*im
             lc_fr = branch["g_fr"] + branch["b_fr"]im
             lc_to = branch["g_to"] + branch["b_to"]im
-            push!(I, f_bus); push!(J, t_bus); push!(V, convert(Float64, -y/conj(t)))
-            push!(I, t_bus); push!(J, f_bus); push!(V, convert(Float64, -(y/t)))
-            push!(I, f_bus); push!(J, f_bus); push!(V, convert(Float64, (y + lc_fr)/abs2(t)))
-            push!(I, t_bus); push!(J, t_bus); push!(V, convert(Float64, (y + lc_to)))
+            push!(I, f_bus); push!(J, t_bus); push!(V, convert(ComplexF64, -y/conj(t)))
+            push!(I, t_bus); push!(J, f_bus); push!(V, convert(ComplexF64, -(y/t)))
+            push!(I, f_bus); push!(J, f_bus); push!(V, convert(ComplexF64, (y + lc_fr)/abs2(t)))
+            push!(I, t_bus); push!(J, t_bus); push!(V, convert(ComplexF64, (y + lc_to)))
         end
     end
 
