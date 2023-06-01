@@ -81,7 +81,6 @@ end
 
 @testset "test ac rect pf" begin
     @testset "5-bus asymmetric case" begin
-        nlp_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6)
         result = run_pf("../test/data/matpower/case5_asym.m", ACRPowerModel, nlp_solver)
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
