@@ -42,7 +42,7 @@ end
 
         @test isa(sm, AdmittanceMatrix{Float64})
         @test SparseArrays.nnz(sm.matrix) == 17
-        @test isapprox(LinearAlgebra.det(sm.matrix), 0.0, atol=1e-5)
+        @test minimum(abs.(LinearAlgebra.eigvals(Matrix(sm.matrix)))) <= 1e-10
     end
     @testset "5-bus ext case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_ext.m")
@@ -50,7 +50,7 @@ end
 
         @test isa(sm, AdmittanceMatrix{Float64})
         @test SparseArrays.nnz(sm.matrix) == 17
-        @test isapprox(LinearAlgebra.det(sm.matrix), 0.0, atol=1e-5)
+        @test minimum(abs.(LinearAlgebra.eigvals(Matrix(sm.matrix)))) <= 1e-10
     end
     @testset "14-bus pti case" begin
         data = PowerModels.parse_file("../test/data/pti/case14.raw")
