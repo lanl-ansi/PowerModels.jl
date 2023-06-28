@@ -621,7 +621,7 @@ end
        result = run_opf("../test/data/matpower/case5_npg.m", SOCWRConicPowerModel, sdp_solver)
 
        @test result["termination_status"] == OPTIMAL
-    #    @test isapprox(result["objective"], 3551.71; atol = 40)
+       # @test isapprox(result["objective"], 3551.71; atol = 40)
        @test isapprox(result["objective"], 3602.11; atol = 40)
     end
     @testset "5-bus with pwl costs" begin
