@@ -394,6 +394,11 @@ cleans up raw pwl cost points in preparation for building a mathamatical model.
 The key mathematical properties,
 - the first and last points are strickly outside of the pmin-to-pmax range
 - pmin and pmax occur in the first and last line segments.
+
+See Table B-4 (generator cost data) on p142 in MATPOWER Manual
+(https://matpower.org/docs/manual.pdf) for the definition of the `cost` vector, and
+section III. A. Data Processing in https://arxiv.org/pdf/2005.14087.pdf for the processing
+explanation.
 """
 function calc_pwl_points(ncost::Int, cost::Vector{<:Real}, pmin::Real, pmax::Real; tolerance=1e-2)
     @assert ncost >= 1 && length(cost) >= 2
@@ -476,7 +481,12 @@ function calc_pwl_points(ncost::Int, cost::Vector{<:Real}, pmin::Real, pmax::Rea
 end
 
 
-"adds pg_cost variables and constraints"
+"""
+adds pg_cost variables and constraints
+
+See III. B. The lambda Formulation in https://arxiv.org/pdf/2005.14087.pdf for the
+explanation of the lambda variables.
+"""
 function objective_variable_pg_cost(pm::AbstractPowerModel, report::Bool=true)
     for (n, nw_ref) in nws(pm)
         pg_cost = var(pm, n)[:pg_cost] = Dict{Int,Any}()
