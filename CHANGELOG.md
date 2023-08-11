@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Add support for DCP formulation for OPF with PST variables (#874)
 - Fix implementation of `calc_theta_delta_bounds` when conductor parameter is used (#870)
 
 ### v0.19.9
