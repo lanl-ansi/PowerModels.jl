@@ -494,7 +494,49 @@ function _build_opf_strg_mi(pm::AbstractPowerModel)
 end
 
 
-"opf with tap magnitude and angle as optimization variables"
+"opf with transformer angles as optimization variables"
+function _solve_opf_pst(file, model_type::Type, optimizer; kwargs...)
+    return solve_model(file, model_type, optimizer, _build_opf_pst; kwargs...)
+end
+
+""
+function _build_opf_pst(pm::AbstractPowerModel)
+    variable_bus_voltage(pm)
+    variable_gen_power(pm)
+
+    variable_branch_transform_angle(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
+
+    objective_min_fuel_and_flow_cost(pm)
+
+    constraint_model_voltage(pm)
+
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
+    end
+
+    for i in ids(pm, :bus)
+        constraint_power_balance(pm, i)
+    end
+
+    for i in ids(pm, :branch)
+        constraint_ohms_y_pst_from(pm, i)
+        constraint_ohms_y_pst_to(pm, i)
+
+        constraint_voltage_angle_difference(pm, i)
+
+        constraint_thermal_limit_from(pm, i)
+        constraint_thermal_limit_to(pm, i)
+    end
+
+    for i in ids(pm, :dcline)
+        constraint_dcline_power_losses(pm, i)
+    end
+end
+
+
+"opf with transformer tap magnitude and angle as optimization variables"
 function _solve_opf_oltc_pst(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, _build_opf_oltc_pst; kwargs...)
 end

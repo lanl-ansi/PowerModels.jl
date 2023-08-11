@@ -14,6 +14,7 @@ function variable_bus_voltage_magnitude(pm::AbstractDCPModel; nw::Int=nw_id_defa
     report && sol_component_fixed(pm, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
 end
 
+
 ""
 function sol_data_model!(pm::AbstractDCPModel, solution::Dict)
     # nothing to do, this is in the data model space by default
@@ -133,6 +134,28 @@ function constraint_ohms_yt_from(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f
     ta = atan(ti, tr)
     JuMP.@constraint(pm.model, p_fr == (va_fr - va_to - ta)/(x*tm))
 end
+
+""
+function constraint_ohms_y_pst_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tm)
+    p_fr  = var(pm, n, :p, f_idx)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+    ta = var(pm, n, :ta, f_idx[1])
+
+    JuMP.@constraint(pm.model, p_fr == -b*(va_fr - va_to - ta))
+end
+
+""
+function constraint_ohms_y_pst_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tm)
+    p_to  = var(pm, n, :p, t_idx)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+    ta = var(pm, n, :ta, f_idx[1])
+
+    JuMP.@constraint(pm.model, p_to == -b*(va_to - va_fr + ta))
+end
+
+
 
 ""
 function constraint_switch_state_closed(pm::AbstractDCPModel, n::Int, f_bus, t_bus)

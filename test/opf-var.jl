@@ -887,6 +887,82 @@ end
     end
 end
 
+
+@testset "test opf with optimization of pst" begin
+
+    @testset "test ac polar opf" begin
+
+        @testset "3-bus case with optimal phase shifting" begin
+            file = "../test/data/matpower/case3_oltc_pst.m"
+            data = PowerModels.parse_file(file)
+            result = PowerModels._solve_opf_pst(data, ACPPowerModel, nlp_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 5755.3; atol = 1e0)
+
+            @test haskey(result["solution"]["branch"]["1"], "ta")
+
+            @test isapprox(result["solution"]["branch"]["1"]["ta"], 0.000; atol = 1e-3)
+            @test isapprox(result["solution"]["branch"]["2"]["ta"], 0.000; atol = 1e-3)
+            @test isapprox(result["solution"]["branch"]["3"]["ta"], 15.0/180*pi; atol = 1e-1)
+        end
+
+        @testset "3-bus case with optimal phase shifting with equal lb/ub" begin
+            file = "../test/data/matpower/case3_oltc_pst.m"
+            data = PowerModels.parse_file(file)
+            for (i, branch) in data["branch"]
+                branch["ta_min"] = branch["shift"]
+                branch["ta_max"] = branch["shift"]
+            end
+            result = PowerModels._solve_opf_pst(data, ACPPowerModel, nlp_solver)
+
+            @test result["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(result["objective"], 5820.1; atol = 1e0)
+
+            @test isapprox(result["solution"]["branch"]["1"]["ta"], 0.000; atol = 1e-3)
+            @test isapprox(result["solution"]["branch"]["2"]["ta"], 0.000; atol = 1e-3)
+            @test isapprox(result["solution"]["branch"]["3"]["ta"], 5.0/180*pi; atol = 1e-1)
+        end
+    end
+
+
+    @testset "test dc polar opf" begin
+        @testset "3-bus case with optimal phase shifting" begin
+            file = "../test/data/matpower/case3_oltc_pst.m"
+            data = PowerModels.parse_file(file)
+            result = PowerModels._solve_opf_pst(data, DCPPowerModel, milp_solver)
+
+            @test result["termination_status"] == OPTIMAL
+            @test isapprox(result["objective"], 5639.0; atol = 1e0)
+
+            @test haskey(result["solution"]["branch"]["1"], "ta")
+
+            @test isapprox(result["solution"]["branch"]["1"]["ta"], 0.000; atol = 1e-3)
+            @test isapprox(result["solution"]["branch"]["2"]["ta"], 0.000; atol = 1e-3)
+            @test isapprox(result["solution"]["branch"]["3"]["ta"], 15.0/180*pi; atol = 1e-1)
+        end
+
+        @testset "3-bus case with optimal phase shifting with equal lb/ub" begin
+            file = "../test/data/matpower/case3_oltc_pst.m"
+            data = PowerModels.parse_file(file)
+            for (i, branch) in data["branch"]
+                branch["ta_min"] = branch["shift"]
+                branch["ta_max"] = branch["shift"]
+            end
+            result = PowerModels._solve_opf_pst(data, DCPPowerModel, milp_solver)
+
+            @test result["termination_status"] == OPTIMAL
+            @test isapprox(result["objective"], 5698.1; atol = 1e0)
+
+            @test isapprox(result["solution"]["branch"]["1"]["ta"], 0.000; atol = 1e-3)
+            @test isapprox(result["solution"]["branch"]["2"]["ta"], 0.000; atol = 1e-3)
+            @test isapprox(result["solution"]["branch"]["3"]["ta"], 5.0/180*pi; atol = 1e-1)
+        end
+    end
+
+end
+
+
 @testset "test opf with optimization of oltc and pst" begin
 
     @testset "test ac polar opf" begin
@@ -899,7 +975,7 @@ end
             @test isapprox(result["objective"], 5820.1; atol = 1e0)
         end
 
-        @testset "3-bus case with optimal phase shifting / tap changing" begin
+        @testset "3-bus case with optimal phase shifting and tap changing" begin
             file = "../test/data/matpower/case3_oltc_pst.m"
             data = PowerModels.parse_file(file)
             result = PowerModels._solve_opf_oltc_pst(data, ACPPowerModel, nlp_solver)
@@ -919,7 +995,7 @@ end
         end
 
 
-        @testset "3-bus case with optimal phase shifting / tap changing with equal lb/ub" begin
+        @testset "3-bus case with optimal phase shifting and tap changing with equal lb/ub" begin
             file = "../test/data/matpower/case3_oltc_pst.m"
             data = PowerModels.parse_file(file)
             for (i, branch) in data["branch"]
@@ -941,4 +1017,5 @@ end
             @test isapprox(result["solution"]["branch"]["3"]["ta"], 5.0/180*pi; atol = 1e-1)
         end
     end
+
 end
