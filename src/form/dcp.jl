@@ -72,6 +72,25 @@ function expression_branch_power_ohms_yt_to(pm::AbstractDCPModel, n::Int, f_bus,
     # omit reactive constraint
 end
 
+function constraint_ohms_y_oltc_pst_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr)
+    p_fr  = var(pm, n, :p, f_idx)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+    ta = var(pm, n, :ta, f_idx[1])
+
+    JuMP.@constraint(pm.model, p_fr == -b*(va_fr - va_to - ta))
+end
+
+function constraint_ohms_y_oltc_pst_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to)
+    p_to  = var(pm, n, :p, t_idx)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+    ta = var(pm, n, :ta, f_idx[1])
+
+    JuMP.@constraint(pm.model, p_to == -b*(va_to - va_fr + ta))
+end
+
+
 function constraint_ne_ohms_yt_from(pm::AbstractDCPModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
     p_fr  = var(pm, n, :p_ne, f_idx)
     va_fr = var(pm, n,   :va, f_bus)
