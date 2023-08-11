@@ -246,6 +246,20 @@ end
 end
 
 
+@testset "test dcll pf" begin
+    @testset "5-bus case with DCPLL model" begin
+        result = run_pf("../test/data/matpower/case5.m", DCPLLPowerModel, nlp_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+
+        @test isapprox(result["solution"]["bus"]["1"]["va"],  0.0587177; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["2"]["va"], -0.0108062; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["3"]["va"], -0.0048031; atol = 1e-7)
+        @test isapprox(result["solution"]["bus"]["4"]["va"],  0.0000000; atol = 1e-7)
+    end
+end
+
+
 @testset "test soc pf" begin
     # started failing 05/22/2020 when ipopt moved to jll artifacts
     # @testset "3-bus case" begin
