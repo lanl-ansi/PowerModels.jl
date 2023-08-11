@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fix implementation of `calc_theta_delta_bounds` when conductor parameter is used (#870)
 
 ### v0.19.9
 - Fix implementation of polynomial costs above quadratic
