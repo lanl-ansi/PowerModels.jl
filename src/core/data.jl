@@ -73,7 +73,7 @@ function calc_theta_delta_bounds(data::Dict{String,<:Any})
     end
 
     if haskey(data, "conductors")
-        return amin, amax
+        return angle_min, angle_max
     else
         return angle_min[1], angle_max[1]
     end
