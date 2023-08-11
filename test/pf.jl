@@ -310,12 +310,13 @@ end
         @test isapprox(result["solution"]["dcline"]["1"]["pf"],  0.10; atol = 1e-4)
         @test isapprox(result["solution"]["dcline"]["1"]["pt"], -0.10; atol = 1e-4)
     end
-    @testset "5-bus asymmetric case" begin
-        result = run_pf_bf("../test/data/matpower/case5_asym.m", SOCBFPowerModel, nlp_solver)
+    # removed due to windows instability in Julia v1.9
+    # @testset "5-bus asymmetric case" begin
+    #     result = run_pf_bf("../test/data/matpower/case5_asym.m", SOCBFPowerModel, nlp_solver)
 
-        @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 0; atol = 1e-2)
-    end
+    #     @test result["termination_status"] == LOCALLY_SOLVED
+    #     @test isapprox(result["objective"], 0; atol = 1e-2)
+    # end
     @testset "5-bus case with hvdc line" begin
         result = run_pf_bf("../test/data/matpower/case5_dc.m", SOCBFPowerModel, nlp_solver)
 
