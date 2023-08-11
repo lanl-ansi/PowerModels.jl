@@ -485,6 +485,36 @@ function constraint_ohms_y_oltc_pst_to(pm::AbstractACPModel, n::Int, f_bus, t_bu
     JuMP.@NLconstraint(pm.model, q_to == -(b+b_to)*vm_to^2 - -b/tm*(vm_to*vm_fr*cos(va_to-va_fr+ta)) + -g/tm*(vm_to*vm_fr*sin(va_to-va_fr+ta)) )
 end
 
+
+""
+function constraint_ohms_y_pst_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tm)
+    p_fr  = var(pm, n, :p, f_idx)
+    q_fr  = var(pm, n,  :q, f_idx)
+    vm_fr = var(pm, n, :vm, f_bus)
+    vm_to = var(pm, n, :vm, t_bus)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+    ta = var(pm, n, :ta, f_idx[1])
+
+    JuMP.@NLconstraint(pm.model, p_fr ==  (g+g_fr)/tm^2*vm_fr^2 + (-g)/tm*(vm_fr*vm_to*cos(va_fr-va_to-ta)) + (-b)/tm*(vm_fr*vm_to*sin(va_fr-va_to-ta)) )
+    JuMP.@NLconstraint(pm.model, q_fr == -(b+b_fr)/tm^2*vm_fr^2 - (-b)/tm*(vm_fr*vm_to*cos(va_fr-va_to-ta)) + (-g)/tm*(vm_fr*vm_to*sin(va_fr-va_to-ta)) )
+end
+
+""
+function constraint_ohms_y_pst_to(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tm)
+    p_to  = var(pm, n,  :p, t_idx)
+    q_to  = var(pm, n,  :q, t_idx)
+    vm_fr = var(pm, n, :vm, f_bus)
+    vm_to = var(pm, n, :vm, t_bus)
+    va_fr = var(pm, n, :va, f_bus)
+    va_to = var(pm, n, :va, t_bus)
+    ta = var(pm, n, :ta, f_idx[1])
+
+    JuMP.@NLconstraint(pm.model, p_to ==  (g+g_to)*vm_to^2 + -g/tm*(vm_to*vm_fr*cos(va_to-va_fr+ta)) + -b/tm*(vm_to*vm_fr*sin(va_to-va_fr+ta)) )
+    JuMP.@NLconstraint(pm.model, q_to == -(b+b_to)*vm_to^2 - -b/tm*(vm_to*vm_fr*cos(va_to-va_fr+ta)) + -g/tm*(vm_to*vm_fr*sin(va_to-va_fr+ta)) )
+end
+
+
 "`angmin <= z_branch[i]*(t[f_bus] - t[t_bus]) <= angmax`"
 function constraint_voltage_angle_difference_on_off(pm::AbstractACPModel, n::Int, f_idx, angmin, angmax, vad_min, vad_max)
     i, f_bus, t_bus = f_idx
