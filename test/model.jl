@@ -21,6 +21,15 @@
         @test pm.model[:my_var] == x
         @test m[:my_var] == x
     end
+
+    @testset "run with user provided JuMP model in direct mode" begin
+        m = JuMP.direct_model(HiGHS.Optimizer())
+        JuMP.set_optimizer_attribute(m, "output_flag", false)
+        result = run_dc_opf("../test/data/matpower/case5.m", milp_solver, jump_model=m)
+
+        @test result["termination_status"] == OPTIMAL
+        @test isapprox(result["objective"], 17613; atol = 1e0)
+    end
 end
 
 
