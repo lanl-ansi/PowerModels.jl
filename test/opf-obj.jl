@@ -91,6 +91,25 @@ end
 
 end
 
+@testset "pwl objective" begin
+    data = PowerModels.parse_file("data/matpower/case5_pwlc.m")
+
+    @testset "opf objective" begin
+        result = run_ac_opf(data, nlp_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 42895; atol = 1e0)
+    end
+
+    @testset "opb objective" begin
+        result = run_opb(data, SOCWRPowerModel, nlp_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 42565; atol = 1e0)
+    end
+
+end
+
 
 @testset "dcline objectives" begin
     data = PowerModels.parse_file("data/matpower/case5_dc.m")
@@ -133,5 +152,17 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 17756.2; atol = 1e0)
+    end
+
+    @testset "pwl objective" begin
+        data = PowerModels.parse_file("data/matpower/case5_pwlc.m")
+
+        data["dcline"]["1"]["model"] = 1
+        data["dcline"]["1"]["ncost"] = 4
+        data["dcline"]["1"]["cost"] = [0.0, 10.0, 20.0, 15.0, 100.0, 50.0, 150.0, 800.0]
+        result = run_ac_opf(data, nlp_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 42905; atol = 1e0)
     end
 end

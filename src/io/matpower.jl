@@ -307,7 +307,7 @@ function _mp_cost_data(cost_row)
     if model == 1
         nr_parameters = ncost*2
     elseif model == 2
-       nr_parameters = ncost
+        nr_parameters = ncost
     end
 
     cost_data = Dict(
