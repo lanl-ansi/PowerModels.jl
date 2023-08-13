@@ -1,8 +1,5 @@
 % Case to test adding data to matpower file
-% tests refrence bus detection
-% tests basic ac and hvdc modeling
-% tests when gencost is present but not dclinecost
-% quadratic objective function
+% Test of adding data needed for oltc, pst formulations
 
 function mpc = case3
 mpc.version = '2';
