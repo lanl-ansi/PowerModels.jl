@@ -155,7 +155,15 @@ function constraint_ohms_y_pst_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_
     JuMP.@constraint(pm.model, p_to == -b*(va_to - va_fr + ta))
 end
 
+""" Alias for constraint_ohms_y_pst_from"""
+function constraint_ohms_y_oltc_pst_from(pm::AbstractDCPModel, i::Int; nw::Int=nw_id_default)
+    constraint_ohms_y_pst_from(pm, i; nw=nw)
+end
 
+""" Alias for constraint_ohms_y_pst_to"""
+function constraint_ohms_y_oltc_pst_to(pm::AbstractDCPModel, i::Int; nw::Int=nw_id_default)
+    constraint_ohms_y_pst_to(pm, i; nw=nw)
+end
 
 ""
 function constraint_switch_state_closed(pm::AbstractDCPModel, n::Int, f_bus, t_bus)
