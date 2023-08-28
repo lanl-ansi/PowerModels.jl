@@ -157,7 +157,7 @@ end
 
 
     @testset "5-bus case solution with duals" begin
-        result = run_dc_opf("../test/data/matpower/case5.m", nlp_solver, setting = Dict("output" => Dict("branch_flows" => true, "duals" => true)))
+        result = run_dc_opf("../test/data/matpower/case5.m", nlp_solver, setting = Dict("output" => Dict("duals" => true)))
         result_base = deepcopy(result)
 
         PowerModels.make_mixed_units!(result["solution"])

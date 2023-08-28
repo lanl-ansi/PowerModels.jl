@@ -93,7 +93,7 @@ end
     #=
     # numerical issues with ipopt, likely div. by zero issue in jacobian
     @testset "5-bus case with hvdc line" begin
-        result = run_pf("../test/data/matpower/case5_dc.m", ACRPowerModel, nlp_solver, setting = Dict("output" => Dict("branch_flows" => true)))
+        result = run_pf("../test/data/matpower/case5_dc.m", ACRPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 0; atol = 1e-2)
