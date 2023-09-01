@@ -69,7 +69,7 @@ end
 
     @testset "jump model objective type" begin
         pm = instantiate_model(data, ACPPowerModel, build_opf)
-        @test JuMP.objective_function(pm.model) isa JuMP.NonlinearExpr{JuMP.VariableRef}
+        @test JuMP.objective_function(pm.model) isa JuMP.NonlinearExpr
     end
 
     @testset "opf objective" begin
