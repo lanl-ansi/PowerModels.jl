@@ -123,22 +123,6 @@ function objective_min_fuel_and_flow_cost_polynomial(pm::AbstractPowerModel; kwa
     end
 end
 
-"""
-    _pow(x, d::Int)
-
-Compute `x^d` with special case handling for `d == 0` and `d == 1` to avoid
-JuMP's default implementation which returns a quadratic for `d in {0, 1, 2}`.
-"""
-function _pow(x, d::Int)
-    if d == 0
-        return 1.0
-    elseif d == 1
-        return x
-    else
-        return x^d
-    end
-end
-
 ""
 function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractPowerModel; report::Bool=true)
     gen_cost = Dict()
@@ -149,7 +133,7 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractPowerM
             pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n) )
             gen_cost[(n, i)] = JuMP.@expression(
                 pm.model,
-                sum(v * _pow(pg, d-1) for (d, v) in enumerate(reverse(gen["cost"]))),
+                sum(v * pg^(d-1) for (d, v) in enumerate(reverse(gen["cost"]))),
             )
         end
 
@@ -158,7 +142,7 @@ function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractPowerM
             p_dc = sum( var(pm, n, :p_dc, from_idx[i])[c] for c in conductor_ids(pm, n) )
             dcline_cost[(n, i)] = JuMP.@expression(
                 pm.model,
-                sum(v * _pow(p_dc, d-1) for (d, v) in enumerate(reverse(dcline["cost"]))),
+                sum(v * p_dc^(d-1) for (d, v) in enumerate(reverse(dcline["cost"]))),
             )
         end
     end
@@ -279,7 +263,7 @@ function _objective_min_fuel_and_flow_cost_polynomial_nl(pm::AbstractPowerModel;
             pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n))
             gen_cost[(n,i)] = JuMP.@expression(
                 pm.model,
-                sum(v * _pow(pg, d-1) for (d, v) in enumerate(reverse(gen["cost"]))),
+                sum(v * pg^(d-1) for (d, v) in enumerate(reverse(gen["cost"]))),
             )
         end
 
@@ -289,7 +273,7 @@ function _objective_min_fuel_and_flow_cost_polynomial_nl(pm::AbstractPowerModel;
             p_dc = sum( var(pm, n, :p_dc, from_idx[i])[c] for c in conductor_ids(pm, n))
             dcline_cost[(n,i)] = JuMP.@expression(
                 pm.model,
-                sum(v * _pow(p_dc, d-1) for (d, v) in enumerate(reverse(dcline["cost"]))),
+                sum(v * p_dc^(d-1) for (d, v) in enumerate(reverse(dcline["cost"]))),
             )
         end
     end
@@ -322,7 +306,7 @@ function _objective_min_fuel_cost_polynomial_linquad(pm::AbstractPowerModel; rep
             pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n) )
             gen_cost[(n, i)] = JuMP.@expression(
                 pm.model,
-                sum(v * _pow(pg, d-1) for (d, v) in enumerate(reverse(gen["cost"]))),
+                sum(v * pg^(d-1) for (d, v) in enumerate(reverse(gen["cost"]))),
             )
         end
     end
@@ -343,7 +327,7 @@ function _objective_min_fuel_cost_polynomial_nl(pm::AbstractPowerModel; report::
             pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n))
             gen_cost[(n,i)] = JuMP.@expression(
                 pm.model,
-                sum(v * _pow(pg, d-1) for (d, v) in enumerate(reverse(gen["cost"]))),
+                sum(v * pg^(d-1) for (d, v) in enumerate(reverse(gen["cost"]))),
             )
         end
     end
