@@ -1,5 +1,5 @@
 import Pkg
-Pkg.pkg"add JuMP#master"
+Pkg.pkg"add JuMP#od/fix-ma-zero"
 
 using PowerModels
 import InfrastructureModels
