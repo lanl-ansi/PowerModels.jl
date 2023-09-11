@@ -18,11 +18,11 @@ the non-basic PowerModels routines.
 """
 function make_basic_network(data::Dict{String,<:Any})
     if _IM.ismultiinfrastructure(data)
-        @error(_LOGGER, "make_basic_network does not support multiinfrastructure data")
+        @error("make_basic_network does not support multiinfrastructure data")
     end
 
     if _IM.ismultinetwork(data)
-        @error(_LOGGER, "make_basic_network does not support multinetwork data")
+        @error("make_basic_network does not support multinetwork data")
     end
 
     # make a copy of data so that modifications do not change the input data
@@ -31,7 +31,7 @@ function make_basic_network(data::Dict{String,<:Any})
     # TODO transform PWL costs into linear costs
     for (i,gen) in data["gen"]
         if get(gen, "cost_model", 2) != 2
-            @error(_LOGGER, "make_basic_network only supports network data with polynomial cost functions, generator $(i) has a piecewise linear cost function")
+            @error("make_basic_network only supports network data with polynomial cost functions, generator $(i) has a piecewise linear cost function")
         end
     end
     standardize_cost_terms!(data, order=2)
@@ -39,7 +39,7 @@ function make_basic_network(data::Dict{String,<:Any})
     # set conductance to zero on all shunts
     for (i,shunt) in data["shunt"]
         if !isapprox(shunt["gs"], 0.0)
-            @warn(_LOGGER, "setting conductance on shunt $(i) from $(shunt["gs"]) to 0.0")
+            @warn("setting conductance on shunt $(i) from $(shunt["gs"]) to 0.0")
             shunt["gs"] = 0.0
         end
     end
@@ -50,7 +50,7 @@ function make_basic_network(data::Dict{String,<:Any})
     # set phase shift to zero on all branches
     for (i,branch) in data["branch"]
         if !isapprox(branch["shift"], 0.0)
-            @warn(_LOGGER, "setting phase shift on branch $(i) from $(branch["shift"]) to 0.0")
+            @warn("setting phase shift on branch $(i) from $(branch["shift"]) to 0.0")
             branch["shift"] = 0.0
         end
     end
@@ -69,7 +69,7 @@ function make_basic_network(data::Dict{String,<:Any})
         end
     end
     if length(ref_buses) > 1
-        @warn(_LOGGER, "network data specifies $(length(ref_buses)) reference buses")
+        @warn("network data specifies $(length(ref_buses)) reference buses")
         for ref_bus_id in ref_buses
             data["bus"]["$(ref_bus_id)"]["bus_type"] = 2
         end
@@ -81,7 +81,7 @@ function make_basic_network(data::Dict{String,<:Any})
         gen_bus = gen["gen_bus"]
         ref_bus = data["bus"]["$(gen_bus)"]
         ref_bus["bus_type"] = 3
-        @warn(_LOGGER, "setting bus $(gen_bus) as reference based on generator $(gen["index"])")
+        @warn("setting bus $(gen_bus) as reference based on generator $(gen["index"])")
     end
 
     # remove switches by merging buses
@@ -103,7 +103,7 @@ function make_basic_network(data::Dict{String,<:Any})
         status_inactive = pm_component_status_inactive[comp_key]
         data[comp_key] = _filter_inactive_components(data[comp_key], status_key=status_key, status_inactive_value=status_inactive)
         if length(data[comp_key]) < comp_count
-            @info(_LOGGER, "removed $(comp_count - length(data[comp_key])) inactive $(comp_key) components")
+            @info("removed $(comp_count - length(data[comp_key])) inactive $(comp_key) components")
         end
     end
 
@@ -170,7 +170,7 @@ values in rectangular coordinates as they appear in the network data.
 """
 function calc_basic_bus_voltage(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
-        @warn(_LOGGER, "calc_basic_bus_voltage requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        @warn("calc_basic_bus_voltage requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     b = [bus for (i,bus) in data["bus"] if bus["bus_type"] != 4]
@@ -185,7 +185,7 @@ injections as they appear in the network data.
 """
 function calc_basic_bus_injection(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
-        @warn(_LOGGER, "calc_basic_bus_injection requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        @warn("calc_basic_bus_injection requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     bi_dict = calc_bus_injection(data)
@@ -200,7 +200,7 @@ series impedances.
 """
 function calc_basic_branch_series_impedance(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
-        @warn(_LOGGER, "calc_basic_branch_series_impedance requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        @warn("calc_basic_branch_series_impedance requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     b = [branch for (i,branch) in data["branch"] if branch["br_status"] != 0]
@@ -218,7 +218,7 @@ indicate _to_ bus.
 """
 function calc_basic_incidence_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
-        @warn(_LOGGER, "calc_basic_incidence_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        @warn("calc_basic_incidence_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     I = Int[]
@@ -241,7 +241,7 @@ matrix with one row and column for each bus in the network.
 """
 function calc_basic_admittance_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
-        @warn(_LOGGER, "calc_basic_admittance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        @warn("calc_basic_admittance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     return calc_admittance_matrix(data).matrix
@@ -256,7 +256,7 @@ matrix that only considers the branch series impedance.
 """
 function calc_basic_susceptance_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
-        @warn(_LOGGER, "calc_basic_susceptance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        @warn("calc_basic_susceptance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     return calc_susceptance_matrix(data).matrix
@@ -271,7 +271,7 @@ active power flow values for each branch.
 """
 function calc_basic_branch_susceptance_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
-        @warn(_LOGGER, "calc_basic_branch_susceptance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        @warn("calc_basic_branch_susceptance_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     I = Int[]
@@ -295,7 +295,7 @@ phase angles by solving a dc power flow.
 """
 function compute_basic_dc_pf(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
-        @warn(_LOGGER, "compute_basic_dc_pf requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        @warn("compute_basic_dc_pf requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     num_bus = length(data["bus"])
@@ -330,7 +330,7 @@ active power flow values on each branch.
 """
 function calc_basic_ptdf_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
-        @warn(_LOGGER, "calc_basic_ptdf_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        @warn("calc_basic_ptdf_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     b_inv = calc_susceptance_matrix_inv(data).matrix
@@ -348,11 +348,11 @@ matrix reflecting that branch.
 """
 function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
     if !get(data, "basic_network", false)
-        @warn(_LOGGER, "calc_basic_ptdf_row requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        @warn("calc_basic_ptdf_row requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     if branch_index < 1 || branch_index > length(data["branch"])
-        @error(_LOGGER, "branch index of $(branch_index) is out of bounds, valid values are $(1)-$(length(data["branch"]))")
+        @error("branch index of $(branch_index) is out of bounds, valid values are $(1)-$(length(data["branch"]))")
     end
     branch = data["branch"]["$(branch_index)"]
     g,b = calc_branch_y(branch)
@@ -381,7 +381,7 @@ while voltage values are ordered by voltage angle and then voltage magnitude.
 """
 function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
     if !get(data, "basic_network", false)
-        @warn(_LOGGER, "calc_basic_jacobian_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        @warn("calc_basic_jacobian_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
     num_bus = length(data["bus"])

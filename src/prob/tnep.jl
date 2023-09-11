@@ -76,7 +76,7 @@ end
 ""
 function _ref_add_ne_branch!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
     if !haskey(ref, :ne_branch)
-        error(_LOGGER, "required ne_branch data not found")
+        error("required ne_branch data not found")
     end
 
     ref[:ne_branch] = Dict(x for x in ref[:ne_branch] if (x.second["br_status"] == 1 && x.second["f_bus"] in keys(ref[:bus]) && x.second["t_bus"] in keys(ref[:bus])))

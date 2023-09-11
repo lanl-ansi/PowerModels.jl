@@ -15,7 +15,7 @@ function solve_opf_branch_power_cuts(file::String, model_type::Type, optimizer; 
 end
 
 function solve_opf_branch_power_cuts!(data::Dict{String,<:Any}, model_type::Type, optimizer; solution_processors=[], max_iter::Int=100, time_limit::Float64=3600.0)
-    @info(_LOGGER, "maximum cut iterations set to value of $max_iter")
+    @info("maximum cut iterations set to value of $max_iter")
 
     for (i,branch) in data["branch"]
         if haskey(branch, "rate_a")
@@ -52,7 +52,7 @@ function solve_opf_branch_power_cuts!(data::Dict{String,<:Any}, model_type::Type
                 #println(branch["index"], rate_a, mva_fr, mva_to)
 
                 if mva_fr > rate_a || mva_to > rate_a
-                    @info(_LOGGER, "activate rate_a on branch $(branch["index"])")
+                    @info("activate rate_a on branch $(branch["index"])")
 
                     branch["rate_a"] = branch["rate_a_inactive"]
                     delete!(branch, "rate_a_inactive")
@@ -73,7 +73,7 @@ function solve_opf_branch_power_cuts!(data::Dict{String,<:Any}, model_type::Type
 
             #print_summary(result["solution"])
         else
-            @info(_LOGGER, "flow cuts converged in $iteration iterations")
+            @info("flow cuts converged in $iteration iterations")
         end
     end
 
@@ -102,7 +102,7 @@ function solve_opf_ptdf_branch_power_cuts(file::String, optimizer; kwargs...)
 end
 
 function solve_opf_ptdf_branch_power_cuts!(data::Dict{String,<:Any}, optimizer; max_iter::Int=100, time_limit::Float64=3600.0, full_inverse=false)
-    @info(_LOGGER, "maximum cut iterations set to value of $max_iter")
+    @info("maximum cut iterations set to value of $max_iter")
 
     for (i,branch) in data["branch"]
         if haskey(branch, "rate_a")
@@ -150,7 +150,7 @@ function solve_opf_ptdf_branch_power_cuts!(data::Dict{String,<:Any}, optimizer; 
                 end
 
                 if mva_fr > rate_a || mva_to > rate_a
-                    @info(_LOGGER, "activate rate_a on branch $(branch["index"])")
+                    @info("activate rate_a on branch $(branch["index"])")
 
                     # update data model
                     branch["rate_a"] = branch["rate_a_inactive"]
@@ -183,7 +183,7 @@ function solve_opf_ptdf_branch_power_cuts!(data::Dict{String,<:Any}, optimizer; 
 
             #print_summary(result["solution"])
         else
-            @info(_LOGGER, "flow cuts converged in $iteration iterations")
+            @info("flow cuts converged in $iteration iterations")
         end
     end
 

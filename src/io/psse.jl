@@ -43,7 +43,7 @@ function _get_bus_value(bus_i, field, pm_data)
         end
     end
 
-    @warn(_LOGGER, "Could not find bus $bus_i, returning 0 for field $field")
+    @warn("Could not find bus $bus_i, returning 0 for field $field")
     return 0
 end
 
@@ -112,14 +112,14 @@ function _import_remaining_comps!(data_out::Dict, data_in::Dict; exclude=[])
                         end
                         comps_out["$(n)"] = comp_out
                     else
-                        error(_LOGGER, "psse data parsing error, please post an issue")
+                        error("psse data parsing error, please post an issue")
                     end
                 end
             elseif isa(v, Dict)
                 comps_out = Dict{String,Any}()
                 _import_remaining_keys!(comps_out, v)
             else
-                error(_LOGGER, "psse data parsing error, please post an issue")
+                error("psse data parsing error, please post an issue")
             end
 
             data_out[lowercase(comp_class)] = comps_out
@@ -136,7 +136,7 @@ function _import_remaining_keys!(comp_dest::Dict, comp_src::Dict; exclude=[])
                 comp_dest[key] = v
             else
                 if key != "index"
-                    warn(_LOGGER, "duplicate key $(key), please post an issue")
+                    warn("duplicate key $(key), please post an issue")
                 end
             end
         end
@@ -339,7 +339,7 @@ function _psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     end
 
     if haskey(pti_data, "SWITCHED SHUNT")
-        @info(_LOGGER, "Switched shunt converted to fixed shunt, with default value gs=0.0")
+        @info("Switched shunt converted to fixed shunt, with default value gs=0.0")
 
         for shunt in pti_data["SWITCHED SHUNT"]
             sub_data = Dict{String,Any}()
@@ -381,17 +381,17 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
         for transformer in pti_data["TRANSFORMER"]
 
             if !(transformer["CZ"] in [1,2,3])
-                @warn(_LOGGER, "transformer CZ value outside of valid bounds assuming the default value of 1.  Given $(transformer["CZ"]), should be 1, 2 or 3")
+                @warn("transformer CZ value outside of valid bounds assuming the default value of 1.  Given $(transformer["CZ"]), should be 1, 2 or 3")
                 transformer["CZ"] = 1
             end
 
             if !(transformer["CW"] in [1,2,3])
-                @warn(_LOGGER, "transformer CW value outside of valid bounds assuming the default value of 1.  Given $(transformer["CW"]), should be 1, 2 or 3")
+                @warn("transformer CW value outside of valid bounds assuming the default value of 1.  Given $(transformer["CW"]), should be 1, 2 or 3")
                 transformer["CW"] = 1
             end
 
             if !(transformer["CM"] in [1,2])
-                @warn(_LOGGER, "transformer CM value outside of valid bounds assuming the default value of 1.  Given $(transformer["CM"]), should be 1 or 2")
+                @warn("transformer CM value outside of valid bounds assuming the default value of 1.  Given $(transformer["CM"]), should be 1 or 2")
                 transformer["CM"] = 1
             end
 
@@ -645,7 +645,7 @@ function _psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
     if haskey(pti_data, "TWO-TERMINAL DC")
         for dcline in pti_data["TWO-TERMINAL DC"]
-            @info(_LOGGER, "Two-Terminal DC lines are supported via a simple *lossless* dc line model approximated by two generators.")
+            @info("Two-Terminal DC lines are supported via a simple *lossless* dc line model approximated by two generators.")
             sub_data = Dict{String,Any}()
 
             # Unit conversions?
@@ -672,7 +672,7 @@ function _psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     push!(anmn, dcline[key])
                 else
                     push!(anmn, 0)
-                    @warn(_LOGGER, "$key outside reasonable limits, setting to 0 degress")
+                    @warn("$key outside reasonable limits, setting to 0 degress")
                 end
             end
 
@@ -704,7 +704,7 @@ function _psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     end
 
     if haskey(pti_data, "VOLTAGE SOURCE CONVERTER")
-        @info(_LOGGER, "VSC-HVDC lines are supported via a dc line model approximated by two generators and an associated loss.")
+        @info("VSC-HVDC lines are supported via a dc line model approximated by two generators and an associated loss.")
         for dcline in pti_data["VOLTAGE SOURCE CONVERTER"]
             # Converter buses : is the distinction between ac and dc side meaningful?
             dcside, acside = dcline["CONVERTER BUSES"]
@@ -861,7 +861,7 @@ end
 Parses directly from iostream
 """
 function parse_psse(io::IO; kwargs...)::Dict
-    @info(_LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
+    @info("The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
     pti_data = parse_pti(io)
     pm = _pti_to_powermodels!(pti_data; kwargs...)
     return pm

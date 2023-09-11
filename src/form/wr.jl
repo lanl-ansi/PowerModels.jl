@@ -539,7 +539,7 @@ end
 
 ""
 function variable_ne_branch_voltage(pm::AbstractQCWRModel; kwargs...)
-    @error(_LOGGER, "variable_ne_branch_voltage is not yet supported for QC formulations, open an issue if you would like this feature.")
+    @error("variable_ne_branch_voltage is not yet supported for QC formulations, open an issue if you would like this feature.")
 end
 
 ""

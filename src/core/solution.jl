@@ -20,7 +20,7 @@ end
 
 "converts the solution data into the data model's standard space, polar voltages and rectangular power"
 function sol_data_model!(pm::AbstractPowerModel, solution::Dict)
-    @warn(_LOGGER, "sol_data_model! not defined for power model of type $(typeof(pm))")
+    @warn("sol_data_model! not defined for power model of type $(typeof(pm))")
 end
 
 

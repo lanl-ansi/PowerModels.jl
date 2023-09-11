@@ -35,22 +35,22 @@ function solve_model(data::Dict{String,<:Any}, model_type::Type, optimizer, buil
     if multinetwork != _IM.ismultinetwork(data)
         model_requirement = multinetwork ? "multi-network" : "single-network"
         data_type = _IM.ismultinetwork(data) ? "multi-network" : "single-network"
-        @error(_LOGGER, "attempted to build a $(model_requirement) model with $(data_type) data")
+        @error("attempted to build a $(model_requirement) model with $(data_type) data")
     end
 
     if multiconductor != ismulticonductor(data)
         model_requirement = multiconductor ? "multi-conductor" : "single-conductor"
         data_type = ismulticonductor(data) ? "multi-conductor" : "single-conductor"
-        @error(_LOGGER, "attempted to build a $(model_requirement) model with $(data_type) data")
+        @error("attempted to build a $(model_requirement) model with $(data_type) data")
     end
 
     start_time = time()
     pm = instantiate_model(data, model_type, build_method; ref_extensions=ref_extensions, kwargs...)
-    @debug(_LOGGER, "pm model build time: $(time() - start_time)")
+    @debug("pm model build time: $(time() - start_time)")
 
     start_time = time()
     result = optimize_model!(pm, relax_integrality=relax_integrality, optimizer=optimizer, solution_processors=solution_processors)
-    @debug(_LOGGER, "pm model solve and solution time: $(time() - start_time)")
+    @debug("pm model solve and solution time: $(time() - start_time)")
 
     return result
 end
@@ -194,7 +194,7 @@ function ref_add_core!(ref::Dict{Symbol,Any})
         nw_ref[:ref_buses] = ref_buses
 
         if length(ref_buses) > 1
-            @warn(_LOGGER, "multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
+            @warn("multiple reference buses found, $(keys(ref_buses)), this can cause infeasibility if they are in the same connected component")
         end
 
         ### aggregate info for pairs of connected buses ###
@@ -214,7 +214,7 @@ function _check_missing_keys(dict, keys, type)
         end
     end
     if length(missing) > 0
-        error(_LOGGER, "the formulation $(type) requires the following varible(s) $(keys) but the $(missing) variable(s) were not found in the model")
+        error("the formulation $(type) requires the following varible(s) $(keys) but the $(missing) variable(s) were not found in the model")
     end
 end
 

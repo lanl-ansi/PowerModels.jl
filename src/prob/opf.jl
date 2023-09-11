@@ -172,7 +172,7 @@ end
 
 ""
 function build_opf_ptdf(pm::AbstractPowerModel)
-    @error(_LOGGER, "build_opf_ptdf is only valid for DCPPowerModels")
+    @error("build_opf_ptdf is only valid for DCPPowerModels")
 end
 
 ""

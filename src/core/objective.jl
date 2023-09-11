@@ -23,7 +23,7 @@ function check_cost_models(pm::AbstractPowerModel)
     end
 
     if gen_model != dcline_model
-        @error(_LOGGER, "generator and dcline cost models are inconsistent, the generator model is $(gen_model) however dcline model $(dcline_model)")
+        @error("generator and dcline cost models are inconsistent, the generator model is $(gen_model) however dcline model $(dcline_model)")
     end
 
     return gen_model
@@ -43,11 +43,11 @@ function check_gen_cost_models(pm::AbstractPowerModel)
                     model = gen["model"]
                 else
                     if gen["model"] != model
-                        @error(_LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
+                        @error("cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
                     end
                 end
             else
-                @error(_LOGGER, "no cost given for generator $(i)")
+                @error("no cost given for generator $(i)")
             end
         end
     end
@@ -69,11 +69,11 @@ function check_dcline_cost_models(pm::AbstractPowerModel)
                     model = dcline["model"]
                 else
                     if dcline["model"] != model
-                        @error(_LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
+                        @error("cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
                     end
                 end
             else
-                @error(_LOGGER, "no cost given for dcline $(i)")
+                @error("no cost given for dcline $(i)")
             end
         end
     end
@@ -91,7 +91,7 @@ function objective_min_fuel_and_flow_cost(pm::AbstractPowerModel; kwargs...)
     elseif model == 2
         return objective_min_fuel_and_flow_cost_polynomial(pm; kwargs...)
     else
-        @error(_LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
+        @error("Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
 
 end
@@ -106,7 +106,7 @@ function objective_min_fuel_cost(pm::AbstractPowerModel; kwargs...)
     elseif model == 2
         return objective_min_fuel_cost_polynomial(pm; kwargs...)
     else
-        @error(_LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
+        @error("Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
     end
 
 end
@@ -401,7 +401,7 @@ function calc_pwl_points(ncost::Int, cost::Vector{<:Real}, pmin::Real, pmax::Rea
     @assert pmin <= pmax
 
     if isinf(pmin) || isinf(pmax)
-        @error(_LOGGER, "a bounded operating range is required for modeling pwl costs.  Given active power range in $(pmin) - $(pmax)")
+        @error("a bounded operating range is required for modeling pwl costs.  Given active power range in $(pmin) - $(pmax)")
     end
 
     points = []
