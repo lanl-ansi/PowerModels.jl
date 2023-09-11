@@ -132,7 +132,7 @@ function _parse_matpower_string(data_string::String)
     if func_name != nothing
         case["name"] = func_name
     else
-        Memento.warn(_LOGGER, string("no case name found in matpower file.  The file seems to be missing \"function mpc = ...\""))
+        @warn(_LOGGER, string("no case name found in matpower file.  The file seems to be missing \"function mpc = ...\""))
         case["name"] = "no_name_found"
     end
 
@@ -140,14 +140,14 @@ function _parse_matpower_string(data_string::String)
     if haskey(matlab_data, "mpc.version")
         case["source_version"] = matlab_data["mpc.version"]
     else
-        Memento.warn(_LOGGER, string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
+        @warn(_LOGGER, string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
         case["source_version"] = "0.0.0+"
     end
 
     if haskey(matlab_data, "mpc.baseMVA")
         case["baseMVA"] = matlab_data["mpc.baseMVA"]
     else
-        Memento.warn(_LOGGER, string("no baseMVA found in matpower file.  The file seems to be missing \"mpc.baseMVA = ...\""))
+        @warn(_LOGGER, string("no baseMVA found in matpower file.  The file seems to be missing \"mpc.baseMVA = ...\""))
         case["baseMVA"] = 1.0
     end
 
@@ -162,7 +162,7 @@ function _parse_matpower_string(data_string::String)
         end
         case["bus"] = buses
     else
-        Memento.error(string("no bus table found in matpower file.  The file seems to be missing \"mpc.bus = [...];\""))
+        @error(string("no bus table found in matpower file.  The file seems to be missing \"mpc.bus = [...];\""))
     end
 
     if haskey(matlab_data, "mpc.gen")
@@ -175,7 +175,7 @@ function _parse_matpower_string(data_string::String)
         end
         case["gen"] = gens
     else
-        Memento.error(string("no gen table found in matpower file.  The file seems to be missing \"mpc.gen = [...];\""))
+        @error(string("no gen table found in matpower file.  The file seems to be missing \"mpc.gen = [...];\""))
     end
 
     if haskey(matlab_data, "mpc.branch")
@@ -188,7 +188,7 @@ function _parse_matpower_string(data_string::String)
         end
         case["branch"] = branches
     else
-        Memento.error(string("no branch table found in matpower file.  The file seems to be missing \"mpc.branch = [...];\""))
+        @error(string("no branch table found in matpower file.  The file seems to be missing \"mpc.branch = [...];\""))
     end
 
     if haskey(matlab_data, "mpc.dcline")
@@ -235,7 +235,7 @@ function _parse_matpower_string(data_string::String)
         case["bus_name"] = bus_names
 
         if length(case["bus_name"]) != length(case["bus"])
-            Memento.error(_LOGGER, "incorrect Matpower file, the number of bus names ($(length(case["bus_name"]))) is inconsistent with the number of buses ($(length(case["bus"]))).\n")
+            @error(_LOGGER, "incorrect Matpower file, the number of bus names ($(length(case["bus_name"]))) is inconsistent with the number of buses ($(length(case["bus"]))).\n")
         end
     end
 
@@ -250,7 +250,7 @@ function _parse_matpower_string(data_string::String)
         case["gencost"] = gencost
 
         if length(case["gencost"]) != length(case["gen"]) && length(case["gencost"]) != 2*length(case["gen"])
-            Memento.error(_LOGGER, "incorrect Matpower file, the number of generator cost functions ($(length(case["gencost"]))) is inconsistent with the number of generators ($(length(case["gen"]))).\n")
+            @error(_LOGGER, "incorrect Matpower file, the number of generator cost functions ($(length(case["gencost"]))) is inconsistent with the number of generators ($(length(case["gen"]))).\n")
         end
     end
 
@@ -265,7 +265,7 @@ function _parse_matpower_string(data_string::String)
         case["dclinecost"] = dclinecosts
 
         if length(case["dclinecost"]) != length(case["dcline"])
-            Memento.error(_LOGGER, "incorrect Matpower file, the number of dcline cost functions ($(length(case["dclinecost"]))) is inconsistent with the number of dclines ($(length(case["dcline"]))).\n")
+            @error(_LOGGER, "incorrect Matpower file, the number of dcline cost functions ($(length(case["dclinecost"]))) is inconsistent with the number of dclines ($(length(case["dcline"]))).\n")
         end
     end
 
@@ -287,10 +287,10 @@ function _parse_matpower_string(data_string::String)
                     push!(tbl, row_data)
                 end
                 case[case_name] = tbl
-                Memento.info(_LOGGER, "extending matpower format with data: $(case_name) $(length(tbl))x$(length(tbl[1])-1)")
+                @info(_LOGGER, "extending matpower format with data: $(case_name) $(length(tbl))x$(length(tbl[1])-1)")
             else
                 case[case_name] = value
-                Memento.info(_LOGGER, "extending matpower format with constant data: $(case_name)")
+                @info(_LOGGER, "extending matpower format with constant data: $(case_name)")
             end
         end
     end
@@ -323,7 +323,7 @@ function _mp_cost_data(cost_row)
     cost_values = [_IM.check_type(Float64, x) for x in cost_row[5:length(cost_row)]]
     if cost_data["model"] == 1:
         if length(cost_values)%2 != 0
-            Memento.error(_LOGGER, "incorrect matpower file, odd number of pwl cost function values")
+            @error(_LOGGER, "incorrect matpower file, odd number of pwl cost function values")
         end
         for i in 0:(length(cost_values)/2-1)
             p_idx = 1+2*i
@@ -529,7 +529,7 @@ end
 "adds dcline costs, if gen costs exist"
 function _add_dcline_costs!(data::Dict{String,Any})
     if length(data["gencost"]) > 0 && length(data["dclinecost"]) <= 0 && length(data["dcline"]) > 0
-        Memento.warn(_LOGGER, "added zero cost function data for dclines")
+        @warn(_LOGGER, "added zero cost function data for dclines")
         model = data["gencost"][1]["model"]
         if model == 1
             for (i, dcline) in enumerate(data["dcline"])
@@ -568,10 +568,10 @@ function _merge_cost_data!(data::Dict{String,Any})
 
         if length(gen) != length(gencost)
             if length(gencost) > length(gen)
-                Memento.warn(_LOGGER, "The last $(length(gencost) - length(gen)) generator cost records will be ignored due to too few generator records.")
+                @warn(_LOGGER, "The last $(length(gencost) - length(gen)) generator cost records will be ignored due to too few generator records.")
                 gencost = gencost[1:length(gen)]
             else
-                Memento.warn(_LOGGER, "The number of generators ($(length(gen))) does not match the number of generator cost records ($(length(gencost))).")
+                @warn(_LOGGER, "The number of generators ($(length(gen))) does not match the number of generator cost records ($(length(gencost))).")
             end
         end
 
@@ -594,7 +594,7 @@ function _merge_cost_data!(data::Dict{String,Any})
         dclinecost = data["dclinecost"]
 
         if length(dcline) != length(dclinecost)
-            Memento.warn(_LOGGER, "The number of dclines ($(length(dcline))) does not match the number of dcline cost records ($(length(dclinecost))).")
+            @warn(_LOGGER, "The number of dclines ($(length(dcline))) does not match the number of dcline cost records ($(length(dclinecost))).")
         end
 
         for (i, dclc) in enumerate(dclinecost)
@@ -642,10 +642,10 @@ function _merge_generic_data!(data::Dict{String,Any})
                     push!(key_to_delete, k)
 
                     if length(mp_matrix) != length(v)
-                        Memento.error(_LOGGER, "failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(k)\" because they do not have the same number of rows, $(length(mp_matrix)) and $(length(v)) respectively.")
+                        @error(_LOGGER, "failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(k)\" because they do not have the same number of rows, $(length(mp_matrix)) and $(length(v)) respectively.")
                     end
 
-                    Memento.info(_LOGGER, "extending matpower format by appending matrix \"$(k)\" in to \"$(mp_name)\"")
+                    @info(_LOGGER, "extending matpower format by appending matrix \"$(k)\" in to \"$(mp_name)\"")
 
                     for (i, row) in enumerate(mp_matrix)
                         merge_row = v[i]
@@ -654,7 +654,7 @@ function _merge_generic_data!(data::Dict{String,Any})
                         delete!(merge_row, "source_id")
                         for key in keys(merge_row)
                             if haskey(row, key)
-                                Memento.error(_LOGGER, "failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(k)\" because they both share \"$(key)\" as a column name.")
+                                @error(_LOGGER, "failed to extend the matpower matrix \"$(mp_name)\" with the matrix \"$(k)\" because they both share \"$(key)\" as a column name.")
                             end
                             row[key] = merge_row[key]
                         end
@@ -691,7 +691,7 @@ end
 function _check_keys(data, keys)
     for key in keys
         if haskey(data, key)
-            Memento.error(_LOGGER, "attempting to overwrite value of $(key) in PowerModels data,\n$(data)")
+            @error(_LOGGER, "attempting to overwrite value of $(key) in PowerModels data,\n$(data)")
         end
     end
 end
@@ -708,7 +708,7 @@ end
 "Export power network data in the matpower format"
 function export_matpower(io::IO, data::Dict{String,Any})
     if _IM.ismultinetwork(data)
-        Memento.error(_LOGGER, "export_matpower does not yet support multinetwork data")
+        @error(_LOGGER, "export_matpower does not yet support multinetwork data")
     end
 
     data = deepcopy(data)
@@ -837,7 +837,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     i = 1
     for (idx,gen) in sort(collect(generators), by=(x) -> x.first)
         if idx != gen["index"]
-            Memento.warn(_LOGGER, "The index of the generator does not match the matpower assigned index. Any data that uses generator indexes for reference is corrupted.");
+            @warn(_LOGGER, "The index of the generator does not match the matpower assigned index. Any data that uses generator indexes for reference is corrupted.");
         end
         println(io, 
             "\t", gen["gen_bus"],
@@ -880,7 +880,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
         i = 1
         for (idx,strg) in sort(collect(storage), by=(x) -> x.first)
             if idx != strg["index"]
-                Memento.warn(_LOGGER, "The index of the storage does not match the matpower assigned index. Any data that uses storage indexes for reference is corrupted.");
+                @warn(_LOGGER, "The index of the storage does not match the matpower assigned index. Any data that uses storage indexes for reference is corrupted.");
             end
             println(io, "\t", strg["storage_bus"],
                 "\t", _get_default(strg, "ps"),
@@ -914,7 +914,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     i = 1
     for (idx,branch) in sort(collect(branches), by=(x) -> x.first)
         if idx != branch["index"]
-            Memento.warn(_LOGGER, "The index of the branch does not match the matpower assigned index. Any data that uses branch indexes for reference is corrupted.");
+            @warn(_LOGGER, "The index of the branch does not match the matpower assigned index. Any data that uses branch indexes for reference is corrupted.");
         end
         println(io,
             "\t", _get_default(branch, "f_bus"),
@@ -1017,7 +1017,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
         i = 1
         for (idx,branch) in sort(collect(ne_branches), by=(x) -> x.first)
             if idx != branch["index"]
-                Memento.warn(_LOGGER, "The index of the ne_branch does not match the matpower assigned index. Any data that uses branch indexes for reference is corrupted.");
+                @warn(_LOGGER, "The index of the ne_branch does not match the matpower assigned index. Any data that uses branch indexes for reference is corrupted.");
             end
             println(io,
                 "\t", branch["f_bus"],
@@ -1121,7 +1121,7 @@ function _export_extra_data(io::IO, data::Dict{String,<:Any}, component, exclude
     # check if dict of dicts
     for (key, value) in data[component]
         if !isa(value, Dict)
-            Memento.warn(_LOGGER, "skipping export $(component), does not appear to be a component Dict")
+            @warn(_LOGGER, "skipping export $(component), does not appear to be a component Dict")
             return
         end
     end
@@ -1163,7 +1163,7 @@ function _export_extra_data(io::IO, data::Dict{String,<:Any}, component, exclude
     for idx in key_order
         c = comp_dict[idx]
         if haskey(c, "index") && i != c["index"]
-            Memento.warn(_LOGGER, "The index of a component does not match the implicit matpower index. Any data that uses component indexes for reference is corrupted.")
+            @warn(_LOGGER, "The index of a component does not match the implicit matpower index. Any data that uses component indexes for reference is corrupted.")
         end
 
         for field in included_fields
@@ -1182,7 +1182,7 @@ function _export_extra_data(io::IO, data::Dict{String,<:Any}, component, exclude
                 elseif typeof(value) <: Real
                     print(io, "$(value)")
                 else
-                    Memento.warn(_LOGGER, "unable to export $(typeof(value)) value for '$(field)' in component list $(component), not a string or numeric value")
+                    @warn(_LOGGER, "unable to export $(typeof(value)) value for '$(field)' in component list $(component), not a string or numeric value")
                     print(io, "NaN")
                 end
             else
@@ -1209,7 +1209,7 @@ function _export_cost_data(io::IO, components::Dict{Int,Dict}, prefix::String)
 
         for (i,comp) in components
             if length(comp["cost"]) != ncost || comp["model"] != model
-                Memento.warn(_LOGGER, "heterogeneous cost functions will be ommited in Matpower data")
+                @warn(_LOGGER, "heterogeneous cost functions will be ommited in Matpower data")
                 return
             end
         end

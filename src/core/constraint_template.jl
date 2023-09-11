@@ -643,7 +643,7 @@ function constraint_thermal_limit_from_on_off(pm::AbstractPowerModel, i::Int; nw
     f_idx = (i, f_bus, t_bus)
 
     if !haskey(branch, "rate_a")
-        Memento.error(_LOGGER, "constraint_thermal_limit_from_on_off requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
+        @error(_LOGGER, "constraint_thermal_limit_from_on_off requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
     end
 
     constraint_thermal_limit_from_on_off(pm, nw, i, f_idx, branch["rate_a"])
@@ -658,7 +658,7 @@ function constraint_thermal_limit_to_on_off(pm::AbstractPowerModel, i::Int; nw::
     t_idx = (i, t_bus, f_bus)
 
     if !haskey(branch, "rate_a")
-        Memento.error(_LOGGER, "constraint_thermal_limit_to_on_off requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
+        @error(_LOGGER, "constraint_thermal_limit_to_on_off requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
     end
 
     constraint_thermal_limit_to_on_off(pm, nw, i, t_idx, branch["rate_a"])
@@ -673,7 +673,7 @@ function constraint_ne_thermal_limit_from(pm::AbstractPowerModel, i::Int; nw::In
     f_idx = (i, f_bus, t_bus)
 
     if !haskey(branch, "rate_a")
-        Memento.error(_LOGGER, "constraint_thermal_limit_from_ne requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
+        @error(_LOGGER, "constraint_thermal_limit_from_ne requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
     end
 
     constraint_ne_thermal_limit_from(pm, nw, i, f_idx, branch["rate_a"])
@@ -688,7 +688,7 @@ function constraint_ne_thermal_limit_to(pm::AbstractPowerModel, i::Int; nw::Int=
     t_idx = (i, t_bus, f_bus)
 
     if !haskey(branch, "rate_a")
-        Memento.error(_LOGGER, "constraint_thermal_limit_to_ne requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
+        @error(_LOGGER, "constraint_thermal_limit_to_ne requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
     end
 
     constraint_ne_thermal_limit_to(pm, nw, i, t_idx, branch["rate_a"])
@@ -895,7 +895,7 @@ function constraint_storage_state(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_
     if haskey(ref(pm, nw), :time_elapsed)
         time_elapsed = ref(pm, nw, :time_elapsed)
     else
-        Memento.warn(_LOGGER, "network data should specify time_elapsed, using 1.0 as a default")
+        @warn(_LOGGER, "network data should specify time_elapsed, using 1.0 as a default")
         time_elapsed = 1.0
     end
 
@@ -909,7 +909,7 @@ function constraint_storage_state(pm::AbstractPowerModel, i::Int, nw_1::Int, nw_
     if haskey(ref(pm, nw_2), :time_elapsed)
         time_elapsed = ref(pm, nw_2, :time_elapsed)
     else
-        Memento.warn(_LOGGER, "network $(nw_2) should specify time_elapsed, using 1.0 as a default")
+        @warn(_LOGGER, "network $(nw_2) should specify time_elapsed, using 1.0 as a default")
         time_elapsed = 1.0
     end
 
@@ -917,7 +917,7 @@ function constraint_storage_state(pm::AbstractPowerModel, i::Int, nw_1::Int, nw_
         constraint_storage_state(pm, nw_1, nw_2, i, storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
     else
         # if the storage device has status=0 in nw_1, then the stored energy variable will not exist. Initialize storage from data model instead.
-        Memento.warn(_LOGGER, "storage component $(i) was not found in network $(nw_1) while building constraint_storage_state between networks $(nw_1) and $(nw_2). Using the energy value from the storage component in network $(nw_2) instead")
+        @warn(_LOGGER, "storage component $(i) was not found in network $(nw_1) while building constraint_storage_state between networks $(nw_1) and $(nw_2). Using the energy value from the storage component in network $(nw_2) instead")
         constraint_storage_state_initial(pm, nw_2, i, storage["energy"], storage["charge_efficiency"], storage["discharge_efficiency"], time_elapsed)
     end
 end

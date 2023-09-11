@@ -23,10 +23,10 @@ Base.show(io::IO, x::AdmittanceMatrix{<:Number}) = print(io, "AdmittanceMatrix($
 "data should be a PowerModels network data model; only supports networks with exactly one reference bus"
 function calc_admittance_matrix(data::Dict{String,<:Any})
     if length(data["dcline"]) > 0
-        Memento.error(_LOGGER, "calc_admittance_matrix does not support data with dclines")
+        @error(_LOGGER, "calc_admittance_matrix does not support data with dclines")
     end
     if length(data["switch"]) > 0
-        Memento.error(_LOGGER, "calc_admittance_matrix does not support data with switches")
+        @error(_LOGGER, "calc_admittance_matrix does not support data with switches")
     end
 
     #TODO check single connected component
@@ -79,10 +79,10 @@ end
 "data should be a PowerModels network data model; only supports networks with exactly one refrence bus"
 function calc_susceptance_matrix(data::Dict{String,<:Any})
     if length(data["dcline"]) > 0
-        Memento.error(_LOGGER, "calc_susceptance_matrix does not support data with dclines")
+        @error(_LOGGER, "calc_susceptance_matrix does not support data with dclines")
     end
     if length(data["switch"]) > 0
-        Memento.error(_LOGGER, "calc_susceptance_matrix does not support data with switches")
+        @error(_LOGGER, "calc_susceptance_matrix does not support data with switches")
     end
 
     #TODO check single connected component
@@ -157,7 +157,7 @@ function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     ref_bus = reference_bus(data)
     ref_idx = sm.bus_to_idx[ref_bus["index"]]
     if !(ref_idx > 0 && ref_idx <= num_buses)
-        Memento.error(_LOGGER, "invalid ref_idx in calc_susceptance_matrix_inv")
+        @error(_LOGGER, "invalid ref_idx in calc_susceptance_matrix_inv")
     end
     S[ref_idx, :] .= 0.0
     S[:, ref_idx] .= 0.0
@@ -165,7 +165,7 @@ function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     
     F = LinearAlgebra.ldlt(Symmetric(S); check=false)
     if !LinearAlgebra.issuccess(F)
-        Memento.error(_LOGGER, "Failed factorization in calc_susceptance_matrix_inv")
+        @error(_LOGGER, "Failed factorization in calc_susceptance_matrix_inv")
     end
     M = F \ Matrix(1.0I, num_buses, num_buses)
     M[ref_idx, :] .= 0.0  # zero-out the row of the slack bus
@@ -178,7 +178,7 @@ function calc_admittance_matrix_inv(am::AdmittanceMatrix, ref_idx::Int)
     num_buses = length(am.idx_to_bus)
 
     if !(ref_idx > 0 && ref_idx <= num_buses)
-        Memento.error(_LOGGER, "invalid ref_idx in calc_admittance_matrix_inv")
+        @error(_LOGGER, "invalid ref_idx in calc_admittance_matrix_inv")
     end
 
     M = Matrix(am.matrix)
@@ -274,10 +274,10 @@ data should be a PowerModels network data model
 """
 function calc_bus_injection(data::Dict{String,<:Any})
     if length(data["dcline"]) > 0
-        Memento.error(_LOGGER, "calc_bus_injection does not support data with dclines")
+        @error(_LOGGER, "calc_bus_injection does not support data with dclines")
     end
     if length(data["switch"]) > 0
-        Memento.error(_LOGGER, "calc_bus_injection does not support data with switches")
+        @error(_LOGGER, "calc_bus_injection does not support data with switches")
     end
 
     bus_values = Dict(bus["index"] => Dict{String,Float64}() for (i,bus) in data["bus"])

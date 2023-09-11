@@ -43,7 +43,7 @@ function _get_bus_value(bus_i, field, pm_data)
         end
     end
 
-    Memento.warn(_LOGGER, "Could not find bus $bus_i, returning 0 for field $field")
+    @warn(_LOGGER, "Could not find bus $bus_i, returning 0 for field $field")
     return 0
 end
 
@@ -339,7 +339,7 @@ function _psse2pm_shunt!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     end
 
     if haskey(pti_data, "SWITCHED SHUNT")
-        Memento.info(_LOGGER, "Switched shunt converted to fixed shunt, with default value gs=0.0")
+        @info(_LOGGER, "Switched shunt converted to fixed shunt, with default value gs=0.0")
 
         for shunt in pti_data["SWITCHED SHUNT"]
             sub_data = Dict{String,Any}()
@@ -381,17 +381,17 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
         for transformer in pti_data["TRANSFORMER"]
 
             if !(transformer["CZ"] in [1,2,3])
-                Memento.warn(_LOGGER, "transformer CZ value outside of valid bounds assuming the default value of 1.  Given $(transformer["CZ"]), should be 1, 2 or 3")
+                @warn(_LOGGER, "transformer CZ value outside of valid bounds assuming the default value of 1.  Given $(transformer["CZ"]), should be 1, 2 or 3")
                 transformer["CZ"] = 1
             end
 
             if !(transformer["CW"] in [1,2,3])
-                Memento.warn(_LOGGER, "transformer CW value outside of valid bounds assuming the default value of 1.  Given $(transformer["CW"]), should be 1, 2 or 3")
+                @warn(_LOGGER, "transformer CW value outside of valid bounds assuming the default value of 1.  Given $(transformer["CW"]), should be 1, 2 or 3")
                 transformer["CW"] = 1
             end
 
             if !(transformer["CM"] in [1,2])
-                Memento.warn(_LOGGER, "transformer CM value outside of valid bounds assuming the default value of 1.  Given $(transformer["CM"]), should be 1 or 2")
+                @warn(_LOGGER, "transformer CM value outside of valid bounds assuming the default value of 1.  Given $(transformer["CM"]), should be 1 or 2")
                 transformer["CM"] = 1
             end
 
@@ -645,7 +645,7 @@ function _psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
     if haskey(pti_data, "TWO-TERMINAL DC")
         for dcline in pti_data["TWO-TERMINAL DC"]
-            Memento.info(_LOGGER, "Two-Terminal DC lines are supported via a simple *lossless* dc line model approximated by two generators.")
+            @info(_LOGGER, "Two-Terminal DC lines are supported via a simple *lossless* dc line model approximated by two generators.")
             sub_data = Dict{String,Any}()
 
             # Unit conversions?
@@ -672,7 +672,7 @@ function _psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     push!(anmn, dcline[key])
                 else
                     push!(anmn, 0)
-                    Memento.warn(_LOGGER, "$key outside reasonable limits, setting to 0 degress")
+                    @warn(_LOGGER, "$key outside reasonable limits, setting to 0 degress")
                 end
             end
 
@@ -704,7 +704,7 @@ function _psse2pm_dcline!(pm_data::Dict, pti_data::Dict, import_all::Bool)
     end
 
     if haskey(pti_data, "VOLTAGE SOURCE CONVERTER")
-        Memento.info(_LOGGER, "VSC-HVDC lines are supported via a dc line model approximated by two generators and an associated loss.")
+        @info(_LOGGER, "VSC-HVDC lines are supported via a dc line model approximated by two generators and an associated loss.")
         for dcline in pti_data["VOLTAGE SOURCE CONVERTER"]
             # Converter buses : is the distinction between ac and dc side meaningful?
             dcside, acside = dcline["CONVERTER BUSES"]
@@ -861,7 +861,7 @@ end
 Parses directly from iostream
 """
 function parse_psse(io::IO; kwargs...)::Dict
-    Memento.info(_LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
+    @info(_LOGGER, "The PSS(R)E parser currently supports buses, loads, shunts, generators, branches, transformers, and dc lines")
     pti_data = parse_pti(io)
     pm = _pti_to_powermodels!(pti_data; kwargs...)
     return pm
