@@ -68,9 +68,9 @@ History and discussion:
 @techreport{Cain2012,
   author = {Cain, Mary B and {O' Neill}, Richard P and Castillo, Anya},
   title = {{History of optimal power flow and Models}},
-  year = {2012}
   pages = {1--36},
-  url = {https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-Model-testing.pdf}
+  url = {https://www.ferc.gov/sites/default/files/2020-04/acopf-1-history-formulation-testing.pdf},
+  year = {2012}
 }
 ```
 """
@@ -86,9 +86,9 @@ AC power flow Model with rectangular bus voltage variables.
 ```
 @techreport{Cain2012,
   author = {Cain, Mary B and {O' Neill}, Richard P and Castillo, Anya},
-  pages = {1--36},
   title = {{History of optimal power flow and Models}},
-  url = {https://www.ferc.gov/industries/electric/indus-act/market-planning/opf-papers/acopf-1-history-Model-testing.pdf}
+  pages = {1--36},
+  url = {https://www.ferc.gov/sites/default/files/2020-04/acopf-1-history-formulation-testing.pdf},
   year = {2012}
 }
 ```
@@ -135,6 +135,7 @@ due to constants power loads/generators and apparent power limits.
     author = {{O' Neill}, Richard P and Castillo, Anya and Cain, Mary B},
     pages = {1--18},
     title = {{The IV formulation and linear approximations of the ac optimal power flow problem}},
+    url = {https://www.ferc.gov/sites/default/files/2020-04/acopf-2-iv-linearization.pdf},
     year = {2012}
 }
 ```
