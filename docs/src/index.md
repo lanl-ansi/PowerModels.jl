@@ -1,8 +1,8 @@
-# PowerModels.jl Documentation
-
 ```@meta
 CurrentModule = PowerModels
 ```
+
+# PowerModels.jl
 
 ## Overview
 
