@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Network Data Format · PowerModels</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-367975-10"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-367975-10', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.045/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.24/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.svg" alt="PowerModels logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">PowerModels</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="../quickguide/">Getting Started</a></li><li class="is-active"><a class="tocitem" href>Network Data Format</a><ul class="internal"><li><a class="tocitem" href="#The-Network-Data-Dictionary"><span>The Network Data Dictionary</span></a></li><li><a class="tocitem" href="#Working-with-the-Network-Data-Dictionary"><span>Working with the Network Data Dictionary</span></a></li><li><a class="tocitem" href="#Working-with-Matpower-Data-Files"><span>Working with Matpower Data Files</span></a></li><li><a class="tocitem" href="#Working-with-PTI-Data-files"><span>Working with PTI Data files</span></a></li></ul></li><li><a class="tocitem" href="../result-data/">Result Data Format</a></li><li><a class="tocitem" href="../math-model/">Mathematical Model</a></li><li><a class="tocitem" href="../power-flow/">Power Flow</a></li><li><a class="tocitem" href="../storage/">Storage Model</a></li><li><a class="tocitem" href="../switch/">Switch Model</a></li><li><a class="tocitem" href="../multi-networks/">Multi Networks</a></li><li><a class="tocitem" href="../utilities/">Utilities</a></li><li><a class="tocitem" href="../basic-data-utilities/">Basic Data Utilities</a></li></ul></li><li><span class="tocitem">Library</span><ul><li><a class="tocitem" href="../formulations/">Network Formulations</a></li><li><a class="tocitem" href="../specifications/">Problem Specifications</a></li><li><input class="collapse-toggle" id="menuitem-3-3" type="checkbox"/><label class="tocitem" for="menuitem-3-3"><span class="docs-label">Modeling Components</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../model/">PowerModel</a></li><li><a class="tocitem" href="../objective/">Objective</a></li><li><a class="tocitem" href="../variables/">Variables</a></li><li><a class="tocitem" href="../constraints/">Constraints</a></li></ul></li><li><a class="tocitem" href="../relaxations/">Relaxation Schemes</a></li><li><a class="tocitem" href="../parser/">File IO</a></li></ul></li><li><span class="tocitem">Developer</span><ul><li><a class="tocitem" href="../developer/">Developer</a></li><li><a class="tocitem" href="../formulation-details/">Formulation Details</a></li></ul></li><li><a class="tocitem" href="../experiment-results/">Experiment Results</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Manual</a></li><li class="is-active"><a href>Network Data Format</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Network Data Format</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/lanl-ansi/PowerModels.jl/blob/master/docs/src/network-data.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="PowerModels-Network-Data-Format"><a class="docs-heading-anchor" href="#PowerModels-Network-Data-Format">PowerModels Network Data Format</a><a id="PowerModels-Network-Data-Format-1"></a><a class="docs-heading-anchor-permalink" href="#PowerModels-Network-Data-Format" title="Permalink"></a></h1><h2 id="The-Network-Data-Dictionary"><a class="docs-heading-anchor" href="#The-Network-Data-Dictionary">The Network Data Dictionary</a><a id="The-Network-Data-Dictionary-1"></a><a class="docs-heading-anchor-permalink" href="#The-Network-Data-Dictionary" title="Permalink"></a></h2><p>Internally PowerModels utilizes a dictionary to store network data. The dictionary uses strings as key values so it can be serialized to JSON for algorithmic data exchange.</p><p>The data dictionary organization and key names are designed to be mostly consistent with the <a href="http://www.pserc.cornell.edu/matpower/">Matpower</a> file format and should be familiar to power system researchers, with the notable exceptions that loads and shunts are now split into separate components (see example below), and in the case of <code>&quot;multinetwork&quot;</code> data, most often used for time series.</p><p>Following the conventions of the InfrastructureModels ecosystem, all PowerModels components have the following standard parameters unless noted otherwise:</p><ul><li><code>&quot;index&quot;:&lt;int&gt;</code> the component&#39;s unique integer id, which is also its lookup id</li><li><code>&quot;status&quot;:&lt;int&gt;</code> a {1,0} flag that determines if the component is active or not, respectively.</li><li>(<code>&quot;name&quot;:&lt;string&gt;</code>) a human readable name for the component</li><li>(<code>&quot;source_id&quot;:&lt;vector{string}&gt;</code>) a list of string data forming a unique id from a source data format</li></ul><p>The PowerModels network data dictionary structure is roughly as follows:</p><pre><code class="language-json hljs">{
+&quot;per_unit&quot;:&lt;boolean&gt;,            # A boolean value indicating if the component parameters are in mixed-units or per unit (p.u.)
+&quot;baseMVA&quot;:&lt;float, MVA&gt;,          # The system wide MVA value for converting between mixed-units and p.u. unit values
+(&quot;time_elapsed&quot;:&lt;float, hours&gt;,) # An amount of time that has passed, used to computing time integrals in storage models
+(&quot;multinetwork&quot;:&lt;boolean&gt;,)      # A boolean value indicating if the data represents a single network or multiple networks (assumed `false` when not present)
+(&quot;name&quot;:&lt;string&gt;,)               # A human readable name for the network data
+(&quot;description&quot;:&lt;string&gt;,)        # A textual description of the network data and any other related notes
+(&quot;source_type&quot;:&lt;string&gt;,)        # The type of source data that generated this data
+(&quot;source_version&quot;:&lt;string&gt;,)     # The version of source data, if applicable
+&quot;bus&quot;:{
+    &quot;1&quot;:{
+        &quot;va&quot;:&lt;float, radians&gt;,  # Voltage angle
+        &quot;vm&quot;:&lt;float, V p.u.&gt;,   # Voltage magnitude
+        &quot;vmin&quot;:&lt;float, V p.u.&gt;, # A minimum voltage magnitude
+        &quot;vmax&quot;:&lt;float, V p.u.&gt;, # A maximum voltage magnitude
+        &quot;bus_type&quot;:&lt;int&gt;,       # Bus status field inactive if 4, active otherwise; also used in power flow studies
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;load&quot;:{
+    &quot;1&quot;:{
+        &quot;load_bus&quot;:&lt;int&gt;,   # Index of the bus to which the load is attached
+        &quot;pd&quot;:&lt;float, MW&gt;,   # Active power withdrawn
+        &quot;qd&quot;:&lt;float, MVar&gt;, # Reactive power withdrawn
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;shunt&quot;:{
+    &quot;1&quot;:{
+        &quot;shunt_bus&quot;:&lt;int&gt;, # Index of the bus to which the shunt is attached
+        &quot;gs&quot;:&lt;float&gt;,      # Active power withdrawn per voltage p.u.
+        &quot;bs&quot;:&lt;float&gt;,      # Reactive power withdrawn per voltage p.u.
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;gen&quot;:{
+    &quot;1&quot;:{
+        &quot;gen_bus&quot;:&lt;int&gt;,       # Index of the bus to which the generator is attached
+        &quot;pg&quot;:&lt;float, MW&gt;,      # Active power injected
+        &quot;qg&quot;:&lt;float, MVAr&gt;,    # Reactive power injected
+        &quot;pmin&quot;:&lt;float, MW&gt;,    # Active power lower bound
+        &quot;pmax&quot;:&lt;float, MW&gt;,    # Active power upper bound
+        &quot;qmin&quot;:&lt;float, MVAr&gt;,  # Reactive power lower bound
+        &quot;qmax&quot;:&lt;float, MVAr&gt;,  # Reactive power upper bound
+        &quot;gen_status&quot;:&lt;int&gt;,    # Status flag for generators
+        (&quot;model&quot;:&lt;int&gt;,)       # Cost model 1=piecewise linear, 2=polynomial
+        (&quot;ncost&quot;:&lt;int&gt;,)       # Length of cost model data
+        (&quot;cost&quot;&lt;vector{float}, $MWh&gt;:) # Cost model data
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;storage&quot;:{
+    &quot;1&quot;:{
+        &quot;storage_bus&quot;:&lt;int&gt;,             # Index of the bus to which the storage is attached
+        &quot;ps&quot;:&lt;float, MW&gt;,                # Active power withdrawn
+        &quot;qs&quot;:&lt;float, MVAr&gt;,              # Reactive power withdrawn
+        &quot;energy&quot;:&lt;float, MWh&gt;,           # Amount of stored energy
+        &quot;energy_rating&quot;:&lt;float, MWh&gt;,    # Maximum amount of stored energy
+        &quot;charge_rating&quot;:&lt;float, MW&gt;,     # Maximum amount of charge per unit time
+        &quot;discharge_rating&quot;:&lt;float, MW&gt;,  # Maximum amount of discharge per unit time
+        &quot;charge_efficiency&quot;:&lt;float&gt;,     # Relative efficiency when charging (between 0.0 and 1.0)
+        &quot;discharge_efficiency&quot;:&lt;float&gt;,  # Relative efficiency when discharging (between 0.0 and 1.0)
+        &quot;qmin&quot;:&lt;float, MVar&gt;,            # Reactive power lower bound
+        &quot;qmax&quot;:&lt;float, MVar&gt;,            # Reactive power upper bound
+        &quot;r&quot;:&lt;float, p.u.&gt;,               # Power inverter resistance
+        &quot;x&quot;:&lt;float, p.u.&gt;,               # Power inverter reactance
+        &quot;p_loss&quot;:&lt;float, MW&gt;,            # Active power standby losses
+        &quot;q_loss&quot;:&lt;float, MVar&gt;,          # Reactive power standby losses
+        (&quot;thermal_rating&quot;:&lt;float, MVA&gt;,) # Apparent power withdrawn limit
+        (&quot;current_rating&quot;:&lt;float, MA&gt;,)  # Current magnitude withdrawn limit
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;branch&quot;:{
+    &quot;1&quot;:{
+        &quot;f_bus&quot;:&lt;int&gt;,               # Index of the from bus to which the branch is attached
+        &quot;t_bus&quot;:&lt;int&gt;,               # Index of the to bus to which the branch is attached
+        &quot;br_r&quot;:&lt;float, p.u.&gt;,        # Branch series resistance
+        &quot;br_x&quot;:&lt;float, p.u.&gt;,        # Branch series reactance
+        &quot;tap&quot;: &lt;float, p.u.&gt;,        # Branch off nominal turns ratio
+        &quot;shift&quot;: &lt;float, radians&gt;,   # Branch phase shift angle
+        &quot;g_fr&quot;:&lt;float, p.u.&gt;,        # Line charging conductance at from bus
+        &quot;b_fr&quot;:&lt;float, p.u.&gt;,        # Line charging susceptance at from bus
+        &quot;g_to&quot;:&lt;float, p.u.&gt;,        # Line charging conductance at to bus
+        &quot;b_to&quot;:&lt;float, p.u.&gt;,        # Line charging susceptance at to bus
+        &quot;transformer&quot;:&lt;boolean&gt;,     # Status flag indicating if the branch is a transformer
+        &quot;br_status&quot;:&lt;int&gt;,           # Status flag for branches
+        (&quot;rate_a&quot;:&lt;float, MVA&gt;,)     # Long term thermal line rating
+        (&quot;rate_b&quot;:&lt;float, MVA&gt;,)     # Short term thermal line rating
+        (&quot;rate_c&quot;:&lt;float, MVA&gt;,)     # Emergency thermal line rating
+        (&quot;angmin&quot;: &lt;float, radians&gt;, # Minimum angle difference between the from and to buses
+        (&quot;angmax&quot;: &lt;float, radians&gt;, # Maximum angle difference between the from and to buses
+        (&quot;c_rating_a&quot;:&lt;float, MA&gt;,)  # Long term current line rating
+        (&quot;c_rating_b&quot;:&lt;float, MA&gt;,)  # Short term current line rating
+        (&quot;c_rating_c&quot;:&lt;float, MA&gt;,)  # Emergency current line rating
+        (&quot;pf&quot;:&lt;float, MW&gt;,)          # Active power withdrawn at the from bus
+        (&quot;qf&quot;:&lt;float, MVAr&gt;,)        # Reactive power withdrawn at the from bus
+        (&quot;pt&quot;:&lt;float, MW&gt;,)          # Active power withdrawn at the to bus
+        (&quot;qt&quot;:&lt;float, MVAr&gt;,)        # Reactive power withdrawn at the to bus
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;dcline&quot;:{
+    &quot;1&quot;:{
+        &quot;f_bus&quot;:&lt;int&gt;,          # Index of the from bus to which the dcline is attached
+        &quot;t_bus&quot;:&lt;int&gt;,          # Index of the to bus to which the dcline is attached
+        &quot;pminf&quot;:&lt;float, MW&gt;,    # Active power lower bound at the from bus
+        &quot;pmaxf&quot;:&lt;float, MW&gt;,    # Active power upper bound at the from bus
+        &quot;qminf&quot;:&lt;float, MVAr&gt;,  # Reactive power lower bound at the from bus
+        &quot;qmaxf&quot;:&lt;float, MVAr&gt;,  # Reactive power upper bound at the from bus
+        &quot;pmint&quot;:&lt;float, MW&gt;,    # Active power lower bound at the to bus
+        &quot;pmaxt&quot;:&lt;float, MW&gt;,    # Active power upper bound at the to bus
+        &quot;qmint&quot;:&lt;float, MVAr&gt;,  # Reactive power lower bound at the to bus
+        &quot;qmaxt&quot;:&lt;float, MVAr&gt;,  # Reactive power upper bound at the to bus
+        &quot;loss0&quot;:&lt;float&gt;,        # Constant active power loss term linking the from and to buses
+        &quot;loss1&quot;:&lt;float&gt;,        # Linear active power loss term linking the from and to buses
+        &quot;br_status&quot;:&lt;int&gt;,      # Status flag for dclines
+        (&quot;pf&quot;:&lt;float, MW&gt;,)     # Active power withdrawn at the from bus
+        (&quot;qf&quot;:&lt;float, MVAr&gt;,)   # Reactive power withdrawn at the from bus
+        (&quot;pt&quot;:&lt;float, MW&gt;,)     # Active power withdrawn at the to bus
+        (&quot;qt&quot;:&lt;float, MVAr&gt;,)   # Reactive power withdrawn at the to bus
+        (&quot;vf&quot;:&lt;float, V p.u.&gt;,) # Voltage set-point at the from bus
+        (&quot;vt&quot;:&lt;float, V p.u.&gt;,) # Voltage set-point at the to bus
+        (&quot;model&quot;:&lt;int&gt;,)        # Cost model 1=piecewise linear, 2=polynomial
+        (&quot;ncost&quot;:&lt;int&gt;,)        # Length of cost model data
+        (&quot;cost&quot;&lt;vector{float}, $MWh&gt;:) # Cost model data
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;switch&quot;:{
+    &quot;1&quot;:{
+        &quot;f_bus&quot;:&lt;int&gt;,                   # Index of the from bus to which the switch is attached
+        &quot;t_bus&quot;:&lt;int&gt;,                   # Index of the to bus to which the switch is attached
+        &quot;state&quot;:&lt;int&gt;,                   # A {0,1} flag that determines if the switch is open or closed, respectively.
+        (&quot;thermal_rating&quot;:&lt;float, MVA&gt;,) # Apparent power flow limit
+        (&quot;current_rating&quot;:&lt;float, MA&gt;,)  # Current magnitude flow limit
+        (&quot;psw&quot;:&lt;float, MW&gt;,)             # Active power withdrawn at the from bus
+        (&quot;qsw&quot;:&lt;float, MVar&gt;,)           # Reactive power withdrawn at the from bus
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+...
+}</code></pre><p>The following commands can be used to explore the network data dictionary generated by a given PTI or Matpower (this example) data file,</p><pre><code class="language-julia hljs">network_data = PowerModels.parse_file(&quot;matpower/case3.m&quot;)
+display(network_data) # raw dictionary
+PowerModels.print_summary(network_data) # quick table-like summary
+PowerModels.component_table(network_data, &quot;bus&quot;, [&quot;vmin&quot;, &quot;vmax&quot;]) # component data in matrix form</code></pre><p>The <code>print_summary</code> function generates a table-like text summary of the network data, which is helpful in quickly assessing the values in a data or solution dictionary.  The <code>component_table</code> builds a matrix of data for a given component type where there is one row for each component and one column for each requested data field.  The first column of a component table is the component&#39;s identifier (i.e. the index).</p><p>For a detailed list of all possible parameters refer to the specification document provided with <a href="http://www.pserc.cornell.edu/matpower/">Matpower</a>. The exception to this is that <code>&quot;load&quot;</code> and <code>&quot;shunt&quot;</code>, containing <code>&quot;pd&quot;</code>, <code>&quot;qd&quot;</code> and <code>&quot;gs&quot;</code>, <code>&quot;bs&quot;</code>, respectively, have been added as additional fields. These values are contained in <code>&quot;bus&quot;</code> in the original specification.</p><h3 id="Noteworthy-Differences-from-Matpower-Data-Files"><a class="docs-heading-anchor" href="#Noteworthy-Differences-from-Matpower-Data-Files">Noteworthy Differences from Matpower Data Files</a><a id="Noteworthy-Differences-from-Matpower-Data-Files-1"></a><a class="docs-heading-anchor-permalink" href="#Noteworthy-Differences-from-Matpower-Data-Files" title="Permalink"></a></h3><p>The PowerModels network data dictionary differs from the Matpower format in the following ways,</p><ul><li>All PowerModels components have an <code>index</code> parameter, which can be used to uniquely identify that network element.</li><li>All network parameters are in per-unit and angles are in radians.</li><li>All non-transformer branches are given nominal transformer values (i.e. a tap of 1.0 and a shift of 0.0).</li><li>All branches have a <code>transformer</code> field indicating if they are a transformer or not.</li><li>Thermal limit (<code>rate</code>) and current (<code>c_rating</code>) ratings on branches are optional.</li><li>When present, the <code>gencost</code> data is incorporated into the <code>gen</code> data, the column names remain the same.</li><li>When present, the <code>dclinecost</code> data is incorporated into the <code>dcline</code> data, the column names remain the same.</li><li>When present, the <code>bus_names</code> data is incorporated into the <code>bus</code> data under the property <code>&quot;bus_name&quot;</code>.</li><li>Special treatment is given to the optional <code>ne_branch</code> matrix to support the TNEP problem.</li><li>Load data are split off from <code>bus</code> data into <code>load</code> data under the same property names.</li><li>Shunt data are split off from <code>bus</code> data into <code>shunt</code> data under the same property names.</li></ul><h2 id="Working-with-the-Network-Data-Dictionary"><a class="docs-heading-anchor" href="#Working-with-the-Network-Data-Dictionary">Working with the Network Data Dictionary</a><a id="Working-with-the-Network-Data-Dictionary-1"></a><a class="docs-heading-anchor-permalink" href="#Working-with-the-Network-Data-Dictionary" title="Permalink"></a></h2><p>Data exchange via JSON files is ideal for building algorithms, however it is hard to for humans to read and process.  To that end PowerModels provides various helper functions for manipulating the network data dictionary.</p><p>The first of these helper functions are <code>make_per_unit</code> and <code>make_mixed_units!</code>, which convert the units of the data inside a network data dictionary.  The <em>mixed units</em> format follows the unit conventions from Matpower and other common power network formats where some of the values are in per unit and others are the true values.  These functions can be used as follows,</p><pre><code class="nohighlight hljs">network_data = PowerModels.parse_file(&quot;matpower/case3.m&quot;)
+PowerModels.print_summary(network_data) # default per-unit form
+PowerModels.make_mixed_units!(network_data)
+PowerModels.print_summary(network_data) # mixed units form</code></pre><p>Another useful helper function is <code>update_data</code>, which takes two network data dictionaries and updates the values in the first dictionary with the values from the second dictionary.  This is particularly helpful when applying sparse updates to network data.  A good example is using the solution of one computation to update the data in preparation for a second computation, like so,</p><pre><code class="nohighlight hljs">data = PowerModels.parse_file(&quot;matpower/case3.m&quot;)
+opf_result = solve_ac_opf(data, Ipopt.Optimizer)
+PowerModels.print_summary(opf_result[&quot;solution&quot;])
+
+PowerModels.update_data!(data, opf_result[&quot;solution&quot;])
+pf_result = solve_ac_pf(data, Ipopt.Optimizer)
+PowerModels.print_summary(pf_result[&quot;solution&quot;])</code></pre><p>A variety of helper functions are available for processing the topology of the network.  For example, <code>connected_components</code> will compute the collections of buses that are connected by branches (i.e. the network&#39;s islands).  By default PowerModels will attempt to solve all of the network components simultaneously.  The <code>select_largest_component</code> function can be used to only consider the largest component in the network.  Finally the <code>propagate_topology_status!</code> can be used to explicitly deactivate components that are implicitly inactive due to the status of other components (e.g. deactivating branches based on the status of their connecting buses), like so,</p><pre><code class="nohighlight hljs">data = PowerModels.parse_file(&quot;matpower/case3.m&quot;)
+PowerModels.propagate_topology_status!(data)
+opf_result = solve_ac_opf(data, Ipopt.Optimizer)</code></pre><p>The <code>test/data/matpower/case7_tplgy.m</code> case provides an example of the kind of component status deductions that can be made.  The <code>simplify_network!</code>, <code>propagate_topology_status!</code> and <code>deactivate_isolated_components!</code> functions can be helpful in diagnosing network models that do not converge or have an infeasible solution.</p><p>For details on all of the network data helper functions see, <code>src/core/data.jl</code>.</p><h2 id="Working-with-Matpower-Data-Files"><a class="docs-heading-anchor" href="#Working-with-Matpower-Data-Files">Working with Matpower Data Files</a><a id="Working-with-Matpower-Data-Files-1"></a><a class="docs-heading-anchor-permalink" href="#Working-with-Matpower-Data-Files" title="Permalink"></a></h2><p>PowerModels has extensive support for parsing Matpower network files in the <code>.m</code> format.</p><p>In addition to parsing the standard Matpower parameters, PowerModels also supports extending the standard Matpower format in a number of ways as illustrated by the following examples.  In these examples JSON document fragments are used to indicate the structure of the PowerModel dictionary.</p><p>Note that for DC lines, the flow results are returned using the same convention as for the AC lines, i.e. positive values for <code>p_from</code>/<code>q_from</code>and <code>p_to</code>/<code>q_to</code> indicating power flow from the &#39;to&#39; node or &#39;from&#39; node into the line. This means that w.r.t matpower the sign is identical for <code>p_from</code>, but opposite for <code>q_from</code>/<code>p_to</code>/<code>q_to</code>.</p><h3 id="Single-Values"><a class="docs-heading-anchor" href="#Single-Values">Single Values</a><a id="Single-Values-1"></a><a class="docs-heading-anchor-permalink" href="#Single-Values" title="Permalink"></a></h3><p>Single values are added to the root of the dictionary as follows,</p><pre><code class="nohighlight hljs">mpc.const_float = 4.56</code></pre><p>becomes</p><pre><code class="language-json hljs">{
+&quot;const_float&quot;: 4.56
+}</code></pre><h3 id="Nonstandard-Matrices"><a class="docs-heading-anchor" href="#Nonstandard-Matrices">Nonstandard Matrices</a><a id="Nonstandard-Matrices-1"></a><a class="docs-heading-anchor-permalink" href="#Nonstandard-Matrices" title="Permalink"></a></h3><p>Nonstandard matrices can be added as follows,</p><pre><code class="nohighlight hljs">mpc.areas = [
+    1   1;
+    2   3;
+];</code></pre><p>becomes</p><pre><code class="language-json hljs">{
+&quot;areas&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:1,
+        &quot;col_1&quot;:1,
+        &quot;col_2&quot;:1
+    },
+    &quot;2&quot;:{
+        &quot;index&quot;:1,
+        &quot;col_1&quot;:2,
+        &quot;col_2&quot;:3
+    }
+}
+}</code></pre><h3 id="Column-Names"><a class="docs-heading-anchor" href="#Column-Names">Column Names</a><a id="Column-Names-1"></a><a class="docs-heading-anchor-permalink" href="#Column-Names" title="Permalink"></a></h3><p>Column names can be given to nonstandard matrices using the following special comment,</p><pre><code class="nohighlight hljs">%column_names%  area    refbus
+mpc.areas_named = [
+    4   5;
+    5   6;
+];</code></pre><p>becomes</p><pre><code class="language-json hljs">{
+&quot;areas&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:1,
+        &quot;area&quot;:4,
+        &quot;refbus&quot;:5
+    },
+    &quot;2&quot;:{
+        &quot;index&quot;:2,
+        &quot;area&quot;:5,
+        &quot;refbus&quot;:6
+    }
+}
+}</code></pre><h3 id="Standard-Matrix-Extensions"><a class="docs-heading-anchor" href="#Standard-Matrix-Extensions">Standard Matrix Extensions</a><a id="Standard-Matrix-Extensions-1"></a><a class="docs-heading-anchor-permalink" href="#Standard-Matrix-Extensions" title="Permalink"></a></h3><p>Finally, if a nonstandard matrix&#39;s name extends a current Matpower matrix name with an underscore, then its values will be merged with the original Matpower component data.  Note that this feature requires that the nonstandard matrix has column names and has the same number of rows as the original matrix (similar to the <code>gencost</code> matrix in the Matpower format).  For example,</p><pre><code class="nohighlight hljs">%column_names%  rate_i  rate_p
+mpc.branch_limit = [
+    50.2    45;
+    36  60.1;
+    12  30;
+];</code></pre><p>becomes</p><pre><code class="language-json hljs">{
+&quot;branch&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:1,
+        ...(all pre existing fields)...
+        &quot;rate_i&quot;:50.2,
+        &quot;rate_p&quot;:45
+    },
+    &quot;2&quot;:{
+        &quot;index&quot;:2,
+        ...(all pre existing fields)...
+        &quot;rate_i&quot;:36,
+        &quot;rate_p&quot;:60.1
+    },
+    &quot;3&quot;:{
+        &quot;index&quot;:3,
+        ...(all pre existing fields)...
+        &quot;rate_i&quot;:12,
+        &quot;rate_p&quot;:30
+    }
+}
+}</code></pre><h2 id="Working-with-PTI-Data-files"><a class="docs-heading-anchor" href="#Working-with-PTI-Data-files">Working with PTI Data files</a><a id="Working-with-PTI-Data-files-1"></a><a class="docs-heading-anchor-permalink" href="#Working-with-PTI-Data-files" title="Permalink"></a></h2><p>PowerModels also has support for parsing PTI network files in the <code>.raw</code> format that follow the PSS(R)E v33 specification.  Currently PowerModels supports the following PTI components,</p><ul><li>Buses</li><li>Loads (constant power)</li><li>Fixed Shunts</li><li>Switch Shunts (default configuration)</li><li>Generators</li><li>Branches</li><li>Transformers (two and three winding)</li><li>Two-Terminal HVDC Lines (approximate)</li><li>Voltage Source Converter HVDC Lines (approximate)</li></ul><p>In addition to parsing the standard parameters required by PowerModels for calculations, PowerModels also supports parsing additional data fields that are defined by the PSS(R)E specification, but not used by PowerModels directly. This can be achieved via the <code>import_all</code> optional keyword argument in <code>parse_file</code> when loading a <code>.raw</code> file, e.g.</p><pre><code class="language-julia hljs">PowerModels.parse_file(&quot;pti/case3.raw&quot;; import_all=true)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../quickguide/">« Getting Started</a><a class="docs-footer-nextpage" href="../result-data/">Result Data Format »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.24 on <span class="colophon-date" title="Sunday 28 May 2023 01:01">Sunday 28 May 2023</span>. Using Julia version 1.9.0.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

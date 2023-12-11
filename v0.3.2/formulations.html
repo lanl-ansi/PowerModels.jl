@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Network Formulations · PowerModels</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-367975-10', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/highlightjs/default.css" rel="stylesheet" type="text/css"/><link href="assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>PowerModels</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="index.html">Home</a></li><li><a class="toctext" href="quickguide.html">Getting Started</a></li><li class="current"><a class="toctext" href="formulations.html">Network Formulations</a><ul class="internal"><li><a class="toctext" href="#Type-Hierarchy-1">Type Hierarchy</a></li><li><a class="toctext" href="#Power-Models-1">Power Models</a></li><li><a class="toctext" href="#User-Defined-Abstractions-1">User-Defined Abstractions</a></li></ul></li><li><a class="toctext" href="specifications.html">Problem Specifications</a></li><li><span class="toctext">Model Components</span><ul><li><a class="toctext" href="model.html">PowerModel</a></li><li><a class="toctext" href="objective.html">Objective</a></li><li><a class="toctext" href="variables.html">Variables</a></li><li><a class="toctext" href="constraints.html">Constraints</a></li></ul></li><li><a class="toctext" href="relaxations.html">Relaxation Schemes</a></li><li><a class="toctext" href="parser.html">File IO</a></li><li><a class="toctext" href="data.html">Data Formats</a></li><li><a class="toctext" href="results.html">Results</a></li></ul></nav><article id="docs"><header><nav><ul><li><a href="formulations.html">Network Formulations</a></li></ul><a class="edit-page" href="https://github.com/lanl-ansi/PowerModels.jl/tree/16e2abc843b0cddd7e4326bed7de0cad7e92b6fb/docs/src/formulations.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Network Formulations</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Network-Formulations-1" href="#Network-Formulations-1">Network Formulations</a></h1><h2><a class="nav-anchor" id="Type-Hierarchy-1" href="#Type-Hierarchy-1">Type Hierarchy</a></h2><p>We begin with the top of the hierarchy, where we can distinguish between AC and DC power flow models.</p><pre><code class="language-julia">AbstractACPForm &lt;: AbstractPowerFormulation
+AbstractDCPForm &lt;: AbstractPowerFormulation
+AbstractWRForm &lt;: AbstractPowerFormulation</code></pre><p>From there, different forms for ACP and DCP are possible:</p><pre><code class="language-julia">StandardACPForm &lt;: AbstractACPForm
+APIACPForm &lt;: AbstractACPForm
+
+StandardDCPForm &lt;: AbstractDCPForm
+
+SOCWRForm &lt;: AbstractWRForm
+QCWRForm &lt;: AbstractWRForm</code></pre><h2><a class="nav-anchor" id="Power-Models-1" href="#Power-Models-1">Power Models</a></h2><p>Each of these forms can be used as the type parameter for a PowerModel:</p><pre><code class="language-julia">ACPPowerModel = GenericPowerModel{StandardACPForm}
+APIACPPowerModel = GenericPowerModel{APIACPForm}
+
+DCPPowerModel = GenericPowerModel{StandardDCPForm}
+
+SOCWRPowerModel = GenericPowerModel{SOCWRForm}
+QCWRPowerModel = GenericPowerModel{QCWRForm}</code></pre><p>For details on <code>GenericPowerModel</code>, see the section on <a href="model.html#Power-Model-1">Power Model</a>.</p><h2><a class="nav-anchor" id="User-Defined-Abstractions-1" href="#User-Defined-Abstractions-1">User-Defined Abstractions</a></h2><p>Consider the class of conic formulations for power flow models. One way of modelling them in this package is through the following type hierarchy:</p><pre><code class="language-julia">AbstractConicPowerFormulation &lt;: AbstractPowerFormulation
+AbstractWRMForm &lt;: AbstractConicPowerFormulation
+
+SDPWRMForm &lt;: AbstractWRMForm
+SDPWRMPowerModel = GenericPowerModel{SDPWRMForm}</code></pre><p>The user-defined abstractions do not have to begin from the root <code>AbstractPowerFormulation</code> abstract type, and can begin from an intermediate abstract type. For example, in the following snippet:</p><pre><code class="language-julia">AbstractDCPLLForm &lt;: AbstractDCPForm
+
+StandardDCPLLForm &lt;: AbstractDCPLLForm
+DCPLLPowerModel = GenericPowerModel{StandardDCPLLForm}</code></pre><footer><hr/><a class="previous" href="quickguide.html"><span class="direction">Previous</span><span class="title">Getting Started</span></a><a class="next" href="specifications.html"><span class="direction">Next</span><span class="title">Problem Specifications</span></a></footer></article></body></html>

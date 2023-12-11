@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Network Data Format · PowerModels</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-367975-10', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/highlightjs/default.css" rel="stylesheet" type="text/css"/><link href="assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>PowerModels</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="index.html">Home</a></li><li><span class="toctext">Manual</span><ul><li><a class="toctext" href="quickguide.html">Getting Started</a></li><li class="current"><a class="toctext" href="network-data.html">Network Data Format</a><ul class="internal"><li><a class="toctext" href="#The-Network-Data-Dictionary-1">The Network Data Dictionary</a></li><li><a class="toctext" href="#Working-with-Matpower-Data-Files-1">Working with Matpower Data Files</a></li></ul></li><li><a class="toctext" href="result-data.html">Result Data Format</a></li></ul></li><li><span class="toctext">Library</span><ul><li><a class="toctext" href="formulations.html">Network Formulations</a></li><li><a class="toctext" href="specifications.html">Problem Specifications</a></li><li><span class="toctext">Modeling Components</span><ul><li><a class="toctext" href="model.html">PowerModel</a></li><li><a class="toctext" href="objective.html">Objective</a></li><li><a class="toctext" href="variables.html">Variables</a></li><li><a class="toctext" href="constraints.html">Constraints</a></li></ul></li><li><a class="toctext" href="relaxations.html">Relaxation Schemes</a></li><li><a class="toctext" href="parser.html">File IO</a></li></ul></li><li><a class="toctext" href="developer.html">Developer</a></li><li><a class="toctext" href="experiment-results.html">Experiment Results</a></li></ul></nav><article id="docs"><header><nav><ul><li>Manual</li><li><a href="network-data.html">Network Data Format</a></li></ul><a class="edit-page" href="https://github.com/lanl-ansi/PowerModels.jl/tree/0b267e326d749b77616386517b4653bff685b140/docs/src/network-data.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Network Data Format</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="PowerModels-Network-Data-Format-1" href="#PowerModels-Network-Data-Format-1">PowerModels Network Data Format</a></h1><h2><a class="nav-anchor" id="The-Network-Data-Dictionary-1" href="#The-Network-Data-Dictionary-1">The Network Data Dictionary</a></h2><p>Internally PowerModels utilizes a dictionary to store network data. The dictionary uses strings as key values so it can be serialized to JSON for algorithmic data exchange.</p><p>The data dictionary organization and key names are designed to be consistent with the <a href="http://www.pserc.cornell.edu/matpower/">Matpower</a> file format and should be familiar to power system researchers.</p><p>The network data dictionary structure is roughly as follows:</p><pre><code class="language-json">{
+&quot;name&quot;:&lt;string&gt;,
+&quot;version&quot;:&quot;2&quot;,
+&quot;baseMVA&quot;:&lt;float&gt;,
+&quot;bus&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:&lt;int&gt;,
+        &quot;bus_type&quot;:&lt;int&gt;,
+        &quot;pd&quot;:&lt;float&gt;,
+        &quot;qd&quot;:&lt;float&gt;,
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;gen&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:&lt;int&gt;,
+        &quot;gen_bus&quot;:&lt;int&gt;,
+        &quot;pg&quot;:&lt;float&gt;,
+        &quot;qg&quot;:&lt;float&gt;,
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;branch&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:&lt;int&gt;,
+        &quot;f_bus&quot;:&lt;int&gt;,
+        &quot;t_bus&quot;:&lt;int&gt;,
+        &quot;br_r&quot;:&lt;int&gt;,
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+}
+}</code></pre><p>The following commands can be used to explore the network data dictionary generated by a given Matpower data file,</p><pre><code class="language-julia">network_data = PowerModels.parse_file(&quot;nesta_case3_lmbd.m&quot;)
+display(network_data)</code></pre><p>For a detailed list of all possible parameters refer to the specification document provided with <a href="http://www.pserc.cornell.edu/matpower/">Matpower</a>.  </p><h3><a class="nav-anchor" id="Noteworthy-Differences-from-Matpower-Data-Files-1" href="#Noteworthy-Differences-from-Matpower-Data-Files-1">Noteworthy Differences from Matpower Data Files</a></h3><p>The PowerModels network data dictionary differs from the Matpower format in the following ways,</p><ul><li><p>All PowerModels components have an <code>index</code> parameter, which can be used to uniquely identify that network element.</p></li><li><p>All network parameters are in per-unit and angles are in radians.</p></li><li><p>All non-transformer branches are given nominal transformer values (i.e. a tap of 1.0 and a shift of 0).</p></li><li><p>All branches have a <code>transformer</code> field indicating if they are a transformer or not.</p></li><li><p>Only quadratic active power generation cost functions are supported, at this time.</p></li><li><p>When present, the <code>gencost</code> data is incorporated into the <code>gen</code> data, the column names remain the same.</p></li><li><p>When present, the <code>bus_names</code> data is incorporated into the <code>bus</code> data under the property <code>&quot;bus_name&quot;</code>.</p></li><li><p>Special treatment is given to the optional <code>ne_branch</code> matrix to support the TNEP problem.</p></li></ul><h2><a class="nav-anchor" id="Working-with-Matpower-Data-Files-1" href="#Working-with-Matpower-Data-Files-1">Working with Matpower Data Files</a></h2><p>The data exchange via JSON files is ideal for building algorithms, however it is hard to for humans to read and process.  To that end PowerModels also has extensive support for parsing Matpower network files in the <code>.m</code> format.</p><p>In addition to parsing the standard Matpower parameters, PowerModels also supports extending the standard Matpower format in a number of ways as illustrated by the following examples.  In these examples JSON document fragments are used to indicate the structure of the PowerModel dictionary.</p><h3><a class="nav-anchor" id="Single-Values-1" href="#Single-Values-1">Single Values</a></h3><p>Single values are added to the root of the dictionary as follows,</p><pre><code class="language-none">mpc.const_float = 4.56</code></pre><p>becomes</p><pre><code class="language-json">{
+&quot;const_float&quot;: 4.56
+}</code></pre><h3><a class="nav-anchor" id="Nonstandard-Matrices-1" href="#Nonstandard-Matrices-1">Nonstandard Matrices</a></h3><p>Nonstandard matrices can be added as follows,</p><pre><code class="language-none">mpc.areas = [
+    1   1;
+    2   3;
+];</code></pre><p>becomes</p><pre><code class="language-json">{
+&quot;areas&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:1,
+        &quot;col_1&quot;:1,
+        &quot;col_2&quot;:1
+    },
+    &quot;2&quot;:{
+        &quot;index&quot;:1,
+        &quot;col_1&quot;:2,
+        &quot;col_2&quot;:3
+    }
+}
+}</code></pre><h3><a class="nav-anchor" id="Column-Names-1" href="#Column-Names-1">Column Names</a></h3><p>Column names can be given to nonstandard matrices using the following special comment,</p><pre><code class="language-none">%column_names%  area    refbus
+mpc.areas_named = [
+    4   5;
+    5   6;
+];</code></pre><p>becomes</p><pre><code class="language-json">{
+&quot;areas&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:1,
+        &quot;area&quot;:4,
+        &quot;refbus&quot;:5
+    },
+    &quot;2&quot;:{
+        &quot;index&quot;:2,
+        &quot;area&quot;:5,
+        &quot;refbus&quot;:6
+    }
+}
+}</code></pre><h3><a class="nav-anchor" id="Standard-Matrix-Extensions-1" href="#Standard-Matrix-Extensions-1">Standard Matrix Extensions</a></h3><p>Finally, if a nonstandard matrix&#39;s name extends a current Matpower matrix name with an underscore, then its values will be merged with the original Matpower component data.  Note that this feature requires that the nonstandard matrix has column names and has the same number of rows as the original matrix (similar to the <code>gencost</code> matrix in the Matpower format).  For example,</p><pre><code class="language-none">%column_names%  rate_i  rate_p
+mpc.branch_limit = [
+    50.2    45;
+    36  60.1;
+    12  30;
+];</code></pre><p>becomes</p><pre><code class="language-json">{
+&quot;branch&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:1,
+        ...(all pre existing fields)...
+        &quot;rate_i&quot;:50.2,
+        &quot;rate_p&quot;:45
+    },
+    &quot;2&quot;:{
+        &quot;index&quot;:2,
+        ...(all pre existing fields)...
+        &quot;rate_i&quot;:36,
+        &quot;rate_p&quot;:60.1
+    },
+    &quot;3&quot;:{
+        &quot;index&quot;:3,
+        ...(all pre existing fields)...
+        &quot;rate_i&quot;:12,
+        &quot;rate_p&quot;:30
+    }
+}
+}</code></pre><footer><hr/><a class="previous" href="quickguide.html"><span class="direction">Previous</span><span class="title">Getting Started</span></a><a class="next" href="result-data.html"><span class="direction">Next</span><span class="title">Result Data Format</span></a></footer></article></body></html>

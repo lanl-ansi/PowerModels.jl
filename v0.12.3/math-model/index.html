@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Mathematical Model · PowerModels</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-367975-10', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link href="../assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><a href="../"><img class="logo" src="../assets/logo.svg" alt="PowerModels logo"/></a><h1>PowerModels</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="../search/"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="../">Home</a></li><li><span class="toctext">Manual</span><ul><li><a class="toctext" href="../quickguide/">Getting Started</a></li><li><a class="toctext" href="../network-data/">Network Data Format</a></li><li><a class="toctext" href="../result-data/">Result Data Format</a></li><li class="current"><a class="toctext" href>Mathematical Model</a><ul class="internal"><li><a class="toctext" href="#Sets-and-Parameters-1">Sets and Parameters</a></li><li><a class="toctext" href="#AC-Optimal-Power-Flow-1">AC Optimal Power Flow</a></li><li><a class="toctext" href="#AC-Optimal-Power-Flow-for-the-Branch-Flow-Model-1">AC Optimal Power Flow for the Branch Flow Model</a></li></ul></li><li><a class="toctext" href="../storage/">Storage Model</a></li><li><a class="toctext" href="../switch/">Switch Model</a></li><li><a class="toctext" href="../multi-networks/">Multi Networks</a></li><li><a class="toctext" href="../utilities/">Utilities</a></li></ul></li><li><span class="toctext">Library</span><ul><li><a class="toctext" href="../formulations/">Network Formulations</a></li><li><a class="toctext" href="../specifications/">Problem Specifications</a></li><li><span class="toctext">Modeling Components</span><ul><li><a class="toctext" href="../model/">PowerModel</a></li><li><a class="toctext" href="../objective/">Objective</a></li><li><a class="toctext" href="../variables/">Variables</a></li><li><a class="toctext" href="../constraints/">Constraints</a></li></ul></li><li><a class="toctext" href="../relaxations/">Relaxation Schemes</a></li><li><a class="toctext" href="../parser/">File IO</a></li></ul></li><li><span class="toctext">Developer</span><ul><li><a class="toctext" href="../developer/">Developer</a></li><li><a class="toctext" href="../formulation-details/">Formulation Details</a></li></ul></li><li><a class="toctext" href="../experiment-results/">Experiment Results</a></li></ul></nav><article id="docs"><header><nav><ul><li>Manual</li><li><a href>Mathematical Model</a></li></ul><a class="edit-page" href="https://github.com/lanl-ansi/PowerModels.jl/blob/master/docs/src/math-model.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Mathematical Model</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="The-PowerModels-Mathematical-Model-1" href="#The-PowerModels-Mathematical-Model-1">The PowerModels Mathematical Model</a></h1><p>As PowerModels implements a variety of power network optimization problems, the implementation is the best reference for precise mathematical formulations.  This section provides a complex number based mathematical specification for a prototypical AC Optimal Power Flow problem, to provide an overview of the typical mathematical models in PowerModels.</p><h2><a class="nav-anchor" id="Sets-and-Parameters-1" href="#Sets-and-Parameters-1">Sets and Parameters</a></h2><p>PowerModels implements a slightly generalized version of the AC Optimal Power Flow problem from <a href="http://www.pserc.cornell.edu/matpower/">Matpower</a>.  These generalizations make it possible for PowerModels to more accurately capture industrial transmission network datasets.  The core generalizations are,</p><ul><li>Support for multiple load (<span>$S^d_k$</span>) and shunt (<span>$Y^s_{k}$</span>) components on each bus <span>$i$</span></li><li>Line charging that supports a conductance and asymmetrical values (<span>$Y^c_{ij}, Y^c_{ji}$</span>)</li></ul><div>\[\begin{align}
+%
+\mbox{sets:} &amp; \nonumber \\
+&amp; N \mbox{ - buses}\nonumber \\
+&amp; R \mbox{ - reference buses}\nonumber \\
+&amp; E, E^R \mbox{ - branches, forward and reverse orientation} \nonumber \\
+&amp; G, G_i \mbox{ - generators and generators at bus $i$} \nonumber \\
+&amp; L, L_i \mbox{ - loads and loads at bus $i$} \nonumber \\
+&amp; S, S_i \mbox{ - shunts and shunts at bus $i$} \nonumber \\
+%
+\mbox{data:} &amp; \nonumber \\
+&amp; S^{gl}_k, S^{gu}_k \;\; \forall k \in G \nonumber \mbox{ - generator complex power bounds}\\
+&amp; c_{2k}, c_{1k}, c_{0k} \;\; \forall k \in G \nonumber  \mbox{ - generator cost components}\\
+&amp; v^l_i, v^u_i \;\; \forall i \in N \nonumber \mbox{ - voltage bounds}\\
+&amp; S^d_k \;\; \forall k \in L \nonumber \mbox{ - load complex power consumption}\\
+&amp; Y^s_{k} \;\; \forall k \in S \nonumber \mbox{ - bus shunt admittance}\\
+&amp; Y_{ij}, Y^c_{ij}, Y^c_{ji} \;\; \forall (i,j) \in E \nonumber \mbox{ - branch pi-section parameters}\\
+&amp; {T}_{ij} \;\; \forall (i,j) \in E \nonumber \mbox{ - branch complex transformation ratio}\\
+&amp; s^u_{ij}  \;\; \forall (i,j) \in E \nonumber \mbox{ - branch apparent power limit}\\
+&amp; i^u_{ij}  \;\; \forall (i,j) \in E \nonumber \mbox{ - branch current limit}\\
+&amp; \theta^{\Delta l}_{ij}, \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \nonumber \mbox{ - branch voltage angle difference bounds}\\
+%
+\end{align}\]</div><h2><a class="nav-anchor" id="AC-Optimal-Power-Flow-1" href="#AC-Optimal-Power-Flow-1">AC Optimal Power Flow</a></h2><p>A complete mathematical model is as follows,</p><div>\[\begin{align}
+%
+\mbox{variables: } &amp;  \\
+&amp; S^g_k \;\; \forall k\in G \mbox{ - generator complex power dispatch} \label{var_generation}\\
+&amp; V_i \;\; \forall i\in N \label{var_voltage} \mbox{ - bus complex voltage}\\
+&amp; S_{ij} \;\; \forall (i,j) \in E \cup E^R  \label{var_complex_power} \mbox{ - branch complex power flow}\\
+%
+\mbox{minimize: } &amp; \sum_{k \in G} c_{2k} (\Re(S^g_k))^2 + c_{1k}\Re(S^g_k) + c_{0k} \label{eq_objective}\\
+%
+\mbox{subject to: } &amp; \nonumber \\
+&amp; \angle V_{r} = 0  \;\; \forall r \in R \label{eq_ref_bus}\\
+&amp; S^{gl}_k \leq S^g_k \leq S^{gu}_k \;\; \forall k \in G  \label{eq_gen_bounds}\\
+&amp; v^l_i \leq |V_i| \leq v^u_i \;\; \forall i \in N \label{eq_voltage_bounds}\\
+&amp; \sum_{\substack{k \in G_i}} S^g_k - \sum_{\substack{k \in L_i}} S^d_k - \sum_{\substack{k \in S_i}} Y^s_k |V_i|^2 = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} S_{ij} \;\; \forall i\in N \label{eq_kcl_shunt} \\
+&amp; S_{ij} = \left( Y_{ij} + Y^c_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2} - Y^*_{ij} \frac{V_i V^*_j}{{T}_{ij}} \;\; \forall (i,j)\in E \label{eq_power_from}\\
+&amp; S_{ji} = \left( Y_{ij} + Y^c_{ji} \right)^* |V_j|^2 - Y^*_{ij} \frac{V^*_i V_j}{{T}^*_{ij}} \;\; \forall (i,j)\in E \label{eq_power_to}\\
+&amp; |S_{ij}| \leq s^u_{ij} \;\; \forall (i,j) \in E \cup E^R \label{eq_thermal_limit}\\
+&amp; |I_{ij}| \leq i^u_{ij} \;\; \forall (i,j) \in E \cup E^R \label{eq_current_limit}\\
+&amp; \theta^{\Delta l}_{ij} \leq \angle (V_i V^*_j) \leq \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \label{eq_angle_difference}
+%
+\end{align}\]</div><p>Note that for clarity of this presentation some model variants that PowerModels supports have been omitted (e.g. piecewise linear cost functions and HVDC lines).  Details about these variants is available in the <a href="http://www.pserc.cornell.edu/matpower/">Matpower</a> documentation.</p><h3><a class="nav-anchor" id="Mapping-to-function-names-1" href="#Mapping-to-function-names-1">Mapping to function names</a></h3><ul><li>Eq. <span>$\eqref{var_generation}$</span> - <code>variable_generation</code> in <code>variable.jl</code></li><li>Eq. <span>$\eqref{var_voltage}$</span> - <code>variable_voltage</code> in <code>variable.jl</code></li><li>Eq. <span>$\eqref{var_complex_power}$</span> - <code>variable_branch_flow</code> in <code>variable.jl</code></li><li>Eq. <span>$\eqref{eq_objective}$</span> - <code>objective_min_fuel_cost</code> in <code>objective.jl</code></li><li>Eq. <span>$\eqref{eq_ref_bus}$</span> - <code>constraint_theta_ref</code> in <code>constraint_template.jl</code></li><li>Eq. <span>$\eqref{eq_gen_bounds}$</span> - bounds of <code>variable_generation</code> in <code>variable.jl</code></li><li>Eq. <span>$\eqref{eq_voltage_bounds}$</span> - bounds of <code>variable_voltage</code> in <code>variable.jl</code></li><li>Eq. <span>$\eqref{eq_kcl_shunt}$</span> - <code>constraint_power_balance_shunt</code> in <code>constraint_template.jl</code></li><li>Eq. <span>$\eqref{eq_power_from}$</span> - <code>constraint_ohms_yt_from</code> in <code>constraint_template.jl</code></li><li>Eq. <span>$\eqref{eq_power_to}$</span> - <code>constraint_ohms_yt_to</code> in <code>constraint_template.jl</code></li><li>Eq. <span>$\eqref{eq_thermal_limit}$</span> - <code>constraint_thermal_limit_from</code> and <code>constraint_thermal_limit_to</code> in <code>constraint_template.jl</code></li><li>Eq. <span>$\eqref{eq_current_limit}$</span> - <code>constraint_current_limit</code> in <code>constraint_template.jl</code></li><li>Eq. <span>$\eqref{eq_angle_difference}$</span> - <code>constraint_voltage_angle_difference</code> in <code>constraint_template.jl</code></li></ul><h2><a class="nav-anchor" id="AC-Optimal-Power-Flow-for-the-Branch-Flow-Model-1" href="#AC-Optimal-Power-Flow-for-the-Branch-Flow-Model-1">AC Optimal Power Flow for the Branch Flow Model</a></h2><p>The same assumptions apply as before. The series impedance is <span>$Z_{ij}=(Y_{ij})^{-1}$</span>. In comparison  with the BIM, a new variable <span>$I^{s}_{ij}$</span>, representing the current in the direction <span>$i$</span> to <span>$j$</span>, through the series part of the pi-section, is introduced. A complete mathematical formulation for a Branch Flow Model is conceived as:</p><div>\[\begin{align}
+%
+\mbox{variables: } &amp; \nonumber \\
+&amp; S^g_k \;\; \forall k\in G \nonumber \\
+&amp; V_i \;\; \forall i\in N \nonumber \\
+&amp; S_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber \\
+&amp; I^{s}_{ij} \;\; \forall (i,j) \in E \cup E^R \label{var_branch_current}  \mbox{ - branch complex (series) current}\\
+%
+\mbox{minimize: } &amp; \sum_{k \in G} c_{2k} (\Re(S^g_k))^2 + c_{1k}\Re(S^g_k) + c_{0k} \nonumber\\
+%
+\mbox{subject to: } &amp; \nonumber \\
+&amp; \angle V_{r} = 0  \;\; \forall r \in R \nonumber \\
+&amp; S^{gl}_k \leq S^g_k \leq S^{gu}_k \;\; \forall k \in G \nonumber \\
+&amp; v^l_i \leq |V_i| \leq v^u_i \;\; \forall i \in N \nonumber\\
+&amp; \sum_{\substack{k \in G_i}} S^g_k - \sum_{\substack{k \in L_i}} S^d_k - \sum_{\substack{k \in S_i}} Y^s_k |V_i|^2 = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} S_{ij} \;\; \forall i\in N \nonumber\\
+&amp; S_{ij} +  S_{ji} = \left(Y^c_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2} + Z_{ij} |I^{s}_{ij}|^2 +  \left(Y^c_{ji}\right)^* {|V_j|^2}  \;\; \forall (i,j)\in E \label{eq_line_losses} \\
+&amp; S_{ij} = S^{s}_{ij} + \left(Y^c_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2}  \;\; \forall (i,j)\in E \label{eq_series_power_flow} \\
+&amp; S^{s}_{ij} = \frac{V_i}{{T}_{ij}} (I^{s}_{ij})^*  \;\; \forall (i,j)\in E \label{eq_complex_power_definition} \\
+&amp; \frac{V_i}{{T}_{ij}} = V_j + z_{ij} I^{s}_{ij}  \;\; \forall (i,j)\in E \label{eq_ohms_bfm} \\
+&amp; |S_{ij}| \leq s^u_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber\\
+&amp; |I_{ij}| \leq i^u_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber\\
+&amp; \theta^{\Delta l}_{ij} \leq \angle (V_i V^*_j) \leq \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \nonumber
+%
+\end{align}\]</div><p>Note that constraints <span>$\eqref{eq_line_losses} - \eqref{eq_ohms_bfm}$</span> replace <span>$\eqref{eq_power_from} - \eqref{eq_power_to}$</span> but the remainder of the problem formulation is identical. Furthermore, the problems have the same feasible set.  </p><h3><a class="nav-anchor" id="Mapping-to-function-names-2" href="#Mapping-to-function-names-2">Mapping to function names</a></h3><ul><li>Eq. <span>$\eqref{var_branch_current}$</span> - <code>variable_branch_current</code> in <code>variable.jl</code></li><li>Eq. <span>$\eqref{eq_line_losses}$</span> - <code>constraint_flow_losses</code> in <code>constraint_template.jl</code></li><li>Eq. <span>$\eqref{eq_series_power_flow}$</span> - implicit, substituted out before implementation</li><li>Eq. <span>$\eqref{eq_complex_power_definition}$</span> - <code>constraint_model_voltage</code> in <code>constraint_template.jl</code></li><li>Eq. <span>$\eqref{eq_ohms_bfm}$</span> - <code>constraint_voltage_magnitude_difference</code> in <code>constraint_template.jl</code></li></ul><footer><hr/><a class="previous" href="../result-data/"><span class="direction">Previous</span><span class="title">Result Data Format</span></a><a class="next" href="../storage/"><span class="direction">Next</span><span class="title">Storage Model</span></a></footer></article></body></html>

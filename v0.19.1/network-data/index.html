@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Network Data Format · PowerModels</title><script async src="https://www.googletagmanager.com/gtag/js?id=UA-367975-10"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-367975-10', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.039/juliamono-regular.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.11/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.svg" alt="PowerModels logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">PowerModels</a></span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Manual</span><ul><li><a class="tocitem" href="../quickguide/">Getting Started</a></li><li class="is-active"><a class="tocitem" href>Network Data Format</a><ul class="internal"><li><a class="tocitem" href="#The-Network-Data-Dictionary"><span>The Network Data Dictionary</span></a></li><li><a class="tocitem" href="#Working-with-the-Network-Data-Dictionary"><span>Working with the Network Data Dictionary</span></a></li><li><a class="tocitem" href="#Working-with-Matpower-Data-Files"><span>Working with Matpower Data Files</span></a></li><li><a class="tocitem" href="#Working-with-PTI-Data-files"><span>Working with PTI Data files</span></a></li></ul></li><li><a class="tocitem" href="../result-data/">Result Data Format</a></li><li><a class="tocitem" href="../math-model/">Mathematical Model</a></li><li><a class="tocitem" href="../power-flow/">Power Flow</a></li><li><a class="tocitem" href="../storage/">Storage Model</a></li><li><a class="tocitem" href="../switch/">Switch Model</a></li><li><a class="tocitem" href="../multi-networks/">Multi Networks</a></li><li><a class="tocitem" href="../utilities/">Utilities</a></li><li><a class="tocitem" href="../basic-data-utilities/">Basic Data Utilities</a></li></ul></li><li><span class="tocitem">Library</span><ul><li><a class="tocitem" href="../formulations/">Network Formulations</a></li><li><a class="tocitem" href="../specifications/">Problem Specifications</a></li><li><input class="collapse-toggle" id="menuitem-3-3" type="checkbox"/><label class="tocitem" for="menuitem-3-3"><span class="docs-label">Modeling Components</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../model/">PowerModel</a></li><li><a class="tocitem" href="../objective/">Objective</a></li><li><a class="tocitem" href="../variables/">Variables</a></li><li><a class="tocitem" href="../constraints/">Constraints</a></li></ul></li><li><a class="tocitem" href="../relaxations/">Relaxation Schemes</a></li><li><a class="tocitem" href="../parser/">File IO</a></li></ul></li><li><span class="tocitem">Developer</span><ul><li><a class="tocitem" href="../developer/">Developer</a></li><li><a class="tocitem" href="../formulation-details/">Formulation Details</a></li></ul></li><li><a class="tocitem" href="../experiment-results/">Experiment Results</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Manual</a></li><li class="is-active"><a href>Network Data Format</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Network Data Format</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/lanl-ansi/PowerModels.jl/blob/master/docs/src/network-data.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="PowerModels-Network-Data-Format"><a class="docs-heading-anchor" href="#PowerModels-Network-Data-Format">PowerModels Network Data Format</a><a id="PowerModels-Network-Data-Format-1"></a><a class="docs-heading-anchor-permalink" href="#PowerModels-Network-Data-Format" title="Permalink"></a></h1><h2 id="The-Network-Data-Dictionary"><a class="docs-heading-anchor" href="#The-Network-Data-Dictionary">The Network Data Dictionary</a><a id="The-Network-Data-Dictionary-1"></a><a class="docs-heading-anchor-permalink" href="#The-Network-Data-Dictionary" title="Permalink"></a></h2><p>Internally PowerModels utilizes a dictionary to store network data. The dictionary uses strings as key values so it can be serialized to JSON for algorithmic data exchange.</p><p>The data dictionary organization and key names are designed to be mostly consistent with the <a href="http://www.pserc.cornell.edu/matpower/">Matpower</a> file format and should be familiar to power system researchers, with the notable exceptions that loads and shunts are now split into separate components (see example below), and in the case of <code>&quot;multinetwork&quot;</code> data, most often used for time series.</p><p>The network data dictionary structure is roughly as follows:</p><pre><code class="language-json hljs">{
+&quot;name&quot;:&lt;string&gt;,
+&quot;baseMVA&quot;:&lt;float&gt;,
+&quot;source_type&quot;:&lt;string&gt;,
+&quot;source_version&quot;:&lt;string&gt;,
+&quot;bus&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:&lt;int&gt;,
+        &quot;bus_type&quot;:&lt;int&gt;,
+        &quot;va&quot;:&lt;float&gt;,
+        &quot;vm&quot;:&lt;float&gt;,
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;load&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:&lt;int&gt;,
+        &quot;load_bus&quot;:&lt;int&gt;,
+        &quot;pd&quot;:&lt;float&gt;,
+        &quot;qd&quot;:&lt;float&gt;,
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;shunt&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:&lt;int&gt;,
+        &quot;shunt_bus&quot;:&lt;int&gt;,
+        &quot;gs&quot;:&lt;float&gt;,
+        &quot;bs&quot;:&lt;float&gt;,
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;gen&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:&lt;int&gt;,
+        &quot;gen_bus&quot;:&lt;int&gt;,
+        &quot;pg&quot;:&lt;float&gt;,
+        &quot;qg&quot;:&lt;float&gt;,
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;storage&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:&lt;int&gt;,
+        &quot;storage_bus&quot;:&lt;int&gt;,
+        &quot;ps&quot;::&lt;float&gt;,
+        &quot;qs&quot;::&lt;float&gt;,
+        &quot;energy&quot;:&lt;float&gt;,
+        &quot;energy_rating&quot;:&lt;float&gt;,
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;branch&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:&lt;int&gt;,
+        &quot;f_bus&quot;:&lt;int&gt;,
+        &quot;t_bus&quot;:&lt;int&gt;,
+        &quot;br_r&quot;:&lt;float&gt;,
+        &quot;g_fr&quot;:&lt;float&gt;,
+        &quot;b_fr&quot;:&lt;float&gt;,
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;dcline&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:&lt;int&gt;,
+        &quot;f_bus&quot;:&lt;int&gt;,
+        &quot;t_bus&quot;:&lt;int&gt;,
+        &quot;pf&quot;:&lt;float&gt;,
+        &quot;qf&quot;:&lt;float&gt;,
+        &quot;vf&quot;:&lt;float&gt;,
+        &quot;loss0&quot;:&lt;float&gt;,
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+&quot;switch&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:&lt;int&gt;,
+        &quot;f_bus&quot;:&lt;int&gt;,
+        &quot;t_bus&quot;:&lt;int&gt;,
+        &quot;psw&quot;:&lt;float&gt;,
+        &quot;qsw&quot;:&lt;float&gt;,
+        &quot;state&quot;:&lt;int&gt;,
+        &quot;thermal_rating&quot;:&lt;float&gt;,
+        ...
+    },
+    &quot;2&quot;:{...},
+    ...
+},
+...
+}</code></pre><p>The following commands can be used to explore the network data dictionary generated by a given PTI or Matpower (this example) data file,</p><pre><code class="language-julia hljs">network_data = PowerModels.parse_file(&quot;matpower/case3.m&quot;)
+display(network_data) # raw dictionary
+PowerModels.print_summary(network_data) # quick table-like summary
+PowerModels.component_table(network_data, &quot;bus&quot;, [&quot;vmin&quot;, &quot;vmax&quot;]) # component data in matrix form</code></pre><p>The <code>print_summary</code> function generates a table-like text summary of the network data, which is helpful in quickly assessing the values in a data or solution dictionary.  The <code>component_table</code> builds a matrix of data for a given component type where there is one row for each component and one column for each requested data field.  The first column of a component table is the component&#39;s identifier (i.e. the index).</p><p>For a detailed list of all possible parameters refer to the specification document provided with <a href="http://www.pserc.cornell.edu/matpower/">Matpower</a>. The exception to this is that <code>&quot;load&quot;</code> and <code>&quot;shunt&quot;</code>, containing <code>&quot;pd&quot;</code>, <code>&quot;qd&quot;</code> and <code>&quot;gs&quot;</code>, <code>&quot;bs&quot;</code>, respectively, have been added as additional fields. These values are contained in <code>&quot;bus&quot;</code> in the original specification.</p><h3 id="Noteworthy-Differences-from-Matpower-Data-Files"><a class="docs-heading-anchor" href="#Noteworthy-Differences-from-Matpower-Data-Files">Noteworthy Differences from Matpower Data Files</a><a id="Noteworthy-Differences-from-Matpower-Data-Files-1"></a><a class="docs-heading-anchor-permalink" href="#Noteworthy-Differences-from-Matpower-Data-Files" title="Permalink"></a></h3><p>The PowerModels network data dictionary differs from the Matpower format in the following ways,</p><ul><li>All PowerModels components have an <code>index</code> parameter, which can be used to uniquely identify that network element.</li><li>All network parameters are in per-unit and angles are in radians.</li><li>All non-transformer branches are given nominal transformer values (i.e. a tap of 1.0 and a shift of 0.0).</li><li>All branches have a <code>transformer</code> field indicating if they are a transformer or not.</li><li>Thermal limit (<code>rate</code>) and current (<code>c_rating</code>) ratings on branches are optional.</li><li>When present, the <code>gencost</code> data is incorporated into the <code>gen</code> data, the column names remain the same.</li><li>When present, the <code>dclinecost</code> data is incorporated into the <code>dcline</code> data, the column names remain the same.</li><li>When present, the <code>bus_names</code> data is incorporated into the <code>bus</code> data under the property <code>&quot;bus_name&quot;</code>.</li><li>Special treatment is given to the optional <code>ne_branch</code> matrix to support the TNEP problem.</li><li>Load data are split off from <code>bus</code> data into <code>load</code> data under the same property names.</li><li>Shunt data are split off from <code>bus</code> data into <code>shunt</code> data under the same property names.</li></ul><h2 id="Working-with-the-Network-Data-Dictionary"><a class="docs-heading-anchor" href="#Working-with-the-Network-Data-Dictionary">Working with the Network Data Dictionary</a><a id="Working-with-the-Network-Data-Dictionary-1"></a><a class="docs-heading-anchor-permalink" href="#Working-with-the-Network-Data-Dictionary" title="Permalink"></a></h2><p>Data exchange via JSON files is ideal for building algorithms, however it is hard to for humans to read and process.  To that end PowerModels provides various helper functions for manipulating the network data dictionary.</p><p>The first of these helper functions are <code>make_per_unit</code> and <code>make_mixed_units!</code>, which convert the units of the data inside a network data dictionary.  The <em>mixed units</em> format follows the unit conventions from Matpower and other common power network formats where some of the values are in per unit and others are the true values.  These functions can be used as follows,</p><pre><code class="nohighlight hljs">network_data = PowerModels.parse_file(&quot;matpower/case3.m&quot;)
+PowerModels.print_summary(network_data) # default per-unit form
+PowerModels.make_mixed_units!(network_data)
+PowerModels.print_summary(network_data) # mixed units form</code></pre><p>Another useful helper function is <code>update_data</code>, which takes two network data dictionaries and updates the values in the first dictionary with the values from the second dictionary.  This is particularly helpful when applying sparse updates to network data.  A good example is using the solution of one computation to update the data in preparation for a second computation, like so,</p><pre><code class="nohighlight hljs">data = PowerModels.parse_file(&quot;matpower/case3.m&quot;)
+opf_result = run_ac_opf(data, Ipopt.Optimizer)
+PowerModels.print_summary(opf_result[&quot;solution&quot;])
+
+PowerModels.update_data!(data, opf_result[&quot;solution&quot;])
+pf_result = run_ac_pf(data, Ipopt.Optimizer)
+PowerModels.print_summary(pf_result[&quot;solution&quot;])</code></pre><p>A variety of helper functions are available for processing the topology of the network.  For example, <code>connected_components</code> will compute the collections of buses that are connected by branches (i.e. the network&#39;s islands).  By default PowerModels will attempt to solve all of the network components simultaneously.  The <code>select_largest_component</code> function can be used to only consider the largest component in the network.  Finally the <code>propagate_topology_status!</code> can be used to explicitly deactivate components that are implicitly inactive due to the status of other components (e.g. deactivating branches based on the status of their connecting buses), like so,</p><pre><code class="nohighlight hljs">data = PowerModels.parse_file(&quot;matpower/case3.m&quot;)
+PowerModels.propagate_topology_status!(data)
+opf_result = run_ac_opf(data, Ipopt.Optimizer)</code></pre><p>The <code>test/data/matpower/case7_tplgy.m</code> case provides an example of the kind of component status deductions that can be made.  The <code>simplify_network!</code>, <code>propagate_topology_status!</code> and <code>deactivate_isolated_components!</code> functions can be helpful in diagnosing network models that do not converge or have an infeasible solution.</p><p>For details on all of the network data helper functions see, <code>src/core/data.jl</code>.</p><h2 id="Working-with-Matpower-Data-Files"><a class="docs-heading-anchor" href="#Working-with-Matpower-Data-Files">Working with Matpower Data Files</a><a id="Working-with-Matpower-Data-Files-1"></a><a class="docs-heading-anchor-permalink" href="#Working-with-Matpower-Data-Files" title="Permalink"></a></h2><p>PowerModels has extensive support for parsing Matpower network files in the <code>.m</code> format.</p><p>In addition to parsing the standard Matpower parameters, PowerModels also supports extending the standard Matpower format in a number of ways as illustrated by the following examples.  In these examples JSON document fragments are used to indicate the structure of the PowerModel dictionary.</p><p>Note that for DC lines, the flow results are returned using the same convention as for the AC lines, i.e. positive values for <code>p_from</code>/<code>q_from</code>and <code>p_to</code>/<code>q_to</code> indicating power flow from the &#39;to&#39; node or &#39;from&#39; node into the line. This means that w.r.t matpower the sign is identical for <code>p_from</code>, but opposite for <code>q_from</code>/<code>p_to</code>/<code>q_to</code>.</p><h3 id="Single-Values"><a class="docs-heading-anchor" href="#Single-Values">Single Values</a><a id="Single-Values-1"></a><a class="docs-heading-anchor-permalink" href="#Single-Values" title="Permalink"></a></h3><p>Single values are added to the root of the dictionary as follows,</p><pre><code class="nohighlight hljs">mpc.const_float = 4.56</code></pre><p>becomes</p><pre><code class="language-json hljs">{
+&quot;const_float&quot;: 4.56
+}</code></pre><h3 id="Nonstandard-Matrices"><a class="docs-heading-anchor" href="#Nonstandard-Matrices">Nonstandard Matrices</a><a id="Nonstandard-Matrices-1"></a><a class="docs-heading-anchor-permalink" href="#Nonstandard-Matrices" title="Permalink"></a></h3><p>Nonstandard matrices can be added as follows,</p><pre><code class="nohighlight hljs">mpc.areas = [
+    1   1;
+    2   3;
+];</code></pre><p>becomes</p><pre><code class="language-json hljs">{
+&quot;areas&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:1,
+        &quot;col_1&quot;:1,
+        &quot;col_2&quot;:1
+    },
+    &quot;2&quot;:{
+        &quot;index&quot;:1,
+        &quot;col_1&quot;:2,
+        &quot;col_2&quot;:3
+    }
+}
+}</code></pre><h3 id="Column-Names"><a class="docs-heading-anchor" href="#Column-Names">Column Names</a><a id="Column-Names-1"></a><a class="docs-heading-anchor-permalink" href="#Column-Names" title="Permalink"></a></h3><p>Column names can be given to nonstandard matrices using the following special comment,</p><pre><code class="nohighlight hljs">%column_names%  area    refbus
+mpc.areas_named = [
+    4   5;
+    5   6;
+];</code></pre><p>becomes</p><pre><code class="language-json hljs">{
+&quot;areas&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:1,
+        &quot;area&quot;:4,
+        &quot;refbus&quot;:5
+    },
+    &quot;2&quot;:{
+        &quot;index&quot;:2,
+        &quot;area&quot;:5,
+        &quot;refbus&quot;:6
+    }
+}
+}</code></pre><h3 id="Standard-Matrix-Extensions"><a class="docs-heading-anchor" href="#Standard-Matrix-Extensions">Standard Matrix Extensions</a><a id="Standard-Matrix-Extensions-1"></a><a class="docs-heading-anchor-permalink" href="#Standard-Matrix-Extensions" title="Permalink"></a></h3><p>Finally, if a nonstandard matrix&#39;s name extends a current Matpower matrix name with an underscore, then its values will be merged with the original Matpower component data.  Note that this feature requires that the nonstandard matrix has column names and has the same number of rows as the original matrix (similar to the <code>gencost</code> matrix in the Matpower format).  For example,</p><pre><code class="nohighlight hljs">%column_names%  rate_i  rate_p
+mpc.branch_limit = [
+    50.2    45;
+    36  60.1;
+    12  30;
+];</code></pre><p>becomes</p><pre><code class="language-json hljs">{
+&quot;branch&quot;:{
+    &quot;1&quot;:{
+        &quot;index&quot;:1,
+        ...(all pre existing fields)...
+        &quot;rate_i&quot;:50.2,
+        &quot;rate_p&quot;:45
+    },
+    &quot;2&quot;:{
+        &quot;index&quot;:2,
+        ...(all pre existing fields)...
+        &quot;rate_i&quot;:36,
+        &quot;rate_p&quot;:60.1
+    },
+    &quot;3&quot;:{
+        &quot;index&quot;:3,
+        ...(all pre existing fields)...
+        &quot;rate_i&quot;:12,
+        &quot;rate_p&quot;:30
+    }
+}
+}</code></pre><h2 id="Working-with-PTI-Data-files"><a class="docs-heading-anchor" href="#Working-with-PTI-Data-files">Working with PTI Data files</a><a id="Working-with-PTI-Data-files-1"></a><a class="docs-heading-anchor-permalink" href="#Working-with-PTI-Data-files" title="Permalink"></a></h2><p>PowerModels also has support for parsing PTI network files in the <code>.raw</code> format that follow the PSS(R)E v33 specification.  Currently PowerModels supports the following PTI components,</p><ul><li>Buses</li><li>Loads (constant power)</li><li>Fixed Shunts</li><li>Switch Shunts (default configuration)</li><li>Generators</li><li>Branches</li><li>Transformers (two and three winding)</li><li>Two-Terminal HVDC Lines (approximate)</li><li>Voltage Source Converter HVDC Lines (approximate)</li></ul><p>In addition to parsing the standard parameters required by PowerModels for calculations, PowerModels also supports parsing additional data fields that are defined by the PSS(R)E specification, but not used by PowerModels directly. This can be achieved via the <code>import_all</code> optional keyword argument in <code>parse_file</code> when loading a <code>.raw</code> file, e.g.</p><pre><code class="language-julia hljs">PowerModels.parse_file(&quot;pti/case3.raw&quot;; import_all=true)</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../quickguide/">« Getting Started</a><a class="docs-footer-nextpage" href="../result-data/">Result Data Format »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.10 on <span class="colophon-date" title="Wednesday 24 November 2021 20:15">Wednesday 24 November 2021</span>. Using Julia version 1.6.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Problem Specifications · PowerModels</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-367975-10', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>PowerModels</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="index.html">Home</a></li><li><span class="toctext">Manual</span><ul><li><a class="toctext" href="quickguide.html">Getting Started</a></li><li><a class="toctext" href="network-data.html">Network Data Format</a></li><li><a class="toctext" href="result-data.html">Result Data Format</a></li></ul></li><li><span class="toctext">Library</span><ul><li><a class="toctext" href="formulations.html">Network Formulations</a></li><li class="current"><a class="toctext" href="specifications.html">Problem Specifications</a><ul class="internal"><li><a class="toctext" href="#Optimal-Power-Flow-(OPF)-1">Optimal Power Flow (OPF)</a></li><li><a class="toctext" href="#Optimal-Power-Flow-(OPF)-using-the-Branch-Flow-Model-1">Optimal Power Flow (OPF) using the Branch Flow Model</a></li><li><a class="toctext" href="#Optimal-Transmission-Switching-(OTS)-1">Optimal Transmission Switching (OTS)</a></li><li><a class="toctext" href="#Power-Flow-(PF)-1">Power Flow (PF)</a></li><li><a class="toctext" href="#Power-Flow-(PF)-using-the-Branch-Flow-Model-1">Power Flow (PF) using the Branch Flow Model</a></li><li><a class="toctext" href="#Transmission-Network-Expansion-Planning-(TNEP)-1">Transmission Network Expansion Planning (TNEP)</a></li></ul></li><li><span class="toctext">Modeling Components</span><ul><li><a class="toctext" href="model.html">PowerModel</a></li><li><a class="toctext" href="objective.html">Objective</a></li><li><a class="toctext" href="variables.html">Variables</a></li><li><a class="toctext" href="constraints.html">Constraints</a></li></ul></li><li><a class="toctext" href="relaxations.html">Relaxation Schemes</a></li><li><a class="toctext" href="parser.html">File IO</a></li></ul></li><li><a class="toctext" href="developer.html">Developer</a></li><li><a class="toctext" href="experiment-results.html">Experiment Results</a></li></ul></nav><article id="docs"><header><nav><ul><li>Library</li><li><a href="specifications.html">Problem Specifications</a></li></ul><a class="edit-page" href="https://github.com/lanl-ansi/PowerModels.jl/blob/master/docs/src/specifications.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Problem Specifications</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="Problem-Specifications-1" href="#Problem-Specifications-1">Problem Specifications</a></h1><h2><a class="nav-anchor" id="Optimal-Power-Flow-(OPF)-1" href="#Optimal-Power-Flow-(OPF)-1">Optimal Power Flow (OPF)</a></h2><h3><a class="nav-anchor" id="Objective-1" href="#Objective-1">Objective</a></h3><pre><code class="language-julia">objective_min_fuel_cost(pm)</code></pre><h3><a class="nav-anchor" id="Variables-1" href="#Variables-1">Variables</a></h3><pre><code class="language-julia">variable_voltage(pm)
+variable_active_generation(pm)
+variable_reactive_generation(pm)
+variable_branch_flow(pm)
+variable_dcline_flow(pm)</code></pre><h3><a class="nav-anchor" id="Constraints-1" href="#Constraints-1">Constraints</a></h3><pre><code class="language-julia">constraint_theta_ref(pm)
+constraint_voltage(pm)
+for (i,bus) in pm.ref[:bus]
+    constraint_kcl_shunt(pm, bus)
+end
+for (i,branch) in pm.ref[:branch]
+    constraint_ohms_yt_from(pm, branch)
+    constraint_ohms_yt_to(pm, branch)
+
+    constraint_voltage_angle_difference(pm, branch)
+
+    constraint_thermal_limit_from(pm, branch)
+    constraint_thermal_limit_to(pm, branch)
+end
+for (i,dcline) in pm.ref[:dcline]
+    constraint_dcline(pm, dcline)
+end</code></pre><h2><a class="nav-anchor" id="Optimal-Power-Flow-(OPF)-using-the-Branch-Flow-Model-1" href="#Optimal-Power-Flow-(OPF)-using-the-Branch-Flow-Model-1">Optimal Power Flow (OPF) using the Branch Flow Model</a></h2><h3><a class="nav-anchor" id="Objective-2" href="#Objective-2">Objective</a></h3><pre><code class="language-julia">objective_min_fuel_cost(pm)</code></pre><h3><a class="nav-anchor" id="Variables-2" href="#Variables-2">Variables</a></h3><pre><code class="language-julia">variable_voltage(pm)
+variable_active_generation(pm)
+variable_reactive_generation(pm)
+variable_branch_flow(pm)
+variable_branch_current(pm)
+variable_dcline_flow(pm)</code></pre><h3><a class="nav-anchor" id="Constraints-2" href="#Constraints-2">Constraints</a></h3><pre><code class="language-julia">constraint_theta_ref(pm)
+constraint_voltage(pm)
+for (i,bus) in pm.ref[:bus]
+    constraint_kcl_shunt(pm, bus)
+end
+for (i,branch) in pm.ref[:branch]
+    constraint_flow_losses(pm, branch)
+    constraint_voltage_magnitude_difference(pm, branch)
+    constraint_branch_current(pm, branch)
+
+    constraint_voltage_angle_difference(pm, branch)
+
+    constraint_thermal_limit_from(pm, branch)
+    constraint_thermal_limit_to(pm, branch)
+end
+for (i,dcline) in pm.ref[:dcline]
+    constraint_dcline(pm, dcline)
+end</code></pre><h2><a class="nav-anchor" id="Optimal-Transmission-Switching-(OTS)-1" href="#Optimal-Transmission-Switching-(OTS)-1">Optimal Transmission Switching (OTS)</a></h2><h3><a class="nav-anchor" id="General-Assumptions-1" href="#General-Assumptions-1">General Assumptions</a></h3><ul><li><p>if the branch status is <code>0</code> in the input, it is out of service and forced to <code>0</code> in OTS</p></li><li><p>the network will be maintained as one connected component (i.e. at least <code>n-1</code> edges)</p></li></ul><h3><a class="nav-anchor" id="Variables-3" href="#Variables-3">Variables</a></h3><pre><code class="language-julia">variable_branch_indicator(pm)
+variable_voltage_on_off(pm)
+variable_active_generation(pm)
+variable_reactive_generation(pm)
+variable_branch_flow(pm)
+variable_dcline_flow(pm)</code></pre><h3><a class="nav-anchor" id="Objective-3" href="#Objective-3">Objective</a></h3><pre><code class="language-julia">objective_min_fuel_cost(pm)</code></pre><h3><a class="nav-anchor" id="Constraints-3" href="#Constraints-3">Constraints</a></h3><pre><code class="language-julia">constraint_theta_ref(pm)
+constraint_voltage_on_off(pm)
+for (i,bus) in pm.ref[:bus]
+    constraint_kcl_shunt(pm, bus)
+end
+for (i,branch) in pm.ref[:branch]
+    constraint_ohms_yt_from_on_off(pm, branch)
+    constraint_ohms_yt_to_on_off(pm, branch)
+
+    constraint_voltage_angle_difference_on_off(pm, branch)
+
+    constraint_thermal_limit_from_on_off(pm, branch)
+    constraint_thermal_limit_to_on_off(pm, branch)
+end
+for (i,dcline) in pm.ref[:dcline]
+    constraint_dcline(pm, dcline)
+end</code></pre><h2><a class="nav-anchor" id="Power-Flow-(PF)-1" href="#Power-Flow-(PF)-1">Power Flow (PF)</a></h2><h3><a class="nav-anchor" id="Assumptions-1" href="#Assumptions-1">Assumptions</a></h3><h3><a class="nav-anchor" id="Variables-4" href="#Variables-4">Variables</a></h3><pre><code class="language-julia">variable_voltage(pm, bounded = false)
+variable_active_generation(pm, bounded = false)
+variable_reactive_generation(pm, bounded = false)
+variable_branch_flow(pm, bounded = false)
+variable_dcline_flow(pm, bounded = false)</code></pre><h3><a class="nav-anchor" id="Constraints-4" href="#Constraints-4">Constraints</a></h3><pre><code class="language-julia">constraint_theta_ref(pm)
+constraint_voltage_magnitude_setpoint(pm, pm.ref[:bus][pm.ref[:ref_bus]])
+constraint_voltage(pm)
+
+
+for (i,bus) in pm.ref[:bus]
+    constraint_kcl_shunt(pm, bus)
+
+    # PV Bus Constraints
+    if length(pm.ref[:bus_gens][i]) &gt; 0 &amp;&amp; i != pm.ref[:ref_bus]
+        # this assumes inactive generators are filtered out of bus_gens
+        @assert bus[&quot;bus_type&quot;] == 2
+
+        constraint_voltage_magnitude_setpoint(pm, bus)
+        for j in pm.ref[:bus_gens][i]
+            constraint_active_gen_setpoint(pm, pm.ref[:gen][j])
+        end
+    end
+end
+
+for (i,branch) in pm.ref[:branch]
+    constraint_ohms_yt_from(pm, branch)
+    constraint_ohms_yt_to(pm, branch)
+end
+for (i,dcline) in pm.ref[:dcline]
+    constraint_active_dcline_setpoint(pm, dcline)
+end</code></pre><h2><a class="nav-anchor" id="Power-Flow-(PF)-using-the-Branch-Flow-Model-1" href="#Power-Flow-(PF)-using-the-Branch-Flow-Model-1">Power Flow (PF) using the Branch Flow Model</a></h2><h3><a class="nav-anchor" id="Assumptions-2" href="#Assumptions-2">Assumptions</a></h3><h3><a class="nav-anchor" id="Variables-5" href="#Variables-5">Variables</a></h3><pre><code class="language-julia">variable_voltage(pm, bounded = false)
+variable_active_generation(pm, bounded = false)
+variable_reactive_generation(pm, bounded = false)
+variable_branch_flow(pm, bounded = false)
+constraint_branch_current(pm, bounded = false)
+variable_branch_current(pm, bounded = false)</code></pre><h3><a class="nav-anchor" id="Constraints-5" href="#Constraints-5">Constraints</a></h3><pre><code class="language-julia">constraint_theta_ref(pm)
+constraint_voltage_magnitude_setpoint(pm, pm.ref[:bus][pm.ref[:ref_bus]])
+constraint_voltage(pm)
+
+
+for (i,bus) in pm.ref[:bus]
+    constraint_kcl_shunt(pm, bus)
+
+    # PV Bus Constraints
+    if length(pm.ref[:bus_gens][i]) &gt; 0 &amp;&amp; i != pm.ref[:ref_bus]
+        # this assumes inactive generators are filtered out of bus_gens
+        @assert bus[&quot;bus_type&quot;] == 2
+
+        constraint_voltage_magnitude_setpoint(pm, bus)
+        for j in pm.ref[:bus_gens][i]
+            constraint_active_gen_setpoint(pm, pm.ref[:gen][j])
+        end
+    end
+end
+
+for (i,branch) in pm.ref[:branch]
+    constraint_flow_losses(pm, branch)
+    constraint_voltage_magnitude_difference(pm, branch)
+    constraint_branch_current(pm, branch)
+end
+for (i,dcline) in pm.ref[:dcline]
+    constraint_active_dcline_setpoint(pm, dcline)
+end</code></pre><h2><a class="nav-anchor" id="Transmission-Network-Expansion-Planning-(TNEP)-1" href="#Transmission-Network-Expansion-Planning-(TNEP)-1">Transmission Network Expansion Planning (TNEP)</a></h2><h3><a class="nav-anchor" id="Objective-4" href="#Objective-4">Objective</a></h3><pre><code class="language-julia">objective_tnep_cost(pm)</code></pre><h3><a class="nav-anchor" id="Variables-6" href="#Variables-6">Variables</a></h3><pre><code class="language-julia">variable_branch_ne(pm)
+variable_voltage(pm)
+variable_voltage_ne(pm)
+variable_active_generation(pm)
+variable_reactive_generation(pm)
+variable_branch_flow(pm)
+variable_dcline_flow(pm)
+variable_branch_flow_ne(pm)</code></pre><h3><a class="nav-anchor" id="Constraints-6" href="#Constraints-6">Constraints</a></h3><pre><code class="language-julia">constraint_theta_ref(pm)
+constraint_voltage(pm)
+constraint_voltage_ne(pm)
+
+for (i,bus) in pm.ref[:bus]
+    constraint_kcl_shunt_ne(pm, bus)
+end
+
+for (i,branch) in pm.ref[:branch]
+    constraint_ohms_yt_from(pm, branch)
+    constraint_ohms_yt_to(pm, branch)
+
+    constraint_voltage_angle_difference(pm, branch)
+
+    constraint_thermal_limit_from(pm, branch)
+    constraint_thermal_limit_to(pm, branch)
+end
+
+for (i,branch) in pm.ref[:ne_branch]
+    constraint_ohms_yt_from_ne(pm, branch)
+    constraint_ohms_yt_to_ne(pm, branch)
+
+    constraint_voltage_angle_difference_ne(pm, branch)
+
+    constraint_thermal_limit_from_ne(pm, branch)
+    constraint_thermal_limit_to_ne(pm, branch)
+end
+for (i,dcline) in pm.ref[:dcline]
+    constraint_dcline(pm, dcline)
+end</code></pre><footer><hr/><a class="previous" href="formulations.html"><span class="direction">Previous</span><span class="title">Network Formulations</span></a><a class="next" href="model.html"><span class="direction">Next</span><span class="title">PowerModel</span></a></footer></article></body></html>

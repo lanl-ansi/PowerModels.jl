@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Mathematical Model · PowerModels</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-367975-10', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>PowerModels</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="index.html">Home</a></li><li><span class="toctext">Manual</span><ul><li><a class="toctext" href="quickguide.html">Getting Started</a></li><li><a class="toctext" href="network-data.html">Network Data Format</a></li><li><a class="toctext" href="result-data.html">Result Data Format</a></li><li class="current"><a class="toctext" href="math-model.html">Mathematical Model</a><ul class="internal"><li><a class="toctext" href="#AC-Optimal-Power-Flow-1">AC Optimal Power Flow</a></li></ul></li></ul></li><li><span class="toctext">Library</span><ul><li><a class="toctext" href="formulations.html">Network Formulations</a></li><li><a class="toctext" href="specifications.html">Problem Specifications</a></li><li><span class="toctext">Modeling Components</span><ul><li><a class="toctext" href="model.html">PowerModel</a></li><li><a class="toctext" href="objective.html">Objective</a></li><li><a class="toctext" href="variables.html">Variables</a></li><li><a class="toctext" href="constraints.html">Constraints</a></li></ul></li><li><a class="toctext" href="relaxations.html">Relaxation Schemes</a></li><li><a class="toctext" href="parser.html">File IO</a></li></ul></li><li><a class="toctext" href="developer.html">Developer</a></li><li><a class="toctext" href="experiment-results.html">Experiment Results</a></li></ul></nav><article id="docs"><header><nav><ul><li>Manual</li><li><a href="math-model.html">Mathematical Model</a></li></ul><a class="edit-page" href="https://github.com/lanl-ansi/PowerModels.jl/blob/master/docs/src/math-model.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Mathematical Model</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="The-PowerModels-Mathematical-Model-1" href="#The-PowerModels-Mathematical-Model-1">The PowerModels Mathematical Model</a></h1><p>As PowerModels implements a variety of power network optimization problems, the implementation is the best reference for precise mathematical formulations.  This section provides a complex number based mathematical specification for a prototypical AC Optimal Power Flow problem, to provide an overview of the typical mathematical models in PowerModels.</p><h2><a class="nav-anchor" id="AC-Optimal-Power-Flow-1" href="#AC-Optimal-Power-Flow-1">AC Optimal Power Flow</a></h2><p>PowerModels implements a slightly generalized version of the AC Optimal Power Flow problem from <a href="http://www.pserc.cornell.edu/matpower/">Matpower</a>.  These generalizations make it possible for PowerModels to more accurately capture industrial transmission network datasets.  The core generalizations are,</p><ul><li><p>Support for multiple load and shunt components on each bus</p></li><li><p>Line charging that supports a conductance and asymmetrical values</p></li></ul><p>A complete mathematical model is as follows,</p><div>\[
+\begin{align}
+%
+\mbox{sets:} &amp; \nonumber \\ 
+&amp; N \mbox{ - buses}\nonumber \\
+&amp; R \mbox{ - refrences buses}\nonumber \\
+&amp; E, E^R \mbox{ - branches, forward and reverse orientation} \nonumber \\
+&amp; G, G_i \mbox{ - generators and generators at bus $i$} \nonumber \\
+&amp; L, L_i \mbox{ - loads and loads at bus $i$} \nonumber \\
+&amp; S, S_i \mbox{ - shunts and shunts at bus $i$} \nonumber \\
+%
+\mbox{data:} &amp; \nonumber \\ 
+&amp; S^{gl}_k, S^{gu}_k \;\; \forall k \in G \nonumber \\
+&amp; c_{2k}, c_{1k}, c_{0k} \;\; \forall k \in G \nonumber \\
+&amp; v^l_i, v^u_i \;\; \forall i \in N \nonumber \\
+&amp; {S^d}_k \;\; \forall k \in L \nonumber \\
+&amp; Y^s_{k} \;\; \forall k \in S \nonumber \\
+&amp; Y_{ij}, Y^c_{ij}, Y^c_{ji}, {T}_{ij} \;\; \forall (i,j) \in E \nonumber \\
+&amp; {s^u}_{ij}, \theta^{\Delta l}_{ij}, \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E \nonumber \\
+%
+\mbox{variables: } &amp; \nonumber \\
+&amp; S^g_k \;\; \forall k\in G \nonumber \\
+&amp; V_i \;\; \forall i\in N \nonumber \\
+&amp; S_{ij} \;\; \forall (i,j) \in E \cup E^R \nonumber \\
+%
+\mbox{minimize: } &amp; \sum_{k \in G} c_{2k} (\Re(S^g_k))^2 + c_{1k}\Re(S^g_k) + c_{0k} \\
+%
+\mbox{subject to: } &amp; \nonumber \\
+&amp; \angle V_{r} = 0  \;\; \forall r \in R \\
+&amp; S^{gl}_k \leq S^g_k \leq S^{gu}_k \;\; \forall k \in G  \\
+&amp; v^l_i \leq |V_i| \leq v^u_i \;\; \forall i \in N \\
+&amp; \sum_{\substack{k \in G_i}} S^g_k - \sum_{\substack{k \in L_i}} S^d_k - \sum_{\substack{k \in S_i}} Y^s_k |V_i|^2 = \sum_{\substack{(i,j)\in E_i \cup E_i^R}} S_{ij} \;\; \forall i\in N \\ 
+&amp; S_{ij} = \left( Y_{ij} + Y^c_{ij}\right)^* \frac{|V_i|^2}{|{T}_{ij}|^2} - Y^*_{ij} \frac{V_i V^*_j}{{T}_{ij}} \;\; \forall (i,j)\in E \\
+&amp; S_{ji} = \left( Y_{ij} + Y^c_{ji} \right)^* |V_j|^2 - Y^*_{ij} \frac{V^*_i V_j}{{T}^*_{ij}} \;\; \forall (i,j)\in E \\
+&amp; |S_{ij}| \leq s^u_{ij} \;\; \forall (i,j) \in E \cup E^R \\
+&amp; \theta^{\Delta l}_{ij} \leq \angle (V_i V^*_j) \leq \theta^{\Delta u}_{ij} \;\; \forall (i,j) \in E
+%
+\end{align}\]</div><p>Note that for clarity of this presentation some model variants that PowerModels supports have been omitted (e.g. piecewise linear cost functions and HVDC lines).  Details about these variants is available in the <a href="http://www.pserc.cornell.edu/matpower/">Matpower</a> documentation.</p><footer><hr/><a class="previous" href="result-data.html"><span class="direction">Previous</span><span class="title">Result Data Format</span></a><a class="next" href="formulations.html"><span class="direction">Next</span><span class="title">Network Formulations</span></a></footer></article></body></html>

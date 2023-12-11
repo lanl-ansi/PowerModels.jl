@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Storage Model · PowerModels</title><script>(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+ga('create', 'UA-367975-10', 'auto');
+ga('send', 'pageview');
+</script><link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/4.2.0/normalize.min.css" rel="stylesheet" type="text/css"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.2.0/require.min.js" data-main="assets/documenter.js"></script><script src="siteinfo.js"></script><script src="../versions.js"></script><link href="assets/documenter.css" rel="stylesheet" type="text/css"/></head><body><nav class="toc"><h1>PowerModels</h1><select id="version-selector" onChange="window.location.href=this.value" style="visibility: hidden"></select><form class="search" id="search-form" action="search.html"><input id="search-query" name="q" type="text" placeholder="Search docs"/></form><ul><li><a class="toctext" href="index.html">Home</a></li><li><span class="toctext">Manual</span><ul><li><a class="toctext" href="quickguide.html">Getting Started</a></li><li><a class="toctext" href="network-data.html">Network Data Format</a></li><li><a class="toctext" href="result-data.html">Result Data Format</a></li><li><a class="toctext" href="math-model.html">Mathematical Model</a></li><li class="current"><a class="toctext" href="storage.html">Storage Model</a><ul class="internal"><li><a class="toctext" href="#Storage-Data-Model-1">Storage Data Model</a></li><li><a class="toctext" href="#Storage-Mathematical-Model-1">Storage Mathematical Model</a></li></ul></li><li><a class="toctext" href="utilities.html">Utilities</a></li></ul></li><li><span class="toctext">Library</span><ul><li><a class="toctext" href="formulations.html">Network Formulations</a></li><li><a class="toctext" href="specifications.html">Problem Specifications</a></li><li><span class="toctext">Modeling Components</span><ul><li><a class="toctext" href="model.html">PowerModel</a></li><li><a class="toctext" href="objective.html">Objective</a></li><li><a class="toctext" href="variables.html">Variables</a></li><li><a class="toctext" href="constraints.html">Constraints</a></li></ul></li><li><a class="toctext" href="relaxations.html">Relaxation Schemes</a></li><li><a class="toctext" href="parser.html">File IO</a></li></ul></li><li><span class="toctext">Developer</span><ul><li><a class="toctext" href="developer.html">Developer</a></li><li><a class="toctext" href="formulation-details.html">Formulation Details</a></li></ul></li><li><a class="toctext" href="experiment-results.html">Experiment Results</a></li></ul></nav><article id="docs"><header><nav><ul><li>Manual</li><li><a href="storage.html">Storage Model</a></li></ul><a class="edit-page" href="https://github.com/lanl-ansi/PowerModels.jl/blob/master/docs/src/storage.md"><span class="fa"></span> Edit on GitHub</a></nav><hr/><div id="topbar"><span>Storage Model</span><a class="fa fa-bars" href="#"></a></div></header><h1><a class="nav-anchor" id="PowerModels&#39;-Storage-Component-1" href="#PowerModels&#39;-Storage-Component-1">PowerModels&#39; Storage Component</a></h1><p>In addition to the standard transmission network components (e.g. bus, load, generator, branch, ...) PowerModels also includes a generic storage component, which can be configured to model a variety of storage devices.  This section provides a brief overview of the storage component&#39;s data and mathematical model.</p><h2><a class="nav-anchor" id="Storage-Data-Model-1" href="#Storage-Data-Model-1">Storage Data Model</a></h2><p>The data for the generic storage model is as follows,</p><pre><code class="language-json">{
+  &quot;index&quot;:&lt;int&gt;,
+  &quot;storage_bus&quot;:&lt;int&gt;,
+  &quot;energy&quot;:&lt;float, MWh&gt;,
+  &quot;energy_rating&quot;:&lt;float, MWh&gt;,
+  &quot;charge_rating&quot;:&lt;float, MW&gt;,
+  &quot;discharge_rating&quot;:&lt;float, MW&gt;,
+  &quot;charge_efficiency&quot;:&lt;float&gt;,
+  &quot;discharge_efficiency&quot;:&lt;float&gt;,
+  (&quot;thermal_rating&quot;:&lt;float, MVA&gt;,)
+  (&quot;current_rating&quot;:&lt;float, MA&gt;,)
+  &quot;qmin&quot;:&lt;float, MVar&gt;,
+  &quot;qmax&quot;:&lt;float, MVar&gt;,
+  &quot;r&quot;:&lt;float, p.u.&gt;,
+  &quot;x&quot;:&lt;float, p.u.&gt;,
+  &quot;standby_loss&quot;:&lt;float, MW&gt;,
+  &quot;status&quot;:&lt;int&gt;,
+}</code></pre><p>All of these quantities should be positive except for <code>qmin</code>, which can be negative.  The <code>efficiency</code> parameters are unit-less scalars in the range of 1.0 and 0.0.  By default, all of these quantities are used in per unit inside PowerModels.  The units indicated here are only used by PowerModels&#39; mixed-unit representation and the extended Matpower network format.</p><p>Note that the optional <code>thermal_rating</code> and <code>current_rating</code> parameters are applied at the point of coupling to the network while the other ratings are internal to the storage device.</p><p>In addition to these component parameters, PowerModels also requires a global parameter <code>time_elapsed</code> (in hours) to specify how active power is converted into units of energy as the storage device is charged or discharged.</p><p>PowerModels&#39; storage components can be added to Matpower data files as follows,</p><pre><code class="language-matlab">% hours
+mpc.time_elapsed = 1.0
+
+%% storage data
+%   storage_bus  energy  energy_rating charge_rating  discharge_rating  charge_efficiency  discharge_efficiency  thermal_rating  qmin  qmax  r  x  standby_loss  status
+mpc.storage = [
+   3   20.0  100.0   50.0  70.0  0.8   0.9   100.0   -50.0   70.0  0.1   0.0   0.0   1;
+   10  30.0  100.0   50.0  70.0  0.9   0.8   100.0   -50.0   70.0  0.1   0.0   0.0   1;
+];</code></pre><p>Note that this Matpower-based format includes the optional <code>thermal_rating</code> parameter.</p><h2><a class="nav-anchor" id="Storage-Mathematical-Model-1" href="#Storage-Mathematical-Model-1">Storage Mathematical Model</a></h2><p>Given the storage data model and two sequential time points <span>$s$</span> and <span>$t$</span>, the storage component&#39;s mathematical model is given by,</p><div>\[\begin{align}
+%
+\mbox{data: } &amp; \nonumber \\
+&amp; e^u \mbox{ - energy rating} \\
+&amp; sc^u \mbox{ - charge rating} \\
+&amp; sd^u \mbox{ - discharge rating} \\
+&amp; \eta^c \mbox{ - charge efficiency} \\
+&amp; \eta^d \mbox{ - discharge efficiency} \\
+&amp; te \mbox{ - time elapsed} \\
+&amp; sl \mbox{ - standing losses} \\
+&amp; r \mbox{ - injection resistance} \\
+&amp; q^l, q^u  \mbox{ - reactive power injection limits} \\
+&amp; s^u \mbox{ - thermal injection limit} \\
+&amp; i^u \mbox{ - current injection limit} \\
+%
+\mbox{variables: } &amp; \nonumber \\
+&amp; e_i \in (0, e^u) \mbox{ - storage energy at time $i$} \\
+&amp; sc_i \in (0, sc^u) \mbox{ - charge amount at time $i$} \\
+&amp; sd_i \in (0, sd^u) \mbox{ - discharge amount at time $i$} \\
+&amp; S_i \mbox{ - complex bus power injection at time $i$} \\
+&amp; I_i \mbox{ - complex bus current injection at time $i$} \\
+%
+\mbox{subject to: } &amp; \nonumber \\
+&amp; e_t - e_s = te \left(\eta^c sc_t - \frac{sd_t}{\eta^d} \right) \label{eq_strg_energy} \\
+&amp; sc_t \cdot sd_t = 0 \label{eq_strg_compl} \\
+&amp; \Re(S_t) + (sd_t - sc_t) = sl + r |I_t| \label{eq_strg_loss} \\
+&amp; q^l \leq \Im(S_t) \leq q^u \label{eq_strg_q_limit} \\
+&amp; |S_t| \leq s^u \label{eq_strg_thermal_limit} \\
+&amp; |I_t| \leq i^u \label{eq_strg_current_limit}
+\end{align}\]</div><footer><hr/><a class="previous" href="math-model.html"><span class="direction">Previous</span><span class="title">Mathematical Model</span></a><a class="next" href="utilities.html"><span class="direction">Next</span><span class="title">Utilities</span></a></footer></article></body></html>
