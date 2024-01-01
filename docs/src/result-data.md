@@ -16,41 +16,14 @@ At the top level the results data dictionary is structured as follows:
 "solve_time":<float>,    # reported solve time (seconds)
 "objective":<float>,     # the final evaluation of the objective function
 "objective_lb":<float>,  # the final lower bound of the objective function (if available)
-"machine":{...},         # computer hardware information (details below)
-"data":{...},            # test case information (details below)
 "solution":{...}         # complete solution information (details below)
-}
-```
-
-### Machine Data
-
-This object provides basic information about the hardware that was
-used when the run command was called.
-
-```json
-{
-"cpu":<string>,    # CPU product name
-"memory":<string>  # the amount of system memory (units given)
-}
-```
-
-### Case Data
-
-This object provides basic information about the network cases that was
-used when the run command was called.
-
-```json
-{
-"name":<string>,      # the name from the network data structure
-"bus_count":<int>,    # the number of buses in the network data structure
-"branch_count":<int>  # the number of branches in the network data structure
 }
 ```
 
 ### Solution Data
 
 The solution object provides detailed information about the solution
-produced by the run command.  The solution is organized similarly to
+produced by the solve command. The solution is organized similarly to
 [The Network Data Dictionary](@ref) with the same nested structure and
 parameter names, when available.  A network solution most often only includes
 a small subset of the data included in the network data.
@@ -59,8 +32,9 @@ For example the data for a bus, `data["bus"]["1"]` is structured as follows,
 
 ```
 {
-"bus_i": 1,
-"bus_type": 3,
+"bus_type":2
+"vmin":0.9
+"vmax":1.1
 "vm":1.0,
 "va":0.0,
 ...

@@ -321,7 +321,7 @@ function _polynomial_cost_expression(pm::AbstractPowerModel, x_list::Array{JuMP.
         return cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2
     else # length(cost_terms) >= 4
         cost_nl = cost_terms[4:end]
-        return JuMP.@NLexpression(pm.model, cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2 + sum( v*x^(d+3) for (d,v) in enumerate(cost_nl)) )
+        return JuMP.@NLexpression(pm.model, cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2 + sum( v*x^(d+2) for (d,v) in enumerate(cost_nl)) )
     end
 end
 
@@ -374,7 +374,7 @@ function _polynomial_cost_expression(pm::AbstractPowerModel, x_list, cost_terms;
         return JuMP.@NLexpression(pm.model, cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2)
     else # length(cost_terms) >= 4
         cost_nl = cost_terms[4:end]
-        return JuMP.@NLexpression(pm.model, cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2 + sum( v*x^(d+3) for (d,v) in enumerate(cost_nl)) )
+        return JuMP.@NLexpression(pm.model, cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2 + sum( v*x^(d+2) for (d,v) in enumerate(cost_nl)) )
     end
 end
 

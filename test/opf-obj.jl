@@ -6,6 +6,11 @@
     data["gen"]["4"]["cost"] = [1.0]
     data["gen"]["5"]["cost"] = []
 
+    @testset "jump model objective type" begin
+        pm = instantiate_model(data, ACPPowerModel, build_opf)
+        @test isa(JuMP.objective_function(pm.model), JuMP.AffExpr)
+    end
+
     @testset "nlp solver" begin
         result = run_ac_opf(data, nlp_solver)
 
@@ -24,7 +29,7 @@
         result = run_dc_opf(data, milp_solver)
 
         @test result["termination_status"] == OPTIMAL
-        # @test isapprox(result["objective"], 4679.05; atol = 1e0)  # Problem upstream with JuMP.SecondOrderCone or JuMP.RotatedSecondOrderCone?
+        @test isapprox(result["objective"], 4679.05; atol = 1e0)
     end
 end
 
@@ -33,6 +38,11 @@ end
     data["gen"]["1"]["cost"] = [1.0, 1400.0, 1.0]
     data["gen"]["4"]["cost"] = [1.0]
     data["gen"]["5"]["cost"] = []
+
+    @testset "jump model objective type" begin
+        pm = instantiate_model(data, ACPPowerModel, build_opf)
+        @test isa(JuMP.objective_function(pm.model), JuMP.QuadExpr)
+    end
 
     @testset "nlp solver" begin
         result = run_ac_opf(data, nlp_solver)
@@ -53,28 +63,49 @@ end
 
 @testset "nlp objective" begin
     data = PowerModels.parse_file("data/matpower/case5.m")
-    data["gen"]["1"]["cost"] = [100.0, 300.0, 1400.0, 1.0] # cubic (JuMP NL)
-    # data["gen"]["2"]["cost"] # piece-wise linear
-    # data["gen"]["3"]["cost"] # linear
-    data["gen"]["4"]["cost"] = [1.0] # constant
-    data["gen"]["5"]["cost"] = [] # zero
+    data["gen"]["1"]["cost"] = []
+    data["gen"]["4"]["cost"] = [1.0]
+    data["gen"]["5"]["cost"] = [10.0, 100.0, 300.0, 1400.0, 1.0]
 
-    data["gen"]["2"]["model"] = 1
-    data["gen"]["2"]["ncost"] = 4
-    data["gen"]["2"]["cost"] = [22.0,1122.0, 33.0,1417.0, 44.0,1742.0, 55.0,2075.0]
+    @testset "jump model objective type" begin
+        pm = instantiate_model(data, ACPPowerModel, build_opf)
+
+        @test JuMP.objective_function(pm.model) == JuMP.AffExpr(0.0)
+        # would be good to add a test like this one in a future version where the NL expression can be accessed with a public API
+        #@test isa(JuMP._nlp_objective_function(pm.model), JuMP.MOI.Nonlinear.Expression)
+    end
 
     @testset "opf objective" begin
         result = run_ac_opf(data, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 4141.59; atol = 1e0)
+        @test isapprox(result["objective"], 19005.9; atol = 1e0)
     end
 
     @testset "opb objective" begin
         result = run_opb(data, SOCWRPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 1027.40; atol = 1e0)
+        @test isapprox(result["objective"], 18911.70; atol = 1e0)
+    end
+
+end
+
+@testset "pwl objective" begin
+    data = PowerModels.parse_file("data/matpower/case5_pwlc.m")
+
+    @testset "opf objective" begin
+        result = run_ac_opf(data, nlp_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 42905; atol = 1e0)
+    end
+
+    @testset "opb objective" begin
+        result = run_opb(data, SOCWRPowerModel, nlp_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 42575; atol = 1e0)
     end
 
 end
@@ -121,5 +152,17 @@ end
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 17756.2; atol = 1e0)
+    end
+
+    @testset "pwl objective" begin
+        data = PowerModels.parse_file("data/matpower/case5_pwlc.m")
+
+        data["dcline"]["1"]["model"] = 1
+        data["dcline"]["1"]["ncost"] = 4
+        data["dcline"]["1"]["cost"] = [0.0, 10.0, 20.0, 15.0, 100.0, 50.0, 150.0, 800.0]
+        result = run_ac_opf(data, nlp_solver)
+
+        @test result["termination_status"] == LOCALLY_SOLVED
+        @test isapprox(result["objective"], 42915; atol = 1e0)
     end
 end

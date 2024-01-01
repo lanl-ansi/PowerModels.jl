@@ -9,8 +9,23 @@ PowerModels.jl Change Log
 - Drop support for JSON v0.18, v0.19, v0.20 (breaking)
 
 ### Staged
+- Add support for ACP and DCP formulation in OPF with PST variables (#543,#875)
+- Fix implementation of `calc_theta_delta_bounds` when conductor parameter is used (#870)
+
+### v0.19.9
+- Fix implementation of polynomial costs above quadratic
+- Add tests for opf objective expression types
+- Update tests for compat with Julia v1.9 (#861)
+
+### v0.19.8
+- Improved network data model documentation (#848)
+- Faster PTDF matrix computation (#849)
+
+### v0.19.7
+- Improve linear algebra test robustness (#827)
 - Fix `make_multinetwork` and add test (#823)
 - Fix SDP solution reporting consistency (#833)
+- Fix solution output test for infeasible models
 
 ### v0.19.6
 - Add specialized version of `sol_component_fixed` for PowerModels (#821)

@@ -40,7 +40,7 @@ end
 @testset "dc warm starts" begin
     @testset "5 bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
-        result = run_dc_opf(data, nlp_solver; setting = Dict("output" => Dict("branch_flows" => true)));
+        result = run_dc_opf(data, nlp_solver)
 
         PowerModels.update_data!(data, result["solution"])
 
@@ -55,7 +55,7 @@ end
 
     @testset "5 bus pwl case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
-        result = run_dc_opf(data, nlp_solver; setting = Dict("output" => Dict("branch_flows" => true)));
+        result = run_dc_opf(data, nlp_solver)
 
         PowerModels.update_data!(data, result["solution"])
 
@@ -73,7 +73,7 @@ end
 @testset "ac warm starts" begin
     @testset "5 bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
-        result = run_ac_opf(data, nlp_solver; setting = Dict("output" => Dict("branch_flows" => true)));
+        result = run_ac_opf(data, nlp_solver)
 
         PowerModels.update_data!(data, result["solution"])
 
@@ -88,7 +88,7 @@ end
 
     @testset "5 bus pwl case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
-        result = run_ac_opf(data, nlp_solver; setting = Dict("output" => Dict("branch_flows" => true)));
+        result = run_ac_opf(data, nlp_solver)
 
         PowerModels.update_data!(data, result["solution"])
 
