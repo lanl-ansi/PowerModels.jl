@@ -697,17 +697,27 @@ end
 
 ### Branch - Current Limit Constraints ###
 
-"""
-Adds a current magnitude limit constraint for the desired branch to the PowerModel.
-"""
-function constraint_current_limit(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
+""
+function constraint_current_limit_from(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
     t_bus = branch["t_bus"]
     f_idx = (i, f_bus, t_bus)
 
     if haskey(branch, "c_rating_a")
-        constraint_current_limit(pm, nw, f_idx, branch["c_rating_a"])
+        constraint_current_limit_from(pm, nw, f_idx, branch["c_rating_a"])
+    end
+end
+
+""
+function constraint_current_limit_to(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
+    branch = ref(pm, nw, :branch, i)
+    f_bus = branch["f_bus"]
+    t_bus = branch["t_bus"]
+    t_idx = (i, t_bus, f_bus)
+
+    if haskey(branch, "c_rating_a")
+        constraint_current_limit_to(pm, nw, t_idx, branch["c_rating_a"])
     end
 end
 

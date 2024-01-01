@@ -28,16 +28,20 @@ function constraint_voltage_magnitude_setpoint(pm::AbstractACPModel, n::Int, i::
 end
 
 
-function constraint_current_limit(pm::AbstractACPModel, n::Int, f_idx, c_rating_a)
+function constraint_current_limit_from(pm::AbstractACPModel, n::Int, f_idx, c_rating_a)
     l,i,j = f_idx
-    t_idx = (l,j,i)
 
     vm_fr = var(pm, n, :vm, i)
-    vm_to = var(pm, n, :vm, j)
 
     p_fr = var(pm, n, :p, f_idx)
     q_fr = var(pm, n, :q, f_idx)
     JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= vm_fr^2*c_rating_a^2)
+end
+
+function constraint_current_limit_to(pm::AbstractACPModel, n::Int, t_idx, c_rating_a)
+    l,j,i = t_idx
+
+    vm_to = var(pm, n, :vm, j)
 
     p_to = var(pm, n, :p, t_idx)
     q_to = var(pm, n, :q, t_idx)

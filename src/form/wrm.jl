@@ -2,22 +2,29 @@
 import LinearAlgebra: Hermitian, cholesky, Symmetric, diag, I
 import SparseArrays: SparseMatrixCSC, sparse, spdiagm, findnz, spzeros, nonzeros
 
+
 ""
-function constraint_current_limit(pm::AbstractWRMModel, n::Int, f_idx, c_rating_a)
+function constraint_current_limit_from(pm::AbstractWRMModel, n::Int, f_idx, c_rating_a)
     l,i,j = f_idx
-    t_idx = (l,j,i)
 
     w_fr = var(pm, n, :w, i)
-    w_to = var(pm, n, :w, j)
 
     p_fr = var(pm, n, :p, f_idx)
     q_fr = var(pm, n, :q, f_idx)
     JuMP.@constraint(pm.model, [w_fr*c_rating_a^2+1, 2*p_fr, 2*q_fr, w_fr*c_rating_a^2-1] in JuMP.SecondOrderCone())
+end
+
+""
+function constraint_current_limit_to(pm::AbstractWRMModel, n::Int, t_idx, c_rating_a)
+    l,j,i = t_idx
+
+    w_to = var(pm, n, :w, j)
 
     p_to = var(pm, n, :p, t_idx)
     q_to = var(pm, n, :q, t_idx)
     JuMP.@constraint(pm.model, [w_to*c_rating_a^2+1, 2*p_to, 2*q_to, w_to*c_rating_a^2-1] in JuMP.SecondOrderCone())
 end
+
 
 
 

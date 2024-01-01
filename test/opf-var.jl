@@ -93,7 +93,7 @@ end
             result = PowerModels._solve_opf_cl(data, DCPLLPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result["objective"], 16282.6; atol = 1e0)
+            @test isapprox(result["objective"], 16394.2; atol = 1e0)
         end
         @testset "14-bus no limits case" begin
             data = build_current_data("../test/data/matpower/case14.m")

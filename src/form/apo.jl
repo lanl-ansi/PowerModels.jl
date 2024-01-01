@@ -202,13 +202,33 @@ function constraint_thermal_limit_to(pm::AbstractActivePowerModel, n::Int, t_idx
     end
 end
 
-""
-function constraint_current_limit(pm::AbstractActivePowerModel, n::Int, f_idx, c_rating_a)
-    p_fr = var(pm, n, :p, f_idx)
 
-    JuMP.lower_bound(p_fr) < -c_rating_a && JuMP.set_lower_bound(p_fr, -c_rating_a)
-    JuMP.upper_bound(p_fr) >  c_rating_a && JuMP.set_upper_bound(p_fr,  c_rating_a)
+""
+function constraint_current_limit_from(pm::AbstractActivePowerModel, n::Int, f_idx, c_rating_a)
+    p_fr = var(pm, n, :p, f_idx)
+    if isa(p_fr, JuMP.VariableRef) && JuMP.has_lower_bound(p_fr)
+        JuMP.lower_bound(p_fr) < -c_rating_a && JuMP.set_lower_bound(p_fr, -c_rating_a)
+        if JuMP.has_upper_bound(p_fr)
+            JuMP.upper_bound(p_fr) > c_rating_a && JuMP.set_upper_bound(p_fr, c_rating_a)
+        end
+    else
+        JuMP.@constraint(pm.model, p_fr <= c_rating_a)
+    end
 end
+
+""
+function constraint_current_limit_to(pm::AbstractActivePowerModel, n::Int, t_idx, c_rating_a)
+    p_to = var(pm, n, :p, t_idx)
+    if isa(p_to, JuMP.VariableRef) && JuMP.has_lower_bound(p_to)
+        JuMP.lower_bound(p_to) < -c_rating_a && JuMP.set_lower_bound(p_to, -c_rating_a)
+        if JuMP.has_upper_bound(p_to)
+            JuMP.upper_bound(p_to) >  c_rating_a && JuMP.set_upper_bound(p_to,  c_rating_a)
+        end
+    else
+        JuMP.@constraint(pm.model, p_to <= c_rating_a)
+    end
+end
+
 
 
 ""

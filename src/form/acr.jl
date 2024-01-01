@@ -231,18 +231,22 @@ function constraint_storage_losses(pm::AbstractACRModel, n::Int, i, bus, r, x, p
 end
 
 
-function constraint_current_limit(pm::AbstractACRModel, n::Int, f_idx, c_rating_a)
+function constraint_current_limit_from(pm::AbstractACRModel, n::Int, f_idx, c_rating_a)
     l,i,j = f_idx
-    t_idx = (l,j,i)
 
     vr_fr = var(pm, n, :vr, i)
-    vr_to = var(pm, n, :vr, j)
     vi_fr = var(pm, n, :vi, i)
-    vi_to = var(pm, n, :vi, j)
 
     p_fr = var(pm, n, :p, f_idx)
     q_fr = var(pm, n, :q, f_idx)
     JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= (vr_fr^2 + vi_fr^2)*c_rating_a^2)
+end
+
+function constraint_current_limit_to(pm::AbstractACRModel, n::Int, t_idx, c_rating_a)
+    l,j,i = t_idx
+
+    vr_to = var(pm, n, :vr, j)
+    vi_to = var(pm, n, :vi, j)
 
     p_to = var(pm, n, :p, t_idx)
     q_to = var(pm, n, :q, t_idx)

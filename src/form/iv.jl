@@ -230,23 +230,25 @@ function constraint_thermal_limit_to(pm::AbstractIVRModel, n::Int, t_idx, rate_a
 end
 
 """
-Bounds the current magnitude at both from and to side of a branch
-`cr[f_idx]^2 + ci[f_idx]^2 <= c_rating^2`
-`cr[t_idx]^2 + ci[t_idx]^2 <= c_rating^2`
+Bounds the current magnitude at the from side of a branch
 """
-function constraint_current_limit(pm::AbstractIVRModel, n::Int, f_idx, c_rating)
-    (l, f_bus, t_bus) = f_idx
-    t_idx = (l, t_bus, f_bus)
-
+function constraint_current_limit_from(pm::AbstractIVRModel, n::Int, f_idx, c_rating)
     crf =  var(pm, n, :cr, f_idx)
     cif =  var(pm, n, :ci, f_idx)
 
+    JuMP.@constraint(pm.model, crf^2 + cif^2 <= c_rating^2)
+end
+
+"""
+Bounds the current magnitude at the to side of a branch
+"""
+function constraint_current_limit_to(pm::AbstractIVRModel, n::Int, t_idx, c_rating)
     crt =  var(pm, n, :cr, t_idx)
     cit =  var(pm, n, :ci, t_idx)
 
-    JuMP.@constraint(pm.model, crf^2 + cif^2 <= c_rating^2)
     JuMP.@constraint(pm.model, crt^2 + cit^2 <= c_rating^2)
 end
+
 
 """
 `pmin <= Re(v*cg') <= pmax`

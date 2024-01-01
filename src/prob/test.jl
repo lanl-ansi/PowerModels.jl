@@ -36,7 +36,8 @@ function _build_opf_cl(pm::AbstractPowerModel)
 
         constraint_voltage_angle_difference(pm, i)
 
-        constraint_current_limit(pm, i)
+        constraint_current_limit_from(pm, i)
+        constraint_current_limit_to(pm, i)
     end
 
     for i in ids(pm, :dcline)
@@ -262,7 +263,7 @@ function _build_mld(pm::AbstractPowerModel)
 end
 
 
-"opf with unit commitment, tests constraint_current_limit"
+"opf with unit commitment"
 function _solve_ucopf(file, model_type::Type, solver; kwargs...)
     return solve_model(file, model_type, solver, _build_ucopf; kwargs...)
 end
