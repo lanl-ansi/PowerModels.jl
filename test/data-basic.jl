@@ -15,7 +15,7 @@
         @test length(data["switch"]) == 0
         @test length(data["storage"]) == 0
 
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
         @test isapprox(result["objective"], 1036.52; atol=1e0)
     end
 
@@ -31,7 +31,7 @@
         @test length(data["switch"]) == 0
         @test length(data["storage"]) == 0
 
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
         @test isapprox(result["objective"], 16551.7; atol=1e0)
     end
 
@@ -43,7 +43,7 @@ end
     @testset "basic bus injection" begin
         data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case14.m"))
 
-        result = run_opf(data, DCPPowerModel, nlp_solver)
+        result = solve_opf(data, DCPPowerModel, nlp_solver)
         update_data!(data, result["solution"])
 
         bi = calc_basic_bus_injection(data)
@@ -51,7 +51,7 @@ end
         @test isapprox(real(sum(bi)), 0.0; atol=1e-6)
 
 
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
         update_data!(data, result["solution"])
 
         bi = calc_basic_bus_injection(data)
@@ -95,7 +95,7 @@ end
         @test isapprox(SM_1, SM_2; atol=1e-6)
 
 
-        result = run_opf(data, DCPPowerModel, nlp_solver)
+        result = solve_opf(data, DCPPowerModel, nlp_solver)
         update_data!(data, result["solution"])
 
         va = angle.(calc_basic_bus_voltage(data))
@@ -155,7 +155,7 @@ end
         @test isapprox(sum(P), 0.9894736; atol=1e-6)
 
 
-        result = run_opf(data, DCPPowerModel, nlp_solver)
+        result = solve_opf(data, DCPPowerModel, nlp_solver)
         update_data!(data, result["solution"])
 
         bi = real(calc_basic_bus_injection(data))

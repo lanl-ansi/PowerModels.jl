@@ -1,7 +1,7 @@
 
 @testset "test output api" begin
     @testset "24-bus rts case" begin
-        result = run_opf("../test/data/matpower/case24.m", ACPPowerModel, nlp_solver)
+        result = solve_opf("../test/data/matpower/case24.m", ACPPowerModel, nlp_solver)
 
         @test haskey(result, "optimizer") == true
         @test haskey(result, "termination_status") == true
@@ -31,7 +31,7 @@
                 gen["cost"] = gen["cost"][length(gen["cost"])-1:end]
             end
         end
-        result = run_opf(data, DCPPowerModel, milp_solver)
+        result = solve_opf(data, DCPPowerModel, milp_solver)
 
         @test haskey(result, "optimizer")
         @test haskey(result, "termination_status")
@@ -47,7 +47,7 @@ end
 
 @testset "test branch flow output" begin
     @testset "24-bus rts case ac opf" begin
-        result = run_opf("../test/data/matpower/case24.m", ACPPowerModel, nlp_solver)
+        result = solve_opf("../test/data/matpower/case24.m", ACPPowerModel, nlp_solver)
 
         @test haskey(result, "optimizer") == true
         @test haskey(result, "termination_status") == true
@@ -73,7 +73,7 @@ end
 
     # A DCPPowerModel test is important because it does have variables for the reverse side of the branchs
     @testset "3-bus case dc opf" begin
-        result = run_opf("../test/data/matpower/case3.m", DCPPowerModel, nlp_solver)
+        result = solve_opf("../test/data/matpower/case3.m", DCPPowerModel, nlp_solver)
 
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "branch") == true
@@ -92,7 +92,7 @@ end
     end
 
     @testset "24-bus rts case ac pf" begin
-        result = run_pf("../test/data/matpower/case24.m", ACPPowerModel, nlp_solver)
+        result = solve_pf("../test/data/matpower/case24.m", ACPPowerModel, nlp_solver)
 
         @test haskey(result, "optimizer") == true
         @test haskey(result, "termination_status") == true
@@ -118,7 +118,7 @@ end
 
     # A DCPPowerModel test is important because it does have variables for the reverse side of the branchs
     @testset "3-bus case dc pf" begin
-        result = run_pf("../test/data/matpower/case3.m", DCPPowerModel, nlp_solver)
+        result = solve_pf("../test/data/matpower/case3.m", DCPPowerModel, nlp_solver)
 
         @test haskey(result, "solution") == true
         @test haskey(result["solution"], "branch") == false
@@ -141,7 +141,7 @@ end
     settings = Dict("output" => Dict("duals" => true))
     data = PowerModels.parse_file("../test/data/matpower/case14.m")
     calc_thermal_limits!(data)
-    result = run_dc_opf(data, nlp_solver, setting = settings)
+    result = solve_dc_opf(data, nlp_solver, setting = settings)
 
     PowerModels.make_mixed_units!(result["solution"])
     @testset "14 bus - kcl duals" begin
@@ -161,7 +161,7 @@ end
     end
 
 
-    result = run_dc_opf("../test/data/matpower/case5.m", nlp_solver, setting = settings)
+    result = solve_dc_opf("../test/data/matpower/case5.m", nlp_solver, setting = settings)
 
     PowerModels.make_mixed_units!(result["solution"])
     @testset "5 bus - kcl duals" begin
@@ -183,7 +183,7 @@ end
     end
 
 
-    result = run_opf("../test/data/matpower/case5.m", SOCWRPowerModel, nlp_solver, setting = settings)
+    result = solve_opf("../test/data/matpower/case5.m", SOCWRPowerModel, nlp_solver, setting = settings)
     @testset "5 bus - kcl duals soc qp" begin
         for (i, bus) in result["solution"]["bus"]
             @test bus["lam_kcl_r"] <= -2900.00
@@ -193,7 +193,7 @@ end
         end
     end
 
-    result = run_opf("../test/data/matpower/case5.m", SOCWRConicPowerModel, sdp_solver, setting = settings)
+    result = solve_opf("../test/data/matpower/case5.m", SOCWRConicPowerModel, sdp_solver, setting = settings)
     @testset "5 bus - kcl duals soc conic" begin
         for (i, bus) in result["solution"]["bus"]
             @test bus["lam_kcl_r"] <= -2900.00
@@ -203,7 +203,7 @@ end
         end
     end
 
-    result = run_opf("../test/data/matpower/case5.m", ACPPowerModel, nlp_solver, setting = settings)
+    result = solve_opf("../test/data/matpower/case5.m", ACPPowerModel, nlp_solver, setting = settings)
     @testset "5 bus - kcl duals acp" begin
         for (i, bus) in result["solution"]["bus"]
             @test bus["lam_kcl_r"] <= -1000.00
@@ -213,7 +213,7 @@ end
         end
     end
 
-    result = run_opf("../test/data/matpower/case5.m", ACRPowerModel, nlp_solver, setting = settings)
+    result = solve_opf("../test/data/matpower/case5.m", ACRPowerModel, nlp_solver, setting = settings)
     @testset "5 bus - kcl duals acr" begin
         for (i, bus) in result["solution"]["bus"]
             @test bus["lam_kcl_r"] <= -1000.00
@@ -223,7 +223,7 @@ end
         end
     end
 
-    result = run_opf("../test/data/matpower/case5.m", ACTPowerModel, nlp_solver, setting = settings)
+    result = solve_opf("../test/data/matpower/case5.m", ACTPowerModel, nlp_solver, setting = settings)
     @testset "5 bus - kcl duals act" begin
         for (i, bus) in result["solution"]["bus"]
             @test bus["lam_kcl_r"] <= -1000.00
@@ -240,7 +240,7 @@ end
     # test case where generator status is 1 but the gen_bus status is 0
     data = parse_file("../test/data/matpower/case5.m")
     data["bus"]["4"]["bus_type"] = 4
-    result = run_ac_opf(data, nlp_solver)
+    result = solve_ac_opf(data, nlp_solver)
 
     @test result["termination_status"] == LOCALLY_SOLVED
     @test isapprox(result["objective"], 10128.6; atol = 1e0)
@@ -249,7 +249,7 @@ end
 
 @testset "test solution processors" begin
     @testset "sol_vr_to_vp" begin
-        result = run_opf("../test/data/matpower/case5.m", ACRPowerModel, nlp_solver, solution_processors=[sol_data_model!])
+        result = solve_opf("../test/data/matpower/case5.m", ACRPowerModel, nlp_solver, solution_processors=[sol_data_model!])
 
         for (i,bus) in result["solution"]["bus"]
             @test haskey(bus, "vm") && haskey(bus, "va")
@@ -257,7 +257,7 @@ end
     end
 
     @testset "sol_w_to_vm" begin
-        result = run_opf("../test/data/matpower/case5.m", SOCWRPowerModel, nlp_solver, solution_processors=[sol_data_model!])
+        result = solve_opf("../test/data/matpower/case5.m", SOCWRPowerModel, nlp_solver, solution_processors=[sol_data_model!])
 
         for (i,bus) in result["solution"]["bus"]
             @test haskey(bus, "vm")
@@ -266,7 +266,7 @@ end
     end
 
     @testset "sol_phi_to_vm" begin
-        result = run_opf("../test/data/matpower/case5.m", LPACCPowerModel, nlp_solver, solution_processors=[sol_data_model!])
+        result = solve_opf("../test/data/matpower/case5.m", LPACCPowerModel, nlp_solver, solution_processors=[sol_data_model!])
 
         for (i,bus) in result["solution"]["bus"]
             @test haskey(bus, "vm")
@@ -281,13 +281,13 @@ end
 
     function solution_feedback(case, ac_opf_obj)
         data = PowerModels.parse_file(case)
-        opf_result = run_ac_opf(data, nlp_solver)
+        opf_result = solve_ac_opf(data, nlp_solver)
         @test opf_result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(opf_result["objective"], ac_opf_obj; atol = 1e0)
 
         PowerModels.update_data!(data, opf_result["solution"])
 
-        pf_result = run_ac_pf(data, nlp_solver)
+        pf_result = solve_ac_pf(data, nlp_solver)
         @test pf_result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(pf_result["objective"], 0.0; atol = 1e-3)
 

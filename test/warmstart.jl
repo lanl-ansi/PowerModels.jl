@@ -40,32 +40,32 @@ end
 @testset "dc warm starts" begin
     @testset "5 bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
-        result = run_dc_opf(data, nlp_solver)
+        result = solve_dc_opf(data, nlp_solver)
 
         PowerModels.update_data!(data, result["solution"])
 
         # 14 iterations
-        result = run_dc_opf(data, nlp_solver);
+        result = solve_dc_opf(data, nlp_solver);
 
         set_dc_start!(data)
 
         # 6 iterations
-        result = run_dc_opf(data, nlp_ws_solver);
+        result = solve_dc_opf(data, nlp_ws_solver);
     end
 
     @testset "5 bus pwl case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
-        result = run_dc_opf(data, nlp_solver)
+        result = solve_dc_opf(data, nlp_solver)
 
         PowerModels.update_data!(data, result["solution"])
 
         # 35 iterations
-        result = run_dc_opf(data, nlp_solver);
+        result = solve_dc_opf(data, nlp_solver);
 
         set_dc_start!(data)
 
         # 6 iterations
-        result = run_dc_opf(data, nlp_ws_solver);
+        result = solve_dc_opf(data, nlp_ws_solver);
     end
 end
 
@@ -73,32 +73,32 @@ end
 @testset "ac warm starts" begin
     @testset "5 bus case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
-        result = run_ac_opf(data, nlp_solver)
+        result = solve_ac_opf(data, nlp_solver)
 
         PowerModels.update_data!(data, result["solution"])
 
         # 22 iterations
-        result = run_ac_opf(data, nlp_solver);
+        result = solve_ac_opf(data, nlp_solver);
 
         set_ac_start!(data)
 
         # 19 iterations
-        result = run_ac_opf(data, nlp_ws_solver);
+        result = solve_ac_opf(data, nlp_ws_solver);
     end
 
     @testset "5 bus pwl case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
-        result = run_ac_opf(data, nlp_solver)
+        result = solve_ac_opf(data, nlp_solver)
 
         PowerModels.update_data!(data, result["solution"])
 
         # 40 iterations
-        result = run_ac_opf(data, nlp_solver);
+        result = solve_ac_opf(data, nlp_solver);
 
         set_ac_start!(data)
 
         # 12 iterations
-        result = run_ac_opf(data, nlp_ws_solver);
+        result = solve_ac_opf(data, nlp_ws_solver);
     end
 end
 

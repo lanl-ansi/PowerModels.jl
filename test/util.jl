@@ -1,15 +1,15 @@
 
 @testset "obbt with trilinear convex hull relaxation" begin
     @testset "3-bus case" begin
-        result_ac = run_ac_opf("../test/data/matpower/case3.m", nlp_solver);
+        result_ac = solve_ac_opf("../test/data/matpower/case3.m", nlp_solver);
         upper_bound = result_ac["objective"]
 
-        data, stats = run_obbt_opf!("../test/data/matpower/case3.m", nlp_solver, model_type=QCLSPowerModel);
+        data, stats = solve_obbt_opf!("../test/data/matpower/case3.m", nlp_solver, model_type=QCLSPowerModel);
         @test isapprox(stats["final_relaxation_objective"], 5901.96; atol=1e0)
         @test isnan(stats["final_rel_gap_from_ub"])
         @test stats["iteration_count"] == 5
 
-        data, stats = run_obbt_opf!("../test/data/matpower/case3.m", nlp_solver, 
+        data, stats = solve_obbt_opf!("../test/data/matpower/case3.m", nlp_solver, 
             model_type = QCLSPowerModel,
             upper_bound = upper_bound, 
             upper_bound_constraint = true, 
@@ -23,15 +23,15 @@ end
 
 @testset "obbt with qc relaxation" begin
     @testset "3-bus case" begin
-        result_ac = run_ac_opf("../test/data/matpower/case3.m", nlp_solver);
+        result_ac = solve_ac_opf("../test/data/matpower/case3.m", nlp_solver);
         upper_bound = result_ac["objective"]
 
-        data, stats = run_obbt_opf!("../test/data/matpower/case3.m", nlp_solver, model_type=QCRMPowerModel);
+        data, stats = solve_obbt_opf!("../test/data/matpower/case3.m", nlp_solver, model_type=QCRMPowerModel);
         @test isapprox(stats["final_relaxation_objective"], 5900.04; atol=1e0)
         @test isnan(stats["final_rel_gap_from_ub"])
         @test stats["iteration_count"] == 5
 
-        data, stats = run_obbt_opf!("../test/data/matpower/case3.m", nlp_solver, 
+        data, stats = solve_obbt_opf!("../test/data/matpower/case3.m", nlp_solver, 
             model_type = QCRMPowerModel,
             upper_bound = upper_bound, 
             upper_bound_constraint = true, 
@@ -47,10 +47,10 @@ end
         data["gen"]["1"]["cost"] = data["gen"]["1"]["cost"][2:3]
         data["gen"]["2"]["cost"] = data["gen"]["2"]["cost"][2:3]
 
-        result_ac = run_ac_opf(data, nlp_solver);
+        result_ac = solve_ac_opf(data, nlp_solver);
         upper_bound = result_ac["objective"]
 
-        data, stats = run_obbt_opf!(data, nlp_solver,
+        data, stats = solve_obbt_opf!(data, nlp_solver,
             model_type=QCRMPowerModel,
             upper_bound = upper_bound,
             upper_bound_constraint = true);
@@ -63,8 +63,8 @@ end
 
 @testset "opf with flow cuts" begin
     @testset "ac 5-bus case" begin
-        result_base = run_opf("../test/data/matpower/case5.m", ACPPowerModel, nlp_solver)
-        result_cuts = run_opf_branch_power_cuts("../test/data/matpower/case5.m", ACPPowerModel, nlp_solver)
+        result_base = solve_opf("../test/data/matpower/case5.m", ACPPowerModel, nlp_solver)
+        result_cuts = solve_opf_branch_power_cuts("../test/data/matpower/case5.m", ACPPowerModel, nlp_solver)
 
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
@@ -75,8 +75,8 @@ end
         end
     end
     @testset "ac 14-bus case" begin
-        result_base = run_opf("../test/data/matpower/case14.m", ACPPowerModel, nlp_solver)
-        result_cuts = run_opf_branch_power_cuts("../test/data/matpower/case14.m", ACPPowerModel, nlp_solver)
+        result_base = solve_opf("../test/data/matpower/case14.m", ACPPowerModel, nlp_solver)
+        result_cuts = solve_opf_branch_power_cuts("../test/data/matpower/case14.m", ACPPowerModel, nlp_solver)
 
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
@@ -88,8 +88,8 @@ end
     end
 
     @testset "soc 5-bus case" begin
-        result_base = run_opf("../test/data/matpower/case5.m", SOCWRPowerModel, nlp_solver)
-        result_cuts = run_opf_branch_power_cuts("../test/data/matpower/case5.m", SOCWRPowerModel, nlp_solver)
+        result_base = solve_opf("../test/data/matpower/case5.m", SOCWRPowerModel, nlp_solver)
+        result_cuts = solve_opf_branch_power_cuts("../test/data/matpower/case5.m", SOCWRPowerModel, nlp_solver)
 
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
@@ -99,8 +99,8 @@ end
         end
     end
     @testset "soc 14-bus case" begin
-        result_base = run_opf("../test/data/matpower/case14.m", SOCWRPowerModel, nlp_solver)
-        result_cuts = run_opf_branch_power_cuts("../test/data/matpower/case14.m", SOCWRPowerModel, nlp_solver)
+        result_base = solve_opf("../test/data/matpower/case14.m", SOCWRPowerModel, nlp_solver)
+        result_cuts = solve_opf_branch_power_cuts("../test/data/matpower/case14.m", SOCWRPowerModel, nlp_solver)
 
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
@@ -111,8 +111,8 @@ end
     end
 
     @testset "dc 5-bus case" begin
-        result_base = run_opf("../test/data/matpower/case5.m", DCPPowerModel, milp_solver)
-        result_cuts = run_opf_branch_power_cuts("../test/data/matpower/case5.m", DCPPowerModel, milp_solver)
+        result_base = solve_opf("../test/data/matpower/case5.m", DCPPowerModel, milp_solver)
+        result_cuts = solve_opf_branch_power_cuts("../test/data/matpower/case5.m", DCPPowerModel, milp_solver)
 
         @test result_base["termination_status"] == OPTIMAL
         @test result_cuts["termination_status"] == OPTIMAL
@@ -122,8 +122,8 @@ end
         end
     end
     @testset "dc 14-bus case" begin
-        result_base = run_opf("../test/data/matpower/case14.m", DCPPowerModel, nlp_solver)
-        result_cuts = run_opf_branch_power_cuts("../test/data/matpower/case14.m", DCPPowerModel, nlp_solver)
+        result_base = solve_opf("../test/data/matpower/case14.m", DCPPowerModel, nlp_solver)
+        result_cuts = solve_opf_branch_power_cuts("../test/data/matpower/case14.m", DCPPowerModel, nlp_solver)
 
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED
@@ -137,8 +137,8 @@ end
 
 @testset "ptdf opf with flow cuts" begin
     @testset "dc 5-bus case" begin
-        result_base = run_opf("../test/data/matpower/case5.m", DCPPowerModel, milp_solver)
-        result_cuts = run_opf_ptdf_branch_power_cuts("../test/data/matpower/case5.m", milp_solver)
+        result_base = solve_opf("../test/data/matpower/case5.m", DCPPowerModel, milp_solver)
+        result_cuts = solve_opf_ptdf_branch_power_cuts("../test/data/matpower/case5.m", milp_solver)
 
         @test result_base["termination_status"] == OPTIMAL
         @test result_cuts["termination_status"] == OPTIMAL
@@ -148,8 +148,8 @@ end
         end
     end
     @testset "dc 5-bus ext case" begin
-        result_base = run_opf("../test/data/matpower/case5_ext.m", DCPPowerModel, milp_solver)
-        result_cuts = run_opf_ptdf_branch_power_cuts("../test/data/matpower/case5_ext.m", milp_solver)
+        result_base = solve_opf("../test/data/matpower/case5_ext.m", DCPPowerModel, milp_solver)
+        result_cuts = solve_opf_ptdf_branch_power_cuts("../test/data/matpower/case5_ext.m", milp_solver)
 
         @test result_base["termination_status"] == OPTIMAL
         @test result_cuts["termination_status"] == OPTIMAL
@@ -159,8 +159,8 @@ end
         end
     end
     @testset "dc 14-bus case" begin
-        result_base = run_opf("../test/data/matpower/case14.m", DCPPowerModel, nlp_solver)
-        result_cuts = run_opf_ptdf_branch_power_cuts("../test/data/matpower/case14.m", nlp_solver)
+        result_base = solve_opf("../test/data/matpower/case14.m", DCPPowerModel, nlp_solver)
+        result_cuts = solve_opf_ptdf_branch_power_cuts("../test/data/matpower/case14.m", nlp_solver)
 
         @test result_base["termination_status"] == LOCALLY_SOLVED
         @test result_cuts["termination_status"] == LOCALLY_SOLVED

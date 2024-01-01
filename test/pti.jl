@@ -344,12 +344,12 @@ end
 
     function compare_pf(filename::String)
         source_data = parse_file(filename)
-        source_solution = PowerModels.run_pf(source_data, ACPPowerModel, nlp_solver)["solution"]
+        source_solution = PowerModels.solve_pf(source_data, ACPPowerModel, nlp_solver)["solution"]
         
         file_tmp = "../test/data/tmp.raw"
         PowerModels.export_pti(file_tmp, source_data)
         destination_data = parse_file(file_tmp)
-        destination_solution = PowerModels.run_pf(destination_data, ACPPowerModel, nlp_solver)["solution"]
+        destination_solution = PowerModels.solve_pf(destination_data, ACPPowerModel, nlp_solver)["solution"]
         rm(file_tmp)
         
         @test InfrastructureModels.compare_dict(source_solution, destination_solution)
