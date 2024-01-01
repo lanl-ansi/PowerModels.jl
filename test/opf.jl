@@ -912,11 +912,11 @@ end
 
         @test haskey(result["solution"],"WR")
         @test haskey(result["solution"],"WI")
-        @test isapprox(result["solution"]["bus"]["1"]["w"], 1.210, atol = 1e-2)
         #@test isapprox(result["solution"]["bus"]["1"]["w"], 1.179, atol = 1e-2)
+        @test isapprox(result["solution"]["bus"]["1"]["w"], 1.209, atol = 1e-2)
         @test isapprox(result["solution"]["branch"]["1"]["wr"], 0.941, atol = 1e-2)
-        @test isapprox(result["solution"]["branch"]["1"]["wi"], 0.284, atol = 1e-2)
         #@test isapprox(result["solution"]["branch"]["1"]["wi"], 0.269, atol = 1e-2)
+        @test isapprox(result["solution"]["branch"]["1"]["wi"], 0.284, atol = 1e-2)
     end
     @testset "5-bus asymmetric case" begin
         result = run_opf("../test/data/matpower/case5_asym.m", SDPWRMPowerModel, sdp_solver)
@@ -955,6 +955,7 @@ end
         result = run_opf("../test/data/matpower/case6.m", SDPWRMPowerModel, sdp_solver)
 
         @test result["termination_status"] == OPTIMAL
+        #@test isapprox(result["objective"], 11580.8; atol = 1e1)
         #@test isapprox(result["objective"], 11507.7; atol = 1e1)
         @test isapprox(result["objective"], 11580.5; atol = 1e1)
     end
@@ -976,11 +977,11 @@ end
 
         @test haskey(result["solution"]["w_group"]["1"],"WR")
         @test haskey(result["solution"]["w_group"]["1"],"WI")
-        @test isapprox(result["solution"]["bus"]["1"]["w"], 1.210, atol = 1e-2)
         #@test isapprox(result["solution"]["bus"]["1"]["w"], 1.179, atol = 1e-2)
+        @test isapprox(result["solution"]["bus"]["1"]["w"], 1.209, atol = 1e-2)
         @test isapprox(result["solution"]["branch"]["1"]["wr"], 0.941, atol = 1e-2)
-        @test isapprox(result["solution"]["branch"]["1"]["wi"], 0.284, atol = 1e-2)
         #@test isapprox(result["solution"]["branch"]["1"]["wi"], 0.269, atol = 1e-2)
+        @test isapprox(result["solution"]["branch"]["1"]["wi"], 0.284, atol = 1e-2)
     end
     @testset "5-bus with asymmetric line charge" begin
         result = run_opf("../test/data/pti/case5_alc.raw", SparseSDPWRMPowerModel, sdp_solver)
