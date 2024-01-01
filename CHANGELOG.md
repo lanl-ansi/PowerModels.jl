@@ -7,6 +7,7 @@ PowerModels.jl Change Log
 ### v0.19.10
 - Add support for ACP and DCP formulation in OPF with PST variables (#543,#875)
 - Fix implementation of `calc_theta_delta_bounds` when conductor parameter is used (#870)
+- Update tests for SCS v2.0
 
 ### v0.19.9
 - Fix implementation of polynomial costs above quadratic
