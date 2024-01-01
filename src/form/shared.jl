@@ -393,7 +393,7 @@ function constraint_current_limit(pm::AbstractWModels, n::Int, f_idx, c_rating_a
 end
 
 ""
-function constraint_storage_losses(pm::AbstractWConvexModels, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+function constraint_storage_losses(pm::AbstractWConvexModels, n::Int, i, bus, r, x, p_loss, q_loss)
     w = var(pm, n, :w, bus)
     ccms = var(pm, n, :ccms, i)
     ps = var(pm, n, :ps, i)
@@ -402,19 +402,7 @@ function constraint_storage_losses(pm::AbstractWConvexModels, n::Int, i, bus, r,
     sd = var(pm, n, :sd, i)
     qsc = var(pm, n, :qsc, i)
 
-    for c in conductors
-        JuMP.@constraint(pm.model, ps[c]^2 + qs[c]^2 <= w[c]*ccms[c])
-    end
-
-    JuMP.@constraint(pm.model,
-        sum(ps[c] for c in conductors) + (sd - sc)
-        ==
-        p_loss + sum(r[c]*ccms[c] for c in conductors)
-    )
-
-    JuMP.@constraint(pm.model,
-        sum(qs[c] for c in conductors)
-        ==
-        qsc + q_loss + sum(x[c]*ccms[c] for c in conductors)
-    )
+    JuMP.@constraint(pm.model, ps^2 + qs^2 <= w*ccms)
+    JuMP.@constraint(pm.model, ps + (sd - sc) == p_loss + r*ccms)
+    JuMP.@constraint(pm.model, qs == qsc + q_loss + x*ccms)
 end

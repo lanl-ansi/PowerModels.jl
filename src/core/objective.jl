@@ -196,19 +196,15 @@ function expression_pg_cost(pm::AbstractPowerModel; report::Bool=true)
         pg_cost = var(pm, n)[:pg_cost] = Dict{Int,Any}()
 
         for (i,gen) in ref(pm, n, :gen)
-            if isa(var(pm, n, :pg, i), Array)
-                pg_terms = [var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n)]
-            else
-                pg_terms = [var(pm, n, :pg, i)]
-            end
+            pg_terms = [var(pm, n, :pg, i)]
 
             if gen["model"] == 1
                 if isa(pg_terms, Array{JuMP.VariableRef})
                     pmin = sum(JuMP.lower_bound.(pg_terms))
                     pmax = sum(JuMP.upper_bound.(pg_terms))
                 else
-                    pmin = sum(gen["pmin"][c] for c in conductor_ids(pm, n))
-                    pmax = sum(gen["pmax"][c] for c in conductor_ids(pm, n))
+                    pmin = gen["pmin"]
+                    pmax = gen["pmax"]
                 end
 
                 points = calc_pwl_points(gen["ncost"], gen["cost"], pmin, pmax)
@@ -236,19 +232,15 @@ function expression_p_dc_cost(pm::AbstractPowerModel; report::Bool=true)
         for (i,dcline) in ref(pm, n, :dcline)
             arc = (i, dcline["f_bus"], dcline["t_bus"])
 
-            if isa(var(pm, n, :pg, i), Array)
-                p_dc_terms = [var(pm, n, :p_dc, arc)[c] for c in conductor_ids(pm, n)]
-            else
-                p_dc_terms = [var(pm, n, :p_dc, arc)]
-            end
+            p_dc_terms = [var(pm, n, :p_dc, arc)]
 
             if dcline["model"] == 1
                 if isa(p_dc_terms, Array{JuMP.VariableRef})
                     pmin = sum(JuMP.lower_bound.(p_dc_terms))
                     pmax = sum(JuMP.upper_bound.(p_dc_terms))
                 else
-                    pmin = sum(dcline["pminf"][c] for c in conductor_ids(pm, n))
-                    pmax = sum(dcline["pmaxf"][c] for c in conductor_ids(pm, n))
+                    pmin = dcline["pminf"]
+                    pmax = dcline["pmaxf"]
                 end
 
                 # note pmin/pmax may be different from dcline["pminf"]/dcline["pmaxf"] in the on/off case
@@ -385,8 +377,6 @@ end
 
 function objective_max_loadability(pm::AbstractPowerModel)
     nws = nw_ids(pm)
-
-    @assert all(!ismulticonductor(pm, n) for n in nws)
 
     z_demand = Dict(n => var(pm, n, :z_demand) for n in nws)
     z_shunt = Dict(n => var(pm, n, :z_shunt) for n in nws)

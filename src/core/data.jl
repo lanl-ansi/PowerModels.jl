@@ -1045,41 +1045,6 @@ function _calc_power_balance(data::Dict{String,<:Any})
 end
 
 
-
-
-
-""
-function ismulticonductor(data::Dict{String,<:Any})
-    pm_data = get_pm_data(data)
-
-    if _IM.ismultinetwork(pm_data)
-        return all(_ismulticonductor(pm_nw_data) for (i, pm_nw_data) in pm_data["nw"])
-    else
-        return _ismulticonductor(pm_data)
-    end
-end
-
-function _ismulticonductor(data::Dict{String,<:Any})
-    return haskey(data, "conductors")
-end
-
-
-""
-function check_conductors(data::Dict{String,<:Any})
-    apply_pm!(_check_conductors, data)
-end
-
-
-""
-function _check_conductors(data::Dict{String,<:Any})
-    if haskey(data, "conductors") && data["conductors"] < 1
-        Memento.error(_LOGGER, "conductor values must be positive integers, given $(data["conductors"])")
-    end
-end
-
-
-
-
 "checks that voltage angle differences are within 90 deg., if not tightens"
 function correct_voltage_angle_differences!(data::Dict{String,<:Any}, default_pad = 1.0472)
     pm_data = get_pm_data(data)

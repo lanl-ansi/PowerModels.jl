@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Add support for models with mixtures of PWL and polynomial cost functions (#829)
 - Revised models to use two-sided constraints (#819) (breaking)
 - Rewrite code for building objective functions (#778) (breaking)
+- Drop support for multiple conductors (#872) (breaking)
 - Drop support for `run_*` functions (#878) (breaking)
 - Drop support for JuMP v0.22 and v0.23 (breaking)
 - Drop support for JSON v0.18, v0.19, v0.20 (breaking)

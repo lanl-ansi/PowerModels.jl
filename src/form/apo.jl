@@ -276,16 +276,12 @@ function constraint_storage_current_limit(pm::AbstractActivePowerModel, n::Int, 
 end
 
 ""
-function constraint_storage_losses(pm::AbstractActivePowerModel, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+function constraint_storage_losses(pm::AbstractActivePowerModel, n::Int, i, bus, r, x, p_loss, q_loss)
     ps = var(pm, n, :ps, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
 
-    JuMP.@constraint(pm.model,
-        sum(ps[c] for c in conductors) + (sd - sc)
-        ==
-        p_loss + sum(r[c]*ps[c]^2 for c in conductors)
-    )
+    JuMP.@constraint(pm.model, ps + (sd - sc) == p_loss + r*ps^2)
 end
 
 function constraint_storage_on_off(pm::AbstractActivePowerModel, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)

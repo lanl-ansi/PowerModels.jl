@@ -192,23 +192,13 @@ end
 
 
 "Neglects the active and reactive loss terms associated with the squared current magnitude."
-function constraint_storage_losses(pm::AbstractBFAModel, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+function constraint_storage_losses(pm::AbstractBFAModel, n::Int, i, bus, r, x, p_loss, q_loss)
     ps = var(pm, n, :ps, i)
     qs = var(pm, n, :qs, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
     qsc = var(pm, n, :qsc, i)
 
-
-    JuMP.@constraint(pm.model,
-        sum(ps[c] for c in conductors) + (sd - sc)
-        ==
-        p_loss
-    )
-
-    JuMP.@constraint(pm.model,
-        sum(qs[c] for c in conductors)
-        ==
-        qsc + q_loss
-    )
+    JuMP.@constraint(pm.model, ps + (sd - sc) == p_loss)
+    JuMP.@constraint(pm.model, qs == qsc + q_loss)
 end

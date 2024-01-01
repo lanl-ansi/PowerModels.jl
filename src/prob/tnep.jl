@@ -92,8 +92,6 @@ function _ref_add_ne_branch!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
     ref[:ne_bus_arcs] = ne_bus_arcs
 
     if !haskey(ref, :ne_buspairs)
-        ismc = haskey(ref, :conductors)
-        cid = ref[:conductor_ids]
-        ref[:ne_buspairs] = calc_buspair_parameters(ref[:bus], ref[:ne_branch], cid, ismc)
+        ref[:ne_buspairs] = calc_buspair_parameters(ref[:bus], ref[:ne_branch])
     end
 end
