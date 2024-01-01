@@ -41,5 +41,4 @@ makedocs(
 
 deploydocs(
     repo = "github.com/lanl-ansi/PowerModels.jl.git",
-    push_preview = true,
 )
