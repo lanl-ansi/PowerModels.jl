@@ -1,390 +1,103 @@
-################################################################################
-# This file is to defines commonly used constraints for power flow models
-# This will hopefully make everything more compositional
-################################################################################
-
-# enables support for v[1]
-Base.getindex(v::JuMP.VariableRef, i::Int) = v
-
-
 """
-Checks that all cost models are of the same type
+Checks if any generator cost model will require a JuMP nonlinear expression
 """
-function check_cost_models(pm::AbstractPowerModel)
-    gen_model = check_gen_cost_models(pm)
-    dcline_model = check_dcline_cost_models(pm)
-
-    if dcline_model == nothing
-        return gen_model
-    end
-
-    if gen_model == nothing
-        return dcline_model
-    end
-
-    if gen_model != dcline_model
-        Memento.error(_LOGGER, "generator and dcline cost models are inconsistent, the generator model is $(gen_model) however dcline model $(dcline_model)")
-    end
-
-    return gen_model
-end
-
-
-"""
-Checks that all generator cost models are of the same type
-"""
-function check_gen_cost_models(pm::AbstractPowerModel)
-    model = nothing
-
+function check_nl_gen_cost_models(pm::AbstractPowerModel)
     for (n, nw_ref) in nws(pm)
         for (i,gen) in nw_ref[:gen]
             if haskey(gen, "cost")
-                if model == nothing
-                    model = gen["model"]
-                else
-                    if gen["model"] != model
-                        Memento.error(_LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
-                    end
+                if gen["model"] == 2 && length(gen["cost"]) > 3
+                    return true
                 end
-            else
-                Memento.error(_LOGGER, "no cost given for generator $(i)")
             end
         end
     end
-
-    return model
+    return false
 end
 
-
 """
-Checks that all dcline cost models are of the same type
+Checks if any dcline cost model will require a JuMP nonlinear expression
 """
-function check_dcline_cost_models(pm::AbstractPowerModel)
-    model = nothing
-
+function check_nl_dcline_cost_models(pm::AbstractPowerModel)
     for (n, nw_ref) in nws(pm)
         for (i,dcline) in nw_ref[:dcline]
-            if haskey(dcline, "model")
-                if model == nothing
-                    model = dcline["model"]
-                else
-                    if dcline["model"] != model
-                        Memento.error(_LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
-                    end
+            if haskey(dcline, "cost")
+                if dcline["model"] == 2 && length(dcline["cost"]) > 3
+                    return true
                 end
-            else
-                Memento.error(_LOGGER, "no cost given for dcline $(i)")
             end
         end
     end
-
-    return model
+    return false
 end
 
 
 ""
 function objective_min_fuel_and_flow_cost(pm::AbstractPowerModel; kwargs...)
-    model = check_cost_models(pm)
+    nl_gen = check_nl_gen_cost_models(pm)
+    nl_dc = check_nl_dcline_cost_models(pm)
 
-    if model == 1
-        return objective_min_fuel_and_flow_cost_pwl(pm; kwargs...)
-    elseif model == 2
-        return objective_min_fuel_and_flow_cost_polynomial(pm; kwargs...)
+    nl = nl_gen || nl_dc || typeof(pm) <: AbstractIVRModel
+
+    expression_pg_cost(pm; kwargs...)
+    expression_p_dc_cost(pm; kwargs...)
+
+    if !nl
+        return JuMP.@objective(pm.model, Min,
+            sum(
+                sum( var(pm, n,   :pg_cost, i) for (i,gen) in nw_ref[:gen]) +
+                sum( var(pm, n, :p_dc_cost, i) for (i,dcline) in nw_ref[:dcline])
+            for (n, nw_ref) in nws(pm))
+        )
     else
-        Memento.error(_LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
-    end
+        pg_cost = Dict()
+        p_dc_cost = Dict()
+        for (n, nw_ref) in nws(pm)
+            for (i,gen) in nw_ref[:gen]
+                pg_cost[(n,i)] = var(pm, n,   :pg_cost, i)
+            end
+            for (i,dcline) in nw_ref[:dcline]
+                p_dc_cost[(n,i)] = var(pm, n, :p_dc_cost, i)
+            end
+        end
 
+        return JuMP.@NLobjective(pm.model, Min,
+            sum(
+                sum( pg_cost[n,i] for (i,gen) in nw_ref[:gen]) +
+                sum( p_dc_cost[n,i] for (i,dcline) in nw_ref[:dcline])
+            for (n, nw_ref) in nws(pm))
+        )
+    end
 end
 
 
 ""
 function objective_min_fuel_cost(pm::AbstractPowerModel; kwargs...)
-    model = check_gen_cost_models(pm)
+    nl_gen = check_nl_gen_cost_models(pm)
 
-    if model == 1
-        return objective_min_fuel_cost_pwl(pm; kwargs...)
-    elseif model == 2
-        return objective_min_fuel_cost_polynomial(pm; kwargs...)
+    nl = nl_gen || typeof(pm) <: AbstractIVRModel
+
+    expression_pg_cost(pm; kwargs...)
+
+    if !nl
+        return JuMP.@objective(pm.model, Min,
+            sum(
+                sum( var(pm, n, :pg_cost, i) for (i,gen) in nw_ref[:gen])
+            for (n, nw_ref) in nws(pm))
+        )
     else
-        Memento.error(_LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model)")
-    end
-
-end
-
-
-""
-function objective_min_fuel_and_flow_cost_polynomial(pm::AbstractPowerModel; kwargs...)
-    order = calc_max_cost_index(pm.data)-1
-
-    if order <= 2
-        return _objective_min_fuel_and_flow_cost_polynomial_linquad(pm; kwargs...)
-    else
-        return _objective_min_fuel_and_flow_cost_polynomial_nl(pm; kwargs...)
-    end
-end
-
-""
-function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractPowerModel; report::Bool=true)
-    gen_cost = Dict()
-    dcline_cost = Dict()
-
-    for (n, nw_ref) in nws(pm)
-        for (i,gen) in nw_ref[:gen]
-            pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n) )
-
-            if length(gen["cost"]) == 1
-                gen_cost[(n,i)] = gen["cost"][1]
-            elseif length(gen["cost"]) == 2
-                gen_cost[(n,i)] = gen["cost"][1]*pg + gen["cost"][2]
-            elseif length(gen["cost"]) == 3
-                gen_cost[(n,i)] = gen["cost"][1]*pg^2 + gen["cost"][2]*pg + gen["cost"][3]
-            else
-                gen_cost[(n,i)] = 0.0
+        pg_cost = Dict()
+        for (n, nw_ref) in nws(pm)
+            for (i,gen) in nw_ref[:gen]
+                pg_cost[(n,i)] = var(pm, n, :pg_cost, i)
             end
         end
 
-        from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
-        for (i,dcline) in nw_ref[:dcline]
-            p_dc = sum( var(pm, n, :p_dc, from_idx[i])[c] for c in conductor_ids(pm, n) )
-
-            if length(dcline["cost"]) == 1
-                dcline_cost[(n,i)] = dcline["cost"][1]
-            elseif length(dcline["cost"]) == 2
-                dcline_cost[(n,i)] = dcline["cost"][1]*p_dc + dcline["cost"][2]
-            elseif length(dcline["cost"]) == 3
-                dcline_cost[(n,i)] = dcline["cost"][1]*p_dc^2 + dcline["cost"][2]*p_dc + dcline["cost"][3]
-            else
-                dcline_cost[(n,i)] = 0.0
-            end
-        end
+        return JuMP.@NLobjective(pm.model, Min,
+            sum(
+                sum( pg_cost[n,i] for (i,gen) in nw_ref[:gen])
+            for (n, nw_ref) in nws(pm))
+        )
     end
-
-    return JuMP.@objective(pm.model, Min,
-        sum(
-            sum(    gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] ) +
-            sum( dcline_cost[(n,i)] for (i,dcline) in nw_ref[:dcline] )
-        for (n, nw_ref) in nws(pm))
-    )
-end
-
-
-"Adds lifted variables to turn a quadatic objective into a linear one; needed for conic solvers that only support linear objectives"
-function _objective_min_fuel_and_flow_cost_polynomial_linquad(pm::AbstractConicModels, report::Bool=true)
-    gen_cost = Dict()
-    dcline_cost = Dict()
-
-    for (n, nw_ref) in nws(pm)
-
-        var(pm, n)[:pg_sqr] = Dict()
-        for (i,gen) in nw_ref[:gen]
-            pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n) )
-
-            if length(gen["cost"]) == 1
-                gen_cost[(n,i)] = gen["cost"][1]
-            elseif length(gen["cost"]) == 2
-                gen_cost[(n,i)] = gen["cost"][1]*pg + gen["cost"][2]
-            elseif length(gen["cost"]) == 3
-                pmin = sum(gen["pmin"][c] for c in conductor_ids(pm, n))
-                pmax = sum(gen["pmax"][c] for c in conductor_ids(pm, n))
-
-                pg_sqr_ub = max(pmin^2, pmax^2)
-                pg_sqr_lb = 0.0
-                if pmin > 0.0
-                    pg_sqr_lb = pmin^2
-                end
-                if pmax < 0.0
-                    pg_sqr_lb = pmax^2
-                end
-
-                pg_sqr = var(pm, n, :pg_sqr)[i] = JuMP.@variable(pm.model,
-                    base_name="$(n)_pg_sqr_$(i)",
-                    lower_bound = pg_sqr_lb,
-                    upper_bound = pg_sqr_ub,
-                    start = 0.0
-                )
-                if report
-                    sol(pm, n, :gen, i)[:pg_sqr] = pg_sqr
-                end
-
-                JuMP.@constraint(pm.model, [0.5, pg_sqr, pg] in JuMP.RotatedSecondOrderCone())
-
-                gen_cost[(n,i)] = gen["cost"][1]*pg_sqr + gen["cost"][2]*pg + gen["cost"][3]
-            else
-                gen_cost[(n,i)] = 0.0
-            end
-        end
-
-        from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
-
-        var(pm, n)[:p_dc_sqr] = Dict()
-        for (i,dcline) in nw_ref[:dcline]
-            p_dc = sum( var(pm, n, :p_dc, from_idx[i])[c] for c in conductor_ids(pm, n) )
-
-            if length(dcline["cost"]) == 1
-                dcline_cost[(n,i)] = dcline["cost"][1]
-            elseif length(dcline["cost"]) == 2
-                dcline_cost[(n,i)] = dcline["cost"][1]*p_dc + dcline["cost"][2]
-            elseif length(dcline["cost"]) == 3
-                pmin = sum(dcline["pminf"][c] for c in conductor_ids(pm, n))
-                pmax = sum(dcline["pmaxf"][c] for c in conductor_ids(pm, n))
-
-                p_dc_sqr_ub = max(pmin^2, pmax^2)
-                p_dc_sqr_lb = 0.0
-                if pmin > 0.0
-                    p_dc_sqr_lb = pmin^2
-                end
-                if pmax < 0.0
-                    p_dc_sqr_lb = pmax^2
-                end
-
-                p_dc_sqr = var(pm, n, :p_dc_sqr)[i] = JuMP.@variable(pm.model,
-                    base_name="$(n)_p_dc_sqr_$(i)",
-                    lower_bound = p_dc_sqr_lb,
-                    upper_bound = p_dc_sqr_ub,
-                    start = 0.0
-                )
-                if report
-                    sol(pm, n, :gen, i)[:p_dc_sqr] = p_dc_sqr
-                end
-
-                JuMP.@constraint(pm.model, [0.5, p_dc_sqr, p_dc] in JuMP.RotatedSecondOrderCone())
-
-                dcline_cost[(n,i)] = dcline["cost"][1]*p_dc_sqr + dcline["cost"][2]*p_dc + dcline["cost"][3]
-            else
-                dcline_cost[(n,i)] = 0.0
-            end
-        end
-    end
-
-    return JuMP.@objective(pm.model, Min,
-        sum(
-            sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] ) +
-            sum( dcline_cost[(n,i)] for (i,dcline) in nw_ref[:dcline] )
-        for (n, nw_ref) in nws(pm))
-    )
-end
-
-
-""
-function _objective_min_fuel_and_flow_cost_polynomial_nl(pm::AbstractPowerModel; report::Bool=true)
-    gen_cost = Dict()
-    dcline_cost = Dict()
-
-    for (n, nw_ref) in nws(pm)
-        for (i,gen) in nw_ref[:gen]
-            pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n))
-
-            cost_rev = reverse(gen["cost"])
-            if length(cost_rev) == 1
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1])
-            elseif length(cost_rev) == 2
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg)
-            elseif length(cost_rev) == 3
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2)
-            elseif length(cost_rev) >= 4
-                cost_rev_nl = cost_rev[4:end]
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2 + sum( v*pg^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
-            else
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, 0.0)
-            end
-        end
-
-        from_idx = Dict(arc[1] => arc for arc in nw_ref[:arcs_from_dc])
-
-        for (i,dcline) in nw_ref[:dcline]
-            p_dc = sum( var(pm, n, :p_dc, from_idx[i])[c] for c in conductor_ids(pm, n))
-
-            cost_rev = reverse(dcline["cost"])
-            if length(cost_rev) == 1
-                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1])
-            elseif length(cost_rev) == 2
-                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc)
-            elseif length(cost_rev) == 3
-                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc + cost_rev[3]*p_dc^2)
-            elseif length(cost_rev) >= 4
-                cost_rev_nl = cost_rev[4:end]
-                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*p_dc + cost_rev[3]*p_dc^2 + sum( v*p_dc^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
-            else
-                dcline_cost[(n,i)] = JuMP.@NLexpression(pm.model, 0.0)
-            end
-        end
-    end
-
-    return JuMP.@NLobjective(pm.model, Min,
-        sum(
-            sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen]) +
-            sum( dcline_cost[(n,i)] for (i,dcline) in nw_ref[:dcline])
-        for (n, nw_ref) in nws(pm))
-    )
-end
-
-
-""
-function objective_min_fuel_cost_polynomial(pm::AbstractPowerModel; kwargs...)
-    order = calc_max_cost_index(pm.data)-1
-
-    if order <= 2
-        return _objective_min_fuel_cost_polynomial_linquad(pm; kwargs...)
-    else
-        return _objective_min_fuel_cost_polynomial_nl(pm; kwargs...)
-    end
-end
-
-""
-function _objective_min_fuel_cost_polynomial_linquad(pm::AbstractPowerModel; report::Bool=true)
-    gen_cost = Dict()
-    for (n, nw_ref) in nws(pm)
-        for (i,gen) in nw_ref[:gen]
-            pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n) )
-
-            if length(gen["cost"]) == 1
-                gen_cost[(n,i)] = gen["cost"][1]
-            elseif length(gen["cost"]) == 2
-                gen_cost[(n,i)] = gen["cost"][1]*pg + gen["cost"][2]
-            elseif length(gen["cost"]) == 3
-                gen_cost[(n,i)] = gen["cost"][1]*pg^2 + gen["cost"][2]*pg + gen["cost"][3]
-            else
-                gen_cost[(n,i)] = 0.0
-            end
-        end
-    end
-
-    return JuMP.@objective(pm.model, Min,
-        sum(
-            sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] )
-        for (n, nw_ref) in nws(pm))
-    )
-end
-
-
-""
-function _objective_min_fuel_cost_polynomial_nl(pm::AbstractPowerModel; report::Bool=true)
-    gen_cost = Dict()
-    for (n, nw_ref) in nws(pm)
-        for (i,gen) in nw_ref[:gen]
-            pg = sum( var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n))
-
-            cost_rev = reverse(gen["cost"])
-            if length(cost_rev) == 1
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1])
-            elseif length(cost_rev) == 2
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg)
-            elseif length(cost_rev) == 3
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2)
-            elseif length(cost_rev) >= 4
-                cost_rev_nl = cost_rev[4:end]
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, cost_rev[1] + cost_rev[2]*pg + cost_rev[3]*pg^2 + sum( v*pg^(d+2) for (d,v) in enumerate(cost_rev_nl)) )
-            else
-                gen_cost[(n,i)] = JuMP.@NLexpression(pm.model, 0.0)
-            end
-        end
-    end
-
-    return JuMP.@NLobjective(pm.model, Min,
-        sum(
-            sum( gen_cost[(n,i)] for (i,gen) in nw_ref[:gen] )
-        for (n, nw_ref) in nws(pm))
-    )
 end
 
 
@@ -392,7 +105,7 @@ end
 cleans up raw pwl cost points in preparation for building a mathamatical model.
 
 The key mathematical properties,
-- the first and last points are strickly outside of the pmin-to-pmax range
+- the first and last points are strictly outside of the pmin-to-pmax range
 - pmin and pmax occur in the first and last line segments.
 """
 function calc_pwl_points(ncost::Int, cost::Vector{<:Real}, pmin::Real, pmax::Real; tolerance=1e-2)
@@ -476,34 +189,34 @@ function calc_pwl_points(ncost::Int, cost::Vector{<:Real}, pmin::Real, pmax::Rea
 end
 
 
+
 "adds pg_cost variables and constraints"
-function objective_variable_pg_cost(pm::AbstractPowerModel, report::Bool=true)
+function expression_pg_cost(pm::AbstractPowerModel; report::Bool=true)
     for (n, nw_ref) in nws(pm)
         pg_cost = var(pm, n)[:pg_cost] = Dict{Int,Any}()
 
         for (i,gen) in ref(pm, n, :gen)
-            pg_vars = [var(pm, n, :pg, i)[c] for c in conductor_ids(pm, n)]
-            pmin = sum(JuMP.lower_bound.(pg_vars))
-            pmax = sum(JuMP.upper_bound.(pg_vars))
+            pg_terms = [var(pm, n, :pg, i)]
 
-            # note pmin/pmax may be different from gen["pmin"]/gen["pmax"] in the on/off case
-            points = calc_pwl_points(gen["ncost"], gen["cost"], pmin, pmax)
+            if gen["model"] == 1
+                if isa(pg_terms, Array{JuMP.VariableRef})
+                    pmin = sum(JuMP.lower_bound.(pg_terms))
+                    pmax = sum(JuMP.upper_bound.(pg_terms))
+                else
+                    pmin = gen["pmin"]
+                    pmax = gen["pmax"]
+                end
 
-            pg_cost_lambda = JuMP.@variable(pm.model,
-                [i in 1:length(points)], base_name="$(n)_pg_cost_lambda",
-                lower_bound = 0.0,
-                upper_bound = 1.0
-            )
-            JuMP.@constraint(pm.model, sum(pg_cost_lambda) == 1.0)
+                points = calc_pwl_points(gen["ncost"], gen["cost"], pmin, pmax)
+                pg_cost[i] = _pwl_cost_expression(pm, pg_terms, points, nw=n, id=i, var_name="pg")
 
-            pg_expr = 0.0
-            pg_cost_expr = 0.0
-            for (i,point) in enumerate(points)
-                pg_expr += point.mw*pg_cost_lambda[i]
-                pg_cost_expr += point.cost*pg_cost_lambda[i]
+            elseif gen["model"] == 2
+                cost_rev = reverse(gen["cost"])
+
+                pg_cost[i] = _polynomial_cost_expression(pm, pg_terms, cost_rev, nw=n, id=i, var_name="pg")
+            else
+                Memento.error(_LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model) on generator $(i)")
             end
-            JuMP.@constraint(pm.model, pg_expr == sum(pg_vars))
-            pg_cost[i] = pg_cost_expr
         end
 
         report && sol_component_value(pm, n, :gen, :pg_cost, ids(pm, n, :gen), pg_cost)
@@ -512,35 +225,34 @@ end
 
 
 "adds p_dc_cost variables and constraints"
-function objective_variable_dc_cost(pm::AbstractPowerModel, report::Bool=true)
+function expression_p_dc_cost(pm::AbstractPowerModel; report::Bool=true)
     for (n, nw_ref) in nws(pm)
         p_dc_cost = var(pm, n)[:p_dc_cost] = Dict{Int,Any}()
 
         for (i,dcline) in ref(pm, n, :dcline)
             arc = (i, dcline["f_bus"], dcline["t_bus"])
-            p_dc_vars = [var(pm, n, :p_dc)[arc][c] for c in conductor_ids(pm, n)]
-            pmin = sum(JuMP.lower_bound.(p_dc_vars))
-            pmax = sum(JuMP.upper_bound.(p_dc_vars))
 
-            # note pmin/pmax may be different from dcline["pminf"]/dcline["pmaxf"] in the on/off case
-            points = calc_pwl_points(dcline["ncost"], dcline["cost"], pmin, pmax)
+            p_dc_terms = [var(pm, n, :p_dc, arc)]
 
-            dc_p_cost_lambda = JuMP.@variable(pm.model,
-                [i in 1:length(points)], base_name="$(n)_dc_p_cost_lambda",
-                lower_bound = 0.0,
-                upper_bound = 1.0
-            )
-            JuMP.@constraint(pm.model, sum(dc_p_cost_lambda) == 1.0)
+            if dcline["model"] == 1
+                if isa(p_dc_terms, Array{JuMP.VariableRef})
+                    pmin = sum(JuMP.lower_bound.(p_dc_terms))
+                    pmax = sum(JuMP.upper_bound.(p_dc_terms))
+                else
+                    pmin = dcline["pminf"]
+                    pmax = dcline["pmaxf"]
+                end
 
-            dc_p_expr = 0.0
-            dc_p_cost_expr = 0.0
-            for (i,point) in enumerate(points)
-                dc_p_expr += point.mw*dc_p_cost_lambda[i]
-                dc_p_cost_expr += point.cost*dc_p_cost_lambda[i]
+                # note pmin/pmax may be different from dcline["pminf"]/dcline["pmaxf"] in the on/off case
+                points = calc_pwl_points(dcline["ncost"], dcline["cost"], pmin, pmax)
+                p_dc_cost[i] = _pwl_cost_expression(pm, p_dc_terms, points, nw=n, id=i, var_name="dc_p")
+
+            elseif dcline["model"] == 2
+                cost_rev = reverse(dcline["cost"])
+                p_dc_cost[i] = _polynomial_cost_expression(pm, p_dc_terms, cost_rev, nw=n, id=i, var_name="dc_p")
+            else
+                Memento.error(_LOGGER, "only cost models of types 1 and 2 are supported at this time, given cost model type of $(model) on dcline $(i)")
             end
-
-            JuMP.@constraint(pm.model, dc_p_expr == sum(p_dc_vars))
-            p_dc_cost[i] = dc_p_cost_expr
         end
 
         report && sol_component_value(pm, n, :dcline, :p_dc_cost, ids(pm, n, :dcline), p_dc_cost)
@@ -548,37 +260,123 @@ function objective_variable_dc_cost(pm::AbstractPowerModel, report::Bool=true)
 end
 
 
-""
-function objective_min_fuel_and_flow_cost_pwl(pm::AbstractPowerModel; kwargs...)
-    objective_variable_pg_cost(pm; kwargs...)
-    objective_variable_dc_cost(pm; kwargs...)
-
-    return JuMP.@objective(pm.model, Min,
-        sum(
-            sum( var(pm, n,   :pg_cost, i) for (i,gen) in nw_ref[:gen]) +
-            sum( var(pm, n, :p_dc_cost, i) for (i,dcline) in nw_ref[:dcline])
-        for (n, nw_ref) in nws(pm))
+function _pwl_cost_expression(pm::AbstractPowerModel, x_list::Array{JuMP.VariableRef}, points; nw=0, id=1, var_name="x")
+    cost_lambda = JuMP.@variable(pm.model,
+        [i in 1:length(points)], base_name="$(nw)_$(var_name)_cost_lambda_$(id)",
+        lower_bound = 0.0,
+        upper_bound = 1.0
     )
+    JuMP.@constraint(pm.model, sum(cost_lambda) == 1.0)
+
+    expr = 0.0
+    cost_expr = 0.0
+    for (i,point) in enumerate(points)
+        expr += point.mw*cost_lambda[i]
+        cost_expr += point.cost*cost_lambda[i]
+    end
+    JuMP.@constraint(pm.model, expr == sum(x_list))
+
+    return cost_expr
+end
+
+function _pwl_cost_expression(pm::AbstractPowerModel, x_list, points; nw=0, id=1, var_name="x")
+    cost_lambda = JuMP.@variable(pm.model,
+        [i in 1:length(points)], base_name="$(nw)_$(var_name)_cost_lambda_$(id)",
+        lower_bound = 0.0,
+        upper_bound = 1.0
+    )
+    JuMP.@constraint(pm.model, sum(cost_lambda) == 1.0)
+
+    expr = 0.0
+    cost_expr = 0.0
+    for (i,point) in enumerate(points)
+        expr += point.mw*cost_lambda[i]
+        cost_expr += point.cost*cost_lambda[i]
+    end
+    JuMP.@NLconstraint(pm.model, expr == sum(x for x in x_list))
+
+    return cost_expr
 end
 
 
-""
-function objective_min_fuel_cost_pwl(pm::AbstractPowerModel; kwargs...)
-    objective_variable_pg_cost(pm; kwargs...)
 
-    return JuMP.@objective(pm.model, Min,
-        sum(
-            sum( var(pm, n, :pg_cost, i) for (i,gen) in nw_ref[:gen])
-        for (n, nw_ref) in nws(pm))
-    )
+# note that `cost_terms` should be providing in ascending order (the reverse of the Matpower spec.)
+function _polynomial_cost_expression(pm::AbstractPowerModel, x_list::Array{JuMP.VariableRef}, cost_terms; nw=0, id=1, var_name="x")
+    x = sum(x_list)
+    if length(cost_terms) == 0
+        return 0.0
+    elseif length(cost_terms) == 1
+        return cost_terms[1]
+    elseif length(cost_terms) == 2
+        return cost_terms[1] + cost_terms[2]*x
+    elseif length(cost_terms) == 3
+        return cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2
+    else # length(cost_terms) >= 4
+        cost_nl = cost_terms[4:end]
+        return JuMP.@NLexpression(pm.model, cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2 + sum( v*x^(d+2) for (d,v) in enumerate(cost_nl)) )
+    end
 end
+
+# note that `cost_terms` should be providing in ascending order (the reverse of the Matpower spec.)
+function _polynomial_cost_expression(pm::AbstractConicModels, x_list::Array{JuMP.VariableRef}, cost_terms; nw=0, id=1, var_name="x")
+    x = sum(x_list)
+    if length(cost_terms) == 0
+        return 0.0
+    elseif length(cost_terms) == 1
+        return cost_terms[1]
+    elseif length(cost_terms) == 2
+        return cost_terms[1] + cost_terms[2]*x
+    elseif length(cost_terms) == 3
+        x_lb = sum(JuMP.lower_bound.(x_list))
+        x_ub = sum(JuMP.upper_bound.(x_list))
+
+        x_sqr_lb = 0.0
+        x_sqr_ub = max(x_lb^2, x_ub^2)
+        if x_lb > 0.0
+            x_sqr_lb = x_lb^2
+        end
+        if x_ub < 0.0
+            x_sqr_lb = x_ub^2
+        end
+
+        x_sqr = JuMP.@variable(pm.model,
+            base_name="$(nw)_$(var_name)_sqr_$(id)",
+            lower_bound = x_sqr_lb,
+            upper_bound = x_sqr_ub,
+            start = 0.0
+        )
+        JuMP.@constraint(pm.model, [0.5, x_sqr, x] in JuMP.RotatedSecondOrderCone())
+
+        return cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x_sqr
+    else # length(cost_terms) >= 4
+        Memento.error(_LOGGER, "the network cost data features a polynomial cost function that is not compatible with conic mathematical programs.")
+    end
+end
+
+# note that `cost_terms` should be providing in ascending order (the reverse of the Matpower spec.)
+function _polynomial_cost_expression(pm::AbstractPowerModel, x_list, cost_terms; nw=0, id=1, var_name="x")
+    x = JuMP.@NLexpression(pm.model, sum(x for x in x_list))
+    if length(cost_terms) == 0
+        return 0.0
+    elseif length(cost_terms) == 1
+        return cost_terms[1]
+    elseif length(cost_terms) == 2
+        return JuMP.@NLexpression(pm.model, cost_terms[1] + cost_terms[2]*x)
+    elseif length(cost_terms) == 3
+        return JuMP.@NLexpression(pm.model, cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2)
+    else # length(cost_terms) >= 4
+        cost_nl = cost_terms[4:end]
+        return JuMP.@NLexpression(pm.model, cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2 + sum( v*x^(d+2) for (d,v) in enumerate(cost_nl)) )
+    end
+end
+
+
+
 
 
 
 function objective_max_loadability(pm::AbstractPowerModel)
     nws = nw_ids(pm)
-
-    @assert all(!ismulticonductor(pm, n) for n in nws)
 
     z_demand = Dict(n => var(pm, n, :z_demand) for n in nws)
     z_shunt = Dict(n => var(pm, n, :z_shunt) for n in nws)

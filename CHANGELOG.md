@@ -4,6 +4,16 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.20.0
+- Add support for models with mixtures of PWL and polynomial cost functions (#829)
+- Revised models to use two-sided constraints (#819) (breaking)
+- Rewrite code for building objective functions (#778) (breaking)
+- Made current limit modeling consistent with thermal limit modeling (#625) (breaking)
+- Drop support for multiple conductors (#872) (breaking)
+- Drop support for `run_*` functions (#878) (breaking)
+- Drop support for JuMP v0.22 and v0.23 (breaking)
+- Drop support for JSON v0.18, v0.19, v0.20 (breaking)
+
 ### v0.19.10
 - Add support for ACP and DCP formulation in OPF with PST variables (#543,#875)
 - Fix implementation of `calc_theta_delta_bounds` when conductor parameter is used (#870)
@@ -32,6 +42,13 @@ PowerModels.jl Change Log
 ### v0.19.5
 - Add support for JuMP v1.0
 - Update `correct_cost_functions!` to support PWL costs with a constant power value
+
+### v0.20.0
+- Added conversion of impedance and current loads from PSSE raw files into constant power loads (#792)
+- Made case name recovery optional in PTI parsing
+
+### Staged
+- nothing
 
 ### v0.19.4
 - Fix `sol_component_value_edge` implementation and usage (#811)

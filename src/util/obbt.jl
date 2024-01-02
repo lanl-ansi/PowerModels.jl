@@ -85,7 +85,6 @@ function solve_obbt_opf!(data::Dict{String,<:Any}, optimizer;
 
     model_relaxation = instantiate_model(data, model_type, PowerModels.build_opf)
     (_IM.ismultinetwork(model_relaxation, pm_it_sym)) && (Memento.error(_LOGGER, "OBBT is not supported for multi-networks"))
-    (ismulticonductor(model_relaxation)) && (Memento.error(_LOGGER, "OBBT is not supported for multi-conductor networks"))
 
     # check for model_type compatability with OBBT
     _check_variables(model_relaxation)
@@ -406,7 +405,37 @@ end
 
 
 function _constraint_obj_bound(pm::AbstractPowerModel, bound)
-    model = PowerModels.check_cost_models(pm)
+
+    model = nothing
+    for (n, nw_ref) in nws(pm)
+        for (i,gen) in nw_ref[:gen]
+            if haskey(gen, "cost")
+                if model == nothing
+                    model = gen["model"]
+                else
+                    if gen["model"] != model
+                        Memento.error(_LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
+                    end
+                end
+            else
+                Memento.error(_LOGGER, "no cost given for generator $(i)")
+            end
+        end
+        for (i,dcline) in nw_ref[:dcline]
+            if haskey(dcline, "model")
+                if model == nothing
+                    model = dcline["model"]
+                else
+                    if dcline["model"] != model
+                        Memento.error(_LOGGER, "cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
+                    end
+                end
+            else
+                Memento.error(_LOGGER, "no cost given for dcline $(i)")
+            end
+        end
+    end
+
     if model != 2
         Memento.error(_LOGGER, "Only cost models of type 2 is supported at this time, given cost model type $(model)")
     end

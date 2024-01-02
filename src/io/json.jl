@@ -1,5 +1,4 @@
 # Parse PowerModels data from JSON exports of PowerModels data structures.
-# Necessary in order to support MultiConductorValues
 
 function _jsonver2juliaver!(pm_data)
     if haskey(pm_data, "source_version") && isa(pm_data["source_version"], Dict)

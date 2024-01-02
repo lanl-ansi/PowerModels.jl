@@ -13,7 +13,7 @@ end
 
 @testset "test ac ots" begin
     @testset "3-bus case" begin
-        result = run_ots("../test/data/matpower/case3.m", ACPPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case3.m", ACPPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 3, 3)
 
@@ -24,7 +24,7 @@ end
     #=
     # remove due to linux stability issue
     @testset "5-bus case" begin
-        result = run_ots("../test/data/matpower/case5.m", ACPPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5.m", ACPPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 0, 0)
 
@@ -35,7 +35,7 @@ end
     end
     =#
     @testset "5-bus with negative branch reactance case" begin
-        result = run_ots("../test/data/matpower/case5_ext.m", ACPPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5_ext.m", ACPPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -45,7 +45,7 @@ end
         #@test result["objective"] < 16600
     end
     @testset "5-bus with asymmetric line charge" begin
-        result = run_ots("../test/data/pti/case5_alc.raw", ACPPowerModel, minlp_solver)
+        result = solve_ots("../test/data/pti/case5_alc.raw", ACPPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 4, 4)
 
@@ -54,7 +54,7 @@ end
     end
     #Omitting this test, returns local infeasible
     #@testset "6-bus case" begin
-    #    result = run_ots("../test/data/matpower/case6.m", ACPPowerModel, minlp_solver)
+    #    result = solve_ots("../test/data/matpower/case6.m", ACPPowerModel, minlp_solver)
 
     #    check_br_status(result["solution"], 0, 0)
 
@@ -67,7 +67,7 @@ end
 
 @testset "test dc ots" begin
     @testset "3-bus case" begin
-        result = run_ots("../test/data/matpower/case3.m", DCPPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case3.m", DCPPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 3, 3)
 
@@ -75,7 +75,7 @@ end
         @test isapprox(result["objective"], 5782.0; atol = 1e0)
     end
     @testset "5-bus case" begin
-        result = run_ots("../test/data/matpower/case5.m", DCPPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5.m", DCPPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -83,7 +83,7 @@ end
         @test isapprox(result["objective"], 14991.2; atol = 1e0)
     end
     @testset "5-bus case, MIP solver" begin
-        result = run_ots("../test/data/matpower/case5.m", DCPPowerModel, milp_solver)
+        result = solve_ots("../test/data/matpower/case5.m", DCPPowerModel, milp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -91,7 +91,7 @@ end
         @test isapprox(result["objective"], 14991.3; atol = 1e0)
     end
     @testset "5-bus with negative branch reactance case" begin
-        result = run_ots("../test/data/matpower/case5_ext.m", DCPPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5_ext.m", DCPPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -99,7 +99,7 @@ end
         @test isapprox(result["objective"], 14991.2; atol = 1e0)
     end
     @testset "6-bus case" begin
-        result = run_ots("../test/data/matpower/case6.m", DCPPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case6.m", DCPPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 6, 6)
 
@@ -111,7 +111,7 @@ end
 
 @testset "test dc+ll ots" begin
     @testset "3-bus case" begin
-        result = run_ots("../test/data/matpower/case3.m", DCPLLPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case3.m", DCPLLPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 3, 3)
 
@@ -119,7 +119,7 @@ end
         @test isapprox(result["objective"], 5885.2; atol = 1e0)
     end
     @testset "5-bus case" begin
-        result = run_ots("../test/data/matpower/case5.m", DCPLLPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5.m", DCPLLPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -127,7 +127,7 @@ end
         @test isapprox(result["objective"], 15275.2; atol = 1e0)
     end
     @testset "5-bus with negative branch reactance case" begin
-        result = run_ots("../test/data/matpower/case5_ext.m", DCPLLPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5_ext.m", DCPLLPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -135,7 +135,7 @@ end
         @test isapprox(result["objective"], 15275.2; atol = 1e0)
     end
     @testset "6-bus case" begin
-        result = run_ots("../test/data/matpower/case6.m", DCPLLPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case6.m", DCPLLPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 6, 6)
 
@@ -147,7 +147,7 @@ end
 
 @testset "test soc ots" begin
     @testset "3-bus case" begin
-        result = run_ots("../test/data/matpower/case3.m", SOCWRPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case3.m", SOCWRPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 3, 3)
 
@@ -155,7 +155,7 @@ end
         @test isapprox(result["objective"], 5746.7; atol = 1e0)
     end
     @testset "5-bus case" begin
-        result = run_ots("../test/data/matpower/case5.m", SOCWRPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5.m", SOCWRPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -163,7 +163,7 @@ end
         @test isapprox(result["objective"], 15051.4; atol = 5e1)
     end
     @testset "5-bus with negative branch reactance case" begin
-        result = run_ots("../test/data/matpower/case5_ext.m", SOCWRPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5_ext.m", SOCWRPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -171,7 +171,7 @@ end
         @test isapprox(result["objective"], 15009.9; atol = 1e0)
     end
     @testset "5-bus with asymmetric line charge" begin
-        result = run_ots("../test/data/pti/case5_alc.raw", SOCWRPowerModel, minlp_solver)
+        result = solve_ots("../test/data/pti/case5_alc.raw", SOCWRPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 4, 4)
 
@@ -179,7 +179,7 @@ end
         @test isapprox(result["objective"], 1004.8; atol = 5e0)
     end
     @testset "6-bus case" begin
-        result = run_ots("../test/data/matpower/case6.m", SOCWRPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case6.m", SOCWRPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 6, 6)
 
@@ -191,7 +191,7 @@ end
 
 @testset "test qc ots" begin
     @testset "3-bus case" begin
-        result = run_ots("../test/data/matpower/case3.m", QCRMPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case3.m", QCRMPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 3, 3)
 
@@ -199,7 +199,7 @@ end
         @test isapprox(result["objective"], 5748.0; atol = 1e0)
     end
     @testset "5-bus case" begin
-        result = run_ots("../test/data/matpower/case5.m", QCRMPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5.m", QCRMPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -207,7 +207,7 @@ end
         @test isapprox(result["objective"], 15051.4; atol = 5e1)
     end
     @testset "5-bus with negative branch reactance case" begin
-        result = run_ots("../test/data/matpower/case5_ext.m", QCRMPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5_ext.m", QCRMPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -215,7 +215,7 @@ end
         @test isapprox(result["objective"], 15010.0; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
-        result = run_ots("../test/data/matpower/case5_asym.m", QCRMPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5_asym.m", QCRMPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 6, 6)
 
@@ -223,7 +223,7 @@ end
         @test isapprox(result["objective"], 15036.9; atol = 1e0)
     end
     @testset "5-bus with asymmetric line charge" begin
-        result = run_ots("../test/data/pti/case5_alc.raw", QCRMPowerModel, minlp_solver)
+        result = solve_ots("../test/data/pti/case5_alc.raw", QCRMPowerModel, minlp_solver)
 
         # updated ub to 5 on 04/21/2021 to fix cross platform stability
         check_br_status(result["solution"], 4, 5)
@@ -232,7 +232,7 @@ end
         @test isapprox(result["objective"], 1003.97; atol = 5e0)
     end
     @testset "6-bus case" begin
-        result = run_ots("../test/data/matpower/case6.m", QCRMPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case6.m", QCRMPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 6, 6)
 
@@ -244,7 +244,7 @@ end
 
 @testset "test lpac ots" begin
     @testset "3-bus case" begin
-        result = run_ots("../test/data/matpower/case3.m", LPACCPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case3.m", LPACCPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 3, 3)
 
@@ -252,7 +252,7 @@ end
         @test isapprox(result["objective"], 5908.98; atol = 1e0)
     end
     @testset "5-bus case" begin
-        result = run_ots("../test/data/matpower/case5.m", LPACCPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5.m", LPACCPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -260,7 +260,7 @@ end
         @test isapprox(result["objective"], 15241.4; atol = 5e1)
     end
     @testset "5-bus with negative branch reactance case" begin
-        result = run_ots("../test/data/matpower/case5_ext.m", LPACCPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5_ext.m", LPACCPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -268,7 +268,7 @@ end
         @test isapprox(result["objective"], 15241.4; atol = 1e0)
     end
     @testset "5-bus asymmetric case" begin
-        result = run_ots("../test/data/matpower/case5_asym.m", LPACCPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case5_asym.m", LPACCPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 5, 5)
 
@@ -276,7 +276,7 @@ end
         @test isapprox(result["objective"], 15246.9; atol = 1e0)
     end
     @testset "5-bus with asymmetric line charge" begin
-        result = run_ots("../test/data/pti/case5_alc.raw", LPACCPowerModel, minlp_solver)
+        result = solve_ots("../test/data/pti/case5_alc.raw", LPACCPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 4, 4)
 
@@ -284,7 +284,7 @@ end
         @test isapprox(result["objective"], 998.4; atol = 5e0)
     end
     @testset "6-bus case" begin
-        result = run_ots("../test/data/matpower/case6.m", LPACCPowerModel, minlp_solver)
+        result = solve_ots("../test/data/matpower/case6.m", LPACCPowerModel, minlp_solver)
 
         check_br_status(result["solution"], 6, 6)
 

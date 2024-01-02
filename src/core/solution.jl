@@ -4,10 +4,6 @@ function _IM.solution_preprocessor(pm::AbstractPowerModel, solution::Dict)
 
     for (nw_id, nw_ref) in nws(pm)
         solution["it"][pm_it_name]["nw"]["$(nw_id)"]["baseMVA"] = nw_ref[:baseMVA]
-
-        if ismulticonductor(pm, nw_id)
-            solution["it"][pm_it_name]["nw"]["$(nw_id)"]["conductors"] = nw_ref[:conductors]
-        end
     end
 end
 

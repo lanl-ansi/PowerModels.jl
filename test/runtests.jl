@@ -19,15 +19,6 @@ import SparseArrays
 using Test
 
 
-# compat for JuMP v0.22/v0.23 transition
-# can be removed after dropping support for v0.22
-if !isdefined(JuMP, :num_nonlinear_constraints)
-    num_nonlinear_constraints = JuMP.num_nl_constraints
-else
-    num_nonlinear_constraints = JuMP.num_nonlinear_constraints
-end
-
-
 # default setup for solvers
 nlp_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6, "print_level"=>0)
 nlp_ws_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6, "mu_init"=>1e-4, "print_level"=>0)
@@ -53,8 +44,6 @@ include("common.jl")
     include("modify.jl")
 
     include("data.jl")
-
-    include("data-mc.jl")
 
     include("data-basic.jl")
 

@@ -66,25 +66,17 @@ function variable_storage_current(pm::AbstractWConvexModels; nw::Int=nw_id_defau
 end
 
 
-"`t[ref_bus] == 0`"
 function constraint_theta_ref(pm::AbstractPolarModels, n::Int, i::Int)
     JuMP.@constraint(pm.model, var(pm, n, :va)[i] == 0)
 end
 
-"""
-```
-t[f_bus] - t[t_bus] <= angmax
-t[f_bus] - t[t_bus] >= angmin
-```
-"""
 function constraint_voltage_angle_difference(pm::AbstractPolarModels, n::Int, f_idx, angmin, angmax)
     i, f_bus, t_bus = f_idx
 
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
-    JuMP.@constraint(pm.model, va_fr - va_to <= angmax)
-    JuMP.@constraint(pm.model, va_fr - va_to >= angmin)
+    JuMP.@constraint(pm.model, angmin <= va_fr - va_to <= angmax)
 end
 
 
@@ -335,6 +327,7 @@ function constraint_voltage_angle_difference(pm::AbstractWModels, n::Int, f_idx,
 
     JuMP.@constraint(pm.model, wi <= tan(angmax)*wr)
     JuMP.@constraint(pm.model, wi >= tan(angmin)*wr)
+
     cut_complex_product_and_angle_difference(pm.model, w_fr, w_to, wr, wi, angmin, angmax)
 end
 
@@ -381,26 +374,31 @@ function constraint_switch_voltage_on_off(pm::AbstractWModels, n::Int, i, f_bus,
 end
 
 
-
 ""
-function constraint_current_limit(pm::AbstractWModels, n::Int, f_idx, c_rating_a)
+function constraint_current_limit_from(pm::AbstractWModels, n::Int, f_idx, c_rating_a)
     l,i,j = f_idx
-    t_idx = (l,j,i)
 
     w_fr = var(pm, n, :w, i)
-    w_to = var(pm, n, :w, j)
 
     p_fr = var(pm, n, :p, f_idx)
     q_fr = var(pm, n, :q, f_idx)
     JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= w_fr*c_rating_a^2)
+end
+
+""
+function constraint_current_limit_to(pm::AbstractWModels, n::Int, t_idx, c_rating_a)
+    l,j,i = t_idx
+
+    w_to = var(pm, n, :w, j)
 
     p_to = var(pm, n, :p, t_idx)
     q_to = var(pm, n, :q, t_idx)
     JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= w_to*c_rating_a^2)
 end
 
+
 ""
-function constraint_storage_losses(pm::AbstractWConvexModels, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+function constraint_storage_losses(pm::AbstractWConvexModels, n::Int, i, bus, r, x, p_loss, q_loss)
     w = var(pm, n, :w, bus)
     ccms = var(pm, n, :ccms, i)
     ps = var(pm, n, :ps, i)
@@ -409,19 +407,7 @@ function constraint_storage_losses(pm::AbstractWConvexModels, n::Int, i, bus, r,
     sd = var(pm, n, :sd, i)
     qsc = var(pm, n, :qsc, i)
 
-    for c in conductors
-        JuMP.@constraint(pm.model, ps[c]^2 + qs[c]^2 <= w[c]*ccms[c])
-    end
-
-    JuMP.@constraint(pm.model,
-        sum(ps[c] for c in conductors) + (sd - sc)
-        ==
-        p_loss + sum(r[c]*ccms[c] for c in conductors)
-    )
-
-    JuMP.@constraint(pm.model,
-        sum(qs[c] for c in conductors)
-        ==
-        qsc + q_loss + sum(x[c]*ccms[c] for c in conductors)
-    )
+    JuMP.@constraint(pm.model, ps^2 + qs^2 <= w*ccms)
+    JuMP.@constraint(pm.model, ps + (sd - sc) == p_loss + r*ccms)
+    JuMP.@constraint(pm.model, qs == qsc + q_loss + x*ccms)
 end

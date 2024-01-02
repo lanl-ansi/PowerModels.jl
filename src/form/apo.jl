@@ -202,13 +202,33 @@ function constraint_thermal_limit_to(pm::AbstractActivePowerModel, n::Int, t_idx
     end
 end
 
-""
-function constraint_current_limit(pm::AbstractActivePowerModel, n::Int, f_idx, c_rating_a)
-    p_fr = var(pm, n, :p, f_idx)
 
-    JuMP.lower_bound(p_fr) < -c_rating_a && JuMP.set_lower_bound(p_fr, -c_rating_a)
-    JuMP.upper_bound(p_fr) >  c_rating_a && JuMP.set_upper_bound(p_fr,  c_rating_a)
+""
+function constraint_current_limit_from(pm::AbstractActivePowerModel, n::Int, f_idx, c_rating_a)
+    p_fr = var(pm, n, :p, f_idx)
+    if isa(p_fr, JuMP.VariableRef) && JuMP.has_lower_bound(p_fr)
+        JuMP.lower_bound(p_fr) < -c_rating_a && JuMP.set_lower_bound(p_fr, -c_rating_a)
+        if JuMP.has_upper_bound(p_fr)
+            JuMP.upper_bound(p_fr) > c_rating_a && JuMP.set_upper_bound(p_fr, c_rating_a)
+        end
+    else
+        JuMP.@constraint(pm.model, p_fr <= c_rating_a)
+    end
 end
+
+""
+function constraint_current_limit_to(pm::AbstractActivePowerModel, n::Int, t_idx, c_rating_a)
+    p_to = var(pm, n, :p, t_idx)
+    if isa(p_to, JuMP.VariableRef) && JuMP.has_lower_bound(p_to)
+        JuMP.lower_bound(p_to) < -c_rating_a && JuMP.set_lower_bound(p_to, -c_rating_a)
+        if JuMP.has_upper_bound(p_to)
+            JuMP.upper_bound(p_to) >  c_rating_a && JuMP.set_upper_bound(p_to,  c_rating_a)
+        end
+    else
+        JuMP.@constraint(pm.model, p_to <= c_rating_a)
+    end
+end
+
 
 
 ""
@@ -276,16 +296,12 @@ function constraint_storage_current_limit(pm::AbstractActivePowerModel, n::Int, 
 end
 
 ""
-function constraint_storage_losses(pm::AbstractActivePowerModel, n::Int, i, bus, r, x, p_loss, q_loss; conductors=[1])
+function constraint_storage_losses(pm::AbstractActivePowerModel, n::Int, i, bus, r, x, p_loss, q_loss)
     ps = var(pm, n, :ps, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
 
-    JuMP.@constraint(pm.model,
-        sum(ps[c] for c in conductors) + (sd - sc)
-        ==
-        p_loss + sum(r[c]*ps[c]^2 for c in conductors)
-    )
+    JuMP.@constraint(pm.model, ps + (sd - sc) == p_loss + r*ps^2)
 end
 
 function constraint_storage_on_off(pm::AbstractActivePowerModel, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)

@@ -30,7 +30,7 @@ TESTLOG = Memento.getlogger(PowerModels)
     end
 
     @testset "5-bus solution summary from dict" begin
-        result = run_ac_opf("../test/data/matpower/case5.m", nlp_solver)
+        result = solve_ac_opf("../test/data/matpower/case5.m", nlp_solver)
         output = sprint(PowerModels.summary, result["solution"])
 
         line_count = count(c -> c == '\n', output)
@@ -128,7 +128,7 @@ end
 
 
     @testset "3-bus case solution" begin
-        result = run_ac_opf("../test/data/matpower/case3.m", nlp_solver)
+        result = solve_ac_opf("../test/data/matpower/case3.m", nlp_solver)
         result_base = deepcopy(result)
 
         PowerModels.make_mixed_units!(result["solution"])
@@ -137,7 +137,7 @@ end
         @test InfrastructureModels.compare_dict(result, result_base)
     end
     @testset "5-bus case solution" begin
-        result = run_ac_opf("../test/data/matpower/case5_asym.m", nlp_solver)
+        result = solve_ac_opf("../test/data/matpower/case5_asym.m", nlp_solver)
         result_base = deepcopy(result)
 
         PowerModels.make_mixed_units!(result["solution"])
@@ -146,7 +146,7 @@ end
         @test InfrastructureModels.compare_dict(result, result_base)
     end
     @testset "24-bus case solution" begin
-        result = run_ac_opf("../test/data/matpower/case24.m", nlp_solver)
+        result = solve_ac_opf("../test/data/matpower/case24.m", nlp_solver)
         result_base = deepcopy(result)
 
         PowerModels.make_mixed_units!(result["solution"])
@@ -157,7 +157,7 @@ end
 
 
     @testset "5-bus case solution with duals" begin
-        result = run_dc_opf("../test/data/matpower/case5.m", nlp_solver, setting = Dict("output" => Dict("duals" => true)))
+        result = solve_dc_opf("../test/data/matpower/case5.m", nlp_solver, setting = Dict("output" => Dict("duals" => true)))
         result_base = deepcopy(result)
 
         PowerModels.make_mixed_units!(result["solution"])
@@ -437,7 +437,7 @@ end
     @testset "output values" begin
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
         PowerModels.simplify_network!(data)
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 1778; atol = 1e0)
@@ -593,8 +593,8 @@ end
      @testset "5-bus test" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
-        data["buspairs"] = PowerModels.calc_buspair_parameters(data["bus"], data["branch"], 1:1, false)
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        data["buspairs"] = PowerModels.calc_buspair_parameters(data["bus"], data["branch"])
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
         @test isapprox(result["objective"], 16642; atol = 1e0)
@@ -608,7 +608,7 @@ end
      @testset "5-bus ac polar flow" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
         PowerModels.update_data!(data, result["solution"])
 
         ac_flows = PowerModels.calc_branch_flow_ac(data)
@@ -626,7 +626,7 @@ end
     @testset "5-bus ac rect flow" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, ACRPowerModel, nlp_solver, solution_processors=[sol_data_model!])
+        result = solve_opf(data, ACRPowerModel, nlp_solver, solution_processors=[sol_data_model!])
         PowerModels.update_data!(data, result["solution"])
 
         ac_flows = PowerModels.calc_branch_flow_ac(data)
@@ -644,7 +644,7 @@ end
     @testset "5-bus dc flow" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, DCPPowerModel, nlp_solver)
+        result = solve_opf(data, DCPPowerModel, nlp_solver)
         PowerModels.update_data!(data, result["solution"])
 
         dc_flows = PowerModels.calc_branch_flow_dc(data)
@@ -666,7 +666,7 @@ end
 
      @testset "5-bus polynomial gen cost" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
         PowerModels.update_data!(data, result["solution"])
 
         gen_cost = PowerModels.calc_gen_cost(data)
@@ -681,7 +681,7 @@ end
             @test isa(gen["ncost"], Int)
         end
 
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
         PowerModels.update_data!(data, result["solution"])
 
         gen_cost = PowerModels.calc_gen_cost(data)
@@ -691,7 +691,7 @@ end
 
      @testset "5-bus polynomial gen and dcline cost" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
         PowerModels.update_data!(data, result["solution"])
 
         gen_cost = PowerModels.calc_gen_cost(data)
@@ -704,7 +704,7 @@ end
         data["gen"]["1"]["gen_status"] = 0
         data["dcline"]["1"]["br_status"] = 0
 
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
         PowerModels.update_data!(data, result["solution"])
 
         gen_cost = PowerModels.calc_gen_cost(data)
@@ -720,7 +720,7 @@ end
      @testset "5-bus ac polar balance" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
         PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)
@@ -734,7 +734,7 @@ end
      @testset "5-bus dc balance" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, DCPPowerModel, nlp_solver)
+        result = solve_opf(data, DCPPowerModel, nlp_solver)
         PowerModels.update_data!(data, result["solution"])
 
         balance = PowerModels.calc_power_balance(data)
@@ -778,7 +778,7 @@ end
      @testset "5-bus balance from flow ac" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
         PowerModels.update_data!(data, result["solution"])
 
         flows = PowerModels.calc_branch_flow_ac(data)
@@ -795,7 +795,7 @@ end
      @testset "5-bus balance from flow dc" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
         data["branch"]["4"]["br_status"] = 0
-        result = run_opf(data, DCPPowerModel, nlp_solver)
+        result = solve_opf(data, DCPPowerModel, nlp_solver)
         PowerModels.update_data!(data, result["solution"])
 
         flows = PowerModels.calc_branch_flow_dc(data)
@@ -816,11 +816,11 @@ end
 @testset "test renumber bus ids" begin
      @testset "5-bus with dcline" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_dc.m")
-        result_1 = run_opf(data, ACPPowerModel, nlp_solver)
+        result_1 = solve_opf(data, ACPPowerModel, nlp_solver)
 
         update_bus_ids!(data, Dict(1 => 10, 2=>20, 3=>30, 4=>40, 5=>50))
 
-        result_2 = run_opf(data, ACPPowerModel, nlp_solver)
+        result_2 = solve_opf(data, ACPPowerModel, nlp_solver)
 
         @test isapprox(result_1["objective"], result_2["objective"]; atol=1e-6)
     end
@@ -845,7 +845,7 @@ end
         @test length(data["switch"]) == 0
         @test length(data["bus"]) == 4
 
-        result = run_opf(data, ACPPowerModel, nlp_solver)
+        result = solve_opf(data, ACPPowerModel, nlp_solver)
 
         @test isapprox(result["objective"], 16641.20; atol=1e0)
     end
