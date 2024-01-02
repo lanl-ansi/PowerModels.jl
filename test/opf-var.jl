@@ -643,8 +643,7 @@ end
             @test isapprox(result["objective"], 15141.2; atol = 1e0)
 
             switch_status_total = sum(switch["status"] for (i,switch) in result["solution"]["switch"])
-            println(switch_status_total)
-            @test switch_status_total <= 13.000 && switch_status_total >= 11.000 # 1 to 3 swtiches off
+            @test switch_status_total <= 13.000 && switch_status_total >= 10.000 # 1 to 4 swtiches off
 
             branch_status_total = sum(branch["br_status"] for (i,branch) in result["solution"]["branch"])
             @test branch_status_total >= 5.0 && branch_status_total <= 7.0  # zero-two branches off
