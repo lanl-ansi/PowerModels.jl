@@ -63,59 +63,28 @@ function constraint_power_balance(pm::AbstractACPModel, n::Int, i::Int, bus_arcs
     p_dc = get(var(pm, n), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
     q_dc = get(var(pm, n), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
 
-    # the check "typeof(p[arc]) <: JuMP.NonlinearExpression" is required for the
-    # case when p/q are nonlinear expressions instead of decision variables
-    # once NLExpressions are first order in JuMP it should be possible to
-    # remove this.
-    nl_form = length(bus_arcs) > 0 && (typeof(p[iterate(bus_arcs)[1]]) <: JuMP.NonlinearExpression)
 
-    if !nl_form
-        cstr_p = JuMP.@constraint(pm.model,
-            sum(p[a] for a in bus_arcs)
-            + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
-            + sum(psw[a_sw] for a_sw in bus_arcs_sw)
-            ==
-            sum(pg[g] for g in bus_gens)
-            - sum(ps[s] for s in bus_storage)
-            - sum(pd for (i,pd) in bus_pd)
-            - sum(gs for (i,gs) in bus_gs)*vm^2
-        )
-    else
-        cstr_p = JuMP.@NLconstraint(pm.model,
-            sum(p[a] for a in bus_arcs)
-            + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
-            + sum(psw[a_sw] for a_sw in bus_arcs_sw)
-            ==
-            sum(pg[g] for g in bus_gens)
-            - sum(ps[s] for s in bus_storage)
-            - sum(pd for (i,pd) in bus_pd)
-            - sum(gs for (i,gs) in bus_gs)*vm^2
-        )
-    end
+    cstr_p = JuMP.@constraint(pm.model,
+        sum(p[a] for a in bus_arcs)
+        + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
+        + sum(psw[a_sw] for a_sw in bus_arcs_sw)
+        ==
+        sum(pg[g] for g in bus_gens)
+        - sum(ps[s] for s in bus_storage)
+        - sum(pd for (i,pd) in bus_pd)
+        - sum(gs for (i,gs) in bus_gs)*vm^2
+    )
 
-    if !nl_form
-        cstr_q = JuMP.@constraint(pm.model,
-            sum(q[a] for a in bus_arcs)
-            + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
-            + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
-            ==
-            sum(qg[g] for g in bus_gens)
-            - sum(qs[s] for s in bus_storage)
-            - sum(qd for (i,qd) in bus_qd)
-            + sum(bs for (i,bs) in bus_bs)*vm^2
-        )
-    else
-        cstr_q = JuMP.@NLconstraint(pm.model,
-            sum(q[a] for a in bus_arcs)
-            + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
-            + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
-            ==
-            sum(qg[g] for g in bus_gens)
-            - sum(qs[s] for s in bus_storage)
-            - sum(qd for (i,qd) in bus_qd)
-            + sum(bs for (i,bs) in bus_bs)*vm^2
-        )
-    end
+    cstr_q = JuMP.@constraint(pm.model,
+        sum(q[a] for a in bus_arcs)
+        + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
+        + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
+        ==
+        sum(qg[g] for g in bus_gens)
+        - sum(qs[s] for s in bus_storage)
+        - sum(qd for (i,qd) in bus_qd)
+        + sum(bs for (i,bs) in bus_bs)*vm^2
+    )
 
     if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
@@ -140,50 +109,27 @@ function constraint_power_balance_ls(pm::AbstractACPModel, n::Int, i::Int, bus_a
     z_demand = get(var(pm, n), :z_demand, Dict()); _check_var_keys(z_demand, keys(bus_pd), "power factor", "load")
     z_shunt = get(var(pm, n), :z_shunt, Dict()); _check_var_keys(z_shunt, keys(bus_gs), "power factor", "shunt")
 
-    # this is required for improved performance in NLP models
-    if length(z_shunt) <= 0
-        cstr_p = JuMP.@constraint(pm.model,
-            sum(p[a] for a in bus_arcs)
-            + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
-            + sum(psw[a_sw] for a_sw in bus_arcs_sw)
-            ==
-            sum(pg[g] for g in bus_gens)
-            - sum(ps[s] for s in bus_storage)
-            - sum(pd*z_demand[i] for (i,pd) in bus_pd)
-            - sum(gs*z_shunt[i] for (i,gs) in bus_gs)*vm^2
-        )
-        cstr_q = JuMP.@constraint(pm.model,
-            sum(q[a] for a in bus_arcs)
-            + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
-            + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
-            ==
-            sum(qg[g] for g in bus_gens)
-            - sum(qs[s] for s in bus_storage)
-            - sum(qd*z_demand[i] for (i,qd) in bus_qd)
-            + sum(bs*z_shunt[i] for (i,bs) in bus_bs)*vm^2
-        )
-    else
-        cstr_p = JuMP.@NLconstraint(pm.model,
-            sum(p[a] for a in bus_arcs)
-            + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
-            + sum(psw[a_sw] for a_sw in bus_arcs_sw)
-            ==
-            sum(pg[g] for g in bus_gens)
-            - sum(ps[s] for s in bus_storage)
-            - sum(pd*z_demand[i] for (i,pd) in bus_pd)
-            - sum(gs*z_shunt[i] for (i,gs) in bus_gs)*vm^2
-        )
-        cstr_q = JuMP.@NLconstraint(pm.model,
-            sum(q[a] for a in bus_arcs)
-            + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
-            + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
-            ==
-            sum(qg[g] for g in bus_gens)
-            - sum(qs[s] for s in bus_storage)
-            - sum(qd*z_demand[i] for (i,qd) in bus_qd)
-            + sum(bs*z_shunt[i] for (i,bs) in bus_bs)*vm^2
-        )
-    end
+
+    cstr_p = JuMP.@constraint(pm.model,
+        sum(p[a] for a in bus_arcs)
+        + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
+        + sum(psw[a_sw] for a_sw in bus_arcs_sw)
+        ==
+        sum(pg[g] for g in bus_gens)
+        - sum(ps[s] for s in bus_storage)
+        - sum(pd*z_demand[i] for (i,pd) in bus_pd)
+        - sum(gs*z_shunt[i] for (i,gs) in bus_gs)*vm^2
+    )
+    cstr_q = JuMP.@constraint(pm.model,
+        sum(q[a] for a in bus_arcs)
+        + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
+        + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
+        ==
+        sum(qg[g] for g in bus_gens)
+        - sum(qs[s] for s in bus_storage)
+        - sum(qd*z_demand[i] for (i,qd) in bus_qd)
+        + sum(bs*z_shunt[i] for (i,bs) in bus_bs)*vm^2
+    )
 
     if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
@@ -241,8 +187,8 @@ function expression_branch_power_ohms_yt_from(pm::AbstractACPModel, n::Int, f_bu
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
-    var(pm, n, :p)[f_idx] = JuMP.@NLexpression(pm.model,  (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
-    var(pm, n, :q)[f_idx] = JuMP.@NLexpression(pm.model, -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
+    var(pm, n, :p)[f_idx] = JuMP.@expression(pm.model,  (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
+    var(pm, n, :q)[f_idx] = JuMP.@expression(pm.model, -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
 end
 
 ""
@@ -252,8 +198,8 @@ function expression_branch_power_ohms_yt_to(pm::AbstractACPModel, n::Int, f_bus,
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
-    var(pm, n, :p)[t_idx] = JuMP.@NLexpression(pm.model,  (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
-    var(pm, n, :q)[t_idx] = JuMP.@NLexpression(pm.model, -(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
+    var(pm, n, :p)[t_idx] = JuMP.@expression(pm.model,  (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
+    var(pm, n, :q)[t_idx] = JuMP.@expression(pm.model, -(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
 end
 
 
@@ -273,8 +219,8 @@ function constraint_ohms_yt_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_i
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
-    JuMP.@NLconstraint(pm.model, p_fr ==  (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
-    JuMP.@NLconstraint(pm.model, q_fr == -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
+    JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
+    JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
 end
 
 """
@@ -293,8 +239,8 @@ function constraint_ohms_yt_to(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
-    JuMP.@NLconstraint(pm.model, p_to ==  (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
-    JuMP.@NLconstraint(pm.model, q_to == -(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
+    JuMP.@constraint(pm.model, p_to ==  (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
+    JuMP.@constraint(pm.model, q_to == -(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
 end
 
 """
@@ -313,8 +259,8 @@ function constraint_ohms_y_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_id
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
-    JuMP.@NLconstraint(pm.model, p_fr ==  (g+g_fr)*(vm_fr/tm)^2 - g*vm_fr/tm*vm_to*cos(va_fr-va_to-ta) + -b*vm_fr/tm*vm_to*sin(va_fr-va_to-ta) )
-    JuMP.@NLconstraint(pm.model, q_fr == -(b+b_fr)*(vm_fr/tm)^2 + b*vm_fr/tm*vm_to*cos(va_fr-va_to-ta) + -g*vm_fr/tm*vm_to*sin(va_fr-va_to-ta) )
+    JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)*(vm_fr/tm)^2 - g*vm_fr/tm*vm_to*cos(va_fr-va_to-ta) + -b*vm_fr/tm*vm_to*sin(va_fr-va_to-ta) )
+    JuMP.@constraint(pm.model, q_fr == -(b+b_fr)*(vm_fr/tm)^2 + b*vm_fr/tm*vm_to*cos(va_fr-va_to-ta) + -g*vm_fr/tm*vm_to*sin(va_fr-va_to-ta) )
 end
 
 """
@@ -333,8 +279,8 @@ function constraint_ohms_y_to(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx,
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
-    JuMP.@NLconstraint(pm.model, p_to ==  (g+g_to)*vm_to^2 - g*vm_to*vm_fr/tm*cos(va_to-va_fr+ta) + -b*vm_to*vm_fr/tm*sin(va_to-va_fr+ta) )
-    JuMP.@NLconstraint(pm.model, q_to == -(b+b_to)*vm_to^2 + b*vm_to*vm_fr/tm*cos(va_to-va_fr+ta) + -g*vm_to*vm_fr/tm*sin(va_to-va_fr+ta) )
+    JuMP.@constraint(pm.model, p_to ==  (g+g_to)*vm_to^2 - g*vm_to*vm_fr/tm*cos(va_to-va_fr+ta) + -b*vm_to*vm_fr/tm*sin(va_to-va_fr+ta) )
+    JuMP.@constraint(pm.model, q_to == -(b+b_to)*vm_to^2 + b*vm_to*vm_fr/tm*cos(va_to-va_fr+ta) + -g*vm_to*vm_fr/tm*sin(va_to-va_fr+ta) )
 end
 
 
@@ -386,8 +332,8 @@ function constraint_ohms_yt_from_on_off(pm::AbstractACPModel, n::Int, i, f_bus, 
     va_to = var(pm, n, :va, t_bus)
     z = var(pm, n, :z_branch, i)
 
-    JuMP.@NLconstraint(pm.model, p_fr == z*( (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))) )
-    JuMP.@NLconstraint(pm.model, q_fr == z*(-(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))) )
+    JuMP.@constraint(pm.model, p_fr == z*( (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))) )
+    JuMP.@constraint(pm.model, q_fr == z*(-(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))) )
 end
 
 """
@@ -405,8 +351,8 @@ function constraint_ohms_yt_to_on_off(pm::AbstractACPModel, n::Int, i, f_bus, t_
     va_to = var(pm, n, :va, t_bus)
     z = var(pm, n, :z_branch, i)
 
-    JuMP.@NLconstraint(pm.model, p_to == z*( (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))) )
-    JuMP.@NLconstraint(pm.model, q_to == z*(-(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))) )
+    JuMP.@constraint(pm.model, p_to == z*( (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))) )
+    JuMP.@constraint(pm.model, q_to == z*(-(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))) )
 end
 
 """
@@ -424,8 +370,8 @@ function constraint_ne_ohms_yt_from(pm::AbstractACPModel, n::Int, i, f_bus, t_bu
     va_to = var(pm, n,   :va, t_bus)
     z = var(pm, n, :branch_ne, i)
 
-    JuMP.@NLconstraint(pm.model, p_fr == z*( (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))) )
-    JuMP.@NLconstraint(pm.model, q_fr == z*(-(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))) )
+    JuMP.@constraint(pm.model, p_fr == z*( (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))) )
+    JuMP.@constraint(pm.model, q_fr == z*(-(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to))) )
 end
 
 """
@@ -443,8 +389,8 @@ function constraint_ne_ohms_yt_to(pm::AbstractACPModel, n::Int, i, f_bus, t_bus,
     va_to = var(pm, n, :va, t_bus)
     z = var(pm, n, :branch_ne, i)
 
-    JuMP.@NLconstraint(pm.model, p_to == z*( (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))) )
-    JuMP.@NLconstraint(pm.model, q_to == z*(-(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))) )
+    JuMP.@constraint(pm.model, p_to == z*( (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))) )
+    JuMP.@constraint(pm.model, q_to == z*(-(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr))) )
 end
 
 """
@@ -464,8 +410,8 @@ function constraint_ohms_y_oltc_pst_from(pm::AbstractACPModel, n::Int, f_bus, t_
     tm = var(pm, n, :tm, f_idx[1])
     ta = var(pm, n, :ta, f_idx[1])
 
-    JuMP.@NLconstraint(pm.model, p_fr ==  (g+g_fr)/tm^2*vm_fr^2 + (-g)/tm*(vm_fr*vm_to*cos(va_fr-va_to-ta)) + (-b)/tm*(vm_fr*vm_to*sin(va_fr-va_to-ta)) )
-    JuMP.@NLconstraint(pm.model, q_fr == -(b+b_fr)/tm^2*vm_fr^2 - (-b)/tm*(vm_fr*vm_to*cos(va_fr-va_to-ta)) + (-g)/tm*(vm_fr*vm_to*sin(va_fr-va_to-ta)) )
+    JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*vm_fr^2 + (-g)/tm*(vm_fr*vm_to*cos(va_fr-va_to-ta)) + (-b)/tm*(vm_fr*vm_to*sin(va_fr-va_to-ta)) )
+    JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*vm_fr^2 - (-b)/tm*(vm_fr*vm_to*cos(va_fr-va_to-ta)) + (-g)/tm*(vm_fr*vm_to*sin(va_fr-va_to-ta)) )
 end
 
 """
@@ -485,8 +431,8 @@ function constraint_ohms_y_oltc_pst_to(pm::AbstractACPModel, n::Int, f_bus, t_bu
     tm = var(pm, n, :tm, f_idx[1])
     ta = var(pm, n, :ta, f_idx[1])
 
-    JuMP.@NLconstraint(pm.model, p_to ==  (g+g_to)*vm_to^2 + -g/tm*(vm_to*vm_fr*cos(va_to-va_fr+ta)) + -b/tm*(vm_to*vm_fr*sin(va_to-va_fr+ta)) )
-    JuMP.@NLconstraint(pm.model, q_to == -(b+b_to)*vm_to^2 - -b/tm*(vm_to*vm_fr*cos(va_to-va_fr+ta)) + -g/tm*(vm_to*vm_fr*sin(va_to-va_fr+ta)) )
+    JuMP.@constraint(pm.model, p_to ==  (g+g_to)*vm_to^2 + -g/tm*(vm_to*vm_fr*cos(va_to-va_fr+ta)) + -b/tm*(vm_to*vm_fr*sin(va_to-va_fr+ta)) )
+    JuMP.@constraint(pm.model, q_to == -(b+b_to)*vm_to^2 - -b/tm*(vm_to*vm_fr*cos(va_to-va_fr+ta)) + -g/tm*(vm_to*vm_fr*sin(va_to-va_fr+ta)) )
 end
 
 
@@ -500,8 +446,8 @@ function constraint_ohms_y_pst_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, 
     va_to = var(pm, n, :va, t_bus)
     ta = var(pm, n, :ta, f_idx[1])
 
-    JuMP.@NLconstraint(pm.model, p_fr ==  (g+g_fr)/tm^2*vm_fr^2 + (-g)/tm*(vm_fr*vm_to*cos(va_fr-va_to-ta)) + (-b)/tm*(vm_fr*vm_to*sin(va_fr-va_to-ta)) )
-    JuMP.@NLconstraint(pm.model, q_fr == -(b+b_fr)/tm^2*vm_fr^2 - (-b)/tm*(vm_fr*vm_to*cos(va_fr-va_to-ta)) + (-g)/tm*(vm_fr*vm_to*sin(va_fr-va_to-ta)) )
+    JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*vm_fr^2 + (-g)/tm*(vm_fr*vm_to*cos(va_fr-va_to-ta)) + (-b)/tm*(vm_fr*vm_to*sin(va_fr-va_to-ta)) )
+    JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*vm_fr^2 - (-b)/tm*(vm_fr*vm_to*cos(va_fr-va_to-ta)) + (-g)/tm*(vm_fr*vm_to*sin(va_fr-va_to-ta)) )
 end
 
 ""
@@ -514,8 +460,8 @@ function constraint_ohms_y_pst_to(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_
     va_to = var(pm, n, :va, t_bus)
     ta = var(pm, n, :ta, f_idx[1])
 
-    JuMP.@NLconstraint(pm.model, p_to ==  (g+g_to)*vm_to^2 + -g/tm*(vm_to*vm_fr*cos(va_to-va_fr+ta)) + -b/tm*(vm_to*vm_fr*sin(va_to-va_fr+ta)) )
-    JuMP.@NLconstraint(pm.model, q_to == -(b+b_to)*vm_to^2 - -b/tm*(vm_to*vm_fr*cos(va_to-va_fr+ta)) + -g/tm*(vm_to*vm_fr*sin(va_to-va_fr+ta)) )
+    JuMP.@constraint(pm.model, p_to ==  (g+g_to)*vm_to^2 + -g/tm*(vm_to*vm_fr*cos(va_to-va_fr+ta)) + -b/tm*(vm_to*vm_fr*sin(va_to-va_fr+ta)) )
+    JuMP.@constraint(pm.model, q_to == -(b+b_to)*vm_to^2 - -b/tm*(vm_to*vm_fr*cos(va_to-va_fr+ta)) + -g/tm*(vm_to*vm_fr*sin(va_to-va_fr+ta)) )
 end
 
 
@@ -582,7 +528,7 @@ function constraint_storage_losses(pm::AbstractACPModel, n::Int, i, bus, r, x, p
     sd = var(pm, n, :sd, i)
     qsc = var(pm, n, :qsc, i)
 
-    JuMP.@NLconstraint(pm.model, ps + (sd - sc) == p_loss + r*(ps^2 + qs^2)/vm^2)
-    JuMP.@NLconstraint(pm.model, qs == qsc + q_loss + x*(ps^2 + qs^2)/vm^2)
+    JuMP.@constraint(pm.model, ps + (sd - sc) == p_loss + r*(ps^2 + qs^2)/vm^2)
+    JuMP.@constraint(pm.model, qs == qsc + q_loss + x*(ps^2 + qs^2)/vm^2)
 end
 
