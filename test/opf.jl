@@ -227,7 +227,8 @@ end
     @testset "5-bus with pwl costs" begin
         result = solve_opf_iv("../test/data/matpower/case5_pwlc.m", IVRPowerModel, nlp_solver)
 
-        @test result["termination_status"] == LOCALLY_SOLVED
+        # ALMOST_LOCALLY_SOLVED added when Ipopt_jll v300.1400.1302+0 => v300.1400.1303+0
+        @test result["termination_status"] == LOCALLY_SOLVED || result["termination_status"] == ALMOST_LOCALLY_SOLVED
         @test isapprox(result["objective"], 42905; atol = 1e0)
     end
     @testset "6-bus case" begin
