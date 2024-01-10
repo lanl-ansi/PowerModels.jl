@@ -4,6 +4,9 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.20.1
+- Fix tests for latest ipopt jll
+
 ### v0.20.0
 - Add support for models with mixtures of PWL and polynomial cost functions (#829)
 - Revised models to use two-sided constraints (#819) (breaking)
