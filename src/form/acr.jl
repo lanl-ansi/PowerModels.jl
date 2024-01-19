@@ -108,50 +108,26 @@ function constraint_power_balance_ls(pm::AbstractACRModel, n::Int, i::Int, bus_a
     z_demand = get(var(pm, n), :z_demand, Dict()); _check_var_keys(z_demand, keys(bus_pd), "power factor", "load")
     z_shunt = get(var(pm, n), :z_shunt, Dict()); _check_var_keys(z_shunt, keys(bus_gs), "power factor", "shunt")
 
-    # this is required for improved performance in NLP models
-    if length(z_shunt) <= 0
-        cstr_p = JuMP.@constraint(pm.model,
-            sum(p[a] for a in bus_arcs)
-            + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
-            + sum(psw[a_sw] for a_sw in bus_arcs_sw)
-            ==
-            sum(pg[g] for g in bus_gens)
-            - sum(ps[s] for s in bus_storage)
-            - sum(pd*z_demand[i] for (i,pd) in bus_pd)
-            - sum(gs*z_shunt[i] for (i,gs) in bus_gs)*(vr^2 + vi^2)
-        )
-        cstr_q =  JuMP.@constraint(pm.model,
-            sum(q[a] for a in bus_arcs)
-            + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
-            + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
-            ==
-            sum(qg[g] for g in bus_gens)
-            - sum(qs[s] for s in bus_storage)
-            - sum(qd*z_demand[i] for (i,qd) in bus_qd)
-            + sum(bs*z_shunt[i] for (i,bs) in bus_bs)*(vr^2 + vi^2)
-        )
-    else
-        cstr_p = JuMP.@NLconstraint(pm.model,
-            sum(p[a] for a in bus_arcs)
-            + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
-            + sum(psw[a_sw] for a_sw in bus_arcs_sw)
-            ==
-            sum(pg[g] for g in bus_gens)
-            - sum(ps[s] for s in bus_storage)
-            - sum(pd*z_demand[i] for (i,pd) in bus_pd)
-            - sum(gs*z_shunt[i] for (i,gs) in bus_gs)*(vr^2 + vi^2)
-        )
-        cstr_q = JuMP.@NLconstraint(pm.model,
-            sum(q[a] for a in bus_arcs)
-            + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
-            + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
-            ==
-            sum(qg[g] for g in bus_gens)
-            - sum(qs[s] for s in bus_storage)
-            - sum(qd*z_demand[i] for (i,qd) in bus_qd)
-            + sum(bs*z_shunt[i] for (i,bs) in bus_bs)*(vr^2 + vi^2)
-        )
-    end
+    cstr_p = JuMP.@constraint(pm.model,
+        sum(p[a] for a in bus_arcs)
+        + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
+        + sum(psw[a_sw] for a_sw in bus_arcs_sw)
+        ==
+        sum(pg[g] for g in bus_gens)
+        - sum(ps[s] for s in bus_storage)
+        - sum(pd*z_demand[i] for (i,pd) in bus_pd)
+        - sum(gs*z_shunt[i] for (i,gs) in bus_gs)*(vr^2 + vi^2)
+    )
+    cstr_q =  JuMP.@constraint(pm.model,
+        sum(q[a] for a in bus_arcs)
+        + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
+        + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
+        ==
+        sum(qg[g] for g in bus_gens)
+        - sum(qs[s] for s in bus_storage)
+        - sum(qd*z_demand[i] for (i,qd) in bus_qd)
+        + sum(bs*z_shunt[i] for (i,bs) in bus_bs)*(vr^2 + vi^2)
+    )
 
     if _IM.report_duals(pm)
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
@@ -226,8 +202,8 @@ function constraint_storage_losses(pm::AbstractACRModel, n::Int, i, bus, r, x, p
     sd = var(pm, n, :sd, i)
     qsc = var(pm, n, :qsc, i)
 
-    JuMP.@NLconstraint(pm.model, ps + (sd - sc) == p_loss + r*(ps^2 + qs^2)/(vr^2 + vi^2))
-    JuMP.@NLconstraint(pm.model, qs == qsc + q_loss + x*(ps^2 + qs^2)/(vr^2 + vi^2))
+    JuMP.@constraint(pm.model, ps + (sd - sc) == p_loss + r*(ps^2 + qs^2)/(vr^2 + vi^2))
+    JuMP.@constraint(pm.model, qs == qsc + q_loss + x*(ps^2 + qs^2)/(vr^2 + vi^2))
 end
 
 

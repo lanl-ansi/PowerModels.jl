@@ -50,8 +50,8 @@ function variable_gen_current(pm::AbstractIVRModel; nw::Int=nw_id_default, bound
         vi = var(pm, nw, :vi, busid)
         crg = var(pm, nw, :crg, i)
         cig = var(pm, nw, :cig, i)
-        pg[i] = JuMP.@NLexpression(pm.model, vr*crg  + vi*cig)
-        qg[i] = JuMP.@NLexpression(pm.model, vi*crg  - vr*cig)
+        pg[i] = JuMP.@expression(pm.model, vr*crg  + vi*cig)
+        qg[i] = JuMP.@expression(pm.model, vi*crg  - vr*cig)
     end
     var(pm, nw)[:pg] = pg
     var(pm, nw)[:qg] = qg
@@ -85,10 +85,10 @@ function variable_dcline_current(pm::AbstractIVRModel; nw::Int=nw_id_default, bo
         cr_to = var(pm, nw, :crdc, (l,j,i))
         ci_to = var(pm, nw, :cidc, (l,j,i))
 
-        p[(l,i,j)] = JuMP.@NLexpression(pm.model, vr_fr*cr_fr  + vi_fr*ci_fr)
-        q[(l,i,j)] = JuMP.@NLexpression(pm.model, vi_fr*cr_fr  - vr_fr*ci_fr)
-        p[(l,j,i)] = JuMP.@NLexpression(pm.model, vr_to*cr_to  + vi_to*ci_to)
-        q[(l,j,i)] = JuMP.@NLexpression(pm.model, vi_to*cr_to  - vr_to*ci_to)
+        p[(l,i,j)] = JuMP.@expression(pm.model, vr_fr*cr_fr  + vi_fr*ci_fr)
+        q[(l,i,j)] = JuMP.@expression(pm.model, vi_fr*cr_fr  - vr_fr*ci_fr)
+        p[(l,j,i)] = JuMP.@expression(pm.model, vr_to*cr_to  + vi_to*ci_to)
+        q[(l,j,i)] = JuMP.@expression(pm.model, vi_to*cr_to  - vr_to*ci_to)
     end
 
     var(pm, nw)[:p_dc] = p
@@ -189,20 +189,22 @@ function constraint_current_balance(pm::AbstractIVRModel, n::Int, i, bus_arcs, b
     crg = var(pm, n, :crg)
     cig = var(pm, n, :cig)
 
-    JuMP.@NLconstraint(pm.model, sum(cr[a] for a in bus_arcs)
-                                + sum(crdc[d] for d in bus_arcs_dc)
-                                ==
-                                sum(crg[g] for g in bus_gens)
-                                - (sum(pd for pd in values(bus_pd))*vr + sum(qd for qd in values(bus_qd))*vi)/(vr^2 + vi^2)
-                                - sum(gs for gs in values(bus_gs))*vr + sum(bs for bs in values(bus_bs))*vi
-                                )
-    JuMP.@NLconstraint(pm.model, sum(ci[a] for a in bus_arcs)
-                                + sum(cidc[d] for d in bus_arcs_dc)
-                                ==
-                                sum(cig[g] for g in bus_gens)
-                                - (sum(pd for pd in values(bus_pd))*vi - sum(qd for qd in values(bus_qd))*vr)/(vr^2 + vi^2)
-                                - sum(gs for gs in values(bus_gs))*vi - sum(bs for bs in values(bus_bs))*vr
-                                )
+    JuMP.@constraint(pm.model,
+        sum(cr[a] for a in bus_arcs)
+        + sum(crdc[d] for d in bus_arcs_dc)
+        ==
+        sum(crg[g] for g in bus_gens)
+        - (sum(pd for pd in values(bus_pd))*vr + sum(qd for qd in values(bus_qd))*vi)/(vr^2 + vi^2)
+        - sum(gs for gs in values(bus_gs))*vr + sum(bs for bs in values(bus_bs))*vi
+    )
+    JuMP.@constraint(pm.model, 
+        sum(ci[a] for a in bus_arcs)
+        + sum(cidc[d] for d in bus_arcs_dc)
+        ==
+        sum(cig[g] for g in bus_gens)
+        - (sum(pd for pd in values(bus_pd))*vi - sum(qd for qd in values(bus_qd))*vr)/(vr^2 + vi^2)
+        - sum(gs for gs in values(bus_gs))*vi - sum(bs for bs in values(bus_bs))*vr
+    )
 end
 
 "`p[f_idx]^2 + q[f_idx]^2 <= rate_a^2`"
@@ -214,7 +216,7 @@ function constraint_thermal_limit_from(pm::AbstractIVRModel, n::Int, f_idx, rate
     crf = var(pm, n, :cr, f_idx)
     cif = var(pm, n, :ci, f_idx)
 
-    JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)*(crf^2 + cif^2) <= rate_a^2)
+    JuMP.@constraint(pm.model, (vr^2 + vi^2)*(crf^2 + cif^2) <= rate_a^2)
 end
 
 "`p[t_idx]^2 + q[t_idx]^2 <= rate_a^2`"
@@ -226,7 +228,7 @@ function constraint_thermal_limit_to(pm::AbstractIVRModel, n::Int, t_idx, rate_a
     crt = var(pm, n, :cr, t_idx)
     cit = var(pm, n, :ci, t_idx)
 
-    JuMP.@NLconstraint(pm.model, (vr^2 + vi^2)*(crt^2 + cit^2) <= rate_a^2)
+    JuMP.@constraint(pm.model, (vr^2 + vi^2)*(crt^2 + cit^2) <= rate_a^2)
 end
 
 """

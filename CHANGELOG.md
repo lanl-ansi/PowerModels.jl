@@ -4,6 +4,9 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.21.0
+- Update to new JuMP nonlinear interface (breaking)
+
 ### v0.20.1
 - Fix tests for latest ipopt jll
 
