@@ -92,7 +92,7 @@ end
 
 """
 Runs various data quality checks on a PowerModels data dictionary.
-Applies modifications in some cases.  Reports modified component ids.
+Applies modifications in some cases. Reports modified component ids.
 """
 function correct_network_data!(data::Dict{String,<:Any})
     check_connectivity(data)

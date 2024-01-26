@@ -4,7 +4,12 @@
 #                                                                       #
 #########################################################################
 
-"Parses the matpwer data from either a filename or an IO object"
+"""
+    parse_matpower(case; validate=true)::Dict
+
+Parses a MATPOWER case file from the given IO stream or file and returns a PowerModel Network Data Dictionary.
+If `validate` is true, several checks are performed to ensure that the data is consistent with the PowerModels format.
+"""
 function parse_matpower(io::IO; validate=true)::Dict
     mp_data = _parse_matpower_string(read(io, String))
     pm_data = _matpower_to_powermodels!(mp_data)

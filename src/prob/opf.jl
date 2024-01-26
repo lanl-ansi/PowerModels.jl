@@ -1,19 +1,54 @@
-""
+"""
+Solves the AC power flow Model with polar bus voltage variables (ACPPowerModel).
+"""
 function solve_ac_opf(file, optimizer; kwargs...)
     return solve_opf(file, ACPPowerModel, optimizer; kwargs...)
 end
 
-""
+"""
+Linearized Direct current power flow Model with polar voltage variables. (DCPPowerModel)
+"""
 function solve_dc_opf(file, optimizer; kwargs...)
     return solve_opf(file, DCPPowerModel, optimizer; kwargs...)
 end
 
-""
+"""
+    solve_opf(file, model_type::Type, optimizer; kwargs...)
+
+Solves an optimal power flow problem using the specified formulation.
+Refer to the documentation for the available formulations.
+"""
 function solve_opf(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_opf; kwargs...)
 end
 
-""
+"""
+    build_opf(pm::AbstractPowerModel)
+
+Builds the JuMP model for the optimal power flow problem.
+
+# Implementation
+
+Internally, the calls the following methods, specific to the Problem formulation:
+
+- `variable_bus_voltage(pm)` defines voltage variables at each bus
+- `variable_gen_power(pm)` defines generator variables at each bus
+- `variable_branch_power(pm)` defines branch variables at each branch
+- `variable_dcline_power(pm)` defines line variables at each DC line
+
+- `objective_min_fuel_and_flow_cost(pm)` defines the objective function
+- `constraint_model_voltage(pm)` defines the voltage constraints
+- `constraint_theta_ref(pm, i)` defines angle constraints at reference bus `i`
+- `constraint_power_balance(pm, i)` defines power balance constraints at bus `i`
+- `constraint_ohms_yt_from(pm, i)` defines branch ohmic constraints from branch `i`
+- `constraint_ohms_yt_to(pm, i)` defines branch ohmic constraints to branch `i`
+- `constraint_voltage_angle_difference(pm, i)` defines voltage angle difference constraints at branch `i`
+- `constraint_thermal_limit_from(pm, i)` defines thermal limit constraints from branch `i`
+- `constraint_thermal_limit_to(pm, i)` defines thermal limit constraints to branch `i`
+- `constraint_dcline_power_losses(pm, i)` defines DC line power loss constraints at DC line `i`
+
+A user can define a custom formulation by defining the above methods for a custom subtype of `AbstractPowerModel`.
+"""
 function build_opf(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_gen_power(pm)

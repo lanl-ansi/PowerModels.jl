@@ -47,7 +47,10 @@ function instantiate_model(file::String, model_type::Type, build_method; kwargs.
     return instantiate_model(data, model_type, build_method; kwargs...)
 end
 
-""
+""""
+Instantiate a JuMP model from the network data dictionary. The model and build method specifies the
+specific equations and variables that will be used in the model.
+"""
 function instantiate_model(data::Dict{String,<:Any}, model_type::Type, build_method; kwargs...)
     return _IM.instantiate_model(data, model_type, build_method, ref_add_core!, _pm_global_keys, pm_it_sym; kwargs...)
 end
