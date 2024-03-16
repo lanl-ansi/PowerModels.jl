@@ -603,6 +603,35 @@ end
 end
 
 
+@testset "test theta delta bounds" begin
+
+    @testset "5-bus test" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        theta_lb, theta_ub = calc_theta_delta_bounds(data)
+
+        @test theta_lb[1] <= -2.0
+        @test theta_ub[1] >=  2.0
+    end
+
+    @testset "14-bus test" begin
+        data = PowerModels.parse_file("../test/data/matpower/case14.m")
+        theta_lb, theta_ub = calc_theta_delta_bounds(data)
+
+        @test theta_lb[1] <= -13.0
+        @test theta_ub[1] >=  13.0
+    end
+
+    @testset "30-bus test" begin
+        data = PowerModels.parse_file("../test/data/matpower/case30.m")
+        theta_lb, theta_ub = calc_theta_delta_bounds(data)
+
+        @test theta_lb[1] <= -15.0
+        @test theta_ub[1] >=  15.0
+    end
+
+end
+
+
 @testset "test branch flow computations" begin
 
      @testset "5-bus ac polar flow" begin
