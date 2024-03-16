@@ -4,6 +4,9 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.21.1
+- Fix bug in `calc_theta_delta_bounds` (#907)
+
 ### v0.21.0
 - Update to new JuMP nonlinear interface (breaking)
 

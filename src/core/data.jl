@@ -50,7 +50,18 @@ function calc_theta_delta_bounds(data::Dict{String,<:Any})
     sort!(angle_mins)
     sort!(angle_maxs, rev=true)
 
-    return angle_mins[1], angle_maxs[1]
+    if length(angle_mins) > 1
+        # note that, this can occur when dclines are present
+        angle_count = min(bus_count-1, length(branches))
+
+        angle_min_val = sum(angle_mins[1:angle_count])
+        angle_max_val = sum(angle_maxs[1:angle_count])
+    else
+        angle_min_val = angle_mins[1]
+        angle_max_val = angle_maxs[1]
+    end
+
+    return angle_min_val, angle_max_val
 end
 
 
