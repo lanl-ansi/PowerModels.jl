@@ -156,7 +156,7 @@ abstract type AbstractDCPModel <: AbstractActivePowerModel end
 Linearized 'DC' power flow Model with polar voltage variables.
 
 This model is a basic linear active-power-only approximation, which uses branch susceptance values
-`br_b = -br_x / (br_x^2 + br_x^2)` for determining the network phase angles.  Furthermore, transformer
+`br_b = -br_x / (br_r^2 + br_x^2)` for determining the network phase angles.  Furthermore, transformer
 parameters such as tap ratios and phase shifts are not considered as part of this model.
 
 It is important to note that it is also common for active-power-only approximations to use `1/br_x` for
