@@ -154,7 +154,6 @@ function _renumber_components(comp_dict::Dict{String,<:Any})
     comp_ordered = sort([comp for (i,comp) in comp_dict], by=(x) -> x["index"])
 
     for (i,comp) in enumerate(comp_ordered)
-        comp = deepcopy(comp)
         comp["index"] = i
         renumbered_dict["$i"] = comp
     end
