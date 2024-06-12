@@ -17,6 +17,30 @@ users requiring any of the features listed above for their analysis should use
 the non-basic PowerModels routines.
 """
 function make_basic_network(data::Dict{String,<:Any})
+    # These initial checks are redundant with the checks in make_basic_network!
+    # We keep them here so they run _before_ we create a deepcopy of the data
+    # The checks are fast so this redundancy has little performance impact
+    if _IM.ismultiinfrastructure(data)
+        Memento.error(_LOGGER, "make_basic_network does not support multiinfrastructure data")
+    end
+    
+    if _IM.ismultinetwork(data)
+        Memento.error(_LOGGER, "make_basic_network does not support multinetwork data")
+    end
+
+    data = deepcopy(data)
+
+    make_basic_network!(data)
+
+    return data
+end
+
+"""
+given a powermodels data dict, modifies it in-place to conform to basic network model requirements.
+
+See [`make_basic_network`](@ref) for more information.
+"""
+function make_basic_network!(data::Dict{String,<:Any})
     if _IM.ismultiinfrastructure(data)
         Memento.error(_LOGGER, "make_basic_network does not support multiinfrastructure data")
     end
@@ -24,9 +48,6 @@ function make_basic_network(data::Dict{String,<:Any})
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "make_basic_network does not support multinetwork data")
     end
-
-    # make a copy of data so that modifications do not change the input data
-    data = deepcopy(data)
 
     # TODO transform PWL costs into linear costs
     for (i,gen) in data["gen"]
