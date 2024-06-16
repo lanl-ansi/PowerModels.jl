@@ -434,8 +434,13 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     else
                         br_r, br_x = transformer["R1-2"], transformer["X1-2"]
                     end
-                    br_r *= (transformer["NOMV1"]^2 / _get_bus_value(transformer["I"], "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE1-2"])
-                    br_x *= (transformer["NOMV1"]^2 / _get_bus_value(transformer["I"], "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE1-2"])
+                    if transformer["NOMV1"] == 0.0
+                        br_r *= (pm_data["baseMVA"] / transformer["SBASE1-2"])
+                        br_x *= (pm_data["baseMVA"] / transformer["SBASE1-2"])
+                    else
+                        br_r *= (transformer["NOMV1"]^2 / _get_bus_value(transformer["I"], "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE1-2"])
+                        br_x *= (transformer["NOMV1"]^2 / _get_bus_value(transformer["I"], "base_kv", pm_data)^2) * (pm_data["baseMVA"] / transformer["SBASE1-2"])
+                    end
                 end
 
                 # Zeq scaling for tap2 (see eq (4.21b) in PROGRAM APPLICATION GUIDE 1 in PSSE installation folder)
@@ -448,8 +453,13 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                         br_r *= (transformer["WINDV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data))^2
                         br_x *= (transformer["WINDV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data))^2
                     else  # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
-                        br_r *= (transformer["WINDV2"]*(transformer["NOMV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data)))^2
-                        br_x *= (transformer["WINDV2"]*(transformer["NOMV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data)))^2
+                        if transformer["NOMV2"] == 0.0
+                            br_r *= transformer["WINDV2"]^2
+                            br_x *= transformer["WINDV2"]^2
+                        else
+                            br_r *= (transformer["WINDV2"]*(transformer["NOMV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data)))^2
+                            br_x *= (transformer["WINDV2"]*(transformer["NOMV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data)))^2
+                        end
                     end
                 end
 
@@ -482,16 +492,21 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     sub_data["nomv2"] = transformer["NOMV2"]
                 end
 
+                # Assumes CW = 1, namely, for off-nominal turns ratio in pu of windning bus base voltage
                 sub_data["tap"] = pop!(transformer, "WINDV1") / pop!(transformer, "WINDV2")
                 sub_data["shift"] = pop!(transformer, "ANG1")
 
                 # Unit Transformations
                 if transformer["CW"] != 1  # NOT "for off-nominal turns ratio in pu of winding bus base voltage"
-                    sub_data["tap"] *= _get_bus_value(transformer["J"], "base_kv", pm_data) / _get_bus_value(transformer["I"], "base_kv", pm_data)
-                    if transformer["CW"] == 3  # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
-                        sub_data["tap"] *= transformer["NOMV1"] / transformer["NOMV2"]
+                    if transformer["CW"] == 2  # i.e. for winding voltage in kv
+                        sub_data["tap"] *= _get_bus_value(transformer["J"], "base_kv", pm_data) / _get_bus_value(transformer["I"], "base_kv", pm_data)
+                    elseif transformer["CW"] == 3 # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
+                        if !iszero(transformer["NOMV1"]) && !iszero(transformer["NOMV2"])
+                            sub_data["tap"] *= (transformer["NOMV1"] / transformer["NOMV2"]) * (_get_bus_value(transformer["J"], "base_kv", pm_data) / _get_bus_value(transformer["I"], "base_kv", pm_data))
+                        end
                     end
                 end
+
 
                 if import_all
                     sub_data["cw"] = transformer["CW"]
@@ -544,13 +559,29 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
                 # Unit Transformations
                 if transformer["CZ"] != 1  # NOT "for resistance and reactance in pu on system MVA base and winding voltage base"
-                    br_r12 *= (transformer["NOMV1"] / _get_bus_value(bus_id1, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE1-2"])
-                    br_r23 *= (transformer["NOMV2"] / _get_bus_value(bus_id2, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE2-3"])
-                    br_r31 *= (transformer["NOMV3"] / _get_bus_value(bus_id3, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE3-1"])
+                    if transformer["NOMV1"] == 0.0
+                        br_r12 *= (pm_data["baseMVA"] / transformer["SBASE1-2"])
+                        br_x12 *= (pm_data["baseMVA"] / transformer["SBASE1-2"])
+                    else
+                        br_r12 *= (transformer["NOMV1"] / _get_bus_value(bus_id1, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE1-2"])
+                        br_x12 *= (transformer["NOMV1"] / _get_bus_value(bus_id1, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE1-2"])
+                    end
 
-                    br_x12 *= (transformer["NOMV1"] / _get_bus_value(bus_id1, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE1-2"])
-                    br_x23 *= (transformer["NOMV2"] / _get_bus_value(bus_id2, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE2-3"])
-                    br_x31 *= (transformer["NOMV3"] / _get_bus_value(bus_id3, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE3-1"])
+                    if transformer["NOMV2"] == 0.0
+                        br_r23 *= (pm_data["baseMVA"] / transformer["SBASE2-3"])
+                        br_x23 *= (pm_data["baseMVA"] / transformer["SBASE2-3"])
+                    else
+                        br_r23 *= (transformer["NOMV2"] / _get_bus_value(bus_id2, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE2-3"])
+                        br_x23 *= (transformer["NOMV2"] / _get_bus_value(bus_id2, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE2-3"])
+                    end
+                    
+                    if transformer["NOMV3"] == 0.0
+                        br_r31 *= (pm_data["baseMVA"] / transformer["SBASE3-1"])
+                        br_x31 *= (pm_data["baseMVA"] / transformer["SBASE3-1"])
+                    else
+                        br_r31 *= (transformer["NOMV3"] / _get_bus_value(bus_id3, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE3-1"])
+                        br_x31 *= (transformer["NOMV3"] / _get_bus_value(bus_id3, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE3-1"])
+                    end                    
                 end
 
                 # See "Power System Stability and Control", ISBN: 0-07-035958-X, Eq. 6.72
@@ -601,9 +632,12 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
                     # Unit Transformations
                     if transformer["CW"] != 1  # NOT "for off-nominal turns ratio in pu of winding bus base voltage"
-                        sub_data["tap"] /= _get_bus_value(bus_id, "base_kv", pm_data)
-                        if transformer["CW"] == 3  # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
-                            sub_data["tap"] *= transformer["NOMV$m"]
+                        if transformer["CW"] == 2
+                            sub_data["tap"] /= _get_bus_value(bus_id, "base_kv", pm_data)
+                        elseif transformer["CW"] == 3  # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
+                            if !iszero(transformer["NOMV$m"])
+                                sub_data["tap"] *= transformer["NOMV$m"] / _get_bus_value(bus_id, "base_kv", pm_data)
+                            end
                         end
                     end
 
