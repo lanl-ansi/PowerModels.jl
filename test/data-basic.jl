@@ -36,7 +36,7 @@
     end
 
     @testset "Re-number components in-place" begin
-        data = make_basic_network(PowerModels.parse_file("../test/data/matpower/case7_tplgy.m"))
+        data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
 
         # Scramble indices before renumbering
         v = [data["gen"]["$i"] for i in 1:3]
