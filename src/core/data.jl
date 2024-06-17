@@ -2536,7 +2536,9 @@ function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "d
 
     # ⚠️ it is important to iterate over _sorted_ bus IDs to ensure that components are labeled correctly  
     for i in sorted_bus_ids
-        component_lookup[i] != i0 && continue  # bus already flagged; skip
+        if component_lookup[i] != i0
+            continue  # bus already flagged; skip
+        end
 
         # We have a new connected component!
         component_lookup[i] = i
@@ -2545,10 +2547,17 @@ function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "d
         while length(V) > 0
             j = pop!(V)
             for k in neighbors[j]
-                component_lookup[k] == i0 || continue  # already visited
-                push!(V, k)
-                component_lookup[k] = i
-                push!(components[i], k)
+                if component_lookup[k] == i0
+                    # Bus `k` is connected to a bus `j` that's connected to `i`
+                    push!(V, k)
+                    component_lookup[k] = i
+                    push!(components[i], k)
+                else
+                    # Bus was already visited
+                    # Check that it's in the right connected component, and move on
+                    @assert component_lookup[k] == i "Unexpected error with bus $k while computing connected components; please report this as a bug."
+                    continue
+                end
             end
         end
     end
