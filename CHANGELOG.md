@@ -4,6 +4,10 @@ PowerModels.jl Change Log
 ### Staged
 - nothing
 
+### v0.21.2
+- In place building of basic network data (#915,#916)
+- Performance improvements to `calc_connected_components` (#914)
+
 ### v0.21.1
 - Fix bug in `calc_theta_delta_bounds` (#907)
 
