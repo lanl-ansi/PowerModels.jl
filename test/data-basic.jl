@@ -35,6 +35,28 @@
         @test isapprox(result["objective"], 16551.7; atol=1e0)
     end
 
+    @testset "Re-number components in-place" begin
+        data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
+
+        # Scramble indices before renumbering
+        v = [data["gen"]["$i"] for i in 1:3]
+        data["gen"]["1"]["index"] = 2
+        data["gen"]["2"]["index"] = 3
+        data["gen"]["3"]["index"] = 1
+
+        d = PowerModels._renumber_components!(data["gen"])
+        @test length(data["gen"]) == 3
+        # Check index consistency
+        @test data["gen"]["1"]["index"] == 1
+        @test data["gen"]["2"]["index"] == 2
+        @test data["gen"]["3"]["index"] == 3
+        # Check that modifications were done in-place
+        @test d === data["gen"]
+        @test data["gen"]["1"] === v[3]
+        @test data["gen"]["2"] === v[1]
+        @test data["gen"]["3"] === v[2]
+    end
+
     @testset "In-place make_basic_network!" begin
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
         data_ = deepcopy(data)

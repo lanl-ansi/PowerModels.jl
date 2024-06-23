@@ -131,7 +131,7 @@ function make_basic_network!(data::Dict{String,<:Any})
     # re-number non-bus component ids
     for comp_key in keys(pm_component_status)
         if comp_key != "bus"
-            data[comp_key] = _renumber_components(data[comp_key])
+            data[comp_key] = _renumber_components!(data[comp_key])
         end
     end
 
@@ -169,18 +169,18 @@ end
 given a component dict returns a new dict where components have been renumbered
 from 1-to-n ordered by the increasing values of the orginal component id.
 """
-function _renumber_components(comp_dict::Dict{String,<:Any})
-    renumbered_dict = Dict{String,Any}()
+function _renumber_components!(comp_dict::Dict{String,<:Any})
+    comp_ordered = sort([(comp["index"], comp) for (i, comp) in comp_dict], by=(x) -> x[1])
 
-    comp_ordered = sort([comp for (i,comp) in comp_dict], by=(x) -> x["index"])
-
-    for (i,comp) in enumerate(comp_ordered)
-        comp = deepcopy(comp)
-        comp["index"] = i
-        renumbered_dict["$i"] = comp
+    # Delete existing keys
+    empty!(comp_dict)
+    # Update component indices and re-build the dict keys
+    for (i_new, (i_old, comp)) in enumerate(comp_ordered)
+        comp["index"] = i_new
+        comp_dict["$(i_new)"] = comp
     end
 
-    return renumbered_dict
+    return comp_dict
 end
 
 
