@@ -35,6 +35,35 @@
         @test isapprox(result["objective"], 16551.7; atol=1e0)
     end
 
+    @testset "In-place make_basic_network!" begin
+        data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
+        data_ = deepcopy(data)
+        
+        # Test #1: `make_basic_network` is non-destructive
+        data_basic = PowerModels.make_basic_network(data)
+        @test data == data_        # input data not modified
+        @test data_basic !== data  # we created a new dict
+
+        # Test #2: `make_basic_network!` is destructive and works in-place
+        data_basic = PowerModels.make_basic_network!(data)
+        @test data_basic === data  # in-place modification
+
+        # Test #3: double-check the output of `make_basic_network!`
+        #   This may be redundant with the above tests, unless `make_basic_network` does not
+        #   call the in-place version under the hood
+        @test length(data_basic["bus"]) == 4
+        @test length(data_basic["load"]) == 2
+        @test length(data_basic["shunt"]) == 2
+        @test length(data_basic["gen"]) == 1
+        @test length(data_basic["branch"]) == 2
+        @test length(data_basic["dcline"]) == 0
+        @test length(data_basic["switch"]) == 0
+        @test length(data_basic["storage"]) == 0
+
+        result = solve_opf(data_basic, ACPPowerModel, nlp_solver)
+        @test isapprox(result["objective"], 1036.52; atol=1e0)
+    end
+
 end
 
 
