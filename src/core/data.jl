@@ -2526,16 +2526,43 @@ function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "d
         end
     end
 
-    component_lookup = Dict(i => Set{Int}([i]) for i in active_bus_ids)
-    touched = Set{Int}()
+    sorted_bus_ids = sort(collect(active_bus_ids))
+    i0 = sorted_bus_ids[1] - 1  # this is to track un-visited buses
+    # The two dictionaries below are used to track the connected components
+    # `component_lookup` maps each bus to the ID of the connected component it belongs to, which is the smallest bus ID in said components
+    # `components` maps the connected component ID to a `Set{Int}` of all bus IDs in that component
+    component_lookup = Dict(i => i0 for i in active_bus_ids)
+    components = Dict{Int,Set{Int}}()
 
-    for i in active_bus_ids
-        if !(i in touched)
-            _cc_dfs(i, neighbors, component_lookup, touched)
+    # ⚠️ it is important to iterate over _sorted_ bus IDs to ensure that components are labeled correctly  
+    for i in sorted_bus_ids
+        if component_lookup[i] != i0
+            continue  # bus already flagged; skip
+        end
+
+        # We have a new connected component!
+        component_lookup[i] = i
+        components[i] = Set([i])
+        V = [i]  # list of all bus IDs in this connected component
+        while length(V) > 0
+            j = pop!(V)
+            for k in neighbors[j]
+                if component_lookup[k] == i0
+                    # Bus `k` is connected to a bus `j` that's connected to `i`
+                    push!(V, k)
+                    component_lookup[k] = i
+                    push!(components[i], k)
+                else
+                    # Bus was already visited
+                    # Check that it's in the right connected component, and move on
+                    @assert component_lookup[k] == i "Unexpected error with bus $k while computing connected components; please report this as a bug."
+                    continue
+                end
+            end
         end
     end
 
-    ccs = (Set(values(component_lookup)))
+    ccs = (Set(values(components)))
 
     return ccs
 end
