@@ -497,16 +497,19 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 sub_data["shift"] = pop!(transformer, "ANG1")
 
                 # Unit Transformations
-                if transformer["CW"] != 1  # NOT "for off-nominal turns ratio in pu of winding bus base voltage"
-                    if transformer["CW"] == 2  # i.e. for winding voltage in kv
-                        sub_data["tap"] *= _get_bus_value(transformer["J"], "base_kv", pm_data) / _get_bus_value(transformer["I"], "base_kv", pm_data)
-                    elseif transformer["CW"] == 3 # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
-                        if !iszero(transformer["NOMV1"]) && !iszero(transformer["NOMV2"])
-                            sub_data["tap"] *= (transformer["NOMV1"] / transformer["NOMV2"]) * (_get_bus_value(transformer["J"], "base_kv", pm_data) / _get_bus_value(transformer["I"], "base_kv", pm_data))
-                        end
+                if transformer["CW"] == 1       # "for off-nominal turns ratio in pu of winding bus base voltage"
+                    # do nothing
+                elseif transformer["CW"] == 2   # "for winding voltage in kv"
+                    sub_data["tap"] *= _get_bus_value(transformer["J"], "base_kv", pm_data) / _get_bus_value(transformer["I"], "base_kv", pm_data)
+                elseif transformer["CW"] == 3   # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
+                    if !iszero(transformer["NOMV1"]) && !iszero(transformer["NOMV2"])
+                        sub_data["tap"] *= (transformer["NOMV1"] / transformer["NOMV2"]) * (_get_bus_value(transformer["J"], "base_kv", pm_data) / _get_bus_value(transformer["I"], "base_kv", pm_data))
+                    else
+                        # do nothing
                     end
+                else
+                    error(_LOGGER, "psse data parsing error, unsupported value for `CW` on transformer")
                 end
-
 
                 if import_all
                     sub_data["cw"] = transformer["CW"]
@@ -631,14 +634,18 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     sub_data["shift"] = pop!(transformer, "ANG$m")
 
                     # Unit Transformations
-                    if transformer["CW"] != 1  # NOT "for off-nominal turns ratio in pu of winding bus base voltage"
-                        if transformer["CW"] == 2
-                            sub_data["tap"] /= _get_bus_value(bus_id, "base_kv", pm_data)
-                        elseif transformer["CW"] == 3  # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
-                            if !iszero(transformer["NOMV$m"])
-                                sub_data["tap"] *= transformer["NOMV$m"] / _get_bus_value(bus_id, "base_kv", pm_data)
-                            end
+                    if transformer["CW"] == 1       # "for off-nominal turns ratio in pu of winding bus base voltage"
+                        # do nothing
+                    elseif transformer["CW"] == 2   # "for winding voltage in kv"
+                        sub_data["tap"] /= _get_bus_value(bus_id, "base_kv", pm_data)
+                    elseif transformer["CW"] == 3   # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
+                        if !iszero(transformer["NOMV$m"])
+                            sub_data["tap"] *= transformer["NOMV$m"] / _get_bus_value(bus_id, "base_kv", pm_data)
+                        else
+                            # do nothing
                         end
+                    else
+                        error(_LOGGER, "psse data parsing error, unsupported value for `CW` on transformer")
                     end
 
                     if import_all
