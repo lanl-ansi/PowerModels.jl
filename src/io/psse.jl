@@ -434,7 +434,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                     else
                         br_r, br_x = transformer["R1-2"], transformer["X1-2"]
                     end
-                    if transformer["NOMV1"] == 0.0
+                    if isapprox(transformer["NOMV1"], 0.0)
                         br_r *= (pm_data["baseMVA"] / transformer["SBASE1-2"])
                         br_x *= (pm_data["baseMVA"] / transformer["SBASE1-2"])
                     else
@@ -453,7 +453,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                         br_r *= (transformer["WINDV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data))^2
                         br_x *= (transformer["WINDV2"]/_get_bus_value(transformer["J"], "base_kv", pm_data))^2
                     else  # "for off-nominal turns ratio in pu of nominal winding voltage, NOMV1, NOMV2 and NOMV3."
-                        if transformer["NOMV2"] == 0.0
+                        if isapprox(transformer["NOMV2"], 0.0)
                             br_r *= transformer["WINDV2"]^2
                             br_x *= transformer["WINDV2"]^2
                         else
@@ -484,7 +484,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                 if sub_data["rate_c"] == 0.0
                     delete!(sub_data, "rate_c")
                 end
-
+                
                 if import_all
                     sub_data["windv1"] = transformer["WINDV1"]
                     sub_data["windv2"] = transformer["WINDV2"]
@@ -562,7 +562,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
 
                 # Unit Transformations
                 if transformer["CZ"] != 1  # NOT "for resistance and reactance in pu on system MVA base and winding voltage base"
-                    if transformer["NOMV1"] == 0.0
+                    if isapprox(transformer["NOMV1"], 0.0)
                         br_r12 *= (pm_data["baseMVA"] / transformer["SBASE1-2"])
                         br_x12 *= (pm_data["baseMVA"] / transformer["SBASE1-2"])
                     else
@@ -570,7 +570,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                         br_x12 *= (transformer["NOMV1"] / _get_bus_value(bus_id1, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE1-2"])
                     end
 
-                    if transformer["NOMV2"] == 0.0
+                    if isapprox(transformer["NOMV2"], 0.0)
                         br_r23 *= (pm_data["baseMVA"] / transformer["SBASE2-3"])
                         br_x23 *= (pm_data["baseMVA"] / transformer["SBASE2-3"])
                     else
@@ -578,7 +578,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                         br_x23 *= (transformer["NOMV2"] / _get_bus_value(bus_id2, "base_kv", pm_data))^2 * (pm_data["baseMVA"] / transformer["SBASE2-3"])
                     end
                     
-                    if transformer["NOMV3"] == 0.0
+                    if isapprox(transformer["NOMV3"], 0.0)
                         br_r31 *= (pm_data["baseMVA"] / transformer["SBASE3-1"])
                         br_x31 *= (pm_data["baseMVA"] / transformer["SBASE3-1"])
                     else
