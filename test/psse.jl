@@ -316,6 +316,32 @@ end
             end
 
         end
+
+
+        @testset "with nomV=0 cw=2" begin
+            data = PowerModels.parse_file("../test/data/pti/case4_3wtf_vnom0_cw2.raw")
+    
+            opf = PowerModels.solve_opf(data, PowerModels.ACPPowerModel, nlp_solver)
+            @test opf["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(opf["objective"], 5.00079; atol=1e-3)
+        end
+
+        @testset "with nomV=0 cw=3" begin
+            data = PowerModels.parse_file("../test/data/pti/case4_3wtf_vnom0_cw3.raw")
+    
+            opf = PowerModels.solve_opf(data, PowerModels.ACPPowerModel, nlp_solver)
+            @test opf["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(opf["objective"], 5.00079; atol=1e-3)
+        end
+
+        @testset "2-windning transformer with nomV=0 cw=3" begin
+            data = PowerModels.parse_file("../test/data/pti/case3_2wtf_vmon0.raw")
+    
+            opf = PowerModels.solve_opf(data, PowerModels.ACPPowerModel, nlp_solver)
+            @test opf["termination_status"] == LOCALLY_SOLVED
+            @test isapprox(opf["objective"], 17.5101; atol=1e-3)
+        end
+        
     end
 
     @testset "transformer magnetizing admittance" begin

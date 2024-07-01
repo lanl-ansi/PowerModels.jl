@@ -67,6 +67,7 @@ The primary developer is Carleton Coffrin (@ccoffrin) with support from the foll
 - Kaarthik Sundar (@kaarthiksundar) LANL, OBBT utility
 - Mathieu Tanneau (@mtanneau) Georgia Tech, PTDF matrix computation
 - Byron Tasseff (@tasseff) LANL, multi-infrastructure updates
+- Rahmat Heidari (@hei06j) CSIRO, PSS(R)E data parser support
 
 
 ## Citing PowerModels
