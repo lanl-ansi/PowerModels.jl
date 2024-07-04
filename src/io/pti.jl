@@ -607,8 +607,8 @@ Comments, typically indicated at the end of a line with a `'/'` character,
 are also extracted separately, and `Array{Array{String}, String}` is returned.
 """
 function _get_line_elements(line::AbstractString)
-    if count(i->(i=="'"), line) % 2 == 1
-        throw(Memento.error(_LOGGER, "There are an uneven number of single-quotes in \"{line}\", the line cannot be parsed."))
+    if count(i->(i=='\''), line) % 2 == 1
+        throw(Memento.error(_LOGGER, "There are an uneven number of single-quotes in \"$line\", the line cannot be parsed."))
     end
 
     line_comment = split(line, _comment_split, limit=2)
