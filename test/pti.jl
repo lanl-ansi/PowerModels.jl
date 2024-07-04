@@ -16,6 +16,8 @@ TESTLOG = Memento.getlogger(PowerModels)
         @test_warn(TESTLOG, "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))
         @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_j.raw"))
 
+        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_l.raw"))
+
         Memento.setlevel!(TESTLOG, "error")
     end
 
