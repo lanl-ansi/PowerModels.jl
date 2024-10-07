@@ -4,21 +4,29 @@
 #                                                                       #
 #########################################################################
 
-"Parses the matpwer data from either a filename or an IO object"
-function parse_matpower(io::IO; validate=true)::Dict
-    mp_data = _parse_matpower_string(read(io, String))
+"Parses the matpwer data from either a filename, an IO object, or matlab_data"
+function parse_matpower(matlab_data::Dict{String, Any}; func_name::String, colnames::Dict{String, Any}, validate=true)::Dict
+    mp_data = _parse_matpower_data(matlab_data, func_name, colnames)
     pm_data = _matpower_to_powermodels!(mp_data)
+
     if validate
         correct_network_data!(pm_data)
     end
+
+    return pm_data
+end
+
+function parse_matpower(io::IO; kwargs...)::Dict
+    matlab_data, func_name, colnames = _IM.parse_matlab_string(read(io, String), extended=true)
+    pm_data = parse_matpower(matlab_data, func_name, colnames, kwargs...)
     return pm_data
 end
 
 function parse_matpower(file::String; kwargs...)::Dict
-    mp_data = open(file) do io
+    pm_data = open(file) do io
         parse_matpower(io; kwargs...)
     end
-    return mp_data
+    return pm_data
 end
 
 
@@ -124,10 +132,8 @@ const _mp_switch_columns = [
 
 
 ""
-function _parse_matpower_string(data_string::String)
-    matlab_data, func_name, colnames = _IM.parse_matlab_string(data_string, extended=true)
-
-    case = Dict{String,Any}()
+function _parse_matpower_data(matlab_data::Dict{String, Any}; func_name::String, colnames::Dict{String, Any})
+    case = Dict{String, Any}()
 
     if func_name != nothing
         case["name"] = func_name
