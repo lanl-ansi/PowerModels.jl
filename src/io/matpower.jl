@@ -5,7 +5,7 @@
 #########################################################################
 
 "Parses the matpwer data from either a filename, an IO object, or matlab_data"
-function parse_matpower(matlab_data::Dict{String, Any}; func_name::AbstractString, colnames::Dict{String, Any}, validate=true)::Dict
+function parse_matpower(matlab_data::Dict{String, Any}; func_name::AbstractString="", colnames::Dict{String, Any}=Dict{String, Any}(), validate=true)::Dict
     mp_data = _parse_matpower_data(matlab_data; func_name=func_name, colnames=colnames)
     pm_data = _matpower_to_powermodels!(mp_data)
 
