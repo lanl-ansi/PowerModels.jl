@@ -367,7 +367,7 @@ end
     @testset "connected components with no active buses" begin
         data = PowerModels.parse_file("../test/data/matpower/case6.m")
         for (i, bus) in data["bus"]
-            data["bus_type"] = 4
+            bus["bus_type"] = 4
         end
         cc = PowerModels.calc_connected_components(data)
         cc_ordered = sort(collect(cc); by=length)
