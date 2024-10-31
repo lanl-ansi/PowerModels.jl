@@ -345,7 +345,7 @@ end
     end
 
 
-    @testset "connecected components" begin
+    @testset "connected components" begin
         data = PowerModels.parse_file("../test/data/matpower/case6.m")
         cc = PowerModels.calc_connected_components(data)
 
@@ -364,7 +364,17 @@ end
         @test cc2 == cc
     end
 
-    @testset "connecected components with switches" begin
+    @testset "connected components with no active buses" begin
+        data = PowerModels.parse_file("../test/data/matpower/case6.m")
+        for (i, bus) in data["bus"]
+            bus["bus_type"] = 4
+        end
+        cc = PowerModels.calc_connected_components(data)
+        cc_ordered = sort(collect(cc); by=length)
+        @test length(cc_ordered) == 0
+    end
+
+    @testset "connected components with switches" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_sw_nb.m")
         cc = PowerModels.calc_connected_components(data)
 
@@ -374,7 +384,7 @@ end
         @test length(cc_ordered[1]) == 19
     end
 
-    @testset "connecected components with simplify network" begin
+    @testset "connected components with simplify network" begin
         data = PowerModels.parse_file("../test/data/matpower/case7_tplgy.m")
         PowerModels.simplify_network!(data)
         cc = PowerModels.calc_connected_components(data)
@@ -467,7 +477,7 @@ end
 
 
 @testset "bus type corrections" begin
-    @testset "no generator in connecected comp." begin
+    @testset "no generator in connected comp." begin
         data = parse_file("../test/data/matpower/case7_tplgy.m")
 
         data["gen"]["2"]["gen_status"] = 0

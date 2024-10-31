@@ -2527,7 +2527,12 @@ function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "d
     end
 
     sorted_bus_ids = sort(collect(active_bus_ids))
+    if isempty(sorted_bus_ids)
+        # This is to avoid an error trying to assign i0 below.
+        return Set{Set{Int}}()
+    end
     i0 = sorted_bus_ids[1] - 1  # this is to track un-visited buses
+
     # The two dictionaries below are used to track the connected components
     # `component_lookup` maps each bus to the ID of the connected component it belongs to, which is the smallest bus ID in said components
     # `components` maps the connected component ID to a `Set{Int}` of all bus IDs in that component
