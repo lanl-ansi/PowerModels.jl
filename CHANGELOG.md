@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fix no-buses bug in `calc_connected_components` (#933) 
 
 ### v0.21.2
 - In place building of basic network data (#915,#916)
