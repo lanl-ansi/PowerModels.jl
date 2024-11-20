@@ -155,7 +155,7 @@ function _opfdata_to_powermodels!(opfdata_dict::Dict{String,<:Any})
             ac_line_data = _IM.row_to_typed_dict(ac_line_row, _opf_ac_line_feature_columns)
             ac_line_data["f_bus"] = grid["edges"]["ac_line"]["senders"][i] + 1
             ac_line_data["t_bus"] = grid["edges"]["ac_line"]["receivers"][i] + 1
-            ac_line_data["tap"] = 1.0 # All non-transformer branches are given nominal transformer values (i.e. a tap of 1.0 and shift of 0.0) https://lanl-ansi.github.io/PowerModels.jl/stable/network-data/#Noteworthy-Differences-from-OPFData-Data-Files
+            ac_line_data["tap"] = 1.0 # All non-transformer branches are given nominal transformer values (i.e. a tap of 1.0 and shift of 0.0) https://lanl-ansi.github.io/PowerModels.jl/stable/network-data/#Noteworthy-Differences-from-Matpower-Data-Files
             ac_line_data["shift"] = 0.0
             ac_line_data["transformer"] = false
 
