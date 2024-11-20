@@ -16,6 +16,10 @@ function parse_json(io::Union{IO,String}; kwargs...)::Dict{String,Any}
         Memento.warn(_LOGGER, "The JSON data contains the conductor parameter, but only single conductors are supported.  Consider using PowerModelsDistribution.")
     end
 
+    if haskey(pm_data, "grid") && haskey(pm_data, "solution") && haskey(pm_data, "metadata")
+        pm_data = PowerModels.parse_opfdata(pm_data, get(kwargs, :validate, true))
+    end
+
     if get(kwargs, :validate, true)
         PowerModels.correct_network_data!(pm_data)
     end
