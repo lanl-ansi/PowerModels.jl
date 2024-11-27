@@ -23,10 +23,6 @@ const _opf_bus_columns = [
     ("vmax", Float64)
 ]
 
-const _opf_bus_sol_columns = [
-    ("va", Float64), ("vm", Float64)
-]
-
 const _opf_gen_columns = [
     ("mbase", Float64),
     ("pg", Float64),
@@ -37,10 +33,6 @@ const _opf_gen_columns = [
     ("cost_squared", Float64),
     ("cost_linear", Float64),
     ("cost_offset", Float64)
-]
-
-const _opf_gen_sol_columns = [
-    ("pg", Float64), ("qg", Float64)
 ]
 
 const _opf_load_columns = [
@@ -79,21 +71,18 @@ Converts a OPFData dict into a PowerModels dict
 function _opfdata_to_powermodels!(opfdata_dict::Dict{String,<:Any})
 
     grid = opfdata_dict["grid"]
-    solution = opfdata_dict["solution"]
     case = Dict{String,Any}()
 
     case["per_unit"] = true
 
-    if haskey(grid["nodes"], "bus") && haskey(solution["nodes"], "bus")
-        @assert(length(grid["nodes"]["bus"]) == length(solution["nodes"]["bus"]))
+    if haskey(grid["nodes"], "bus")
         buses = []
         for (i, bus_row) in enumerate(grid["nodes"]["bus"])
             bus_data = _IM.row_to_typed_dict(bus_row, _opf_bus_columns)
-            # bus_solution_data = _IM.row_to_typed_dict(solution["nodes"]["bus"][i], _opf_bus_sol_columns) # This was for testing if setting to solution voltages gave correct objective
             bus_data["index"] = i
             bus_data["source_id"] = ["bus", i]
-            # bus_data["va"] = bus_solution_data["va"]
-            # bus_data["vm"] = bus_solution_data["vm"]
+            bus_data["va"] = 0.0
+            bus_data["vm"] = 0.0
             push!(buses, bus_data)
         end
         case["bus"] = buses
@@ -105,15 +94,12 @@ function _opfdata_to_powermodels!(opfdata_dict::Dict{String,<:Any})
         gens = []
         for (i, gen_row) in enumerate(grid["nodes"]["generator"])
             gen_data = _IM.row_to_typed_dict(gen_row, _opf_gen_columns)
-            gen_solution_data = _IM.row_to_typed_dict(solution["nodes"]["bus"][i], _opf_gen_sol_columns)
             gen_data["index"] = i
             gen_data["source_id"] = ["gen", i]
             gen_data["model"] = 2
             gen_data["ncost"] = 3
-            gen_data["cost"] = [_IM.check_type(Float64, gen_data[key]) for key in ["cost_linear", "cost_squared", "cost_offset"]]
-            gen_data["pg"] = gen_solution_data["pg"]
-            gen_data["qg"] = gen_solution_data["qg"]
-            for key in ["cost_linear", "cost_squared", "cost_offset"]
+            gen_data["cost"] = [_IM.check_type(Float64, gen_data[key]) for key in ["cost_offset", "cost_linear", "cost_squared"]]
+            for key in ["cost_offset", "cost_linear", "cost_squared"]
                 delete!(gen_data, key)
             end
             push!(gens, gen_data)
@@ -155,7 +141,7 @@ function _opfdata_to_powermodels!(opfdata_dict::Dict{String,<:Any})
             ac_line_data = _IM.row_to_typed_dict(ac_line_row, _opf_ac_line_feature_columns)
             ac_line_data["f_bus"] = grid["edges"]["ac_line"]["senders"][i] + 1
             ac_line_data["t_bus"] = grid["edges"]["ac_line"]["receivers"][i] + 1
-            ac_line_data["tap"] = 1.0 # All non-transformer branches are given nominal transformer values (i.e. a tap of 1.0 and shift of 0.0) https://lanl-ansi.github.io/PowerModels.jl/stable/network-data/#Noteworthy-Differences-from-Matpower-Data-Files
+            ac_line_data["tap"] = 1.0
             ac_line_data["shift"] = 0.0
             ac_line_data["transformer"] = false
 
@@ -219,9 +205,9 @@ function _opfdata_to_powermodels!(opfdata_dict::Dict{String,<:Any})
 
         for (i, bus_id) in enumerate(gen_links)
             g = gen[i]
-            @assert(g["index"] == (grid["edges"]["generator_link"]["senders"][i]+1))
+            @assert(g["index"] == (grid["edges"]["generator_link"]["senders"][i] + 1))
             g["gen_bus"] = bus_id + 1
-            bus = case["bus"][bus_id + 1]
+            bus = case["bus"][bus_id+1]
             @assert(bus["index"] == (bus_id + 1))
             g["gen_status"] = convert(Int8, bus["bus_type"] != 4)
             bus["vm"] = g["vg"]
@@ -241,14 +227,14 @@ function _opfdata_to_powermodels!(opfdata_dict::Dict{String,<:Any})
 
         for (i, bus_id) in enumerate(load_links)
             l = load[i]
-            @assert(l["index"] == (grid["edges"]["load_link"]["senders"][i]+1))
+            @assert(l["index"] == (grid["edges"]["load_link"]["senders"][i] + 1))
             l["load_bus"] = bus_id + 1
-            bus = case["bus"][bus_id + 1]
+            bus = case["bus"][bus_id+1]
             @assert(bus["index"] == (bus_id + 1))
             l["status"] = convert(Int8, bus["bus_type"] != 4)
         end
     end
-        
+
     if haskey(grid["edges"], "shunt_link")
         shunt = case["shunt"]
         shunt_links = grid["edges"]["shunt_link"]["receivers"]
@@ -262,9 +248,9 @@ function _opfdata_to_powermodels!(opfdata_dict::Dict{String,<:Any})
 
         for (i, bus_id) in enumerate(shunt_links)
             s = shunt[i]
-            @assert(s["index"] == (grid["edges"]["shunt_link"]["senders"][i]+1))
+            @assert(s["index"] == (grid["edges"]["shunt_link"]["senders"][i] + 1))
             s["shunt_bus"] = bus_id + 1
-            bus = case["bus"][bus_id + 1]
+            bus = case["bus"][bus_id+1]
             @assert(bus["index"] == (bus_id + 1))
             s["status"] = convert(Int8, bus["bus_type"] != 4)
         end
@@ -302,7 +288,7 @@ function _merge_lines!(data::Dict{String,Any})
         ac_line["br_status"] = convert(Int8, (bus_f["bus_type"] != 4 && bus_t["bus_type"] != 4))
 
         push!(branches, ac_line)
-        i = i+1
+        i = i + 1
     end
     for transformer_line in data["transformer_line"]
         transformer_line["index"] = i
@@ -318,7 +304,7 @@ function _merge_lines!(data::Dict{String,Any})
         transformer_line["br_status"] = convert(Int8, (bus_f["bus_type"] != 4 && bus_t["bus_type"] != 4))
 
         push!(branches, transformer_line)
-        i = i+1
+        i = i + 1
     end
 
     @assert(length(branches) == (length(data["ac_line"]) + length(data["transformer_line"])))

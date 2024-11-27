@@ -6,6 +6,6 @@
         result = solve_opf(data, ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 6935.242110031468; atol = 1e2)
+        @test isapprox(result["objective"], 6935.242110031468; atol = 1e0)
     end
 end
