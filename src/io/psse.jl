@@ -211,7 +211,15 @@ function _psse2pm_generator!(pm_data::Dict, pti_data::Dict, import_all::Bool)
             sub_data = Dict{String,Any}()
 
             sub_data["gen_bus"] = pop!(gen, "I")
-            sub_data["gen_status"] = _get_bus_value(sub_data["gen_bus"], "bus_type", pm_data) == 1 ? begin delete!(gen, "STAT"); 0 end : pop!(gen, "STAT") #	In PSSE active generators at bus type 1 are ignored. PQ or PV control mode is controlled by "Machine Control Mode" parameter (Machine Data Record -> Wind Data -> Control Mode)
+            if _get_bus_value(sub_data["gen_bus"], "bus_type", pm_data) == 1
+                # In PSSE active generators at bus type 1 are ignored. PQ or PV
+                # control mode is controlled by "Machine Control Mode" parameter
+                # (Machine Data Record -> Wind Data -> Control Mode)
+                delete!(gen, "STAT")
+                sub_data["gen_status"] = 0
+            else
+                sub_data["gen_status"] = pop!(gen, "STAT") 
+            end
             sub_data["pg"] = pop!(gen, "PG")
             sub_data["qg"] = pop!(gen, "QG")
             sub_data["vg"] = pop!(gen, "VS")
