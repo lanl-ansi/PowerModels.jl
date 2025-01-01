@@ -2687,12 +2687,12 @@ end
 given a network data dict merges buses that are connected by closed switches
 converting the dataset into a pure bus-branch model.
 """
-function resolve_swithces!(data::Dict{String,<:Any})
-    apply_pm!(_resolve_swithces!, data)
+function resolve_switches!(data::Dict{String,<:Any})
+    apply_pm!(_resolve_switches!, data)
 end
 
 ""
-function _resolve_swithces!(data::Dict{String,<:Any})
+function _resolve_switches!(data::Dict{String,<:Any})
     if length(data["switch"]) <= 0
         return
     end

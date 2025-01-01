@@ -106,7 +106,7 @@ function make_basic_network!(data::Dict{String,<:Any})
     end
 
     # remove switches by merging buses
-    resolve_swithces!(data)
+    resolve_switches!(data)
 
     # switch resolution can result in new parallel branches
     correct_branch_directions!(data)
