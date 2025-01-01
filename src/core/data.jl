@@ -2725,7 +2725,7 @@ function _resolve_switches!(data::Dict{String,<:Any})
         # Merging a PV bus into a PQ bus results in a PV bus.
         # Therefore, the resulting bus should always have the highest bus_type,
         # but it should never be of type 4 (disconnected).
-        bus_type = max([data["bus"]["$i"]["bus_type"] for i in bus_set]...)
+        bus_type = maximum(data["bus"]["$i"]["bus_type"] for i in bus_set)
         bus_type = min(bus_type, 3)
 
         for i in bus_set
