@@ -2687,12 +2687,12 @@ end
 given a network data dict merges buses that are connected by closed switches
 converting the dataset into a pure bus-branch model.
 """
-function resolve_swithces!(data::Dict{String,<:Any})
-    apply_pm!(_resolve_swithces!, data)
+function resolve_switches!(data::Dict{String,<:Any})
+    apply_pm!(_resolve_switches!, data)
 end
 
 ""
-function _resolve_swithces!(data::Dict{String,<:Any})
+function _resolve_switches!(data::Dict{String,<:Any})
     if length(data["switch"]) <= 0
         return
     end
@@ -2721,7 +2721,15 @@ function _resolve_swithces!(data::Dict{String,<:Any})
     for bus_set in Set(values(bus_sets))
         bus_min = minimum(bus_set)
         Memento.info(_LOGGER, "merged buses $(join(bus_set, ",")) in to bus $(bus_min) based on switch status")
+        
+        # Merging a PV bus into a PQ bus results in a PV bus.
+        # Therefore, the resulting bus should always have the highest bus_type,
+        # but it should never be of type 4 (disconnected).
+        bus_type = maximum(data["bus"]["$i"]["bus_type"] for i in bus_set)
+        bus_type = min(bus_type, 3)
+
         for i in bus_set
+            data["bus"]["$i"]["bus_type"] = bus_type
             if i != bus_min
                 bus_id_map[i] = bus_min
             end
