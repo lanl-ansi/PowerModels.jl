@@ -883,6 +883,7 @@ end
 
         @test length(data["switch"]) == 0
         @test length(data["bus"]) == 4
+        @test data["bus"]["1"]["bus_type"] == 2
 
         result = solve_opf(data, ACPPowerModel, nlp_solver)
 
