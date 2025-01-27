@@ -13,6 +13,18 @@ function parse_opfdata(opfdata_dict::Dict{String,Any}, validate=true)::Dict
     return pm_data
 end
 
+"Parses OPFData data from either a filename or an IO object"
+function parse_opfdata(io::IO; kwargs...)::Dict
+    opf_data = parse_json(io; kwargs...)
+    return opf_data
+end
+
+function parse_opfdata(file::String; kwargs...)::Dict
+    opf_data = open(file) do io
+        parse_json(io; kwargs...)
+    end
+    return opf_data
+end
 
 ### Data and functions specific to OPFData format ###
 
