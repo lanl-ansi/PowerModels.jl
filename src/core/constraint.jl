@@ -208,6 +208,9 @@ function constraint_switch_power_on_off(pm::AbstractPowerModel, n::Int, i, f_idx
     qsw = var(pm, n, :qsw, f_idx)
     z = var(pm, n, :z_switch, i)
 
+    psw_lb, psw_ub = _IM.variable_domain(psw)
+    qsw_lb, qsw_ub = _IM.variable_domain(qsw)
+
     c1 = JuMP.@constraint(pm.model, psw <= psw_ub*z, base_name=name[1])
     c2 = JuMP.@constraint(pm.model, psw >= psw_lb*z, base_name=name[2])
     c3 = JuMP.@constraint(pm.model, qsw <= qsw_ub*z, base_name=name[3])
