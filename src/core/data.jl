@@ -2329,7 +2329,7 @@ function _deactivate_isolated_components!(data::Dict{String,<:Any})
         active_strg_count = sum(cc_active_strg)
 
         if (active_load_count == 0 && active_shunt_count == 0 && active_strg_count == 0) || active_gen_count == 0
-            Memento.info(_LOGGER, "deactivating connected component $(cc) due to isolation without generation, load or storage")
+            Memento.info(_LOGGER, "deactivating connected component $(cc) due to isolation without (a) generation or (b) load, storage, or shunts")
             for i in cc
                 buses[i]["bus_type"] = 4
             end
