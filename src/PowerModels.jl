@@ -1,5 +1,7 @@
 module PowerModels
 
+import CliqueTrees
+
 import LinearAlgebra, SparseArrays
 
 import JSON

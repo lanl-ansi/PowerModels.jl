@@ -5,6 +5,7 @@ repo = "https://github.com/lanl-ansi/PowerModels.jl"
 version = "0.21.3"
 
 [deps]
+CliqueTrees = "60701a23-6482-424a-84db-faee86b9b1f8"
 InfrastructureModels = "2030c09a-7f63-5d83-885d-db604e0e9cc0"
 JSON = "682c06a0-de6a-54ab-a142-c8b1cf79cde6"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
@@ -14,6 +15,7 @@ NLsolve = "2774e3e8-f4cf-5e23-947b-6d7e65073b56"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
 
 [compat]
+CliqueTrees = "0.4.0"
 HiGHS = "~1"
 InfrastructureModels = "~0.6, ~0.7"
 Ipopt = "~1"

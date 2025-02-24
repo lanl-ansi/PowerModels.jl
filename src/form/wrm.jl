@@ -379,21 +379,7 @@ Maximum cardinality search for graph adjacency matrix A.
 Returns a perfect elimination ordering for chordal graphs.
 """
 function _mcs(A)
-    n = size(A, 1)
-    w = zeros(Int, n)
-    peo = zeros(Int, n)
-    unnumbered = collect(1:n)
-
-    for i = n:-1:1
-        z = unnumbered[argmax(w[unnumbered])]
-        filter!(x -> x != z, unnumbered)
-        peo[i] = z
-
-        Nz = findall(x->x!=0, A[:, z])
-        for y in intersect(Nz, unnumbered)
-            w[y] += 1
-        end
-    end
+    peo, _ = CliqueTrees.permutation(A, CliqueTrees.MCS())
     return peo
 end
 
