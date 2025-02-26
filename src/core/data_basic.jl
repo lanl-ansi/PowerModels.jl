@@ -242,29 +242,17 @@ function calc_basic_incidence_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_incidence_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    N::Int = length(data["bus"])
-    E::Int = length(data["branch"])
-
-    I = Int[]
-    J = Int[]
-    V = Int[]
-    sizehint!(I, 2*E)
-    sizehint!(J, 2*E)
-    sizehint!(V, 2*E)
-
+    E, N = length(data["branch"])::Int, length(data["bus"])::Int
+    # I = [..., e, e, ...]
+    I = repeat(1:E; inner=2)
+    J = zeros(Int, 2 * E)
     for e in 1:E
         branch = data["branch"]["$e"]
-        i::Int = branch["f_bus"]
-        j::Int = branch["t_bus"]
-
-        push!(I, e)
-        push!(J, i)
-        push!(V, 1)
-
-        push!(I, e)
-        push!(J, j)
-        push!(V, -1)
+        J[2*e-1] = branch["f_bus"]::Int
+        J[2*e] = branch["t_bus"]::Int
     end
+    # V = [..., 1, -1, ...]
+    V = repeat([1, -1]; outer=E)
 
     return sparse(I, J, V, E, N)
 end
