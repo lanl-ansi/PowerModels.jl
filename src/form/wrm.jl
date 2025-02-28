@@ -1,4 +1,5 @@
 ### sdp relaxations in the rectangular W-space
+import .CliqueTrees
 import LinearAlgebra: Hermitian, cholesky, Symmetric, diag, I
 import SparseArrays: SparseMatrixCSC, sparse, spdiagm, findnz, spzeros, nonzeros
 

@@ -1,7 +1,5 @@
 module PowerModels
 
-import CliqueTrees
-
 import LinearAlgebra, SparseArrays
 
 import JSON
@@ -62,6 +60,7 @@ include("io/json.jl")
 
 include("form/iv.jl")
 
+include("form/cliquetrees/CliqueTrees.jl")
 include("form/acp.jl")
 include("form/acr.jl")
 include("form/act.jl")
