@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Improve performance of `calc_basic_incidence_matrix` (#946)
 
 ### v0.21.3
 - Fix no-buses bug in `calc_connected_components` (#933)
