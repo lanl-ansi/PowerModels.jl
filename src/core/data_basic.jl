@@ -253,7 +253,6 @@ function calc_basic_incidence_matrix(data::Dict{String,<:Any})
     end
     # V = [..., 1, -1, ...]
     V = repeat([1, -1]; outer=E)
-
     return sparse(I, J, V, E, N)
 end
 
