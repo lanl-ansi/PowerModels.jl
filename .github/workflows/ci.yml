@@ -1,9 +1,17 @@
 name: CI
 on:
   push:
+    branches:
+      - master
+      - release-*
   pull_request:
+    types: [opened, synchronize, reopened]
   schedule:
     - cron:  '0 0 * * 3' # on every Wednesday
+# needed to allow julia-actions/cache to delete old caches that it has created
+permissions:
+  actions: write
+  contents: read
 jobs:
   test:
     if: "!contains(github.event.head_commit.message, 'skip ci')"
