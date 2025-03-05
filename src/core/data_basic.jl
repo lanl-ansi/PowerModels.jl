@@ -76,6 +76,17 @@ function make_basic_network!(data::Dict{String,<:Any})
         end
     end
 
+    # check whether all resistances and conductances are > 0
+    for (i,branch) in data["branch"]
+        if branch["br_r"] < 0
+            Memento.warn(_LOGGER, "resistance on branch $(i) is $(branch["br_r"]) < 0.")
+        end
+        if branch["br_x"] < 0
+            Memento.warn(_LOGGER, "reactance on branch $(i) is $(branch["br_x"]) < 0.")
+        end
+    end
+
+
     # ensure single connected component
     select_largest_component!(data)
 
