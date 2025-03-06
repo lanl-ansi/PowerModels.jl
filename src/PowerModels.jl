@@ -38,6 +38,7 @@ const pm_it_sym = Symbol(pm_it_name)
 
 
 include("io/matpower.jl")
+include("io/opfdata.jl")
 include("io/common.jl")
 include("io/pti.jl")
 include("io/psse.jl")

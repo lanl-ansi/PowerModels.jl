@@ -33,6 +33,8 @@ include("common.jl")
 
     include("matpower.jl")
 
+    include("opfdata.jl")
+
     include("pti.jl")
 
     include("psse.jl")
