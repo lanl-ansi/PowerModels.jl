@@ -3,7 +3,7 @@
         result = solve_opf("../test/data/opfdata/example_0.json", ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 1354333.3168954465; atol = 3e4)
+        @test isapprox(result["objective"], 2265.9539492937015; atol = 1e-3)
     end
 
     @testset "example 0 case opfdata (parse_file)" begin
@@ -13,7 +13,7 @@
         result = solve_opf(data, ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 1354333.3168954465; atol = 3e4)
+        @test isapprox(result["objective"], 2265.953939003096; atol = 1e-3)
     end
 
     @testset "example 0 case opfdata (parse_opfdata)" begin
@@ -23,7 +23,7 @@
         result = solve_opf(data, ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 1354333.3168954465; atol = 3e4)
+        @test isapprox(result["objective"], 2265.953939003096; atol = 1e-3)
     end
 
     @testset "example 0 case opfdata (parse_opfdata; iostream)" begin
@@ -34,7 +34,7 @@
             result = solve_opf(data, ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result["objective"], 1354333.3168954465; atol = 3e4)
+            @test isapprox(result["objective"], 2265.953939003096; atol = 1e-3)
         end
     end
 
@@ -42,7 +42,7 @@
         result = solve_opf("../test/data/opfdata/example_1.json", ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 6935.242110031468; atol = 1e0)
+        @test isapprox(result["objective"], 6935.242110031468; atol = 1e-2)
     end
 
     @testset "example 1 case opfdata (parse_file)" begin
@@ -52,7 +52,7 @@
         result = solve_opf(data, ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 6935.242110031468; atol = 1e0)
+        @test isapprox(result["objective"], 6935.242110031468; atol = 1e-2)
     end
 
     @testset "example 1 case opfdata (parse_opfdata)" begin
@@ -62,7 +62,7 @@
         result = solve_opf(data, ACPPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 6935.242110031468; atol = 1e0)
+        @test isapprox(result["objective"], 6935.242110031468; atol = 1e-2)
     end
 
     @testset "example 1 case opfdata (parse_opfdata; iostream)" begin
@@ -73,7 +73,7 @@
             result = solve_opf(data, ACPPowerModel, nlp_solver)
 
             @test result["termination_status"] == LOCALLY_SOLVED
-            @test isapprox(result["objective"], 6935.242110031468; atol = 1e0)
+            @test isapprox(result["objective"], 6935.242110031468; atol = 1e-2)
         end
     end
 end
