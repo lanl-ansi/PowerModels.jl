@@ -1542,7 +1542,7 @@ function _pm2psse_2w_tran(pm_br::Dict{String, Any}, owner::Int, sbase::Real, sou
     if haskey(pm_br, "source_id")
         ckt = source == "pti" ? "\'$(pm_br["source_id"][5])\'" : "\'$(pm_br["source_id"][end])\'"
     else
-        ckt = _default_transformer("CKT")
+        ckt = _default_transformer["CKT"]
     end
     sub_data["CKT"] = ckt
     sub_data["CW"] = _default_transformer["CW"]
