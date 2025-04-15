@@ -8,8 +8,11 @@ end
 
 "Parses json from iostream or string"
 function parse_json(io::Union{IO,String}; kwargs...)::Dict{String,Any}
-    pm_data = JSON.parse(io)
-
+    if io isa IO
+        pm_data = JSON.parse(io)
+    else
+        pm_data = JSON.parsefile(io)
+    end
     _jsonver2juliaver!(pm_data)
 
     if haskey(pm_data, "conductors")

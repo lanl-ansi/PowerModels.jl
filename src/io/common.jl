@@ -5,16 +5,14 @@ Parses a Matpower .m `file` or PTI (PSS(R)E-v33) .raw `file` into a
 PowerModels data structure. All fields from PTI files will be imported if
 `import_all` is true (Default: false).
 """
-function parse_file(file::String; import_all=false, validate=true)
-    pm_data = open(file) do io
-        pm_data = parse_file(io; import_all=import_all, validate=validate, filetype=split(lowercase(file), '.')[end])
-    end
-    return pm_data
-end
 
 
 "Parses the iostream from a file"
-function parse_file(io::IO; import_all=false, validate=true, filetype="json")
+function parse_file(io::Union{IO,String}; import_all=false, validate=true, filetype="json")
+    if io isa String
+        filetype = split(lowercase(io), '.')[end]
+    end
+
     if filetype == "m"
         pm_data = PowerModels.parse_matpower(io, validate=validate)
     elseif filetype == "raw"
