@@ -8,6 +8,10 @@
         PowerModels.export_file(file_tmp, source_data)
 
         destination_data = PowerModels.parse_file(file_tmp)
+        destination_data = open(file) do io
+            PowerModels.parse_file(io)
+        end
+        
         rm(file_tmp)
 
         @test true
