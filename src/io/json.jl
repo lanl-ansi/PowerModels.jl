@@ -11,7 +11,7 @@ function parse_json(io::Union{IO,String}; kwargs...)::Dict{String,Any}
     if io isa IO
         pm_data = JSON.parse(io)
     else
-        pm_data = JSON.parsefile(io)
+        pm_data = JSON.parsefile(io;use_mmap=false)
     end
     _jsonver2juliaver!(pm_data)
 
