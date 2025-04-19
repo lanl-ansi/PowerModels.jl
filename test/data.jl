@@ -888,4 +888,12 @@ end
 
         @test isapprox(result["objective"], 16641.20; atol=1e0)
     end
+
+    @testset "3-bus with switches" begin
+       data = PowerModels.parse_file("../test/data/json/case3_switches.json")
+       resolve_switches!(data)
+
+       @test length(data["switch"]) == 0
+       @test length(data["bus"]) == 1
+   end
 end
