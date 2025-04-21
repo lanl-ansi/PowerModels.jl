@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Fix InexactError in `compute_ac_pf` (#939)
+- Fix dictionary call syntax error in psse export (#941)
 - Updated the logging message when components are deactivated (#943)
 - Improve performance of `calc_basic_incidence_matrix` (#946)
 
