@@ -13,7 +13,7 @@ following basic network model requirements.
 - all branches have explicit thermal limits
 - phase shift on all transformers is set to 0.0
 - bus shunts have 0.0 conductance values
-users requiring any of the features listed above for their analysis should use 
+users requiring any of the features listed above for their analysis should use
 the non-basic PowerModels routines.
 """
 function make_basic_network(data::Dict{String,<:Any})
@@ -23,7 +23,7 @@ function make_basic_network(data::Dict{String,<:Any})
     if _IM.ismultiinfrastructure(data)
         Memento.error(_LOGGER, "make_basic_network does not support multiinfrastructure data")
     end
-    
+
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "make_basic_network does not support multinetwork data")
     end
@@ -106,7 +106,7 @@ function make_basic_network!(data::Dict{String,<:Any})
     end
 
     # remove switches by merging buses
-    resolve_swithces!(data)
+    resolve_switches!(data)
 
     # switch resolution can result in new parallel branches
     correct_branch_directions!(data)

@@ -879,7 +879,7 @@ end
 @testset "test resolve switches" begin
      @testset "5-bus with switches" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
-        resolve_swithces!(data)
+        resolve_switches!(data)
 
         @test length(data["switch"]) == 0
         @test length(data["bus"]) == 4

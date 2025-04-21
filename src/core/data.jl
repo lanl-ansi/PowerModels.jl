@@ -2539,7 +2539,7 @@ function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "d
     component_lookup = Dict(i => i0 for i in active_bus_ids)
     components = Dict{Int,Set{Int}}()
 
-    # ⚠️ it is important to iterate over _sorted_ bus IDs to ensure that components are labeled correctly  
+    # ⚠️ it is important to iterate over _sorted_ bus IDs to ensure that components are labeled correctly
     for i in sorted_bus_ids
         if component_lookup[i] != i0
             continue  # bus already flagged; skip
@@ -2687,12 +2687,14 @@ end
 given a network data dict merges buses that are connected by closed switches
 converting the dataset into a pure bus-branch model.
 """
-function resolve_swithces!(data::Dict{String,<:Any})
-    apply_pm!(_resolve_swithces!, data)
+function resolve_switches!(data::Dict{String,<:Any})
+    apply_pm!(_resolve_switches!, data)
 end
 
+@deprecate resolve_swithces! resolve_switches!
+
 ""
-function _resolve_swithces!(data::Dict{String,<:Any})
+function _resolve_switches!(data::Dict{String,<:Any})
     if length(data["switch"]) <= 0
         return
     end
