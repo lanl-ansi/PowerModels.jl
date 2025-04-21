@@ -2,7 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- nothing
+- Fix dictionary call syntax error in psse export (#941)
 
 ### v0.21.3
 - Fix no-buses bug in `calc_connected_components` (#933)
