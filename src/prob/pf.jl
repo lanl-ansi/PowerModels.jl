@@ -312,7 +312,7 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
             if bus["bus_type"] != 4
                 bus_idx = am.bus_to_idx[bus["index"]]
 
-                bus_assignment[i] = Dict(
+                bus_assignment[i] = Dict{String,Float64}(
                     "vm" => pf_data.vm_idx[bus_idx],
                     "va" => pf_data.va_idx[bus_idx]
                 )
@@ -322,7 +322,7 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
         gen_assignment= Dict{String,Any}()
         for (i,gen) in data["gen"]
             if gen["gen_status"] != 0
-                gen_assignment[i] = Dict(
+                gen_assignment[i] = Dict{String,Float64}(
                     "pg" => gen["pg"],
                     "qg" => gen["qg"]
                 )
