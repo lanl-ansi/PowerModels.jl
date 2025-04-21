@@ -4,13 +4,18 @@
     function test_export(filename::AbstractString, extension::AbstractString)
         source_data = parse_file(filename)
 
-        file_tmp = "../test/data/tmp." * extension
+        dir = mktempdir()
+        file_tmp = joinpath(dir, "tmp.$extension")
         PowerModels.export_file(file_tmp, source_data)
 
-        destination_data = PowerModels.parse_file(file_tmp)
-        rm(file_tmp)
-
-        @test true
+        # Test ::String method
+        destination_data_file = PowerModels.parse_file(file_tmp)
+        # Test ::IO method
+        destination_data_io = open(file_tmp, "r") do io
+            return PowerModels.parse_file(io; filetype = extension)
+        end
+        @test destination_data_file == destination_data_io
+        return
     end
 
     @testset "test case30.m" begin

@@ -6,9 +6,12 @@ function _jsonver2juliaver!(pm_data)
     end
 end
 
+_json_parse(io::IO) = JSON.parse(io)
+_json_parse(io::String) = JSON.parsefile(io; use_mmap = false)
+
 "Parses json from iostream or string"
-function parse_json(io::Union{IO,String}; kwargs...)::Dict{String,Any}
-    pm_data = JSON.parse(io)
+function parse_json(io::Union{IO,String}; validate = true)::Dict{String,Any}
+    pm_data = _json_parse(io)
 
     _jsonver2juliaver!(pm_data)
 
@@ -16,7 +19,7 @@ function parse_json(io::Union{IO,String}; kwargs...)::Dict{String,Any}
         Memento.warn(_LOGGER, "The JSON data contains the conductor parameter, but only single conductors are supported.  Consider using PowerModelsDistribution.")
     end
 
-    if get(kwargs, :validate, true)
+    if validate
         PowerModels.correct_network_data!(pm_data)
     end
 
