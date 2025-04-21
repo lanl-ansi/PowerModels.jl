@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Updated the logging message when components are deactivated (#943)
 - Improve performance of `calc_basic_incidence_matrix` (#946)
 
 ### v0.21.3
