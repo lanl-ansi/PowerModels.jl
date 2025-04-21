@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Fix InexactError in `compute_ac_pf` (#939)
+- Updated the logging message when components are deactivated (#943)
 
 ### v0.21.3
 - Fix no-buses bug in `calc_connected_components` (#933)
