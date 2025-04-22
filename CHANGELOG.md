@@ -7,6 +7,7 @@ PowerModels.jl Change Log
 - Updated the logging message when components are deactivated (#943)
 - Improve performance of `calc_basic_incidence_matrix` (#946)
 - Fix `parse_file` to use `JSON.parsefile` (#958)
+- Fix spelling of `resolve_swithces!` and add deprecation for compatibility (#959)
 
 ### v0.21.3
 - Fix no-buses bug in `calc_connected_components` (#933)
