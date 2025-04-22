@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 
 # used by OTS models
 function check_br_status(sol, active_lb::Real, active_ub::Real; tol=1e-6)

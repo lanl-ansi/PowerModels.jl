@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 # Parse PowerModels data from JSON exports of PowerModels data structures.
 
 function _jsonver2juliaver!(pm_data)

@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 @testset "test native dc pf solver" begin
     # degenerate due to no slack bus
     # @testset "3-bus case" begin

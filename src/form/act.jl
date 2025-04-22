@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 ### w-theta form of the non-convex AC equations
 
 "`t[ref_bus] == 0`"

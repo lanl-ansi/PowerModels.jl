@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 
 """
 A valid inequality for the product of two complex variables with magnitude and

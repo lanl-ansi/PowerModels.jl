@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 
 @testset "code snippets from docs" begin
     @testset "DATA.md - The Network Data Dictionary" begin

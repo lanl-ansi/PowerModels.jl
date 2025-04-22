@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 "solves the AC Power Flow in polar coordinates using a JuMP model"
 function solve_ac_pf(file, optimizer; kwargs...)
     return solve_pf(file, ACPPowerModel, optimizer; kwargs...)

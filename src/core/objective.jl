@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 ""
 function objective_min_fuel_and_flow_cost(pm::AbstractPowerModel; kwargs...)
     expression_pg_cost(pm; kwargs...)

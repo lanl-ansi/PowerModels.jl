@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 # PowerModels exports everything except internal symbols, which are defined as
 # those whose name starts with an underscore. If you don't want all of these
 # symbols in your environment, then use `import PowerModels` instead of

@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 ""
 function solve_pf_iv(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_pf_iv; kwargs...)

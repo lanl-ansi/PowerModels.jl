@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 function _IM.solution_preprocessor(pm::AbstractPowerModel, solution::Dict)
     per_unit = _IM.get_data(x -> x["per_unit"], pm.data, pm_it_name; apply_to_subnetworks = false)
     solution["it"][pm_it_name]["per_unit"] = per_unit

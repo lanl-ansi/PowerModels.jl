@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 ### sdp relaxations in the rectangular W-space
 import LinearAlgebra: Hermitian, cholesky, Symmetric, diag, I
 import SparseArrays: SparseMatrixCSC, sparse, spdiagm, findnz, spzeros, nonzeros

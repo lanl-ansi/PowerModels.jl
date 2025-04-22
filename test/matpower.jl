@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 @testset "test matpower parser" begin
     @testset "30-bus case file" begin
         result = solve_opf("../test/data/matpower/case30.m", ACPPowerModel, nlp_solver)

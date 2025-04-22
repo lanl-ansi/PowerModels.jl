@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 # Kirchhoff's circuit laws as defined the current-voltage variable space.
 # Even though the branch model is linear, the feasible set is non-convex
 # in the context of constant-power loads or generators

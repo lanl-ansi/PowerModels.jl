@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 @testset "test ac polar pf" begin
     @testset "3-bus case" begin
         result = solve_ac_pf("../test/data/matpower/case3.m", nlp_solver)

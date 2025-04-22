@@ -1,3 +1,8 @@
+# Copyright (c) 2016: Los Alamos National Security, LLC
+#
+# Use of this source code is governed by a BSD-style license that can be found
+# in the LICENSE.md file.
+
 #### General Assumptions of these OTS Models ####
 #
 # - if the branch status is 0 in the input, it is out of service and forced to 0 in OTS
