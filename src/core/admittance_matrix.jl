@@ -167,7 +167,7 @@ function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     if !LinearAlgebra.issuccess(F)
         Memento.error(_LOGGER, "Failed factorization in calc_susceptance_matrix_inv")
     end
-    M = F \ Matrix(1.0I, num_buses, num_buses)
+    M = F \ LinearAlgebra.I(num_buses)
     M[ref_idx, :] .= 0.0  # zero-out the row of the slack bus
 
     return AdmittanceMatrixInverse(sm.idx_to_bus, sm.bus_to_idx, ref_idx, M)

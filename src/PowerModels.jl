@@ -1,5 +1,6 @@
 module PowerModels
 
+import InfrastructureModels
 import InfrastructureModels as _IM
 import InfrastructureModels: optimize_model!, @im_fields, nw_id_default
 import JSON
