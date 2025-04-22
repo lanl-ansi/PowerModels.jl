@@ -1,5 +1,4 @@
 # tools for working with a PowerModels data dict structure
-import LinearAlgebra: pinv
 
 "PowerModels wrapper for the InfrastructureModels `apply!` function."
 function apply_pm!(func!::Function, data::Dict{String, <:Any}; apply_to_subnetworks::Bool = true)
@@ -27,7 +26,7 @@ end
 
 ""
 function calc_branch_y(branch::Dict{String,<:Any})
-    y = pinv(branch["br_r"] + im * branch["br_x"])
+    y = LinearAlgebra.pinv(branch["br_r"] + im * branch["br_x"])
     g, b = real(y), imag(y)
     return g, b
 end
@@ -1112,7 +1111,7 @@ function _calc_thermal_limits!(pm_data::Dict{String,<:Any})
             r = branch["br_r"]
             x = branch["br_x"]
             z = r + im * x
-            y = pinv(z)
+            y = LinearAlgebra.pinv(z)
             y_mag = abs.(y)
 
             fr_vmax = pm_data["bus"][string(branch["f_bus"])]["vmax"]
@@ -1197,7 +1196,7 @@ function _calc_current_limits!(pm_data::Dict{String,<:Any})
             r = branch["br_r"]
             x = branch["br_x"]
             z = r + im * x
-            y = pinv(z)
+            y = LinearAlgebra.pinv(z)
             y_mag = abs.(y)
 
             fr_vmax = pm_data["bus"][string(branch["f_bus"])]["vmax"]

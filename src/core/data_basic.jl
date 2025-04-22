@@ -253,7 +253,7 @@ function calc_basic_incidence_matrix(data::Dict{String,<:Any})
     end
     # V = [..., 1, -1, ...]
     V = repeat([1, -1]; outer=E)
-    return sparse(I, J, V, E, N)
+    return SparseArrays.sparse(I, J, V, E, N)
 end
 
 """
@@ -307,7 +307,7 @@ function calc_basic_branch_susceptance_matrix(data::Dict{String,<:Any})
         push!(I, i); push!(J, branch["t_bus"]); push!(V, -b)
     end
 
-    return sparse(I,J,V)
+    return SparseArrays.sparse(I,J,V)
 end
 
 """
@@ -410,7 +410,7 @@ function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
     vm, va = abs.(v), angle.(v)
     Y = calc_basic_admittance_matrix(data)
     neighbors = [Set{Int}([i]) for i in 1:num_bus]
-    I, J, V = findnz(Y)
+    I, J, V = SparseArrays.findnz(Y)
     for nz in eachindex(V)
         push!(neighbors[I[nz]], J[nz])
         push!(neighbors[J[nz]], I[nz])
@@ -430,7 +430,7 @@ function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
             push!(J0_I, f_i_i); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
         end
     end
-    J = sparse(J0_I, J0_J, J0_V)
+    J = SparseArrays.sparse(J0_I, J0_J, J0_V)
     for i in 1:num_bus
         i1 = i
         i2 = i + num_bus
