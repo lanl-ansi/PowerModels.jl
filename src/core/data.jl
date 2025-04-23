@@ -2660,8 +2660,6 @@ function resolve_switches!(data::Dict{String,<:Any})
     apply_pm!(_resolve_switches!, data)
 end
 
-@deprecate resolve_swithces! resolve_switches!
-
 function _resolve_switches!(data::Dict{String,<:Any})
     if length(data["switch"]) <= 0
         return
