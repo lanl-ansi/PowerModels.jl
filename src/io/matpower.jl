@@ -123,7 +123,6 @@ const _mp_switch_columns = [
 ]
 
 
-""
 function _parse_matpower_string(data_string::String)
     matlab_data, func_name, colnames = _IM.parse_matlab_string(data_string, extended=true)
 
@@ -299,7 +298,6 @@ function _parse_matpower_string(data_string::String)
 end
 
 
-""
 function _mp_cost_data(cost_row)
     ncost = _IM.check_type(Int, cost_row[4])
     model = _IM.check_type(Int, cost_row[1])
@@ -687,7 +685,6 @@ function _get_default(dict, key, default=0.0)
 end
 
 
-""
 function _check_keys(data, keys)
     for key in keys
         if haskey(data, key)
@@ -839,7 +836,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
         if idx != gen["index"]
             Memento.warn(_LOGGER, "The index of the generator does not match the matpower assigned index. Any data that uses generator indexes for reference is corrupted.");
         end
-        println(io, 
+        println(io,
             "\t", gen["gen_bus"],
             "\t", _get_default(gen, "pg"),
             "\t", _get_default(gen, "qg"),
@@ -945,7 +942,7 @@ function export_matpower(io::IO, data::Dict{String,Any})
     println(io, "];")
     println(io)
 
-    if length(dclines) > 0 
+    if length(dclines) > 0
         # print the dcline data
         println(io, "%% dcline data")
         println(io, "%    f_bus    t_bus    status    Pf    Pt    Qf    Qt    Vf    Vt    Pmin    Pmax    QminF    QmaxF    QminT    QmaxT    loss0    loss1")
