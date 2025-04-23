@@ -64,7 +64,6 @@ end
 
 
 
-""
 function expression_branch_power_ohms_yt_from(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     if !haskey(var(pm, nw), :p)
         var(pm, nw)[:p] = Dict{Tuple{Int,Int,Int},Any}()
@@ -89,7 +88,6 @@ function expression_branch_power_ohms_yt_from(pm::AbstractPowerModel, i::Int; nw
 end
 
 
-""
 function expression_branch_power_ohms_yt_to(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     if !haskey(var(pm, nw), :p)
         var(pm, nw)[:p] = Dict{Tuple{Int,Int,Int},Any}()
@@ -115,7 +113,6 @@ end
 
 
 
-""
 function expression_branch_power_ohms_yt_from_ptdf(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     if !haskey(var(pm, nw), :p)
         var(pm, nw)[:p] = Dict{Tuple{Int,Int,Int},Any}()
@@ -155,7 +152,6 @@ function expression_branch_power_ohms_yt_from_ptdf(pm::AbstractPowerModel, i::In
 end
 
 
-""
 function expression_branch_power_ohms_yt_to_ptdf(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     if !haskey(var(pm, nw), :p)
         var(pm, nw)[:p] = Dict{Tuple{Int,Int,Int},Any}()

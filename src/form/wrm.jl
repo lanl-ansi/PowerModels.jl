@@ -1,6 +1,5 @@
 ### sdp relaxations in the rectangular W-space
 
-""
 function constraint_current_limit_from(pm::AbstractWRMModel, n::Int, f_idx, c_rating_a)
     l,i,j = f_idx
 
@@ -11,7 +10,6 @@ function constraint_current_limit_from(pm::AbstractWRMModel, n::Int, f_idx, c_ra
     JuMP.@constraint(pm.model, [w_fr*c_rating_a^2+1, 2*p_fr, 2*q_fr, w_fr*c_rating_a^2-1] in JuMP.SecondOrderCone())
 end
 
-""
 function constraint_current_limit_to(pm::AbstractWRMModel, n::Int, t_idx, c_rating_a)
     l,j,i = t_idx
 
@@ -25,7 +23,6 @@ end
 
 
 
-""
 function constraint_model_voltage(pm::AbstractWRMModel, n::Int)
     _check_missing_keys(var(pm, n), [:WR,:WI], typeof(pm))
 
@@ -36,7 +33,6 @@ function constraint_model_voltage(pm::AbstractWRMModel, n::Int)
 end
 
 
-""
 function variable_bus_voltage(pm::AbstractWRMModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs))
     bus_ids = ids(pm, nw, :bus)

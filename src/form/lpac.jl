@@ -1,13 +1,11 @@
 ### the LPAC approximation
 
-""
 function variable_bus_voltage(pm::AbstractLPACModel; kwargs...)
     variable_bus_voltage_angle(pm; kwargs...)
     variable_bus_voltage_magnitude(pm; kwargs...)
     variable_buspair_cosine(pm; kwargs...)
 end
 
-""
 function variable_bus_voltage_magnitude(pm::AbstractLPACModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     phi = var(pm, nw)[:phi] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :bus)], base_name="$(nw)_phi",
@@ -25,13 +23,11 @@ function variable_bus_voltage_magnitude(pm::AbstractLPACModel; nw::Int=nw_id_def
 end
 
 
-""
 function sol_data_model!(pm::AbstractLPACModel, solution::Dict)
     apply_pm!(_sol_data_model_lpac!, solution)
 end
 
 
-""
 function _sol_data_model_lpac!(solution::Dict)
     if haskey(solution, "bus")
         for (i, bus) in solution["bus"]
@@ -44,7 +40,6 @@ function _sol_data_model_lpac!(solution::Dict)
 end
 
 
-""
 function constraint_model_voltage(pm::AbstractLPACModel, n::Int)
     _check_missing_keys(var(pm, n), [:va,:cs], typeof(pm))
 
@@ -59,7 +54,6 @@ function constraint_model_voltage(pm::AbstractLPACModel, n::Int)
 end
 
 
-""
 function constraint_power_balance(pm::AbstractLPACModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
     phi  = var(pm, n, :phi, i)
     p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
@@ -102,7 +96,6 @@ function constraint_power_balance(pm::AbstractLPACModel, n::Int, i::Int, bus_arc
 end
 
 
-""
 function constraint_ohms_yt_from(pm::AbstractLPACCModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     p_fr   = var(pm, n, :p, f_idx)
     q_fr   = var(pm, n, :q, f_idx)
@@ -116,7 +109,6 @@ function constraint_ohms_yt_from(pm::AbstractLPACCModel, n::Int, f_bus, t_bus, f
     JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*(1.0 + 2*phi_fr) - (-b*tr-g*ti)/tm^2*(cs + phi_fr + phi_to) + (-g*tr+b*ti)/tm^2*(va_fr-va_to) )
 end
 
-""
 function constraint_ohms_yt_to(pm::AbstractLPACCModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
     p_to   = var(pm, n, :p, t_idx)
     q_to   = var(pm, n, :q, t_idx)
@@ -155,7 +147,6 @@ function constraint_voltage_angle_difference_on_off(pm::AbstractLPACCModel, n::I
     JuMP.@constraint(pm.model, va_fr - va_to >= angmin*z + vad_min*(1-z))
 end
 
-""
 function variable_ne_branch_voltage(pm::AbstractLPACCModel; kwargs...)
     variable_ne_branch_voltage_magnitude_fr(pm; kwargs...)
     variable_ne_branch_voltage_magnitude_to(pm; kwargs...)
@@ -163,7 +154,6 @@ function variable_ne_branch_voltage(pm::AbstractLPACCModel; kwargs...)
     variable_ne_branch_cosine(pm; kwargs...)
 end
 
-""
 function variable_ne_branch_voltage_magnitude_fr(pm::AbstractLPACModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
@@ -178,7 +168,6 @@ function variable_ne_branch_voltage_magnitude_fr(pm::AbstractLPACModel; nw::Int=
     report && sol_component_value(pm, nw, :ne_branch, :phi_fr, ids(pm, nw, :ne_branch), phi_fr_ne)
 end
 
-""
 function variable_ne_branch_voltage_magnitude_to(pm::AbstractLPACModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
@@ -194,7 +183,6 @@ function variable_ne_branch_voltage_magnitude_to(pm::AbstractLPACModel; nw::Int=
     report && sol_component_value(pm, nw, :ne_branch, :phi_to, ids(pm, nw, :ne_branch), phi_to_ne)
 end
 
-""
 function variable_ne_branch_cosine(pm::AbstractLPACCModel; nw::Int=nw_id_default, report::Bool=true)
     cos_min = Dict((l, -Inf) for l in ids(pm, nw, :ne_branch))
     cos_max = Dict((l,  Inf) for l in ids(pm, nw, :ne_branch))
@@ -226,7 +214,6 @@ function variable_ne_branch_cosine(pm::AbstractLPACCModel; nw::Int=nw_id_default
     report && sol_component_value(pm, nw, :ne_branch, :cs, ids(pm, nw, :ne_branch), cs_ne)
 end
 
-""
 function variable_ne_branch_voltage_product_angle(pm::AbstractLPACCModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
      buspair = ref(pm, nw, :ne_buspairs)
@@ -240,7 +227,6 @@ function variable_ne_branch_voltage_product_angle(pm::AbstractLPACCModel; nw::In
     report && sol_component_value(pm, nw, :ne_branch, :td, ids(pm, nw, :ne_branch), td_ne)
 end
 
-""
 function constraint_model_voltage_on_off(pm::AbstractLPACCModel, n::Int)
     phi  = var(pm, n, :phi)
     t = var(pm, n, :va)
@@ -273,7 +259,6 @@ function constraint_model_voltage_on_off(pm::AbstractLPACCModel, n::Int)
     end
 end
 
-""
 function constraint_ne_model_voltage(pm::AbstractLPACCModel, n::Int)
     phi  = var(pm, n, :phi)
     t = var(pm, n, :va)
@@ -306,7 +291,6 @@ function constraint_ne_model_voltage(pm::AbstractLPACCModel, n::Int)
     end
 end
 
-""
 function constraint_ne_power_balance(pm::AbstractLPACCModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
     phi  = var(pm, n, :phi, i)
     p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
@@ -350,7 +334,6 @@ function constraint_ne_power_balance(pm::AbstractLPACCModel, n::Int, i::Int, bus
     end
 end
 
-""
 function constraint_ne_ohms_yt_from(pm::AbstractLPACCModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm, vad_min, vad_max)
     p_fr = var(pm, n,    :p_ne, f_idx)
     q_fr = var(pm, n,    :q_ne, f_idx)
@@ -363,7 +346,6 @@ function constraint_ne_ohms_yt_from(pm::AbstractLPACCModel, n::Int, i, f_bus, t_
     JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*(z + 2*phi_fr) - (-b*tr-g*ti)/tm^2*(cs + phi_fr + phi_to) + (-g*tr+b*ti)/tm^2*(td))
 end
 
-""
 function constraint_ne_ohms_yt_to(pm::AbstractLPACCModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
     p_to = var(pm, n,    :p_ne, t_idx)
     q_to = var(pm, n,    :q_ne, t_idx)
@@ -389,7 +371,6 @@ function variable_bus_voltage_on_off(pm::AbstractLPACCModel; kwargs...)
 end
 
 
-""
 function variable_branch_voltage_magnitude_fr_on_off(pm::AbstractLPACCModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)
@@ -404,7 +385,6 @@ function variable_branch_voltage_magnitude_fr_on_off(pm::AbstractLPACCModel; nw:
     report && sol_component_value(pm, nw, :branch, :phi_fr, ids(pm, nw, :branch), phi_fr)
 end
 
-""
 function variable_branch_voltage_magnitude_to_on_off(pm::AbstractLPACCModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :branch)

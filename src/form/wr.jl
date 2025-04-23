@@ -1,19 +1,16 @@
 ### quadratic relaxations in the rectangular W-space (e.g. SOC and QC relaxations)
 
 
-""
 function variable_bus_voltage(pm::AbstractWRModel; kwargs...)
     variable_bus_voltage_magnitude_sqr(pm; kwargs...)
     variable_buspair_voltage_product(pm; kwargs...)
 end
 
-""
 function variable_bus_voltage(pm::AbstractWRConicModel; kwargs...)
     variable_bus_voltage_magnitude_sqr(pm; kwargs...)
     variable_buspair_voltage_product(pm; kwargs...)
 end
 
-""
 function constraint_model_voltage(pm::AbstractWRModel, n::Int)
     _check_missing_keys(var(pm, n), [:w,:wr,:wi], typeof(pm))
 
@@ -26,7 +23,6 @@ function constraint_model_voltage(pm::AbstractWRModel, n::Int)
     end
 end
 
-""
 function constraint_model_voltage(pm::AbstractWRConicModel, n::Int)
     _check_missing_keys(var(pm, n), [:w,:wr,:wi], typeof(pm))
 
@@ -77,7 +73,6 @@ function constraint_ne_ohms_yt_to(pm::AbstractWRModel, n::Int, i, f_bus, t_bus, 
     JuMP.@constraint(pm.model, q_to == -(b+b_to)*w_to - (-b*tr+g*ti)/tm^2*wr + (-g*tr-b*ti)/tm^2*-wi )
 end
 
-""
 function variable_bus_voltage_on_off(pm::AbstractWRModel; kwargs...)
     variable_bus_voltage_magnitude_sqr(pm; kwargs...)
 
@@ -86,7 +81,6 @@ function variable_bus_voltage_on_off(pm::AbstractWRModel; kwargs...)
     variable_branch_voltage_product_on_off(pm; kwargs...)
 end
 
-""
 function constraint_model_voltage_on_off(pm::AbstractWRModel, n::Int)
     w  = var(pm, n, :w)
     wr = var(pm, n, :wr)
@@ -107,7 +101,6 @@ function constraint_model_voltage_on_off(pm::AbstractWRModel, n::Int)
     end
 end
 
-""
 function constraint_ne_model_voltage(pm::AbstractWRModel, n::Int)
     buses = ref(pm, n, :bus)
     branches = ref(pm, n, :ne_branch)
@@ -142,7 +135,6 @@ function constraint_ne_model_voltage(pm::AbstractWRModel, n::Int)
 end
 
 
-""
 function constraint_voltage_magnitude_from_on_off(pm::AbstractWRModel, n::Int)
     buses = ref(pm, n, :bus)
     branches = ref(pm, n, :branch)
@@ -156,7 +148,6 @@ function constraint_voltage_magnitude_from_on_off(pm::AbstractWRModel, n::Int)
     end
 end
 
-""
 function constraint_voltage_magnitude_to_on_off(pm::AbstractWRModel, n::Int)
     buses = ref(pm, n, :bus)
     branches = ref(pm, n, :branch)
@@ -171,7 +162,6 @@ function constraint_voltage_magnitude_to_on_off(pm::AbstractWRModel, n::Int)
 end
 
 
-""
 function constraint_voltage_magnitude_sqr_from_on_off(pm::AbstractWRModel, n::Int)
     buses = ref(pm, n, :bus)
     branches = ref(pm, n, :branch)
@@ -185,7 +175,6 @@ function constraint_voltage_magnitude_sqr_from_on_off(pm::AbstractWRModel, n::In
     end
 end
 
-""
 function constraint_voltage_magnitude_sqr_to_on_off(pm::AbstractWRModel, n::Int)
     buses = ref(pm, n, :bus)
     branches = ref(pm, n, :branch)
@@ -199,7 +188,6 @@ function constraint_voltage_magnitude_sqr_to_on_off(pm::AbstractWRModel, n::Int)
     end
 end
 
-""
 function constraint_voltage_product_on_off(pm::AbstractWRModel, n::Int)
     wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, n, :buspairs))
 
@@ -275,14 +263,12 @@ function constraint_ne_voltage_angle_difference(pm::AbstractWRModel, n::Int, f_i
     JuMP.@constraint(pm.model, wi >= tan(angmin)*wr)
 end
 
-""
 function variable_ne_branch_voltage(pm::AbstractWRModel; kwargs...)
     variable_ne_branch_voltage_magnitude_fr_sqr(pm; kwargs...)
     variable_ne_branch_voltage_magnitude_to_sqr(pm; kwargs...)
     variable_ne_branch_voltage_product(pm; kwargs...)
 end
 
-""
 function variable_ne_branch_voltage_magnitude_fr_sqr(pm::AbstractWRModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
@@ -297,7 +283,6 @@ function variable_ne_branch_voltage_magnitude_fr_sqr(pm::AbstractWRModel; nw::In
     report && sol_component_value(pm, nw, :ne_branch, :w_fr, ids(pm, nw, :ne_branch), w_fr_ne)
 end
 
-""
 function variable_ne_branch_voltage_magnitude_to_sqr(pm::AbstractWRModel; nw::Int=nw_id_default, report::Bool=true)
     buses = ref(pm, nw, :bus)
     branches = ref(pm, nw, :ne_branch)
@@ -312,7 +297,6 @@ function variable_ne_branch_voltage_magnitude_to_sqr(pm::AbstractWRModel; nw::In
     report && sol_component_value(pm, nw, :ne_branch, :w_to, ids(pm, nw, :ne_branch), w_to_ne)
 end
 
-""
 function variable_ne_branch_voltage_product(pm::AbstractWRModel; nw::Int=nw_id_default, report::Bool=true)
     wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :ne_buspairs))
     bi_bp = Dict((i, (b["f_bus"], b["t_bus"])) for (i,b) in ref(pm, nw, :ne_branch))
@@ -375,7 +359,6 @@ function variable_buspair_voltage_product_magnitude(pm::AbstractPowerModel; nw::
 end
 
 
-""
 function variable_buspair_current_magnitude_sqr(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     ccm = var(pm, nw)[:ccm] = JuMP.@variable(pm.model,
         [bp in ids(pm, nw, :buspairs)], base_name="$(nw)_ccm",
@@ -399,7 +382,6 @@ function variable_buspair_current_magnitude_sqr(pm::AbstractPowerModel; nw::Int=
     report && sol_component_value_buspair(pm, nw, :buspairs, :ccm, ids(pm, nw, :buspairs), ccm)
 end
 
-""
 function variable_bus_voltage(pm::AbstractQCWRModel; kwargs...)
     variable_bus_voltage_angle(pm; kwargs...)
     variable_bus_voltage_magnitude(pm; kwargs...)
@@ -414,7 +396,6 @@ function variable_bus_voltage(pm::AbstractQCWRModel; kwargs...)
     variable_buspair_current_magnitude_sqr(pm; kwargs...)
 end
 
-""
 function constraint_model_voltage(pm::AbstractQCWRModel, n::Int)
     _check_missing_keys(var(pm, n), [:vm,:va,:td,:si,:cs,:vv,:w,:wr,:wi], typeof(pm))
 
@@ -491,7 +472,6 @@ function constraint_theta_ref(pm::AbstractQCWRModel, n::Int, i::Int)
     JuMP.@constraint(pm.model, var(pm, n, :va)[i] == 0)
 end
 
-""
 function constraint_voltage_angle_difference(pm::AbstractQCWRModel, n::Int, f_idx, angmin, angmax)
     i, f_bus, t_bus = f_idx
 
@@ -517,7 +497,6 @@ function constraint_voltage_angle_difference(pm::AbstractQCWRModel, n::Int, f_id
 end
 
 
-""
 function variable_bus_voltage_on_off(pm::AbstractQCWRModel; kwargs...)
     variable_bus_voltage_angle(pm; kwargs...)
     variable_bus_voltage_magnitude(pm; kwargs...)
@@ -537,12 +516,10 @@ function variable_bus_voltage_on_off(pm::AbstractQCWRModel; kwargs...)
     variable_branch_current_magnitude_sqr_on_off(pm; kwargs...) # includes 0, but needs new indexes
 end
 
-""
 function variable_ne_branch_voltage(pm::AbstractQCWRModel; kwargs...)
     Memento.error(_LOGGER, "variable_ne_branch_voltage is not yet supported for QC formulations, open an issue if you would like this feature.")
 end
 
-""
 function variable_branch_voltage_product_angle_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     td = var(pm, nw)[:td] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_td",
@@ -554,7 +531,6 @@ function variable_branch_voltage_product_angle_on_off(pm::AbstractPowerModel; nw
     report && sol_component_value(pm, nw, :branch, :td, ids(pm, nw, :branch), td)
 end
 
-""
 function variable_buspair_voltage_product_magnitude_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     branches = ref(pm, nw, :branch)
     buses = ref(pm, nw, :bus)
@@ -573,7 +549,6 @@ function variable_buspair_voltage_product_magnitude_on_off(pm::AbstractPowerMode
 end
 
 
-""
 function variable_branch_cosine_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     cos_min = Dict((l, -Inf) for l in ids(pm, nw, :branch))
     cos_max = Dict((l,  Inf) for l in ids(pm, nw, :branch))
@@ -605,7 +580,6 @@ function variable_branch_cosine_on_off(pm::AbstractPowerModel; nw::Int=nw_id_def
     report && sol_component_value(pm, nw, :branch, :cs, ids(pm, nw, :branch), cs)
 end
 
-""
 function variable_branch_sine_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     si = var(pm, nw)[:si] = JuMP.@variable(pm.model,
         [l in ids(pm, nw, :branch)], base_name="$(nw)_si",
@@ -618,7 +592,6 @@ function variable_branch_sine_on_off(pm::AbstractPowerModel; nw::Int=nw_id_defau
 end
 
 
-""
 function variable_branch_current_magnitude_sqr_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)
     ccm_min = Dict((l, 0) for l in ids(pm, nw, :branch))
 
@@ -640,7 +613,6 @@ function variable_branch_current_magnitude_sqr_on_off(pm::AbstractPowerModel; nw
 end
 
 
-""
 function constraint_model_voltage_on_off(pm::AbstractQCWRModel, n::Int)
     v = var(pm, n, :vm)
     t = var(pm, n, :va)
@@ -741,7 +713,6 @@ end
 
 
 
-""
 function variable_buspair_voltage_product_magnitude(pm::AbstractQCLSModel; nw::Int=nw_id_default, report::Bool=true)
     # do nothing - no lifted variables required for voltage variable product
 end
@@ -766,7 +737,6 @@ function variable_buspair_voltage_product_magnitude_multipliers(pm::AbstractQCLS
     end
 end
 
-""
 function variable_bus_voltage(pm::AbstractQCLSModel; kwargs...)
     variable_bus_voltage_angle(pm; kwargs...)
     variable_bus_voltage_magnitude(pm; kwargs...)
@@ -783,7 +753,6 @@ function variable_bus_voltage(pm::AbstractQCLSModel; kwargs...)
 end
 
 
-""
 function constraint_model_voltage(pm::AbstractQCLSModel, n::Int)
     _check_missing_keys(var(pm, n), [:vm,:va,:td,:si,:cs,:w,:wr,:wi,:lambda_wr,:lambda_wi], typeof(pm))
 
