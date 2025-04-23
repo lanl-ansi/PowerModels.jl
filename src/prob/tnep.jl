@@ -7,7 +7,6 @@
 #
 #
 
-""
 function solve_tnep(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_tnep; ref_extensions=[ref_add_on_off_va_bounds!,ref_add_ne_branch!], kwargs...)
 end
@@ -72,13 +71,11 @@ function objective_tnep_cost(pm::AbstractPowerModel)
 end
 
 
-""
 function ref_add_ne_branch!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
     apply_pm!(_ref_add_ne_branch!, ref, data)
 end
 
 
-""
 function _ref_add_ne_branch!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
     if !haskey(ref, :ne_branch)
         error(_LOGGER, "required ne_branch data not found")

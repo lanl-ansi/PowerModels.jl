@@ -16,7 +16,6 @@ function _solve_opf_cl(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, _build_opf_cl; kwargs...)
 end
 
-""
 function _build_opf_cl(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_gen_power(pm)
@@ -56,7 +55,6 @@ function _solve_opf_sw(file, model_constructor, optimizer; kwargs...)
     return solve_model(file, model_constructor, optimizer, _build_opf_sw; kwargs...)
 end
 
-""
 function _build_opf_sw(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_gen_power(pm)
@@ -102,7 +100,6 @@ function _solve_oswpf(file, model_constructor, optimizer; kwargs...)
     return solve_model(file, model_constructor, optimizer, _build_oswpf; ref_extensions=[ref_add_on_off_va_bounds!], kwargs...)
 end
 
-""
 function _build_oswpf(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_gen_power(pm)
@@ -151,7 +148,6 @@ function _solve_oswpf_nb(file, model_constructor, optimizer; kwargs...)
     return solve_model(file, model_constructor, optimizer, _build_oswpf_nb; ref_extensions=[ref_add_on_off_va_bounds!], kwargs...)
 end
 
-""
 function _build_oswpf_nb(pm::AbstractPowerModel)
     variable_bus_voltage_on_off(pm)
     variable_gen_power(pm)
@@ -273,7 +269,6 @@ function _solve_ucopf(file, model_type::Type, solver; kwargs...)
     return solve_model(file, model_type, solver, _build_ucopf; kwargs...)
 end
 
-""
 function _build_ucopf(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
 
@@ -329,12 +324,10 @@ function _build_ucopf(pm::AbstractPowerModel)
 end
 
 
-""
 function _solve_mn_opb(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, _build_mn_opb; ref_extensions=[ref_add_connected_components!], multinetwork=true, kwargs...)
 end
 
-""
 function _build_mn_opb(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_gen_power(pm, nw=n)
@@ -348,12 +341,10 @@ function _build_mn_opb(pm::AbstractPowerModel)
 end
 
 
-""
 function _solve_mn_pf(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, _build_mn_pf; multinetwork=true, kwargs...)
 end
 
-""
 function _build_mn_pf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_bus_voltage(pm, nw=n, bounded = false)
@@ -409,7 +400,6 @@ function _solve_opf_strg(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, _build_opf_strg; kwargs...)
 end
 
-""
 function _build_opf_strg(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_gen_power(pm)
@@ -457,7 +447,6 @@ function _solve_opf_strg_mi(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, _build_opf_strg_mi; kwargs...)
 end
 
-""
 function _build_opf_strg_mi(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_gen_power(pm)
@@ -505,7 +494,6 @@ function _solve_opf_pst(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, _build_opf_pst; kwargs...)
 end
 
-""
 function _build_opf_pst(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_gen_power(pm)
@@ -547,7 +535,6 @@ function _solve_opf_oltc_pst(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, _build_opf_oltc_pst; kwargs...)
 end
 
-""
 function _build_opf_oltc_pst(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_gen_power(pm)

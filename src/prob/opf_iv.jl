@@ -8,7 +8,6 @@ function solve_opf_iv(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_opf_iv; kwargs...)
 end
 
-""
 function build_opf_iv(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_branch_current(pm)

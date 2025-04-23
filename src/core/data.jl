@@ -4,7 +4,6 @@
 # in the LICENSE.md file.
 
 # tools for working with a PowerModels data dict structure
-import LinearAlgebra: pinv
 
 "PowerModels wrapper for the InfrastructureModels `apply!` function."
 function apply_pm!(func!::Function, data::Dict{String, <:Any}; apply_to_subnetworks::Bool = true)
@@ -18,7 +17,6 @@ function get_pm_data(data::Dict{String, <:Any})
 end
 
 
-""
 function calc_branch_t(branch::Dict{String,<:Any})
     tap_ratio = branch["tap"]
     angle_shift = branch["shift"]
@@ -30,15 +28,13 @@ function calc_branch_t(branch::Dict{String,<:Any})
 end
 
 
-""
 function calc_branch_y(branch::Dict{String,<:Any})
-    y = pinv(branch["br_r"] + im * branch["br_x"])
+    y = LinearAlgebra.pinv(branch["br_r"] + im * branch["br_x"])
     g, b = real(y), imag(y)
     return g, b
 end
 
 
-""
 function calc_theta_delta_bounds(data::Dict{String,<:Any})
     bus_count = length(data["bus"])
     branches = [branch for branch in values(data["branch"])]
@@ -70,7 +66,6 @@ function calc_theta_delta_bounds(data::Dict{String,<:Any})
 end
 
 
-""
 function calc_max_cost_index(data::Dict{String,<:Any})
     if _IM.ismultinetwork(data)
         max_index = 0
@@ -85,7 +80,6 @@ function calc_max_cost_index(data::Dict{String,<:Any})
 end
 
 
-""
 function _calc_max_cost_index(data::Dict{String,<:Any})
     max_index = 0
 
@@ -236,7 +230,6 @@ function make_multinetwork(data::Dict{String, <:Any}; global_keys::Set{String}=S
 end
 
 
-""
 function _apply_func!(data::Dict{String,<:Any}, key::String, func)
     if haskey(data, key)
         data[key] = func.(data[key])
@@ -255,7 +248,6 @@ function make_per_unit!(data::Dict{String,<:Any})
 end
 
 
-""
 function _make_per_unit!(data::Dict{String,<:Any})
     mva_base = data["baseMVA"]
 
@@ -402,7 +394,6 @@ function make_mixed_units!(data::Dict{String,<:Any})
 end
 
 
-""
 function _make_mixed_units!(data::Dict{String,<:Any})
     mva_base = data["baseMVA"]
 
@@ -538,7 +529,6 @@ function _make_mixed_units!(data::Dict{String,<:Any})
 end
 
 
-""
 function _rescale_cost_model!(comp::Dict{String,<:Any}, scale::Real)
     if "model" in keys(comp) && "cost" in keys(comp)
         if comp["model"] == 1
@@ -1061,7 +1051,6 @@ function correct_thermal_limits!(data::Dict{String,<:Any})
     apply_pm!(_correct_thermal_limits!, data)
 end
 
-""
 function _correct_thermal_limits!(pm_data::Dict{String,<:Any})
     branches = [branch for branch in values(pm_data["branch"])]
 
@@ -1096,7 +1085,6 @@ function calc_thermal_limits!(data::Dict{String,<:Any})
 end
 
 
-""
 function _calc_thermal_limits!(pm_data::Dict{String,<:Any})
     mva_base = pm_data["baseMVA"]
 
@@ -1117,7 +1105,7 @@ function _calc_thermal_limits!(pm_data::Dict{String,<:Any})
             r = branch["br_r"]
             x = branch["br_x"]
             z = r + im * x
-            y = pinv(z)
+            y = LinearAlgebra.pinv(z)
             y_mag = abs.(y)
 
             fr_vmax = pm_data["bus"][string(branch["f_bus"])]["vmax"]
@@ -1146,7 +1134,6 @@ function correct_current_limits!(data::Dict{String,<:Any})
     apply_pm!(_correct_current_limits!, data)
 end
 
-""
 function _correct_current_limits!(pm_data::Dict{String,<:Any})
     branches = [branch for branch in values(pm_data["branch"])]
 
@@ -1202,7 +1189,7 @@ function _calc_current_limits!(pm_data::Dict{String,<:Any})
             r = branch["br_r"]
             x = branch["br_x"]
             z = r + im * x
-            y = pinv(z)
+            y = LinearAlgebra.pinv(z)
             y_mag = abs.(y)
 
             fr_vmax = pm_data["bus"][string(branch["f_bus"])]["vmax"]
@@ -1232,7 +1219,6 @@ function correct_branch_directions!(data::Dict{String,<:Any})
     apply_pm!(_correct_branch_directions!, data)
 end
 
-""
 function _correct_branch_directions!(pm_data::Dict{String,<:Any})
 
     orientations = Set()
@@ -1270,7 +1256,6 @@ function check_branch_loops(data::Dict{String,<:Any})
     apply_pm!(_check_branch_loops, data)
 end
 
-""
 function _check_branch_loops(pm_data::Dict{String, <:Any})
     for (i, branch) in pm_data["branch"]
         if branch["f_bus"] == branch["t_bus"]
@@ -1286,7 +1271,6 @@ function check_connectivity(data::Dict{String,<:Any})
 end
 
 
-""
 function _check_connectivity(data::Dict{String,<:Any})
     bus_ids = Set(bus["index"] for (i,bus) in data["bus"])
     @assert(length(bus_ids) == length(data["bus"])) # if this is not true something very bad is going on
@@ -1352,7 +1336,6 @@ function check_status(data::Dict{String,<:Any})
     apply_pm!(_check_status, data)
 end
 
-""
 function _check_status(data::Dict{String,<:Any})
     active_bus_ids = Set(bus["index"] for (i,bus) in data["bus"] if bus["bus_type"] != 4)
 
@@ -1426,7 +1409,6 @@ function check_reference_bus(data::Dict{String,<:Any})
     apply_pm!(_check_reference_bus, data)
 end
 
-""
 function _check_reference_bus(data::Dict{String,<:Any})
     ref_buses = Dict{String,Any}()
 
@@ -1456,7 +1438,6 @@ function correct_transformer_parameters!(data::Dict{String,<:Any})
 end
 
 
-""
 function _correct_transformer_parameters!(pm_data::Dict{String,<:Any})
 
     for (i, branch) in pm_data["branch"]
@@ -1484,7 +1465,6 @@ function check_storage_parameters(data::Dict{String,<:Any})
     apply_pm!(_check_storage_parameters, data)
 end
 
-""
 function _check_storage_parameters(data::Dict{String,<:Any})
     for (i, strg) in data["storage"]
         if strg["energy"] < 0.0
@@ -1544,7 +1524,6 @@ function check_switch_parameters(data::Dict{String,<:Any})
     apply_pm!(_check_switch_parameters, data)
 end
 
-""
 function _check_switch_parameters(data::Dict{String,<:Any})
     for (i, switch) in data["switch"]
         if switch["state"] <= 0.0 && (!isapprox(switch["psw"], 0.0) || !isapprox(switch["qsw"], 0.0))
@@ -1575,7 +1554,6 @@ function correct_bus_types!(data::Dict{String,<:Any})
     apply_pm!(_correct_bus_types!, data)
 end
 
-""
 function _correct_bus_types!(pm_data::Dict{String,<:Any})
     bus_gens = Dict(bus["index"] => [] for (i,bus) in pm_data["bus"])
 
@@ -1664,7 +1642,6 @@ function correct_dcline_limits!(data::Dict{String,<:Any})
     apply_pm!(_correct_dcline_limits!, data)
 end
 
-""
 function _correct_dcline_limits!(pm_data::Dict{String,<:Any})
     mva_base = pm_data["baseMVA"]
 
@@ -1706,7 +1683,6 @@ function check_voltage_setpoints(data::Dict{String,<:Any})
     apply_pm!(_check_voltage_setpoints, data)
 end
 
-""
 function _check_voltage_setpoints(data::Dict{String,<:Any})
 
     for (i,gen) in data["gen"]
@@ -1740,7 +1716,6 @@ function correct_cost_functions!(data::Dict{String,<:Any})
     apply_pm!(_correct_cost_functions!, data)
 end
 
-""
 function _correct_cost_functions!(pm_data::Dict{String,<:Any})
     for (i,gen) in pm_data["gen"]
         _correct_cost_function!(i, gen, "generator", "pmin", "pmax")
@@ -1752,7 +1727,6 @@ function _correct_cost_functions!(pm_data::Dict{String,<:Any})
 end
 
 
-""
 function _correct_cost_function!(id, comp, type_name, pmin_key, pmax_key)
 
     if "model" in keys(comp) && "cost" in keys(comp)
@@ -1865,7 +1839,6 @@ function simplify_cost_terms!(data::Dict{String,<:Any})
     apply_pm!(_simplify_cost_terms!, data)
 end
 
-""
 function _simplify_cost_terms!(pm_data::Dict{String,<:Any})
 
     if haskey(pm_data, "gen")
@@ -2028,7 +2001,6 @@ function propagate_topology_status!(data::Dict{String, <:Any})
 end
 
 
-""
 function _propagate_topology_status!(data::Dict{String,<:Any})
     buses = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
 
@@ -2181,7 +2153,6 @@ function deactivate_isolated_components!(data::Dict{String, <:Any})
 end
 
 
-""
 function _deactivate_isolated_components!(data::Dict{String,<:Any})
     buses = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
 
@@ -2375,7 +2346,6 @@ function select_largest_component!(data::Dict{String, <:Any})
     apply_pm!(_select_largest_component!, data)
 end
 
-""
 function _select_largest_component!(data::Dict{String,<:Any})
     ccs = calc_connected_components(data)
 
@@ -2406,7 +2376,6 @@ function correct_reference_buses!(data::Dict{String,<:Any})
     apply_pm!(_correct_reference_buses!, data)
 end
 
-""
 function _correct_reference_buses!(data::Dict{String,<:Any})
     bus_lookup = Dict(bus["bus_i"] => bus for (i,bus) in data["bus"])
     bus_gen = bus_gen_lookup(data["gen"], data["bus"])
@@ -2698,7 +2667,6 @@ end
 
 @deprecate resolve_swithces! resolve_switches!
 
-""
 function _resolve_switches!(data::Dict{String,<:Any})
     if length(data["switch"]) <= 0
         return
