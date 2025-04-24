@@ -8,6 +8,9 @@ function solve_opb(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_opb; ref_extensions=[ref_add_connected_components!], kwargs...)
 end
 
+"""
+    build_opb(pm::AbstractPowerModel)
+"""
 function build_opb(pm::AbstractPowerModel)
     variable_bus_voltage_magnitude_only(pm)
     variable_gen_power(pm)

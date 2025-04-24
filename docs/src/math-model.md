@@ -78,7 +78,7 @@ Note that for clarity of this presentation some model variants that PowerModels 
 - Eq. $\eqref{eq_power_from}$ - [`constraint_ohms_yt_from`](@ref)
 - Eq. $\eqref{eq_power_to}$ - [`constraint_ohms_yt_to`](@ref)
 - Eq. $\eqref{eq_thermal_limit}$ - [`constraint_thermal_limit_from`](@ref) and [`constraint_thermal_limit_to`](@ref)
-- Eq. $\eqref{eq_current_limit}$ - [`constraint_current_limit`](@ref)
+- Eq. $\eqref{eq_current_limit}$ - [`constraint_current_limit_from`](@ref) and  [`constraint_current_limit_to`](@ref)
 - Eq. $\eqref{eq_angle_difference}$ - [`constraint_voltage_angle_difference`](@ref)
 
 
@@ -116,7 +116,7 @@ A complete mathematical formulation for a Branch Flow Model is conceived as:
 \end{align}
 ```
 
-Note that constraints $\eqref{eq_line_losses} - \eqref{eq_ohms_bfm}$ replace $\eqref{eq_power_from} - \eqref{eq_power_to}$ but the remainder of the problem formulation is identical. Furthermore, the problems have the same feasible set.  
+Note that constraints $\eqref{eq_line_losses} - \eqref{eq_ohms_bfm}$ replace $\eqref{eq_power_from} - \eqref{eq_power_to}$ but the remainder of the problem formulation is identical. Furthermore, the problems have the same feasible set.
 
 ### Mapping to PowerModels Functions
 - Eq. $\eqref{var_branch_current}$ - [`variable_branch_current`](@ref)

@@ -7,6 +7,9 @@ function solve_mn_opf_bf_strg(file, model_type::Type{T}, optimizer; kwargs...) w
     return solve_model(file, model_type, optimizer, build_mn_opf_bf_strg; multinetwork=true, kwargs...)
 end
 
+"""
+    build_opf_bf(pm::AbstractPowerModel)
+"""
 function build_opf_bf(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_gen_power(pm)

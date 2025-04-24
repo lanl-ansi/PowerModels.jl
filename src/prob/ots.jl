@@ -8,6 +8,9 @@ function solve_ots(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_ots; ref_extensions=[ref_add_on_off_va_bounds!], kwargs...)
 end
 
+"""
+    build_ots(pm::AbstractPowerModel)
+"""
 function build_ots(pm::AbstractPowerModel)
     variable_branch_indicator(pm)
     variable_bus_voltage_on_off(pm)

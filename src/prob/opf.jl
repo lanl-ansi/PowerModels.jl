@@ -11,6 +11,9 @@ function solve_opf(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_opf; kwargs...)
 end
 
+"""
+    build_opf(pm::AbstractPowerModel)
+"""
 function build_opf(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_gen_power(pm)
@@ -51,6 +54,9 @@ function solve_mn_opf(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_mn_opf; multinetwork=true, kwargs...)
 end
 
+"""
+    build_mn_opf(pm::AbstractPowerModel)
+"""
 function build_mn_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_bus_voltage(pm, nw=n)
@@ -92,6 +98,9 @@ function solve_mn_opf_strg(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_mn_opf_strg; multinetwork=true, kwargs...)
 end
 
+"""
+    build_mn_opf_strg(pm::AbstractPowerModel)
+"""
 function build_mn_opf_strg(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_bus_voltage(pm, nw=n)
@@ -169,6 +178,9 @@ function build_opf_ptdf(pm::AbstractPowerModel)
     Memento.error(_LOGGER, "build_opf_ptdf is only valid for DCPPowerModels")
 end
 
+"""
+    build_opf_ptdf(pm::DCPPowerModel)
+"""
 function build_opf_ptdf(pm::DCPPowerModel)
     variable_gen_power(pm)
 

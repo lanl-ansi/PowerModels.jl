@@ -165,6 +165,9 @@ end
 
 ### Bus - KCL Constraints ###
 
+"""
+    constraint_power_balance(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
+"""
 function constraint_power_balance(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     bus = ref(pm, nw, :bus, i)
     bus_arcs = ref(pm, nw, :bus_arcs, i)
@@ -184,7 +187,11 @@ function constraint_power_balance(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_
     constraint_power_balance(pm, nw, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
-"nodal power balance with constant power factor load and shunt shedding"
+"""
+    constraint_power_balance_ls(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
+
+Nodal power balance with constant power factor load and shunt shedding.
+"""
 function constraint_power_balance_ls(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     bus = ref(pm, nw, :bus, i)
     bus_arcs = ref(pm, nw, :bus_arcs, i)
@@ -204,6 +211,9 @@ function constraint_power_balance_ls(pm::AbstractPowerModel, i::Int; nw::Int=nw_
     constraint_power_balance_ls(pm, nw, i, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
 end
 
+"""
+    constraint_ne_power_balance(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
+"""
 function constraint_ne_power_balance(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     bus = ref(pm, nw, :bus, i)
     bus_arcs = ref(pm, nw, :bus_arcs, i)
@@ -665,6 +675,9 @@ end
 
 ### Branch - Current Limit Constraints ###
 
+"""
+    constraint_current_limit_from(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
+"""
 function constraint_current_limit_from(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
@@ -676,6 +689,9 @@ function constraint_current_limit_from(pm::AbstractPowerModel, i::Int; nw::Int=n
     end
 end
 
+"""
+    constraint_current_limit_to(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
+"""
 function constraint_current_limit_to(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     branch = ref(pm, nw, :branch, i)
     f_bus = branch["f_bus"]
@@ -823,21 +839,32 @@ end
 
 ### Storage Constraints ###
 
+"""
+    constraint_storage_thermal_limit(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
+"""
 function constraint_storage_thermal_limit(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     storage = ref(pm, nw, :storage, i)
     constraint_storage_thermal_limit(pm, nw, i, storage["thermal_rating"])
 end
 
+"""
+    constraint_storage_current_limit(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
+"""
 function constraint_storage_current_limit(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     storage = ref(pm, nw, :storage, i)
     constraint_storage_current_limit(pm, nw, i, storage["storage_bus"], storage["current_rating"])
 end
 
-
+"""
+    constraint_storage_complementarity_nl(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
+"""
 function constraint_storage_complementarity_nl(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     constraint_storage_complementarity_nl(pm, nw, i)
 end
 
+"""
+    constraint_storage_complementarity_mi(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
+"""
 function constraint_storage_complementarity_mi(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     storage = ref(pm, nw, :storage, i)
     charge_ub = storage["charge_rating"]
@@ -853,6 +880,9 @@ function constraint_storage_losses(pm::AbstractPowerModel, i::Int; nw::Int=nw_id
     constraint_storage_losses(pm, nw, i, storage["storage_bus"], storage["r"], storage["x"], storage["p_loss"], storage["q_loss"])
 end
 
+"""
+    constraint_storage_state(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
+"""
 function constraint_storage_state(pm::AbstractPowerModel, i::Int; nw::Int=nw_id_default)
     storage = ref(pm, nw, :storage, i)
 
