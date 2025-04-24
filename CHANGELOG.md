@@ -12,6 +12,7 @@ PowerModels.jl Change Log
 - Clean up package imports (#961)
 - Refactor `test/runtests.jl` (#962) (#965)
 - Remove empty docstrings (#963) (#966)
+- Add PrecompileTools (#967)
 
 ### v0.21.3
 - Fix no-buses bug in `calc_connected_components` (#933)
