@@ -10,7 +10,7 @@ PowerModels.jl Change Log
 - Fix spelling of `resolve_swithces!` and add deprecation for compatibility (#959)
 - Clean up package imports (#961)
 - Refactor `test/runtests.jl` (#962)
-- Remove empty docstrings (#963)
+- Remove empty docstrings (#963) (#966)
 
 ### v0.21.3
 - Fix no-buses bug in `calc_connected_components` (#933)
