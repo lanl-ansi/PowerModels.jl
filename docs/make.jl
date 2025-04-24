@@ -1,5 +1,5 @@
 import Documenter
-import PowerModels
+using PowerModels
 
 Documenter.makedocs(
     sitename = "PowerModels",
