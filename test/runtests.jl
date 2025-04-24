@@ -47,11 +47,52 @@ sdp_solver = JuMP.optimizer_with_attributes(SCS.Optimizer, "verbose"=>false)
 
 include("common.jl")
 
-@testset verbose=true "PowerModels" begin
-    @testset verbose=true "$file" for file in readdir(@__DIR__)
-        if !endswith(file, ".jl") || file in ("common.jl", "runtests.jl")
-            continue
-        end
-        include(joinpath(@__DIR__, file))
-    end
+@testset "PowerModels" begin
+
+    include("matpower.jl")
+
+    include("pti.jl")
+
+    include("psse.jl")
+
+    include("io.jl")
+
+    include("output.jl")
+
+    include("modify.jl")
+
+    include("data.jl")
+
+    include("data-basic.jl")
+
+    include("model.jl")
+
+    include("am.jl")
+
+    include("opb.jl")
+
+    include("pf.jl")
+
+    include("pf-native.jl")
+
+    include("opf.jl")
+
+    include("opf-var.jl")
+
+    include("opf-obj.jl")
+
+    include("opf-ptdf.jl")
+
+    include("ots.jl")
+
+    include("tnep.jl")
+
+    include("multinetwork.jl")
+
+    include("util.jl")
+
+    include("warmstart.jl")
+
+    include("docs.jl")
+
 end
