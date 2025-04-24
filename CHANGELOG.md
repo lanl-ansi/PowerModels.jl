@@ -7,7 +7,7 @@ PowerModels.jl Change Log
 - Updated the logging message when components are deactivated (#943)
 - Improve performance of `calc_basic_incidence_matrix` (#946)
 - Fix `parse_file` to use `JSON.parsefile` (#958)
-- Fix spelling of `resolve_swithces!` and add deprecation for compatibility (#959)
+- Fix spelling of `resolve_swithces!` and add deprecation for compatibility (#959) (#964)
 - Clean up package imports (#961)
 - Refactor `test/runtests.jl` (#962)
 - Remove empty docstrings (#963)
