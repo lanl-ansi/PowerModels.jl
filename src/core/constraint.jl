@@ -197,6 +197,9 @@ function constraint_storage_thermal_limit(pm::AbstractPowerModel, n::Int, i, rat
     JuMP.@constraint(pm.model, ps^2 + qs^2 <= rating^2)
 end
 
+"""
+    constraint_storage_state_initial(pm::AbstractPowerModel, n::Int, i::Int, energy, charge_eff, discharge_eff, time_elapsed)
+"""
 function constraint_storage_state_initial(pm::AbstractPowerModel, n::Int, i::Int, energy, charge_eff, discharge_eff, time_elapsed)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)

@@ -12,6 +12,9 @@ function objective_min_fuel_and_flow_cost(pm::AbstractPowerModel; kwargs...)
 end
 
 
+"""
+    objective_min_fuel_cost(pm::AbstractPowerModel; kwargs...)
+"""
 function objective_min_fuel_cost(pm::AbstractPowerModel; kwargs...)
     expression_pg_cost(pm; kwargs...)
 

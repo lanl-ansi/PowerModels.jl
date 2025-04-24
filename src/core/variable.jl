@@ -392,6 +392,9 @@ end
 
 
 
+"""
+    variable_branch_power(pm::AbstractPowerModel; kwargs...)
+"""
 function variable_branch_power(pm::AbstractPowerModel; kwargs...)
     variable_branch_power_real(pm; kwargs...)
     variable_branch_power_imaginary(pm; kwargs...)
@@ -796,7 +799,9 @@ function variable_dcline_current_imaginary(pm::AbstractPowerModel; nw::Int=nw_id
     report && sol_component_value_edge(pm, nw, :dcline, :cidc_fr, :cidc_to, ref(pm, nw, :arcs_from_dc), ref(pm, nw, :arcs_to_dc), cidc)
 end
 
-
+"""
+    variable_switch_indicator(pm::AbstractPowerModel; nw::Int=nw_id_default, relax::Bool=false, report::Bool=true)
+"""
 function variable_switch_indicator(pm::AbstractPowerModel; nw::Int=nw_id_default, relax::Bool=false, report::Bool=true)
     if !relax
         z_switch = var(pm, nw)[:z_switch] = JuMP.@variable(pm.model,
@@ -816,7 +821,9 @@ function variable_switch_indicator(pm::AbstractPowerModel; nw::Int=nw_id_default
     report && sol_component_value(pm, nw, :switch, :status, ids(pm, nw, :switch), z_switch)
 end
 
-
+"""
+    variable_switch_power(pm::AbstractPowerModel; kwargs...)
+"""
 function variable_switch_power(pm::AbstractPowerModel; kwargs...)
     variable_switch_power_real(pm; kwargs...)
     variable_switch_power_imaginary(pm; kwargs...)
@@ -983,6 +990,9 @@ function variable_storage_current(pm::AbstractPowerModel; nw::Int=nw_id_default,
 end
 
 
+"""
+    variable_storage_energy(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
+"""
 function variable_storage_energy(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     se = var(pm, nw)[:se] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_se",
@@ -999,6 +1009,9 @@ function variable_storage_energy(pm::AbstractPowerModel; nw::Int=nw_id_default, 
     report && sol_component_value(pm, nw, :storage, :se, ids(pm, nw, :storage), se)
 end
 
+"""
+    variable_storage_charge(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
+"""
 function variable_storage_charge(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     sc = var(pm, nw)[:sc] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_sc",
@@ -1015,6 +1028,9 @@ function variable_storage_charge(pm::AbstractPowerModel; nw::Int=nw_id_default, 
     report && sol_component_value(pm, nw, :storage, :sc, ids(pm, nw, :storage), sc)
 end
 
+"""
+    variable_storage_discharge(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
+"""
 function variable_storage_discharge(pm::AbstractPowerModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     sd = var(pm, nw)[:sd] = JuMP.@variable(pm.model,
         [i in ids(pm, nw, :storage)], base_name="$(nw)_sd",
