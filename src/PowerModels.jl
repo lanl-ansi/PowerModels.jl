@@ -1,6 +1,5 @@
 module PowerModels
 
-import InfrastructureModels
 import InfrastructureModels as _IM
 import InfrastructureModels: optimize_model!, @im_fields, nw_id_default
 import JSON
@@ -85,4 +84,13 @@ include("util/flow_limit_cuts.jl")
 # this must come last to support automated export
 include("core/export.jl")
 
-end
+# Deprecations to be removed in the next breaking release
+
+@deprecate resolve_swithces! resolve_switches!
+
+# This import was retained for anyone using PowerModels.InfrastructureModels.
+# The suggested approach is for users to import InfrastructureModels in their
+# own code.
+import InfrastructureModels
+
+end  # module PowerModels
