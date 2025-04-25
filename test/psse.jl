@@ -394,7 +394,6 @@ end
         end
     end
 
-
     @testset "transformer status" begin
         @testset "two-winding transformers" begin
             data_pti = PowerModels.parse_file("../test/data/pti/case5.raw")
@@ -423,7 +422,20 @@ end
         end
     end
 
+    @testset "generator status" begin
+        data_pti = PowerModels.parse_file("../test/data/pti/frankenstein_70.raw")
 
+        gen_off = Set(["1", "5"])
+        for (i,gen) in data_pti["gen"]
+            if i in gen_off
+                @test gen["gen_status"] == 0
+            else
+                @test gen["gen_status"] == 1
+            end
+        end
+    end
+	
+	
     @testset "import all" begin
         @testset "30-bus case" begin
             data = PowerModels.parse_file("../test/data/pti/case30.raw"; import_all=true)
@@ -540,7 +552,7 @@ end
         end
     end
 
-     @testset "Impedance and Current Load Conversions" begin
+    @testset "Impedance and Current Load Conversions" begin
         data = PowerModels.parse_file("../test/data/pti//parser_test_k.raw")
         Vm_load = data["bus"]["103"]["vm"]
         # Test current load only
