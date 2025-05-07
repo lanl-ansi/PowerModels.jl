@@ -173,7 +173,7 @@ function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     return AdmittanceMatrixInverse(sm.idx_to_bus, sm.bus_to_idx, ref_idx, M)
 end
 
-"calculates the inverse of the susceptance matrix"
+"calculates the inverse of the admittance matrix"
 function calc_admittance_matrix_inv(am::AdmittanceMatrix{T}, ref_idx::Int) where {T}
     num_buses = length(am.idx_to_bus)
 
