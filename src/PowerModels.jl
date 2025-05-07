@@ -90,7 +90,7 @@ PrecompileTools.@setup_workload begin
     case9 = joinpath(dirname(@__DIR__), "test/data/matpower/case9.m")
     PrecompileTools.@compile_workload begin
         for case in [case3, case9]
-            data = parse_file(case3)
+            data = parse_file(case)
             _ = instantiate_model(data, ACPPowerModel, build_opf)
             _ = instantiate_model(data, ACPPowerModel, build_pf)
             _ = instantiate_model(data, DCPPowerModel, build_opf)
