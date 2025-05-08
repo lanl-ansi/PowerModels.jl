@@ -2704,22 +2704,23 @@ function _resolve_switches!(data::Dict{String,<:Any})
     switch_status_key = pm_component_status["switch"]
     switch_status_value = pm_component_status_inactive["switch"]
 
-    for (i,switch) in data["switch"]
+    for switch in values(data["switch"])
         if switch[switch_status_key] != switch_status_value && switch["state"] == 1
-            if !haskey(bus_sets, switch["f_bus"])
-                bus_sets[switch["f_bus"]] = Set{Int}([switch["f_bus"]])
+            f_bus, t_bus = switch["f_bus"]::Int, switch["t_bus"]::Int
+            if !haskey(bus_sets, f_bus)
+                bus_sets[f_bus] = Set{Int}(f_bus)
             end
-            if !haskey(bus_sets, switch["t_bus"])
-                bus_sets[switch["t_bus"]] = Set{Int}([switch["t_bus"]])
+            if !haskey(bus_sets, t_bus)
+                bus_sets[t_bus] = Set{Int}(t_bus)
             end
-
-            merged_set = Set{Int}([bus_sets[switch["f_bus"]]..., bus_sets[switch["t_bus"]]...])
+            merged_set = union(bus_sets[f_bus], bus_sets[t_bus])
+            # bus_sets[switch["f_bus"]] = merged_set
+            # bus_sets[switch["t_bus"]] = merged_set
             for bus in merged_set
                 bus_sets[bus] = merged_set
             end
         end
     end
-
     bus_id_map = Dict{Int,Int}()
     for bus_set in Set(values(bus_sets))
         bus_min = minimum(bus_set)
