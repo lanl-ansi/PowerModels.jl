@@ -2714,8 +2714,6 @@ function _resolve_switches!(data::Dict{String,<:Any})
                 bus_sets[t_bus] = Set{Int}(t_bus)
             end
             merged_set = union(bus_sets[f_bus], bus_sets[t_bus])
-            # bus_sets[switch["f_bus"]] = merged_set
-            # bus_sets[switch["t_bus"]] = merged_set
             for bus in merged_set
                 bus_sets[bus] = merged_set
             end
