@@ -917,7 +917,7 @@ end
         resolve_switches!(data)
         @test sort(collect(keys(data["bus"]))) == ["1", "10"]
     end
-    @testset "Test switches case5_sw brute force iteration order"
+    @testset "Test switches case5_sw brute force iteration order" begin
         # The merging logic depends on the iteration order of an internal set.
         # It's quite hard to test this, so we just brute force a large set of
         # possible keys to hope we hit the right one. One such key in Julia
