@@ -919,15 +919,22 @@ end
     end
     @testset "Test switches case5_sw brute force iteration order" begin
         # The merging logic depends on the iteration order of an internal set.
-        # It's quite hard to test this, so we just brute force a large set of
-        # possible keys to hope we hit the right one. One such key in Julia
-        # v1.10.9 is a=4, b=2, c=1
+        # It's quite hard to test this, so we just brute force a set of possible
+        # keys to hope we hit the right one. One such key in Julia v1.10.9 is
+        # a=2, b=1, c=3, but about 50% of keys fail.
+        #
+        # The "Test switches case5_sw 4->3->2->1" test above works because
+        # (1, 2, 3) is a key that happens to work.
         level = Memento.getlevel(TESTLOG)
         Memento.setlevel!(TESTLOG, "error")
-        for a in 1:9, b in 1:9, c in 1:9
-            if a == b || b == c || c == a
-                continue
-            end
+        @testset "$a-$b-$c" for (a, b, c) in [
+            (1, 2, 3),
+            (1, 3, 2),
+            (2, 1, 3),
+            (2, 3, 1),
+            (3, 1, 2),
+            (3, 2, 1),
+        ]
             data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
             data["switch"]["2"]["state"] = 1
             data["switch"]["3"]["status"] = 1
