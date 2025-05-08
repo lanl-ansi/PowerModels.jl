@@ -888,4 +888,64 @@ end
 
         @test isapprox(result["objective"], 16641.20; atol=1e0)
     end
+    @testset "Test switches case5_sw 2->1" begin
+        # Switch merges 2 -> 1
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "2", "3", "4"]
+        resolve_switches!(data)
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "3", "4"]
+    end
+    @testset "Test switches case5_sw 3->2->1" begin
+        # Change state of 3->2 switch to merge 3 -> 2 -> 1
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        data["switch"]["2"]["state"] = 1
+        resolve_switches!(data)
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "4"]
+    end
+    @testset "Test switches case5_sw 4->3 and 2->1" begin
+        # Change status of 3->4 switch to merge
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        data["switch"]["3"]["status"] = 1
+        resolve_switches!(data)
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "3"]
+    end
+    @testset "Test switches case5_sw 4->3->2->1" begin
+        # Enable 4 -> 3 -> 2 -> 1 merge
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        data["switch"]["2"]["state"] = 1
+        data["switch"]["3"]["status"] = 1
+        resolve_switches!(data)
+        @test sort(collect(keys(data["bus"]))) == ["1", "10"]
+    end
+    @testset "Test switches case5_sw brute force iteration order" begin
+        # The merging logic depends on the iteration order of an internal set.
+        # It's quite hard to test this, so we just brute force a set of possible
+        # keys to hope we hit the right one. One such key in Julia v1.10.9 is
+        # a=2, b=1, c=3, but about 50% of keys fail.
+        #
+        # The "Test switches case5_sw 4->3->2->1" test above works because
+        # (1, 2, 3) is a key that happens to work.
+        level = Memento.getlevel(TESTLOG)
+        Memento.setlevel!(TESTLOG, "error")
+        @testset "$a-$b-$c" for (a, b, c) in [
+            (1, 2, 3),
+            (1, 3, 2),
+            (2, 1, 3),
+            (2, 3, 1),
+            (3, 1, 2),
+            (3, 2, 1),
+        ]
+            data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+            data["switch"]["2"]["state"] = 1
+            data["switch"]["3"]["status"] = 1
+            data["switch"] = Dict(
+                "$a" => data["switch"]["1"],
+                "$b" => data["switch"]["2"],
+                "$c" => data["switch"]["3"],
+            )
+            resolve_switches!(data)
+            @test sort(collect(keys(data["bus"]))) == ["1", "10"]
+        end
+        Memento.setlevel!(TESTLOG, level)
+    end
 end
