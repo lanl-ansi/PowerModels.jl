@@ -1,9 +1,13 @@
-""
+"""
+    solve_pf_bf(file, model_type::Type, optimizer; kwargs...)
+"""
 function solve_pf_bf(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_pf_bf; kwargs...)
 end
 
-""
+"""
+    build_pf_bf(pm::AbstractPowerModel)
+"""
 function build_pf_bf(pm::AbstractPowerModel)
     variable_bus_voltage(pm, bounded = false)
     variable_gen_power(pm, bounded = false)

@@ -3,17 +3,17 @@ function solve_ac_opf(file, optimizer; kwargs...)
     return solve_opf(file, ACPPowerModel, optimizer; kwargs...)
 end
 
-""
 function solve_dc_opf(file, optimizer; kwargs...)
     return solve_opf(file, DCPPowerModel, optimizer; kwargs...)
 end
 
-""
 function solve_opf(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_opf; kwargs...)
 end
 
-""
+"""
+    build_opf(pm::AbstractPowerModel)
+"""
 function build_opf(pm::AbstractPowerModel)
     variable_bus_voltage(pm)
     variable_gen_power(pm)
@@ -54,7 +54,9 @@ function solve_mn_opf(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_mn_opf; multinetwork=true, kwargs...)
 end
 
-""
+"""
+    build_mn_opf(pm::AbstractPowerModel)
+"""
 function build_mn_opf(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_bus_voltage(pm, nw=n)
@@ -96,7 +98,9 @@ function solve_mn_opf_strg(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_mn_opf_strg; multinetwork=true, kwargs...)
 end
 
-""
+"""
+    build_mn_opf_strg(pm::AbstractPowerModel)
+"""
 function build_mn_opf_strg(pm::AbstractPowerModel)
     for (n, network) in nws(pm)
         variable_bus_voltage(pm, nw=n)
@@ -170,12 +174,13 @@ function solve_opf_ptdf(file, model_type::Type, optimizer; full_inverse=false, k
     end
 end
 
-""
 function build_opf_ptdf(pm::AbstractPowerModel)
     Memento.error(_LOGGER, "build_opf_ptdf is only valid for DCPPowerModels")
 end
 
-""
+"""
+    build_opf_ptdf(pm::DCPPowerModel)
+"""
 function build_opf_ptdf(pm::DCPPowerModel)
     variable_gen_power(pm)
 
@@ -212,26 +217,22 @@ function build_opf_ptdf(pm::DCPPowerModel)
 end
 
 
-""
 function ref_add_sm!(ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any})
     apply_pm!(_ref_add_sm!, ref, data)
 end
 
 
-""
 function _ref_add_sm!(ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any})
     reference_bus(data) # throws an error if an incorrect number of reference buses are defined
     ref[:sm] = calc_susceptance_matrix(data)
 end
 
 
-""
 function ref_add_sm_inv!(ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any})
     apply_pm!(_ref_add_sm_inv!, ref, data)
 end
 
 
-""
 function _ref_add_sm_inv!(ref::Dict{Symbol, <:Any}, data::Dict{String, <:Any})
     ref[:sm] = calc_susceptance_matrix_inv(data)
 end

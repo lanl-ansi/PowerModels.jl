@@ -6,9 +6,14 @@ PowerModels.jl Change Log
 - Fix dictionary call syntax error in psse export (#941)
 - Updated the logging message when components are deactivated (#943)
 - Improve performance of `calc_basic_incidence_matrix` (#946)
+- Update `codecov/codecov-action` (#952)
 - Fix logic mistake in resolve switches and add test (#956)
 - Fix `parse_file` to use `JSON.parsefile` (#958)
-- Fix spelling of `resolve_swithces!` and add deprecation for compatibility (#959)
+- Fix spelling of `resolve_swithces!` and add deprecation for compatibility (#959) (#964)
+- Clean up package imports (#961)
+- Refactor `test/runtests.jl` (#962) (#965)
+- Remove empty docstrings (#963) (#966)
+- Add PrecompileTools (#967)
 
 ### v0.21.3
 - Fix no-buses bug in `calc_connected_components` (#933)

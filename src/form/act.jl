@@ -5,7 +5,6 @@ function constraint_theta_ref(pm::AbstractACTModel, n::Int, i::Int)
     JuMP.@constraint(pm.model, var(pm, n, :va)[i] == 0)
 end
 
-""
 function variable_bus_voltage(pm::AbstractACTModel; kwargs...)
     variable_bus_voltage_angle(pm; kwargs...)
     variable_bus_voltage_magnitude_sqr(pm; kwargs...)
@@ -27,7 +26,6 @@ function constraint_model_voltage(pm::AbstractACTModel, n::Int)
 end
 
 
-""
 function constraint_power_balance_ls(pm::AbstractACTModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
     w    = var(pm, n, :w, i)
     p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")

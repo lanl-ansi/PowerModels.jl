@@ -1,17 +1,14 @@
 module PowerModels
 
-import LinearAlgebra, SparseArrays
-
-import JSON
-import Memento
-
-import NLsolve
-
-import JuMP
-
-import InfrastructureModels
+import InfrastructureModels as _IM
 import InfrastructureModels: optimize_model!, @im_fields, nw_id_default
-const _IM = InfrastructureModels
+import JSON
+import JuMP
+import LinearAlgebra
+import Memento
+import NLsolve
+import PrecompileTools
+import SparseArrays
 
 # Create our module level logger (this will get precompiled)
 const _LOGGER = Memento.getlogger(@__MODULE__)
@@ -23,7 +20,7 @@ __init__() = Memento.register(_LOGGER)
 "Suppresses information and warning messages output by PowerModels, for fine grained control use the Memento package"
 function silence()
     Memento.info(_LOGGER, "Suppressing information and warning messages for the rest of this session.  Use the Memento package for more fine-grained control of logging.")
-    Memento.setlevel!(Memento.getlogger(InfrastructureModels), "error")
+    Memento.setlevel!(Memento.getlogger(_IM), "error")
     Memento.setlevel!(Memento.getlogger(PowerModels), "error")
 end
 
@@ -88,4 +85,29 @@ include("util/flow_limit_cuts.jl")
 # this must come last to support automated export
 include("core/export.jl")
 
+PrecompileTools.@setup_workload begin
+    case3 = joinpath(dirname(@__DIR__), "test/data/matpower/case3.m")
+    case9 = joinpath(dirname(@__DIR__), "test/data/matpower/case9.m")
+    PrecompileTools.@compile_workload begin
+        for case in [case3, case9]
+            data = parse_file(case)
+            _ = instantiate_model(data, ACPPowerModel, build_opf)
+            _ = instantiate_model(data, ACPPowerModel, build_pf)
+            _ = instantiate_model(data, DCPPowerModel, build_opf)
+            _ = instantiate_model(data, DCPPowerModel, build_pf)
+        end
+        _ = compute_ac_pf(case9)
+        _ = compute_dc_pf(case9)
+    end
 end
+
+# Deprecations to be removed in the next breaking release
+
+@deprecate resolve_swithces! resolve_switches!
+
+# This import was retained for anyone using PowerModels.InfrastructureModels.
+# The suggested approach is for users to import InfrastructureModels in their
+# own code.
+import InfrastructureModels
+
+end  # module PowerModels

@@ -1,30 +1,48 @@
 using PowerModels
+using Test
+
+import HiGHS
 import InfrastructureModels
+import Ipopt
+import JSON
+import JuMP
+import Juniper
+import LinearAlgebra
 import Memento
+import SCS
+import SparseArrays
 
 # Suppress warnings during testing.
 Memento.setlevel!(Memento.getlogger(InfrastructureModels), "error")
 PowerModels.logger_config!("error")
 
-import HiGHS
-import Ipopt
-import SCS
-import Juniper
-
-import JuMP
-import JSON
-
-import LinearAlgebra
-import SparseArrays
-using Test
-
-
 # default setup for solvers
-nlp_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6, "print_level"=>0)
-nlp_ws_solver = JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-6, "mu_init"=>1e-4, "print_level"=>0)
+nlp_solver = JuMP.optimizer_with_attributes(
+    Ipopt.Optimizer,
+    "tol"=>1e-6,
+    "print_level"=>0,
+)
 
-milp_solver = JuMP.optimizer_with_attributes(HiGHS.Optimizer, "output_flag"=>false)
-minlp_solver = JuMP.optimizer_with_attributes(Juniper.Optimizer, "nl_solver"=>JuMP.optimizer_with_attributes(Ipopt.Optimizer, "tol"=>1e-4, "print_level"=>0), "log_levels"=>[])
+nlp_ws_solver = JuMP.optimizer_with_attributes(
+    Ipopt.Optimizer,
+    "tol"=>1e-6,
+    "mu_init"=>1e-4,
+    "print_level"=>0,
+)
+
+milp_solver =
+    JuMP.optimizer_with_attributes(HiGHS.Optimizer, "output_flag"=>false)
+
+minlp_solver = JuMP.optimizer_with_attributes(
+    Juniper.Optimizer,
+    "nl_solver"=>JuMP.optimizer_with_attributes(
+        Ipopt.Optimizer,
+        "tol"=>1e-4,
+        "print_level"=>0,
+    ),
+    "log_levels"=>[],
+)
+
 sdp_solver = JuMP.optimizer_with_attributes(SCS.Optimizer, "verbose"=>false)
 
 include("common.jl")
