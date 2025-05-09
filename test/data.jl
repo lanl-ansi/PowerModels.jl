@@ -895,6 +895,7 @@ end
         @test sort(collect(keys(data["bus"]))) == ["1", "10", "2", "3", "4"]
         resolve_switches!(data)
         @test sort(collect(keys(data["bus"]))) == ["1", "10", "3", "4"]
+        @test data["bus"]["1"]["bus_type"] == 2
     end
     @testset "Test switches case5_sw 3->2->1" begin
         # Change state of 3->2 switch to merge 3 -> 2 -> 1
@@ -902,6 +903,7 @@ end
         data["switch"]["2"]["state"] = 1
         resolve_switches!(data)
         @test sort(collect(keys(data["bus"]))) == ["1", "10", "4"]
+        @test data["bus"]["1"]["bus_type"] == 2
     end
     @testset "Test switches case5_sw 4->3 and 2->1" begin
         # Change status of 3->4 switch to merge
@@ -909,6 +911,8 @@ end
         data["switch"]["3"]["status"] = 1
         resolve_switches!(data)
         @test sort(collect(keys(data["bus"]))) == ["1", "10", "3"]
+        @test data["bus"]["1"]["bus_type"] == 2
+        @test data["bus"]["3"]["bus_type"] == 3
     end
     @testset "Test switches case5_sw 4->3->2->1" begin
         # Enable 4 -> 3 -> 2 -> 1 merge
@@ -917,6 +921,7 @@ end
         data["switch"]["3"]["status"] = 1
         resolve_switches!(data)
         @test sort(collect(keys(data["bus"]))) == ["1", "10"]
+        @test data["bus"]["1"]["bus_type"] == 3
     end
     @testset "Test switches case5_sw brute force iteration order" begin
         # The merging logic depends on the iteration order of an internal set.
@@ -946,7 +951,17 @@ end
             )
             resolve_switches!(data)
             @test sort(collect(keys(data["bus"]))) == ["1", "10"]
+            @test data["bus"]["1"]["bus_type"] == 3
         end
         Memento.setlevel!(TESTLOG, level)
+    end
+    @testset "Test switches case5_sw 2->1 with 2 inactive" begin
+        # Switch merges 2 -> 1
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        data["bus"]["2"]["bus_type"] = 4
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "2", "3", "4"]
+        resolve_switches!(data)
+        @test data["bus"]["1"]["bus_type"] == 2
+        @test data["bus"]["2"]["bus_type"] == 4
     end
 end
