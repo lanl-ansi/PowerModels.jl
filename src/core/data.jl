@@ -2704,11 +2704,10 @@ function _resolve_switches!(data::Dict{String,<:Any})
         #  * Inactive buses are ignored, but all connected components should be
         #    removed. We enforce this with `propagate_topology_status!` at the
         #    start of this function.
-        # These rules are equivalent to taking the maximum over the bus types,
-        # excluding the inactive buses.
-        bus_types = Int[data["bus"]["$i"]["bus_type"] for i in bus_set]
-        filter!(!=(4), bus_types)  # Drop inactive buses
-        bus_type = maximum(bus_types)
+        # These rules are equivalent to taking the maximum over the bus types.
+        bus_type = maximum(data["bus"]["$i"]["bus_type"] for i in bus_set)
+        # There should not be any inactive buses at this point.
+        @assert 1 <= bus_type <= 3
 
         for i in bus_set
             data["bus"]["$i"]["bus_type"] = bus_type
