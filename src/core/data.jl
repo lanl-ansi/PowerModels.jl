@@ -2665,6 +2665,8 @@ function _resolve_switches!(data::Dict{String,<:Any})
         return
     end
 
+    propagate_topology_status!(data)
+
     bus_sets = Dict{Int,Set{Int}}()
 
     switch_status_key = pm_component_status["switch"]
@@ -2689,7 +2691,26 @@ function _resolve_switches!(data::Dict{String,<:Any})
     for bus_set in Set(values(bus_sets))
         bus_min = minimum(bus_set)
         Memento.info(_LOGGER, "merged buses $(join(bus_set, ",")) in to bus $(bus_min) based on switch status")
+
+        # There are four bus types:
+        #  PQ       = 1
+        #  PV       = 2
+        #  Slack    = 3
+        #  Inactive = 4
+        # The rules for merging them are:
+        #  * If all are one bus type, the resulting bus is that bus type
+        #  * If any bus is slack, the resulting bus is slack
+        #  * If there are mix of PQ and PV, the resultinng bus is PV
+        #  * Inactive buses are ignored, but all connected components should be
+        #    removed. We enforce this with `propagate_topology_status!` at the
+        #    start of this function.
+        # These rules are equivalent to taking the maximum over the bus types.
+        bus_type = maximum(data["bus"]["$i"]["bus_type"] for i in bus_set)
+        # There should not be any inactive buses at this point.
+        @assert 1 <= bus_type <= 3
+
         for i in bus_set
+            data["bus"]["$i"]["bus_type"] = bus_type
             if i != bus_min
                 bus_id_map[i] = bus_min
             end
