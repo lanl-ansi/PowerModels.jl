@@ -2,11 +2,13 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+
+### v0.21.4
 - Fix InexactError in `compute_ac_pf` (#939)
 - Fix dictionary call syntax error in psse export (#941)
 - Updated the logging message when components are deactivated (#943)
 - Improve performance of `calc_basic_incidence_matrix` (#946)
-- Update `codecov/codecov-action` (#952)
+- Update various versios in GitHub actionns (#947) (#949) (#950) (#951) (#952)
 - Fix logic mistake in resolve switches and add test (#956)
 - Fix `parse_file` to use `JSON.parsefile` (#958)
 - Fix spelling of `resolve_swithces!` and add deprecation for compatibility (#959) (#964)
