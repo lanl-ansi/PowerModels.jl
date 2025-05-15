@@ -15,6 +15,7 @@ PowerModels.jl Change Log
 - Remove empty docstrings (#963) (#966)
 - Add PrecompileTools (#967)
 - Add tests for `calc_admittance_matrix_inv` (#970)
+- Fix bus type update logic during bus merging (#972)
 
 ### v0.21.3
 - Fix no-buses bug in `calc_connected_components` (#933)
