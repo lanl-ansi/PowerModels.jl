@@ -224,60 +224,6 @@ function _pwl_cost_expression(pm::AbstractPowerModel, x_list, points; nw=0, id=1
 end
 
 
-
-# note that `cost_terms` should be providing in ascending order (the reverse of the Matpower spec.)
-function _polynomial_cost_expression(pm::AbstractPowerModel, x_list::Array{JuMP.VariableRef}, cost_terms; nw=0, id=1, var_name="x")
-    x = sum(x_list)
-    if length(cost_terms) == 0
-        return 0.0
-    elseif length(cost_terms) == 1
-        return cost_terms[1]
-    elseif length(cost_terms) == 2
-        return cost_terms[1] + cost_terms[2]*x
-    elseif length(cost_terms) == 3
-        return cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2
-    else # length(cost_terms) >= 4
-        cost_nl = cost_terms[4:end]
-        return JuMP.@expression(pm.model, cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2 + sum( v*x^(d+2) for (d,v) in enumerate(cost_nl)) )
-    end
-end
-
-# note that `cost_terms` should be providing in ascending order (the reverse of the Matpower spec.)
-function _polynomial_cost_expression(pm::AbstractConicModels, x_list::Array{JuMP.VariableRef}, cost_terms; nw=0, id=1, var_name="x")
-    x = sum(x_list)
-    if length(cost_terms) == 0
-        return 0.0
-    elseif length(cost_terms) == 1
-        return cost_terms[1]
-    elseif length(cost_terms) == 2
-        return cost_terms[1] + cost_terms[2]*x
-    elseif length(cost_terms) == 3
-        x_lb = sum(JuMP.lower_bound.(x_list))
-        x_ub = sum(JuMP.upper_bound.(x_list))
-
-        x_sqr_lb = 0.0
-        x_sqr_ub = max(x_lb^2, x_ub^2)
-        if x_lb > 0.0
-            x_sqr_lb = x_lb^2
-        end
-        if x_ub < 0.0
-            x_sqr_lb = x_ub^2
-        end
-
-        x_sqr = JuMP.@variable(pm.model,
-            base_name="$(nw)_$(var_name)_sqr_$(id)",
-            lower_bound = x_sqr_lb,
-            upper_bound = x_sqr_ub,
-            start = 0.0
-        )
-        JuMP.@constraint(pm.model, [0.5, x_sqr, x] in JuMP.RotatedSecondOrderCone())
-
-        return cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x_sqr
-    else # length(cost_terms) >= 4
-        Memento.error(_LOGGER, "the network cost data features a polynomial cost function that is not compatible with conic mathematical programs.")
-    end
-end
-
 # note that `cost_terms` should be providing in ascending order (the reverse of the Matpower spec.)
 function _polynomial_cost_expression(pm::AbstractPowerModel, x_list, cost_terms; nw=0, id=1, var_name="x")
     x = JuMP.@expression(pm.model, sum(x for x in x_list))
@@ -294,10 +240,6 @@ function _polynomial_cost_expression(pm::AbstractPowerModel, x_list, cost_terms;
         return JuMP.@expression(pm.model, cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x^2 + sum( v*x^(d+2) for (d,v) in enumerate(cost_nl)) )
     end
 end
-
-
-
-
 
 
 function objective_max_loadability(pm::AbstractPowerModel)
