@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Relax tests to allow `INFEASIBLE_POINT` (#976)
 
 ### v0.21.4
 - Fix InexactError in `compute_ac_pf` (#939)

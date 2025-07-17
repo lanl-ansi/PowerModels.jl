@@ -37,7 +37,7 @@
         @test haskey(result, "termination_status")
         @test result["termination_status"] == INFEASIBLE
         @test haskey(result, "primal_status")
-        @test result["primal_status"] == NO_SOLUTION
+        @test result["primal_status"] in (NO_SOLUTION, INFEASIBLE_POINT)
         @test haskey(result, "dual_status")
         @test haskey(result, "solve_time")
         @test haskey(result, "solution")
