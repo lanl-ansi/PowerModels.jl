@@ -13,8 +13,7 @@ import SCS
 import SparseArrays
 
 # Suppress warnings during testing.
-Memento.setlevel!(Memento.getlogger(InfrastructureModels), "error")
-PowerModels.logger_config!("error")
+PowerModels.silence()
 
 # default setup for solvers
 nlp_solver = JuMP.optimizer_with_attributes(

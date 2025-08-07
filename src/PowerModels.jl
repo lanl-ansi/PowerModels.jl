@@ -21,12 +21,12 @@ __init__() = Memento.register(_LOGGER)
 function silence()
     Memento.info(_LOGGER, "Suppressing information and warning messages for the rest of this session.  Use the Memento package for more fine-grained control of logging.")
     Memento.setlevel!(Memento.getlogger(_IM), "error")
-    Memento.setlevel!(Memento.getlogger(PowerModels), "error")
+    Memento.setlevel!(_LOGGER, "error")
 end
 
 "alows the user to set the logging level without the need to add Memento"
 function logger_config!(level)
-    Memento.config!(Memento.getlogger("PowerModels"), level)
+    Memento.setlevel!(_LOGGER, level)
 end
 
 const _pm_global_keys = Set(["time_series", "per_unit"])
@@ -86,6 +86,7 @@ include("util/flow_limit_cuts.jl")
 include("core/export.jl")
 
 PrecompileTools.@setup_workload begin
+    logger_config!("error")  # Turn off logging for this precompile block
     case3 = joinpath(dirname(@__DIR__), "test/data/matpower/case3.m")
     case9 = joinpath(dirname(@__DIR__), "test/data/matpower/case9.m")
     PrecompileTools.@compile_workload begin
@@ -99,6 +100,7 @@ PrecompileTools.@setup_workload begin
         _ = compute_ac_pf(case9)
         _ = compute_dc_pf(case9)
     end
+    logger_config!("info")   # Re-enable default logging
 end
 
 # Deprecations to be removed in the next breaking release
