@@ -83,7 +83,11 @@ function export_file(io::IO, data::Dict{String, Any}; filetype="json")
     elseif filetype == "raw"
         PowerModels.export_pti(io, data)
     elseif filetype == "json"
-        JSON.json(io, data; allownan = true)
+        # This call reverts the writing behavior of JSON@1 to the pre-1.0
+        # behavior of `Inf => null` and so on. The new default in JSON@1 is to
+        # error (if allownan is not set), and to print `Inf => "Infinity"` if
+        # `inf` is not set. Ditto for `ninf` (for -Inf) and `nan` (for NaN).
+        JSON.json(io, data; allownan = true, inf = "null", ninf = "null", nan = "null")
     else
         Memento.error(_LOGGER, "Unrecognized filetype: \".$filetype\", Supported extensions are \".raw\", \".m\" and \".json\"")
     end
