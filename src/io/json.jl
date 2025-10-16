@@ -6,8 +6,8 @@ function _jsonver2juliaver!(pm_data)
     end
 end
 
-_json_parse(io::IO) = JSON.parse(io)
-_json_parse(io::String) = JSON.parsefile(io; use_mmap = false)
+_json_parse(io::IO) = JSON.parse(io; dicttype = Dict{String,Any})
+_json_parse(io::String) = JSON.parsefile(io; dicttype = Dict{String,Any})
 
 "Parses json from iostream or string"
 function parse_json(io::Union{IO,String}; validate = true)::Dict{String,Any}

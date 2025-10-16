@@ -83,8 +83,7 @@ function export_file(io::IO, data::Dict{String, Any}; filetype="json")
     elseif filetype == "raw"
         PowerModels.export_pti(io, data)
     elseif filetype == "json"
-        stringdata = JSON.json(data)
-        write(io, stringdata)
+        JSON.json(io, data; allownan = true)
     else
         Memento.error(_LOGGER, "Unrecognized filetype: \".$filetype\", Supported extensions are \".raw\", \".m\" and \".json\"")
     end

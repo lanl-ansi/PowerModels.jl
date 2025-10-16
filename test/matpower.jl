@@ -8,7 +8,7 @@
 
     @testset "30-bus case matpower data (parse_file)" begin
         data = PowerModels.parse_file("../test/data/matpower/case30.m")
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
 
         result = solve_opf(data, ACPPowerModel, nlp_solver)
 
@@ -18,7 +18,7 @@
 
     @testset "30-bus case matpower data (parse_matpower)" begin
         data = PowerModels.parse_matpower("../test/data/matpower/case30.m")
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
 
         result = solve_opf(data, ACPPowerModel, nlp_solver)
 
@@ -29,7 +29,7 @@
     @testset "30-bus case matpower data (parse_matpower; iostream)" begin
         open("../test/data/matpower/case30.m") do f
             data = PowerModels.parse_matpower(f)
-            @test isa(JSON.json(data), String)
+            @test sprint(PowerModels.export_file, data) isa String
 
             result = solve_opf(data, ACPPowerModel, nlp_solver)
 
@@ -41,19 +41,19 @@
     @testset "14-bus case file with bus names" begin
         data = PowerModels.parse_file("../test/data/matpower/case14.m")
         @test data["bus"]["1"]["name"] == "Bus 1     HV"
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
     end
 
     @testset "5-bus case file with pwl cost functions" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_pwlc.m")
         @test data["gen"]["1"]["model"] == 1
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
     end
 
     @testset "3-bus case file with hvdc lines" begin
         data = PowerModels.parse_file("../test/data/matpower/case3.m")
         @test length(data["dcline"]) > 0
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
     end
 
     @testset "2-bus case file with spaces" begin
@@ -104,7 +104,7 @@ end
         @test data["const_int"] == 123
         @test data["const_float"] == 4.56
         @test data["const_str"] == "a string"
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
     end
 
     @testset "3-bus extended matrix" begin
@@ -115,7 +115,7 @@ end
         @test data["areas"]["1"]["col_2"] == 1
         @test data["areas"]["2"]["col_1"] == 2
         @test data["areas"]["2"]["col_2"] == 3
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
     end
 
     @testset "3-bus extended named matrix" begin
@@ -126,7 +126,7 @@ end
         @test data["areas_named"]["1"]["refbus"] == 5
         @test data["areas_named"]["2"]["area"] == 5
         @test data["areas_named"]["2"]["refbus"] == 6
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
     end
 
     @testset "3-bus extended predefined matrix" begin
@@ -139,7 +139,7 @@ end
         @test data["branch"]["2"]["rate_p"] == 60.1
         @test data["branch"]["3"]["rate_i"] == 12
         @test data["branch"]["3"]["rate_p"] == 30
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
     end
 
     @testset "3-bus extended matrix from cell" begin
@@ -154,7 +154,7 @@ end
         @test data["areas_cells"]["2"]["col_2"] == 456
         @test data["areas_cells"]["2"]["col_4"] == "Slack Bus 3"
         @test data["areas_cells"]["2"]["col_5"] == 4.56
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
     end
 
     @testset "3-bus extended named matrix from cell" begin
@@ -171,7 +171,7 @@ end
         @test data["areas_named_cells"]["2"]["area2"] == 987
         @test data["areas_named_cells"]["2"]["refbus_name"] == "Slack Bus 3"
         @test data["areas_named_cells"]["2"]["refbus"] == 4.56
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
     end
 
     @testset "3-bus extended predefined matrix from cell" begin
@@ -184,7 +184,7 @@ end
         @test data["branch"]["2"]["number_id"] == 456
         @test data["branch"]["3"]["name"] == "Branch 3"
         @test data["branch"]["3"]["number_id"] == 789
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
     end
 
     @testset "3-bus tnep case" begin
@@ -193,7 +193,7 @@ end
         @test haskey(data, "ne_branch")
         @test data["ne_branch"]["1"]["f_bus"] == 2
         @test data["ne_branch"]["1"]["construction_cost"] == 1
-        @test isa(JSON.json(data), String)
+        @test sprint(PowerModels.export_file, data) isa String
     end
 
     @testset "`build_ref` for 3-bus tnep case" begin
