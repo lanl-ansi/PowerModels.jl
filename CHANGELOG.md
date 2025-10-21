@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Update to JSON@1 (#986)
 
 ### v0.21.5
 - Relax tests to allow `INFEASIBLE_POINT` (#976)
