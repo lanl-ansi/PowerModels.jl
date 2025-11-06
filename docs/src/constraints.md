@@ -85,9 +85,10 @@ constraint_ne_thermal_limit_to
 ### Current Limit Constraints
 
 ```@docs
-constraint_current_limit
 constraint_current_to
 constraint_current_from
+constraint_current_limit_to
+constraint_current_limit_from
 ```
 
 ### Phase Angle Difference Constraints

@@ -1,9 +1,5 @@
 ### sdp relaxations in the rectangular W-space
-import LinearAlgebra: Hermitian, cholesky, Symmetric, diag, I
-import SparseArrays: SparseMatrixCSC, sparse, spdiagm, findnz, spzeros, nonzeros
 
-
-""
 function constraint_current_limit_from(pm::AbstractWRMModel, n::Int, f_idx, c_rating_a)
     l,i,j = f_idx
 
@@ -14,7 +10,6 @@ function constraint_current_limit_from(pm::AbstractWRMModel, n::Int, f_idx, c_ra
     JuMP.@constraint(pm.model, [w_fr*c_rating_a^2+1, 2*p_fr, 2*q_fr, w_fr*c_rating_a^2-1] in JuMP.SecondOrderCone())
 end
 
-""
 function constraint_current_limit_to(pm::AbstractWRMModel, n::Int, t_idx, c_rating_a)
     l,j,i = t_idx
 
@@ -28,7 +23,6 @@ end
 
 
 
-""
 function constraint_model_voltage(pm::AbstractWRMModel, n::Int)
     _check_missing_keys(var(pm, n), [:WR,:WI], typeof(pm))
 
@@ -39,7 +33,6 @@ function constraint_model_voltage(pm::AbstractWRMModel, n::Int)
 end
 
 
-""
 function variable_bus_voltage(pm::AbstractWRMModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     wr_min, wr_max, wi_min, wi_max = ref_calc_voltage_product_bounds(ref(pm, nw, :buspairs))
     bus_ids = ids(pm, nw, :bus)
@@ -47,7 +40,7 @@ function variable_bus_voltage(pm::AbstractWRMModel; nw::Int=nw_id_default, bound
     w_index = 1:length(bus_ids)
     lookup_w_index = Dict((bi,i) for (i,bi) in enumerate(bus_ids))
 
-    WR_start = zeros(length(bus_ids), length(bus_ids)) + I
+    WR_start = LinearAlgebra.I(length(bus_ids))
 
     WR = var(pm, nw)[:WR] = JuMP.@variable(pm.model,
         [i=1:length(bus_ids), j=1:length(bus_ids)], Symmetric, base_name="$(nw)_WR", start=WR_start[i,j]
@@ -129,8 +122,8 @@ struct _SDconstraintDecomposition
     "A chordal extension and maximal cliques are uniquely determined by a graph ordering"
     ordering::Vector{Int}
 end
-import Base: ==
-function ==(d1::_SDconstraintDecomposition, d2::_SDconstraintDecomposition)
+
+function Base.:(==)(d1::_SDconstraintDecomposition, d2::_SDconstraintDecomposition)
     eq = true
     for f in fieldnames(_SDconstraintDecomposition)
         eq = eq && (getfield(d1, f) == getfield(d2, f))
@@ -159,7 +152,7 @@ function variable_bus_voltage(pm::AbstractSparseSDPWRMModel; nw::Int=nw_id_defau
 
     for (gidx, group) in enumerate(groups)
         n = length(group)
-        wr_start = zeros(n, n) + I
+        wr_start = LinearAlgebra.I(n)
         voltage_product_groups[gidx] = Dict()
         WR = voltage_product_groups[gidx][:WR] =
             var(pm, nw)[:voltage_product_groups][gidx][:WR] =
@@ -312,7 +305,7 @@ function _adjacency_matrix(pm::AbstractPowerModel, nw::Int=nw_id_default)
     f = [lookup_index[bp[1]] for bp in keys(buspairs)]
     t = [lookup_index[bp[2]] for bp in keys(buspairs)]
 
-    return sparse([f;t], [t;f], ones(2nl), nb, nb), lookup_index
+    return SparseArrays.sparse([f;t], [t;f], ones(2nl), nb, nb), lookup_index
 end
 
 
@@ -329,16 +322,16 @@ function _chordal_extension(pm::AbstractPowerModel, nw::Int)
     adj, lookup_index = _adjacency_matrix(pm, nw)
     nb = size(adj, 1)
     diag_el = sum(adj, dims=1)[:]
-    W = Hermitian(-adj + spdiagm(0 => diag_el .+ 1))
+    W = LinearAlgebra.Hermitian(-adj + SparseArrays.spdiagm(0 => diag_el .+ 1))
 
-    F = cholesky(W)
-    L = sparse(F.L)
+    F = LinearAlgebra.cholesky(W)
+    L = SparseArrays.sparse(F.L)
     p = F.p
     q = invperm(p)
 
-    Rchol = L - spdiagm(0 => diag(L))
-    f_idx, t_idx, V = findnz(Rchol)
-    cadj = sparse([f_idx;t_idx], [t_idx;f_idx], ones(2*length(f_idx)), nb, nb)
+    Rchol = L - SparseArrays.spdiagm(0 => LinearAlgebra.diag(L))
+    f_idx, t_idx, V = SparseArrays.findnz(Rchol)
+    cadj = SparseArrays.sparse([f_idx;t_idx], [t_idx;f_idx], ones(2*length(f_idx)), nb, nb)
     cadj = cadj[q, q] # revert to original bus ordering (invert cholfact permutation)
     return cadj, lookup_index, p
 end
@@ -349,7 +342,7 @@ end
 Given a chordal graph adjacency matrix and perfect elimination
 ordering, return the set of maximal cliques.
 """
-function _maximal_cliques(cadj::SparseMatrixCSC, peo::Vector{Int})
+function _maximal_cliques(cadj::SparseArrays.SparseMatrixCSC, peo::Vector{Int})
     nb = size(cadj, 1)
 
     # use peo to obtain one clique for each vertex
@@ -371,7 +364,7 @@ function _maximal_cliques(cadj::SparseMatrixCSC, peo::Vector{Int})
     mc = [sort(c) for c in mc]
     return mc
 end
-_maximal_cliques(cadj::SparseMatrixCSC) = _maximal_cliques(cadj, _mcs(cadj))
+_maximal_cliques(cadj::SparseArrays.SparseMatrixCSC) = _maximal_cliques(cadj, _mcs(cadj))
 
 """
     peo = _mcs(A)
@@ -409,7 +402,7 @@ function _prim(A, minweight=false)
     candidate_edges = []
     unvisited = collect(1:n)
     next_node = 1 # convention
-    T = spzeros(Int, n, n)
+    T = SparseArrays.spzeros(Int, n, n)
 
     while length(unvisited) > 1
         current_node = next_node
@@ -451,7 +444,7 @@ function _overlap_graph(groups)
             end
         end
     end
-    return sparse(I, J, V, n, n)
+    return SparseArrays.sparse(I, J, V, n, n)
 end
 
 
@@ -492,5 +485,5 @@ computes the change in problem size for a proposed group merge.
 function _problem_size(groups)
     nvars(n::Integer) = n*(2*n + 1)
     A = _prim(_overlap_graph(groups))
-    return sum(nvars.(Int.(nonzeros(A)))) + sum(nvars.(length.(groups)))
+    return sum(nvars.(Int.(SparseArrays.nonzeros(A)))) + sum(nvars.(length.(groups)))
 end

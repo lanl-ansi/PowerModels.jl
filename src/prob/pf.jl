@@ -234,7 +234,7 @@ function instantiate_pf_data(data::Dict{String,<:Any})
 
 
     neighbors = [Set{Int}([i]) for i in eachindex(am.idx_to_bus)]
-    I, J, V = findnz(am.matrix)
+    I, J, V = SparseArrays.findnz(am.matrix)
     for nz in eachindex(V)
         push!(neighbors[I[nz]], J[nz])
         push!(neighbors[J[nz]], I[nz])
@@ -261,7 +261,7 @@ function instantiate_pf_data(data::Dict{String,<:Any})
             push!(J0_I, f_i_i); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
         end
     end
-    J0 = sparse(J0_I, J0_J, J0_V)
+    J0 = SparseArrays.sparse(J0_I, J0_J, J0_V)
 
     return PowerFlowData(data, bus_gens, am, bus_type_idx, p_delta_base_idx, q_delta_base_idx, p_inject_idx, q_inject_idx, vm_idx, va_idx, neighbors, x0, F0, J0)
 end
@@ -312,7 +312,7 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
             if bus["bus_type"] != 4
                 bus_idx = am.bus_to_idx[bus["index"]]
 
-                bus_assignment[i] = Dict(
+                bus_assignment[i] = Dict{String,Float64}(
                     "vm" => pf_data.vm_idx[bus_idx],
                     "va" => pf_data.va_idx[bus_idx]
                 )
@@ -322,7 +322,7 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
         gen_assignment= Dict{String,Any}()
         for (i,gen) in data["gen"]
             if gen["gen_status"] != 0
-                gen_assignment[i] = Dict(
+                gen_assignment[i] = Dict{String,Float64}(
                     "pg" => gen["pg"],
                     "qg" => gen["qg"]
                 )
@@ -569,7 +569,7 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
 
 
     # ac power flow, sparse jacobian computation
-    function jsp!(J::SparseMatrixCSC{Float64,Int}, x::Vector{Float64})
+    function jsp!(J::SparseArrays.SparseMatrixCSC{Float64,Int}, x::Vector{Float64})
         for i in eachindex(am.idx_to_bus)
             f_i_r = 2*i - 1
             f_i_i = 2*i

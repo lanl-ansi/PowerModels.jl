@@ -159,7 +159,6 @@ function constraint_model_current(pm::AbstractPowerModel, n::Int)
 end
 
 
-""
 function constraint_switch_state_open(pm::AbstractPowerModel, n::Int, f_idx)
     psw = var(pm, n, :psw, f_idx)
     qsw = var(pm, n, :qsw, f_idx)
@@ -168,7 +167,6 @@ function constraint_switch_state_open(pm::AbstractPowerModel, n::Int, f_idx)
     JuMP.@constraint(pm.model, qsw == 0.0)
 end
 
-""
 function constraint_switch_thermal_limit(pm::AbstractPowerModel, n::Int, f_idx, rating)
     psw = var(pm, n, :psw, f_idx)
     qsw = var(pm, n, :qsw, f_idx)
@@ -176,7 +174,6 @@ function constraint_switch_thermal_limit(pm::AbstractPowerModel, n::Int, f_idx, 
     JuMP.@constraint(pm.model, psw^2 + qsw^2 <= rating^2)
 end
 
-""
 function constraint_switch_power_on_off(pm::AbstractPowerModel, n::Int, i, f_idx)
     psw = var(pm, n, :psw, f_idx)
     qsw = var(pm, n, :qsw, f_idx)
@@ -193,7 +190,6 @@ end
 
 
 
-""
 function constraint_storage_thermal_limit(pm::AbstractPowerModel, n::Int, i, rating)
     ps = var(pm, n, :ps, i)
     qs = var(pm, n, :qs, i)
@@ -201,7 +197,9 @@ function constraint_storage_thermal_limit(pm::AbstractPowerModel, n::Int, i, rat
     JuMP.@constraint(pm.model, ps^2 + qs^2 <= rating^2)
 end
 
-""
+"""
+    constraint_storage_state_initial(pm::AbstractPowerModel, n::Int, i::Int, energy, charge_eff, discharge_eff, time_elapsed)
+"""
 function constraint_storage_state_initial(pm::AbstractPowerModel, n::Int, i::Int, energy, charge_eff, discharge_eff, time_elapsed)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
@@ -210,7 +208,6 @@ function constraint_storage_state_initial(pm::AbstractPowerModel, n::Int, i::Int
     JuMP.@constraint(pm.model, se - energy == time_elapsed*(charge_eff*sc - sd/discharge_eff))
 end
 
-""
 function constraint_storage_state(pm::AbstractPowerModel, n_1::Int, n_2::Int, i::Int, charge_eff, discharge_eff, time_elapsed)
     sc_2 = var(pm, n_2, :sc, i)
     sd_2 = var(pm, n_2, :sd, i)
@@ -220,7 +217,6 @@ function constraint_storage_state(pm::AbstractPowerModel, n_1::Int, n_2::Int, i:
     JuMP.@constraint(pm.model, se_2 - se_1 == time_elapsed*(charge_eff*sc_2 - sd_2/discharge_eff))
 end
 
-""
 function constraint_storage_complementarity_nl(pm::AbstractPowerModel, n::Int, i)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
@@ -228,7 +224,6 @@ function constraint_storage_complementarity_nl(pm::AbstractPowerModel, n::Int, i
     JuMP.@constraint(pm.model, sc*sd == 0.0)
 end
 
-""
 function constraint_storage_complementarity_mi(pm::AbstractPowerModel, n::Int, i, charge_ub, discharge_ub)
     sc = var(pm, n, :sc, i)
     sd = var(pm, n, :sd, i)
@@ -241,7 +236,6 @@ function constraint_storage_complementarity_mi(pm::AbstractPowerModel, n::Int, i
 end
 
 
-""
 function constraint_storage_on_off(pm::AbstractPowerModel, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
     z_storage = var(pm, n, :z_storage, i)
     ps = var(pm, n, :ps, i)

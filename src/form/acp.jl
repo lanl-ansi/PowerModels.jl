@@ -1,18 +1,15 @@
 ### polar form of the non-convex AC equations
 
-""
 function variable_bus_voltage(pm::AbstractACPModel; kwargs...)
     variable_bus_voltage_angle(pm; kwargs...)
     variable_bus_voltage_magnitude(pm; kwargs...)
 end
 
-""
 function sol_data_model!(pm::AbstractACPModel, solution::Dict)
     # nothing to do, this is in the data model space by default
 end
 
 
-""
 function variable_ne_branch_voltage(pm::AbstractACPModel; kwargs...)
 end
 
@@ -49,7 +46,6 @@ function constraint_current_limit_to(pm::AbstractACPModel, n::Int, t_idx, c_rati
 end
 
 
-""
 function constraint_power_balance(pm::AbstractACPModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
     vm   = var(pm, n, :vm, i)
     p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
@@ -92,7 +88,6 @@ function constraint_power_balance(pm::AbstractACPModel, n::Int, i::Int, bus_arcs
     end
 end
 
-""
 function constraint_power_balance_ls(pm::AbstractACPModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
     vm   = var(pm, n, :vm, i)
     p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
@@ -138,7 +133,6 @@ function constraint_power_balance_ls(pm::AbstractACPModel, n::Int, i::Int, bus_a
 end
 
 
-""
 function constraint_ne_power_balance(pm::AbstractACPModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_arcs_ne, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
     vm   = var(pm, n, :vm, i)
     p    = get(var(pm, n),    :p, Dict()); _check_var_keys(p, bus_arcs, "active power", "branch")
@@ -180,7 +174,6 @@ end
 
 
 
-""
 function expression_branch_power_ohms_yt_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     vm_fr = var(pm, n, :vm, f_bus)
     vm_to = var(pm, n, :vm, t_bus)
@@ -191,7 +184,6 @@ function expression_branch_power_ohms_yt_from(pm::AbstractACPModel, n::Int, f_bu
     var(pm, n, :q)[f_idx] = JuMP.@expression(pm.model, -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
 end
 
-""
 function expression_branch_power_ohms_yt_to(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
     vm_fr = var(pm, n, :vm, f_bus)
     vm_to = var(pm, n, :vm, t_bus)
@@ -284,7 +276,6 @@ function constraint_ohms_y_to(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx,
 end
 
 
-""
 function constraint_switch_state_closed(pm::AbstractACPModel, n::Int, f_bus, t_bus)
     vm_fr = var(pm, n, :vm, f_bus)
     vm_to = var(pm, n, :vm, t_bus)
@@ -295,7 +286,6 @@ function constraint_switch_state_closed(pm::AbstractACPModel, n::Int, f_bus, t_b
     JuMP.@constraint(pm.model, va_fr == va_to)
 end
 
-""
 function constraint_switch_voltage_on_off(pm::AbstractACPModel, n::Int, i, f_bus, t_bus, vad_min, vad_max)
     vm_fr = var(pm, n, :vm, f_bus)
     vm_to = var(pm, n, :vm, t_bus)
@@ -307,7 +297,6 @@ function constraint_switch_voltage_on_off(pm::AbstractACPModel, n::Int, i, f_bus
     JuMP.@constraint(pm.model, z*va_fr == z*va_to)
 end
 
-""
 function variable_bus_voltage_on_off(pm::AbstractACPModel; kwargs...)
     variable_bus_voltage_angle(pm; kwargs...)
     variable_bus_voltage_magnitude(pm; kwargs...)
@@ -436,7 +425,6 @@ function constraint_ohms_y_oltc_pst_to(pm::AbstractACPModel, n::Int, f_bus, t_bu
 end
 
 
-""
 function constraint_ohms_y_pst_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tm)
     p_fr  = var(pm, n, :p, f_idx)
     q_fr  = var(pm, n,  :q, f_idx)
@@ -450,7 +438,6 @@ function constraint_ohms_y_pst_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, 
     JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*vm_fr^2 - (-b)/tm*(vm_fr*vm_to*cos(va_fr-va_to-ta)) + (-g)/tm*(vm_fr*vm_to*sin(va_fr-va_to-ta)) )
 end
 
-""
 function constraint_ohms_y_pst_to(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tm)
     p_to  = var(pm, n,  :p, t_idx)
     q_to  = var(pm, n,  :q, t_idx)
@@ -509,7 +496,6 @@ function constraint_power_losses_lb(pm::AbstractACPModel, n::Int, f_bus, t_bus, 
 end
 
 
-""
 function constraint_storage_current_limit(pm::AbstractACPModel, n::Int, i, bus, rating)
     vm = var(pm, n, :vm, bus)
     ps = var(pm, n, :ps, i)
@@ -519,7 +505,6 @@ function constraint_storage_current_limit(pm::AbstractACPModel, n::Int, i, bus, 
 end
 
 
-""
 function constraint_storage_losses(pm::AbstractACPModel, n::Int, i, bus, r, x, p_loss, q_loss)
     vm = var(pm, n, :vm, bus)
     ps = var(pm, n, :ps, i)

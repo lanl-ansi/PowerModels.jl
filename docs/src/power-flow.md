@@ -101,7 +101,7 @@ way of setting a suitable starting point.
 
 ## Native DC Power Flow
 
-At its core the DC Power Flow problem simply requires solving a system of 
+At its core the DC Power Flow problem simply requires solving a system of
 linear equations.  This can be done natively in Julia via the `\` operator.
 The following function can be used to solve a DC Power Flow using Julia's
 built-in linear systems solvers.
@@ -148,14 +148,17 @@ The foundational type for both representations is `AdmittanceMatrix{T}`.
 ```@docs
 AdmittanceMatrix
 ```
-In the case of an full admittance matrix and simplified susceptance the type is 
+In the case of an full admittance matrix and simplified susceptance the type is
 `AdmittanceMatrix{Complex{Float64}}` and `AdmittanceMatrix{Float64}`, respectively.
 
 The following functions can be used to compute the admittance matrix and
-susceptance matrix from PowerModels network data.
+susceptance matrix from PowerModels network data:
 ```@docs
 calc_admittance_matrix
 calc_susceptance_matrix
 ```
-
-
+There are similar functions for their inverses:
+```@docs
+calc_admittance_matrix_inv
+calc_susceptance_matrix_inv
+```

@@ -2,7 +2,30 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
-- Fix no-buses bug in `calc_connected_components` (#933) 
+- Update to JSON@1 (#986)
+
+### v0.21.5
+- Relax tests to allow `INFEASIBLE_POINT` (#976)
+- Silence Memento logger during precompilation (#980)
+
+### v0.21.4
+- Fix InexactError in `compute_ac_pf` (#939)
+- Fix dictionary call syntax error in psse export (#941)
+- Updated the logging message when components are deactivated (#943)
+- Improve performance of `calc_basic_incidence_matrix` (#946)
+- Update various versios in GitHub actionns (#947) (#949) (#950) (#951) (#952)
+- Fix logic mistake in resolve switches and add test (#956)
+- Fix `parse_file` to use `JSON.parsefile` (#958)
+- Fix spelling of `resolve_swithces!` and add deprecation for compatibility (#959) (#964)
+- Clean up package imports (#961)
+- Refactor `test/runtests.jl` (#962) (#965)
+- Remove empty docstrings (#963) (#966)
+- Add PrecompileTools (#967)
+- Add tests for `calc_admittance_matrix_inv` (#970)
+- Fix bus type update logic during bus merging (#972)
+
+### v0.21.3
+- Fix no-buses bug in `calc_connected_components` (#933)
 
 ### v0.21.2
 - In place building of basic network data (#915,#916)

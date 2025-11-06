@@ -13,7 +13,7 @@ following basic network model requirements.
 - all branches have explicit thermal limits
 - phase shift on all transformers is set to 0.0
 - bus shunts have 0.0 conductance values
-users requiring any of the features listed above for their analysis should use 
+users requiring any of the features listed above for their analysis should use
 the non-basic PowerModels routines.
 """
 function make_basic_network(data::Dict{String,<:Any})
@@ -23,7 +23,7 @@ function make_basic_network(data::Dict{String,<:Any})
     if _IM.ismultiinfrastructure(data)
         Memento.error(_LOGGER, "make_basic_network does not support multiinfrastructure data")
     end
-    
+
     if _IM.ismultinetwork(data)
         Memento.error(_LOGGER, "make_basic_network does not support multinetwork data")
     end
@@ -106,7 +106,7 @@ function make_basic_network!(data::Dict{String,<:Any})
     end
 
     # remove switches by merging buses
-    resolve_swithces!(data)
+    resolve_switches!(data)
 
     # switch resolution can result in new parallel branches
     correct_branch_directions!(data)
@@ -242,18 +242,18 @@ function calc_basic_incidence_matrix(data::Dict{String,<:Any})
         Memento.warn(_LOGGER, "calc_basic_incidence_matrix requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
     end
 
-    I = Int[]
-    J = Int[]
-    V = Int[]
-
-    b = [branch for (i,branch) in data["branch"] if branch["br_status"] != 0]
-    branch_ordered = sort(b, by=(x) -> x["index"])
-    for (i,branch) in enumerate(branch_ordered)
-        push!(I, i); push!(J, branch["f_bus"]); push!(V,  1)
-        push!(I, i); push!(J, branch["t_bus"]); push!(V, -1)
+    E, N = length(data["branch"])::Int, length(data["bus"])::Int
+    # I = [..., e, e, ...]
+    I = repeat(1:E; inner=2)
+    J = zeros(Int, 2 * E)
+    for e in 1:E
+        branch = data["branch"]["$e"]
+        J[2*e-1] = branch["f_bus"]::Int
+        J[2*e] = branch["t_bus"]::Int
     end
-
-    return sparse(I,J,V)
+    # V = [..., 1, -1, ...]
+    V = repeat([1, -1]; outer=E)
+    return SparseArrays.sparse(I, J, V, E, N)
 end
 
 """
@@ -307,7 +307,7 @@ function calc_basic_branch_susceptance_matrix(data::Dict{String,<:Any})
         push!(I, i); push!(J, branch["t_bus"]); push!(V, -b)
     end
 
-    return sparse(I,J,V)
+    return SparseArrays.sparse(I,J,V)
 end
 
 """
@@ -410,7 +410,7 @@ function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
     vm, va = abs.(v), angle.(v)
     Y = calc_basic_admittance_matrix(data)
     neighbors = [Set{Int}([i]) for i in 1:num_bus]
-    I, J, V = findnz(Y)
+    I, J, V = SparseArrays.findnz(Y)
     for nz in eachindex(V)
         push!(neighbors[I[nz]], J[nz])
         push!(neighbors[J[nz]], I[nz])
@@ -430,7 +430,7 @@ function calc_basic_jacobian_matrix(data::Dict{String,<:Any})
             push!(J0_I, f_i_i); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
         end
     end
-    J = sparse(J0_I, J0_J, J0_V)
+    J = SparseArrays.sparse(J0_I, J0_J, J0_V)
     for i in 1:num_bus
         i1 = i
         i2 = i + num_bus

@@ -879,13 +879,141 @@ end
 @testset "test resolve switches" begin
      @testset "5-bus with switches" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
-        resolve_swithces!(data)
+        resolve_switches!(data)
 
         @test length(data["switch"]) == 0
         @test length(data["bus"]) == 4
+        @test data["bus"]["1"]["bus_type"] == 2
 
         result = solve_opf(data, ACPPowerModel, nlp_solver)
 
         @test isapprox(result["objective"], 16641.20; atol=1e0)
+    end
+    @testset "Test switches case5_sw 2->1" begin
+        # Switch merges 2 -> 1
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "2", "3", "4"]
+        resolve_switches!(data)
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "3", "4"]
+        @test data["bus"]["1"]["bus_type"] == 2
+    end
+    @testset "Test switches case5_sw 3->2->1" begin
+        # Change state of 3->2 switch to merge 3 -> 2 -> 1
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        data["switch"]["2"]["state"] = 1
+        resolve_switches!(data)
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "4"]
+        @test data["bus"]["1"]["bus_type"] == 2
+    end
+    @testset "Test switches case5_sw 4->3 and 2->1" begin
+        # Change status of 3->4 switch to merge
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        data["switch"]["3"]["status"] = 1
+        resolve_switches!(data)
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "3"]
+        @test data["bus"]["1"]["bus_type"] == 2
+        @test data["bus"]["3"]["bus_type"] == 3
+    end
+    @testset "Test switches case5_sw 4->3->2->1" begin
+        # Enable 4 -> 3 -> 2 -> 1 merge
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        data["switch"]["2"]["state"] = 1
+        data["switch"]["3"]["status"] = 1
+        resolve_switches!(data)
+        @test sort(collect(keys(data["bus"]))) == ["1", "10"]
+        @test data["bus"]["1"]["bus_type"] == 3
+    end
+    @testset "Test switches case5_sw brute force iteration order" begin
+        # The merging logic depends on the iteration order of an internal set.
+        # It's quite hard to test this, so we just brute force a set of possible
+        # keys to hope we hit the right one. One such key in Julia v1.10.9 is
+        # a=2, b=1, c=3, but about 50% of keys fail.
+        #
+        # The "Test switches case5_sw 4->3->2->1" test above works because
+        # (1, 2, 3) is a key that happens to work.
+        level = Memento.getlevel(TESTLOG)
+        Memento.setlevel!(TESTLOG, "error")
+        @testset "$a-$b-$c" for (a, b, c) in [
+            (1, 2, 3),
+            (1, 3, 2),
+            (2, 1, 3),
+            (2, 3, 1),
+            (3, 1, 2),
+            (3, 2, 1),
+        ]
+            data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+            data["switch"]["2"]["state"] = 1
+            data["switch"]["3"]["status"] = 1
+            data["switch"] = Dict(
+                "$a" => data["switch"]["1"],
+                "$b" => data["switch"]["2"],
+                "$c" => data["switch"]["3"],
+            )
+            resolve_switches!(data)
+            @test sort(collect(keys(data["bus"]))) == ["1", "10"]
+            @test data["bus"]["1"]["bus_type"] == 3
+        end
+        Memento.setlevel!(TESTLOG, level)
+    end
+    @testset "Test switches case5_sw 2->1 with 2 inactive" begin
+        # Switch merges 2 -> 1
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        data["bus"]["2"]["bus_type"] = 4
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "2", "3", "4"]
+        resolve_switches!(data)
+        @test data["bus"]["1"]["bus_type"] == 2
+        @test data["bus"]["2"]["bus_type"] == 4
+    end
+    @testset "Test switches case5_sw 4->3->2->1 with 2 inactive" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        # Make bus 2 inactive, turn on 3->2 and 3->4
+        data["bus"]["2"]["bus_type"] = 4
+        data["switch"]["2"]["state"] = 1
+        data["switch"]["3"]["status"] = 1
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "2", "3", "4"]
+        resolve_switches!(data)
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "2", "3"]
+        @test data["bus"]["1"]["bus_type"] == 2
+        @test data["bus"]["2"]["bus_type"] == 4
+        @test data["bus"]["3"]["bus_type"] == 3
+    end
+    @testset "Test switches case5_sw with loop" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        data["switch"]["2"]["state"] = 1
+        data["switch"]["3"]["status"] = 1
+        data["switch"]["4"] = Dict(
+            "qsw" => 0.9861,
+            "source_id" => Any["switch", 4],
+            "f_bus" => 1,
+            "thermal_rating" => 10.0,
+            "status" => 1,
+            "t_bus" => 3,
+            "psw" => 3.0,
+            "index" => 1,
+            "state" => 1,
+        )
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "2", "3", "4"]
+        resolve_switches!(data)
+        @test sort(collect(keys(data["bus"]))) == ["1", "10"]
+    end
+    @testset "Test switches case5_sw with loop and inactive bus" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5_sw.m")
+        data["bus"]["2"]["bus_type"] = 4
+        data["switch"]["2"]["state"] = 1
+        data["switch"]["3"]["status"] = 1
+        data["switch"]["4"] = Dict(
+            "qsw" => 0.9861,
+            "source_id" => Any["switch", 4],
+            "f_bus" => 1,
+            "thermal_rating" => 10.0,
+            "status" => 1,
+            "t_bus" => 3,
+            "psw" => 3.0,
+            "index" => 1,
+            "state" => 1,
+        )
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "2", "3", "4"]
+        resolve_switches!(data)
+        @test sort(collect(keys(data["bus"]))) == ["1", "10", "2"]
     end
 end

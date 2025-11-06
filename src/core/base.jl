@@ -12,13 +12,11 @@ _IM.@def pm_fields begin
 end
 
 
-""
 function solve_model(file::String, model_type::Type, optimizer, build_method; kwargs...)
     data = PowerModels.parse_file(file)
     return solve_model(data, model_type, optimizer, build_method; kwargs...)
 end
 
-""
 function solve_model(data::Dict{String,<:Any}, model_type::Type, optimizer, build_method;
         ref_extensions=[], solution_processors=[], relax_integrality=false,
         multinetwork=false, kwargs...)
@@ -41,13 +39,11 @@ function solve_model(data::Dict{String,<:Any}, model_type::Type, optimizer, buil
 end
 
 
-""
 function instantiate_model(file::String, model_type::Type, build_method; kwargs...)
     data = PowerModels.parse_file(file)
     return instantiate_model(data, model_type, build_method; kwargs...)
 end
 
-""
 function instantiate_model(data::Dict{String,<:Any}, model_type::Type, build_method; kwargs...)
     return _IM.instantiate_model(data, model_type, build_method, ref_add_core!, _pm_global_keys, pm_it_sym; kwargs...)
 end

@@ -501,5 +501,11 @@ end
             @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-6)
         end
     end
+    @testset "test_issue_938" begin
+        filename = joinpath(@__DIR__, "data/json/issue_938.json")
+        data = PowerModels.parse_file(filename)
+        native = PowerModels.compute_ac_pf(data)
+        @test native["termination_status"]
+    end
 end
 

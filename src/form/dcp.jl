@@ -3,19 +3,16 @@
 
 ######## AbstractDCPForm Models (has va but assumes vm is 1.0) ########
 
-""
 function variable_bus_voltage(pm::AbstractDCPModel; kwargs...)
     variable_bus_voltage_angle(pm; kwargs...)
     variable_bus_voltage_magnitude(pm; kwargs...)
 end
 
-""
 function variable_bus_voltage_magnitude(pm::AbstractDCPModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     report && sol_component_fixed(pm, nw, :bus, :vm, ids(pm, nw, :bus), 1.0)
 end
 
 
-""
 function sol_data_model!(pm::AbstractDCPModel, solution::Dict)
     # nothing to do, this is in the data model space by default
 end
@@ -55,7 +52,6 @@ function constraint_ohms_yt_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_i
     # omit reactive constraint
 end
 
-""
 function expression_branch_power_ohms_yt_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
@@ -64,7 +60,6 @@ function expression_branch_power_ohms_yt_from(pm::AbstractDCPModel, n::Int, f_bu
     # omit reactive constraint
 end
 
-""
 function expression_branch_power_ohms_yt_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
@@ -99,7 +94,6 @@ function constraint_ne_ohms_yt_from(pm::AbstractDCMPPModel, n::Int, i, f_bus, t_
 end
 
 
-""
 function expression_branch_power_ohms_yt_from(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
@@ -111,7 +105,6 @@ function expression_branch_power_ohms_yt_from(pm::AbstractDCMPPModel, n::Int, f_
     # omit reactive constraint
 end
 
-""
 function expression_branch_power_ohms_yt_to(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
@@ -123,7 +116,6 @@ function expression_branch_power_ohms_yt_to(pm::AbstractDCMPPModel, n::Int, f_bu
     # omit reactive constraint
 end
 
-""
 function constraint_ohms_yt_from(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     p_fr  = var(pm, n,  :p, f_idx)
     va_fr = var(pm, n, :va, f_bus)
@@ -135,7 +127,6 @@ function constraint_ohms_yt_from(pm::AbstractDCMPPModel, n::Int, f_bus, t_bus, f
     JuMP.@constraint(pm.model, p_fr == (va_fr - va_to - ta)/(x*tm))
 end
 
-""
 function constraint_ohms_y_pst_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tm)
     p_fr  = var(pm, n, :p, f_idx)
     va_fr = var(pm, n, :va, f_bus)
@@ -145,7 +136,6 @@ function constraint_ohms_y_pst_from(pm::AbstractDCPModel, n::Int, f_bus, t_bus, 
     JuMP.@constraint(pm.model, p_fr == -b*(va_fr - va_to - ta))
 end
 
-""
 function constraint_ohms_y_pst_to(pm::AbstractDCPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tm)
     p_to  = var(pm, n, :p, t_idx)
     va_fr = var(pm, n, :va, f_bus)
@@ -157,7 +147,6 @@ end
 
 
 
-""
 function constraint_switch_state_closed(pm::AbstractDCPModel, n::Int, f_bus, t_bus)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
@@ -165,7 +154,6 @@ function constraint_switch_state_closed(pm::AbstractDCPModel, n::Int, f_bus, t_b
     JuMP.@constraint(pm.model, va_fr == va_to)
 end
 
-""
 function constraint_switch_voltage_on_off(pm::AbstractDCPModel, n::Int, i, f_bus, t_bus, vad_min, vad_max)
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
@@ -176,7 +164,6 @@ function constraint_switch_voltage_on_off(pm::AbstractDCPModel, n::Int, i, f_bus
 end
 
 
-""
 function variable_bus_voltage_on_off(pm::AbstractDCPModel; kwargs...)
     variable_bus_voltage_angle(pm; kwargs...)
 end
@@ -227,7 +214,6 @@ function constraint_ne_voltage_angle_difference(pm::AbstractDCPModel, n::Int, f_
 end
 
 
-""
 function expression_bus_voltage(pm::AbstractPowerModel, n::Int, i, am::AdmittanceMatrix)
     ref_bus = collect(ids(pm, n, :ref_buses))[1]
     inj_factors = injection_factors_va(am, ref_bus, i)
@@ -236,7 +222,6 @@ function expression_bus_voltage(pm::AbstractPowerModel, n::Int, i, am::Admittanc
     var(pm, n, :va)[i] = JuMP.@expression(pm.model, sum(f*inj_p[j] for (j,f) in inj_factors))
 end
 
-""
 function expression_bus_voltage(pm::AbstractPowerModel, n::Int, i, am::AdmittanceMatrixInverse)
     inj_factors = injection_factors_va(am, i)
     inj_p = var(pm, n, :inj_p)
@@ -247,7 +232,6 @@ end
 
 ######## Lossless Models ########
 
-""
 function variable_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     p = var(pm, nw)[:p] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :arcs_from)], base_name="$(nw)_p",
@@ -283,7 +267,6 @@ function variable_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=nw_id_
     report && sol_component_value_edge(pm, nw, :branch, :pf, :pt, ref(pm, nw, :arcs_from), ref(pm, nw, :arcs_to), p_expr)
 end
 
-""
 function variable_ne_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true)
     p_ne = var(pm, nw)[:p_ne] = JuMP.@variable(pm.model,
         [(l,i,j) in ref(pm, nw, :ne_arcs_from)], base_name="$(nw)_p_ne",
@@ -306,7 +289,6 @@ function variable_ne_branch_power_real(pm::AbstractAPLossLessModels; nw::Int=nw_
     report && sol_component_value_edge(pm, nw, :ne_branch, :pf, :pt, ref(pm, nw, :ne_arcs_from), ref(pm, nw, :ne_arcs_to), p_ne_expr)
 end
 
-""
 function constraint_network_power_balance(pm::AbstractAPLossLessModels, n::Int, i, comp_gen_ids, comp_pd, comp_qd, comp_gs, comp_bs, comp_branch_g, comp_branch_b)
     pg = var(pm, n, :pg)
 
@@ -351,7 +333,6 @@ end
 function constraint_ne_ohms_yt_to(pm::AbstractAPLossLessModels, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
 end
 
-""
 function constraint_storage_on_off(pm::AbstractAPLossLessModels, n::Int, i, pmin, pmax, qmin, qmax, charge_ub, discharge_ub)
     z_storage = var(pm, n, :z_storage, i)
     ps = var(pm, n, :ps, i)
@@ -364,7 +345,6 @@ function constraint_storage_on_off(pm::AbstractAPLossLessModels, n::Int, i, pmin
     JuMP.@constraint(pm.model, sd <= z_storage*discharge_ub)
 end
 
-""
 function constraint_storage_losses(pm::AbstractAPLossLessModels, n::Int, i, bus, r, x, p_loss, q_loss)
     ps = var(pm, n, :ps, i)
     sc = var(pm, n, :sc, i)
@@ -413,7 +393,6 @@ function constraint_ohms_yt_to(pm::AbstractDCPLLModel, n::Int, f_bus, t_bus, f_i
     JuMP.@constraint(pm.model, p_fr + p_to >= r*(p_fr^2))
 end
 
-""
 function constraint_ohms_yt_to_on_off(pm::AbstractDCPLLModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
     p_fr  = var(pm, n,  :p, f_idx)
     p_to  = var(pm, n,  :p, t_idx)
@@ -427,7 +406,6 @@ function constraint_ohms_yt_to_on_off(pm::AbstractDCPLLModel, n::Int, i, f_bus, 
     JuMP.@constraint(pm.model, p_fr + p_to >= 0)
 end
 
-""
 function constraint_ne_ohms_yt_to(pm::AbstractDCPLLModel, n::Int, i, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm, vad_min, vad_max)
     p_fr = var(pm, n, :p_ne, f_idx)
     p_to = var(pm, n, :p_ne, t_idx)

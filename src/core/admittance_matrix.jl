@@ -17,7 +17,7 @@ struct AdmittanceMatrix{T}
     matrix::SparseArrays.SparseMatrixCSC{T,Int}
 end
 
-Base.show(io::IO, x::AdmittanceMatrix{<:Number}) = print(io, "AdmittanceMatrix($(length(x.idx_to_bus)) buses, $(length(nonzeros(x.matrix))) entries)")
+Base.show(io::IO, x::AdmittanceMatrix{<:Number}) = print(io, "AdmittanceMatrix($(length(x.idx_to_bus)) buses, $(SparseArrays.nnz(x.matrix)) entries)")
 
 
 "data should be a PowerModels network data model; only supports networks with exactly one reference bus"
@@ -70,7 +70,7 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
         end
     end
 
-    m = sparse(I,J,V)
+    m = SparseArrays.sparse(I,J,V)
 
     return AdmittanceMatrix(idx_to_bus, bus_to_idx, m)
 end
@@ -112,7 +112,7 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
         end
     end
 
-    m = sparse(I,J,V)
+    m = SparseArrays.sparse(I,J,V)
 
     return AdmittanceMatrix(idx_to_bus, bus_to_idx, m)
 end
@@ -153,7 +153,7 @@ function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     sm = calc_susceptance_matrix(data)
     S  = sm.matrix
     num_buses = length(sm.idx_to_bus)  # this avoids inactive buses
-    
+
     ref_bus = reference_bus(data)
     ref_idx = sm.bus_to_idx[ref_bus["index"]]
     if !(ref_idx > 0 && ref_idx <= num_buses)
@@ -162,19 +162,19 @@ function calc_susceptance_matrix_inv(data::Dict{String,<:Any})
     S[ref_idx, :] .= 0.0
     S[:, ref_idx] .= 0.0
     S[ref_idx, ref_idx] = 1.0
-    
-    F = LinearAlgebra.ldlt(Symmetric(S); check=false)
+
+    F = LinearAlgebra.ldlt(LinearAlgebra.Symmetric(S); check=false)
     if !LinearAlgebra.issuccess(F)
         Memento.error(_LOGGER, "Failed factorization in calc_susceptance_matrix_inv")
     end
-    M = F \ Matrix(1.0I, num_buses, num_buses)
+    M = F \ Matrix{Float64}(LinearAlgebra.I(num_buses))
     M[ref_idx, :] .= 0.0  # zero-out the row of the slack bus
-    
+
     return AdmittanceMatrixInverse(sm.idx_to_bus, sm.bus_to_idx, ref_idx, M)
 end
 
-"calculates the inverse of the susceptance matrix"
-function calc_admittance_matrix_inv(am::AdmittanceMatrix, ref_idx::Int)
+"calculates the inverse of the admittance matrix"
+function calc_admittance_matrix_inv(am::AdmittanceMatrix{T}, ref_idx::Int) where {T}
     num_buses = length(am.idx_to_bus)
 
     if !(ref_idx > 0 && ref_idx <= num_buses)
@@ -184,7 +184,7 @@ function calc_admittance_matrix_inv(am::AdmittanceMatrix, ref_idx::Int)
     M = Matrix(am.matrix)
 
     nonref_buses = Int[i for i in 1:num_buses if i != ref_idx]
-    am_inv = zeros(Float64, num_buses, num_buses)
+    am_inv = zeros(T, num_buses, num_buses)
     am_inv[nonref_buses, nonref_buses] = inv(M[nonref_buses, nonref_buses])
 
     return AdmittanceMatrixInverse(am.idx_to_bus, am.bus_to_idx, ref_idx, am_inv)
@@ -239,7 +239,7 @@ function injection_factors_va(am::AdmittanceMatrix{T}, ref_bus::Int, bus_id::Int
     J = Int[]
     V = Float64[]
 
-    I_src, J_src, V_src = findnz(am.matrix)
+    I_src, J_src, V_src = SparseArrays.findnz(am.matrix)
     for k in 1:length(V_src)
         if I_src[k] != ref_idx && J_src[k] != ref_idx
             push!(I, idx1_to_idx2[I_src[k]])
@@ -247,7 +247,7 @@ function injection_factors_va(am::AdmittanceMatrix{T}, ref_bus::Int, bus_id::Int
             push!(V, V_src[k])
         end
     end
-    M = sparse(I,J,V)
+    M = SparseArrays.sparse(I,J,V)
 
     # a vector to select which bus injection factors to compute
     va_vect = zeros(Float64, length(idx2_to_idx1))

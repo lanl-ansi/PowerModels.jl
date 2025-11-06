@@ -2,7 +2,6 @@
 # Even though the branch model is linear, the feasible set is non-convex
 # in the context of constant-power loads or generators
 
-""
 function variable_branch_current(pm::AbstractIVRModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true, kwargs...)
     variable_branch_current_real(pm, nw=nw, bounded=bounded, report=report; kwargs...)
     variable_branch_current_imaginary(pm, nw=nw, bounded=bounded, report=report; kwargs...)
@@ -36,7 +35,9 @@ function variable_branch_current(pm::AbstractIVRModel; nw::Int=nw_id_default, bo
     variable_branch_series_current_imaginary(pm, nw=nw, bounded=bounded, report=report; kwargs...)
 end
 
-""
+"""
+    variable_gen_current(pm::AbstractIVRModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true, kwargs...)
+"""
 function variable_gen_current(pm::AbstractIVRModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true, kwargs...)
     variable_gen_current_real(pm, nw=nw, bounded=bounded, report=report; kwargs...)
     variable_gen_current_imaginary(pm, nw=nw, bounded=bounded, report=report; kwargs...)
@@ -66,7 +67,6 @@ function variable_gen_current(pm::AbstractIVRModel; nw::Int=nw_id_default, bound
     end
 end
 
-""
 function variable_dcline_current(pm::AbstractIVRModel; nw::Int=nw_id_default, bounded::Bool=true, report::Bool=true, kwargs...)
     variable_dcline_current_real(pm, nw=nw, bounded=bounded, report=report; kwargs...)
     variable_dcline_current_imaginary(pm, nw=nw, bounded=bounded, report=report; kwargs...)
@@ -197,7 +197,7 @@ function constraint_current_balance(pm::AbstractIVRModel, n::Int, i, bus_arcs, b
         - (sum(pd for pd in values(bus_pd))*vr + sum(qd for qd in values(bus_qd))*vi)/(vr^2 + vi^2)
         - sum(gs for gs in values(bus_gs))*vr + sum(bs for bs in values(bus_bs))*vi
     )
-    JuMP.@constraint(pm.model, 
+    JuMP.@constraint(pm.model,
         sum(ci[a] for a in bus_arcs)
         + sum(cidc[d] for d in bus_arcs_dc)
         ==

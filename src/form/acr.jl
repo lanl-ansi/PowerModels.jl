@@ -1,6 +1,5 @@
 ### rectangular form of the non-convex AC equations
 
-""
 function variable_bus_voltage(pm::AbstractACRModel; nw::Int=nw_id_default, bounded::Bool=true, kwargs...)
     variable_bus_voltage_real(pm; nw=nw, bounded=bounded, kwargs...)
     variable_bus_voltage_imaginary(pm; nw=nw, bounded=bounded, kwargs...)
@@ -90,7 +89,6 @@ function constraint_power_balance(pm::AbstractACRModel, n::Int, i::Int, bus_arcs
     end
 end
 
-""
 function constraint_power_balance_ls(pm::AbstractACRModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
     vr = var(pm, n, :vr, i)
     vi = var(pm, n, :vi, i)
@@ -137,7 +135,6 @@ end
 
 
 
-""
 function expression_branch_power_ohms_yt_from(pm::AbstractACRModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     vr_fr = var(pm, n, :vr, f_bus)
     vr_to = var(pm, n, :vr, t_bus)
@@ -149,7 +146,6 @@ function expression_branch_power_ohms_yt_from(pm::AbstractACRModel, n::Int, f_bu
 end
 
 
-""
 function expression_branch_power_ohms_yt_to(pm::AbstractACRModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_to, b_to, tr, ti, tm)
     vr_fr = var(pm, n, :vr, f_bus)
     vr_to = var(pm, n, :vr, t_bus)
@@ -192,7 +188,6 @@ function constraint_ohms_yt_to(pm::AbstractACRModel, n::Int, f_bus, t_bus, f_idx
 end
 
 
-""
 function constraint_storage_losses(pm::AbstractACRModel, n::Int, i, bus, r, x, p_loss, q_loss)
     vr = var(pm, n, :vr, bus)
     vi = var(pm, n, :vi, bus)
@@ -245,13 +240,11 @@ function constraint_voltage_angle_difference(pm::AbstractACRModel, n::Int, f_idx
     JuMP.@constraint(pm.model, (vi_fr*vr_to - vr_fr*vi_to) >= tan(angmin)*(vr_fr*vr_to + vi_fr*vi_to))
 end
 
-""
 function sol_data_model!(pm::AbstractACRModel, solution::Dict)
     apply_pm!(_sol_data_model_acr!, solution)
 end
 
 
-""
 function _sol_data_model_acr!(solution::Dict)
     if haskey(solution, "bus")
         for (i, bus) in solution["bus"]

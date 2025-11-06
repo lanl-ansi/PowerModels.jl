@@ -1,5 +1,3 @@
-using JuMP
-PMs = PowerModels
 TESTLOG = Memento.getlogger(PowerModels)
 
 @testset "test multinetwork" begin

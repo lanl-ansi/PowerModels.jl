@@ -12,7 +12,9 @@ function objective_min_fuel_and_flow_cost(pm::AbstractPowerModel; kwargs...)
 end
 
 
-""
+"""
+    objective_min_fuel_cost(pm::AbstractPowerModel; kwargs...)
+"""
 function objective_min_fuel_cost(pm::AbstractPowerModel; kwargs...)
     expression_pg_cost(pm; kwargs...)
 
@@ -306,14 +308,14 @@ function objective_max_loadability(pm::AbstractPowerModel)
     time_elapsed = Dict(n => get(ref(pm, n), :time_elapsed, 1) for n in nws)
 
     load_weight = Dict(n =>
-        Dict(i => get(load, "weight", 1.0) for (i,load) in ref(pm, n, :load)) 
+        Dict(i => get(load, "weight", 1.0) for (i,load) in ref(pm, n, :load))
     for n in nws)
 
     #println(load_weight)
 
     return JuMP.@objective(pm.model, Max,
-        sum( 
-            ( 
+        sum(
+            (
             time_elapsed[n]*(
                 sum(z_shunt[n][i] for (i,shunt) in ref(pm, n, :shunt)) +
                 sum(load_weight[n][i]*abs(load["pd"])*z_demand[n][i] for (i,load) in ref(pm, n, :load))

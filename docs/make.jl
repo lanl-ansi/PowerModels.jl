@@ -1,11 +1,16 @@
-using Documenter, PowerModels
+import Documenter
+using PowerModels
 
-makedocs(
-    warnonly = Documenter.except(:linkcheck),
-    modules = [PowerModels],
-    format = Documenter.HTML(analytics = "UA-367975-10", mathengine = Documenter.MathJax()),
+Documenter.makedocs(
     sitename = "PowerModels",
     authors = "Carleton Coffrin, Russell Bent, and contributors.",
+    format = Documenter.HTML(analytics = "UA-367975-10", mathengine = Documenter.MathJax()),
+    modules = [PowerModels],
+    # There are a large number of exported functions in PowerModels.jl that have
+    # docstrings, but which are not explicitly included in the docs.
+    #
+    # When this is fixed, we should change to `checkdocs = :exports,`
+    checkdocs = :none,
     pages = [
         "Home" => "index.md",
         "Manual" => [
@@ -40,6 +45,6 @@ makedocs(
     ]
 )
 
-deploydocs(
+Documenter.deploydocs(
     repo = "github.com/lanl-ansi/PowerModels.jl.git",
 )

@@ -9,6 +9,14 @@
         @test isa(am, AdmittanceMatrix{Complex{Float64}})
         @test SparseArrays.nnz(am.matrix) == 17
         @test isapprox(LinearAlgebra.det(am.matrix), 7.133429246315739e6 - 1.0156167905437486e7im)
+
+        n = size(am.matrix, 1)
+        for i in 1:n
+            am_inv = calc_admittance_matrix_inv(am, i)
+            am_I = am_inv.matrix * am.matrix
+            indices = filter(!=(i), 1:n)
+            @test isapprox(am_I[indices, indices], LinearAlgebra.I(n - 1))
+        end
     end
     @testset "5-bus ext case" begin
         data = PowerModels.parse_file("../test/data/matpower/case5_ext.m")
@@ -24,6 +32,14 @@
 
         @test SparseArrays.nnz(am.matrix) == 54
         @test isapprox(LinearAlgebra.det(am.matrix), -5.930071424866359e12 - 5.026659473516862e12im)
+
+        n = size(am.matrix, 1)
+        for i in 1:n
+            am_inv = calc_admittance_matrix_inv(am, i)
+            am_I = am_inv.matrix * am.matrix
+            indices = filter(!=(i), 1:n)
+            @test isapprox(am_I[indices, indices], LinearAlgebra.I(n - 1))
+        end
     end
     @testset "24-bus rts case" begin
         data = PowerModels.parse_file("../test/data/matpower/case24.m")
@@ -31,6 +47,14 @@
 
         @test SparseArrays.nnz(am.matrix) == 92
         @test isapprox(LinearAlgebra.det(am.matrix), 3.283715190798021e36 + 1.688494962783582e36im)
+
+        n = size(am.matrix, 1)
+        for i in 1:n
+            am_inv = calc_admittance_matrix_inv(am, i)
+            am_I = am_inv.matrix * am.matrix
+            indices = filter(!=(i), 1:n)
+            @test isapprox(am_I[indices, indices], LinearAlgebra.I(n - 1))
+        end
     end
 end
 

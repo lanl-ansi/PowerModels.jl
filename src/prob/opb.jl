@@ -8,7 +8,9 @@ function solve_opb(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_opb; ref_extensions=[ref_add_connected_components!], kwargs...)
 end
 
-""
+"""
+    build_opb(pm::AbstractPowerModel)
+"""
 function build_opb(pm::AbstractPowerModel)
     variable_bus_voltage_magnitude_only(pm)
     variable_gen_power(pm)
@@ -21,13 +23,11 @@ function build_opb(pm::AbstractPowerModel)
 end
 
 
-""
 function ref_add_connected_components!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
     apply_pm!(_ref_add_connected_components!, ref, data)
 end
 
 
-""
 function _ref_add_connected_components!(ref::Dict{Symbol,<:Any}, data::Dict{String,<:Any})
     component_sets = PowerModels.calc_connected_components(data)
     ref[:components] = Dict(i => c for (i,c) in enumerate(sort(collect(component_sets); by = length)))
