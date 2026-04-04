@@ -16,7 +16,7 @@ end
 
 "converts the solution data into the data model's standard space, polar voltages and rectangular power"
 function sol_data_model!(pm::AbstractPowerModel, solution::Dict)
-    Memento.warn(_LOGGER, "sol_data_model! not defined for power model of type $(typeof(pm))")
+    @warn "sol_data_model! not defined for power model of type $(typeof(pm))"
 end
 
 
@@ -35,4 +35,4 @@ end
 "PowerModels wrapper for the InfrastructureModels `sol_component_value_edge` function."
 function sol_component_value_edge(aim::AbstractPowerModel, n::Int, comp_name::Symbol, field_name_fr::Symbol, field_name_to::Symbol, comp_ids_fr, comp_ids_to, variables)
     return _IM.sol_component_value_edge(aim, pm_it_sym, n, comp_name, field_name_fr, field_name_to, comp_ids_fr, comp_ids_to, variables)
-end
+end

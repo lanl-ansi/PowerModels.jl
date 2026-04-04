@@ -5,28 +5,27 @@ import InfrastructureModels: optimize_model!, @im_fields, nw_id_default
 import JSON
 import JuMP
 import LinearAlgebra
-import Memento
+import Logging
 import NLsolve
 import PrecompileTools
 import SparseArrays
 
-# Create our module level logger (this will get precompiled)
-const _LOGGER = Memento.getlogger(@__MODULE__)
-
-# Register the module level logger at runtime so that folks can access the logger via `getlogger(PowerModels)`
-# NOTE: If this line is not included then the precompiled `PowerModels._LOGGER` won't be registered at runtime.
-__init__() = Memento.register(_LOGGER)
-
-"Suppresses information and warning messages output by PowerModels, for fine grained control use the Memento package"
+"Suppresses information and warning messages output by PowerModels, for fine grained control use the Logging standard library"
 function silence()
-    Memento.info(_LOGGER, "Suppressing information and warning messages for the rest of this session.  Use the Memento package for more fine-grained control of logging.")
-    Memento.setlevel!(Memento.getlogger(_IM), "error")
-    Memento.setlevel!(_LOGGER, "error")
+    Logging.disable_logging(Logging.Warn)
 end
 
-"alows the user to set the logging level without the need to add Memento"
+"allows the user to set the logging level without the need to add Logging"
 function logger_config!(level)
-    Memento.setlevel!(_LOGGER, level)
+    if level == "error"
+        Logging.disable_logging(Logging.Warn)
+    elseif level == "warn"
+        Logging.disable_logging(Logging.Info)
+    elseif level == "info"
+        Logging.disable_logging(Logging.Debug)
+    elseif level == "debug"
+        Logging.disable_logging(Logging.BelowMinLevel)
+    end
 end
 
 const _pm_global_keys = Set(["time_series", "per_unit"])

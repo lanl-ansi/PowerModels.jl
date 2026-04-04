@@ -517,7 +517,7 @@ function variable_bus_voltage_on_off(pm::AbstractQCWRModel; kwargs...)
 end
 
 function variable_ne_branch_voltage(pm::AbstractQCWRModel; kwargs...)
-    Memento.error(_LOGGER, "variable_ne_branch_voltage is not yet supported for QC formulations, open an issue if you would like this feature.")
+    error("variable_ne_branch_voltage is not yet supported for QC formulations, open an issue if you would like this feature.")
 end
 
 function variable_branch_voltage_product_angle_on_off(pm::AbstractPowerModel; nw::Int=nw_id_default, report::Bool=true)

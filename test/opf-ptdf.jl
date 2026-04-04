@@ -1,6 +1,4 @@
 
-TESTLOG = Memento.getlogger(PowerModels)
-
 @testset "test ptdf-based dc opf" begin
     @testset "5-bus case, LP solver" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
@@ -55,19 +53,19 @@ TESTLOG = Memento.getlogger(PowerModels)
     @testset "no support for zero reference buses" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         data["bus"]["4"]["bus_type"] = 2
-        @test_throws(TESTLOG, ErrorException, PowerModels.solve_opf_ptdf(data, DCPPowerModel, nlp_solver))
+        @test_throws ErrorException PowerModels.solve_opf_ptdf(data, DCPPowerModel, nlp_solver)
     end
 
     @testset "no support for multiple connected components" begin
-        @test_throws(TESTLOG, ErrorException, PowerModels.solve_opf_ptdf("../test/data/matpower/case6.m", DCPPowerModel, nlp_solver))
+        @test_throws ErrorException PowerModels.solve_opf_ptdf("../test/data/matpower/case6.m", DCPPowerModel, nlp_solver)
     end
 
     @testset "no support for dclines" begin
-        @test_throws(TESTLOG, ErrorException, PowerModels.solve_opf_ptdf("../test/data/matpower/case3.m", DCPPowerModel, nlp_solver))
+        @test_throws ErrorException PowerModels.solve_opf_ptdf("../test/data/matpower/case3.m", DCPPowerModel, nlp_solver)
     end
 
     @testset "no support for switches" begin
-        @test_throws(TESTLOG, ErrorException, PowerModels.solve_opf_ptdf("../test/data/matpower/case5_sw.m", DCPPowerModel, nlp_solver))
+        @test_throws ErrorException PowerModels.solve_opf_ptdf("../test/data/matpower/case5_sw.m", DCPPowerModel, nlp_solver)
     end
 
 end

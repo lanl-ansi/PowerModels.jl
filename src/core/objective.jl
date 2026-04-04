@@ -39,7 +39,7 @@ function calc_pwl_points(ncost::Int, cost::Vector{<:Real}, pmin::Real, pmax::Rea
     @assert pmin <= pmax
 
     if isinf(pmin) || isinf(pmax)
-        Memento.error(_LOGGER, "a bounded operating range is required for modeling pwl costs.  Given active power range in $(pmin) - $(pmax)")
+        error("a bounded operating range is required for modeling pwl costs.  Given active power range in $(pmin) - $(pmax)")
     end
 
     points = []
@@ -140,7 +140,7 @@ function expression_pg_cost(pm::AbstractPowerModel; report::Bool=true)
 
                 pg_cost[i] = _polynomial_cost_expression(pm, pg_terms, cost_rev, nw=n, id=i, var_name="pg")
             else
-                Memento.error(_LOGGER, "Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model) on generator $(i)")
+                error("Only cost models of types 1 and 2 are supported at this time, given cost model type of $(model) on generator $(i)")
             end
         end
 
@@ -176,7 +176,7 @@ function expression_p_dc_cost(pm::AbstractPowerModel; report::Bool=true)
                 cost_rev = reverse(dcline["cost"])
                 p_dc_cost[i] = _polynomial_cost_expression(pm, p_dc_terms, cost_rev, nw=n, id=i, var_name="dc_p")
             else
-                Memento.error(_LOGGER, "only cost models of types 1 and 2 are supported at this time, given cost model type of $(model) on dcline $(i)")
+                error("only cost models of types 1 and 2 are supported at this time, given cost model type of $(model) on dcline $(i)")
             end
         end
 
@@ -274,7 +274,7 @@ function _polynomial_cost_expression(pm::AbstractConicModels, x_list::Array{JuMP
 
         return cost_terms[1] + cost_terms[2]*x + cost_terms[3]*x_sqr
     else # length(cost_terms) >= 4
-        Memento.error(_LOGGER, "the network cost data features a polynomial cost function that is not compatible with conic mathematical programs.")
+        error("the network cost data features a polynomial cost function that is not compatible with conic mathematical programs.")
     end
 end
 

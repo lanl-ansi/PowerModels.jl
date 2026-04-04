@@ -69,7 +69,7 @@ An AC Power Flow Solver from scratch.
 """
 function compute_basic_ac_pf!(data::Dict{String, Any})
     if !get(data, "basic_network", false)
-        Memento.warn(_LOGGER, "compute_basic_ac_pf requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form.")
+        @warn "compute_basic_ac_pf requires basic network data and given data may be incompatible. make_basic_network can be used to transform data into the appropriate form."
     end
     bus_num = length(data["bus"])
     gen_num = length(data["gen"])
@@ -132,7 +132,7 @@ function compute_basic_ac_pf!(data::Dict{String, Any})
         itr += 1
     end
     if itr == itr_max
-        Memento.warn(_LOGGER, "Max iteration limit")
+        @warn "Max iteration limit"
         @assert false
     end
 end

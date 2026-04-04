@@ -1,33 +1,30 @@
 # Test cases for PTI RAW file parser
 
-TESTLOG = Memento.getlogger(PowerModels)
 
 @testset "test .raw file parser" begin
     @testset "Check PTI exception handling" begin
-        Memento.setlevel!(TESTLOG, "warn")
+        Logging.disable_logging(Logging.Info)
 
         @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
-        # @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
-        @test_warn(TESTLOG, "Version 32 of PTI format is unsupported, parser may not function correctly.",
-                   PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
-        @test_warn(TESTLOG, "At line 4, new section started with '0', but additional non-comment data is present. Pattern '^\\s*0\\s*[/]*.*' is reserved for section start/end.",
-                    PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
-        #@test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
-        @test_warn(TESTLOG, "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))
-        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_j.raw"))
+        # @test_throws ErrorException PowerModels.parse_pti("../test/data/pti/parser_test_b.raw")
+        @test_logs (:warn, "Version 32 of PTI format is unsupported, parser may not function correctly.") match_mode=:any PowerModels.parse_pti("../test/data/pti/parser_test_c.raw")
+        @test_logs (:warn, "At line 4, new section started with '0', but additional non-comment data is present. Pattern '^\\s*0\\s*[/]*.*' is reserved for section start/end.") match_mode=:any PowerModels.parse_pti("../test/data/pti/parser_test_c.raw")
+        #@test_throws ErrorException PowerModels.parse_pti("../test/data/pti/parser_test_d.raw")
+        @test_logs (:warn, "GNE DEVICE parsing is not supported.") match_mode=:any PowerModels.parse_pti("../test/data/pti/parser_test_h.raw")
+        @test_throws ErrorException PowerModels.parse_pti("../test/data/pti/parser_test_j.raw")
 
-        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_l.raw"))
+        @test_throws ErrorException PowerModels.parse_pti("../test/data/pti/parser_test_l.raw")
 
-        Memento.setlevel!(TESTLOG, "error")
+        Logging.disable_logging(Logging.Warn)
     end
 
     @testset "Check PSSE exception handling" begin
-        Memento.setlevel!(TESTLOG, "warn")
+        Logging.disable_logging(Logging.Info)
 
-        @test_throws(TESTLOG, Exception, PowerModels.parse_psse("../test/data/pti/parser_test_b.raw"))
-        @test_throws(TESTLOG, Exception, PowerModels.parse_psse("../test/data/pti/parser_test_d.raw"))
+        @test_throws Exception PowerModels.parse_psse("../test/data/pti/parser_test_b.raw")
+        @test_throws Exception PowerModels.parse_psse("../test/data/pti/parser_test_d.raw")
 
-        Memento.setlevel!(TESTLOG, "error")
+        Logging.disable_logging(Logging.Warn)
     end
 
     @testset "4-bus frankenstein file" begin
@@ -171,7 +168,7 @@ TESTLOG = Memento.getlogger(PowerModels)
     end
 
     @testset "0-bus case file" begin
-        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/case0.raw"))
+        @test_throws ErrorException PowerModels.parse_pti("../test/data/pti/case0.raw")
     end
 
     @testset "73-bus case file" begin

@@ -1,7 +1,5 @@
 # Tests for data conversion from PSS(R)E to PowerModels data structure
 
-TESTLOG = Memento.getlogger(PowerModels)
-
 function set_costs!(data::Dict)
     for (n, gen) in data["gen"]
         gen["cost"] = [0., 100., 0.]
@@ -211,15 +209,13 @@ end
 
         @test dummy_data["gen"]["1"]["source_id"] == ["generator", 1001, "1 "]
 
-        Memento.setlevel!(TESTLOG, "warn")
+        Logging.disable_logging(Logging.Info)
 
-        @test_warn(TESTLOG, "Could not find bus 1, returning 0 for field vm",
-                   PowerModels._get_bus_value(1, "vm", dummy_data))
+        @test_logs (:warn, "Could not find bus 1, returning 0 for field vm") match_mode=:any PowerModels._get_bus_value(1, "vm", dummy_data)
 
-        @test_warn(TESTLOG, "The following fields in BUS are missing: NVHI, NVLO, EVHI, EVLO",
-                   PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
+        @test_logs (:warn, "The following fields in BUS are missing: NVHI, NVLO, EVHI, EVLO") match_mode=:any PowerModels.parse_file("../test/data/pti/parser_test_i.raw")
 
-        Memento.setlevel!(TESTLOG, "error")
+        Logging.disable_logging(Logging.Warn)
     end
 
     @testset "three-winding transformer" begin

@@ -175,7 +175,7 @@ function solve_opf_ptdf(file, model_type::Type, optimizer; full_inverse=false, k
 end
 
 function build_opf_ptdf(pm::AbstractPowerModel)
-    Memento.error(_LOGGER, "build_opf_ptdf is only valid for DCPPowerModels")
+    error("build_opf_ptdf is only valid for DCPPowerModels")
 end
 
 """

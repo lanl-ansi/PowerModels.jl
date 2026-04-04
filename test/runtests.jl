@@ -8,7 +8,7 @@ import JSON
 import JuMP
 import Juniper
 import LinearAlgebra
-import Memento
+import Logging
 import SCS
 import SparseArrays
 
