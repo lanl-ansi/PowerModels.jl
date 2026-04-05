@@ -13,7 +13,7 @@ import SCS
 import SparseArrays
 
 # Suppress warnings during testing.
-PowerModels.silence()
+PowerModels.silence!()
 
 # default setup for solvers
 nlp_solver = JuMP.optimizer_with_attributes(

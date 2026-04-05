@@ -6,26 +6,30 @@ import JSON
 import JuMP
 import LinearAlgebra
 import Logging
+import LoggingExtras
 import NLsolve
 import PrecompileTools
 import SparseArrays
 
+# Setup Logging
+include("core/logging.jl")
+_DEFAULT_LOGGER = Logging.current_logger()
+_LOGGER = Logging.ConsoleLogger(; meta_formatter=PowerModels._pm_metafmt)
+function __init__()
+    global _DEFAULT_LOGGER = Logging.current_logger()
+    global _LOGGER = Logging.ConsoleLogger(; meta_formatter=PowerModels._pm_metafmt)
+
+    Logging.global_logger(_LOGGER)
+end
+
 "Suppresses information and warning messages output by PowerModels, for fine grained control use the Logging standard library"
 function silence()
-    Logging.disable_logging(Logging.Warn)
+    silence!()
 end
 
 "allows the user to set the logging level without the need to add Logging"
 function logger_config!(level)
-    if level == "error"
-        Logging.disable_logging(Logging.Warn)
-    elseif level == "warn"
-        Logging.disable_logging(Logging.Info)
-    elseif level == "info"
-        Logging.disable_logging(Logging.Debug)
-    elseif level == "debug"
-        Logging.disable_logging(Logging.BelowMinLevel)
-    end
+    set_logging_level!(Symbol(uppercase(level[1]) * level[2:end]))
 end
 
 const _pm_global_keys = Set(["time_series", "per_unit"])
