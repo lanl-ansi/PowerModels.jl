@@ -125,7 +125,11 @@ const _mp_switch_columns = [
 
 function _parse_matpower_string(data_string::String)
     matlab_data, func_name, colnames = _IM.parse_matlab_string(data_string, extended=true)
+    return _parse_matpower_data(matlab_data, func_name, colnames)
+end
 
+
+function _parse_matpower_data(matlab_data::Dict{String,Any}, func_name::Union{AbstractString,Nothing}, colnames::Dict{String,Any})
     case = Dict{String,Any}()
 
     if func_name != nothing
