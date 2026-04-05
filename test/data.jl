@@ -532,7 +532,7 @@ end
     data["dcline"]["1"]["t_bus"] = 2
 
     #warnings
-    Logging.disable_logging(Logging.Info)
+    PowerModels.set_logging_level!(:Warn)
 
     data["gen"]["1"]["model"] = 3
     @test_logs (:warn, "Skipping cost model of type 3 in per unit transformation") match_mode=:any PowerModels.make_mixed_units!(data)
@@ -560,7 +560,7 @@ end
     data["branch"]["1"]["tap"] = -1.0
     @test_logs (:warn, "branch found with non-positive tap value of -1.0, setting a tap to 1.0") match_mode=:any PowerModels.correct_transformer_parameters!(data)
 
-    Logging.disable_logging(Logging.Warn)
+    PowerModels.silence!()
 end
 
 
@@ -929,7 +929,7 @@ end
         #
         # The "Test switches case5_sw 4->3->2->1" test above works because
         # (1, 2, 3) is a key that happens to work.
-        Logging.disable_logging(Logging.Warn)
+        PowerModels.silence!()
         @testset "$a-$b-$c" for (a, b, c) in [
             (1, 2, 3),
             (1, 3, 2),
@@ -950,7 +950,7 @@ end
             @test sort(collect(keys(data["bus"]))) == ["1", "10"]
             @test data["bus"]["1"]["bus_type"] == 3
         end
-        Logging.disable_logging(Logging.Warn)
+        PowerModels.silence!()
     end
     @testset "Test switches case5_sw 2->1 with 2 inactive" begin
         # Switch merges 2 -> 1

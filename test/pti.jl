@@ -3,7 +3,7 @@
 
 @testset "test .raw file parser" begin
     @testset "Check PTI exception handling" begin
-        Logging.disable_logging(Logging.Info)
+        PowerModels.set_logging_level!(:Warn)
 
         @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
         # @test_throws ErrorException PowerModels.parse_pti("../test/data/pti/parser_test_b.raw")
@@ -15,16 +15,16 @@
 
         @test_throws ErrorException PowerModels.parse_pti("../test/data/pti/parser_test_l.raw")
 
-        Logging.disable_logging(Logging.Warn)
+        PowerModels.silence!()
     end
 
     @testset "Check PSSE exception handling" begin
-        Logging.disable_logging(Logging.Info)
+        PowerModels.set_logging_level!(:Warn)
 
         @test_throws Exception PowerModels.parse_psse("../test/data/pti/parser_test_b.raw")
         @test_throws Exception PowerModels.parse_psse("../test/data/pti/parser_test_d.raw")
 
-        Logging.disable_logging(Logging.Warn)
+        PowerModels.silence!()
     end
 
     @testset "4-bus frankenstein file" begin

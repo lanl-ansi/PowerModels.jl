@@ -48,6 +48,8 @@ include("common.jl")
 
 @testset "PowerModels" begin
 
+    include("logging.jl")
+
     include("matpower.jl")
 
     include("pti.jl")

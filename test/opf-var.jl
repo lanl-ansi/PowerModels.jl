@@ -802,9 +802,9 @@ end
     @testset "storage constraint warn" begin
         mp_data = PowerModels.parse_file("../test/data/matpower/case5_strg.m")
         delete!(mp_data, "time_elapsed")
-        Logging.disable_logging(Logging.Info)
+        PowerModels.set_logging_level!(:Warn)
         @test_logs (:warn, "network data should specify time_elapsed, using 1.0 as a default") match_mode=:any PowerModels._solve_opf_strg(mp_data, PowerModels.ACPPowerModel, nlp_solver)
-        Logging.disable_logging(Logging.Warn)
+        PowerModels.silence!()
     end
 
 end

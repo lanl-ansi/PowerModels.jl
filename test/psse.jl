@@ -209,13 +209,13 @@ end
 
         @test dummy_data["gen"]["1"]["source_id"] == ["generator", 1001, "1 "]
 
-        Logging.disable_logging(Logging.Info)
+        PowerModels.set_logging_level!(:Warn)
 
         @test_logs (:warn, "Could not find bus 1, returning 0 for field vm") match_mode=:any PowerModels._get_bus_value(1, "vm", dummy_data)
 
         @test_logs (:warn, "The following fields in BUS are missing: NVHI, NVLO, EVHI, EVLO") match_mode=:any PowerModels.parse_file("../test/data/pti/parser_test_i.raw")
 
-        Logging.disable_logging(Logging.Warn)
+        PowerModels.silence!()
     end
 
     @testset "three-winding transformer" begin

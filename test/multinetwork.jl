@@ -452,9 +452,9 @@
 
             mn_data["nw"]["1"]["storage"]["1"]["status"] = 0  # verify that storage activation does not cause error
 
-            Logging.disable_logging(Logging.Info)
+            PowerModels.set_logging_level!(:Warn)
             @test_logs (:warn, "network data should specify time_elapsed, using 1.0 as a default") match_mode=:any PowerModels.solve_mn_opf_strg(mn_data, PowerModels.ACPPowerModel, minlp_solver)
-            Logging.disable_logging(Logging.Warn)
+            PowerModels.silence!()
         end
     end
 
@@ -503,9 +503,9 @@
         @test_throws ErrorException PowerModels.correct_voltage_angle_differences!(mn_data)
         @test_throws ErrorException PowerModels.calc_connected_components(mn_data)
 
-        Logging.disable_logging(Logging.Info)
+        PowerModels.set_logging_level!(:Warn)
         @test_nowarn PowerModels.correct_reference_buses!(mn_data)
-        Logging.disable_logging(Logging.Warn)
+        PowerModels.silence!()
     end
 
 end
