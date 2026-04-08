@@ -642,17 +642,19 @@ end
         result = solve_opf("../test/data/matpower/case6.m", SOCWRConicPowerModel, sdp_solver)
 
         @test result["termination_status"] == OPTIMAL
-        #@test isapprox(result["objective"], 11472.2; atol = 3e0)
-        #@test isapprox(result["objective"], 11451.5; atol = 3e0)
-        @test isapprox(result["objective"], 11473.4; atol = 3e0)
+        # Solvers get a range of answers for this test.
+        #  * Mosek@10 produces 11472.3
+        #  * SCS@3    produces 11470.3
+        @test 11470.2 <= result["objective"] <= 11472.4
     end
     @testset "24-bus rts case" begin
         result = solve_opf("../test/data/matpower/case24.m", SOCWRConicPowerModel, sdp_solver)
 
         @test result["termination_status"] == OPTIMAL
-        #@test isapprox(result["objective"], 70693.9; atol = 1e0)
-        #@test isapprox(result["objective"], 70670.0; atol = 1e0)
-        @test isapprox(result["objective"], 70683.5; atol = 1e0)
+        # Solvers get a range of answers for this test.
+        #  * Mosek@10 produces 70690.7
+        #  * SCS@3    produces 70680.6
+        @test 70680.5 <= result["objective"] <= 70690.8
     end
     @testset "14-bus variable bounds" begin
         pm = instantiate_model("../test/data/matpower/case14.m", SOCWRConicPowerModel, PowerModels.build_opf)
@@ -944,11 +946,14 @@ end
     end
     @testset "5-bus with negative generators" begin
         result = solve_opf("../test/data/matpower/case5_npg.m", SDPWRMPowerModel, sdp_solver)
-
-        @test result["termination_status"] == OPTIMAL
-        #@test isapprox(result["objective"], 6827.34; atol = 1e0)
-        #@test isapprox(result["objective"], 6735.17; atol = 1e0)
-        @test isapprox(result["objective"], 6827.71; atol = 1e0)
+        # SCS hits an iteration limit with these, but it still finds the correct
+        # objective.
+        @test result["termination_status"] == OPTIMAL ||
+              result["termination_status"] == ITERATION_LIMIT
+        # Solvers get a range of answers for this test.
+        #  * Mosek@10 produces 6827.48
+        #  * SCS@3    produces 6827.73
+        @test 6827.38 <= result["objective"] <= 6827.83
     end
     # too slow for unit tests
     # @testset "14-bus case" begin
