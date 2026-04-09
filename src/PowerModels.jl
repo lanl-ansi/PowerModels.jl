@@ -1,25 +1,19 @@
 module PowerModels
 
 import InfrastructureModels as _IM
-import InfrastructureModels: optimize_model!, @im_fields, nw_id_default
+import InfrastructureModels: optimize_model!, @im_fields, @log_error, nw_id_default
 import JSON
 import JuMP
 import LinearAlgebra
 import Logging
-import LoggingExtras
 import NLsolve
 import PrecompileTools
 import SparseArrays
 
 # Setup Logging
 include("core/logging.jl")
-_DEFAULT_LOGGER = Logging.current_logger()
-_LOGGER = Logging.ConsoleLogger(; meta_formatter=PowerModels._pm_metafmt)
 function __init__()
-    global _DEFAULT_LOGGER = Logging.current_logger()
-    global _LOGGER = Logging.ConsoleLogger(; meta_formatter=PowerModels._pm_metafmt)
-
-    Logging.global_logger(_LOGGER)
+    _IM.register_module!(PowerModels, PowerModels._pm_metafmt)
 end
 
 "Suppresses information and warning messages output by PowerModels, for fine grained control use the Logging standard library"

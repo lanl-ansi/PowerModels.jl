@@ -21,11 +21,11 @@ function make_basic_network(data::Dict{String,<:Any})
     # We keep them here so they run _before_ we create a deepcopy of the data
     # The checks are fast so this redundancy has little performance impact
     if _IM.ismultiinfrastructure(data)
-        error("make_basic_network does not support multiinfrastructure data")
+        @log_error("make_basic_network does not support multiinfrastructure data")
     end
 
     if _IM.ismultinetwork(data)
-        error("make_basic_network does not support multinetwork data")
+        @log_error("make_basic_network does not support multinetwork data")
     end
 
     data = deepcopy(data)
@@ -42,17 +42,17 @@ See [`make_basic_network`](@ref) for more information.
 """
 function make_basic_network!(data::Dict{String,<:Any})
     if _IM.ismultiinfrastructure(data)
-        error("make_basic_network does not support multiinfrastructure data")
+        @log_error("make_basic_network does not support multiinfrastructure data")
     end
 
     if _IM.ismultinetwork(data)
-        error("make_basic_network does not support multinetwork data")
+        @log_error("make_basic_network does not support multinetwork data")
     end
 
     # TODO transform PWL costs into linear costs
     for (i,gen) in data["gen"]
         if get(gen, "cost_model", 2) != 2
-            error("make_basic_network only supports network data with polynomial cost functions, generator $(i) has a piecewise linear cost function")
+            @log_error("make_basic_network only supports network data with polynomial cost functions, generator $(i) has a piecewise linear cost function")
         end
     end
     standardize_cost_terms!(data, order=2)
@@ -373,7 +373,7 @@ function calc_basic_ptdf_row(data::Dict{String,<:Any}, branch_index::Int)
     end
 
     if branch_index < 1 || branch_index > length(data["branch"])
-        error("branch index of $(branch_index) is out of bounds, valid values are $(1)-$(length(data["branch"]))")
+        @log_error("branch index of $(branch_index) is out of bounds, valid values are $(1)-$(length(data["branch"]))")
     end
     branch = data["branch"]["$(branch_index)"]
     g,b = calc_branch_y(branch)

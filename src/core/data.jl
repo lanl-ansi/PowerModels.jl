@@ -663,7 +663,7 @@ function _calc_comp_lines(component::Dict{String,<:Any})
 
     for i in 2:length(line_data)
         if line_data[i-1].slope > line_data[i].slope
-            error("non-convex pwl function found in points $(component["cost"])\nlines: $(line_data)")
+            @log_error("non-convex pwl function found in points $(component["cost"])\nlines: $(line_data)")
         end
     end
 
@@ -1011,7 +1011,7 @@ function correct_voltage_angle_differences!(data::Dict{String,<:Any}, default_pa
     pm_data = get_pm_data(data)
 
     if _IM.ismultinetwork(pm_data)
-        error("correct_voltage_angle_differences! does not yet support multinetwork data")
+        @log_error("correct_voltage_angle_differences! does not yet support multinetwork data")
     end
 
     @assert("per_unit" in keys(pm_data) && pm_data["per_unit"])
@@ -1058,7 +1058,7 @@ function _correct_thermal_limits!(pm_data::Dict{String,<:Any})
             if haskey(branch, rate_key)
                 rate_value = branch[rate_key]
                 if rate_value < 0.0
-                    error("negative $(rate_key) value on branch $(branch["index"]), this code only supports non-negative $(rate_key) values")
+                    @log_error("negative $(rate_key) value on branch $(branch["index"]), this code only supports non-negative $(rate_key) values")
                 end
                 if isapprox(rate_value, 0.0)
                     delete!(branch, rate_key)
@@ -1142,7 +1142,7 @@ function _correct_current_limits!(pm_data::Dict{String,<:Any})
                 rate_value = branch[rate_key]
 
                 if rate_value < 0.0
-                    error("negative $(rate_key) value on branch $(branch["index"]), this code only supports non-negative $(rate_key) values")
+                    @log_error("negative $(rate_key) value on branch $(branch["index"]), this code only supports non-negative $(rate_key) values")
                 end
 
                 if isapprox(rate_value, 0.0)
@@ -1254,7 +1254,7 @@ end
 function _check_branch_loops(pm_data::Dict{String, <:Any})
     for (i, branch) in pm_data["branch"]
         if branch["f_bus"] == branch["t_bus"]
-            error("both sides of branch $(i) connect to bus $(branch["f_bus"])")
+            @log_error("both sides of branch $(i) connect to bus $(branch["f_bus"])")
         end
     end
 end
@@ -1272,55 +1272,55 @@ function _check_connectivity(data::Dict{String,<:Any})
 
     for (i, load) in data["load"]
         if !(load["load_bus"] in bus_ids)
-            error("bus $(load["load_bus"]) in load $(i) is not defined")
+            @log_error("bus $(load["load_bus"]) in load $(i) is not defined")
         end
     end
 
     for (i, shunt) in data["shunt"]
         if !(shunt["shunt_bus"] in bus_ids)
-            error("bus $(shunt["shunt_bus"]) in shunt $(i) is not defined")
+            @log_error("bus $(shunt["shunt_bus"]) in shunt $(i) is not defined")
         end
     end
 
     for (i, gen) in data["gen"]
         if !(gen["gen_bus"] in bus_ids)
-            error("bus $(gen["gen_bus"]) in generator $(i) is not defined")
+            @log_error("bus $(gen["gen_bus"]) in generator $(i) is not defined")
         end
     end
 
     for (i, strg) in data["storage"]
         if !(strg["storage_bus"] in bus_ids)
-            error("bus $(strg["storage_bus"]) in storage unit $(i) is not defined")
+            @log_error("bus $(strg["storage_bus"]) in storage unit $(i) is not defined")
         end
     end
 
     for (i, switch) in data["switch"]
         if !(switch["f_bus"] in bus_ids)
-            error("from bus $(switch["f_bus"]) in switch $(i) is not defined")
+            @log_error("from bus $(switch["f_bus"]) in switch $(i) is not defined")
         end
 
         if !(switch["t_bus"] in bus_ids)
-            error("to bus $(switch["t_bus"]) in switch $(i) is not defined")
+            @log_error("to bus $(switch["t_bus"]) in switch $(i) is not defined")
         end
     end
 
     for (i, branch) in data["branch"]
         if !(branch["f_bus"] in bus_ids)
-            error("from bus $(branch["f_bus"]) in branch $(i) is not defined")
+            @log_error("from bus $(branch["f_bus"]) in branch $(i) is not defined")
         end
 
         if !(branch["t_bus"] in bus_ids)
-            error("to bus $(branch["t_bus"]) in branch $(i) is not defined")
+            @log_error("to bus $(branch["t_bus"]) in branch $(i) is not defined")
         end
     end
 
     for (i, dcline) in data["dcline"]
         if !(dcline["f_bus"] in bus_ids)
-            error("from bus $(dcline["f_bus"]) in dcline $(i) is not defined")
+            @log_error("from bus $(dcline["f_bus"]) in dcline $(i) is not defined")
         end
 
         if !(dcline["t_bus"] in bus_ids)
-            error("to bus $(dcline["t_bus"]) in dcline $(i) is not defined")
+            @log_error("to bus $(dcline["t_bus"]) in dcline $(i) is not defined")
         end
     end
 end
@@ -1385,13 +1385,13 @@ function reference_bus(data::Dict{String,<:Any})
     pm_data = get_pm_data(data)
 
     if _IM.ismultinetwork(pm_data)
-        error("check_reference_bus does not yet support multinetwork data")
+        @log_error("check_reference_bus does not yet support multinetwork data")
     end
 
     ref_buses = [bus for (i,bus) in pm_data["bus"] if bus["bus_type"] == 3]
 
     if length(ref_buses) != 1
-        error("exactly one refrence bus in data is required when calling reference_bus, given $(length(ref_buses))")
+        @log_error("exactly one refrence bus in data is required when calling reference_bus, given $(length(ref_buses))")
     end
     ref_buses = ref_buses[1]
 
@@ -1463,39 +1463,39 @@ end
 function _check_storage_parameters(data::Dict{String,<:Any})
     for (i, strg) in data["storage"]
         if strg["energy"] < 0.0
-            error("storage unit $(strg["index"]) has a non-positive energy level $(strg["energy"])")
+            @log_error("storage unit $(strg["index"]) has a non-positive energy level $(strg["energy"])")
         end
         if strg["energy_rating"] < 0.0
-            error("storage unit $(strg["index"]) has a non-positive energy rating $(strg["energy_rating"])")
+            @log_error("storage unit $(strg["index"]) has a non-positive energy rating $(strg["energy_rating"])")
         end
         if strg["charge_rating"] < 0.0
-            error("storage unit $(strg["index"]) has a non-positive charge rating $(strg["energy_rating"])")
+            @log_error("storage unit $(strg["index"]) has a non-positive charge rating $(strg["energy_rating"])")
         end
         if strg["discharge_rating"] < 0.0
-            error("storage unit $(strg["index"]) has a non-positive discharge rating $(strg["energy_rating"])")
+            @log_error("storage unit $(strg["index"]) has a non-positive discharge rating $(strg["energy_rating"])")
         end
 
         if strg["r"] < 0.0
-            error("storage unit $(strg["index"]) has a non-positive resistance $(strg["r"])")
+            @log_error("storage unit $(strg["index"]) has a non-positive resistance $(strg["r"])")
         end
         if strg["x"] < 0.0
-            error("storage unit $(strg["index"]) has a non-positive reactance $(strg["x"])")
+            @log_error("storage unit $(strg["index"]) has a non-positive reactance $(strg["x"])")
         end
         if haskey(strg, "thermal_rating") && strg["thermal_rating"] < 0.0
-            error("storage unit $(strg["index"]) has a non-positive thermal rating $(strg["thermal_rating"])")
+            @log_error("storage unit $(strg["index"]) has a non-positive thermal rating $(strg["thermal_rating"])")
         end
         if haskey(strg, "current_rating") && strg["current_rating"] < 0.0
-            error("storage unit $(strg["index"]) has a non-positive current rating $(strg["thermal_rating"])")
+            @log_error("storage unit $(strg["index"]) has a non-positive current rating $(strg["thermal_rating"])")
         end
 
         if strg["charge_efficiency"] < 0.0
-            error("storage unit $(strg["index"]) has a non-positive charge efficiency of $(strg["charge_efficiency"])")
+            @log_error("storage unit $(strg["index"]) has a non-positive charge efficiency of $(strg["charge_efficiency"])")
         end
         if strg["charge_efficiency"] <= 0.0 || strg["charge_efficiency"] > 1.0
             @warn "storage unit $(strg["index"]) charge efficiency of $(strg["charge_efficiency"]) is out of the valid range (0.0. 1.0]"
         end
         if strg["discharge_efficiency"] < 0.0
-            error("storage unit $(strg["index"]) has a non-positive discharge efficiency of $(strg["discharge_efficiency"])")
+            @log_error("storage unit $(strg["index"]) has a non-positive discharge efficiency of $(strg["discharge_efficiency"])")
         end
         if strg["discharge_efficiency"] <= 0.0 || strg["discharge_efficiency"] > 1.0
             @warn "storage unit $(strg["index"]) discharge efficiency of $(strg["discharge_efficiency"]) is out of the valid range (0.0. 1.0]"
@@ -1526,11 +1526,11 @@ function _check_switch_parameters(data::Dict{String,<:Any})
         end
 
         if haskey(switch, "thermal_rating") && switch["thermal_rating"] < 0.0
-            error("switch $(switch["index"]) has a non-positive thermal_rating $(switch["thermal_rating"])")
+            @log_error("switch $(switch["index"]) has a non-positive thermal_rating $(switch["thermal_rating"])")
         end
 
         if haskey(switch, "current_rating") && switch["current_rating"] < 0.0
-            error("switch $(switch["index"]) has a non-positive current_rating $(switch["current_rating"])")
+            @log_error("switch $(switch["index"]) has a non-positive current_rating $(switch["current_rating"])")
         end
     end
 end
@@ -1598,7 +1598,7 @@ function _correct_bus_types!(pm_data::Dict{String,<:Any})
             ref_bus["bus_type"] = 3
             @warn "no reference bus found, setting bus $(gen_bus) as reference based on generator $(gen["index"])"
         else
-            error("no generators found in the given network data, correct_bus_types! requires at least one generator at the reference bus")
+            @log_error("no generators found in the given network data, correct_bus_types! requires at least one generator at the reference bus")
         end
     end
 
@@ -1608,7 +1608,7 @@ end
 "find the largest active generator in a collection of generators"
 function _biggest_generator(gens::Dict)::Dict
     if length(gens) == 0
-        error("generator list passed to _biggest_generator was empty.  please report this bug.")
+        @log_error("generator list passed to _biggest_generator was empty.  please report this bug.")
     end
 
     biggest_gen = Dict{String,Any}()
@@ -1727,17 +1727,17 @@ function _correct_cost_function!(id, comp, type_name, pmin_key, pmax_key)
     if "model" in keys(comp) && "cost" in keys(comp)
         if comp["model"] == 1
             if length(comp["cost"]) != 2*comp["ncost"]
-                error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
+                @log_error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
             end
             if length(comp["cost"]) < 4
-                error("cost includes $(comp["ncost"]) points, but at least two points are required on $(type_name) $(id)")
+                @log_error("cost includes $(comp["ncost"]) points, but at least two points are required on $(type_name) $(id)")
             end
 
             _remove_pwl_cost_duplicates!(id, comp, type_name)
 
             for i in 3:2:length(comp["cost"])
                 if comp["cost"][i-2] > comp["cost"][i]
-                    error("non-increasing x values in pwl cost model on $(type_name) $(id)")
+                    @log_error("non-increasing x values in pwl cost model on $(type_name) $(id)")
                 end
             end
 
@@ -1745,7 +1745,7 @@ function _correct_cost_function!(id, comp, type_name, pmin_key, pmax_key)
 
         elseif comp["model"] == 2
             if length(comp["cost"]) != comp["ncost"]
-                error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
+                @log_error("ncost of $(comp["ncost"]) not consistent with $(length(comp["cost"])) cost values on $(type_name) $(id)")
             end
         else
             @warn "Unknown cost model of type $(comp["model"]) on $(type_name) $(id)"
@@ -2477,7 +2477,7 @@ function calc_connected_components(data::Dict{String,<:Any}; edges=["branch", "d
     pm_data = get_pm_data(data)
 
     if _IM.ismultinetwork(pm_data)
-        error("connected_components does not yet support multinetwork data")
+        @log_error("connected_components does not yet support multinetwork data")
     end
 
     active_bus = Dict(x for x in pm_data["bus"] if x.second["bus_type"] != 4)
@@ -2588,7 +2588,7 @@ function _update_bus_ids!(data::Dict{String,<:Any}, bus_id_map::Dict{Int,Int}; i
             if !(new_id in new_bus_ids)
                 push!(new_bus_ids, new_id)
             else
-                error("bus id mapping given to update_bus_ids has an id clash on new bus id $(new_id)")
+                @log_error("bus id mapping given to update_bus_ids has an id clash on new bus id $(new_id)")
             end
         end
     end

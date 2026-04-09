@@ -624,7 +624,7 @@ function constraint_thermal_limit_from_on_off(pm::AbstractPowerModel, i::Int; nw
     f_idx = (i, f_bus, t_bus)
 
     if !haskey(branch, "rate_a")
-        error("constraint_thermal_limit_from_on_off requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
+        @log_error("constraint_thermal_limit_from_on_off requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
     end
 
     constraint_thermal_limit_from_on_off(pm, nw, i, f_idx, branch["rate_a"])
@@ -638,7 +638,7 @@ function constraint_thermal_limit_to_on_off(pm::AbstractPowerModel, i::Int; nw::
     t_idx = (i, t_bus, f_bus)
 
     if !haskey(branch, "rate_a")
-        error("constraint_thermal_limit_to_on_off requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
+        @log_error("constraint_thermal_limit_to_on_off requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
     end
 
     constraint_thermal_limit_to_on_off(pm, nw, i, t_idx, branch["rate_a"])
@@ -652,7 +652,7 @@ function constraint_ne_thermal_limit_from(pm::AbstractPowerModel, i::Int; nw::In
     f_idx = (i, f_bus, t_bus)
 
     if !haskey(branch, "rate_a")
-        error("constraint_thermal_limit_from_ne requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
+        @log_error("constraint_thermal_limit_from_ne requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
     end
 
     constraint_ne_thermal_limit_from(pm, nw, i, f_idx, branch["rate_a"])
@@ -666,7 +666,7 @@ function constraint_ne_thermal_limit_to(pm::AbstractPowerModel, i::Int; nw::Int=
     t_idx = (i, t_bus, f_bus)
 
     if !haskey(branch, "rate_a")
-        error("constraint_thermal_limit_to_ne requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
+        @log_error("constraint_thermal_limit_to_ne requires a rate_a value on all branches, calc_thermal_limits! can be used to generate reasonable values")
     end
 
     constraint_ne_thermal_limit_to(pm, nw, i, t_idx, branch["rate_a"])

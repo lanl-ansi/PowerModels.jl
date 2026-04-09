@@ -24,7 +24,7 @@ function solve_model(data::Dict{String,<:Any}, model_type::Type, optimizer, buil
     if multinetwork != _IM.ismultinetwork(data)
         model_requirement = multinetwork ? "multi-network" : "single-network"
         data_type = _IM.ismultinetwork(data) ? "multi-network" : "single-network"
-        error("attempted to build a $(model_requirement) model with $(data_type) data")
+        @log_error("attempted to build a $(model_requirement) model with $(data_type) data")
     end
 
     start_time = time()
@@ -195,7 +195,7 @@ function _check_missing_keys(dict, keys, type)
         end
     end
     if length(missing) > 0
-        error("the formulation $(type) requires the following varible(s) $(keys) but the $(missing) variable(s) were not found in the model")
+        @log_error("the formulation $(type) requires the following varible(s) $(keys) but the $(missing) variable(s) were not found in the model")
     end
 end
 

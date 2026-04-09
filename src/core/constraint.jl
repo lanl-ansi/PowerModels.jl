@@ -7,7 +7,7 @@
 "checks if a sufficient number of variables exist for the given keys collection"
 function _check_var_keys(vars, keys, var_name, comp_name)
     if length(vars) < length(keys)
-        error("$(var_name) decision variables appear to be missing for $(comp_name) components")
+        @log_error("$(var_name) decision variables appear to be missing for $(comp_name) components")
     end
 end
 

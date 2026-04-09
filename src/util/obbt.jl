@@ -84,7 +84,7 @@ function solve_obbt_opf!(data::Dict{String,<:Any}, optimizer;
     @info "maximum time limit for OBBT set to default value of $time_limit seconds"
 
     model_relaxation = instantiate_model(data, model_type, PowerModels.build_opf)
-    (_IM.ismultinetwork(model_relaxation, pm_it_sym)) && (error("OBBT is not supported for multi-networks"))
+    (_IM.ismultinetwork(model_relaxation, pm_it_sym)) && (@log_error("OBBT is not supported for multi-networks"))
 
     # check for model_type compatability with OBBT
     _check_variables(model_relaxation)
@@ -93,7 +93,7 @@ function solve_obbt_opf!(data::Dict{String,<:Any}, optimizer;
     _check_obbt_options(upper_bound, rel_gap_tol, upper_bound_constraint)
 
     # check termination norm criteria for obbt
-    (termination != :avg && termination != :max) && (error("OBBT termination criteria can only be :max or :avg"))
+    (termination != :avg && termination != :max) && (@log_error("OBBT termination criteria can only be :max or :avg"))
 
     # pass status
     status_pass = [JuMP.LOCALLY_SOLVED, JuMP.OPTIMAL]
@@ -102,7 +102,7 @@ function solve_obbt_opf!(data::Dict{String,<:Any}, optimizer;
     result_relaxation = optimize_model!(model_relaxation, optimizer=optimizer)
     current_relaxation_objective = result_relaxation["objective"]
     if upper_bound < current_relaxation_objective
-        error("the upper bound provided to OBBT is not a valid ACOPF upper bound")
+        @log_error("the upper bound provided to OBBT is not a valid ACOPF upper bound")
     end
     if !(result_relaxation["termination_status"] in status_pass)
         @warn "initial relaxation solve status is $(result_relaxation["termination_status"])"
@@ -382,24 +382,24 @@ function _check_variables(pm::AbstractPowerModel)
     try
         vm = var(pm, :vm)
     catch err
-        (isa(error, KeyError)) && (error("OBBT is not supported for models without explicit voltage magnitude variables"))
+        (isa(error, KeyError)) && (@log_error("OBBT is not supported for models without explicit voltage magnitude variables"))
     end
 
     try
         td = var(pm, :td)
     catch err
-        (isa(error, KeyError)) && (error("OBBT is not supported for models without explicit voltage angle difference variables"))
+        (isa(error, KeyError)) && (@log_error("OBBT is not supported for models without explicit voltage angle difference variables"))
     end
 end
 
 
 function _check_obbt_options(ub::Float64, rel_gap::Float64, ub_constraint::Bool)
     if ub_constraint && isinf(ub)
-        error("the option upper_bound_constraint cannot be set to true without specifying an upper bound")
+        @log_error("the option upper_bound_constraint cannot be set to true without specifying an upper bound")
     end
 
     if !isinf(rel_gap) && isinf(ub)
-        error("rel_gap_tol is specified without providing an upper bound")
+        @log_error("rel_gap_tol is specified without providing an upper bound")
     end
 end
 
@@ -414,11 +414,11 @@ function _constraint_obj_bound(pm::AbstractPowerModel, bound)
                     model = gen["model"]
                 else
                     if gen["model"] != model
-                        error("cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
+                        @log_error("cost models are inconsistent, the typical model is $(model) however model $(gen["model"]) is given on generator $(i)")
                     end
                 end
             else
-                error("no cost given for generator $(i)")
+                @log_error("no cost given for generator $(i)")
             end
         end
         for (i,dcline) in nw_ref[:dcline]
@@ -427,22 +427,22 @@ function _constraint_obj_bound(pm::AbstractPowerModel, bound)
                     model = dcline["model"]
                 else
                     if dcline["model"] != model
-                        error("cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
+                        @log_error("cost models are inconsistent, the typical model is $(model) however model $(dcline["model"]) is given on dcline $(i)")
                     end
                 end
             else
-                error("no cost given for dcline $(i)")
+                @log_error("no cost given for dcline $(i)")
             end
         end
     end
 
     if model != 2
-        error("Only cost models of type 2 is supported at this time, given cost model type $(model)")
+        @log_error("Only cost models of type 2 is supported at this time, given cost model type $(model)")
     end
 
     cost_index = PowerModels.calc_max_cost_index(pm.data)
     if cost_index > 3
-        error("Only quadratic generator cost models are supported at this time, given cost model of order $(cost_index-1)")
+        @log_error("Only quadratic generator cost models are supported at this time, given cost model of order $(cost_index-1)")
     end
 
     PowerModels.standardize_cost_terms!(pm.data, order=2)

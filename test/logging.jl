@@ -69,7 +69,7 @@ import LoggingExtras
     end
 
     @testset "restore_global_logger!" begin
-        original = PowerModels._DEFAULT_LOGGER
+        original = InfrastructureModels._DEFAULT_LOGGER
 
         PowerModels.restore_global_logger!()
         @test Logging.global_logger() === original
@@ -79,10 +79,35 @@ import LoggingExtras
         PowerModels.silence!()
     end
 
-    @testset "per-module filtering" begin
-        filtered = PowerModels._make_filtered_logger(Logging.Error)
-        @test filtered isa LoggingExtras.EarlyFilteredLogger
-        @test filtered.logger isa Logging.ConsoleLogger
+    @testset "per-module independence" begin
+        # Silence PM only — IM should be unaffected
+        PowerModels.reset_logging_level!()
+        InfrastructureModels.reset_logging_level!()
+
+        PowerModels.silence!()
+
+        # PM is silenced
+        @test haskey(InfrastructureModels._MODULE_LOG_LEVELS, PowerModels)
+        # IM is not silenced
+        @test !haskey(InfrastructureModels._MODULE_LOG_LEVELS, InfrastructureModels)
+
+        # Filter correctly discriminates
+        filter = InfrastructureModels._should_log
+        @test filter((level=Logging.Warn, _module=PowerModels)) == false
+        @test filter((level=Logging.Error, _module=PowerModels)) == true
+        @test filter((level=Logging.Warn, _module=InfrastructureModels)) == true
+
+        PowerModels.silence!()  # cleanup
+    end
+
+    @testset "dispatching formatter routes to PM" begin
+        # PM formatter is registered
+        @test haskey(InfrastructureModels._MODULE_FORMATTERS, PowerModels)
+
+        # Dispatching formatter routes PM module to _pm_metafmt
+        _, prefix1, _ = InfrastructureModels._dispatching_metafmt(Logging.Info, PowerModels, :default, :id, "file.jl", 1)
+        _, prefix2, _ = PowerModels._pm_metafmt(Logging.Info, PowerModels, :default, :id, "file.jl", 1)
+        @test prefix1 == prefix2
     end
 
     @testset "legacy API wrappers" begin

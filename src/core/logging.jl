@@ -1,7 +1,7 @@
 """
     _pm_metafmt(level::Logging.LogLevel, _module, group, id, file, line)
 
-MetaFormatter for ConsoleLogger for PowerModels to adjust log message format
+MetaFormatter for PowerModels log messages.
 """
 function _pm_metafmt(level::Logging.LogLevel, _module, group, id, file, line)
     @nospecialize
@@ -26,7 +26,7 @@ end
 """
     silence!()
 
-Sets loglevel for PowerModels to `:Error`, silencing Info and Warn
+Sets loglevel for PowerModels to `:Error`, silencing Info and Warn.
 """
 function silence!()
     set_logging_level!(:Error)
@@ -34,13 +34,23 @@ end
 
 
 """
+    set_logging_level!(level::Symbol)
+
+Sets the logging level for PowerModels: `:Info`, `:Warn`, `:Error`.
+"""
+function set_logging_level!(level::Symbol)
+    _IM.set_module_log_level!(PowerModels, getfield(Logging, level))
+    return
+end
+
+
+"""
     reset_logging_level!()
 
-Resets the log level to Info
+Removes PowerModels' log level override, restoring default behavior.
 """
 function reset_logging_level!()
-    Logging.global_logger(_LOGGER)
-
+    _IM.reset_module_log_level!(PowerModels)
     return
 end
 
@@ -48,38 +58,9 @@ end
 """
     restore_global_logger!()
 
-Restores the global logger to its default state (before PowerModels was loaded)
+Restores the global logger to its default state (before InfrastructureModels was loaded).
 """
 function restore_global_logger!()
-    Logging.global_logger(_DEFAULT_LOGGER)
-
+    _IM.restore_global_logger!()
     return
-end
-
-
-"""
-    set_logging_level!(level::Symbol)
-
-Sets the logging level for PowerModels: `:Info`, `:Warn`, `:Error`
-"""
-function set_logging_level!(level::Symbol)
-    Logging.global_logger(_make_filtered_logger(getfield(Logging, level)))
-
-    return
-end
-
-
-"""
-    _make_filtered_logger(level::Logging.LogLevel)
-
-Helper function to create the filtered logger for PowerModels
-"""
-function _make_filtered_logger(level)
-    LoggingExtras.EarlyFilteredLogger(_LOGGER) do log
-        if log._module == PowerModels && log.level < level
-            return false
-        else
-            return true
-        end
-    end
 end
