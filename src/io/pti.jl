@@ -513,7 +513,7 @@ function _parse_elements(elements::Array, dtypes::Array, defaults::Dict, section
                     if isa(message, Meta.ParseError)
                         data[field] = element
                     else
-                        error("value '$element' for $field in section $section is not of type $dtype.")
+                        @log_error("value '$element' for $field in section $section is not of type $dtype.")
                     end
                 end
             end
@@ -575,7 +575,7 @@ function _parse_line_element!(data::Dict, elements::Array, section::AbstractStri
             if isa(message, Meta.ParseError)
                 data[field] = element
             else
-                error("value '$element' for $field in section $section is not of type $dtype.")
+                @log_error("value '$element' for $field in section $section is not of type $dtype.")
             end
         end
     end
@@ -608,7 +608,7 @@ are also extracted separately, and `Array{Array{String}, String}` is returned.
 """
 function _get_line_elements(line::AbstractString)
     if count(i->(i=='\''), line) % 2 == 1
-        error("There are an uneven number of single-quotes in \"$line\", the line cannot be parsed.")
+        @log_error("There are an uneven number of single-quotes in \"$line\", the line cannot be parsed.")
     end
 
     line_comment = split(line, _comment_split, limit=2)
@@ -680,7 +680,7 @@ function _parse_pti_data(data_io::IO)
                 try
                     _parse_line_element!(section_data, elements, section)
                 catch message
-                    error("Parsing failed at line $line_number: $(sprint(showerror, message))")
+                    @log_error("Parsing failed at line $line_number: $(sprint(showerror, message))")
                 end
 
             elseif section == "CASE IDENTIFICATION"
@@ -688,7 +688,7 @@ function _parse_pti_data(data_io::IO)
                     try
                         _parse_line_element!(section_data, elements, section)
                     catch message
-                        error("Parsing failed at line $line_number: $(sprint(showerror, message))")
+                        @log_error("Parsing failed at line $line_number: $(sprint(showerror, message))")
                     end
 
                     if section_data["REV"] != "" && section_data["REV"] < 33
@@ -711,7 +711,7 @@ function _parse_pti_data(data_io::IO)
                     winding = "THREE-WINDING"
                     skip_lines = 4
                 else
-                    error("Cannot detect type of Transformer")
+                    @log_error("Cannot detect type of Transformer")
                 end
 
                 try
@@ -730,7 +730,7 @@ function _parse_pti_data(data_io::IO)
                         end
                     end
                 catch message
-                    error("Parsing failed at line $line_number: $(sprint(showerror, message))")
+                    @log_error("Parsing failed at line $line_number: $(sprint(showerror, message))")
                 end
 
             elseif section == "VOLTAGE SOURCE CONVERTER"
@@ -739,7 +739,7 @@ function _parse_pti_data(data_io::IO)
                     try
                         _parse_line_element!(section_data, elements, section)
                     catch message
-                        error("Parsing failed at line $line_number: $(sprint(showerror, message))")
+                        @log_error("Parsing failed at line $line_number: $(sprint(showerror, message))")
                     end
                     skip_sublines = 2
                     continue
@@ -775,7 +775,7 @@ function _parse_pti_data(data_io::IO)
                 try
                     _parse_line_element!(section_data, elements, section)
                 catch message
-                    error("Parsing failed at line $line_number: $(sprint(showerror, message))")
+                    @log_error("Parsing failed at line $line_number: $(sprint(showerror, message))")
                 end
 
             elseif section == "MULTI-TERMINAL DC"
@@ -784,7 +784,7 @@ function _parse_pti_data(data_io::IO)
                     try
                         _parse_line_element!(section_data, elements, section)
                     catch message
-                        error("Parsing failed at line $line_number: $(sprint(showerror, message))")
+                        @log_error("Parsing failed at line $line_number: $(sprint(showerror, message))")
                     end
 
                     if section_data["NCONV"] > 0
@@ -809,7 +809,7 @@ function _parse_pti_data(data_io::IO)
                     try
                         _parse_line_element!(subsection_data, elements, "$section $subsection")
                     catch message
-                        error("Parsing failed at line $line_number: $(sprint(showerror, message))")
+                        @log_error("Parsing failed at line $line_number: $(sprint(showerror, message))")
                     end
 
                     if haskey(section_data, "$(subsection[2:end])")
@@ -999,7 +999,7 @@ Things that are not exported if you use `import_all = true` to make the PowerMod
 """
 function export_pti(io::IO, data::Dict{String,Any})
     if _IM.ismultinetwork(data)
-        error("export_pti does not yet support multinetwork data")
+        @log_error("export_pti does not yet support multinetwork data")
     end
 
     # Info for items that will be exported
