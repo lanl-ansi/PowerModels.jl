@@ -21,11 +21,11 @@ Ipopt = "1"
 JSON = "1"
 JuMP = "1.15"
 Juniper = "0.9"
-Logging = "1.11.0"
+Logging = "1.10"
 NLsolve = "4"
 PrecompileTools = "1"
 SCS = "1, 2"
-julia = "1.6"
+julia = "1.10"
 
 [extras]
 HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
