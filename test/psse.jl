@@ -1,7 +1,5 @@
 # Tests for data conversion from PSS(R)E to PowerModels data structure
 
-TESTLOG = Memento.getlogger(PowerModels)
-
 function set_costs!(data::Dict)
     for (n, gen) in data["gen"]
         gen["cost"] = [0., 100., 0.]
@@ -211,15 +209,13 @@ end
 
         @test dummy_data["gen"]["1"]["source_id"] == ["generator", 1001, "1 "]
 
-        Memento.setlevel!(TESTLOG, "warn")
+        _test_warn("Could not find bus 1, returning 0 for field vm") do
+            return PowerModels._get_bus_value(1, "vm", dummy_data)
+        end
 
-        @test_warn(TESTLOG, "Could not find bus 1, returning 0 for field vm",
-                   PowerModels._get_bus_value(1, "vm", dummy_data))
-
-        @test_warn(TESTLOG, "The following fields in BUS are missing: NVHI, NVLO, EVHI, EVLO",
-                   PowerModels.parse_file("../test/data/pti/parser_test_i.raw"))
-
-        Memento.setlevel!(TESTLOG, "error")
+        _test_warn("The following fields in BUS are missing: NVHI, NVLO, EVHI, EVLO") do
+            return PowerModels.parse_file("../test/data/pti/parser_test_i.raw")
+        end
     end
 
     @testset "three-winding transformer" begin
@@ -320,7 +316,7 @@ end
 
         @testset "with nomV=0 cw=2" begin
             data = PowerModels.parse_file("../test/data/pti/case4_3wtf_vnom0_cw2.raw")
-    
+
             opf = PowerModels.solve_opf(data, PowerModels.ACPPowerModel, nlp_solver)
             @test opf["termination_status"] == LOCALLY_SOLVED
             @test isapprox(opf["objective"], 5.00079; atol=1e-3)
@@ -328,7 +324,7 @@ end
 
         @testset "with nomV=0 cw=3" begin
             data = PowerModels.parse_file("../test/data/pti/case4_3wtf_vnom0_cw3.raw")
-    
+
             opf = PowerModels.solve_opf(data, PowerModels.ACPPowerModel, nlp_solver)
             @test opf["termination_status"] == LOCALLY_SOLVED
             @test isapprox(opf["objective"], 5.00079; atol=1e-3)
@@ -336,12 +332,12 @@ end
 
         @testset "2-windning transformer with nomV=0 cw=3" begin
             data = PowerModels.parse_file("../test/data/pti/case3_2wtf_vmon0.raw")
-    
+
             opf = PowerModels.solve_opf(data, PowerModels.ACPPowerModel, nlp_solver)
             @test opf["termination_status"] == LOCALLY_SOLVED
             @test isapprox(opf["objective"], 17.5101; atol=1e-3)
         end
-        
+
     end
 
     @testset "transformer magnetizing admittance" begin

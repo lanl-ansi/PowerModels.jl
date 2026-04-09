@@ -8,12 +8,44 @@ import JSON
 import JuMP
 import Juniper
 import LinearAlgebra
-import Memento
+import Logging
 import SCS
 import SparseArrays
 
 # Suppress warnings during testing.
 PowerModels.silence()
+
+struct TestLogger <: Logging.AbstractLogger
+    level::Any
+    msgs::Vector{Any}
+    TestLogger(level) = new(level, Any[])
+end
+Logging.min_enabled_level(::TestLogger) = Logging.Debug
+Logging.shouldlog(::TestLogger, args...) = true
+function Logging.handle_message(logger::TestLogger, l, msg, args...; kwargs...)
+    if logger.level == l
+        push!(logger.msgs, msg)
+    end
+    return
+end
+
+function _test_warn(f, msg)
+    old_logger = PowerModels._LOGGER
+    PowerModels._LOGGER = TestLogger(Logging.Warn)
+    f()
+    @test msg in PowerModels._LOGGER.msgs
+    PowerModels._LOGGER = old_logger
+    return
+end
+
+function _test_nowarn(f)
+    old_logger = PowerModels._LOGGER
+    PowerModels._LOGGER = TestLogger(Logging.Warn)
+    f()
+    @test isempty(PowerModels._LOGGER.msgs)
+    PowerModels._LOGGER = old_logger
+    return
+end
 
 # default setup for solvers
 nlp_solver = JuMP.optimizer_with_attributes(
