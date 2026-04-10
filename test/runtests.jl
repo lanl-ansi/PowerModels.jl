@@ -12,7 +12,6 @@ import Logging
 import SCS
 import SparseArrays
 
-# Suppress warnings during testing.
 PowerModels.silence()
 
 function _test_warn(f, msg)
@@ -35,7 +34,7 @@ function _test_nowarn(f)
         PowerModels._LOGGER[] = old_logger
         return
     end
-    @test !occursin("[PowerModels | Warn]:", log_msg)
+    @test !occursin("PowerModels | Warn]:", log_msg)
     return
 end
 

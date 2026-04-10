@@ -20,7 +20,7 @@ end
 """
     silence()
 
-Silence logging within PowerModels.
+Silence logging within PowerModels and InfrastructureModels.
 
 This is equivalent to calling `logger_config!("error")`.
 """
@@ -30,14 +30,8 @@ function silence()
     return
 end
 
-function _meta_formatter(l::Logging.LogLevel, _module, ::Any, id, file, line)
-    color = Logging.default_logcolor(l)
-    prefix = "$(_module) | $l]:"
-    if Logging.Info <= l < Logging.Warn
-        return color, prefix, ""
-    end
-    suffix = string("@ $(_module) ", Base.contractuser(file), ":$line")
-    return color, prefix, suffix
+function _meta_formatter(level::Logging.LogLevel, _module, args...)
+    return Logging.default_logcolor(level), "$(_module) | $level]:", ""
 end
 
 function logger_config!(level::Logging.LogLevel)
@@ -46,20 +40,15 @@ function logger_config!(level::Logging.LogLevel)
     return
 end
 
-const _LEVEL = Dict(
-    "error" => Logging.Error,
-    "warn" => Logging.Warn,
-    "info" => Logging.Info,
-    "debug" => Logging.Debug,
-)
-
 """
     logger_config!(level::String)
 
 Set the logging level within PowerModels. `level` just be one of `"error"`,
 `"warn"`, `"info"`, or `"debug"`.
 """
-logger_config!(level::String) = logger_config!(_LEVEL[level])
+function logger_config!(level::String)
+    return getfield(Logging, level |> titlecase |> Symbol) |> logger_config!
+end
 
 function _log_if_level(f, level, logger = _LOGGER[])
     if level >= Logging.min_enabled_level(logger)
