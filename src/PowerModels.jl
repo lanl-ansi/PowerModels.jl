@@ -10,14 +10,25 @@ import NLsolve
 import PrecompileTools
 import SparseArrays
 
-global _LOGGER
+const _LOGGER = Ref{Logging.ConsoleLogger}()
 
 function __init__()
     logger_config!("info")
     return
 end
 
-silence() = logger_config!("error")
+"""
+    silence()
+
+Silence logging within PowerModels.
+
+This is equivalent to calling `logger_config!("error")`.
+"""
+function silence()
+    logger_config!("error")
+    _IM.logger_config!("error")
+    return
+end
 
 function _meta_formatter(l::Logging.LogLevel, _module, ::Any, id, file, line)
     color = Logging.default_logcolor(l)
@@ -30,7 +41,7 @@ function _meta_formatter(l::Logging.LogLevel, _module, ::Any, id, file, line)
 end
 
 function logger_config!(level::Logging.LogLevel)
-    global _LOGGER =
+    _LOGGER[] =
         Logging.ConsoleLogger(stdout, level; meta_formatter = _meta_formatter)
     return
 end
@@ -42,11 +53,15 @@ const _LEVEL = Dict(
     "debug" => Logging.Debug,
 )
 
-logger_config!(level::String) = logger_config!(LEVEL[level])
+"""
+    logger_config!(level::String)
 
-_log_if_level(f, level) = _log_if_level(f, _LOGGER, level)
+Set the logging level within PowerModels. `level` just be one of `"error"`,
+`"warn"`, `"info"`, or `"debug"`.
+"""
+logger_config!(level::String) = logger_config!(_LEVEL[level])
 
-function _log_if_level(f, logger, level)
+function _log_if_level(f, level, logger = _LOGGER[])
     if level >= Logging.min_enabled_level(logger)
         Logging.with_logger(f, logger)
     end
