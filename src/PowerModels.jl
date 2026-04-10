@@ -35,37 +35,41 @@ function logger_config!(level::Logging.LogLevel)
     return
 end
 
-function logger_config!(level::String)
-    if level == "error"
-        logger_config!(Logging.Error)
-    elseif level == "warn"
-        logger_config!(Logging.Warn)
-    elseif level == "info"
-        logger_config!(Logging.Info)
-    else
-        @assert level == "debug"
-        logger_config!(Logging.Debug)
+const _LEVEL = Dict(
+    "error" => Logging.Error,
+    "warn" => Logging.Warn,
+    "info" => Logging.Info,
+    "debug" => Logging.Debug,
+)
+
+logger_config!(level::String) = logger_config!(LEVEL[level])
+
+_log_if_level(f, level) = _log_if_level(f, _LOGGER, level)
+
+function _log_if_level(f, logger, level)
+    if level >= Logging.min_enabled_level(logger)
+        Logging.with_logger(f, logger)
     end
     return
 end
 
 macro _error(msg)
     return quote
-        Logging.with_logger(() -> @error($msg), _LOGGER)
+        _log_if_level(() -> @error($msg), Logging.Error)
         error($msg)
     end |> esc
 end
 
 macro _warn(msg)
-    return :(Logging.with_logger(() -> @warn($msg), _LOGGER)) |> esc
+    return :(_log_if_level(() -> @warn($msg), Logging.Warn)) |> esc
 end
 
 macro _debug(msg)
-    return :(Logging.with_logger(() -> @debug($msg), _LOGGER)) |> esc
+    return :(_log_if_level(() -> @debug($msg), Logging.Debug)) |> esc
 end
 
 macro _info(msg)
-    return :(Logging.with_logger(() -> @info($msg), _LOGGER)) |> esc
+    return :(_log_if_level(() -> @info($msg), Logging.Info)) |> esc
 end
 
 const _pm_global_keys = Set(["time_series", "per_unit"])
