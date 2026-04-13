@@ -11,39 +11,50 @@ requirejs.config({
     'highlight-julia-repl': 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/languages/julia-repl.min',
   },
   shim: {
-  "highlight-julia": {
-    "deps": [
-      "highlight"
-    ]
-  },
-  "mathjax": {
-    "exports": "MathJax"
-  },
   "headroom-jquery": {
     "deps": [
       "jquery",
       "headroom"
     ]
   },
+  "highlight-julia": {
+    "deps": [
+      "highlight"
+    ]
+  },
   "highlight-julia-repl": {
     "deps": [
       "highlight"
     ]
+  },
+  "mathjax": {
+    "exports": "MathJax"
   }
 }});
 ////////////////////////////////////////////////////////////////////////////////
 require(['mathjax'], function(MathJax) {
 MathJax.Hub.Config({
-  "jax": [
-    "input/TeX",
-    "output/HTML-CSS",
-    "output/NativeMML"
-  ],
   "TeX": {
     "equationNumbers": {
       "autoNumber": "AMS"
     }
   },
+  "config": [
+    "MMLorHTML.js"
+  ],
+  "extensions": [
+    "MathMenu.js",
+    "MathZoom.js",
+    "TeX/AMSmath.js",
+    "TeX/AMSsymbols.js",
+    "TeX/autobold.js",
+    "TeX/autoload-all.js"
+  ],
+  "jax": [
+    "input/TeX",
+    "output/HTML-CSS",
+    "output/NativeMML"
+  ],
   "tex2jax": {
     "inlineMath": [
       [
@@ -56,18 +67,7 @@ MathJax.Hub.Config({
       ]
     ],
     "processEscapes": true
-  },
-  "config": [
-    "MMLorHTML.js"
-  ],
-  "extensions": [
-    "MathMenu.js",
-    "MathZoom.js",
-    "TeX/AMSmath.js",
-    "TeX/AMSsymbols.js",
-    "TeX/autobold.js",
-    "TeX/autoload-all.js"
-  ]
+  }
 });
 
 })
