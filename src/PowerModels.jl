@@ -43,7 +43,7 @@ end
 """
     logger_config!(level::String)
 
-Set the logging level within PowerModels. `level` just be one of `"error"`,
+Set the logging level within PowerModels. `level` must be one of `"error"`,
 `"warn"`, `"info"`, or `"debug"`.
 """
 function logger_config!(level::String)
