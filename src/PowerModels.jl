@@ -59,21 +59,21 @@ end
 
 macro _error(msg)
     return quote
-        _log_if_level(() -> @error($msg), Logging.Error)
+        $_log_if_level(() -> @error($msg), $(Logging.Error))
         error($msg)
     end |> esc
 end
 
 macro _warn(msg)
-    return :(_log_if_level(() -> @warn($msg), Logging.Warn)) |> esc
+    return :($_log_if_level(() -> @warn($msg), $(Logging.Warn))) |> esc
 end
 
 macro _debug(msg)
-    return :(_log_if_level(() -> @debug($msg), Logging.Debug)) |> esc
+    return :($_log_if_level(() -> @debug($msg), $(Logging.Debug))) |> esc
 end
 
 macro _info(msg)
-    return :(_log_if_level(() -> @info($msg), Logging.Info)) |> esc
+    return :($_log_if_level(() -> @info($msg), $(Logging.Info))) |> esc
 end
 
 const _pm_global_keys = Set(["time_series", "per_unit"])
