@@ -195,7 +195,7 @@ function _check_missing_keys(dict, keys, type)
         end
     end
     if length(missing) > 0
-        error("the formulation $(type) requires the following varible(s) $(keys) but the $(missing) variable(s) were not found in the model")
+        @_error("the formulation $(type) requires the following varible(s) $(keys) but the $(missing) variable(s) were not found in the model")
     end
 end
 

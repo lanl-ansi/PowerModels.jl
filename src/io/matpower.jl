@@ -131,7 +131,7 @@ function _parse_matpower_string(data_string::String)
     if func_name != nothing
         case["name"] = func_name
     else
-        @_warn(string("no case name found in matpower file.  The file seems to be missing \"function mpc = ...\""))
+        @_warn("no case name found in matpower file.  The file seems to be missing \"function mpc = ...\"")
         case["name"] = "no_name_found"
     end
 
@@ -139,14 +139,14 @@ function _parse_matpower_string(data_string::String)
     if haskey(matlab_data, "mpc.version")
         case["source_version"] = matlab_data["mpc.version"]
     else
-        @_warn(string("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\""))
+        @_warn("no case version found in matpower file.  The file seems to be missing \"mpc.version = ...\"")
         case["source_version"] = "0.0.0+"
     end
 
     if haskey(matlab_data, "mpc.baseMVA")
         case["baseMVA"] = matlab_data["mpc.baseMVA"]
     else
-        @_warn(string("no baseMVA found in matpower file.  The file seems to be missing \"mpc.baseMVA = ...\""))
+        @_warn("no baseMVA found in matpower file.  The file seems to be missing \"mpc.baseMVA = ...\"")
         case["baseMVA"] = 1.0
     end
 
@@ -161,7 +161,7 @@ function _parse_matpower_string(data_string::String)
         end
         case["bus"] = buses
     else
-        _error(string("no bus table found in matpower file.  The file seems to be missing \"mpc.bus = [...];\""))
+        @_error("no bus table found in matpower file.  The file seems to be missing \"mpc.bus = [...];\"")
     end
 
     if haskey(matlab_data, "mpc.gen")
@@ -174,7 +174,7 @@ function _parse_matpower_string(data_string::String)
         end
         case["gen"] = gens
     else
-        _error(string("no gen table found in matpower file.  The file seems to be missing \"mpc.gen = [...];\""))
+        @_error("no gen table found in matpower file.  The file seems to be missing \"mpc.gen = [...];\"")
     end
 
     if haskey(matlab_data, "mpc.branch")
@@ -187,7 +187,7 @@ function _parse_matpower_string(data_string::String)
         end
         case["branch"] = branches
     else
-        _error(string("no branch table found in matpower file.  The file seems to be missing \"mpc.branch = [...];\""))
+        @_error("no branch table found in matpower file.  The file seems to be missing \"mpc.branch = [...];\"")
     end
 
     if haskey(matlab_data, "mpc.dcline")

@@ -1011,7 +1011,7 @@ function export_pti(io::IO, data::Dict{String,Any})
     for item in incompatible_items
         if haskey(data, item) && length(data[item]) > 0
             components = length(data[item])
-            @_warn(string("Skipping export of the $(components) $(item) items because it is not suported in the PSSE 33 .raw file"))
+            @_warn("Skipping export of the $(components) $(item) items because it is not suported in the PSSE 33 .raw file")
         end
     end
 
@@ -1024,7 +1024,7 @@ function export_pti(io::IO, data::Dict{String,Any})
         if haskey(data, item)
             components = length(data[item])
             if components > 0
-                @_warn(string("Skipping export of the $(components) $(item) data because is not yet implemented"))
+                @_warn("Skipping export of the $(components) $(item) data because is not yet implemented")
             end
         end
     end

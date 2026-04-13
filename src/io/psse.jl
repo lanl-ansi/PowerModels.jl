@@ -112,14 +112,14 @@ function _import_remaining_comps!(data_out::Dict, data_in::Dict; exclude=[])
                         end
                         comps_out["$(n)"] = comp_out
                     else
-                        error("psse data parsing error, please post an issue")
+                        @_error("psse data parsing error, please post an issue")
                     end
                 end
             elseif isa(v, Dict)
                 comps_out = Dict{String,Any}()
                 _import_remaining_keys!(comps_out, v)
             else
-                error("psse data parsing error, please post an issue")
+                @_error("psse data parsing error, please post an issue")
             end
 
             data_out[lowercase(comp_class)] = comps_out
@@ -136,7 +136,7 @@ function _import_remaining_keys!(comp_dest::Dict, comp_src::Dict; exclude=[])
                 comp_dest[key] = v
             else
                 if key != "index"
-                    warn("duplicate key $(key), please post an issue")
+                    @_warn("duplicate key $(key), please post an issue")
                 end
             end
         end
@@ -508,7 +508,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                         # do nothing
                     end
                 else
-                    error("psse data parsing error, unsupported value for `CW` on transformer")
+                    @_error("psse data parsing error, unsupported value for `CW` on transformer")
                 end
 
                 if import_all
@@ -645,7 +645,7 @@ function _psse2pm_transformer!(pm_data::Dict, pti_data::Dict, import_all::Bool)
                             # do nothing
                         end
                     else
-                        error("psse data parsing error, unsupported value for `CW` on transformer")
+                        @_error("psse data parsing error, unsupported value for `CW` on transformer")
                     end
 
                     if import_all
