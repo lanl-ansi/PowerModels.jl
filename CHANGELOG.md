@@ -2,9 +2,12 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+
+### v0.21.6
 - Update to JSON@1 (#986)
 - Remove Memento and switch to Logging.jl (#1000)
 - Relax flakey tests that are failing on macOS (#1001)
+- Update GitHub actions (#982), (#983), (#990), (#992), (#993), (#994), (#995)
 
 ### v0.21.5
 - Relax tests to allow `INFEASIBLE_POINT` (#976)
