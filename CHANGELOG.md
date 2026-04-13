@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Update to JSON@1 (#986)
+- Remove Memento and switch to Logging.jl (#1000)
 
 ### v0.21.5
 - Relax tests to allow `INFEASIBLE_POINT` (#976)

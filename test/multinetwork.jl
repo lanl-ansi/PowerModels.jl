@@ -1,5 +1,3 @@
-TESTLOG = Memento.getlogger(PowerModels)
-
 @testset "test multinetwork" begin
 
     @testset "idempotent unit transformation" begin
@@ -109,11 +107,11 @@ TESTLOG = Memento.getlogger(PowerModels)
 
     @testset "test solve_opf with multinetwork data" begin
         mn_data = build_mn_data("../test/data/matpower/case5.m")
-        @test_throws(TESTLOG, ErrorException, PowerModels.solve_opf(mn_data, ACPPowerModel, nlp_solver))
+        @test_throws(ErrorException, PowerModels.solve_opf(mn_data, ACPPowerModel, nlp_solver))
     end
 
     @testset "test solve_mn_opf with single-network data" begin
-        @test_throws(TESTLOG, ErrorException, PowerModels.solve_mn_opf("../test/data/matpower/case5.m", ACPPowerModel, nlp_solver))
+        @test_throws(ErrorException, PowerModels.solve_mn_opf("../test/data/matpower/case5.m", ACPPowerModel, nlp_solver))
     end
 
     @testset "test multi-network solution" begin
@@ -454,9 +452,9 @@ TESTLOG = Memento.getlogger(PowerModels)
 
             mn_data["nw"]["1"]["storage"]["1"]["status"] = 0  # verify that storage activation does not cause error
 
-            Memento.setlevel!(TESTLOG, "warn")
-            @test_warn(TESTLOG, "network data should specify time_elapsed, using 1.0 as a default", PowerModels.solve_mn_opf_strg(mn_data, PowerModels.ACPPowerModel, minlp_solver))
-            Memento.setlevel!(TESTLOG, "error")
+            _test_warn("network data should specify time_elapsed, using 1.0 as a default") do
+                return PowerModels.solve_mn_opf_strg(mn_data, PowerModels.ACPPowerModel, minlp_solver)
+            end
         end
     end
 
@@ -502,12 +500,10 @@ TESTLOG = Memento.getlogger(PowerModels)
     @testset "test errors and warnings" begin
         mn_data = build_mn_data("../test/data/matpower/case5.m")
 
-        @test_throws(TESTLOG, ErrorException, PowerModels.correct_voltage_angle_differences!(mn_data))
-        @test_throws(TESTLOG, ErrorException, PowerModels.calc_connected_components(mn_data))
+        @test_throws(ErrorException, PowerModels.correct_voltage_angle_differences!(mn_data))
+        @test_throws(ErrorException, PowerModels.calc_connected_components(mn_data))
 
-        Memento.setlevel!(TESTLOG, "warn")
-        @test_nowarn PowerModels.correct_reference_buses!(mn_data)
-        Memento.setlevel!(TESTLOG, "error")
+        _test_nowarn(() -> PowerModels.correct_reference_buses!(mn_data))
     end
 
 end
