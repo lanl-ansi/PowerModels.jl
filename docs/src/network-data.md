@@ -48,8 +48,8 @@ The PowerModels network data dictionary structure is roughly as follows:
 "shunt":{
     "1":{
         "shunt_bus":<int>, # Index of the bus to which the shunt is attached
-        "gs":<float>,      # Active power withdrawn per voltage p.u.
-        "bs":<float>,      # Reactive power withdrawn per voltage p.u.
+        "gs":<float>,      # Active power withdrawn at unity voltage (1 p.u.)
+        "bs":<float>,      # Reactive power injected at unity voltage (1 p.u.)
         ...
     },
     "2":{...},
