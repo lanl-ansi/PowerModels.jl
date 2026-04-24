@@ -25,6 +25,35 @@ function objective_min_fuel_cost(pm::AbstractPowerModel; kwargs...)
     )
 end
 
+"""
+objective to minimize the distance between original pg setpoints and existing pg setpoints
+"""
+function objective_min_setpoint_dist(pm::AbstractPowerModel, pgs, og_pgs; kwargs...)
+    obj = 1000*sum((og_pgs .- pgs).^2)
+    return JuMP.@objective(pm.model, Min, obj)
+end
+
+function objective_min_vm_dist(pm::AbstractPowerModel, vms, og_vms; kwargs...)
+    return JuMP.@objective(pm.model, Min, sum((og_vms .- vms).^2))
+end
+
+function objective_min_vm_qg_va(pm::AbstractPowerModel, vms, og_vms, vas, og_vas, qgs, og_qgs; nw::Int=nw_id_default, kwargs...)
+    # calculate changes in va 
+    va_mult = [bus["va_m"] for (i, bus) in ref(pm, nw, :bus)]
+    va_obj = sum(va_mult .* abs.(og_vas .- vas))
+    va_obj = 0
+    # calculate changes in vm 
+    vm_mult = [gen["vm_m"] for (i, gen) in ref(pm, nw, :gen)]
+    vm_obj = sum(vm_mult .* (og_vms .- vms).^2)
+    # vm_obj = sum(vm_mult .* abs.(og_vms .- vms))
+    # calculate changes in qg 
+    qg_mult = [gen["qg_m"] for (i, gen) in ref(pm, nw, :gen)]
+    qg_obj = sum(qg_mult .* abs.(og_qgs .- qgs))
+    qg_obj = 0
+    # combine
+    obj = va_obj + vm_obj + qg_obj
+    return JuMP.@objective(pm.model, Min, obj)
+end
 
 """
 cleans up raw pwl cost points in preparation for building a mathamatical model.
@@ -39,7 +68,7 @@ function calc_pwl_points(ncost::Int, cost::Vector{<:Real}, pmin::Real, pmax::Rea
     @assert pmin <= pmax
 
     if isinf(pmin) || isinf(pmax)
-        @_error("a bounded operating range is required for modeling pwl costs.  Given active power range in $(pmin) - $(pmax)")
+        @_error( "a bounded operating range is required for modeling pwl costs.  Given active power range in $(pmin) - $(pmax)")
     end
 
     points = []

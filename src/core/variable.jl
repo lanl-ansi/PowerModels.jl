@@ -26,6 +26,7 @@ function variable_bus_voltage_angle(pm::AbstractPowerModel; nw::Int=nw_id_defaul
     )
 
     report && sol_component_value(pm, nw, :bus, :va, ids(pm, nw, :bus), va)
+    return va
 end
 
 "variable: `v[i]` for `i` in `bus`es"
@@ -43,6 +44,7 @@ function variable_bus_voltage_magnitude(pm::AbstractPowerModel; nw::Int=nw_id_de
     end
 
     report && sol_component_value(pm, nw, :bus, :vm, ids(pm, nw, :bus), vm)
+    return vm
 end
 
 
@@ -258,8 +260,9 @@ end
 
 "generates variables for both `active` and `reactive` generation"
 function variable_gen_power(pm::AbstractPowerModel; kwargs...)
-    variable_gen_power_real(pm; kwargs...)
-    variable_gen_power_imaginary(pm; kwargs...)
+    pg, pg_sps = variable_gen_power_real(pm;  kwargs...)
+    qg = variable_gen_power_imaginary(pm;  kwargs...)
+    return pg, pg_sps, qg
 end
 
 
@@ -278,6 +281,12 @@ function variable_gen_power_real(pm::AbstractPowerModel; nw::Int=nw_id_default, 
     end
 
     report && sol_component_value(pm, nw, :gen, :pg, ids(pm, nw, :gen), pg)
+    # remove slack bus 
+    slack_bus = [bus["bus_i"] for (i, bus) in ref(pm, nw, :bus) if bus["bus_type"] == 3][1]
+    pg_sps = ["pg_start" in keys(gen) ? gen["pg_start"] : 0 for (i, gen) in ref(pm, nw, :gen) if !(gen["gen_bus"] in slack_bus)]
+    pg_ns = [pg[i] for (i, gen) in ref(pm, nw, :gen) if !(gen["gen_bus"] in slack_bus)]
+
+    return pg_ns, pg_sps
 end
 
 "variable: `qq[j]` for `j` in `gen`"
@@ -288,13 +297,24 @@ function variable_gen_power_imaginary(pm::AbstractPowerModel; nw::Int=nw_id_defa
     )
 
     if bounded
+        slack_bus = [bus["bus_i"] for (i, bus) in ref(pm, nw, :bus) if bus["bus_type"] == 3][1]
         for (i, gen) in ref(pm, nw, :gen)
+            if gen["gen_bus"] == slack_bus 
+                continue 
+            end
             JuMP.set_lower_bound(qg[i], gen["qmin"])
             JuMP.set_upper_bound(qg[i], gen["qmax"])
         end
     end
 
     report && sol_component_value(pm, nw, :gen, :qg, ids(pm, nw, :gen), qg)
+    # qg_sps = [gen["qg"] for (i, gen) in ref(pm, nw, :gen)]
+    return qg
+    # # remove slack bus 
+    # slack_bus = [bus["bus_i"] for (i, bus) in ref(pm, nw, :bus) if bus["bus_type"] == 3][1]
+    # qg_sps = [gen["qg"] for (i, gen) in ref(pm, nw, :gen) if !(gen["gen_bus"] in slack_bus)]
+    # qg = [qg[i] for (i, gen) in ref(pm, nw, :gen) if !(gen["gen_bus"] in slack_bus)]
+
 end
 
 "variable: `crg[j]` for `j` in `gen`"
@@ -396,8 +416,8 @@ end
     variable_branch_power(pm::AbstractPowerModel; kwargs...)
 """
 function variable_branch_power(pm::AbstractPowerModel; kwargs...)
-    variable_branch_power_real(pm; kwargs...)
-    variable_branch_power_imaginary(pm; kwargs...)
+    variable_branch_power_real(pm;  kwargs...)
+    variable_branch_power_imaginary(pm;  kwargs...)
 end
 
 

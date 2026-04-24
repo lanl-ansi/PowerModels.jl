@@ -1022,17 +1022,14 @@ function correct_voltage_angle_differences!(data::Dict{String,<:Any}, default_pa
         angmax = branch["angmax"]
 
         if angmin <= -pi/2
-            @_warn("this code only supports angmin values in -90 deg. to 90 deg., tightening the value on branch $i from $(rad2deg(angmin)) to -$(default_pad_deg) deg.")
             branch["angmin"] = -default_pad
         end
 
         if angmax >= pi/2
-            @_warn("this code only supports angmax values in -90 deg. to 90 deg., tightening the value on branch $i from $(rad2deg(angmax)) to $(default_pad_deg) deg.")
             branch["angmax"] = default_pad
         end
 
         if angmin == 0.0 && angmax == 0.0
-            @_warn("angmin and angmax values are 0, widening these values on branch $i to +/- $(default_pad_deg) deg.")
             branch["angmin"] = -default_pad
             branch["angmax"] =  default_pad
         end

@@ -7,10 +7,17 @@
 "checks if a sufficient number of variables exist for the given keys collection"
 function _check_var_keys(vars, keys, var_name, comp_name)
     if length(vars) < length(keys)
-        @_error("$(var_name) decision variables appear to be missing for $(comp_name) components")
+        error(_LOGGER, "$(var_name) decision variables appear to be missing for $(comp_name) components")
     end
 end
 
+function constraint_voltage_setpoint(pm::AbstractPowerModel, i, nw::Int=nw_id_default)
+    gen = ref(pm, nw, :gen, i)
+    bus = ref(pm, nw, :bus, gen["gen_bus"])
+    vm = var(pm, nw, :vm, bus["bus_i"])
+    # JuMP.@constraint(pm.model, vm == bus["vm"])
+    JuMP.@constraint(pm.model, vm == gen["vg"])
+end
 
 # Generic thermal limit constraint
 "`p[f_idx]^2 + q[f_idx]^2 <= rate_a^2`"
@@ -18,7 +25,7 @@ function constraint_thermal_limit_from(pm::AbstractPowerModel, n::Int, f_idx, ra
     p_fr = var(pm, n, :p, f_idx)
     q_fr = var(pm, n, :q, f_idx)
 
-    JuMP.@constraint(pm.model, p_fr^2 + q_fr^2 <= rate_a^2)
+    return JuMP.@constraint(pm.model,  p_fr^2 + q_fr^2 <= rate_a^2)
 end
 
 "`p[t_idx]^2 + q[t_idx]^2 <= rate_a^2`"
@@ -26,7 +33,7 @@ function constraint_thermal_limit_to(pm::AbstractPowerModel, n::Int, t_idx, rate
     p_to = var(pm, n, :p, t_idx)
     q_to = var(pm, n, :q, t_idx)
 
-    JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2)
+    return JuMP.@constraint(pm.model, p_to^2 + q_to^2 <= rate_a^2)
 end
 
 "`[rate_a, p[f_idx], q[f_idx]] in SecondOrderCone`"
@@ -121,7 +128,7 @@ function constraint_dcline_power_losses(pm::AbstractPowerModel, n::Int, f_bus, t
     p_fr = var(pm, n, :p_dc, f_idx)
     p_to = var(pm, n, :p_dc, t_idx)
 
-    JuMP.@constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0) == 0)
+    return JuMP.@constraint(pm.model, (1-loss1) * p_fr + (p_to - loss0) == 0)
 end
 
 "`pf[i] == pf, pt[i] == pt`"
@@ -133,7 +140,15 @@ function constraint_dcline_setpoint_active(pm::AbstractPowerModel, n::Int, f_idx
     JuMP.@constraint(pm.model, p_to == pt)
 end
 
+function constraint_generator_setpoint(pm::AbstractPowerModel, pg, pg_sp)
+    # JuMP.@constraint(pm.model, pg .== pg_sp)
+    JuMP.@constraint(pm.model, (pg .- pg_sp).^2 .<= 1e-4)
+end    
 
+function constraint_vm_setpoint(pm::AbstractPowerModel, p_vm, pvm_sp)
+    # JuMP.@constraint(pm.model, p_vm .== pvm_sp)
+    JuMP.@constraint(pm.model, (p_vm .- pvm_sp).^2 .<= 1e-3)
+end    
 """
 do nothing, most models to not require any model-specific voltage constraints
 """

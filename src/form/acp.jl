@@ -1,8 +1,10 @@
 ### polar form of the non-convex AC equations
 
 function variable_bus_voltage(pm::AbstractACPModel; kwargs...)
-    variable_bus_voltage_angle(pm; kwargs...)
-    variable_bus_voltage_magnitude(pm; kwargs...)
+    # println("kwargs: ", kwargs)
+    va = variable_bus_voltage_angle(pm; kwargs...)
+    vm = variable_bus_voltage_magnitude(pm; kwargs...)
+    return vm, va
 end
 
 function sol_data_model!(pm::AbstractACPModel, solution::Dict)
@@ -58,9 +60,7 @@ function constraint_power_balance(pm::AbstractACPModel, n::Int, i::Int, bus_arcs
     qsw  = get(var(pm, n),  :qsw, Dict()); _check_var_keys(qsw, bus_arcs_sw, "reactive power", "switch")
     p_dc = get(var(pm, n), :p_dc, Dict()); _check_var_keys(p_dc, bus_arcs_dc, "active power", "dcline")
     q_dc = get(var(pm, n), :q_dc, Dict()); _check_var_keys(q_dc, bus_arcs_dc, "reactive power", "dcline")
-
-
-    cstr_p = JuMP.@constraint(pm.model,
+    cstr_p = JuMP.@constraint(pm.model, 
         sum(p[a] for a in bus_arcs)
         + sum(p_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(psw[a_sw] for a_sw in bus_arcs_sw)
@@ -71,7 +71,7 @@ function constraint_power_balance(pm::AbstractACPModel, n::Int, i::Int, bus_arcs
         - sum(gs for (i,gs) in bus_gs)*vm^2
     )
 
-    cstr_q = JuMP.@constraint(pm.model,
+    cstr_q = JuMP.@constraint(pm.model, 
         sum(q[a] for a in bus_arcs)
         + sum(q_dc[a_dc] for a_dc in bus_arcs_dc)
         + sum(qsw[a_sw] for a_sw in bus_arcs_sw)
@@ -86,6 +86,7 @@ function constraint_power_balance(pm::AbstractACPModel, n::Int, i::Int, bus_arcs
         sol(pm, n, :bus, i)[:lam_kcl_r] = cstr_p
         sol(pm, n, :bus, i)[:lam_kcl_i] = cstr_q
     end
+    return cstr_p, cstr_q
 end
 
 function constraint_power_balance_ls(pm::AbstractACPModel, n::Int, i::Int, bus_arcs, bus_arcs_dc, bus_arcs_sw, bus_gens, bus_storage, bus_pd, bus_qd, bus_gs, bus_bs)
@@ -172,7 +173,9 @@ function constraint_ne_power_balance(pm::AbstractACPModel, n::Int, i::Int, bus_a
     )
 end
 
-
+function constraint_pbal_sp(pm::AbstractACPModel, pg, sp)
+    JuMP.@constraint(pm.model, pg == sp)
+end
 
 function expression_branch_power_ohms_yt_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx, t_idx, g, b, g_fr, b_fr, tr, ti, tm)
     vm_fr = var(pm, n, :vm, f_bus)
@@ -211,8 +214,9 @@ function constraint_ohms_yt_from(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_i
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
-    JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
-    JuMP.@constraint(pm.model, q_fr == -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)) )
+    ytfp = JuMP.@constraint(pm.model, p_fr ==  (g+g_fr)/tm^2*vm_fr^2 + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)))
+    ytfq = JuMP.@constraint(pm.model,  q_fr == -(b+b_fr)/tm^2*vm_fr^2 - (-b*tr-g*ti)/tm^2*(vm_fr*vm_to*cos(va_fr-va_to)) + (-g*tr+b*ti)/tm^2*(vm_fr*vm_to*sin(va_fr-va_to)))
+    return ytfp, ytfq
 end
 
 """
@@ -231,8 +235,9 @@ function constraint_ohms_yt_to(pm::AbstractACPModel, n::Int, f_bus, t_bus, f_idx
     va_fr = var(pm, n, :va, f_bus)
     va_to = var(pm, n, :va, t_bus)
 
-    JuMP.@constraint(pm.model, p_to ==  (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
-    JuMP.@constraint(pm.model, q_to == -(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)) )
+    yttp = JuMP.@constraint(pm.model,p_to ==  (g+g_to)*vm_to^2 + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)))
+    yttq = JuMP.@constraint(pm.model,q_to == -(b+b_to)*vm_to^2 - (-b*tr+g*ti)/tm^2*(vm_to*vm_fr*cos(va_to-va_fr)) + (-g*tr-b*ti)/tm^2*(vm_to*vm_fr*sin(va_to-va_fr)))
+    return yttp, yttq
 end
 
 """

@@ -9,3 +9,8 @@ docs/site/
 docs/.documenter
 .project
 .tags
+__pycache__/
+*.pt
+config.jl
+config.py
+wandb/

@@ -1,3 +1,4 @@
+debug = false
 ""
 function solve_ac_opf(file, optimizer; kwargs...)
     return solve_opf(file, ACPPowerModel, optimizer; kwargs...)
@@ -9,6 +10,14 @@ end
 
 function solve_opf(file, model_type::Type, optimizer; kwargs...)
     return solve_model(file, model_type, optimizer, build_opf; kwargs...)
+end
+
+function solve_relaxed_opf(file, optimizer; kwargs...)
+    return solve_model(file, ACPPowerModel, optimizer, build_relaxed_opf; kwargs...)
+end
+
+function solve_dc_ac_pf(file, optimizer; kwargs...)
+    return solve_model(file, ACPPowerModel, optimizer, build_dc_ac_pf; kwargs...)
 end
 
 """
@@ -47,7 +56,124 @@ function build_opf(pm::AbstractPowerModel)
     end
 end
 
+"""
+    build opf for distance maximization, all else equal 
+"""
+function build_ac_setpoint_max(pm::AbstractPowerModel)
 
+end
+
+"""
+    build_dc_ac_pf for setpoint minimization
+"""
+function build_dc_ac_pf(pm::AbstractPowerModel)
+    vm, va = variable_bus_voltage(pm)
+    pgs, pg_sps, qgs = variable_gen_power(pm)
+    variable_branch_power(pm)
+    #variable_dcline_power(pm)
+
+    vm_sps = []
+    vm_gens = []
+    va_sps = []
+    
+    for i in ids(pm, :gen)
+        push!(vm_sps, pm.data["gen"][string(i)]["vg"])
+        push!(vm_gens, var(pm, nw_id_default, :vm, pm.data["gen"][string(i)]["gen_bus"]))
+    end
+    @infiltrate debug
+    constraint_model_voltage(pm)
+    constraint_generator_setpoint(pm, pgs, pg_sps)
+    constraint_vm_setpoint(pm, vm_gens, vm_sps)
+    # objective_min_vm_qg_va(pm, vm_gens, vm_sps, va, va_sps, qgs, qg_sps)
+    # objective_min_setpoint_dist(pm, pgs, pg_sps)
+    
+
+
+    # constraint_vm_setpoint(pm, vm_gens, vm_sps)
+    # for (pg, sp) in zip(pgs, pg_sps)
+    #     constraint_generator_setpoint(pm, pg, sp)
+    # end    
+
+    for i in ids(pm, :ref_buses)
+        constraint_theta_ref(pm, i)
+    end
+
+    for i in ids(pm, :bus)
+        constraint_power_balance(pm, i)
+    end
+
+    for i in ids(pm, :branch)
+        constraint_ohms_yt_from(pm, i)
+        constraint_ohms_yt_to(pm, i)
+
+        #constraint_voltage_angle_difference(pm, i)
+
+        # constraint_thermal_limit_from(pm, i)
+        # constraint_thermal_limit_to(pm, i)
+    end
+
+    # for i in ids(pm, :dcline)
+    #     constraint_dcline_power_losses(pm, i)
+    # end
+    objective_min_vm_dist(pm, vm_gens, vm_sps)
+end
+
+"""
+    build_ac_opf with relaxed constraints
+"""
+function build_relaxed_opf(pm::AbstractPowerModel)
+    variable_bus_voltage(pm)
+    pgs, pg_sps, qgs = variable_gen_power(pm)
+    variable_branch_power(pm)
+    variable_dcline_power(pm)
+
+    constraint_dict = Dict()
+    vm_dict = constraint_model_voltage(pm)
+    constraint_dict =  isnothing(vm_dict) ? constraint_dict : merge(constraint_dict, vm_dict)
+    for i in ids(pm, :ref_buses)
+        tref = constraint_theta_ref(pm, i)
+        constraint_dict[JuMP.index(tref)] = "tref_$i"
+    end
+
+    for i in ids(pm, :bus)
+        constr_p, constr_q = constraint_power_balance(pm, i)
+        constraint_dict[JuMP.index(constr_p)] = "pbal_$i"
+        constraint_dict[JuMP.index(constr_q)] = "qbal_$i"
+    end
+
+    for i in ids(pm, :branch)
+        ytfp, ytfq = constraint_ohms_yt_from(pm, i)
+        constraint_dict[JuMP.index(ytfp)] = "ytfp_$i"
+        constraint_dict[JuMP.index(ytfq)] = "ytfq_$i"
+        yttp, yttq = constraint_ohms_yt_to(pm, i)
+        constraint_dict[JuMP.index(yttp)] = "yttp_$i"
+        constraint_dict[JuMP.index(yttq)] = "yttq_$i"
+
+        vadiff = constraint_voltage_angle_difference(pm, i)
+        constraint_dict[JuMP.index(vadiff)] = "vadiff_$i"
+
+        tlf = constraint_thermal_limit_from(pm, i)
+        tlt = constraint_thermal_limit_to(pm, i)
+        constraint_dict[JuMP.index(tlf)] = "tlf_$i"
+        constraint_dict[JuMP.index(tlt)] = "tlt_$i"
+    end
+
+    for i in ids(pm, :dcline)
+        dcline = constraint_dcline_power_losses(pm, i)
+        constraint_dict[JuMP.index(dcline)] = "dcline_$i"
+    end
+
+    constraints = JuMP.all_constraints(pm.model; include_variable_in_set_constraints=true)
+    relaxation_penalty = JuMP.MOI.Utilities.PenaltyRelaxation(Dict(JuMP.index(c) => 5.0 for c in constraints))
+    backend = JuMP.backend(pm.model)
+    penalty_dict = JuMP.MOI.modify(backend, relaxation_penalty)
+
+    for (pg, sp) in zip(pgs, pg_sps)
+        constraint_pbal_sp(pm, pg, sp)
+    end
+    pm.data["penalty_dict"] = penalty_dict
+    pm.data["constraint_dict"] = constraint_dict
+end
 
 "a toy example of how to model with multi-networks"
 function solve_mn_opf(file, model_type::Type, optimizer; kwargs...)
@@ -175,7 +301,7 @@ function solve_opf_ptdf(file, model_type::Type, optimizer; full_inverse=false, k
 end
 
 function build_opf_ptdf(pm::AbstractPowerModel)
-    @_error("build_opf_ptdf is only valid for DCPPowerModels")
+    Memento.error(_LOGGER, "build_opf_ptdf is only valid for DCPPowerModels")
 end
 
 """
