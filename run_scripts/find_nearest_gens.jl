@@ -2,43 +2,39 @@
 using Graphs
 using SimpleWeightedGraphs
 using LinearAlgebra
-include("../../../../../config.jl")
+include("../config.jl")
 push!(LOAD_PATH, DATA_PATH)
+
 function find_nearest_generators_khop(file_path::String; top_k::Int=100)
-    # 1. Parse the MATPOWER file
+    # parse the MATPOWER file
     data = PowerModels.parse_file(file_path)
 
-    # 2. Create Mappings (Bus ID -> Graph Index)
+    # create Mappings (Bus ID -> Graph Index)
     bus_ids = sort([parse(Int, k) for k in keys(data["bus"])])
     n_buses = length(bus_ids)
     
     id_to_idx = Dict(id => i for (i, id) in enumerate(bus_ids))
     idx_to_id = Dict(i => id for (i, id) in enumerate(bus_ids))
 
-    # 3. Build the Unweighted Graph
-    g = SimpleGraph(n_buses) # Changed to an unweighted graph
+    # build the graph
+    g = SimpleGraph(n_buses) 
     
     for (k, branch) in data["branch"]
         u_real = branch["f_bus"]
         v_real = branch["t_bus"]
-        
-        # Skip isolated buses if they aren't in our main map
         if !haskey(id_to_idx, u_real) || !haskey(id_to_idx, v_real)
             continue
         end
-
         u = id_to_idx[u_real]
         v = id_to_idx[v_real]
-        
-        # Weight is removed. Every edge is exactly 1 hop.
         add_edge!(g, u, v)
     end
 
-    # 4. Identify Targets (Generators) and Sources (Loads)
+    # identify targets and sources
     gen_bus_ids = unique([gen["gen_bus"] for (k, gen) in data["gen"]])
     load_bus_ids = unique([bus["bus_i"] for (k, bus) in data["bus"]])
 
-    # 5. Compute Shortest Paths and Rank
+    # compute shortest paths and rank
     results = Dict{Int, Vector{Int}}()
 
     for l_id in load_bus_ids
@@ -65,7 +61,7 @@ function find_nearest_generators_khop(file_path::String; top_k::Int=100)
     return results
 end
 
-# # # --- Usage Example ---
+# --- Usage Example ---
 # CASE_NAME = "case300"
 # file_pth = joinpath(DATA_PATH, "test_cases/network_info/$CASE_NAME/$(CASE_NAME).m")
 # results = find_nearest_generators(file_pth)
