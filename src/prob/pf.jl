@@ -1437,54 +1437,6 @@ function _find_matching_viols_(gen_invs, prev_swaps, b1_violations, submat_dict,
     return pivot_cols, swap_candidates
 end
 
-function _adjust_gen_invs_!(gen_invs, prev_swaps, b1_violations, submat_dict)
-    for (i, viol) in enumerate(b1_violations)
-        bus = viol[1]
-        bad_gens = [submat_dict["submap"]["qv_cols"][gen] for gen in prev_swaps[bus]]
-        row_viol = submat_dict["submap"]["qv_rows"][bus]
-        # set all indices = 0 so they won't be swapped 
-        gen_invs[row_viol, bad_gens] .= 0
-    end
-end
-
-function _reorder_cols_(prev_swaps, b1_violations, violated_rows, submat_dict)
-    qv_cols = submat_dict["submap"]["qv_cols"]
-    # get the initial ordering
-    gen_ordering = zeros(length(qv_cols))
-    for (gen, ind) in pairs(qv_cols)
-        gen_ordering[ind] = gen 
-    end
-    # make sure no pairs exist between the violation and the generator 
-    num_viols = length(b1_violations)
-    for (i, viol) in enumerate(b1_violations) 
-        bus = viol[1]
-        bad_gens = prev_swaps[bus]
-        if length(bad_gens) == 0
-            # this bus has no off-limits generators
-            continue 
-        end
-        if !(gen_ordering[i] in bad_gens)
-            # this bus can be matched with this generator 
-            continue 
-        end
-        if length(bad_gens) == length(gen_ordering)
-            # this violation has no remaining feasible generators
-            filter!(x -> x == submat_dict["submap"]["qv_rows"][bus], violated_rows)
-            continue 
-        end
-
-        # if there are more generators than b1 violations, swaps are easy 
-        if num_viols < length(gen_ordering)
-            viable_gens = setdiff(gen_ordering[(num_viols + 1):end], bad_gens)
-            swap_ind = findall(x -> x == viable_gens[1], gen_ordering)[1]
-            gen_ordering[swap_ind] = gen_ordering[i] 
-            gen_ordering[i] = viable_gens[1]
-        end
-    end
-    gens = [qv_cols[i] for i in gen_ordering]
-    return violated_rows, gens
-end
-
 function _jacobian_submatrix_(pf_data, jacobian, mapping_dict, bus_indices)
     jacobian = Matrix(jacobian)
     # obtain row indices for type 1 through 5 
