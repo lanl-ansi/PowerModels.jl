@@ -157,7 +157,7 @@ function prepare_test_case_perturbations(test_case)
     return test_case, max_pd
 end
 
-function prepare_test_case(test_case, case_name, file_pth; solve_acpf = false)
+function prepare_test_case(test_case, case_name, file_pth; solve_acpf = true)
     # set generator vm bounds so they're not immediately violated
     for (gen_ind, gen) in pairs(test_case["gen"])
         gen_bus = gen["gen_bus"]
@@ -194,8 +194,9 @@ function store_load!(df, test_case, counter)
     push!(df, dp_dict)
 end
 
-function generate_solutions(case_name, delta, test_case, load_data; num_samples = 1000)
-    PowerModels.logger_config!("debug")
+function generate_solutions(case_name, delta, test_case, load_data, file_pth, run_dict; 
+                            num_samples = 1000, write_out = true)
+    PowerModels.logger_config!("warn")
     # prep structures to store outputs
     cols = [("datapoint", Int64), ("run_id", Int64), 
             ("pf_type", String), ("obo", Int64), 
@@ -220,10 +221,12 @@ function generate_solutions(case_name, delta, test_case, load_data; num_samples 
             ["bt_$bus_ind" for bus_ind in keys(test_case["bus"])]
             )
     bi_df = DataFrame([name => Float64[] for name in cols])
+    nearest_gens = find_nearest_generators_khop(file_pth)
+
     # iterate through acpf combos 
     run_id = 0
-    for pf_type in ["baseline", "qlim", "mbuses"]
-        for obo in [0,1]
+    for pf_type in run_dict["pf_types"]
+        for obo in run_dict["obo"]
             if pf_type in ["baseline", "qlim"]
                 run_id += 1 
                 run_flags = Dict("run_id" => run_id, "pf_type" => pf_type, 
@@ -231,12 +234,13 @@ function generate_solutions(case_name, delta, test_case, load_data; num_samples 
                 println("Running ID $run_id: pf_type = $pf_type, obo = $obo")
                 run_pf!(test_case, load_data, run_flags, run_df, soln_df, violations_df, bi_df, num_samples)
             else
-                for swap_technique in ["qv_inv", "nearest_gen"]
-                    for grainger in [0,1]
+                for swap_technique in run_dict["swap_techniques"]
+                    for grainger in run_dict["grainger"]
                         run_id += 1 
                         run_flags = Dict("run_id" => run_id, "pf_type" => pf_type, 
                                     "obo" => obo, "swap_technique" => swap_technique, "grainger" => grainger
                                     )
+                        test_case["pv_pairs"] = deepcopy(nearest_gens)
                         println("Running ID $run_id: pf_type = $pf_type, obo = $obo, swap_technique = $swap_technique, grainger = $grainger")
                         run_pf!(test_case, load_data, run_flags, run_df, soln_df, violations_df, bi_df, num_samples)
                     end
@@ -244,30 +248,33 @@ function generate_solutions(case_name, delta, test_case, load_data; num_samples 
             end
         end
     end
-    # write out data 
-    filename = joinpath(RESULTS_PATH, "$(case_name)/$delta.xlsx")
-    dir_path = dirname(filename)
-    mkpath(dir_path)
-    if isfile(filename)
-        rm(filename)
-    end
-    XLSX.openxlsx(filename, mode="w") do xf
-        sheet1 = XLSX.addsheet!(xf, "run_info")
-        XLSX.writetable!(sheet1, Tables.columntable(run_df))
-        sheet2 = XLSX.addsheet!(xf, "solns")
-        XLSX.writetable!(sheet2, Tables.columntable(soln_df))
-        sheet3 = XLSX.addsheet!(xf, "bus_types")
-        XLSX.writetable!(sheet3, Tables.columntable(bi_df))
-        sheet4 = XLSX.addsheet!(xf, "violations")
-        XLSX.writetable!(sheet4, Tables.columntable(violations_df))
+    if write_out
+        # write out data 
+        filename = joinpath(RESULTS_PATH, "$(case_name)/$delta.xlsx")
+        dir_path = dirname(filename)
+        mkpath(dir_path)
+        if isfile(filename)
+            rm(filename)
+        end
+        XLSX.openxlsx(filename, mode="w") do xf
+            sheet1 = XLSX.addsheet!(xf, "run_info")
+            XLSX.writetable!(sheet1, Tables.columntable(run_df))
+            sheet2 = XLSX.addsheet!(xf, "solns")
+            XLSX.writetable!(sheet2, Tables.columntable(soln_df))
+            sheet3 = XLSX.addsheet!(xf, "bus_types")
+            XLSX.writetable!(sheet3, Tables.columntable(bi_df))
+            sheet4 = XLSX.addsheet!(xf, "violations")
+            XLSX.writetable!(sheet4, Tables.columntable(violations_df))
+        end
     end
 end
 
-function run_pf!(test_case, load_data, run_flags, run_df, soln_df, violations_df, bi_df, num_samples)
+function run_pf!(original_test_case, load_data, run_flags, run_df, soln_df, violations_df, bi_df, num_samples)
     for (i, loads) in enumerate(eachrow(load_data))
         if i > num_samples 
             break 
         end
+        test_case = deepcopy(original_test_case)
         # add values to test case 
         for (load_ind, load) in pairs(test_case["load"])
             load["pd"] = loads["pd_$load_ind"]
@@ -405,9 +412,8 @@ function generate_loads(test_case, num_points, delta, case_name)
     end
 end
 
-if isinteractive()
-    # pull in test case 
-    CASE_NAME = "case14"
+function main()
+    CASE_NAME = "case300"
     file_pth = joinpath(DATA_PATH, "test_cases/network_info/$CASE_NAME/$(CASE_NAME).m")
     test_case = PowerModels.parse_file(file_pth)
     test_case = prepare_test_case(test_case, CASE_NAME, file_pth)
@@ -415,8 +421,13 @@ if isinteractive()
     max_pg = sum([gen["pmax"] for gen in values(test_case["gen"])])
     base_load = sum([load["pd"] for load in values(test_case["load"])])
     delta = round(0.85*max_pg/base_load - 1, digits=2)
+    delta -= 0.03
 
     # pull in loads and generate dataset
+    run_dict = Dict("pf_types" => ["mbuses", "qlim", "baseline"],
+                    "obo" => [0,1], "grainger" => [0,1], 
+                    "swap_techniques" => ["nearest_gen", "qv_inv"]
+                )
     load_data = DataFrame(XLSX.readtable(joinpath(TESTCASE_PATH, "data/$(CASE_NAME)/loads/$delta.xlsx"), "loads"))
-    generate_solutions(CASE_NAME, delta, test_case, load_data; num_samples = 1)
+    generate_solutions(CASE_NAME, delta, test_case, load_data, file_pth, run_dict; num_samples = 10, write_out = true)
 end

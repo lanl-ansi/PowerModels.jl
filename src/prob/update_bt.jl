@@ -138,6 +138,7 @@ function find_pv_bus(pf_data, pqv_bus)
     # if a pv bus is found, remove from this bus's list (so it never swaps again)
     pv_bus = nearby_pvs[pv_bus]
     filter!(x -> x != pv_bus, pf_data.data["pv_pairs"][pf_data.am.idx_to_bus[pqv_bus]])
+    filter!(e -> pf_data.am.idx_to_bus[e] != pv_bus, pf_data.data["pv_bus_inds"]) # remove from general list of buses
     return pf_data.am.bus_to_idx[pv_bus]
 end
 
@@ -154,7 +155,6 @@ function swap_pqv_buses!(pf_data, b_violations, swap_gens, p_pqv_pairs, bus_assi
         bus_assignment[string(pf_data.am.idx_to_bus[bus])]["vm"] = adjust
         # store pair 
         p_pqv_pairs[gen] = bus
-        filter!(e -> e != pv_bus, pf_data.data["pv_bus_inds"])
     end
     return swap 
 end 

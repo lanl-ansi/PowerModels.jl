@@ -1,5 +1,6 @@
 
 using Infiltrator
+using RowEchelon
 using Random
 using Graphs
 using SparseArrays
@@ -196,7 +197,7 @@ Base.@kwdef struct SwapFlags
     enforce_q_lims = true # for basic PF: include q lims or not 
     obo = false  # one-by-one: can you perform one type-switch each iteration, or multiple?
     flat_start = false # flat start each iter vs. warmstart with the prev soln
-    max_acpf = 100 # max iters before returning best solution thus far
+    max_acpf = 50 # max iters before returning best solution thus far
     minimize_mag = true # minimize violation magnitude vs. number of violations 
     one_swap = false # only one P-PQV pair at a time; switch back between each iter
     highest_mag = true # prioritize resolving the highest mag. violation versus the smallest mag.
@@ -350,14 +351,11 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
         @_debug( "computing ac pf, iteration $(acpf_counter)... ")
         if mapping
             mapping_dict, J0_map = map_types_to_variable_indices(pf_data; grainger = flags.grainger)
-
             push!(mapping_dicts, mapping_dict)
             if flags.grainger 
-             pf_result, jacobian, x_hist = _compute_ac_pf_grainger(pf_data, mapping_dict, J0_map, flat_start=true; 
-                                            filtered_kwargs...)  
+             pf_result, jacobian, x_hist = _compute_ac_pf_grainger(pf_data, mapping_dict, J0_map, flat_start=flags.flat_start)  
             else 
-                pf_result, jacobian, x_hist = _compute_ac_pf(pf_data, mapping_dict, J0_map, flat_start=true; 
-                                            filtered_kwargs...)   
+                pf_result, jacobian, x_hist = _compute_ac_pf(pf_data, mapping_dict, J0_map, flat_start=flags.flat_start)   
             end            
             x_history = vcat(x_history, x_hist)
             push!(x_history, [])
@@ -385,7 +383,7 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
             "bus" => bus_assignment,
             "gen" => gen_assignment,
             )
-            push!(solution_history, solution)
+            push!(soln_history, solution)
             push!(prev_bus_indices, deepcopy(pf_data.bus_type_idx))
             
             @_debug( "ac power flow solver convergence failed!")
@@ -1085,7 +1083,6 @@ end
 function compute_ac_pf_mult_buses(pf_data::PowerFlowData; kwargs...)
     # store flags
     flags = SwapFlags(; kwargs...)
-    @infiltrate debug
     # prepare to begin 
     is_feas = false
     pf_result = nothing
@@ -1105,9 +1102,7 @@ function compute_ac_pf_mult_buses(pf_data::PowerFlowData; kwargs...)
     non_convergence = 0
     pf_data.data["pv_bus_inds"] = [i for (i, bt) in enumerate(pf_data.bus_type_idx) if bt == 2]
     jacobian = nothing 
-    if flags.grainger  
-        pf_data.data["prev_swaps"] = Dict(bus=> [] for bus in 1:length(pf_data.bus_type_idx))
-    end
+    pf_data.data["prev_swaps"] = Dict(bus=> [] for bus in 1:length(pf_data.bus_type_idx))
     time_start = time()
     while (~is_feas) & (acpf_counter <= flags.max_acpf)
         @_debug( "computing ac pf, iteration $(acpf_counter)... ")
@@ -1118,25 +1113,26 @@ function compute_ac_pf_mult_buses(pf_data::PowerFlowData; kwargs...)
             _update_x_!(pf_data, soln_history[end], pf_data.bus_type_idx, mapping_dict, pf_data.x0)
         end
         # compute ac power flow
+        pf_result, jacobian, x_hist = nothing, nothing, nothing
         try
             if flags.grainger 
                 pf_result, jacobian, x_hist = _compute_ac_pf_grainger(pf_data, mapping_dict, J0_map, flat_start=flags.flat_start) 
             else 
                 pf_result, jacobian, x_hist = _compute_ac_pf(pf_data, mapping_dict, J0_map; flat_start = flags.flat_start) 
             end
-            # store jacobian, x, and mapping for analysis 
-            jacobian_history = vcat(jacobian_history, jacobian)
-            x_history = vcat(x_history, x_hist)
-            push!(x_history, [])
-            push!(jacobian_history, [])
-            mapping_dicts = vcat(mapping_dicts, mapping_dict)
         catch e 
-            # rethrow(e)
-            @infiltrate flags.debug
+            # @infiltrate flags.debug
+            rethrow(e)
             pf_result.x_converged = false
             pf_result.f_converged = false
             non_convergence = 5
         end
+        # store jacobian, x, and mapping for analysis 
+        jacobian_history = vcat(jacobian_history, jacobian)
+        x_history = vcat(x_history, x_hist)
+        push!(x_history, [])
+        push!(jacobian_history, [])
+        mapping_dicts = vcat(mapping_dicts, mapping_dict)
         is_feas = true # start by assuming solution has no violations
         solution = Dict("per_unit" => pf_data.data["per_unit"])
         converged = pf_result.x_converged || pf_result.f_converged 
@@ -1239,6 +1235,7 @@ function compute_ac_pf_mult_buses(pf_data::PowerFlowData; kwargs...)
                     "b6v" => b6v_violations, 
                     "b6q" => b6q_violations
                     )
+            @_debug("power balance maintained? $(validate_power_balance(pf_data, gen_assignment))")
             
             if flags.one_swap 
                 _one_swap_update_(pf_data, p_pqv_pairs, violations, swap)
@@ -1250,12 +1247,11 @@ function compute_ac_pf_mult_buses(pf_data::PowerFlowData; kwargs...)
                 "gen" => deepcopy(gen_assignment),
             )
             push!(soln_history, solution)
-            score = minimize_mag ? violation_mag[] : num_violations[]
+            score = flags.minimize_mag ? violation_mag[] : num_violations[]
             update_best_solution!(best_solution, old_pfd, score, solution, old_pairs, bus_type_idx, mapping_dict)
             # swap buses for next iteration
             perform_bus_swaps!(pf_data, mapping_dict, bus_type_idx, p_pqv_pairs, jacobian[end],
                             bus_assignment, swap, violations, flags)
-
             if score <= 1e-4
                 @_debug( "Feasible Run")
                 is_feas = true    
@@ -1266,12 +1262,13 @@ function compute_ac_pf_mult_buses(pf_data::PowerFlowData; kwargs...)
             if is_feas  
                 @_debug( "Ending with $(score), but no swap")
             end
+            # warm start for next iter
+            warm_start_prev_soln!(pf_data, solution)
         end
         if acpf_counter > flags.max_acpf 
             break 
         end
-        # warm start for next iter
-        warm_start_prev_soln!(pf_data, solution)
+
         acpf_counter += 1
     end
     # store info
@@ -1335,8 +1332,8 @@ function perform_bus_swaps!(pf_data, mapping_dict, bus_type_idx, p_pqv_pairs, ja
     end    
     # update the voltage violations at type 6 buses 
     sort!(b6v_violations, by = x -> sort_func(x[2]))
-    update_vm_violations!(pf_data, b6v_violations, p_pqv_pairs, obo, swap)
-    if obo & swap[] 
+    update_vm_violations!(pf_data, b6v_violations, p_pqv_pairs, flags.obo, swap)
+    if flags.obo & swap[] 
         return 
     end 
     # update the voltage violations at type 1 buses according to swapping technique
@@ -1354,6 +1351,7 @@ end
 
 "P_PQV switching methodology based on nearby generators"
 function perform_bus_swaps_nearest_gen!(pf_data, bus_assignment, p_pqv_pairs, b1_violations, swap, flags)
+    sort_func = flags.highest_mag ? val -> -abs(val) : val -> abs(val)
     # find pv buses to swap 
     swap_gens = []
     for (pq_bus, viol, adjust) in b1_violations
@@ -1368,7 +1366,7 @@ function perform_bus_swaps_nearest_gen!(pf_data, bus_assignment, p_pqv_pairs, b1
     end
     # swap buses
     stored_violations = b1_violations[1:length(swap_gens)]
-    swap_pqv_buses!(pf_data, sorted_violations, swap_gens, p_pqv_pairs, bus_assignment, swap)
+    swap_pqv_buses!(pf_data, stored_violations, swap_gens, p_pqv_pairs, bus_assignment, swap)
 end
 
 "P-PQV switching methodology based on jacobian sensitivity"
@@ -1380,24 +1378,73 @@ end
 "P_PQV switching methodology based on maintaining LI of the QV submatrix"
 function perform_bus_swaps_qv_inv!(pf_data, mapping_dict, jacobian, bus_type_idx, p_pqv_pairs, bus_assignment, 
                                             swap, b1_violations, flags)
+    sort_func = flags.highest_mag ? val -> -abs(val) : val -> abs(val)
     # obtain the submatrices of the jacobian for the previous iteration
     submat_dict = _jacobian_submatrix_(pf_data, jacobian, mapping_dict, bus_type_idx)
+    if length(submat_dict["qv_cols"]) == 0
+        @_debug("No generators left to switch with. Continuing.")
+        return 
+    end
     # get the generator inverse matrix 
-    inv_qv = inv(submat_dict["qv"])
+    inv_qv = nothing 
+    try 
+        inv_qv = inv(submat_dict["qv"])
+    catch e 
+        @_debug("singular QV submatrix. Continuing")
+        return
+    end
     gen_invs = Float64.(reduce(hcat, [inv_qv * vec for vec in submat_dict["qv_cols"]]))
     # get violated rows and cols
-    num_gens = length(submat_dict["qv_cols"])
     sort!(b1_violations, by = x -> sort_func(x[2])) # sort violations 
     violated_rows = [submat_dict["submap"]["qv_rows"][i[1]] for i in b1_violations]
-    violated_rows, gen_ordering = _reorder_cols_(pf_data.data["prev_swaps"], b1_violations, violated_rows, submat_dict)
-    # identify pivot columns (LI generators to swap out buses)
-    F = lu(reshape(gen_invs[violated_rows, gen_ordering], length(violated_rows), num_gens))
-    diag_elems = diag(F.U)
-    pivot_cols = findall(x -> abs(x) > 1e-3, diag_elems)
-    swap_candidates = [k for (k, v) in submat_dict["submap"]["qv_cols"] if v in gen_ordering[pivot_cols]]
+    num_gens = length(submat_dict["qv_cols"])
+    # find LI pivot cols
+    F = nothing
+    try
+        F = qr(reshape(gen_invs[violated_rows, :], length(violated_rows), num_gens), ColumnNorm())
+    catch e 
+        @infiltrate flags.debug
+        rethrow(e)
+    end
+    pivot_cols, swap_candidates = _find_matching_viols_(gen_invs, pf_data.data["prev_swaps"], b1_violations, submat_dict, F.p)
+
     # bus-type switching 
-    swap_pqv_buses_qv_inv!(pf_data, b1_violations[pivot_cols], swap_candidates, p_pqv_pairs, bus_assignment, swap)
+    swap_pqv_buses!(pf_data, b1_violations[pivot_cols], swap_candidates, p_pqv_pairs, bus_assignment, swap)
     return
+end
+
+function _find_matching_viols_(gen_invs, prev_swaps, b1_violations, submat_dict, perms)
+    pivot_cols = []
+    pivot_gens =[]
+    for (i, viol) in enumerate(b1_violations) 
+        bus = viol[1] 
+        bad_gens = prev_swaps[bus]
+        bad_gis = [gen in keys(submat_dict["submap"]["qv_cols"]) ? submat_dict["submap"]["qv_cols"][gen] : 0 for gen in bad_gens]
+        for gen in setdiff(perms, bad_gis)
+            if gen in pivot_gens 
+                continue 
+            end 
+            if abs(gen_invs[submat_dict["submap"]["qv_rows"][bus], gen]) < 1e-3
+                continue 
+            end 
+            push!(pivot_cols, i)
+            push!(pivot_gens, gen)
+            break
+        end
+    end
+
+    swap_candidates = [collect(keys(submat_dict["submap"]["qv_cols"]))[findfirst(x -> x == v, collect(values(submat_dict["submap"]["qv_cols"])))] for v in pivot_gens]
+    return pivot_cols, swap_candidates
+end
+
+function _adjust_gen_invs_!(gen_invs, prev_swaps, b1_violations, submat_dict)
+    for (i, viol) in enumerate(b1_violations)
+        bus = viol[1]
+        bad_gens = [submat_dict["submap"]["qv_cols"][gen] for gen in prev_swaps[bus]]
+        row_viol = submat_dict["submap"]["qv_rows"][bus]
+        # set all indices = 0 so they won't be swapped 
+        gen_invs[row_viol, bad_gens] .= 0
+    end
 end
 
 function _reorder_cols_(prev_swaps, b1_violations, violated_rows, submat_dict)
@@ -1559,6 +1606,37 @@ function update_best_solution!(best_solution, pf_data, score, solution, p_pqv_pa
     best_solution["mapping_dict"] = mapping_dict
 end
 
+function validate_power_balance(pf_data, gen_assignment)
+    data = pf_data.data
+    am = pf_data.am
+    bus_type_idx = pf_data.bus_type_idx
+    p_delta_base_idx = pf_data.p_delta_base_idx
+    q_delta_base_idx = pf_data.q_delta_base_idx
+    p_inject_idx = pf_data.p_inject_idx
+    q_inject_idx = pf_data.q_inject_idx
+    vm_idx = pf_data.vm_idx
+    va_idx = pf_data.va_idx
+    neighbors = pf_data.neighbors
+    balance = true
+    for i in eachindex(am.idx_to_bus)
+        balance_real = p_delta_base_idx[i] + p_inject_idx[i]
+        balance_imag = q_delta_base_idx[i] + q_inject_idx[i]
+        for j in neighbors[i]
+            if i == j
+                balance_real += vm_idx[i] * vm_idx[i] *  real(am.matrix[i,i])
+                balance_imag += vm_idx[i] * vm_idx[i] * -imag(am.matrix[i,i])
+            else
+                balance_real += vm_idx[i] * vm_idx[j] * ( real(am.matrix[i,j]) * cos(va_idx[i] - va_idx[j]) + imag(am.matrix[i,j]) * sin(va_idx[i] - va_idx[j]))
+                balance_imag += vm_idx[i] * vm_idx[j] * (-imag(am.matrix[i,j]) * cos(va_idx[i] - va_idx[j]) + real(am.matrix[i,j]) * sin(va_idx[i] - va_idx[j]))
+            end
+        end
+        balance = balance && abs(balance_real) < 1e-5
+        balance = balance && abs(balance_imag) < 1e-5
+
+    end
+    return balance
+end
+
 function update_pf_data!(pf_data, best_solution)
     function update_list!(pf_data_lst, best_solution_lst)
         for i in 1:length(pf_data_lst)
@@ -1572,6 +1650,7 @@ function update_pf_data!(pf_data, best_solution)
     update_list!(pf_data.q_inject_idx, best_solution["q_inject_idx"])
     update_list!(pf_data.p_delta_base_idx, best_solution["p_delta_base_idx"])
     update_list!(pf_data.q_delta_base_idx, best_solution["q_delta_base_idx"])
+    
 end
 
 "Compute AC-Power flow using the methology outlined in Grainger-Stevenson"
@@ -1730,7 +1809,7 @@ function _compute_ac_pf_grainger(pf_data::PowerFlowData, mapping_dict, J0_map;
             elseif bus_type_idx[i] == 6
                 vm_idx[i] = x[mapping["vm"]]
                 va_idx[i] = x[mapping["va"]]
-                q_inject_idx[i] =0
+                q_inject_idx[i] = 0
                 x_final[mapping["vm"]] = x[mapping["vm"]]
                 x_final[mapping["va"]] = x[mapping["va"]]
             else
@@ -1755,9 +1834,11 @@ function _compute_ac_pf_grainger(pf_data::PowerFlowData, mapping_dict, J0_map;
             end
             if bus_type_idx[i] in [1, 2, 3, 6]
                 x_final[mapping_dict[i]["q"]] = -balance_imag
+                q_inject_idx[i] = -balance_imag
             end
             if bus_type_idx[i] == 3
                 x_final[mapping_dict[i]["p"]] = -balance_real
+                p_inject_idx[i] = -balance_real
             end
         end
         return x_final
@@ -1861,7 +1942,7 @@ end
 
 "Compute AC-Power flow using the regular methodology, but with a mapping dictionary"
 function _compute_ac_pf(pf_data::PowerFlowData, mapping_dict, J0_map; 
-                        finite_differencing=false, flat_start=true,  bounded_vars = false, var_bounds = nothing, kwargs...)
+                        finite_differencing=false, flat_start=true, kwargs...)
     data = pf_data.data
     am = pf_data.am
     bus_type_idx = pf_data.bus_type_idx
@@ -1872,17 +1953,15 @@ function _compute_ac_pf(pf_data::PowerFlowData, mapping_dict, J0_map;
     vm_idx = pf_data.vm_idx
     va_idx = pf_data.va_idx
     neighbors = pf_data.neighbors
-    additional_x_len = bounded_vars ? length(var_bounds) : 0
-    x0 = flat_start ? zeros(Float64, 2*length(am.idx_to_bus) + additional_x_len) : pf_data.x0
-    if flat_start 
+    x0 =  zeros(Float64, 2*length(am.idx_to_bus))
+    if flat_start || sum(x0) == 0 
         vm_indices = [val["vm"] for val in values(mapping_dict) if val["vm"] != 0]
         x0[vm_indices] .= 1.0
     end
-    F0 = flat_start ? zeros(Float64, 2*length(am.idx_to_bus) + additional_x_len) : pf_data.F0
+    F0 = zeros(Float64, 2*length(am.idx_to_bus))
     J0 = J0_map
     jacobian_history = Vector{SparseMatrixCSC{Float64, Int64}}()
     x_history = Vector{Vector{Float64}}()
-    var_bounds = var_bounds
     # ac power flow, nodal power balance function eval
     function f!(F::Vector{Float64}, x::Vector{Float64})
         for i in eachindex(am.idx_to_bus)
@@ -1929,6 +2008,9 @@ function _compute_ac_pf(pf_data::PowerFlowData, mapping_dict, J0_map;
     end
 
     function jsp_mb!(J::SparseArrays.SparseMatrixCSC{Float64,Int}, x::Vector{Float64})
+        if size(J)[1] != size(J)[2]
+            @infiltrate
+        end
         # functions for each type of derivative
         function dpdv(i)
             y_ii = am.matrix[i, i]
@@ -1973,39 +2055,6 @@ function _compute_ac_pf(pf_data::PowerFlowData, mapping_dict, J0_map;
             return vm_idx[i] * vm_idx[j] * (-imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j]))
         end
 
-        function dbound_dvar(i)
-            return -1 
-        end 
-
-        # function dbound_dbvar(x_og)
-        #     x_ind, bv = var_bounds[x_og] # grab bound variable and range
-        #     mp, R, S = bv
-        #     xval = x[x_ind] # current value for bound variable
-        #     # inside piece 
-        #     inside = 1 + (xval/(S*R))^10
-        #     # numerator
-        #     n1 = (inside)^(1/10)/(S*R) 
-        #     n2 = (xval * (xval/(S*R))^9)/((S*R)^2 * inside^(9/10))
-        #     num = n1 - n2 
-        #     # denominator
-        #     denom = inside^(1/5)
-        #     return num/denom * R, x_ind
-        # end
-
-        function dbound_dbvar(x_og)
-            x_ind, bv = var_bounds[x_og] # grab bound variable and range
-            mp, R, S = bv
-            xval = x[x_ind] # current value for bound variable
-            deriv = (R/S) * cos(xval/S) 
-            # if derivative is near 0, push it forward 
-            if abs(deriv) <= 1e-5
-                deriv = sign(deriv) * 1e-3
-            elseif deriv == 0 
-                deriv = 1e-3 
-            end
-            return deriv, x_ind
-        end
-
         # iterate through each power balance equation
         for i in eachindex(am.idx_to_bus)
             r_real = 2*i - 1
@@ -2020,22 +2069,11 @@ function _compute_ac_pf(pf_data::PowerFlowData, mapping_dict, J0_map;
                         J[r_imag, vm_col] = dqdv(j)
                         J[r_real, va_col] = dpdtheta(j)
                         J[r_imag, va_col] = dqdtheta(j)
-                        # println("J[$r_real, $vm_col] = dpdv($j)")
-                        # println("J[$r_imag, $vm_col] = dqdv($j)")
-                        # println("J[$r_real, $va_col] = dpdtheta($j)")
-                        # println("J[$r_imag, $va_col] = dqdtheta($j)")
                     else 
                         J[r_real, vm_col] = dpn_dv(i, j)
                         J[r_imag, vm_col] = dqn_dv(i, j)
                         J[r_real, va_col] = dpn_dtheta(i, j)
                         J[r_imag, va_col] = dqn_dtheta(i, j)
-                        # println(" 
-                        #     J[$r_real, $vm_col] = dpn_dv($i, $j)
-                        #     J[$r_imag, $vm_col] = dqn_dv($i, $j) 
-                        # ")
-                        #     J[$r_real, $va_col] = dpn_dtheta($i, $j) 
-                        #     J[$r_imag, $va_col] = dqn_dtheta($i, $j)  
-                        # ")
                     end
                 elseif bus_type_idx[j] == 2 
                     q_col = mapping_dict[j]["q"]
@@ -2045,23 +2083,11 @@ function _compute_ac_pf(pf_data::PowerFlowData, mapping_dict, J0_map;
                         J[r_imag, q_col] = dqdq(j)
                         J[r_real, va_col] = dpdtheta(j)
                         J[r_imag, va_col] = dqdtheta(j)
-                        # println(" 
-                        #     J[$r_real, $q_col] = dpdq($j) 
-                        #     J[$r_imag, $q_col] = dqdq($j) 
-                        #     J[$r_real, $va_col] = dpdtheta($j) 
-                        #     J[$r_imag, $va_col] = dqdtheta($j)                        
-                        # ")
                     else 
                         J[r_real, q_col] = 0
                         J[r_imag, q_col] = 0
                         J[r_real, va_col] = dpn_dtheta(i, j)
                         J[r_imag, va_col] = dqn_dtheta(i, j)
-                        # println(" 
-                        #     J[$r_real, $q_col] = 0 
-                        #     J[$r_imag, $q_col] = 0 
-                        #     J[$r_real, $va_col] = dpn_dtheta($i, $j) 
-                        #     J[$r_imag, $va_col] = dqn_dtheta($i, $j)                        
-                        # ")
                     end
                 elseif bus_type_idx[j] == 3
                     q_col = mapping_dict[j]["q"]
@@ -2071,23 +2097,11 @@ function _compute_ac_pf(pf_data::PowerFlowData, mapping_dict, J0_map;
                         J[r_imag, q_col] = dqdq(j)
                         J[r_real, p_col] = dpdp(j)
                         J[r_imag, p_col] = dqdp(j)
-                        # println("
-                        #     J[$r_real, $q_col] = dpdq($j) 
-                        #     J[$r_imag, $q_col] = dqdq($j) 
-                        #     J[$r_real, $p_col] = dpdp($j) 
-                        #     J[$r_imag, $p_col] = dqdp($j)                        
-                        # ")
                     else 
                         J[r_real, q_col] = 0
                         J[r_imag, q_col] = 0
                         J[r_real, p_col] = 0
                         J[r_imag, p_col] = 0
-                        # println("
-                        #     J[$r_real, $q_col] = 0 
-                        #     J[$r_imag, $q_col] = 0 
-                        #     J[$r_real, $p_col] = 0 
-                        #     J[$r_imag, $p_col] = 0                        
-                        # ")
                     end   
 
                 elseif bus_type_idx[j] == 5       
@@ -2122,18 +2136,7 @@ function _compute_ac_pf(pf_data::PowerFlowData, mapping_dict, J0_map;
             end
         end
 
-        final_row = 2*length(am.idx_to_bus)
-        # add bound variables 
-        if bounded_vars 
-            for (i, og_var) in enumerate(keys(var_bounds))
-                # add derivative WRT bound variable 
-                val, var_ind = dbound_dbvar(og_var)
 
-               # add derivative WRT real variable 
-                J[var_ind, og_var] = dbound_dvar(og_var)
-                J[var_ind, var_ind] = val
-            end
-        end
         push!(jacobian_history, deepcopy(J))
         push!(x_history, deepcopy(x))
     end
@@ -2154,59 +2157,70 @@ function _compute_ac_pf(pf_data::PowerFlowData, mapping_dict, J0_map;
             end
         end
     end
+ 
+    # warm-start point
+    if !flat_start
+        p_inject = Dict{Int,Float64}(bus["index"] => 0.0 for (i,bus) in data["bus"])
+        q_inject = Dict{Int,Float64}(bus["index"] => 0.0 for (i,bus) in data["bus"])
+        for (i,gen) in data["gen"]
+            if gen["gen_status"] != 0
+                if haskey(gen, "pg_start")
+                    p_inject[gen["gen_bus"]] += gen["pg_start"]
+                end
+                if haskey(gen, "qg_start")
+                    q_inject[gen["gen_bus"]] += gen["qg_start"]
+                end
+            end
+        end
 
+        for (i,shunt) in data["shunt"]
+            if shunt["status"] != 0
+                bus = data["bus"]["$(shunt["shunt_bus"])"]
+                if haskey(bus, "vm_start")
+                    p_inject[shunt["shunt_bus"]] += shunt["gs"]*bus["vm_start"]^2
+                    p_inject[shunt["shunt_bus"]] -= shunt["bs"]*bus["vm_start"]^2
+                else
+                    p_inject[shunt["shunt_bus"]] += shunt["gs"]
+                    p_inject[shunt["shunt_bus"]] -= shunt["bs"]
+                end
+            end
+        end
 
-    # # warm-start point
-    # if !flat_start
-    #     p_inject = Dict{Int,Float64}(bus["index"] => 0.0 for (i,bus) in data["bus"])
-    #     q_inject = Dict{Int,Float64}(bus["index"] => 0.0 for (i,bus) in data["bus"])
-    #     for (i,gen) in data["gen"]
-    #         if gen["gen_status"] != 0
-    #             if haskey(gen, "pg_start")
-    #                 p_inject[gen["gen_bus"]] += gen["pg_start"]
-    #             end
-    #             if haskey(gen, "qg_start")
-    #                 q_inject[gen["gen_bus"]] += gen["qg_start"]
-    #             end
-    #         end
-    #     end
-
-    #     for (i,shunt) in data["shunt"]
-    #         if shunt["status"] != 0
-    #             bus = data["bus"]["$(shunt["shunt_bus"])"]
-    #             if haskey(bus, "vm_start")
-    #                 p_inject[shunt["shunt_bus"]] += shunt["gs"]*bus["vm_start"]^2
-    #                 p_inject[shunt["shunt_bus"]] -= shunt["bs"]*bus["vm_start"]^2
-    #             else
-    #                 p_inject[shunt["shunt_bus"]] += shunt["gs"]
-    #                 p_inject[shunt["shunt_bus"]] -= shunt["bs"]
-    #             end
-    #         end
-    #     end
-
-    #     for (i,bid) in enumerate(am.idx_to_bus)
-    #         bus = data["bus"]["$(bid)"]
-    #         if bus_type_idx[i] == 1
-    #             if haskey(bus, "vm_start")
-    #                 x0[2*i - 1] = bus["vm_start"]
-    #             end
-    #             if haskey(bus, "va_start")
-    #                 x0[2*i] = bus["va_start"]
-    #             end
-    #         elseif bus_type_idx[i] == 2
-    #             x0[2*i - 1] = -q_inject[bid]
-    #             if haskey(bus, "va_start")
-    #                 x0[2*i] = bus["va_start"]
-    #             end
-    #         elseif bus_type_idx[i] == 3
-    #             x0[2*i - 1] = -p_inject[bid]
-    #             x0[2*i] = -q_inject[bid]
-    #         else
-    #             @assert false
-    #         end
-    #     end
-    # end
-
+        for (i,bid) in enumerate(am.idx_to_bus)
+            bus = data["bus"]["$(bid)"]
+            mapping = mapping_dict[am.bus_to_idx[bid]]
+            if bus_type_idx[i] == 1
+                if haskey(bus, "vm_start")
+                    x0[mapping["vm"]] = bus["vm_start"]
+                end
+                if haskey(bus, "va_start")
+                    x0[mapping["va"]] = bus["va_start"]
+                end
+            elseif bus_type_idx[i] == 2
+                x0[mapping["q"]] = -q_inject[bid]
+                if haskey(bus, "va_start")
+                    x0[mapping["va"]] = bus["va_start"]
+                end
+            elseif bus_type_idx[i] == 3
+                x0[mapping["q"]] = -q_inject[bid]
+                x0[mapping["p"]] = -p_inject[bid]
+            elseif bus_type_idx[i] == 5 
+                if haskey(bus, "va_start")
+                    x0[mapping["va"]] = bus["va_start"]
+                end   
+            elseif bus_type_idx[i] == 6
+                x0[mapping["q"]] = -q_inject[bid]
+                if haskey(bus, "vm_start")
+                    x0[mapping["vm"]] = bus["vm_start"]
+                end
+                if haskey(bus, "va_start")
+                    x0[mapping["va"]] = bus["va_start"]
+                end   
+            else
+                @assert false
+            end
+        end
+    end
  
     # this is where the magic happens
     
