@@ -192,17 +192,19 @@ struct PowerFlowData
 end
 
 
-Base.@kwdef struct SwapFlags 
+Base.@kwdef struct SwapFlags
     mapping = false # for basic PF: use mapping dictionary vs. using indexing
-    enforce_q_lims = true # for basic PF: include q lims or not 
+    enforce_q_lims = true # for basic PF: include q lims or not
     obo = false  # one-by-one: can you perform one type-switch each iteration, or multiple?
     flat_start = false # flat start each iter vs. warmstart with the prev soln
     max_acpf = 50 # max iters before returning best solution thus far
-    minimize_mag = true # minimize violation magnitude vs. number of violations 
+    minimize_mag = true # minimize violation magnitude vs. number of violations
     one_swap = false # only one P-PQV pair at a time; switch back between each iter
     highest_mag = true # prioritize resolving the highest mag. violation versus the smallest mag.
     grainger = false # use the grainger implementation to solve power flow
     swap_technique = "nearest_gen" # swap technique to determine the best P-PQV pairs
+    score_collateral_aware = false # sensitivity_score: use Corollary-1 collateral-aware donor score
+    use_smw_warmstart = false # sensitivity_score: seed next NR with SMW first-Newton-step prediction
     debug = false
 end
 
@@ -1254,13 +1256,26 @@ function compute_ac_pf_mult_buses(pf_data::PowerFlowData; kwargs...)
                             bus_assignment, swap, violations, flags)
             if score <= 1e-4
                 @_debug( "Feasible Run")
-                is_feas = true    
+                is_feas = true
                 break
-            else 
+            else
                 is_feas = ~swap[]
             end
-            if is_feas  
+            if is_feas
                 @_debug( "Ending with $(score), but no swap")
+            end
+            # Sherman-Morrison warm-start hook: perform_bus_swaps! may have
+            # mutated bus_assignment with SMW-predicted post-swap vm/va to
+            # seed the next NR call. solution["bus"] was deep-copied from
+            # bus_assignment before the swap, so copy the (possibly updated)
+            # values back into solution so warm_start_prev_soln! picks them up.
+            if flags.use_smw_warmstart
+                for (s, b) in solution["bus"]
+                    if haskey(bus_assignment, s)
+                        b["vm"] = bus_assignment[s]["vm"]
+                        b["va"] = bus_assignment[s]["va"]
+                    end
+                end
             end
             # warm start for next iter
             warm_start_prev_soln!(pf_data, solution)
@@ -1369,10 +1384,11 @@ function perform_bus_swaps_nearest_gen!(pf_data, bus_assignment, p_pqv_pairs, b1
     swap_pqv_buses!(pf_data, stored_violations, swap_gens, p_pqv_pairs, bus_assignment, swap)
 end
 
-"P-PQV switching methodology based on jacobian sensitivity"
-function perform_bus_swaps_sensitivity_score!(pf_data, mapping_dict, jacobian, bus_type_idx, p_pqv_pairs, 
+"P-PQV switching methodology based on Sherman-Morrison voltage sensitivities (see pf_smw.jl)"
+function perform_bus_swaps_sensitivity_score!(pf_data, mapping_dict, jacobian, bus_type_idx, p_pqv_pairs,
                                                 bus_assignment, swap, b1_violations, flags)
-    #TODO fill in
+    return perform_bus_swaps_sensitivity_score_impl!(pf_data, mapping_dict, jacobian, bus_type_idx,
+                                                     p_pqv_pairs, bus_assignment, swap, b1_violations, flags)
 end
 
 "P_PQV switching methodology based on maintaining LI of the QV submatrix"

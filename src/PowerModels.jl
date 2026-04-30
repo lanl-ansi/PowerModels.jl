@@ -126,6 +126,7 @@ include("prob/ots.jl")
 include("prob/tnep.jl")
 include("prob/test.jl")
 include("prob/update_bt.jl")
+include("prob/pf_smw.jl")
 
 
 include("util/obbt.jl")

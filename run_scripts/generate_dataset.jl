@@ -198,11 +198,13 @@ function generate_solutions(case_name, delta, test_case, load_data, file_pth, ru
                             num_samples = 1000, write_out = true)
     PowerModels.logger_config!("warn")
     # prep structures to store outputs
-    cols = [("datapoint", Int64), ("run_id", Int64), 
-            ("pf_type", String), ("obo", Int64), 
-            ("swap_technique", String), ("grainger", Int64), ("time", Float64),
+    cols = [("datapoint", Int64), ("run_id", Int64),
+            ("pf_type", String), ("obo", Int64),
+            ("swap_technique", String), ("grainger", Int64),
+            ("use_smw_warmstart", Int64), ("score_collateral_aware", Int64),
+            ("time", Float64),
             ("swap_iters", Int64), ("jac_iters", Int64)]
-    run_df = DataFrame([name => type[] for (name, type) in cols]) 
+    run_df = DataFrame([name => type[] for (name, type) in cols])
     cols = vcat(["datapoint" ,"run_id", "iter", "jac_iter", "final_iter"], 
                 ["qg_$gen_ind" for gen_ind in keys(test_case["gen"])],
                 ["pg_$gen_ind" for gen_ind in keys(test_case["gen"])], 
@@ -228,21 +230,36 @@ function generate_solutions(case_name, delta, test_case, load_data, file_pth, ru
     for pf_type in run_dict["pf_types"]
         for obo in run_dict["obo"]
             if pf_type in ["baseline", "qlim"]
-                run_id += 1 
-                run_flags = Dict("run_id" => run_id, "pf_type" => pf_type, 
-                            "obo" => obo, "swap_technique" => "none", "grainger" => 0)
+                run_id += 1
+                run_flags = Dict("run_id" => run_id, "pf_type" => pf_type,
+                            "obo" => obo, "swap_technique" => "none", "grainger" => 0,
+                            "use_smw_warmstart" => 0, "score_collateral_aware" => 0)
                 println("Running ID $run_id: pf_type = $pf_type, obo = $obo")
                 run_pf!(test_case, load_data, run_flags, run_df, soln_df, violations_df, bi_df, num_samples)
             else
+                # `sensitivity_score` supports two extra knobs that other techniques ignore.
+                # Iterate over them only when relevant; defaults of [0] keep this loop the
+                # same shape as before for "nearest_gen" and "qv_inv".
+                smw_grid = get(run_dict, "use_smw_warmstart", [0])
+                collat_grid = get(run_dict, "score_collateral_aware", [0])
                 for swap_technique in run_dict["swap_techniques"]
                     for grainger in run_dict["grainger"]
-                        run_id += 1 
-                        run_flags = Dict("run_id" => run_id, "pf_type" => pf_type, 
-                                    "obo" => obo, "swap_technique" => swap_technique, "grainger" => grainger
-                                    )
-                        test_case["pv_pairs"] = deepcopy(nearest_gens)
-                        println("Running ID $run_id: pf_type = $pf_type, obo = $obo, swap_technique = $swap_technique, grainger = $grainger")
-                        run_pf!(test_case, load_data, run_flags, run_df, soln_df, violations_df, bi_df, num_samples)
+                        smw_loop = swap_technique == "sensitivity_score" ? smw_grid : [0]
+                        collat_loop = swap_technique == "sensitivity_score" ? collat_grid : [0]
+                        for use_smw in smw_loop
+                            for collateral in collat_loop
+                                run_id += 1
+                                run_flags = Dict("run_id" => run_id, "pf_type" => pf_type,
+                                            "obo" => obo, "swap_technique" => swap_technique,
+                                            "grainger" => grainger,
+                                            "use_smw_warmstart" => use_smw,
+                                            "score_collateral_aware" => collateral
+                                            )
+                                test_case["pv_pairs"] = deepcopy(nearest_gens)
+                                println("Running ID $run_id: pf_type=$pf_type, obo=$obo, swap_technique=$swap_technique, grainger=$grainger, use_smw=$use_smw, collat=$collateral")
+                                run_pf!(test_case, load_data, run_flags, run_df, soln_df, violations_df, bi_df, num_samples)
+                            end
+                        end
                     end
                 end
             end
@@ -283,15 +300,20 @@ function run_pf!(original_test_case, load_data, run_flags, run_df, soln_df, viol
         for (gen_ind, gen) in pairs(test_case["gen"])
             gen["pg"] = loads["pg_$gen_ind"]
         end
-        # run ac power flow 
+        # run ac power flow
         results = nothing
         if run_flags["pf_type"] in ["qlim", "baseline"]
             results = PowerModels.compute_ac_pf(test_case, mapping = true,
                                 enforce_q_lims = run_flags["pf_type"] == "qlim")
         else
-            results = PowerModels.compute_ac_pf_mult_buses(test_case, mapping = true, 
-                                    swap_technique = run_flags["swap_technique"], 
-                                    obo = Bool(run_flags["obo"]), grainger = Bool(run_flags["grainger"]), debug = true)
+            # Optional sensitivity_score-only knobs (defaults preserve existing behavior).
+            use_smw  = Bool(get(run_flags, "use_smw_warmstart", 0))
+            collateral = Bool(get(run_flags, "score_collateral_aware", 0))
+            results = PowerModels.compute_ac_pf_mult_buses(test_case, mapping = true,
+                                    swap_technique = run_flags["swap_technique"],
+                                    obo = Bool(run_flags["obo"]), grainger = Bool(run_flags["grainger"]),
+                                    use_smw_warmstart = use_smw,
+                                    score_collateral_aware = collateral, debug = true)
         end
         # parse results 
         parse_results!(test_case, results, run_flags, loads["datapoint"],  run_df, soln_df, violations_df, bi_df)
@@ -425,8 +447,11 @@ function main()
 
     # pull in loads and generate dataset
     run_dict = Dict("pf_types" => ["mbuses", "qlim", "baseline"],
-                    "obo" => [0,1], "grainger" => [0,1], 
-                    "swap_techniques" => ["nearest_gen", "qv_inv"]
+                    "obo" => [0,1], "grainger" => [0,1],
+                    "swap_techniques" => ["nearest_gen", "qv_inv", "sensitivity_score"],
+                    # sensitivity_score-specific knobs (0=off, 1=on); other techniques ignore.
+                    "use_smw_warmstart"      => [0, 1],
+                    "score_collateral_aware" => [0],
                 )
     load_data = DataFrame(XLSX.readtable(joinpath(TESTCASE_PATH, "data/$(CASE_NAME)/loads/$delta.xlsx"), "loads"))
     generate_solutions(CASE_NAME, delta, test_case, load_data, file_pth, run_dict; num_samples = 10, write_out = true)
