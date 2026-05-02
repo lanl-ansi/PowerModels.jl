@@ -111,7 +111,7 @@ function _loads_xlsx_path(case_name::String)
     return nothing
 end
 
-const CASES = ["case14", "case57", "case300"]
+const CASES = ["case14", "case57", "case300", "case118", "case240", "case1354_pegase"]
 
 # ----- strategies under comparison ------------------------------------------
 
@@ -383,7 +383,14 @@ function main()
         @info "no bus_swap_data or config.jl found; case14 only with random scaling"
     end
     # Heavier cases get fewer samples to keep total runtime reasonable.
-    sample_caps = Dict("case14" => 100, "case57" => 50, "case300" => 15)
+    sample_caps = Dict(
+        "case14" => 100,
+        "case57" => 50,
+        "case300" => 15,
+        "case118" => 30,
+        "case240" => 20,
+        "case1354_pegase" => 5,
+    )
     for case_name in CASES
         run_case(case_name; max_samples = get(sample_caps, case_name, 30))
     end

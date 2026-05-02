@@ -156,7 +156,29 @@ function build_embedded_jacobian(pf_data, p_pqv_pairs::AbstractDict = Dict{Int,I
 
     emap = build_embedded_map(pf_data)
     n_emb = emap.n_emb
-    Jhat = zeros(Float64, n_emb, n_emb)
+
+    # Build the embedded Jacobian as a sparse matrix via COO triplets. The
+    # admittance graph is sparse (~k nonzeros per row, k = avg degree), and
+    # PV/PQV-donor aux rows are 1-nonzero identity rows, so dense storage
+    # wastes O(n^2) memory and the dense LU dominates per-swap-iter cost on
+    # mid-size grids (case300 was a 598x598 dense factor per swap).
+    nnz_est = 0
+    @inbounds for i in emap.nonslack_buses
+        deg = 1 + count(j -> j != i && haskey(emap.va_col, j), neighbors[i])
+        bt  = bti[i]
+        nnz_est += 2 * deg                 # P row: dtheta + dV per (self + nonslack neighbor)
+        if bt == 1 || bt == 5
+            nnz_est += 2 * deg             # Q row: dtheta + dV per (self + nonslack neighbor)
+        else
+            nnz_est += 1                   # PV / P-donor identity row
+        end
+    end
+    I = Vector{Int}(undef, 0); sizehint!(I, nnz_est)
+    J = Vector{Int}(undef, 0); sizehint!(J, nnz_est)
+    V = Vector{Float64}(undef, 0); sizehint!(V, nnz_est)
+    @inline function _push!(r, c, v)
+        push!(I, r); push!(J, c); push!(V, v)
+    end
 
     # Fill P rows for every nonslack bus, and the aux row depending on type.
     @inbounds for i in emap.nonslack_buses
@@ -167,38 +189,38 @@ function build_embedded_jacobian(pf_data, p_pqv_pairs::AbstractDict = Dict{Int,I
 
         # P_i row: derivatives w.r.t. theta_j and V_j for all neighbors j (and self).
         #          (We only differentiate w.r.t. nonslack variables.)
-        Jhat[pr, vai] = _smw_dpdtheta_diag(am, neighbors, vm, va, i)
-        Jhat[pr, vmi] = _smw_dpdv_diag(am, neighbors, vm, va, i)
+        _push!(pr, vai, _smw_dpdtheta_diag(am, neighbors, vm, va, i))
+        _push!(pr, vmi, _smw_dpdv_diag(am, neighbors, vm, va, i))
         for j in neighbors[i]
             j == i && continue
             haskey(emap.va_col, j) || continue   # skip slack neighbor cols
-            Jhat[pr, emap.va_col[j]] = _smw_dpn_dtheta(am, vm, va, i, j)
-            Jhat[pr, emap.vm_col[j]] = _smw_dpn_dv(am, vm, va, i, j)
+            _push!(pr, emap.va_col[j], _smw_dpn_dtheta(am, vm, va, i, j))
+            _push!(pr, emap.vm_col[j], _smw_dpn_dv(am, vm, va, i, j))
         end
 
         bt = bti[i]
         if bt == 1 || bt == 5
             # Q_i row: standard Q balance.
-            Jhat[qr, vai] = _smw_dqdtheta_diag(am, neighbors, vm, va, i)
-            Jhat[qr, vmi] = _smw_dqdv_diag(am, neighbors, vm, va, i)
+            _push!(qr, vai, _smw_dqdtheta_diag(am, neighbors, vm, va, i))
+            _push!(qr, vmi, _smw_dqdv_diag(am, neighbors, vm, va, i))
             for j in neighbors[i]
                 j == i && continue
                 haskey(emap.va_col, j) || continue
-                Jhat[qr, emap.va_col[j]] = _smw_dqn_dtheta(am, vm, va, i, j)
-                Jhat[qr, emap.vm_col[j]] = _smw_dqn_dv(am, vm, va, i, j)
+                _push!(qr, emap.va_col[j], _smw_dqn_dtheta(am, vm, va, i, j))
+                _push!(qr, emap.vm_col[j], _smw_dqn_dv(am, vm, va, i, j))
             end
         elseif bt == 2
             # V_i = V_bar_i row: gradient is e_{V_i}.
-            Jhat[qr, vmi] = 1.0
+            _push!(qr, vmi, 1.0)
         elseif bt == 6
             # P-donor: borrowed V_l = V_hat_l row, l = p_pqv_pairs[i].
             l = get(p_pqv_pairs, i, nothing)
             if l === nothing || !haskey(emap.vm_col, l)
                 # No linked recipient (or recipient is slack -- shouldn't happen).
                 # Fall back to keeping a V_i = V_i row so Jhat stays nonsingular by structure.
-                Jhat[qr, vmi] = 1.0
+                _push!(qr, vmi, 1.0)
             else
-                Jhat[qr, emap.vm_col[l]] = 1.0
+                _push!(qr, emap.vm_col[l], 1.0)
             end
         else
             # bt == 3 (slack) is excluded from emap, so this branch is unreachable.
@@ -206,6 +228,7 @@ function build_embedded_jacobian(pf_data, p_pqv_pairs::AbstractDict = Dict{Int,I
         end
     end
 
+    Jhat = SparseArrays.sparse(I, J, V, n_emb, n_emb)
     return Jhat, emap
 end
 
