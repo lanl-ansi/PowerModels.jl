@@ -1,10 +1,11 @@
 name = "PowerModels"
 uuid = "c36e90e8-916a-50a6-bd94-075b64ef4655"
+version = "0.21.5"
 authors = ["Carleton Coffrin"]
 repo = "https://github.com/lanl-ansi/PowerModels.jl"
-version = "0.21.5"
 
 [deps]
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DataStructures = "864edb3b-99cc-5e75-8d2d-829cb0a9cfe8"
 Graphs = "86223c79-3864-5bf0-83f7-82e725a168b6"
 Infiltrator = "5903a43b-9cc3-4c30-8d17-598619ec4e9b"
@@ -22,8 +23,10 @@ Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 RowEchelon = "af85af4c-bcd5-5d23-b03a-a909639aa875"
 SimpleWeightedGraphs = "47aef6b3-ad0c-573a-a1e2-d07658019622"
 SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+XLSX = "fdbf4ff8-1666-58a4-91e7-1b58723a45e0"
 
 [compat]
+DataFrames = "1.8.2"
 DataStructures = "0.19.4"
 Graphs = "1.14.0"
 HiGHS = "1"
@@ -41,6 +44,7 @@ PrecompileTools = "1"
 Random = "1.10"
 SCS = "1, 2"
 SparseArrays = "1.10"
+XLSX = "0.11.6"
 julia = "1.10"
 
 [extras]

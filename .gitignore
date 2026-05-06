@@ -14,3 +14,5 @@ __pycache__/
 config.jl
 config.py
 wandb/
+.claude/
+bus_swap_data/

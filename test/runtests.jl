@@ -97,6 +97,8 @@ include("common.jl")
 
     include("pf-native.jl")
 
+    include("pf_smw.jl")
+
     include("opf.jl")
 
     include("opf-var.jl")
