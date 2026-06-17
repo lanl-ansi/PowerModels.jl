@@ -2,11 +2,13 @@
 function objective_min_fuel_and_flow_cost(pm::AbstractPowerModel; kwargs...)
     expression_pg_cost(pm; kwargs...)
     expression_p_dc_cost(pm; kwargs...)
+    expression_qg_cost_deficit(pm; kwargs...)
 
     return JuMP.@objective(pm.model, Min,
         sum(
             sum( var(pm, n,   :pg_cost, i) for (i,gen) in nw_ref[:gen]) +
-            sum( var(pm, n, :p_dc_cost, i) for (i,dcline) in nw_ref[:dcline])
+            sum( var(pm, n, :p_dc_cost, i) for (i,dcline) in nw_ref[:dcline]) +
+            sum( var(pm, n, :qg_cost, i) for (i,gen) in nw_ref[:gen] if startswith(get(gen, "name", ""), "deficit"); init=0.0)
         for (n, nw_ref) in nws(pm))
     )
 end
@@ -17,10 +19,12 @@ end
 """
 function objective_min_fuel_cost(pm::AbstractPowerModel; kwargs...)
     expression_pg_cost(pm; kwargs...)
+    expression_qg_cost_deficit(pm; kwargs...)
 
     return JuMP.@objective(pm.model, Min,
         sum(
-            sum( var(pm, n, :pg_cost, i) for (i,gen) in nw_ref[:gen])
+            sum( var(pm, n, :pg_cost, i) for (i,gen) in nw_ref[:gen]) +
+            sum( var(pm, n, :qg_cost, i) for (i,gen) in nw_ref[:gen] if startswith(get(gen, "name", ""), "deficit"); init=0.0)
         for (n, nw_ref) in nws(pm))
     )
 end
@@ -181,6 +185,47 @@ function expression_p_dc_cost(pm::AbstractPowerModel; report::Bool=true)
         end
 
         report && sol_component_value(pm, n, :dcline, :p_dc_cost, ids(pm, n, :dcline), p_dc_cost)
+    end
+end
+
+
+"adds qg_cost expressions for generators whose name starts with 'deficit' (cost evaluated at |qg|)"
+function expression_qg_cost_deficit(pm::AbstractPowerModel; report::Bool=true)
+    for (n, nw_ref) in nws(pm)
+        qg_cost = var(pm, n)[:qg_cost] = Dict{Int,Any}()
+
+        deficit_ids = []
+        for (i, gen) in ref(pm, n, :gen)
+            if !startswith(get(gen, "name", ""), "deficit")
+                continue
+            end
+            push!(deficit_ids, i)
+
+            qg = var(pm, n, :qg, i)
+            qg_abs_ub = max(abs(gen["qmin"]), abs(gen["qmax"]))
+
+            qg_abs = JuMP.@variable(pm.model,
+                base_name="$(n)_qg_abs_$(i)",
+                lower_bound = 0.0,
+                upper_bound = qg_abs_ub
+            )
+            JuMP.@constraint(pm.model, qg_abs >= qg)
+            JuMP.@constraint(pm.model, qg_abs >= -qg)
+
+            qg_abs_terms = JuMP.VariableRef[qg_abs]
+
+            if gen["model"] == 1
+                points = calc_pwl_points(gen["ncost"], gen["cost"], 0.0, qg_abs_ub)
+                qg_cost[i] = _pwl_cost_expression(pm, qg_abs_terms, points, nw=n, id=i, var_name="qg")
+            elseif gen["model"] == 2
+                cost_rev = reverse(gen["cost"])
+                qg_cost[i] = _polynomial_cost_expression(pm, qg_abs_terms, cost_rev, nw=n, id=i, var_name="qg")
+            else
+                @_error("Only cost models of types 1 and 2 are supported at this time, given cost model type of $(gen["model"]) on generator $(i)")
+            end
+        end
+
+        report && sol_component_value(pm, n, :gen, :qg_cost, deficit_ids, qg_cost)
     end
 end
 
