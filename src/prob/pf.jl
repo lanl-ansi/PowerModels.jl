@@ -316,7 +316,7 @@ function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
     converged = pf_result.x_converged || pf_result.f_converged
 
     if !converged
-        Memento.warn(_LOGGER, "ac power flow solver convergence failed!  use `show_trace = true` for more details")
+        @_warn("ac power flow solver convergence failed!  use `show_trace = true` for more details")
     else
         data = pf_data.data
         bus_gens = pf_data.bus_gens
@@ -420,7 +420,7 @@ function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
     pf_result = _compute_ac_pf(pf_data; kwargs...)
 
     if !(pf_result.x_converged || pf_result.f_converged)
-        Memento.warn(_LOGGER, "ac power flow solver convergence failed!  use `show_trace = true` for more details")
+        @_warn("ac power flow solver convergence failed!  use `show_trace = true` for more details")
     end
 
     data = pf_data.data

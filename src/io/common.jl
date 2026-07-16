@@ -25,7 +25,7 @@ function parse_file(io::Union{IO,String}; import_all=false, validate=true, filet
     elseif filetype == "json"
         return PowerModels.parse_json(io; validate)
     else
-        Memento.error(_LOGGER, "Unrecognized filetype: \".$filetype\", Supported extensions are \".raw\", \".m\" and \".json\"")
+        @_error("Unrecognized filetype: \".$filetype\", Supported extensions are \".raw\", \".m\" and \".json\"")
     end
 end
 
@@ -72,7 +72,7 @@ function export_file(file::AbstractString, data::Dict{String, Any})
             export_file(io, data, filetype=split(lowercase(file), '.')[end])
         end
     else
-        Memento.error(_LOGGER, "The file must have an extension")
+        @_error("The file must have an extension")
     end
 end
 
@@ -89,7 +89,7 @@ function export_file(io::IO, data::Dict{String, Any}; filetype="json")
         # `inf` is not set. Ditto for `ninf` (for -Inf) and `nan` (for NaN).
         JSON.json(io, data; allownan = true, inf = "null", ninf = "null", nan = "null")
     else
-        Memento.error(_LOGGER, "Unrecognized filetype: \".$filetype\", Supported extensions are \".raw\", \".m\" and \".json\"")
+        @_error("Unrecognized filetype: \".$filetype\", Supported extensions are \".raw\", \".m\" and \".json\"")
     end
 end
 

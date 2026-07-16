@@ -1,33 +1,27 @@
 # Test cases for PTI RAW file parser
 
-TESTLOG = Memento.getlogger(PowerModels)
-
 @testset "test .raw file parser" begin
     @testset "Check PTI exception handling" begin
-        Memento.setlevel!(TESTLOG, "warn")
+        _test_nowarn(() -> PowerModels.parse_pti("../test/data/pti/parser_test_a.raw"))
+        # @test_throws(ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
+        _test_warn("Version 32 of PTI format is unsupported, parser may not function correctly.") do
+            return PowerModels.parse_pti("../test/data/pti/parser_test_c.raw")
+        end
+        _test_warn("At line 4, new section started with '0', but additional non-comment data is present. Pattern '^\\s*0\\s*[/]*.*' is reserved for section start/end.") do
+            return PowerModels.parse_pti("../test/data/pti/parser_test_c.raw")
+        end
+        #@test_throws(ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
+        _test_warn("GNE DEVICE parsing is not supported.") do
+            return PowerModels.parse_pti("../test/data/pti/parser_test_h.raw")
+        end
+        @test_throws(ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_j.raw"))
 
-        @test_nowarn PowerModels.parse_pti("../test/data/pti/parser_test_a.raw")
-        # @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_b.raw"))
-        @test_warn(TESTLOG, "Version 32 of PTI format is unsupported, parser may not function correctly.",
-                   PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
-        @test_warn(TESTLOG, "At line 4, new section started with '0', but additional non-comment data is present. Pattern '^\\s*0\\s*[/]*.*' is reserved for section start/end.",
-                    PowerModels.parse_pti("../test/data/pti/parser_test_c.raw"))
-        #@test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_d.raw"))
-        @test_warn(TESTLOG, "GNE DEVICE parsing is not supported.", PowerModels.parse_pti("../test/data/pti/parser_test_h.raw"))
-        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_j.raw"))
-
-        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_l.raw"))
-
-        Memento.setlevel!(TESTLOG, "error")
+        @test_throws(ErrorException, PowerModels.parse_pti("../test/data/pti/parser_test_l.raw"))
     end
 
     @testset "Check PSSE exception handling" begin
-        Memento.setlevel!(TESTLOG, "warn")
-
-        @test_throws(TESTLOG, Exception, PowerModels.parse_psse("../test/data/pti/parser_test_b.raw"))
-        @test_throws(TESTLOG, Exception, PowerModels.parse_psse("../test/data/pti/parser_test_d.raw"))
-
-        Memento.setlevel!(TESTLOG, "error")
+        @test_throws(Exception, PowerModels.parse_psse("../test/data/pti/parser_test_b.raw"))
+        @test_throws(Exception, PowerModels.parse_psse("../test/data/pti/parser_test_d.raw"))
     end
 
     @testset "4-bus frankenstein file" begin
@@ -171,7 +165,7 @@ TESTLOG = Memento.getlogger(PowerModels)
     end
 
     @testset "0-bus case file" begin
-        @test_throws(TESTLOG, ErrorException, PowerModels.parse_pti("../test/data/pti/case0.raw"))
+        @test_throws(ErrorException, PowerModels.parse_pti("../test/data/pti/case0.raw"))
     end
 
     @testset "73-bus case file" begin
@@ -334,7 +328,7 @@ end
         file = "../test/data/pti/two-terminal-hvdc_test.raw"
         test_pti_idempotent(file, import_all=true)
     end
-    
+
     # Only fails in qminf/qmaxf because it lost amnr amni values in the export function.
     # @testset "test TT HVDC 3" begin
     #     file = "../test/data/pti/two-terminal-hvdc_test.raw"
@@ -347,13 +341,13 @@ end
     function compare_pf(filename::String)
         source_data = parse_file(filename)
         source_solution = PowerModels.solve_pf(source_data, ACPPowerModel, nlp_solver)["solution"]
-        
+
         file_tmp = "../test/data/tmp.raw"
         PowerModels.export_pti(file_tmp, source_data)
         destination_data = parse_file(file_tmp)
         destination_solution = PowerModels.solve_pf(destination_data, ACPPowerModel, nlp_solver)["solution"]
         rm(file_tmp)
-        
+
         @test InfrastructureModels.compare_dict(source_solution, destination_solution)
     end
 
@@ -361,7 +355,7 @@ end
         file = "../test/data/pti/two-terminal-hvdc_test.raw"
         compare_pf(file)
     end
-    
+
     # Fails because missing info to recreate the exact DCLINE (loss1)
     # @testset "HVDC MAT" begin
     #     file = "../test/data/matpower/case5_dc.m"

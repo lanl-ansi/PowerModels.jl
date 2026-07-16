@@ -1,7 +1,5 @@
 # Tests of data checking and transformation code
 
-TESTLOG = Memento.getlogger(PowerModels)
-
 @testset "test data summary" begin
 
     @testset "5-bus summary from dict" begin
@@ -488,7 +486,6 @@ end
     end
 end
 
-
 @testset "test errors and warnings" begin
     data = PowerModels.parse_file("../test/data/matpower/case3.m")
 
@@ -496,73 +493,88 @@ end
     data["gen"]["1"]["model"] = 1
     data["gen"]["1"]["ncost"] = 1
     data["gen"]["1"]["cost"] = [0, 1, 0]
-    @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
+    @test_throws(ErrorException, PowerModels.correct_cost_functions!(data))
 
     data["gen"]["1"]["cost"] = [0, 0]
-    @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
+    @test_throws(ErrorException, PowerModels.correct_cost_functions!(data))
 
     data["gen"]["1"]["model"] = 2
-    @test_throws(TESTLOG, ErrorException, PowerModels.correct_cost_functions!(data))
+    @test_throws(ErrorException, PowerModels.correct_cost_functions!(data))
 
     # check_connectivity
     data["load"]["1"]["load_bus"] = 1000
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+    @test_throws(ErrorException, PowerModels.check_connectivity(data))
 
     data["load"]["1"]["load_bus"] = 1
     data["shunt"]["1"] = Dict("gs"=>0, "bs"=>1, "shunt_bus"=>1000, "index"=>1, "status"=>1)
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+    @test_throws(ErrorException, PowerModels.check_connectivity(data))
 
     data["shunt"]["1"]["shunt_bus"] = 1
     data["gen"]["1"]["gen_bus"] = 1000
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+    @test_throws(ErrorException, PowerModels.check_connectivity(data))
 
     data["gen"]["1"]["gen_bus"] = 1
     data["branch"]["1"]["f_bus"] = 1000
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+    @test_throws(ErrorException, PowerModels.check_connectivity(data))
 
     data["branch"]["1"]["f_bus"] = 1
     data["branch"]["1"]["t_bus"] = 1000
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+    @test_throws(ErrorException, PowerModels.check_connectivity(data))
 
     data["branch"]["1"]["t_bus"] = 3
     data["dcline"]["1"]["f_bus"] = 1000
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+    @test_throws(ErrorException, PowerModels.check_connectivity(data))
 
     data["dcline"]["1"]["f_bus"] = 1
     data["dcline"]["1"]["t_bus"] = 1000
-    @test_throws(TESTLOG, ErrorException, PowerModels.check_connectivity(data))
+    @test_throws(ErrorException, PowerModels.check_connectivity(data))
     data["dcline"]["1"]["t_bus"] = 2
 
     #warnings
-    Memento.setlevel!(TESTLOG, "warn")
 
     data["gen"]["1"]["model"] = 3
-    @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_mixed_units!(data))
-    @test_warn(TESTLOG, "Skipping cost model of type 3 in per unit transformation", PowerModels.make_per_unit!(data))
-    @test_warn(TESTLOG, "Unknown cost model of type 3 on generator 1", PowerModels.correct_cost_functions!(data))
+    _test_warn("Skipping cost model of type 3 in per unit transformation") do
+        return PowerModels.make_mixed_units!(data)
+    end
+    _test_warn("Skipping cost model of type 3 in per unit transformation") do
+        return PowerModels.make_per_unit!(data)
+    end
+    _test_warn("Unknown cost model of type 3 on generator 1") do
+        return PowerModels.correct_cost_functions!(data)
+    end
 
     data["dcline"]["1"]["loss0"] = -1.0
-    @test_warn(TESTLOG, "this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0", PowerModels.correct_dcline_limits!(data))
+    _test_warn("this code only supports positive loss0 values, changing the value on dcline 1 from -100.0 to 0.0") do
+        return PowerModels.correct_dcline_limits!(data)
+    end
 
     data["dcline"]["1"]["loss1"] = -1.0
-    @test_warn(TESTLOG, "this code only supports positive loss1 values, changing the value on dcline 1 from -1.0 to 0.0", PowerModels.correct_dcline_limits!(data))
+    _test_warn("this code only supports positive loss1 values, changing the value on dcline 1 from -1.0 to 0.0") do
+        return PowerModels.correct_dcline_limits!(data)
+    end
 
     @test data["dcline"]["1"]["loss0"] == 0.0
     @test data["dcline"]["1"]["loss1"] == 0.0
 
     data["dcline"]["1"]["loss1"] = 100.0
-    @test_warn(TESTLOG, "this code only supports loss1 values < 1, changing the value on dcline 1 from 100.0 to 0.0", PowerModels.correct_dcline_limits!(data))
+    _test_warn("this code only supports loss1 values < 1, changing the value on dcline 1 from 100.0 to 0.0") do
+        return PowerModels.correct_dcline_limits!(data)
+    end
 
     delete!(data["branch"]["1"], "tap")
-    @test_warn(TESTLOG, "branch found without tap value, setting a tap to 1.0", PowerModels.correct_transformer_parameters!(data))
+    _test_warn("branch found without tap value, setting a tap to 1.0") do
+        return PowerModels.correct_transformer_parameters!(data)
+    end
 
     delete!(data["branch"]["1"], "shift")
-    @test_warn(TESTLOG, "branch found without shift value, setting a shift to 0.0", PowerModels.correct_transformer_parameters!(data))
+    _test_warn("branch found without shift value, setting a shift to 0.0") do
+        return PowerModels.correct_transformer_parameters!(data)
+    end
 
     data["branch"]["1"]["tap"] = -1.0
-    @test_warn(TESTLOG, "branch found with non-positive tap value of -1.0, setting a tap to 1.0", PowerModels.correct_transformer_parameters!(data))
-
-    Memento.setlevel!(TESTLOG, "error")
+    _test_warn("branch found with non-positive tap value of -1.0, setting a tap to 1.0") do
+        return PowerModels.correct_transformer_parameters!(data)
+    end
 end
 
 
@@ -930,9 +942,7 @@ end
         # a=2, b=1, c=3, but about 50% of keys fail.
         #
         # The "Test switches case5_sw 4->3->2->1" test above works because
-        # (1, 2, 3) is a key that happens to work.
-        level = Memento.getlevel(TESTLOG)
-        Memento.setlevel!(TESTLOG, "error")
+        # (1, 2, 3) is a key that happens to work
         @testset "$a-$b-$c" for (a, b, c) in [
             (1, 2, 3),
             (1, 3, 2),
@@ -953,7 +963,6 @@ end
             @test sort(collect(keys(data["bus"]))) == ["1", "10"]
             @test data["bus"]["1"]["bus_type"] == 3
         end
-        Memento.setlevel!(TESTLOG, level)
     end
     @testset "Test switches case5_sw 2->1 with 2 inactive" begin
         # Switch merges 2 -> 1
