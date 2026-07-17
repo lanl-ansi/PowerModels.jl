@@ -249,8 +249,8 @@ function instantiate_pf_data(data::Dict{String,<:Any})
 
     for i in eachindex(am.idx_to_bus)
         bus_type_i = bus_type_idx[i]
-        f_i_r = am.idx_to_J_idx[i]
-        f_i_i = am.idx_to_J_idx[i] + 1
+        f_i_fst = am.idx_to_J_idx[i]
+        f_i_snd = am.idx_to_J_idx[i] + 1
 
         for j in neighbors[i]
             bus_type_j = bus_type_idx[j]
@@ -260,18 +260,18 @@ function instantiate_pf_data(data::Dict{String,<:Any})
             if bus_type_i == 3 || bus_type_j == 3
                 # nothing in J
             elseif bus_type_i == 2 && bus_type_j == 2
-                push!(J0_I, f_i_r); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
+                push!(J0_I, f_i_fst); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
             elseif bus_type_i == 2 && bus_type_j == 1
-                push!(J0_I, f_i_r); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
-                push!(J0_I, f_i_r); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
+                push!(J0_I, f_i_fst); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
+                push!(J0_I, f_i_fst); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
             elseif bus_type_i == 1 && bus_type_j == 2
-                push!(J0_I, f_i_r); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
-                push!(J0_I, f_i_i); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
+                push!(J0_I, f_i_fst); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
+                push!(J0_I, f_i_snd); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
             elseif bus_type_i == 1 && bus_type_j == 1
-                push!(J0_I, f_i_r); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
-                push!(J0_I, f_i_r); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
-                push!(J0_I, f_i_i); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
-                push!(J0_I, f_i_i); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
+                push!(J0_I, f_i_fst); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
+                push!(J0_I, f_i_fst); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
+                push!(J0_I, f_i_snd); push!(J0_J, x_j_fst); push!(J0_V, 0.0)
+                push!(J0_I, f_i_snd); push!(J0_J, x_j_snd); push!(J0_V, 0.0)
             else
                 error("Bus types wrong")
             end
@@ -528,38 +528,24 @@ end
 function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_start=false, kwargs...)
     data = pf_data.data
     am = pf_data.am
-    bus_type_idx = pf_data.bus_type_idx
-    p_delta_base_idx = pf_data.p_delta_base_idx
-    q_delta_base_idx = pf_data.q_delta_base_idx
-    p_inject_idx = pf_data.p_inject_idx
-    q_inject_idx = pf_data.q_inject_idx
-    vm_idx = pf_data.vm_idx
+    bus_type_idx = pf_data.bus_type_idx  # Bus types: 1 - PQ, 2 - PV, 3 - reference
+    p_delta_base_idx = pf_data.p_delta_base_idx # base active   withdrawal from non-controlled sources (e.g. loads, non-reference gens)
+    q_delta_base_idx = pf_data.q_delta_base_idx # base reactive withdrawal from non-controlled sources (e.g. loads)
+    p_inject_idx = pf_data.p_inject_idx # variable active injection (e.g reference gen)
+    q_inject_idx = pf_data.q_inject_idx # variable reactive injection (e.g gens)
+    vm_idx = pf_data.vm_idx 
     va_idx = pf_data.va_idx
     neighbors = pf_data.neighbors
-    x0 = pf_data.x0
-    F0 = pf_data.F0
-    J0 = pf_data.J0
+    x0 = pf_data.x0   # combined |V| and ∠V
+    F0 = pf_data.F0   # active power error at PQ + PV buses and reactive power error at PQ buses 
+    J0 = pf_data.J0   # Jacobian
 
     # ac power flow, nodal power balance function eval
     function f!(F::Vector{Float64}, x::Vector{Float64})
-        for i in eachindex(am.idx_to_bus)
-            J_idx = am.idx_to_J_idx[i]
-            if bus_type_idx[i] == 1
-                vm_idx[i] = x[J_idx]
-                va_idx[i] = x[J_idx+1]
-            elseif bus_type_idx[i] == 2
-                #q_inject_idx[i] = x[2*i - 1]
-                va_idx[i] = x[J_idx]
-            elseif bus_type_idx[i] == 3
-                #p_inject_idx[i] = x[2*i - 1]
-                #q_inject_idx[i] = x[2*i]
-            else
-                @assert false
-            end
-        end
-
+        # Update vm and va from new x
+        update_vm_va!(x)
         
-        # TODO ensure this correclty updates p_inject_idx and q_inject_idx
+        # calculate new nodal power balance errors (F)
         for i in eachindex(am.idx_to_bus)
             balance_real = p_delta_base_idx[i] + p_inject_idx[i]
             balance_imag = q_delta_base_idx[i] + q_inject_idx[i]
@@ -594,15 +580,76 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
         #     F[2*i - 1] = real(balance)
         #     F[2*i] = imag(balance)
         # end
-        println("Ran f!")
     end
 
     # ac power flow, sparse jacobian computation
     function jsp!(J::SparseArrays.SparseMatrixCSC{Float64,Int}, x::Vector{Float64})
-        # Notes to self
-        # Y_ij = |Y_ij| exp(j*θ_ij)
+        # NLsolve does NOT guarantee jsp! and f! execution order (different in Newton and trust region method)
+        # Thats why this voltage update step is done in jsp! and f! (to ensure jacobian always uses newest voltages)
+        update_vm_va!(x)
 
-        for i in eachindex(am.idx_to_bus)   # NLsolve does NOT guarantee jsp! and f! execution order (different in Newton and main method)
+        for i in eachindex(am.idx_to_bus)
+            J_idx_i = am.idx_to_J_idx[i]
+
+            f_i_fst = J_idx_i         # PQ/PV bus: P
+            f_i_snd = J_idx_i + 1     # PQ bus:    Q
+
+            bus_type_row = bus_type_idx[i]
+            
+            for j in neighbors[i]
+                J_idx_j = am.idx_to_J_idx[j]
+                x_j_fst = J_idx_j       # PQ bus: |V|, PV bus: δ
+                x_j_snd = J_idx_j + 1   # PQ bus:  δ
+
+                bus_type_col = bus_type_idx[j]
+                if bus_type_row == 3 || bus_type_col == 3   # Ref bus || Ref bus (no J entries)
+
+                elseif bus_type_row == 2 && bus_type_col == 2  # PV bus && PV bus
+                    if i == j # on diagonal
+                        y_ii = am.matrix[i,i]
+                        J[f_i_fst, x_j_fst] =              vm_idx[i] * sum(  real(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + imag(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
+                    else # off diagonal
+                        y_ij = am.matrix[i,j]
+                        J[f_i_fst, x_j_fst] = vm_idx[i] * vm_idx[j] * ( real(y_ij) * sin(va_idx[i] - va_idx[j]) + imag(y_ij) * -cos(va_idx[i] - va_idx[j]))
+                    end
+
+                elseif bus_type_row == 2 && bus_type_col == 1  # PV bus && PQ bus
+                    @assert i != j # has to be off diagonal
+                    y_ij = am.matrix[i,j]
+                    J[f_i_fst, x_j_fst] =             vm_idx[i] * ( real(y_ij) * cos(va_idx[i] - va_idx[j]) + imag(y_ij) *  sin(va_idx[i] - va_idx[j])) # good
+                    J[f_i_fst, x_j_snd] = vm_idx[i] * vm_idx[j] * ( real(y_ij) * sin(va_idx[i] - va_idx[j]) + imag(y_ij) * -cos(va_idx[i] - va_idx[j])) # good
+
+                elseif bus_type_row == 1 && bus_type_col == 2  # PQ bus && PV bus
+                    @assert i != j # has to be off diagonal
+                    y_ij = am.matrix[i,j]
+                    J[f_i_fst, x_j_fst] = vm_idx[i] * vm_idx[j] * ( real(y_ij) * sin(va_idx[i] - va_idx[j]) + imag(y_ij) * -cos(va_idx[i] - va_idx[j])) # good
+                    J[f_i_snd, x_j_fst] = vm_idx[i] * vm_idx[j] * (-imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j])) # good
+                
+                elseif bus_type_row == 1 && bus_type_col == 1  # PQ bus && PQ bus
+                    if i == j # on diagonal
+                        y_ii = am.matrix[i,i]
+                        J[f_i_fst, x_j_fst] =  2*real(y_ii)*vm_idx[i] +            sum(  real(am.matrix[i,k]) * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) + imag(am.matrix[i,k]) * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i) # good
+                        J[f_i_fst, x_j_snd] =                          vm_idx[i] * sum(  real(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + imag(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i) # good
+
+                        J[f_i_snd, x_j_fst] = -2*imag(y_ii)*vm_idx[i] +            sum( -imag(am.matrix[i,k]) * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i) # good
+                        J[f_i_snd, x_j_snd] =                          vm_idx[i] * sum( -imag(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i) # good
+                    else # off diagonal
+                        y_ij = am.matrix[i,j]
+                        J[f_i_fst, x_j_fst] =             vm_idx[i] * ( real(y_ij) * cos(va_idx[i] - va_idx[j]) + imag(y_ij) *  sin(va_idx[i] - va_idx[j])) # good
+                        J[f_i_fst, x_j_snd] = vm_idx[i] * vm_idx[j] * ( real(y_ij) * sin(va_idx[i] - va_idx[j]) + imag(y_ij) * -cos(va_idx[i] - va_idx[j])) # good
+
+                        J[f_i_snd, x_j_fst] =             vm_idx[i] * (-imag(y_ij) * cos(va_idx[i] - va_idx[j]) + real(y_ij) *  sin(va_idx[i] - va_idx[j])) # good
+                        J[f_i_snd, x_j_snd] = vm_idx[i] * vm_idx[j] * (-imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j])) # good
+                    end
+                else
+                    @assert false
+                end
+            end
+        end
+    end
+
+    function update_vm_va!(x)
+        for i in eachindex(am.idx_to_bus)   
             J_idx = am.idx_to_J_idx[i]
             if bus_type_idx[i] == 1
                 vm_idx[i] = x[J_idx]
@@ -614,69 +661,9 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
                 @assert false
             end
         end
-
-        for i in eachindex(am.idx_to_bus)
-            J_idx_i = am.idx_to_J_idx[i]
-
-            f_i_r = J_idx_i         # PQ/PV bus: P
-            f_i_i = J_idx_i + 1     # PQ bus:    Q
-
-            bus_type_row = bus_type_idx[i]
-            
-            for j in neighbors[i]
-                J_idx_j = am.idx_to_J_idx[j]
-                x_j_fst = J_idx_j       # PQ bus: |V|, PV bus: δ
-                x_j_snd = J_idx_j + 1   # PQ bus:  δ
-
-                bus_type_col = bus_type_idx[j]
-                if bus_type_row == 3 || bus_type_col == 3   # REF bus || Ref bus (no J entries)
-
-                elseif bus_type_row == 2 && bus_type_col == 2  # PV bus && PV bus
-                    if i == j # on diagonal
-                        y_ii = am.matrix[i,i]
-                        J[f_i_r, x_j_fst] =              vm_idx[i] * sum(  real(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + imag(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i)
-                    else # off diagonal
-                        y_ij = am.matrix[i,j]
-                        J[f_i_r, x_j_fst] = vm_idx[i] * vm_idx[j] * ( real(y_ij) * sin(va_idx[i] - va_idx[j]) + imag(y_ij) * -cos(va_idx[i] - va_idx[j]))
-                    end
-
-                elseif bus_type_row == 2 && bus_type_col == 1  # PV bus && PQ bus
-                    @assert i != j # has to be off diagonal
-                    y_ij = am.matrix[i,j]
-                    J[f_i_r, x_j_fst] =             vm_idx[i] * ( real(y_ij) * cos(va_idx[i] - va_idx[j]) + imag(y_ij) *  sin(va_idx[i] - va_idx[j])) # good
-                    J[f_i_r, x_j_snd] = vm_idx[i] * vm_idx[j] * ( real(y_ij) * sin(va_idx[i] - va_idx[j]) + imag(y_ij) * -cos(va_idx[i] - va_idx[j])) # good
-
-                elseif bus_type_row == 1 && bus_type_col == 2  # PQ bus && PV bus
-                    @assert i != j # has to be off diagonal
-                    y_ij = am.matrix[i,j]
-                    J[f_i_r, x_j_fst] = vm_idx[i] * vm_idx[j] * ( real(y_ij) * sin(va_idx[i] - va_idx[j]) + imag(y_ij) * -cos(va_idx[i] - va_idx[j])) # good
-                    J[f_i_i, x_j_fst] = vm_idx[i] * vm_idx[j] * (-imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j])) # good
-                
-                elseif bus_type_row == 1 && bus_type_col == 1  # PQ bus && PQ bus
-                    if i == j # on diagonal
-                        y_ii = am.matrix[i,i]
-                        J[f_i_r, x_j_fst] =  2*real(y_ii)*vm_idx[i] +            sum(  real(am.matrix[i,k]) * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) + imag(am.matrix[i,k]) * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i) # good
-                        J[f_i_r, x_j_snd] =                          vm_idx[i] * sum(  real(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + imag(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i) # good
-
-                        J[f_i_i, x_j_fst] = -2*imag(y_ii)*vm_idx[i] +            sum( -imag(am.matrix[i,k]) * vm_idx[k] *  cos(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * sin(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i) # good
-                        J[f_i_i, x_j_snd] =                          vm_idx[i] * sum( -imag(am.matrix[i,k]) * vm_idx[k] * -sin(va_idx[i] - va_idx[k]) + real(am.matrix[i,k]) * vm_idx[k] * cos(va_idx[i] - va_idx[k]) for k in neighbors[i] if k != i) # good
-                    else # off diagonal
-                        y_ij = am.matrix[i,j]
-                        J[f_i_r, x_j_fst] =             vm_idx[i] * ( real(y_ij) * cos(va_idx[i] - va_idx[j]) + imag(y_ij) *  sin(va_idx[i] - va_idx[j])) # good
-                        J[f_i_r, x_j_snd] = vm_idx[i] * vm_idx[j] * ( real(y_ij) * sin(va_idx[i] - va_idx[j]) + imag(y_ij) * -cos(va_idx[i] - va_idx[j])) # good
-
-                        J[f_i_i, x_j_fst] =             vm_idx[i] * (-imag(y_ij) * cos(va_idx[i] - va_idx[j]) + real(y_ij) *  sin(va_idx[i] - va_idx[j])) # good
-                        J[f_i_i, x_j_snd] = vm_idx[i] * vm_idx[j] * (-imag(y_ij) * sin(va_idx[i] - va_idx[j]) + real(y_ij) * -cos(va_idx[i] - va_idx[j])) # good
-                    end
-                else
-                    @assert false
-                end
-            end
-        end
-        println("Ran jsp!")
     end
 
-    # basic init point
+    # basic init point (flat start, vm = 1 for PQ busses, va already initialized to zero)
     for i in eachindex(am.idx_to_bus)
         if bus_type_idx[i] == 1
             J_idx = am.idx_to_J_idx[i]
