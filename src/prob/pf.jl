@@ -578,10 +578,10 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
                 F[J_idx+1] = balance_imag
             elseif bus_type_idx[i] == 2
                 F[J_idx] = balance_real
-                q_inject_idx[i] += balance_imag
+                q_inject_idx[i] += - balance_imag
             elseif bus_type_idx[i] == 3
-                p_inject_idx[i] += balance_real
-                q_inject_idx[i] += balance_imag
+                p_inject_idx[i] += - balance_real
+                q_inject_idx[i] += - balance_imag
             end 
         end
 
