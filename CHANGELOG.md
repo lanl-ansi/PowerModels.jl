@@ -2,6 +2,7 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Relax tests to allow `OTHER_ERROR` (#1010)
 
 ### v0.21.6
 - Update to JSON@1 (#986)
