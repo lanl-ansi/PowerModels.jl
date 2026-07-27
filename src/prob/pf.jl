@@ -240,7 +240,7 @@ function instantiate_pf_data(data::Dict{String,<:Any})
         push!(neighbors[J[nz]], I[nz])
     end
 
-    x0 = [0.0 for i in 1:(maximum(am.idx_to_J_idx)+1)]
+    x0 = [0.0 for i in 1:am.J_size]
     F0 = similar(x0)
 
     J0_I = Int[]
