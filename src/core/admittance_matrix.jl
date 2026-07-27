@@ -15,7 +15,6 @@ struct AdmittanceMatrix{T}
     idx_to_bus::Vector{Int}
     bus_to_idx::Dict{Int,Int}
     idx_to_J_idx::Vector{Int}
-    J_size::Int
     matrix::SparseArrays.SparseMatrixCSC{T,Int}
 end
 
@@ -55,7 +54,6 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
             error("Unsupported bus type")
         end
     end
-    J_size = running_idx - 1
 
     I = Int[]
     J = Int[]
@@ -92,7 +90,7 @@ function calc_admittance_matrix(data::Dict{String,<:Any})
 
     m = SparseArrays.sparse(I,J,V)
 
-    return AdmittanceMatrix(idx_to_bus, bus_to_idx, idx_to_J_idx, J_size, m)
+    return AdmittanceMatrix(idx_to_bus, bus_to_idx, idx_to_J_idx, m)
 end
 
 
@@ -132,8 +130,6 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
             error("Unsupported bus type")
         end
     end
-    J_size = running_idx - 1
-
 
     I = Int[]
     J = Int[]
@@ -155,7 +151,7 @@ function calc_susceptance_matrix(data::Dict{String,<:Any})
 
     m = SparseArrays.sparse(I,J,V)
 
-    return AdmittanceMatrix(idx_to_bus, bus_to_idx, idx_to_J_idx, J_size, m)
+    return AdmittanceMatrix(idx_to_bus, bus_to_idx, idx_to_J_idx, m)
 end
 
 
