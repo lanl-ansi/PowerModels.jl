@@ -731,6 +731,12 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
     # this is where the magic happens
     if finite_differencing
         result = NLsolve.nlsolve(f!, x0; kwargs...)
+        
+        # finite differencing reevals update_vm_val! to find the finite differences. 
+        # This changes p_inject_idx and q_inject_idx to slightly wrong values 
+        # now that f! sets p_inject_idx and q_inject_idx directly, rather than the iteration finding p_inject_idx and q_inject_idx, this becomes an issue. 
+        # Fix is to evaluate f! again after the finite differencing is done
+        f!(F0, result.zero) 
     else
         df = NLsolve.OnceDifferentiable(f!, jsp!, x0, F0, J0)
         result = NLsolve.nlsolve(df, x0; kwargs...)
