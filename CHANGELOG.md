@@ -2,6 +2,11 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+- Remove the NLsolve dependency, `compute_ac_pf` now uses a built-in damped Newton solver selected via the `solver` keyword argument (breaking)
+- Add `PowerFlowSystem`, `PowerFlowSolution`, `NativeNewton`, and `build_pf_system` for building custom power flow solvers
+- Remove the `ftol`, `iterations`, `method`, `show_trace`, and `finite_differencing` keyword arguments of `compute_ac_pf`, the supported keyword arguments are `solver` and `flat_start` (breaking)
+- Add "iterations" to the `compute_ac_pf` result data
+- Add the bus type predicates `is_pq_bus`, `is_pv_bus`, `is_slack_bus`, and `is_inactive_bus`
 
 ### v0.21.6
 - Update to JSON@1 (#986)
