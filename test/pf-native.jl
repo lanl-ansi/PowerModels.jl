@@ -401,19 +401,19 @@ end
     end
 
     @testset "24-bus rts case, native warm-start" begin
-        # TODO extract number of iterations and test there is a reduction
-        # show_trace can be used for manual verification, for now
         data = PowerModels.parse_file("../test/data/matpower/case24.m")
         solution = compute_ac_pf(data)
-        #solution = compute_ac_pf(data, show_trace=true)
         @test length(solution) >= 3
+        @test solution["iterations"] > 0
 
         update_data!(data, solution["solution"])
         set_ac_pf_start_values!(data)
 
         solution_ws = compute_ac_pf(data)
-        #solution_ws = compute_ac_pf(data, show_trace=true)
         @test length(solution_ws["solution"]) >= 3
+
+        # warm-starting from a solution should reduce the iteration count
+        @test solution_ws["iterations"] < solution["iterations"]
 
         bus_pg_ini = bus_gen_values(data, solution["solution"], "pg")
         bus_qg_ini = bus_gen_values(data, solution["solution"], "qg")
@@ -433,32 +433,6 @@ end
 
 
 @testset "test native ac pf solver options" begin
-    @testset "5-bus case, finite_differencing" begin
-        data = PowerModels.parse_file("../test/data/matpower/case5.m")
-        result = solve_ac_pf(data, nlp_solver)
-        native = compute_ac_pf("../test/data/matpower/case5.m", finite_differencing=true)
-
-        # compat for Julia v1.6 on windows (01/19/24)
-        if result["termination_status"] == LOCALLY_SOLVED
-            @test length(native["solution"]) >= 3
-
-            bus_pg_nlp = bus_gen_values(data, result["solution"], "pg")
-            bus_qg_nlp = bus_gen_values(data, result["solution"], "qg")
-
-            bus_pg_nls = bus_gen_values(data, native["solution"], "pg")
-            bus_qg_nls = bus_gen_values(data, native["solution"], "qg")
-
-            for (i,bus) in data["bus"]
-                @test isapprox(result["solution"]["bus"][i]["va"], native["solution"]["bus"][i]["va"]; atol = 1e-7)
-                @test isapprox(result["solution"]["bus"][i]["vm"], native["solution"]["bus"][i]["vm"]; atol = 1e-7)
-
-                @test isapprox(bus_pg_nlp[i], bus_pg_nls[i]; atol = 1e-6)
-                @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
-            end
-        else
-            @test result["termination_status"] == NUMERICAL_ERROR
-        end
-    end
     @testset "5-bus case, flat_start" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
         result = solve_ac_pf(data, nlp_solver)
@@ -485,10 +459,10 @@ end
             @test result["termination_status"] == NUMERICAL_ERROR
         end
     end
-    @testset "5-bus case, in-place and nsolve method parameter" begin
+    @testset "5-bus case, in-place and solver parameter" begin
         data = PowerModels.parse_file("../test/data/matpower/case5.m")
-        native = compute_ac_pf("../test/data/matpower/case5.m", method=:newton)
-        compute_ac_pf!(data, method=:newton)
+        native = compute_ac_pf("../test/data/matpower/case5.m", solver=NativeNewton())
+        compute_ac_pf!(data, solver=NativeNewton())
 
         @test length(native["solution"]) >= 3
 
@@ -500,6 +474,48 @@ end
             @test isapprox(data["gen"][i]["pg"], gen["pg"]; atol = 1e-6)
             @test isapprox(data["gen"][i]["qg"], gen["qg"]; atol = 1e-6)
         end
+    end
+    @testset "5-bus case, NativeNewton options" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        result = solve_ac_pf(data, nlp_solver)
+        native = compute_ac_pf("../test/data/matpower/case5.m", solver=NativeNewton(abstol=1e-10, linesearch=false, maxstep=100.0))
+
+        # compat for Julia v1.6 on windows (01/19/24)
+        if result["termination_status"] == LOCALLY_SOLVED
+            @test length(native["solution"]) >= 3
+
+            for (i,bus) in data["bus"]
+                @test isapprox(result["solution"]["bus"][i]["va"], native["solution"]["bus"][i]["va"]; atol = 1e-7)
+                @test isapprox(result["solution"]["bus"][i]["vm"], native["solution"]["bus"][i]["vm"]; atol = 1e-7)
+            end
+        else
+            @test result["termination_status"] == NUMERICAL_ERROR
+        end
+    end
+    @testset "5-bus case, iteration limit" begin
+        native = compute_ac_pf("../test/data/matpower/case5.m", solver=NativeNewton(maxiters=1), flat_start=true)
+        @test native["termination_status"] == false
+        @test native["iterations"] == 1
+        @test !haskey(native["solution"], "bus")
+
+        _test_warn("did not converge") do
+            compute_ac_pf("../test/data/matpower/case5.m", solver=NativeNewton(maxiters=1), flat_start=true)
+        end
+    end
+    @testset "5-bus case, unknown solver type" begin
+        @test_throws ErrorException compute_ac_pf("../test/data/matpower/case5.m", solver="newton")
+    end
+    @testset "5-bus case, direct solver interface" begin
+        data = PowerModels.parse_file("../test/data/matpower/case5.m")
+        pf_data = PowerModels.instantiate_pf_data(data)
+        sys = build_pf_system(pf_data)
+        sol = PowerModels._solve_nl(sys, NativeNewton())
+
+        @test sol isa PowerFlowSolution
+        @test sol.converged
+        @test sol.iterations > 0
+        @test sol.residual_norm <= 1e-8
+        @test length(sol.x) == 2*length(data["bus"])
     end
     @testset "test_issue_938" begin
         filename = joinpath(@__DIR__, "data/json/issue_938.json")
