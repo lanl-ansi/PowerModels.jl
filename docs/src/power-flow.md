@@ -76,13 +76,29 @@ set_ac_pf_start_values!
 
 The AC Power Flow problem is ubiquitous in power system analysis.
 The problem requires solving a system of nonlinear equations, usually via a
-Newton-Raphson type of algorithm.  In PowerModels, the package
-[NLSolve](https://github.com/JuliaNLSolvers/NLsolve.jl) is used for solving
-this system of nonlinear equations.  NLsolve provides a variety of established
-solution methods.  The following function is used to solve AC Power Flow problem
-with voltages in polar coordinates with NLsolve.
+Newton-Raphson type of algorithm.  PowerModels ships with a built-in damped
+Newton solver for this system of equations, which uses an analytic sparse
+Jacobian and a backtracking line search.  The following function is used to
+solve the AC Power Flow problem with voltages in polar coordinates.
 ```@docs
 compute_ac_pf
+```
+The solver is configured with the `solver` keyword argument,
+```julia
+compute_ac_pf(data)                                             # default settings
+compute_ac_pf(data, solver = NativeNewton(abstol = 1e-10))      # tighter tolerance
+compute_ac_pf(data, flat_start = true)                          # ignore _start values
+```
+```@docs
+NativeNewton
+```
+The underlying nonlinear system and its solution are exposed as data
+structures, which can be used to build custom power flow solvers on top of
+PowerModels.
+```@docs
+build_pf_system
+PowerFlowSystem
+PowerFlowSolution
 ```
 `compute_ac_pf` will typically provide an identical result to `solve_ac_pf`.
 However, the existence of solution degeneracy around generator injection
