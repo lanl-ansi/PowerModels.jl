@@ -293,13 +293,15 @@ end
 
 """
 Computes a nonlinear AC power flow in polar coordinates based on the admittance
-matrix of the network data using a built-in Newton solver.  The solver can be
+matrix of the network data using a built-in Newton solver.  The solver is
 configured with the `solver` keyword argument, e.g.
-`solver = NativeNewton(maxiters = 50, abstol = 1e-8, linesearch = true)`.
-The `flat_start` keyword argument disables warm starting from `_start` values
-in the network data.
+`solver = NativeNewton(abstol = 1e-10)`, see `NativeNewton` for the available
+settings.  The `flat_start` keyword argument disables warm starting from
+`_start` values in the network data.
 
-Returns a solution data structure in PowerModels Dict format
+Returns a solution data structure in PowerModels Dict format.  In addition to
+the standard result keys, `"termination_status"` holds a `Bool` indicating
+convergence and `"iterations"` holds the number of solver iterations taken.
 """
 function compute_ac_pf(pf_data::PowerFlowData; kwargs...)
     time_start = time()
