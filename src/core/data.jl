@@ -1380,6 +1380,23 @@ function _check_status(data::Dict{String,<:Any})
 end
 
 
+"checks if the given bus (or bus type value) is a PQ bus, i.e. `bus_type` 1"
+is_pq_bus(bus_type::Int) = bus_type == 1
+is_pq_bus(bus::Dict{String,<:Any}) = is_pq_bus(bus["bus_type"])
+
+"checks if the given bus (or bus type value) is a PV bus, i.e. `bus_type` 2"
+is_pv_bus(bus_type::Int) = bus_type == 2
+is_pv_bus(bus::Dict{String,<:Any}) = is_pv_bus(bus["bus_type"])
+
+"checks if the given bus (or bus type value) is a slack bus, i.e. `bus_type` 3"
+is_slack_bus(bus_type::Int) = bus_type == 3
+is_slack_bus(bus::Dict{String,<:Any}) = is_slack_bus(bus["bus_type"])
+
+"checks if the given bus (or bus type value) is inactive, i.e. `bus_type` 4"
+is_inactive_bus(bus_type::Int) = bus_type == pm_component_status_inactive["bus"]
+is_inactive_bus(bus::Dict{String,<:Any}) = is_inactive_bus(bus["bus_type"])
+
+
 "get the reference bus in a network dataset"
 function reference_bus(data::Dict{String,<:Any})
     pm_data = get_pm_data(data)
