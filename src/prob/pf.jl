@@ -414,7 +414,7 @@ similar to compute_ac_pf but places the solution in the power model's data
 dict instead of a separate result object
 """
 function compute_ac_pf!(pf_data::PowerFlowData; kwargs...)
-    pf_result, solver = _compute_ac_pf(pf_data; kwargs...)
+    pf_result, _ = _compute_ac_pf(pf_data; kwargs...)
 
     if !pf_result.converged
         @_warn("ac power flow solver did not converge after $(pf_result.iterations) iterations (final residual norm $(pf_result.residual_norm))")
