@@ -174,6 +174,12 @@ struct PowerFlowData
 end
 
 
+"""
+    instantiate_pf_data(data::Dict{String,<:Any})
+
+Builds a `PowerFlowData` from a power models data dictionary. This precomputes some 
+static quantities like the admittance matrix.
+"""
 function instantiate_pf_data(data::Dict{String,<:Any})
     p_delta, q_delta = calc_bus_injection(data)
 
