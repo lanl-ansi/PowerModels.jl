@@ -76,14 +76,75 @@ set_ac_pf_start_values!
 
 The AC Power Flow problem is ubiquitous in power system analysis.
 The problem requires solving a system of nonlinear equations, usually via a
-Newton-Raphson type of algorithm.  In PowerModels, the package
-[NLSolve](https://github.com/JuliaNLSolvers/NLsolve.jl) is used for solving
-this system of nonlinear equations.  NLsolve provides a variety of established
-solution methods.  The following function is used to solve AC Power Flow problem
-with voltages in polar coordinates with NLsolve.
+Newton-Raphson type of algorithm.  PowerModels ships with a built-in damped
+Newton solver for this system of equations, which uses an analytic sparse
+Jacobian and a backtracking line search.  The following function is used to
+solve the AC Power Flow problem with voltages in polar coordinates.
+
 ```@docs
 compute_ac_pf
 ```
+
+The solver is configured with the `solver` keyword argument:
+
+```julia
+compute_ac_pf(data)                                             # default settings
+compute_ac_pf(data, solver = NativeNewton(abstol = 1e-10))      # tighter tolerance
+compute_ac_pf(data, flat_start = true)                          # ignore _start values
+```
+
+```@docs
+NativeNewton
+```
+
+### The Solver Interface
+
+Internally `compute_ac_pf` separates the power flow computation into a standard problem 
+statement and a standard result, which are shared by every solver backend.  
+
+A [`PowerFlowSystem`](@ref) states the problem and carries everything a nonlinear
+solver needs.  A solver consumes it to produce a [`PowerFlowSolution`](@ref).
+Because every solver reads and writes the same two structures, the path from
+network data to result data never changes.
+
+```@docs
+instantiate_pf_data
+PowerFlowData
+build_pf_system
+PowerFlowSystem
+PowerFlowSolution
+```
+
+A `PowerFlowSystem` can be built from standard network data in two steps:
+
+```julia
+data = parse_file("case5.m")
+pf_data = instantiate_pf_data(data)     # network data indexed for computation
+sys = build_pf_system(pf_data)          # the nonlinear system to be solved
+```
+
+Everything that is specific to the network is compiled into the system's
+residual function `f!` and Jacobian function `j!` at construction time, so a
+solver ever only sees a sparse nonlinear system and does not need to know any problem
+domain specific details, which allows for a clean separation of concerns between the 
+solver and the problem definition.
+
+Solver backends can internally dispatch on `PowerModels._solve_nl`, each consuming a
+`PowerFlowSystem` and returning a `PowerFlowSolution`:
+
+```julia
+struct MySolver end
+
+function PowerModels._solve_nl(sys::PowerFlowSystem, alg::MySolver)
+    # iterate using sys.f!, sys.j!, sys.x0, sys.p0 and sys.jac_prototype
+    return PowerFlowSolution(x, converged, iterations, residual_norm)
+end
+
+compute_ac_pf(data, solver = MySolver())
+```
+
+### Comparison with `solve_ac_pf`
+
 `compute_ac_pf` will typically provide an identical result to `solve_ac_pf`.
 However, the existence of solution degeneracy around generator injection
 assignments and multiple power flow solutions can yield different results.

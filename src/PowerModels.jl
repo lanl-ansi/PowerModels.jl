@@ -6,7 +6,6 @@ import JSON
 import JuMP
 import LinearAlgebra
 import Logging
-import NLsolve
 import PrecompileTools
 import SparseArrays
 
@@ -116,6 +115,7 @@ include("form/wrm.jl")
 include("form/shared.jl")
 
 include("prob/opb.jl")
+include("prob/pf_solver.jl")
 include("prob/pf.jl")
 include("prob/pf_bf.jl")
 include("prob/pf_iv.jl")
