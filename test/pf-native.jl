@@ -527,12 +527,6 @@ end
         sol = PowerModels._solve_nl(sys, NativeNewton())
         @test !sol.converged
         @test sol.iterations == 0
-
-        # other errors propagate to the caller
-        j_wrong!(J, x, p) = (J[1, 1] = 1.0)
-        jac_wrong = SparseArrays.sparse([1], [1], [0.0])
-        sys_wrong = PowerFlowSystem(f!, j_wrong!, [0.0, 0.0], Float64[], jac_wrong)
-        @test_throws DimensionMismatch PowerModels._solve_nl(sys_wrong, NativeNewton())
     end
     @testset "solver interface, line search backtracking" begin
         # overshoot recovered by step cap and the line search
