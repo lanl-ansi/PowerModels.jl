@@ -94,11 +94,10 @@ function _solve_nl(sys::PowerFlowSystem, alg::NativeNewton)
         dx = try
             -(J \ res)
         catch err
-            if err isa LinearAlgebra.SingularException
-                @_debug("newton iteration $(iter) produced a singular jacobian")
-                return PowerFlowSolution(x, false, iter - 1, residual_norm)
-            end
-            rethrow(err)
+            # errors other than a singular jacobian propagate to the caller
+            err isa LinearAlgebra.SingularException || rethrow(err)
+            @_debug("newton iteration $(iter) produced a singular jacobian")
+            return PowerFlowSolution(x, false, iter - 1, residual_norm)
         end
 
         # cap the step length in the infinity norm
@@ -112,7 +111,7 @@ function _solve_nl(sys::PowerFlowSystem, alg::NativeNewton)
             res_norm = LinearAlgebra.norm(res)
             alpha = 1.0
             accepted = false
-            for k in 1:10
+            for _ in 1:10
                 x_trial .= x .+ alpha .* dx
                 sys.f!(res_trial, x_trial, p)
                 if LinearAlgebra.norm(res_trial) <= (1.0 - 1.0e-4*alpha) * res_norm
