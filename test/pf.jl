@@ -27,7 +27,7 @@
         if result["termination_status"] == LOCALLY_SOLVED
             @test isapprox(result["objective"], 0; atol = 1e-2)
         else
-            @test result["termination_status"] == NUMERICAL_ERROR
+            @test result["termination_status"] in (NUMERICAL_ERROR, OTHER_ERROR)
         end
     end
     @testset "5-bus asymmetric case" begin

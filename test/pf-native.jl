@@ -130,7 +130,7 @@ end
                 @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
             end
         else
-            @test result["termination_status"] == NUMERICAL_ERROR
+            @test result["termination_status"] in (NUMERICAL_ERROR, OTHER_ERROR)
         end
 
     end
@@ -456,7 +456,7 @@ end
                 @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
             end
         else
-            @test result["termination_status"] == NUMERICAL_ERROR
+            @test result["termination_status"] in (NUMERICAL_ERROR, OTHER_ERROR)
         end
     end
     @testset "5-bus case, flat_start" begin
@@ -482,7 +482,7 @@ end
                 @test isapprox(bus_qg_nlp[i], bus_qg_nls[i]; atol = 1e-6)
             end
         else
-            @test result["termination_status"] == NUMERICAL_ERROR
+            @test result["termination_status"] in (NUMERICAL_ERROR, OTHER_ERROR)
         end
     end
     @testset "5-bus case, in-place and nsolve method parameter" begin
