@@ -507,5 +507,10 @@ end
         native = PowerModels.compute_ac_pf(data)
         @test native["termination_status"]
     end
+    @testset "test_issue_1009" begin
+        data = parse_file(joinpath(@__DIR__, "data/json/issue_1009.json"))
+        result = compute_ac_pf(data)
+        @test result["termination_status"] == true
+    end
 end
 

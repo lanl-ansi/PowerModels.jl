@@ -3,6 +3,7 @@ PowerModels.jl Change Log
 
 ### Staged
 - Relax tests to allow `OTHER_ERROR` (#1010)
+- Fix Jacobian callback in `compute_ac_pf` to use the most recent primal vector (#1017)
 
 ### v0.21.6
 - Update to JSON@1 (#986)
