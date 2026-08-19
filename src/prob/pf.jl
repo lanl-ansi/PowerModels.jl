@@ -523,23 +523,23 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
     F0 = pf_data.F0
     J0 = pf_data.J0
 
-    # ac power flow, nodal power balance function eval
-    function f!(F::Vector{Float64}, x::Vector{Float64})
+    function _update_x!(x::Vector{Float64})
         for i in eachindex(am.idx_to_bus)
             if bus_type_idx[i] == 1
-                vm_idx[i] = x[2*i - 1]
-                va_idx[i] = x[2*i]
+                vm_idx[i], va_idx[i] = x[2*i-1], x[2*i]
             elseif bus_type_idx[i] == 2
-                q_inject_idx[i] = x[2*i - 1]
-                va_idx[i] = x[2*i]
-            elseif bus_type_idx[i] == 3
-                p_inject_idx[i] = x[2*i - 1]
-                q_inject_idx[i] = x[2*i]
+                q_inject_idx[i], va_idx[i] = x[2*i-1], x[2*i]
             else
-                @assert false
+                @assert bus_type_idx[i] == 3
+                p_inject_idx[i], q_inject_idx[i] = x[2*i-1], x[2*i]
             end
         end
+        return
+    end
 
+    # ac power flow, nodal power balance function eval
+    function f!(F::Vector{Float64}, x::Vector{Float64})
+        _update_x!(x)
         for i in eachindex(am.idx_to_bus)
             balance_real = p_delta_base_idx[i] + p_inject_idx[i]
             balance_imag = q_delta_base_idx[i] + q_inject_idx[i]
@@ -570,6 +570,7 @@ function _compute_ac_pf(pf_data::PowerFlowData; finite_differencing=false, flat_
 
     # ac power flow, sparse jacobian computation
     function jsp!(J::SparseArrays.SparseMatrixCSC{Float64,Int}, x::Vector{Float64})
+        _update_x!(x)
         for i in eachindex(am.idx_to_bus)
             f_i_r = 2*i - 1
             f_i_i = 2*i
