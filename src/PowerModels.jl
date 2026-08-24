@@ -135,23 +135,23 @@ include("util/flow_limit_cuts.jl")
 # this must come last to support automated export
 include("core/export.jl")
 
-# PrecompileTools.@setup_workload begin
-#     logger_config!("error")  # Turn off logging for this precompile block
-#     case3 = joinpath(dirname(@__DIR__), "test/data/matpower/case3.m")
-#     case9 = joinpath(dirname(@__DIR__), "test/data/matpower/case9.m")
-#     PrecompileTools.@compile_workload begin
-#         for case in [case3, case9]
-#             data = parse_file(case)
-#             _ = instantiate_model(data, ACPPowerModel, build_opf)
-#             _ = instantiate_model(data, ACPPowerModel, build_pf)
-#             _ = instantiate_model(data, DCPPowerModel, build_opf)
-#             _ = instantiate_model(data, DCPPowerModel, build_pf)
-#         end
-#         _ = compute_ac_pf(case9)
-#         _ = compute_dc_pf(case9)
-#     end
-#     logger_config!("info")   # Re-enable default logging
-# end
+PrecompileTools.@setup_workload begin
+    logger_config!("error")  # Turn off logging for this precompile block
+    case3 = joinpath(dirname(@__DIR__), "test/data/matpower/case3.m")
+    case9 = joinpath(dirname(@__DIR__), "test/data/matpower/case9.m")
+    PrecompileTools.@compile_workload begin
+        for case in [case3, case9]
+            data = parse_file(case)
+            _ = instantiate_model(data, ACPPowerModel, build_opf)
+            _ = instantiate_model(data, ACPPowerModel, build_pf)
+            _ = instantiate_model(data, DCPPowerModel, build_opf)
+            _ = instantiate_model(data, DCPPowerModel, build_pf)
+        end
+        _ = compute_ac_pf(case9)
+        _ = compute_dc_pf(case9)
+    end
+    logger_config!("info")   # Re-enable default logging
+end
 
 # Deprecations to be removed in the next breaking release
 

@@ -9,11 +9,10 @@ using LinearAlgebra
 using DataStructures
 using Printf
 using NLsolve
-import NLsolve: nlsolve, trust_region, trust_region_, 
-                NonDifferentiable, OnceDifferentiable, 
+import NLsolve: NonDifferentiable, OnceDifferentiable,
                 NewtonTrustRegionCache, SolverTrace, SolverResults,
-                value_jacobian!!, value, value!, check_isfinite, 
-                assess_convergence, jacobian, jacobian!, 
+                value_jacobian!!, value, value!, check_isfinite,
+                assess_convergence, jacobian, jacobian!,
                 wnorm, dogleg!, @trustregiontrace, euclidean
 Infiltrator.toggle_async_check(false)
 "solves the AC Power Flow in polar coordinates using a JuMP model"
@@ -1895,7 +1894,7 @@ function _compute_ac_pf_grainger(pf_data::PowerFlowData, mapping_dict, J0_map;
     else
         v_inds = [md["vm"] for md in values(mapping_dict) if md["vm"] != 0]
         df = NLsolve.OnceDifferentiable(f!, jsp_mb!, x0, F0, J0)
-        result = NLsolve.nlsolve(df, x0; delta_v = true, v_inds=v_inds, kwargs...)
+        result = nlsolve_grainger(df, x0; delta_v = true, v_inds=v_inds, kwargs...)
     end
 
     if ~(result.x_converged || result.f_converged )
@@ -2209,28 +2208,29 @@ end
 
 
 """
-Functions patched over from NLsolve to be able to use the grainger power flow implementation, 
+Functions patched over from NLsolve to be able to use the grainger power flow implementation,
 which requires updating the |V| slightly differently.
+These wrappers are intentionally local to PowerModels so the package can precompile cleanly.
 """
-function nlsolve(df::Union{NonDifferentiable, OnceDifferentiable},
-                 initial_x::AbstractArray;
-                 method::Symbol = :trust_region,
-                 xtol::Real = zero(real(eltype(initial_x))),
-                 ftol::Real = convert(real(eltype(initial_x)), 1e-8),
-                 iterations::Integer = 1_000,
-                 store_trace::Bool = false,
-                 show_trace::Bool = false,
-                 extended_trace::Bool = false,
-                 linesearch = NLsolve.LineSearches.Static(),
-                 linsolve=(x, A, b) -> copyto!(x, A\b),
-                 factor::Real = one(real(eltype(initial_x))),
-                 autoscale::Bool = true,
-                 m::Integer = 10,
-                 beta::Real = 1,
-                 aa_start::Integer = 1,
-                 droptol::Real = convert(real(eltype(initial_x)), 1e10),
-                 bounds = [], 
-                 delta_v = false, v_inds = [])
+function nlsolve_grainger(df::Union{NonDifferentiable, OnceDifferentiable},
+                         initial_x::AbstractArray;
+                         method::Symbol = :trust_region,
+                         xtol::Real = zero(real(eltype(initial_x))),
+                         ftol::Real = convert(real(eltype(initial_x)), 1e-8),
+                         iterations::Integer = 1_000,
+                         store_trace::Bool = false,
+                         show_trace::Bool = false,
+                         extended_trace::Bool = false,
+                         linesearch = NLsolve.LineSearches.Static(),
+                         linsolve=(x, A, b) -> copyto!(x, A\b),
+                         factor::Real = one(real(eltype(initial_x))),
+                         autoscale::Bool = true,
+                         m::Integer = 10,
+                         beta::Real = 1,
+                         aa_start::Integer = 1,
+                         droptol::Real = convert(real(eltype(initial_x)), 1e10),
+                         bounds = [],
+                         delta_v = false, v_inds = [])
     if show_trace
         @printf "Iter     f(x) inf-norm    Step 2-norm \n"
         @printf "------   --------------   --------------\n"
@@ -2239,9 +2239,9 @@ function nlsolve(df::Union{NonDifferentiable, OnceDifferentiable},
         newton(df, initial_x, xtol, ftol, iterations,
                store_trace, show_trace, extended_trace, linesearch; linsolve=linsolve, bounds=bounds)
     elseif method == :trust_region
-        trust_region(df, initial_x, xtol, ftol, iterations,
-                     store_trace, show_trace, extended_trace, factor,
-                     autoscale; delta_v = delta_v, v_inds = v_inds)
+        trust_region_grainger(df, initial_x, xtol, ftol, iterations,
+                             store_trace, show_trace, extended_trace, factor,
+                             autoscale; delta_v = delta_v, v_inds = v_inds)
     elseif method == :anderson
         anderson(df, initial_x, xtol, ftol, iterations,
                  store_trace, show_trace, extended_trace, m, beta, aa_start, droptol)
@@ -2253,36 +2253,36 @@ function nlsolve(df::Union{NonDifferentiable, OnceDifferentiable},
     end
 end
 
-function trust_region(df::OnceDifferentiable,
-                      initial_x::AbstractArray{T},
-                      xtol::Real,
-                      ftol::Real,
-                      iterations::Integer,
-                      store_trace::Bool,
-                      show_trace::Bool,
-                      extended_trace::Bool,
-                      factor::Real,
-                      autoscale::Bool,
-                      cache = NewtonTrustRegionCache(df); 
-                       delta_v = false, v_inds = []) where T
-    trust_region_(df, initial_x, convert(real(T), xtol), convert(real(T), ftol), 
-                    iterations, store_trace, show_trace, 
-                    extended_trace, convert(real(T), factor), 
-                    autoscale, cache; delta_v = delta_v, v_inds = v_inds)
+function trust_region_grainger(df::OnceDifferentiable,
+                              initial_x::AbstractArray{T},
+                              xtol::Real,
+                              ftol::Real,
+                              iterations::Integer,
+                              store_trace::Bool,
+                              show_trace::Bool,
+                              extended_trace::Bool,
+                              factor::Real,
+                              autoscale::Bool,
+                              cache = NewtonTrustRegionCache(df);
+                              delta_v = false, v_inds = []) where T
+    trust_region_grainger_(df, initial_x, convert(real(T), xtol), convert(real(T), ftol),
+                           iterations, store_trace, show_trace,
+                           extended_trace, convert(real(T), factor),
+                           autoscale, cache; delta_v = delta_v, v_inds = v_inds)
 end
 
-function trust_region_(df::OnceDifferentiable,
-                       initial_x::AbstractArray{T},
-                       xtol::Real,
-                       ftol::Real,
-                       iterations::Integer,
-                       store_trace::Bool,
-                       show_trace::Bool,
-                       extended_trace::Bool,
-                       factor::Real,
-                       autoscale::Bool,
-                       cache = NewtonTrustRegionCache(df); 
-                       delta_v = false, v_inds = []) where T
+function trust_region_grainger_(df::OnceDifferentiable,
+                               initial_x::AbstractArray{T},
+                               xtol::Real,
+                               ftol::Real,
+                               iterations::Integer,
+                               store_trace::Bool,
+                               show_trace::Bool,
+                               extended_trace::Bool,
+                               factor::Real,
+                               autoscale::Bool,
+                               cache = NewtonTrustRegionCache(df);
+                               delta_v = false, v_inds = []) where T
     copyto!(cache.x, initial_x)
     value_jacobian!!(df, cache.x)
     cache.r .= value(df)

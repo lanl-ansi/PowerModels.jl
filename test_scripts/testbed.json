@@ -1,0 +1,44 @@
+[
+  {
+    "case_name": "case14",
+    "datapoint": 0.0,
+    "loads_file": "1.53.xlsx",
+    "row_index": 1,
+    "vm_violation_magnitude": 0.554016241807129
+  },
+  {
+    "case_name": "case14",
+    "datapoint": 14.0,
+    "loads_file": "1.53.xlsx",
+    "row_index": 15,
+    "vm_violation_magnitude": 0.49968216201829674
+  },
+  {
+    "case_name": "case57",
+    "datapoint": 0.0,
+    "loads_file": "0.34.xlsx",
+    "row_index": 1,
+    "vm_violation_magnitude": 0.059589895139415594
+  },
+  {
+    "case_name": "case57",
+    "datapoint": 8.0,
+    "loads_file": "0.34.xlsx",
+    "row_index": 9,
+    "vm_violation_magnitude": 0.05584840634050248
+  },
+  {
+    "case_name": "case300",
+    "datapoint": 14.0,
+    "loads_file": "0.15.xlsx",
+    "row_index": 15,
+    "vm_violation_magnitude": 2.592266127598061
+  },
+  {
+    "case_name": "case300",
+    "datapoint": 1.0,
+    "loads_file": "0.15.xlsx",
+    "row_index": 2,
+    "vm_violation_magnitude": 2.4909307723326846
+  }
+]

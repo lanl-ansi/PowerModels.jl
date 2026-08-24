@@ -99,6 +99,8 @@ include("common.jl")
 
     include("pf_smw.jl")
 
+    include("pf_busswap.jl")
+
     include("opf.jl")
 
     include("opf-var.jl")
