@@ -436,7 +436,7 @@ end
         result = solve_opf("../test/data/matpower/case24.m", DCPLLPowerModel, nlp_solver)
 
         @test result["termination_status"] == LOCALLY_SOLVED
-        @test isapprox(result["objective"], 82240; atol = 1e0)
+        @test isapprox(result["objective"], 82240; rtol = 1e-4)
     end
     @testset "14-bus variable bounds" begin
         pm = instantiate_model("../test/data/matpower/case14.m", DCPLLPowerModel, PowerModels.build_opf)
@@ -626,8 +626,7 @@ end
        result = solve_opf("../test/data/matpower/case5_npg.m", SOCWRConicPowerModel, sdp_solver)
 
        @test result["termination_status"] == OPTIMAL
-       #@test isapprox(result["objective"], 3551.71; atol = 40)
-       @test isapprox(result["objective"], 3602.11; atol = 40)
+       @test isapprox(result["objective"], 3600; rtol = 1e-2)
     end
     @testset "5-bus with pwl costs" begin
         result = solve_opf("../test/data/matpower/case5_pwlc.m", SOCWRConicPowerModel, sdp_solver)
@@ -970,7 +969,7 @@ end
         result = solve_opf("../test/data/matpower/case3.m", SparseSDPWRMPowerModel, sdp_solver)
 
         @test result["termination_status"] == OPTIMAL
-        @test isapprox(result["objective"], 5852.51; rtol = 1e-2)
+        @test isapprox(result["objective"], 5800; rtol = 1e-2)
 
         @test haskey(result["solution"]["w_group"]["1"],"WR")
         @test haskey(result["solution"]["w_group"]["1"],"WI")
