@@ -1033,3 +1033,11 @@ end
         @test isapprox(result["objective"], 1005.31; atol = 1e0)
     end
 end
+
+@testset "ExaModels" begin
+    result = solve_ac_opf(
+        "../test/data/matpower/case14.m",
+        () -> ExaModels.Optimizer(NLPModelsIpopt.ipopt),
+    )
+    @test result["termination_status"] == LOCALLY_SOLVED
+end
