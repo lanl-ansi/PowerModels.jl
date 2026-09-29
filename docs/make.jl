@@ -45,6 +45,7 @@ Documenter.makedocs(
     ]
 )
 
-Documenter.deploydocs(
+Documenter.deploydocs(;
     repo = "github.com/lanl-ansi/PowerModels.jl.git",
+    push_preview = true,
 )

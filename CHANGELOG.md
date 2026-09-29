@@ -7,6 +7,7 @@ PowerModels.jl Change Log
 - Fix Jacobian callback in `compute_ac_pf` to use the most recent primal vector (#1017)
 - Add ExaModels.Optimizer to the tests (#1019)
 - Relax tolerance of SCS tests (#1020)
+- Refactor the Quickstart Guide in the documentation (#1021)
 
 ### v0.21.6
 - Update to JSON@1 (#986)
