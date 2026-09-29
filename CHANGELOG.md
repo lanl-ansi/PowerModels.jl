@@ -5,6 +5,7 @@ PowerModels.jl Change Log
 - Relax tests to allow `OTHER_ERROR` (#1010)
 - Add support for NLsolve@5 (#1015)
 - Fix Jacobian callback in `compute_ac_pf` to use the most recent primal vector (#1017)
+- Add ExaModels.Optimizer to the tests (#1019)
 - Relax tolerance of SCS tests (#1020)
 
 ### v0.21.6

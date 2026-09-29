@@ -1,6 +1,7 @@
 using PowerModels
 using Test
 
+import ExaModels
 import HiGHS
 import InfrastructureModels
 import Ipopt
@@ -9,6 +10,7 @@ import JuMP
 import Juniper
 import LinearAlgebra
 import Logging
+import NLPModelsIpopt
 import SCS
 import SparseArrays
 
