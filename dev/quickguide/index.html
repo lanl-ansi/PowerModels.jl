@@ -62,7 +62,7 @@ Number of inequality constraint evaluations          = 15
 Number of equality constraint Jacobian evaluations   = 15
 Number of inequality constraint Jacobian evaluations = 15
 Number of Lagrangian Hessian evaluations             = 14
-Total seconds in IPOPT                               = 3.738
+Total seconds in IPOPT                               = 3.748
 
 EXIT: Optimal Solution Found.
 Dict{String, Any} with 8 entries:
@@ -72,7 +72,7 @@ Dict{String, Any} with 8 entries:
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
-  &quot;solve_time&quot;         =&gt; 3.73902
+  &quot;solve_time&quot;         =&gt; 3.74983
   &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>Pass options to the solver using JuMP&#39;s <code>optimizer_with_attributes</code>:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_dc_opf(
            joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
            optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
@@ -83,7 +83,7 @@ Dict{String, Any} with 8 entries:
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
-  &quot;solve_time&quot;         =&gt; 0.0124881
+  &quot;solve_time&quot;         =&gt; 0.0129991
   &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>Similarly, a DC Optimal Power Flow can be executed with:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_dc_opf(
            joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
            optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
@@ -94,7 +94,7 @@ Dict{String, Any} with 8 entries:
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
-  &quot;solve_time&quot;         =&gt; 0.00272298
+  &quot;solve_time&quot;         =&gt; 0.00276494
   &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>PTI <code>.raw</code> files in the PSS(R)E v33 specification can be run similarly, for example, in the case of an AC Optimal Power Flow:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_ac_opf(
            joinpath(DATA_DIR, &quot;pti&quot;, &quot;case3.raw&quot;),
            optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
@@ -105,7 +105,7 @@ Dict{String, Any} with 8 entries:
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
-  &quot;solve_time&quot;         =&gt; 0.00445795
+  &quot;solve_time&quot;         =&gt; 0.00448298
   &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><h2 id="Getting-Results"><a class="docs-heading-anchor" href="#Getting-Results">Getting Results</a><a id="Getting-Results-1"></a><a class="docs-heading-anchor-permalink" href="#Getting-Results" title="Permalink"></a></h2><p>The run commands in PowerModels return detailed results data in the form of a dictionary. Results dictionaries from either Matpower <code>.m</code> or PTI <code>.raw</code> files will be identical in format. This dictionary can be saved for further processing as follows,</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; result = solve_ac_opf(
            joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
            optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
@@ -116,8 +116,8 @@ Dict{String, Any} with 8 entries:
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
-  &quot;solve_time&quot;         =&gt; 0.00469804
-  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>For example, the algorithm&#39;s runtime and final objective value can be accessed with:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; result[&quot;solve_time&quot;]</code><code class="nohighlight hljs ansi" style="display:block;">0.004698038101196289</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; result[&quot;objective&quot;]</code><code class="nohighlight hljs ansi" style="display:block;">5906.879416718175</code></pre><p>The <code>&quot;solution&quot;</code> field contains detailed information about the solution produced by the run method. For example, the following dictionary comprehension can be used to inspect the bus voltage angles in the solution:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; Dict(name =&gt; data[&quot;va&quot;] for (name, data) in result[&quot;solution&quot;][&quot;bus&quot;])</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Float64} with 3 entries:
+  &quot;solve_time&quot;         =&gt; 0.00468802
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>For example, the algorithm&#39;s runtime and final objective value can be accessed with:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; result[&quot;solve_time&quot;]</code><code class="nohighlight hljs ansi" style="display:block;">0.0046880245208740234</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; result[&quot;objective&quot;]</code><code class="nohighlight hljs ansi" style="display:block;">5906.879416718175</code></pre><p>The <code>&quot;solution&quot;</code> field contains detailed information about the solution produced by the run method. For example, the following dictionary comprehension can be used to inspect the bus voltage angles in the solution:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; Dict(name =&gt; data[&quot;va&quot;] for (name, data) in result[&quot;solution&quot;][&quot;bus&quot;])</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Float64} with 3 entries:
   &quot;3&quot; =&gt; -0.301368
   &quot;1&quot; =&gt; -2.40793e-37
   &quot;2&quot; =&gt; 0.12669</code></pre><p>The <code>print_summary(result[&quot;solution&quot;])</code> function can be used show an table-like overview of the solution data.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; print_summary(result[&quot;solution&quot;])</code><code class="nohighlight hljs ansi" style="display:block;"><span class="sgr1">Metadata</span>
@@ -161,9 +161,9 @@ Dict{String, Any} with 8 entries:
            () -&gt; ExaModels.Optimizer(NLPModelsIpopt.ipopt),
        )</code><code class="nohighlight hljs ansi" style="display:block;">This is Ipopt version 3.14.19, running with linear solver MUMPS 5.9.0.
 
-Number of nonzeros in equality constraint Jacobian...:      144
+Number of nonzeros in equality constraint Jacobian...:       84
 Number of nonzeros in inequality constraint Jacobian.:       18
-Number of nonzeros in Lagrangian Hessian.............:      266
+Number of nonzeros in Lagrangian Hessian.............:      134
 
 Total number of variables............................:       27
                      variables with only lower bounds:        0
@@ -191,17 +191,17 @@ iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
   11  5.9074978e+03 4.66e-06 5.75e-03  -1.7 2.96e-03    -  1.00e+00 1.00e+00f  1
   12  5.9068858e+03 2.13e-07 3.57e-04  -3.8 7.95e-04    -  1.00e+00 1.00e+00f  1
   13  5.9068795e+03 3.64e-11 5.98e-08  -5.7 1.21e-05    -  1.00e+00 1.00e+00h  1
-  14  5.9068794e+03 1.50e-15 2.99e-12  -8.6 7.05e-08    -  1.00e+00 1.00e+00h  1
+  14  5.9068794e+03 1.48e-15 3.00e-12  -8.6 7.05e-08    -  1.00e+00 1.00e+00h  1
 
 Number of Iterations....: 14
 
                                    (scaled)                 (unscaled)
-Objective...............:   1.1813758833436352e+03    5.9068794167181759e+03
-Dual infeasibility......:   2.9930237242856009e-12    1.4965118621428005e-11
-Constraint violation....:   1.4988010832439613e-15    1.4988010832439613e-15
+Objective...............:   1.1813758833436355e+03    5.9068794167181768e+03
+Dual infeasibility......:   3.0001291474080372e-12    1.5000645737040186e-11
+Constraint violation....:   1.4849232954361469e-15    1.4849232954361469e-15
 Variable bound violation:   1.0962198482289409e-08    1.0962198482289409e-08
-Complementarity.........:   2.5073461206267801e-09    1.2536730603133900e-08
-Overall NLP error.......:   2.5073461206267801e-09    1.2536730603133900e-08
+Complementarity.........:   2.5073461206267834e-09    1.2536730603133916e-08
+Overall NLP error.......:   2.5073461206267834e-09    1.2536730603133916e-08
 
 
 Number of objective function evaluations             = 15
@@ -211,7 +211,7 @@ Number of inequality constraint evaluations          = 15
 Number of equality constraint Jacobian evaluations   = 15
 Number of inequality constraint Jacobian evaluations = 15
 Number of Lagrangian Hessian evaluations             = 14
-Total seconds in IPOPT                               = 1.394
+Total seconds in IPOPT                               = 1.419
 
 EXIT: Optimal Solution Found.
 Dict{String, Any} with 8 entries:
@@ -221,7 +221,7 @@ Dict{String, Any} with 8 entries:
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;ipopt running with ExaModels&quot;
-  &quot;solve_time&quot;         =&gt; 1.92113
+  &quot;solve_time&quot;         =&gt; 1.96305
   &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>A benefit of ExaModels is that it supports <a href="https://github.com/madsuite-org/MadNLP.jl">MadNLP</a>, which can run on a GPU:</p><pre><code class="language-julia hljs">julia&gt; import CUDA, CUDSS, MadNLP, MadNLPGPU
 
 julia&gt; result = solve_ac_opf(
@@ -238,7 +238,7 @@ julia&gt; result = solve_ac_opf(
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
-  &quot;solve_time&quot;         =&gt; 4.29088
+  &quot;solve_time&quot;         =&gt; 4.36802
   &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>where <code>ACPPowerModel</code> indicates an AC formulation in polar coordinates. This more generic <code>solve_opf()</code> allows one to solve an OPF problem with any power network formulation implemented in PowerModels. For example, an SOC Optimal Power Flow can be run with:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_opf(
            joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
            SOCWRPowerModel,
@@ -250,7 +250,7 @@ julia&gt; result = solve_ac_opf(
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
-  &quot;solve_time&quot;         =&gt; 0.00569105
+  &quot;solve_time&quot;         =&gt; 0.00586104
   &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p><a href="../formulation-details/#Formulation-Details">Formulation Details</a> provides a list of available formulations.</p><h2 id="Modifying-Network-Data"><a class="docs-heading-anchor" href="#Modifying-Network-Data">Modifying Network Data</a><a id="Modifying-Network-Data-1"></a><a class="docs-heading-anchor-permalink" href="#Modifying-Network-Data" title="Permalink"></a></h2><p>The following example demonstrates one way to perform multiple PowerModels solves while modifing the network data in Julia:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; network_data = PowerModels.parse_file(joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;))</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 22 entries:
   &quot;baseMVA&quot;           =&gt; 100.0
   &quot;storage&quot;           =&gt; Dict{String, Any}()
@@ -282,7 +282,7 @@ julia&gt; result = solve_ac_opf(
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
-  &quot;solve_time&quot;         =&gt; 0.00501418
+  &quot;solve_time&quot;         =&gt; 0.00503492
   &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; network_data[&quot;load&quot;][&quot;3&quot;][&quot;pd&quot;] = 0.0;</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; network_data[&quot;load&quot;][&quot;3&quot;][&quot;qd&quot;] = 0.0;</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_opf(
            network_data,
            ACPPowerModel,
@@ -294,7 +294,7 @@ julia&gt; result = solve_ac_opf(
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
-  &quot;solve_time&quot;         =&gt; 0.00417781
+  &quot;solve_time&quot;         =&gt; 0.00423503
   &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>Network data parsed from PTI <code>.raw</code> files supports data extensions, that is, data fields that are within the PSS(R)E specification, but not used by PowerModels for calculation. This can be achieved by:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; filename = joinpath(DATA_DIR, &quot;pti&quot;, &quot;case3.raw&quot;)</code><code class="nohighlight hljs ansi" style="display:block;">&quot;/home/runner/work/PowerModels.jl/PowerModels.jl/test/data/pti/case3.raw&quot;</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; network_data = PowerModels.parse_file(filename; import_all = true)</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 22 entries:
   &quot;baseMVA&quot;          =&gt; 100.0
   &quot;storage&quot;          =&gt; Dict{String, Any}()
@@ -326,7 +326,7 @@ julia&gt; result = solve_ac_opf(
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
-  &quot;solve_time&quot;         =&gt; 0.0104671
+  &quot;solve_time&quot;         =&gt; 0.0105331
   &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; result[&quot;solution&quot;][&quot;dcline&quot;][&quot;1&quot;]</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 5 entries:
   &quot;pt&quot;        =&gt; -0.089
   &quot;p_dc_cost&quot; =&gt; 400.0
@@ -455,7 +455,7 @@ Subject to
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
-  &quot;solve_time&quot;         =&gt; 0.00502801
+  &quot;solve_time&quot;         =&gt; 0.00532198
   &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>Alternatively, you can further break it up by parsing a file into a network data dictionary, before passing it on to <code>instantiate_model()</code> like so:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; network_data = PowerModels.parse_file(
            joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
        );</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; pm = instantiate_model(network_data, ACPPowerModel, PowerModels.build_opf);</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; result = optimize_model!(
@@ -468,5 +468,5 @@ Subject to
   &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
   &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
   &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
-  &quot;solve_time&quot;         =&gt; 0.00472522
-  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../network-data/">Network Data Format »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Tuesday 29 September 2026 22:30">Tuesday 29 September 2026</span>. Using Julia version 1.13.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+  &quot;solve_time&quot;         =&gt; 0.00495291
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../network-data/">Network Data Format »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Thursday 8 October 2026 22:16">Thursday 8 October 2026</span>. Using Julia version 1.13.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
