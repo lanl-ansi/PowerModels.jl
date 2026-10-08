@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Getting Started · PowerModels</title><meta name="title" content="Getting Started · PowerModels"/><meta property="og:title" content="Getting Started · PowerModels"/><meta property="twitter:title" content="Getting Started · PowerModels"/><meta name="description" content="Documentation for PowerModels."/><meta property="og:description" content="Documentation for PowerModels."/><meta property="twitter:description" content="Documentation for PowerModels."/><script async src="https://www.googletagmanager.com/gtag/js?id=UA-367975-10"></script><script>  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'UA-367975-10', {'page_path': location.pathname + location.search + location.hash});
+</script><script data-outdated-warner src="../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.63.2/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../search_index.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><a class="docs-logo" href="../"><img src="../assets/logo.svg" alt="PowerModels logo"/></a><div class="docs-package-name"><span class="docs-autofit"><a href="../">PowerModels</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../">Home</a></li><li><span class="tocitem">Manual</span><ul><li class="is-active"><a class="tocitem" href>Getting Started</a><ul class="internal"><li><a class="tocitem" href="#Setup"><span>Setup</span></a></li><li><a class="tocitem" href="#Solving-the-basic-Optimal-Power-Flow"><span>Solving the basic Optimal Power Flow</span></a></li><li><a class="tocitem" href="#Getting-Results"><span>Getting Results</span></a></li><li><a class="tocitem" href="#Using-a-different-optimizer"><span>Using a different optimizer</span></a></li><li><a class="tocitem" href="#Accessing-Different-Formulations"><span>Accessing Different Formulations</span></a></li><li><a class="tocitem" href="#Modifying-Network-Data"><span>Modifying Network Data</span></a></li><li><a class="tocitem" href="#Inspecting-AC-and-DC-branch-flow-results"><span>Inspecting AC and DC branch flow results</span></a></li><li><a class="tocitem" href="#Building-PowerModels-from-Network-Data-Dictionaries"><span>Building PowerModels from Network Data Dictionaries</span></a></li></ul></li><li><a class="tocitem" href="../network-data/">Network Data Format</a></li><li><a class="tocitem" href="../result-data/">Result Data Format</a></li><li><a class="tocitem" href="../math-model/">Mathematical Model</a></li><li><a class="tocitem" href="../power-flow/">Power Flow</a></li><li><a class="tocitem" href="../storage/">Storage Model</a></li><li><a class="tocitem" href="../switch/">Switch Model</a></li><li><a class="tocitem" href="../multi-networks/">Multi Networks</a></li><li><a class="tocitem" href="../utilities/">Utilities</a></li><li><a class="tocitem" href="../basic-data-utilities/">Basic Data Utilities</a></li></ul></li><li><span class="tocitem">Library</span><ul><li><a class="tocitem" href="../formulations/">Network Formulations</a></li><li><a class="tocitem" href="../specifications/">Problem Specifications</a></li><li><input class="collapse-toggle" id="menuitem-3-3" type="checkbox"/><label class="tocitem" for="menuitem-3-3"><span class="docs-label">Modeling Components</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../model/">PowerModel</a></li><li><a class="tocitem" href="../objective/">Objective</a></li><li><a class="tocitem" href="../variables/">Variables</a></li><li><a class="tocitem" href="../constraints/">Constraints</a></li></ul></li><li><a class="tocitem" href="../relaxations/">Relaxation Schemes</a></li><li><a class="tocitem" href="../parser/">File IO</a></li></ul></li><li><span class="tocitem">Developer</span><ul><li><a class="tocitem" href="../developer/">Developer</a></li><li><a class="tocitem" href="../formulation-details/">Formulation Details</a></li></ul></li><li><a class="tocitem" href="../experiment-results/">Experiment Results</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Manual</a></li><li class="is-active"><a href>Getting Started</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Getting Started</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/lanl-ansi/PowerModels.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/lanl-ansi/PowerModels.jl/blob/master/docs/src/quickguide.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Quick-Start-Guide"><a class="docs-heading-anchor" href="#Quick-Start-Guide">Quick Start Guide</a><a id="Quick-Start-Guide-1"></a><a class="docs-heading-anchor-permalink" href="#Quick-Start-Guide" title="Permalink"></a></h1><p>This page provides a brief overview of the features of PowerModels.jl.</p><h2 id="Setup"><a class="docs-heading-anchor" href="#Setup">Setup</a><a id="Setup-1"></a><a class="docs-heading-anchor-permalink" href="#Setup" title="Permalink"></a></h2><p>This page uses the following packages:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using PowerModels</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; using Ipopt</code></pre><p>This page also uses various input files. In this build of the documentation, we use the files in:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; DATA_DIR = joinpath(pkgdir(PowerModels), &quot;test&quot;, &quot;data&quot;);</code></pre><p>but there are many public instances that you can use, for example, by going to <a href="https://github.com/power-grid-lib/pglib-opf">pglib-opf</a>.</p><h2 id="Solving-the-basic-Optimal-Power-Flow"><a class="docs-heading-anchor" href="#Solving-the-basic-Optimal-Power-Flow">Solving the basic Optimal Power Flow</a><a id="Solving-the-basic-Optimal-Power-Flow-1"></a><a class="docs-heading-anchor-permalink" href="#Solving-the-basic-Optimal-Power-Flow" title="Permalink"></a></h2><p>Once PowerModels is installed, Ipopt is installed, and a network data file (e.g., <code>&quot;case3.m&quot;</code> or <code>&quot;case3.raw&quot;</code>) has been acquired, an AC Optimal Power Flow can be executed with:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_ac_opf(joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;), Ipopt.Optimizer)</code><code class="nohighlight hljs ansi" style="display:block;">
+******************************************************************************
+This program contains Ipopt, a library for large-scale nonlinear optimization.
+ Ipopt is released as open source code under the Eclipse Public License (EPL).
+         For more information visit https://github.com/coin-or/Ipopt
+******************************************************************************
+
+This is Ipopt version 3.14.19, running with linear solver MUMPS 5.9.0.
+
+Number of nonzeros in equality constraint Jacobian...:       84
+Number of nonzeros in inequality constraint Jacobian.:       18
+Number of nonzeros in Lagrangian Hessian.............:      134
+
+Total number of variables............................:       27
+                     variables with only lower bounds:        0
+                variables with lower and upper bounds:       24
+                     variables with only upper bounds:        0
+Total number of equality constraints.................:       20
+Total number of inequality constraints...............:        9
+        inequality constraints with only lower bounds:        0
+   inequality constraints with lower and upper bounds:        3
+        inequality constraints with only upper bounds:        6
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   0  6.3949934e+00 1.20e+00 2.54e+01  -1.0 0.00e+00    -  0.00e+00 0.00e+00   0
+   1  3.7786723e+03 2.38e-01 1.40e+02  -1.0 1.80e+00    -  5.79e-03 8.01e-01h  1
+   2  4.1854574e+03 1.83e-01 1.08e+02  -1.0 4.16e-01    -  6.49e-01 2.33e-01h  1
+   3  4.3122875e+03 1.67e-01 9.87e+01  -1.0 3.13e-01    -  2.84e-01 8.82e-02h  1
+   4  5.1593473e+03 8.73e-02 1.60e+02  -1.0 4.26e-01    -  2.12e-01 5.98e-01h  1
+   5  5.5669007e+03 3.75e-02 3.71e+01  -1.0 2.04e-01    -  8.47e-01 6.39e-01h  1
+   6  5.6334313e+03 3.43e-02 5.77e+01  -1.0 1.07e-01    -  9.90e-01 2.67e-01h  1
+   7  5.6639586e+03 4.30e-02 1.31e+02  -1.0 1.86e-01    -  2.87e-01 1.57e-01h  1
+   8  5.6670493e+03 4.39e-02 2.28e+02  -1.0 1.44e-01    -  4.23e-02 1.76e-02h  1
+   9  5.9038108e+03 2.24e-03 1.71e+02  -1.0 1.28e-01    -  2.16e-01 1.00e+00h  1
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+  10  5.9095024e+03 1.02e-05 4.37e-01  -1.0 4.21e-03    -  1.00e+00 1.00e+00h  1
+  11  5.9074978e+03 4.66e-06 5.75e-03  -1.7 2.96e-03    -  1.00e+00 1.00e+00f  1
+  12  5.9068858e+03 2.13e-07 3.57e-04  -3.8 7.95e-04    -  1.00e+00 1.00e+00f  1
+  13  5.9068795e+03 3.64e-11 5.98e-08  -5.7 1.21e-05    -  1.00e+00 1.00e+00h  1
+  14  5.9068794e+03 1.53e-15 3.00e-12  -8.6 7.05e-08    -  1.00e+00 1.00e+00h  1
+
+Number of Iterations....: 14
+
+                                   (scaled)                 (unscaled)
+Objective...............:   1.1813758833436350e+03    5.9068794167181750e+03
+Dual infeasibility......:   3.0001291516432019e-12    1.5000645758216010e-11
+Constraint violation....:   1.5265566588595902e-15    1.5265566588595902e-15
+Variable bound violation:   1.0962198482289409e-08    1.0962198482289409e-08
+Complementarity.........:   2.5073461206267809e-09    1.2536730603133905e-08
+Overall NLP error.......:   2.5073461206267809e-09    1.2536730603133905e-08
+
+
+Number of objective function evaluations             = 15
+Number of objective gradient evaluations             = 15
+Number of equality constraint evaluations            = 15
+Number of inequality constraint evaluations          = 15
+Number of equality constraint Jacobian evaluations   = 15
+Number of inequality constraint Jacobian evaluations = 15
+Number of Lagrangian Hessian evaluations             = 14
+Total seconds in IPOPT                               = 3.891
+
+EXIT: Optimal Solution Found.
+Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 5906.88
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
+  &quot;solve_time&quot;         =&gt; 3.89226
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>Pass options to the solver using JuMP&#39;s <code>optimizer_with_attributes</code>:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_dc_opf(
+           joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
+           optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 5782.03
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
+  &quot;solve_time&quot;         =&gt; 0.0135682
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>Similarly, a DC Optimal Power Flow can be executed with:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_dc_opf(
+           joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
+           optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 5782.03
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
+  &quot;solve_time&quot;         =&gt; 0.00281405
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>PTI <code>.raw</code> files in the PSS(R)E v33 specification can be run similarly, for example, in the case of an AC Optimal Power Flow:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_ac_opf(
+           joinpath(DATA_DIR, &quot;pti&quot;, &quot;case3.raw&quot;),
+           optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 317.38
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
+  &quot;solve_time&quot;         =&gt; 0.00476789
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><h2 id="Getting-Results"><a class="docs-heading-anchor" href="#Getting-Results">Getting Results</a><a id="Getting-Results-1"></a><a class="docs-heading-anchor-permalink" href="#Getting-Results" title="Permalink"></a></h2><p>The run commands in PowerModels return detailed results data in the form of a dictionary. Results dictionaries from either Matpower <code>.m</code> or PTI <code>.raw</code> files will be identical in format. This dictionary can be saved for further processing as follows,</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; result = solve_ac_opf(
+           joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
+           optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 5906.88
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
+  &quot;solve_time&quot;         =&gt; 0.00510311
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>For example, the algorithm&#39;s runtime and final objective value can be accessed with:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; result[&quot;solve_time&quot;]</code><code class="nohighlight hljs ansi" style="display:block;">0.005103111267089844</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; result[&quot;objective&quot;]</code><code class="nohighlight hljs ansi" style="display:block;">5906.879416718175</code></pre><p>The <code>&quot;solution&quot;</code> field contains detailed information about the solution produced by the run method. For example, the following dictionary comprehension can be used to inspect the bus voltage angles in the solution:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; Dict(name =&gt; data[&quot;va&quot;] for (name, data) in result[&quot;solution&quot;][&quot;bus&quot;])</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Float64} with 3 entries:
+  &quot;3&quot; =&gt; -0.301368
+  &quot;1&quot; =&gt; -2.40793e-37
+  &quot;2&quot; =&gt; 0.12669</code></pre><p>The <code>print_summary(result[&quot;solution&quot;])</code> function can be used show an table-like overview of the solution data.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; print_summary(result[&quot;solution&quot;])</code><code class="nohighlight hljs ansi" style="display:block;"><span class="sgr1">Metadata</span>
+  baseMVA: 100.000
+  multiinfrastructure: false
+  multinetwork: false
+  per_unit: true
+
+<span class="sgr1">Table Counts</span>
+  bus: 3
+  gen: 3
+  branch: 3
+  dcline: 1
+
+
+<span class="sgr1">Table: bus</span>
+            vm,     va
+      1: 1.100, -0.000
+      2: 0.926,  0.127
+      3: 0.900, -0.301
+
+
+<span class="sgr1">Table: gen</span>
+            pg,     qg,  pg_cost
+      1: 1.581,  0.302, 3538.701
+      2: 1.600, -0.049, 2368.179
+      3: 0.000, -0.048,    0.000
+
+
+<span class="sgr1">Table: branch</span>
+             pf,     qf,     pt,     qt
+      1:  0.513,  0.101, -0.491, -0.349
+      2: -0.459, -0.199,  0.465, -0.183
+      3: -0.132,  0.046,  0.135, -0.305
+
+
+<span class="sgr1">Table: dcline</span>
+            pf,     qf,     pt,    qt, p_dc_cost
+      1: 0.100, -0.245, -0.100, 0.039,     0.000</code></pre><p>For more information about PowerModels result data, see the <a href="../result-data/#PowerModels-Result-Data-Format">PowerModels Result Data Format</a> section.</p><h2 id="Using-a-different-optimizer"><a class="docs-heading-anchor" href="#Using-a-different-optimizer">Using a different optimizer</a><a id="Using-a-different-optimizer-1"></a><a class="docs-heading-anchor-permalink" href="#Using-a-different-optimizer" title="Permalink"></a></h2><p>PowerModels supports any solver compatible with JuMP.  In the examples above, we used <a href="https://github.com/jump-dev/Ipopt.jl">Ipopt.jl</a>. Another option, which can be faster particularly on large-scale problems, is <a href="https://github.com/madsuite-org/ExaModels.jl">ExaModels.jl</a>.</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; import ExaModels</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; import NLPModelsIpopt</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; result = solve_ac_opf(
+           joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
+           () -&gt; ExaModels.Optimizer(NLPModelsIpopt.ipopt),
+       )</code><code class="nohighlight hljs ansi" style="display:block;">This is Ipopt version 3.14.19, running with linear solver MUMPS 5.9.0.
+
+Number of nonzeros in equality constraint Jacobian...:       84
+Number of nonzeros in inequality constraint Jacobian.:       18
+Number of nonzeros in Lagrangian Hessian.............:      134
+
+Total number of variables............................:       27
+                     variables with only lower bounds:        0
+                variables with lower and upper bounds:       24
+                     variables with only upper bounds:        0
+Total number of equality constraints.................:       20
+Total number of inequality constraints...............:        9
+        inequality constraints with only lower bounds:        0
+   inequality constraints with lower and upper bounds:        3
+        inequality constraints with only upper bounds:        6
+
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+   0  6.3949934e+00 1.20e+00 2.54e+01  -1.0 0.00e+00    -  0.00e+00 0.00e+00   0
+   1  3.7786723e+03 2.38e-01 1.40e+02  -1.0 1.80e+00    -  5.79e-03 8.01e-01h  1
+   2  4.1854574e+03 1.83e-01 1.08e+02  -1.0 4.16e-01    -  6.49e-01 2.33e-01h  1
+   3  4.3122875e+03 1.67e-01 9.87e+01  -1.0 3.13e-01    -  2.84e-01 8.82e-02h  1
+   4  5.1593473e+03 8.73e-02 1.60e+02  -1.0 4.26e-01    -  2.12e-01 5.98e-01h  1
+   5  5.5669007e+03 3.75e-02 3.71e+01  -1.0 2.04e-01    -  8.47e-01 6.39e-01h  1
+   6  5.6334313e+03 3.43e-02 5.77e+01  -1.0 1.07e-01    -  9.90e-01 2.67e-01h  1
+   7  5.6639586e+03 4.30e-02 1.31e+02  -1.0 1.86e-01    -  2.87e-01 1.57e-01h  1
+   8  5.6670493e+03 4.39e-02 2.28e+02  -1.0 1.44e-01    -  4.23e-02 1.76e-02h  1
+   9  5.9038108e+03 2.24e-03 1.71e+02  -1.0 1.28e-01    -  2.16e-01 1.00e+00h  1
+iter    objective    inf_pr   inf_du lg(mu)  ||d||  lg(rg) alpha_du alpha_pr  ls
+  10  5.9095024e+03 1.02e-05 4.37e-01  -1.0 4.21e-03    -  1.00e+00 1.00e+00h  1
+  11  5.9074978e+03 4.66e-06 5.75e-03  -1.7 2.96e-03    -  1.00e+00 1.00e+00f  1
+  12  5.9068858e+03 2.13e-07 3.57e-04  -3.8 7.95e-04    -  1.00e+00 1.00e+00f  1
+  13  5.9068795e+03 3.64e-11 5.98e-08  -5.7 1.21e-05    -  1.00e+00 1.00e+00h  1
+  14  5.9068794e+03 1.48e-15 3.00e-12  -8.6 7.05e-08    -  1.00e+00 1.00e+00h  1
+
+Number of Iterations....: 14
+
+                                   (scaled)                 (unscaled)
+Objective...............:   1.1813758833436355e+03    5.9068794167181768e+03
+Dual infeasibility......:   3.0001291474080372e-12    1.5000645737040186e-11
+Constraint violation....:   1.4849232954361469e-15    1.4849232954361469e-15
+Variable bound violation:   1.0962198482289409e-08    1.0962198482289409e-08
+Complementarity.........:   2.5073461206267834e-09    1.2536730603133916e-08
+Overall NLP error.......:   2.5073461206267834e-09    1.2536730603133916e-08
+
+
+Number of objective function evaluations             = 15
+Number of objective gradient evaluations             = 15
+Number of equality constraint evaluations            = 15
+Number of inequality constraint evaluations          = 15
+Number of equality constraint Jacobian evaluations   = 15
+Number of inequality constraint Jacobian evaluations = 15
+Number of Lagrangian Hessian evaluations             = 14
+Total seconds in IPOPT                               = 1.472
+
+EXIT: Optimal Solution Found.
+Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 5906.88
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;ipopt running with ExaModels&quot;
+  &quot;solve_time&quot;         =&gt; 2.05254
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>A benefit of ExaModels is that it supports <a href="https://github.com/madsuite-org/MadNLP.jl">MadNLP</a>, which can run on a GPU:</p><pre><code class="language-julia hljs">julia&gt; import CUDA, CUDSS, MadNLP, MadNLPGPU
+
+julia&gt; result = solve_ac_opf(
+           joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
+           () -&gt; ExaModels.Optimizer(MadNLP.madnlp, CUDA.CUDABackend()),
+       );</code></pre><h2 id="Accessing-Different-Formulations"><a class="docs-heading-anchor" href="#Accessing-Different-Formulations">Accessing Different Formulations</a><a id="Accessing-Different-Formulations-1"></a><a class="docs-heading-anchor-permalink" href="#Accessing-Different-Formulations" title="Permalink"></a></h2><p>The functions <code>solve_ac_opf</code> and <code>solve_dc_opf</code> are shorthands for a more general formulation-independent OPF execution, <code>solve_opf</code>. For example, <code>solve_ac_opf</code> is equivalent to:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_opf(
+           joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
+           ACPPowerModel,
+           optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 5906.88
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
+  &quot;solve_time&quot;         =&gt; 4.54527
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>where <code>ACPPowerModel</code> indicates an AC formulation in polar coordinates. This more generic <code>solve_opf()</code> allows one to solve an OPF problem with any power network formulation implemented in PowerModels. For example, an SOC Optimal Power Flow can be run with:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_opf(
+           joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
+           SOCWRPowerModel,
+           optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 5746.72
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
+  &quot;solve_time&quot;         =&gt; 0.00625992
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p><a href="../formulation-details/#Formulation-Details">Formulation Details</a> provides a list of available formulations.</p><h2 id="Modifying-Network-Data"><a class="docs-heading-anchor" href="#Modifying-Network-Data">Modifying Network Data</a><a id="Modifying-Network-Data-1"></a><a class="docs-heading-anchor-permalink" href="#Modifying-Network-Data" title="Permalink"></a></h2><p>The following example demonstrates one way to perform multiple PowerModels solves while modifing the network data in Julia:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; network_data = PowerModels.parse_file(joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;))</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 22 entries:
+  &quot;baseMVA&quot;           =&gt; 100.0
+  &quot;storage&quot;           =&gt; Dict{String, Any}()
+  &quot;name&quot;              =&gt; &quot;case3&quot;
+  &quot;switch&quot;            =&gt; Dict{String, Any}()
+  &quot;const_int&quot;         =&gt; 123
+  &quot;areas_cells&quot;       =&gt; Dict{String, Any}(&quot;1&quot;=&gt;Dict{String, Any}(&quot;col_3&quot;=&gt;987,…
+  &quot;component&quot;         =&gt; Dict{String, Any}(&quot;1&quot;=&gt;Dict{String, Any}(&quot;number&quot;=&gt;100…
+  &quot;const_float&quot;       =&gt; 4.56
+  &quot;bus&quot;               =&gt; Dict{String, Any}(&quot;3&quot;=&gt;Dict{String, Any}(&quot;number&quot;=&gt;3, …
+  &quot;shunt&quot;             =&gt; Dict{String, Any}()
+  &quot;source_type&quot;       =&gt; &quot;matpower&quot;
+  &quot;per_unit&quot;          =&gt; true
+  &quot;dcline&quot;            =&gt; Dict{String, Any}(&quot;1&quot;=&gt;Dict{String, Any}(&quot;pt&quot;=&gt;-0.1, &quot;…
+  &quot;gen&quot;               =&gt; Dict{String, Any}(&quot;3&quot;=&gt;Dict{String, Any}(&quot;gen_bus&quot;=&gt;3,…
+  &quot;areas_named&quot;       =&gt; Dict{String, Any}(&quot;1&quot;=&gt;Dict{String, Any}(&quot;source_id&quot;=&gt;…
+  &quot;load&quot;              =&gt; Dict{String, Any}(&quot;3&quot;=&gt;Dict{String, Any}(&quot;qd&quot;=&gt;0.5, &quot;l…
+  &quot;areas_named_cells&quot; =&gt; Dict{String, Any}(&quot;1&quot;=&gt;Dict{String, Any}(&quot;refbus_name&quot;…
+  &quot;const_str&quot;         =&gt; &quot;a string&quot;
+  &quot;source_version&quot;    =&gt; &quot;2&quot;
+  ⋮                   =&gt; ⋮</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_opf(
+           network_data,
+           ACPPowerModel,
+           optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 5906.88
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
+  &quot;solve_time&quot;         =&gt; 0.00531197
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; network_data[&quot;load&quot;][&quot;3&quot;][&quot;pd&quot;] = 0.0;</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; network_data[&quot;load&quot;][&quot;3&quot;][&quot;qd&quot;] = 0.0;</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; solve_opf(
+           network_data,
+           ACPPowerModel,
+           optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 2937.16
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
+  &quot;solve_time&quot;         =&gt; 0.0046401
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>Network data parsed from PTI <code>.raw</code> files supports data extensions, that is, data fields that are within the PSS(R)E specification, but not used by PowerModels for calculation. This can be achieved by:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; filename = joinpath(DATA_DIR, &quot;pti&quot;, &quot;case3.raw&quot;)</code><code class="nohighlight hljs ansi" style="display:block;">&quot;/home/runner/work/PowerModels.jl/PowerModels.jl/test/data/pti/case3.raw&quot;</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; network_data = PowerModels.parse_file(filename; import_all = true)</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 22 entries:
+  &quot;baseMVA&quot;          =&gt; 100.0
+  &quot;storage&quot;          =&gt; Dict{String, Any}()
+  &quot;name&quot;             =&gt; &quot;case3&quot;
+  &quot;owner&quot;            =&gt; Dict{String, Any}(&quot;1&quot;=&gt;Dict{String, Any}(&quot;owname&quot;=&gt;&quot;1&quot;,…
+  &quot;nxfrat&quot;           =&gt; 0
+  &quot;xfrrat&quot;           =&gt; 0
+  &quot;comment_line_2&quot;   =&gt; &quot;this case does not have an HVDC line that occurs in th…
+  &quot;basfrq&quot;           =&gt; 60.0
+  &quot;switch&quot;           =&gt; Dict{String, Any}()
+  &quot;zone&quot;             =&gt; Dict{String, Any}(&quot;1&quot;=&gt;Dict{String, Any}(&quot;i&quot;=&gt;1, &quot;zonam…
+  &quot;bus&quot;              =&gt; Dict{String, Any}(&quot;3&quot;=&gt;Dict{String, Any}(&quot;evhi&quot;=&gt;1.1, &quot;…
+  &quot;shunt&quot;            =&gt; Dict{String, Any}()
+  &quot;area interchange&quot; =&gt; Dict{String, Any}(&quot;1&quot;=&gt;Dict{String, Any}(&quot;isw&quot;=&gt;0, &quot;i&quot;=…
+  &quot;source_type&quot;      =&gt; &quot;pti&quot;
+  &quot;per_unit&quot;         =&gt; true
+  &quot;ic&quot;               =&gt; 0
+  &quot;dcline&quot;           =&gt; Dict{String, Any}()
+  &quot;comment_line_1&quot;   =&gt; &quot;tests basic network fetures&quot;
+  &quot;gen&quot;              =&gt; Dict{String, Any}(&quot;3&quot;=&gt;Dict{String, Any}(&quot;zr&quot;=&gt;0.0, &quot;gt…
+  ⋮                  =&gt; ⋮</code></pre><p>This network data can be modified in the same way as the previous Matpower <code>.m</code> file example.</p><p>For additional details about the network data, see the <a href="../network-data/#PowerModels-Network-Data-Format">PowerModels Network Data Format</a> section.</p><h2 id="Inspecting-AC-and-DC-branch-flow-results"><a class="docs-heading-anchor" href="#Inspecting-AC-and-DC-branch-flow-results">Inspecting AC and DC branch flow results</a><a id="Inspecting-AC-and-DC-branch-flow-results-1"></a><a class="docs-heading-anchor-permalink" href="#Inspecting-AC-and-DC-branch-flow-results" title="Permalink"></a></h2><p>The flow AC and DC branch results are written to the result by default. The following can be used to inspect the flow results:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; result = solve_opf(
+           joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case5_dc.m&quot;),
+           ACPPowerModel,
+           optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 18156.2
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
+  &quot;solve_time&quot;         =&gt; 0.0108578
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; result[&quot;solution&quot;][&quot;dcline&quot;][&quot;1&quot;]</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 5 entries:
+  &quot;pt&quot;        =&gt; -0.089
+  &quot;p_dc_cost&quot; =&gt; 400.0
+  &quot;qf&quot;        =&gt; -1.0
+  &quot;pf&quot;        =&gt; 0.1
+  &quot;qt&quot;        =&gt; 0.108245</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; result[&quot;solution&quot;][&quot;branch&quot;][&quot;2&quot;]</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 4 entries:
+  &quot;pt&quot; =&gt; -1.86988
+  &quot;qf&quot; =&gt; 0.394971
+  &quot;pf&quot; =&gt; 1.8798
+  &quot;qt&quot; =&gt; -0.303066</code></pre><p>The losses of an AC or DC branch can be derived:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; loss_ac = Dict(
+           name =&gt; data[&quot;pt&quot;]+data[&quot;pf&quot;]
+           for (name, data) in result[&quot;solution&quot;][&quot;branch&quot;]
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Float64} with 6 entries:
+  &quot;3&quot; =&gt; 0.00530134
+  &quot;4&quot; =&gt; 0.00370667
+  &quot;1&quot; =&gt; 0.0175942
+  &quot;2&quot; =&gt; 0.00992406
+  &quot;5&quot; =&gt; 0.00947219
+  &quot;6&quot; =&gt; 0.0154276</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; loss_dc = Dict(
+           name =&gt; data[&quot;pt&quot;]+data[&quot;pf&quot;]
+           for (name, data) in result[&quot;solution&quot;][&quot;dcline&quot;]
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Float64} with 1 entry:
+  &quot;1&quot; =&gt; 0.011</code></pre><h2 id="Building-PowerModels-from-Network-Data-Dictionaries"><a class="docs-heading-anchor" href="#Building-PowerModels-from-Network-Data-Dictionaries">Building PowerModels from Network Data Dictionaries</a><a id="Building-PowerModels-from-Network-Data-Dictionaries-1"></a><a class="docs-heading-anchor-permalink" href="#Building-PowerModels-from-Network-Data-Dictionaries" title="Permalink"></a></h2><p>The following example demonstrates how to break a <code>solve_opf</code> call into separate model building and solving steps.  This allows inspection of the JuMP model created by PowerModels for the AC-OPF problem,</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; pm = instantiate_model(
+           joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
+           ACPPowerModel,
+           PowerModels.build_opf,
+       );</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; pm.model</code><code class="nohighlight hljs ansi" style="display:block;">A JuMP Model
+├ solver: none
+├ objective_sense: MIN_SENSE
+│ └ objective_function_type: JuMP.QuadExpr
+├ num_variables: 28
+├ num_constraints: 79
+│ ├ JuMP.NonlinearExpr in MOI.EqualTo{Float64}: 12
+│ ├ JuMP.AffExpr in MOI.EqualTo{Float64}: 8
+│ ├ JuMP.AffExpr in MOI.Interval{Float64}: 3
+│ ├ JuMP.QuadExpr in MOI.LessThan{Float64}: 6
+│ ├ JuMP.VariableRef in MOI.GreaterThan{Float64}: 25
+│ └ JuMP.VariableRef in MOI.LessThan{Float64}: 25
+└ Names registered in the model: none</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; print(pm.model)</code><code class="nohighlight hljs ansi" style="display:block;">Min 850.0000000000001 0_pg[2]² + 1100 0_pg[1]² + 120 0_pg[2] + 500 0_pg[1]
+Subject to
+ 0_p[(3, 1, 2)] - ((0.05173917542536994 0_vm[1]²) + -0.05173917542536994 * ((0_vm[1]*0_vm[2]) * cos(-0_va[2] + 0_va[1])) + 1.1086966162579273 * ((0_vm[1]*0_vm[2]) * sin(-0_va[2] + 0_va[1]))) = 0
+ 0_q[(3, 1, 2)] - (((0.9586966162579272 0_vm[1]²) - 1.1086966162579273 * ((0_vm[1]*0_vm[2]) * cos(-0_va[2] + 0_va[1]))) + -0.05173917542536994 * ((0_vm[1]*0_vm[2]) * sin(-0_va[2] + 0_va[1]))) = 0
+ 0_p[(3, 2, 1)] - ((0.05173917542536994 0_vm[2]²) + -0.05173917542536994 * ((0_vm[2]*0_vm[1]) * cos(0_va[2] - 0_va[1])) + 1.1086966162579273 * ((0_vm[2]*0_vm[1]) * sin(0_va[2] - 0_va[1]))) = 0
+ 0_q[(3, 2, 1)] - (((0.9586966162579272 0_vm[2]²) - 1.1086966162579273 * ((0_vm[2]*0_vm[1]) * cos(0_va[2] - 0_va[1]))) + -0.05173917542536994 * ((0_vm[2]*0_vm[1]) * sin(0_va[2] - 0_va[1]))) = 0
+ 0_p[(2, 3, 2)] - ((0.044395116537180916 0_vm[3]²) + -0.044395116537180916 * ((0_vm[3]*0_vm[2]) * cos(0_va[3] - 0_va[2])) + 1.3318534961154274 * ((0_vm[3]*0_vm[2]) * sin(0_va[3] - 0_va[2]))) = 0
+ 0_q[(2, 3, 2)] - (((0.9818534961154274 0_vm[3]²) - 1.3318534961154274 * ((0_vm[3]*0_vm[2]) * cos(0_va[3] - 0_va[2]))) + -0.044395116537180916 * ((0_vm[3]*0_vm[2]) * sin(0_va[3] - 0_va[2]))) = 0
+ 0_p[(2, 2, 3)] - ((0.044395116537180916 0_vm[2]²) + -0.044395116537180916 * ((0_vm[2]*0_vm[3]) * cos(-0_va[3] + 0_va[2])) + 1.3318534961154274 * ((0_vm[2]*0_vm[3]) * sin(-0_va[3] + 0_va[2]))) = 0
+ 0_q[(2, 2, 3)] - (((0.9818534961154274 0_vm[2]²) - 1.3318534961154274 * ((0_vm[2]*0_vm[3]) * cos(-0_va[3] + 0_va[2]))) + -0.044395116537180916 * ((0_vm[2]*0_vm[3]) * sin(-0_va[3] + 0_va[2]))) = 0
+ 0_p[(1, 1, 3)] - ((0.16725635252492763 0_vm[1]²) + -0.16725635252492763 * ((0_vm[1]*0_vm[3]) * cos(-0_va[3] + 0_va[1])) + 1.5953682856223865 * ((0_vm[1]*0_vm[3]) * sin(-0_va[3] + 0_va[1]))) = 0
+ 0_q[(1, 1, 3)] - (((1.3703682856223864 0_vm[1]²) - 1.5953682856223865 * ((0_vm[1]*0_vm[3]) * cos(-0_va[3] + 0_va[1]))) + -0.16725635252492763 * ((0_vm[1]*0_vm[3]) * sin(-0_va[3] + 0_va[1]))) = 0
+ 0_p[(1, 3, 1)] - ((0.16725635252492763 0_vm[3]²) + -0.16725635252492763 * ((0_vm[3]*0_vm[1]) * cos(0_va[3] - 0_va[1])) + 1.5953682856223865 * ((0_vm[3]*0_vm[1]) * sin(0_va[3] - 0_va[1]))) = 0
+ 0_q[(1, 3, 1)] - (((1.3703682856223864 0_vm[3]²) - 1.5953682856223865 * ((0_vm[3]*0_vm[1]) * cos(0_va[3] - 0_va[1]))) + -0.16725635252492763 * ((0_vm[3]*0_vm[1]) * sin(0_va[3] - 0_va[1]))) = 0
+ 0_va[1] = 0
+ -0_pg[3] + 0_p[(2, 3, 2)] + 0_p[(1, 3, 1)] = -0.95
+ -0_qg[3] + 0_q[(2, 3, 2)] + 0_q[(1, 3, 1)] = -0.5
+ -0_pg[2] + 0_p[(3, 2, 1)] + 0_p[(2, 2, 3)] + 0_p_dc[(1, 2, 1)] = -1.1
+ -0_qg[2] + 0_q[(3, 2, 1)] + 0_q[(2, 2, 3)] + 0_q_dc[(1, 2, 1)] = -0.4
+ -0_pg[1] + 0_p[(3, 1, 2)] + 0_p[(1, 1, 3)] + 0_p_dc[(1, 1, 2)] = -1.1
+ -0_qg[1] + 0_q[(3, 1, 2)] + 0_q[(1, 1, 3)] + 0_q_dc[(1, 1, 2)] = -0.4
+ 0_p_dc[(1, 1, 2)] + 0_p_dc[(1, 2, 1)] = 0
+ -0_va[2] + 0_va[1] ∈ [-0.5235987755982988, 0.5235987755982988]
+ 0_va[3] - 0_va[2] ∈ [-0.5235987755982988, 0.5235987755982988]
+ -0_va[3] + 0_va[1] ∈ [-0.5235987755982988, 0.5235987755982988]
+ 0_p[(3, 1, 2)]² + 0_q[(3, 1, 2)]² ≤ 8100
+ 0_p[(3, 2, 1)]² + 0_q[(3, 2, 1)]² ≤ 8100
+ 0_p[(2, 3, 2)]² + 0_q[(2, 3, 2)]² ≤ 0.25
+ 0_p[(2, 2, 3)]² + 0_q[(2, 2, 3)]² ≤ 0.25
+ 0_p[(1, 1, 3)]² + 0_q[(1, 1, 3)]² ≤ 8100
+ 0_p[(1, 3, 1)]² + 0_q[(1, 3, 1)]² ≤ 8100
+ 0_vm[3] ≥ 0.9
+ 0_vm[2] ≥ 0.9
+ 0_vm[1] ≥ 0.9
+ 0_pg[3] ≥ 0
+ 0_pg[2] ≥ 0
+ 0_pg[1] ≥ 0
+ 0_qg[3] ≥ -10
+ 0_qg[2] ≥ -10
+ 0_qg[1] ≥ -10
+ 0_p[(3, 1, 2)] ≥ -90
+ 0_p[(2, 3, 2)] ≥ -0.5
+ 0_p[(1, 1, 3)] ≥ -90
+ 0_p[(3, 2, 1)] ≥ -90
+ 0_p[(2, 2, 3)] ≥ -0.5
+ 0_p[(1, 3, 1)] ≥ -90
+ 0_q[(3, 1, 2)] ≥ -90
+ 0_q[(2, 3, 2)] ≥ -0.5
+ 0_q[(1, 1, 3)] ≥ -90
+ 0_q[(3, 2, 1)] ≥ -90
+ 0_q[(2, 2, 3)] ≥ -0.5
+ 0_q[(1, 3, 1)] ≥ -90
+ 0_p_dc[(1, 1, 2)] ≥ 0.1
+ 0_p_dc[(1, 2, 1)] ≥ -9
+ 0_q_dc[(1, 1, 2)] ≥ -9
+ 0_q_dc[(1, 2, 1)] ≥ -9
+ 0_vm[3] ≤ 1.1
+ 0_vm[2] ≤ 1.1
+ 0_vm[1] ≤ 1.1
+ 0_pg[3] ≤ 0
+ 0_pg[2] ≤ 15
+ 0_pg[1] ≤ 20
+ 0_qg[3] ≤ 10
+ 0_qg[2] ≤ 10
+ 0_qg[1] ≤ 10
+ 0_p[(3, 1, 2)] ≤ 90
+ 0_p[(2, 3, 2)] ≤ 0.5
+ 0_p[(1, 1, 3)] ≤ 90
+ 0_p[(3, 2, 1)] ≤ 90
+ 0_p[(2, 2, 3)] ≤ 0.5
+ 0_p[(1, 3, 1)] ≤ 90
+ 0_q[(3, 1, 2)] ≤ 90
+ 0_q[(2, 3, 2)] ≤ 0.5
+ 0_q[(1, 1, 3)] ≤ 90
+ 0_q[(3, 2, 1)] ≤ 90
+ 0_q[(2, 2, 3)] ≤ 0.5
+ 0_q[(1, 3, 1)] ≤ 90
+ 0_p_dc[(1, 1, 2)] ≤ 9
+ 0_p_dc[(1, 2, 1)] ≤ -0.1
+ 0_q_dc[(1, 1, 2)] ≤ 9
+ 0_q_dc[(1, 2, 1)] ≤ 9</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; result = optimize_model!(
+           pm;
+           optimizer = optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 5906.88
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
+  &quot;solve_time&quot;         =&gt; 0.00530219
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre><p>Alternatively, you can further break it up by parsing a file into a network data dictionary, before passing it on to <code>instantiate_model()</code> like so:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; network_data = PowerModels.parse_file(
+           joinpath(DATA_DIR, &quot;matpower&quot;, &quot;case3.m&quot;),
+       );</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; pm = instantiate_model(network_data, ACPPowerModel, PowerModels.build_opf);</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; result = optimize_model!(
+           pm;
+           optimizer = optimizer_with_attributes(Ipopt.Optimizer, &quot;print_level&quot; =&gt; 0),
+       )</code><code class="nohighlight hljs ansi" style="display:block;">Dict{String, Any} with 8 entries:
+  &quot;objective_lb&quot;       =&gt; -Inf
+  &quot;termination_status&quot; =&gt; LOCALLY_SOLVED
+  &quot;objective&quot;          =&gt; 5906.88
+  &quot;primal_status&quot;      =&gt; FEASIBLE_POINT
+  &quot;dual_status&quot;        =&gt; FEASIBLE_POINT
+  &quot;optimizer&quot;          =&gt; &quot;Ipopt&quot;
+  &quot;solve_time&quot;         =&gt; 0.00507402
+  &quot;solution&quot;           =&gt; Dict{String, Any}(&quot;baseMVA&quot;=&gt;100.0, &quot;multinetwork&quot;=&gt;f…</code></pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« Home</a><a class="docs-footer-nextpage" href="../network-data/">Network Data Format »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.19.0 on <span class="colophon-date" title="Thursday 8 October 2026 21:26">Thursday 8 October 2026</span>. Using Julia version 1.13.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
