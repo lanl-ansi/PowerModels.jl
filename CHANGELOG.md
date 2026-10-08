@@ -2,6 +2,8 @@ PowerModels.jl Change Log
 =========================
 
 ### Staged
+
+### v0.21.7
 - Relax tests to allow `OTHER_ERROR` (#1010)
 - Add support for NLsolve@5 (#1015)
 - Fix Jacobian callback in `compute_ac_pf` to use the most recent primal vector (#1017)
